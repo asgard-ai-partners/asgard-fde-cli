@@ -1,0 +1,124 @@
+# GoReleaser config - https://goreleaser.com
+# Verify locally: goreleaser check && goreleaser release --snapshot --clean
+version: 2
+
+project_name: asgard-fde-cli
+
+before:
+  hooks:
+    - go mod tidy
+    - go test ./...
+
+builds:
+  - id: asgard-cli
+    binary: asgard-cli
+    main: ./cmd/asgard-cli
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X github.com/asgard-ai-partners/asgard-fde-cli/internal/version.version={{ .Version }}
+      - -X github.com/asgard-ai-partners/asgard-fde-cli/internal/version.commit={{ .FullCommit }}
+      - -X github.com/asgard-ai-partners/asgard-fde-cli/internal/version.date={{ .CommitDate }}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+archives:
+  - id: default
+    ids: [asgard-cli]
+    # e.g. asgard-fde-cli_1.2.0_darwin_arm64.tar.gz
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    files:
+      - README.md
+      - LICENSE*
+
+# Linux packages. No extra credentials needed; the artifacts are attached to the
+# GitHub Release alongside the archives.
+nfpms:
+  - id: packages
+    ids: [asgard-cli]
+    package_name: asgard-cli
+    vendor: Asgard AI Partners
+    homepage: https://github.com/asgard-ai-partners/asgard-fde-cli
+    maintainer: Asgard AI Partners <dev@asgard-ai.com>
+    description: Command line tool for Asgard FDE.
+    license: Proprietary
+    formats:
+      - deb
+      - rpm
+      - apk
+
+checksum:
+  name_template: checksums.txt
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  use: github
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - "^ci:"
+      - Merge pull request
+      - Merge branch
+  groups:
+    - title: Features
+      regexp: '^.*?feat(\(.+\))??!?:.+$'
+      order: 0
+    - title: Bug fixes
+      regexp: '^.*?fix(\(.+\))??!?:.+$'
+      order: 1
+    - title: Others
+      order: 999
+
+release:
+  prerelease: auto
+  footer: |
+    **Full diff**: https://github.com/asgard-ai-partners/asgard-fde-cli/compare/{{ .PreviousTag }}...{{ .Tag }}
+
+# ---------------------------------------------------------------------------
+# The channels below need extra setup; uncomment once that is in place.
+#
+# Homebrew tap: create the asgard-ai-partners/homebrew-tap repo, add a PAT with
+# write access to it as the HOMEBREW_TAP_TOKEN secret of this repo, and pass it
+# through as an env var in the release workflow.
+#
+# brews:
+#   - name: asgard-cli
+#     ids: [default]
+#     repository:
+#       owner: asgard-ai-partners
+#       name: homebrew-tap
+#       token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+#     homepage: https://github.com/asgard-ai-partners/asgard-fde-cli
+#     description: Command line tool for Asgard FDE.
+#     test: |
+#       system "#{bin}/asgard-cli", "version"
+#
+# Windows scoop: likewise needs a bucket repo.
+#
+# scoops:
+#   - repository:
+#       owner: asgard-ai-partners
+#       name: scoop-bucket
+#       token: "{{ .Env.SCOOP_BUCKET_TOKEN }}"
+#     homepage: https://github.com/asgard-ai-partners/asgard-fde-cli
+#     description: Command line tool for Asgard FDE.
+#     license: Proprietary
