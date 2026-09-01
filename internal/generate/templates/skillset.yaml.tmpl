@@ -1,0 +1,82 @@
+# <<.DisplayName>>
+#
+# A SkillSet is a trio, not a CR: the SkillSet, its OWN SourceSet, and the git
+# Syncer that fills it, bound 1:1:1 and kept in this one file.
+#
+# Do not point several SkillSets at one SourceSet. The Platform UI reads the
+# 1:1:1 structure, and sharing leaves it unable to find a skill set's git
+# config - it renders as a skill set with no source. A UI failure, not a runtime
+# one, which is why it survives unnoticed.
+apiVersion: asgard-ai.com/v1alpha1
+kind: SourceSet
+metadata:
+  name: ss-<<.Name>>
+  annotations:
+    asgard-ai.com/source-set-name: "<<.DisplayName>> 來源"
+  labels:
+    # Hides the Syncer from the generic list, and is what the platform cascades
+    # on when the SkillSet is deleted. Needed on both CRs.
+    asgard-ai.com/managed-by: skill-set
+    {{- include "<<.Chart>>.labels" . | nindent 4 }}
+spec:
+  apiKey:
+    valueFrom:
+      secretKeyRef:
+        key: asgard_resource_api_key
+        name: {{ include "<<.Chart>>.appSecretName" . }}
+---
+apiVersion: asgard-ai.com/v1alpha1
+kind: Syncer
+metadata:
+  name: syn-<<.Name>>
+  annotations:
+    asgard-ai.com/syncer-name: "<<.DisplayName>> 同步"
+  labels:
+    asgard-ai.com/managed-by: skill-set
+    # Scheduler off; CD triggers this once after each helm upgrade, so sync
+    # timing is tied to deploys on purpose.
+    asgard-ai.com/syncer-suspend: "true"
+    {{- include "<<.Chart>>.labels" . | nindent 4 }}
+spec:
+  sourceSetName: ss-<<.Name>>
+  # A relative path inside the volume. The trailing slash is load bearing:
+  # without it the CRD rejects the resource.
+  destinationPath: "git/"
+  # No statePath on a git syncer - it clones the whole tree every run. The
+  # incremental cursor belongs to a database syncer.
+  syncerClass: git
+  schedule: "0 */6 * * *"
+  timeZone: Asia/Taipei
+  git:
+    repoUrl: "<<.Repo>>"
+<<if .Private>>    # Pinning the release tag means the tag must be pushed before the Syncer can
+    # find its commit - and it is why a local helm upgrade breaks it.
+    revision: {{ .Chart.AppVersion | quote }}
+    auth:
+      type: http
+      username:
+        value: "git"
+      password:
+        valueFrom:
+          secretKeyRef:
+            name: {{ include "<<.Chart>>.appSecretName" . }}
+            key: asgard-github-pat-password
+<<else>>    revision: "main"
+    # A public repo needs no auth block, and no PAT key in app-secret.
+<<end>>---
+apiVersion: asgard-ai.com/v1alpha1
+kind: SkillSet
+metadata:
+  name: <<.CRName>>
+  annotations:
+    asgard-ai.com/skill-set-name: "<<.DisplayName>>"
+    asgard-ai.com/skill-set-description: "TODO"
+  labels:
+    {{- include "<<.Chart>>.labels" . | nindent 4 }}
+spec:
+  sourceSetName: ss-<<.Name>>
+  searchPaths:
+    # ONE PATH PER SKILL DIRECTORY. Naming a parent directory resolves to
+    # nothing at all, and nothing catches it - the symptom is an agent with
+    # fewer skills than expected.
+    - git/TODO/

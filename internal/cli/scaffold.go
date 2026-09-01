@@ -1,0 +1,102 @@
+package cli
+
+import (
+	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
+
+	"github.com/spf13/cobra"
+
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/config"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/scaffold"
+)
+
+func newScaffoldCmd() *cobra.Command {
+	var force bool
+
+	cmd := &cobra.Command{
+		Use:   "scaffold",
+		Short: "Write the repository skeleton next to " + config.FileName,
+		Long: `Write the repository skeleton next to ` + config.FileName + `.
+
+This is the part of a customer repo that is the same for every engagement: the
+four-layer docs model, the SDD rules, the four acceptance gate scripts, the three
+design-time skills, the CD workflow, and an AGENTS.md carrying the platform
+contract. What it does not write is the customer's own knowledge - which systems
+exist, how the projects split, what the CRs look like. That is what the
+onboarding produces.
+
+Running it again is safe: existing files are left alone and reported as skipped,
+so it can be re-run after adding a project or when a file was deleted by hand.
+--force overwrites, which discards local edits to the skeleton.`,
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			dir, err := os.Getwd()
+			if err != nil {
+				return fmt.Errorf("get current directory: %w", err)
+			}
+
+			path, err := config.Find(dir)
+			if err != nil {
+				if errors.Is(err, config.ErrNotFound) {
+					return fmt.Errorf("no %s found; run `asgard-cli init` first", config.FileName)
+				}
+				return err
+			}
+			cfg, err := config.Load(path)
+			if err != nil {
+				return err
+			}
+
+			// The skeleton belongs next to the config, not in whatever
+			// subdirectory the command happened to be run from.
+			root := filepath.Dir(path)
+
+			results, err := scaffold.Write(root, cfg, force)
+			if err != nil {
+				return err
+			}
+
+			out := cmd.OutOrStdout()
+			var created, overwritten, skipped int
+			for _, r := range results {
+				switch r.Status {
+				case scaffold.Created:
+					created++
+					fmt.Fprintf(out, "  created      %s\n", r.Path)
+				case scaffold.Overwritten:
+					overwritten++
+					fmt.Fprintf(out, "  overwritten  %s\n", r.Path)
+				default:
+					skipped++
+				}
+			}
+
+			fmt.Fprintf(out, "\n%d created", created)
+			if overwritten > 0 {
+				fmt.Fprintf(out, ", %d overwritten", overwritten)
+			}
+			if skipped > 0 {
+				fmt.Fprintf(out, ", %d already present", skipped)
+			}
+			fmt.Fprintf(out, " in %s\n", root)
+
+			if created > 0 || overwritten > 0 {
+				fmt.Fprintf(out, `
+Verify the skeleton before writing any CRs:
+
+  asgard-cli check
+
+Then "asgard-cli next" for what this stage requires, and AGENTS.md for how to
+change the repo.
+`)
+			}
+			return nil
+		},
+	}
+
+	cmd.Flags().BoolVarP(&force, "force", "f", false, "overwrite files that already exist")
+
+	return cmd
+}

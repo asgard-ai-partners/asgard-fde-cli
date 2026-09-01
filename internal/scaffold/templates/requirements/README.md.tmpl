@@ -1,0 +1,32 @@
+# requirements
+
+`requirements/` stores executable requirements and specs. This is the implementation source of truth for agents.
+
+Read order:
+
+1. **`docs/spec/<<.SpecSlug>>/`** — the living spec for the area you are touching. It describes
+   what the system does *today*; your task spec is a delta against it.
+2. `requirements/_index.md`
+3. `requirements/requests/_index.md` or `requirements/tasks/_index.md`
+4. Target `REQ-*.md` or `TASK-*.md`
+5. `docs/decisions/` when you need to know why something is the way it is
+6. `references/` only when more background is needed
+
+Task specs use Single-file SDD and live under `requirements/tasks/`, with sections `Meta`, `1) Requirements`, `2) Design`, `3) Implementation Tasks`, `4) Execution Log / Change Log`.
+
+Status values: `draft`, `ready`, `in-progress`, `done` (never `in_progress`).
+
+> This repo deploys Kubernetes custom resources via Helm, one chart per project under
+> `projects/<project>/chart/app`. "Design" and "Implementation Tasks" describe CR/Helm/agent
+> changes (e.g. `Agent`, `SemanticLayer`, `DataConnector`, `SkillSet`, `SourceSet`, `Syncer`,
+> values files, `deploy.yaml`, CI), not UI or application source code.
+>
+> The databases are **real** and the current architecture is **read-only** — a spec that adds a
+> `SemanticLayer`/`DataConnector`, widens which cubes an agent may query, or re-introduces a
+> write path must say so explicitly. See `docs/spec-driven-development.md`.
+
+> **A task spec is a work item, not the spec of record.** It stops being read once it reaches
+> `done`; the living spec is what the next person reads. So a task that changes behaviour is not
+> done until its delta is applied to `docs/spec/<<.SpecSlug>>/<module>.md`, and a task that
+> settles a decision writes `docs/decisions/YYYY-MM-DD-<topic>.md` for it.
+> See `docs/README.md` for the four-layer model.

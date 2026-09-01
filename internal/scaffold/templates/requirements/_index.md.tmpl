@@ -1,0 +1,52 @@
+# Requirements Index
+
+This is the entrypoint for requirement navigation.
+
+## Convention
+
+- **`docs/spec/<<.SpecSlug>>/` is the living spec** — what the system does today. Read the module
+  you are touching before writing a task spec, and apply the delta back to it when the task lands.
+- `docs/decisions/YYYY-MM-DD-*.md` are dated, immutable decision records — why it is the way it is.
+- `requirements/` is the implementation source of truth **for the work itself**.
+- `references/` is background only.
+- High-level requirements live in `requirements/requests/REQ-*.md`.
+- Executable task specs live in `requirements/tasks/TASK-*.md`.
+- Task specs use Single-file SDD with `Meta`, `1) Requirements`, `2) Design`, `3) Implementation Tasks`, and `4) Execution Log / Change Log`.
+- Acceptance criteria use `R#` identifiers and must map to implementation tasks and verification cases.
+- Status values are `draft`, `ready`, `in-progress`, and `done`.
+
+## Indexes
+
+- Living spec: `docs/spec/<<.SpecSlug>>/README.md`
+- Decisions: `docs/decisions/README.md`
+- Requests: `requirements/requests/_index.md`
+- Tasks: `requirements/tasks/_index.md`
+
+## Gates
+
+- Do not implement from `references/` directly.
+- Do not start implementation until the target task is `ready` and the user explicitly asks to begin.
+- If implementation must deviate from a ready spec, stop, ask for confirmation, update the spec, then continue.
+- A task that changed behaviour is not `done` until the delta reaches the living spec, and a task
+  that settled a decision is not `done` until that decision has its own dated record.
+- A spec touching a `SemanticLayer` / `DataConnector`, widening an agent's queryable cubes, or re-introducing a write path must state that explicitly — the databases are real and the architecture is read-only today.
+
+## Verification
+
+Implementation changes are verified by the repo's four-step gate (not by running an app).
+The `asgard-cr-verification` skill under `.agents/skills/` documents the full procedure:
+
+```bash
+asgard-cli check [project]
+
+helm lint projects/<project>/chart/app
+helm lint projects/<project>/chart/app \
+  -f projects/<project>/chart/values-dev.yaml
+
+asgard-cli verify <project>
+```
+
+`asgard-cli verify` is the step that catches dangling CR references (Agent → SemanticLayer /
+Toolset, Toolset → Workflow, SemanticLayer → DataConnector), which `helm lint` cannot see.
+
+See `AGENTS.md` for the full command reference and why deployment is CD-only.

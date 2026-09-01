@@ -1,0 +1,41 @@
+# <<.Project.Slug>> chart
+
+<<.Workspace.Name>> 的 `<<.Project.Slug>>` project(<<.Project.Name>>)所需的 Asgard CR。
+
+部署目標見 [`../deploy.yaml`](../deploy.yaml):
+<<range .Project.Environments>>
+- `<<.>>` → `asgard-<<$.Workspace.Slug>>-<<$.Project.Slug>>-<<.>>`
+<<end>>
+
+## 資產清單
+
+> **TODO** —— 每加一個 CR 就補一列。這張表是 reviewer 判斷「這個 chart 現在有什麼」
+> 最快的入口,也是部署後人工驗證的清單。
+
+| Kind | 名稱 | 用途 |
+|---|---|---|
+
+## `app-secret` 需要哪些 key
+
+> **TODO** —— 這個 project 的 CR 用到哪些憑證,逐一列出。`app-secret` 由 tf-asgard 建立,
+> 不是這個 repo;少一把 key 的症狀是 CR apply 成功但呼叫時失敗。
+
+| key | 誰在用 |
+|---|---|
+| `asgard_resource_api_key` | 平台資源憑證。**一個 namespace 一把,所有需要的 CR 共用** —— `SourceSet.apiKey`、`Toolset.apiKey`、`BotProvider.adminApiKey` 都是同一種東西,不要為每個 CR 各發一把 |
+
+## 驗證
+
+```bash
+asgard-cli check <<.Project.Slug>>
+helm lint projects/<<.Project.Slug>>/chart/app
+helm lint projects/<<.Project.Slug>>/chart/app -f projects/<<.Project.Slug>>/chart/values-dev.yaml
+asgard-cli verify <<.Project.Slug>>
+```
+
+第一關的 bare `helm lint`(不帶 `-f`)是唯一會驗「`values.yaml` 有沒有替每個 `.Values.*`
+宣告預設值」的一步,不要跳過。
+
+## 部署後人工步驟
+
+> **TODO** —— 例如上傳知識文件到 Drive、觸發第一輪同步。沒有的話寫「無」。

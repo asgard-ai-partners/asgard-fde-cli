@@ -1,0 +1,126 @@
+package cli
+
+import (
+	"errors"
+	"fmt"
+	"os"
+
+	"github.com/spf13/cobra"
+
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/config"
+)
+
+func newProjectCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "project",
+		Short: "Manage the projects recorded in " + config.FileName,
+		Long: `Manage the projects recorded in ` + config.FileName + `.
+
+A project is the unit of deployment: one Helm chart, one namespace per
+environment. An onboarding usually starts before the split is known, so projects
+are added as the engagement discovers them.`,
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return cmd.Help()
+		},
+	}
+
+	cmd.AddCommand(newProjectAddCmd())
+
+	return cmd
+}
+
+func newProjectAddCmd() *cobra.Command {
+	var (
+		name string
+		envs []string
+	)
+
+	cmd := &cobra.Command{
+		Use:   "add <slug>",
+		Short: "Add a project to " + config.FileName,
+		Long: `Add a project to ` + config.FileName + `.
+
+The slug becomes part of every namespace this project deploys to
+(asgard-<workspace>-<slug>-<env>), so keep it short: names derived from a
+namespace inherit its length, and Kubernetes caps a namespace at 63 characters.
+
+--env may be repeated and defaults to dev. The two environments are independent:
+a project may declare dev only, prod only, or both. Adding an environment later
+means running this command again with --force, or editing the config.`,
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			slug := args[0]
+
+			dir, err := os.Getwd()
+			if err != nil {
+				return fmt.Errorf("get current directory: %w", err)
+			}
+			path, err := config.Find(dir)
+			if err != nil {
+				if errors.Is(err, config.ErrNotFound) {
+					return fmt.Errorf("no %s found; run `asgard-cli init` first", config.FileName)
+				}
+				return err
+			}
+
+			cfg, err := config.Load(path)
+			if err != nil {
+				return err
+			}
+			if _, exists := cfg.Project(slug); exists {
+				return fmt.Errorf("project %q already exists in %s", slug, config.FileName)
+			}
+
+			project := config.Project{
+				Slug:         slug,
+				Name:         name,
+				Environments: parseEnvs(envs),
+			}
+			if project.Name == "" {
+				project.Name = slug
+			}
+
+			cfg.Projects = append(cfg.Projects, project)
+			if err := cfg.Validate(); err != nil {
+				return err
+			}
+			if err := config.Save(path, cfg); err != nil {
+				return err
+			}
+
+			out := cmd.OutOrStdout()
+			fmt.Fprintf(out, "Added project %q to %s\n", slug, path)
+			for _, env := range project.Environments {
+				fmt.Fprintf(out, "  %-5s %s\n", env, cfg.Namespace(slug, env))
+			}
+
+			// Both of these are ordering traps rather than things to look up
+			// later: getting either wrong fails in CD, not here.
+			fmt.Fprintf(out, `
+Before the first deploy of each environment:
+  1. tf-asgard must create the namespace and its app-secret first. Declaring an
+     environment before they exist makes the next tag fail at helm upgrade.
+  2. the project needs at least one Syncer. CD waits for a CronJob labelled
+     asgard-ai.com/syncer-name and exits 1 after 180s if it finds none, even
+     when helm upgrade succeeded.
+`)
+			return nil
+		},
+	}
+
+	cmd.Flags().StringVar(&name, "name", "", "display name for the project (defaults to the slug)")
+	cmd.Flags().StringSliceVar(&envs, "env", []string{string(config.EnvDev)}, "environment this project deploys to, repeatable")
+
+	return cmd
+}
+
+// parseEnvs converts flag strings to Env values without judging them; Validate
+// reports an unknown symbol along with everything else that is wrong.
+func parseEnvs(values []string) []config.Env {
+	envs := make([]config.Env, len(values))
+	for i, v := range values {
+		envs[i] = config.Env(v)
+	}
+	return envs
+}

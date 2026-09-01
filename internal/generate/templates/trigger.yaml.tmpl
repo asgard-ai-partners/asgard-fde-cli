@@ -1,0 +1,80 @@
+# <<.DisplayName>>
+#
+# Do NOT write a BotProvider for this. The Trigger reconciler provisions the
+# BotProvider, its API-key Secret, and the CronJob itself.
+#
+# State is one cursor, saved by the agent and injected into the next run's
+# system prompt. Do not add a look-back window and do not keep a seen-set: check
+# which field actually gets back-dated first, because a cursor column stamped at
+# write time already catches late arrivals.
+#
+# Cold start must send nothing: seed the cursor to the current maximum and exit,
+# or the first run notifies everyone about every historical record.
+apiVersion: asgard-ai.com/v1alpha1
+kind: Trigger
+metadata:
+  name: <<.CRName>>
+  annotations:
+    asgard-ai.com/trigger-name: "<<.DisplayName>>"
+  labels:
+    asgard-ai.com/trigger-suspend: {{ .Values.triggers.<<.ValuesKey>>.suspend | quote }}
+    # Both of these live on the Trigger itself. Without them the schedule fires
+    # correctly and the editor opens as a blank canvas.
+    asgard-ai.com/workflow-set-id: wf-<<.Name>>
+    asgard-ai.com/project-environment-id: {{ .Values.platformMainEnvironmentId | quote }}
+    {{- include "<<.Chart>>.labels" . | nindent 4 }}
+spec:
+  triggerClass: cron
+  cron:
+    schedule: {{ .Values.triggers.<<.ValuesKey>>.schedule | quote }}
+    timeZone: {{ .Values.triggers.<<.ValuesKey>>.timeZone | quote }}
+  entrypoint:
+    workflow: wf-<<.Name>>
+    entry: main
+---
+# The entrypoint. One agent processor, capabilities declared inline - there is
+# no Agent CR and no SandboxBlueprint in this shape.
+#
+# No listen-message processor: this is not a conversation. The Trigger fires
+# once, the run does the whole batch, and it ends.
+apiVersion: asgard-ai.com/v1alpha1
+kind: Workflow
+metadata:
+  name: wf-<<.Name>>
+  annotations:
+    asgard-ai.com/workflow-name: "<<.DisplayName>>"
+    {{- include "<<.Chart>>.workflowSetAnnotations" (dict "name" "wf-<<.Name>>" "displayName" "<<.DisplayName>>") | nindent 4 }}
+  labels:
+    {{- include "<<.Chart>>.workflowSetLabels" (dict "name" "wf-<<.Name>>" "type" "trigger") | nindent 4 }}
+    asgard-ai.com/project-environment-id: {{ .Values.platformMainEnvironmentId | quote }}
+    {{- include "<<.Chart>>.labels" . | nindent 4 }}
+spec:
+  variables: []
+  entries:
+    - name: main
+      handlingProcessor: proc-run
+      labels:
+        display_name: Entry
+  exits: []
+  processors:
+    - name: proc-run
+      type: stream-llm-completion-message
+      labels:
+        display_name: Run
+      configs:
+<<if .Layers>>        # An ARRAY: one run can mount several systems and do the cross-system
+        # matching in its own reasoning. That is what replaces an ETL.
+        - name: semanticLayers
+          expression: '[<<range $i, $l := .Layers>><<if $i>>, <<end>>{"name": "<<$l>>", "allowQuery": true}<<end>>]'
+<<else>>        # - name: semanticLayers
+        #   expression: '[{"name": "sl-<name>", "allowQuery": true}]'
+<<end>>        # Any outward action. A scheduled run cannot use a consenting tool -
+        # nobody is there to approve - so this Toolset needs requestConsent: false
+        # and must not be shared with a write path.
+        # - name: toolsets
+        #   value: ts-<name>
+        - name: prompt
+          value: |-
+            TODO: the whole instruction for the run. Say that nobody is online,
+            that it must finish the batch in one turn, and how to read the
+            <trigger_state> block that already holds the cursor.

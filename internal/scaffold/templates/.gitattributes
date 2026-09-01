@@ -1,0 +1,14 @@
+# Normalise line endings in the repository to LF.
+#
+# Without this, a clone on Windows with the default core.autocrlf=true rewrites
+# every text file to CRLF on checkout. helm itself tolerates that, but any gate
+# that compares rendered output byte for byte starts failing for a reason nobody
+# can see in a diff, and the same chart then renders differently on two
+# machines. The chart is the deployment artifact, so it has to be identical
+# everywhere.
+* text=auto eol=lf
+
+# The gate scripts are run directly and must keep LF: a CRLF shebang line makes
+# the kernel look for an interpreter whose name ends in a carriage return.
+*.py text eol=lf
+*.sh text eol=lf

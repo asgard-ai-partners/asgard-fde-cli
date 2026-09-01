@@ -1,0 +1,76 @@
+---
+name: asgard-fde-onboarding
+description: Use FIRST when working in this repo - it routes you to the right command, skill and document for whatever you are about to do, and states the rules that hold at every stage. Covers starting an onboarding, splitting the work into projects, wiring up a customer database, writing Asgard custom resources, and running the acceptance gate.
+---
+
+# <<.Workspace.Name>> onboarding
+
+> **Design time.** This skill is for the coding agent working in this repo. It is
+> never synced into the platform. Skills the *deployed* agent uses at runtime
+> live in `common/skills/` and reach the cluster through a `SkillSet` - a
+> completely separate mechanism. Do not confuse the two.
+
+This repo defines the Asgard custom resources (`asgard-ai.com/v1alpha1`) for
+<<.Workspace.Name>>, one Helm chart per project, each deployed to its own
+namespace. There is no application source code.
+
+## Start here, every session
+
+```bash
+asgard-cli next
+```
+
+It works out where the onboarding is **from the repository itself** - which files
+exist, which CR kinds each chart declares - and prints that stage's guidance.
+
+Run it again after each step rather than working from memory. It cannot claim
+work is finished that is not, and it stays right when a step was done by hand.
+
+**Do not reproduce what it says.** Run it and follow it: the guidance is
+versioned with the tool, while a copy pasted into a transcript goes stale.
+
+## Routing
+
+| what you are doing | where to look |
+|---|---|
+| anything, first | `asgard-cli next` |
+| **about to write a CR** | `asgard-cli usecase` - the shape, its skeleton, and its traps |
+| you know the requirement but not the shape | `asgard-cli usecase --search "<the customer's words>"` |
+| how to change this repo - layout, conventions, CRD traps | `AGENTS.md` |
+| what the system currently does | `docs/spec/<<.SpecSlug>>/` |
+| why something was decided | `docs/decisions/` |
+| a `SemanticLayer` or `DataConnector`, or any query against a customer database | `semantic-layer-modeling` skill |
+| before committing anything under `projects/*/chart` or `common/` | `asgard-cr-verification` skill |
+| work that needs a spec before implementation | `spec-workflow` skill |
+| registering a new project | `asgard-cli project add <slug>`, then `asgard-cli scaffold` |
+
+## The question behind the three big decisions
+
+The read path, the entry point, and where unstructured knowledge lives all
+follow from one question:
+
+> **Who is on the other end - an internal caller that can authenticate, or an
+> anonymous visitor?**
+
+An internal audience and a public one need different shapes, and that is not a
+preference: it follows from what the platform can and cannot do. Each of the
+three has an obvious answer that has already been proven wrong in production.
+`asgard-cli next` states the reversal when you reach that stage; `AGENTS.md` has
+the same three under "The three decisions that get answered wrong".
+
+**Establish the audience before designing anything.**
+
+## Rules that hold at every stage
+
+- **Never guess a schema.** Connect to the real database and introspect it.
+  Reasoning about a schema is not verifying it.
+- **Source systems are read-only** until a spec says otherwise. Any write path
+  points outward, never at a source system, and needs human approval.
+- **Run the gate before committing** anything under `projects/*/chart` or
+  `common/`, and stop at the first red step.
+- **Write the decision down the day it is settled** -
+  `docs/decisions/YYYY-MM-DD-<topic>.md`, saying why the rejected option was
+  rejected. That sentence is the only part nobody can reconstruct later.
+- **A behaviour change is not done** until the delta reaches
+  `docs/spec/<<.SpecSlug>>/`. A task spec stops being read once it is done; the
+  living spec is what the next person reads.

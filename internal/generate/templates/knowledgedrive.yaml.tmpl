@@ -1,0 +1,72 @@
+# <<.DisplayName>> —— 知識 Drive
+#
+# Unstructured knowledge: documents, FAQs, pages. NOT anything a query answers
+# exactly - counts, prices, stock, contact details belong to a query tool, and
+# putting them here makes the agent paraphrase a number it should have read.
+#
+# KnowledgeBase is deprecated. If you find it in an older chart with Loader CRs
+# and retrieval workflows, it is not a template to copy.
+apiVersion: asgard-ai.com/v1alpha1
+kind: SourceSet
+metadata:
+  name: <<.CRName>>
+  annotations:
+    asgard-ai.com/source-set-name: "<<.DisplayName>>"
+    asgard-ai.com/source-set-description: "TODO: what knowledge this holds"
+  labels:
+    # To pause indexing, set this label. Do NOT remove the contextIndex field -
+    # clearing it tears down the derived CRs and renames the index aside.
+    asgard-ai.com/context-index-suspend: {{ .Values.<<.ValuesKey>>.contextIndex.suspend | quote }}
+    {{- include "<<.Chart>>.labels" . | nindent 4 }}
+spec:
+  apiKey:
+    valueFrom:
+      secretKeyRef:
+        key: asgard_resource_api_key
+        name: {{ include "<<.Chart>>.appSecretName" . }}
+  # No member registry: what is in the Drive is whatever its Syncers write, plus
+  # anything uploaded by hand. The paths are the truth.
+  #
+  # Setting contextIndex derives three same-named CRs that mount the Drive
+  # writable and build the knowledge graph on a cron.
+  contextIndex:
+    cron:
+      schedule: {{ .Values.<<.ValuesKey>>.contextIndex.schedule | quote }}
+      timeZone: {{ .Values.<<.ValuesKey>>.timeZone | quote }}
+    prompt: |-
+      TODO: domain knowledge only - this is appended to the platform's own
+      indexing instructions. Three things earn their place:
+        - what each folder holds, one line each
+        - the key, and which copy wins. With incremental sync the same record
+          appears in several dated partitions - say which one is current, or
+          the graph treats stale versions as facts
+        - what a field means where the name does not carry it
+---
+# One Syncer per folder that is filled automatically. A folder people upload to
+# by hand needs no Syncer at all.
+apiVersion: asgard-ai.com/v1alpha1
+kind: Syncer
+metadata:
+  name: syn-<<.Name>>-db
+  annotations:
+    asgard-ai.com/syncer-name: "<<.DisplayName>> 資料同步"
+  labels:
+    # The platform's switch: stops the scheduler, does NOT stop CD.
+    asgard-ai.com/syncer-suspend: {{ .Values.<<.ValuesKey>>.dbSync.suspend | quote }}
+    {{- include "<<.Chart>>.labels" . | nindent 4 }}
+spec:
+  sourceSetName: <<.CRName>>
+  # Relative path inside the volume: no leading /, no . or .. segment, no //.
+  # Must end with / for a database or web syncer.
+  destinationPath: "data/"
+  # Where the incremental cursor lives. Must NOT end with /.
+  statePath: ".syncer-state/<<.Name>>-db"
+  syncerClass: database
+  schedule: {{ .Values.<<.ValuesKey>>.dbSync.schedule | quote }}
+  timeZone: {{ .Values.<<.ValuesKey>>.timeZone | quote }}
+  database:
+    dataConnectorName: <<.Connector>>
+    # Immutable: changing the projection means a new Syncer, not an edit.
+    columns: []
+    # A strictly-greater-than cursor. A day with no changes writes nothing.
+    isMaxValueColumn: TODO

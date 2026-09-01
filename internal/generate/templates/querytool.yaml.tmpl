@@ -1,0 +1,95 @@
+# <<.DisplayName>>
+#
+# A zero-parameter query. No user input reaches SQL, so the injection surface is
+# zero - that property is the reason this shape exists for a public audience.
+# Do not add parameters: interpolating a keyword re-opens exactly the hole it
+# closes. A query that wants a filter gets rewritten to aggregate instead.
+#
+# Do not ship a second tool on the same FROM/JOIN differing only in projection:
+# each description then has to name the other as the alternative, which is where
+# a model picks wrong. Make the difference a column value.
+apiVersion: asgard-ai.com/v1alpha1
+kind: Workflow
+metadata:
+  name: <<.CRName>>
+  annotations:
+    asgard-ai.com/workflow-name: "<<.DisplayName>>"
+    {{- include "<<.Chart>>.workflowSetAnnotations" (dict "name" "<<.CRName>>" "displayName" "<<.DisplayName>>") | nindent 4 }}
+  labels:
+    {{- include "<<.Chart>>.workflowSetLabels" (dict "name" "<<.CRName>>" "type" "automation_tool") | nindent 4 }}
+    {{- with .Values.platformMainEnvironmentId }}
+    asgard-ai.com/project-environment-id: {{ . | quote }}
+    {{- end }}
+    {{- include "<<.Chart>>.labels" . | nindent 4 }}
+spec:
+  variables: []
+  entries:
+    - name: entry-main
+      handlingProcessor: proc-query
+      labels:
+        display_name: Entry
+      inputSchema: |-
+        {
+          "type": "object",
+          "properties": {}
+        }
+      tooling:
+        name: <<.Name>>
+        description: |-
+          TODO: what it returns, how many rows, and when to reach for it.
+          Record the row count you measured, and when you measured it.
+        allowUploadFile: false
+  exits: []
+  processors:
+    - name: proc-query
+      type: query-database
+      labels:
+        display_name: SQL
+      configs:
+        - name: dataConnector
+          value: <<.Connector>>
+        - name: resultField
+          value: rows
+        - name: sql
+          value: |-
+            -- TODO. Run it against the live database before committing.
+            -- Put the reasoning in this comment: soft deletes, why a COUNT is
+            -- DISTINCT, how a path is built. There is nowhere else for it.
+            select 1
+<<if .ToolsetExists>># The Toolset <<.Toolset>> already exists in this chart, so it is not written
+# again here: two CRs with one name means whichever applies last replaces the
+# other, and the tools in the discarded copy are silently gone.
+#
+# Add this tool to the existing set instead - one entry under its `tools`:
+#
+#     - entrypoint:
+#         entry: entry-main
+#         workflow: <<.CRName>>
+#       requestConsent: false
+#       name: <<.Name>>
+#       description: |-
+#         TODO. This is the text the model reads to choose between tools, so it
+#         has to name the other tool it could be confused with.
+<<else>>---
+apiVersion: asgard-ai.com/v1alpha1
+kind: Toolset
+metadata:
+  name: <<.Toolset>>
+  annotations:
+    asgard-ai.com/toolset-name: "<<.DisplayName>>"
+    asgard-ai.com/toolset-description: "TODO"
+  labels:
+    {{- include "<<.Chart>>.labels" . | nindent 4 }}
+spec:
+  toolsetClass: workflow-tooling
+  apiKey:
+    valueFrom:
+      secretKeyRef:
+        key: asgard_resource_api_key
+        name: {{ include "<<.Chart>>.appSecretName" . }}
+  tools:
+    - entrypoint:
+        entry: entry-main
+        workflow: <<.CRName>>
+      requestConsent: false
+<<end>>

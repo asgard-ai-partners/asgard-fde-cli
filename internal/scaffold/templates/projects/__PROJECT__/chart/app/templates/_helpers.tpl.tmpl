@@ -1,0 +1,83 @@
+{{- define "<<.Project.Slug>>.name" -}}
+{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{- define "<<.Project.Slug>>.fullname" -}}
+{{- if .Values.fullnameOverride }}
+{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- $name := default .Chart.Name .Values.nameOverride }}
+{{- if contains $name .Release.Name }}
+{{- .Release.Name | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{- define "<<.Project.Slug>>.chart" -}}
+{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{- define "<<.Project.Slug>>.labels" -}}
+helm.sh/chart: {{ include "<<.Project.Slug>>.chart" . }}
+{{ include "<<.Project.Slug>>.selectorLabels" . }}
+# Audit-log product dimension: every Asgard CR this chart applies is the
+# Platform's. asgard-core echoes it into every audit event; the preset
+# reconcilers stamp agent-hub / data-insight on their own.
+asgard-ai.com/product: platform
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+
+{{- define "<<.Project.Slug>>.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "<<.Project.Slug>>.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+app: {{ include "<<.Project.Slug>>.name" . }}
+{{- end }}
+
+{{- define "<<.Project.Slug>>.appSecretName" -}}
+{{- default "app-secret" .Values.appSecretName }}
+{{- end }}
+
+{{/*
+Workflow-set metadata —— 沒有這組東西,Workflow 在 Platform UI 上是隱形的。
+
+平台不以「Workflow CR」為 UI 單位,而是以 **workflow set**:一組共用
+`asgard-ai.com/workflow-set-id` 的 Workflow,其中恰有一支帶 `main-workflow-set: "true"`。
+沒有這組 label 的 Workflow 不屬於任何 set,UI 就沒有東西可以列 —— 而 apply 完全正常,
+lint、CRD 驗證都不會有任何反應,只有打開 UI 才看得出來。
+
+set 的型別決定它出現在哪一區(權威來源:asgard-workflow-service/internal/shared.go):
+  bot             → Flow Agents。BotProvider 指向這個 set 裡的 workflow 時,
+                    才會被列成它的 release(channel 或 Agent Hub)。
+  automation_tool → Automations(API / MCP 消費),也是 Toolset 工具選單過濾的依據。
+  trigger         → 屬於它的 Trigger,刻意不出現在 Automations。
+
+用法:
+  {{- include "<<.Project.Slug>>.workflowSetLabels" (dict "name" "wf-xxx" "type" "bot") | nindent 4 }}
+  {{- include "<<.Project.Slug>>.workflowSetAnnotations" (dict "name" "wf-xxx" "displayName" "顯示名") | nindent 4 }}
+
+`workflow-set-id` / `workflow-key` 這裡都直接用 CR 名字 —— 一支 workflow 自成一個 set,
+名字天然唯一,而且人看得懂。(平台自己在 UI 建立時是發 snowflake ID;GitOps 沒有那個
+需求,取名字更好追。)
+*/}}
+{{- define "<<.Project.Slug>>.workflowSetLabels" -}}
+asgard-ai.com/main-workflow-set: "true"
+asgard-ai.com/workflow-key: {{ .name | quote }}
+asgard-ai.com/workflow-set-id: {{ .name | quote }}
+asgard-ai.com/workflow-set-type: {{ .type }}
+{{- end }}
+
+{{/*
+`workflow-set-name` 是 set 在 UI 上的顯示名(`workflow-name` 是單支 workflow 的)。
+
+畫布版面不由 chart 管:沒有 node_positions ConfigMap 時後端會做拓樸自動排版;
+使用者拖過之後平台自建 ConfigMap 保存。版面的 SoT 在 UI。
+*/}}
+{{- define "<<.Project.Slug>>.workflowSetAnnotations" -}}
+asgard-ai.com/workflow-set-name: {{ .displayName | quote }}
+{{- end }}

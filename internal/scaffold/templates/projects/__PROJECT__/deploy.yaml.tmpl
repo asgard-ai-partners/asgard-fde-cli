@@ -1,0 +1,20 @@
+# projects/<<.Project.Slug>>/deploy.yaml
+#
+# 本 project 的部署宣告 —— 這裡是「部署目標」的單一事實來源:CI
+# (.github/workflows/main.yaml)掃 projects/*/deploy.yaml 產生部署 matrix,
+# 本地的 asgard-cli render 也讀同一份檔,所以 CI 與本地不會漂。
+#
+# environments 底下列了哪些 env(dev / prod),就只部署那些 env(兩邊可不對稱)。
+# env 合法符號固定為兩個:dev、prod。
+#   namespace —— 部署到的 K8s namespace(由這裡指定)。
+#   values    —— 該 env 要疊加的 project values 檔,路徑相對於本 project 資料夾。
+#                (CI / asgard-cli render 會再在它之前疊加跨 project 共用的 common/values-<env>.yaml)
+#
+# 加一個 env 之前,先在 tf-asgard 建好該 env 的 namespace 與 app-secret ——
+# 順序反了的話,下一個 tag 會在 helm upgrade 這一步失敗。
+
+environments:
+<<range .Project.Environments>>  <<.>>:
+    namespace: asgard-<<$.Workspace.Slug>>-<<$.Project.Slug>>-<<.>>
+    values: chart/values-<<.>>.yaml
+<<end>>

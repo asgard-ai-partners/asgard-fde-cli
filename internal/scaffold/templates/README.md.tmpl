@@ -1,0 +1,146 @@
+# <<.RepoName>>
+
+**<<.Workspace.Name>> 的 Agentic 應用所需的全部 Asgard CR,都在這裡定義與部署。**
+
+工作方式是 **spec-driven**:`requirements/` 是實作的事實來源(見下方 Spec-Driven Development)。
+
+每個 **project** 是一份獨立 Helm chart,放在 `projects/<project>/`:
+
+<!-- asgard-cli:managed:start -->
+<!-- 這張表由 `asgard-cli scaffold` 依 .asgard-config.json 維護,兩個標記之間的內容
+     每次 scaffold 都會重寫。說明欄要填的話,填在標記外面的段落。
+     asgard-cli check 會比對這張表與 projects/ 底下實際的資料夾。 -->
+
+| Project | 目錄 | 部署 | 說明 |
+|---|---|---|---|
+<<range .Projects>>| <<.Name>> | `projects/<<.Slug>>/` | <<.EnvList>> | TODO |
+<<end>><<if not .Projects>>
+> 還沒有 project。用 `asgard-cli project add <slug>` 新增,再跑一次 `asgard-cli scaffold`。
+<<end>>
+<!-- asgard-cli:managed:end -->
+**部署目標寫在 `projects/<project>/deploy.yaml`** —— 每個 env 一組 namespace + values 檔。
+CI 與本地 `asgard-cli render` 讀同一份宣告,所以兩邊一致。namespace 慣例為
+`asgard-<<.Workspace.Slug>>-<slug>-<env>`,`<slug>` 刻意留短以免衍生物件名太長。
+
+> **要為某個 project 啟用一個 env,順序不能反**:先在 tf-asgard 建好該 env 的 namespace 與
+> `app-secret`,再補 `environments.<env>` 與對應的 `chart/values-<env>.yaml`。反過來的話,
+> 下一個 tag 會在 `helm upgrade` 這一步失敗。
+
+全部細節見 [`AGENTS.md`](AGENTS.md)。
+
+## 目錄
+
+```
+AGENTS.md                    # coding agent 的單一事實來源(CLAUDE.md 只是 @AGENTS.md 指標)
+docs/
+  README.md                  # 文件目錄索引 + 四層心智模型 + 與 AGENTS.md 的分界
+  spec-driven-development.md # SDD 規範
+  spec/<<.SpecSlug>>/          # ★ Living Spec —— 系統**當下**的行為規格(先讀這個)
+  decisions/                 # dated 決議紀錄(不可變,回答「當初為什麼」)
+  meeting-notes/             # raw 會議 / issue 輸入(收斂前;可省略的一層)
+requirements/                # 實作事實來源(requests / tasks + _index)
+references/                  # 背景資料(不可直接照著實作)
+.agents/skills/              # design-time 技能(給在這個 repo 工作的 coding agent)
+.github/workflows/main.yaml  # CD:tag 觸發,依各 project 的 deploy.yaml 展開部署 matrix
+common/
+  values-{dev,prod}.yaml     # 跨 project 共用的每-env 值
+  skills/<skill>/SKILL.md    # runtime 技能來源(由各 SkillSet 挑選,同步進平台)
+  asgard-cli render                  # 本地渲染 helper(讀 deploy.yaml,與 CI 同一事實來源);只渲染、不部署
+scripts/
+  asgard-cli check  # 結構不變量(README registry / deploy.yaml / skills / 索引 / docs 規格層)
+  asgard-cli verify        # 渲染後的 CR 交叉引用完整性
+  asgard-cli verify       # 一系統一 Agent 的不變量
+  check_crd_fidelity.py      # 對目標叢集的 CRD 保真度(欄位會不會被靜默丟棄)
+  db/                        # 對客戶資料庫做查詢與 schema 探勘(隨接上的系統增加)
+projects/<project>/
+  deploy.yaml                # 部署宣告:每個 env 的 namespace + values 檔
+  chart/{app/templates,values-{dev,prod}.yaml}
+```
+
+### 技能放哪裡 —— 兩種技能,不可混用
+
+| | `.agents/skills/` | `common/skills/` |
+|---|---|---|
+| 給誰用 | **在這個 repo 工作的 coding agent** | **部署後的 Asgard agent** |
+| 什麼時候 | design time(寫 CR 的時候) | runtime(回答使用者的時候) |
+| 怎麼生效 | 任何認 `.agents/skills` 的 coding agent 直接從工作目錄讀 | commit → SourceSet 同步 → `SkillSet.searchPaths` 選取 → 由 Agent 或 SandboxBlueprint 綁定 |
+| 會進叢集嗎 | 不會 | 會,那就是目的 |
+
+`common/skills/` 的 `searchPaths` 要**逐個技能目錄**列出,不能只列父目錄(平台以「一個
+searchPath = 一個技能目錄」解析)。
+
+## Spec-Driven Development
+
+文件分四層,**時態不同**是它們分家的唯一理由:
+
+```
+docs/meeting-notes/   raw 原始輸入(收斂前)         ── 可省略的一層
+docs/decisions/       dated 決議紀錄(不可變)        ── 「當初為什麼這樣定」
+docs/spec/<slug>/     ★ Living Spec(持續改寫)      ── 「現在的行為是什麼」
+requirements/tasks/   可執行任務規格(draft→done)   ── 「這件工作怎麼做、怎麼驗」
+```
+
+- **接手這個 repo 先讀 [`docs/spec/<<.SpecSlug>>/`](docs/spec/<<.SpecSlug>>/)** ——
+  它是系統當下行為的唯一描述。`AGENTS.md` 回答的是另一個問題:**怎麼改這個 repo**。
+  同一件事只寫一邊,分界見 [`docs/README.md`](docs/README.md)。
+- **一份 task spec 是對 living spec 的 delta**,不是規格本身。它到 `done` 之後就不再被讀,
+  所以行為變了要把 delta 套回 living spec,順帶定案的決策要寫一份 `docs/decisions/`。
+
+## 環境設定(一次性)
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -r scripts/db/requirements.txt
+cp .env.example .env                                   # 再填入各資料庫的連線值
+brew install helm                                      # 只需要 helm;asgard-cli doctor 會告訴你缺什麼
+```
+
+`.env` 的非密碼欄位可從各 project 的 `chart/values-dev.yaml` 對照填;密碼從 cluster secret 取:
+
+```bash
+kubectl get secret app-secret -n <namespace> -o jsonpath='{.data.<key>}' | base64 -d
+```
+
+### `.env` 與 `app-secret` 是兩套東西,不要混
+
+|  | `.env` | `app-secret`(K8s Secret) |
+|---|---|---|
+| 誰讀 | **你的筆電**上的 `scripts/db/*` 工具鏈 | **叢集裡**的 Asgard CR |
+| 誰建 | 你自己 `cp .env.example .env` | **tf-asgard**(Terraform),不是這個 repo |
+| 放什麼 | 只有 DB 連線 | 所有 CR 用到的憑證 |
+| 會進叢集嗎 | **不會**,完全不參與部署 | 會,CR 以 `secretKeyRef` 取用 |
+
+chart 裡**永遠只寫 `secretKeyRef`**,憑證值不進 values、不進 git。
+
+## 驗收閘門
+
+四關(project 可省略=全 repo);完整程序見 `.agents/skills/asgard-cr-verification/`:
+
+```bash
+asgard-cli check [project]
+helm lint projects/<project>/chart/app -f projects/<project>/chart/values-dev.yaml
+asgard-cli verify <project>
+```
+
+第四關要對部署目標叢集跑(唯讀,需要 `kubectl`):`kubectl apply --dry-run=server` 與
+`check_crd_fidelity.py`。兩者抓的東西不同 —— dry-run 答「會不會被接受」,fidelity 答
+「會不會被留下」。任何一步紅就停。
+
+## 部署
+
+推 tag 觸發 `.github/workflows/main.yaml`,部署所有「在自己的 `deploy.yaml` 宣告了該 env」
+的 project:
+
+| tag | env |
+|---|---|
+| `dev-X.Y.Z` | dev |
+| `X.Y.Z` | prod |
+
+> [!IMPORTANT]
+> **部署一律走 CD,不要從本機 `helm upgrade`。** 理由見 [`AGENTS.md`](AGENTS.md) 的 Deploy / CI。
+
+## 目前狀態
+
+- [x] repo 骨架(docs 四層、requirements、scripts 驗收工具、design-time 技能、CD)
+<<range .Projects>>- [ ] `<<.Slug>>` 的 CR
+<<end>>
