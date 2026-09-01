@@ -53,7 +53,7 @@ nfpms:
     package_name: asgard-cli
     vendor: Asgard AI Partners
     homepage: https://github.com/asgard-ai-partners/asgard-fde-cli
-    maintainer: Asgard AI Partners <dev@asgard-ai.com>
+    maintainer: Asgard AI Partners <service@asgard-ai.com>
     description: Command line tool for Asgard FDE.
     license: Proprietary
     formats:
