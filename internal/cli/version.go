@@ -15,7 +15,14 @@ func newVersionCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "version",
 		Short: "Print version and build information",
-		Args:  cobra.NoArgs,
+		Long: `Print version and build information.
+
+The version, commit and build date come from the ldflags GoReleaser sets when it
+builds a release. A binary from a plain go build or go install reports "dev" and
+falls back to the module and VCS metadata the Go toolchain embeds.
+
+Use --json when a script needs to read the values.`,
+		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			info := version.Get()
 			out := cmd.OutOrStdout()

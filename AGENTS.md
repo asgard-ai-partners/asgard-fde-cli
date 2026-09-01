@@ -12,6 +12,23 @@ commit messages are all written in English.
 return fmt.Errorf("write %s: %w", path, err)
 ```
 
+## Every command must document itself
+
+A command that cannot explain itself is not finished. When adding a subcommand:
+
+- `Short` is a one-line summary, shown in the parent's command list.
+- `Long` explains what the command does, its defaults, and how it fails. It must
+  say more than `Short` repeats. Include an example when the usage is not obvious.
+- Every flag needs usage text, and says there if it is required or what it
+  defaults to.
+- Never register a flag the code does not read. An option that silently does
+  nothing is worse than no option at all.
+
+cobra gives every command a `--help` flag for free, but nothing stops that help
+from being empty, so `internal/cli/help_test.go` walks the whole command tree and
+fails the build on any command that skips the above. Run `go test ./internal/cli/`
+after adding a command; do not weaken those tests to make a new command pass.
+
 ## Plain ASCII only, no emoji
 
 Source code, comments, command output, documentation and commit messages stay in

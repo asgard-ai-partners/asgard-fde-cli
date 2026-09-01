@@ -10,8 +10,6 @@ import (
 // NewRootCmd builds the root command. Every call returns a fresh tree so tests
 // cannot interfere with one another.
 func NewRootCmd() *cobra.Command {
-	var verbose bool
-
 	cmd := &cobra.Command{
 		Use:   "asgard-cli",
 		Short: "Command line tool for Asgard FDE",
@@ -31,7 +29,6 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 		},
 	}
 
-	cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "enable verbose output")
 	cmd.SetVersionTemplate("{{.Name}} {{.Version}}\n")
 
 	cmd.AddCommand(
