@@ -1,0 +1,36 @@
+# <<.DisplayName>> —— 能力包
+#
+# A bundle a blueprint loads by name, and can choose per request. Use one when
+# the same agent needs different capabilities on different turns; when the set
+# is fixed, attach the skills directly and skip this.
+#
+# Decide the axes before the fifth bundle - the naming IS the taxonomy. One that
+# works: what it knows, versus how it presents.
+apiVersion: asgard-ai.com/v1alpha1
+kind: Plugin
+metadata:
+  name: <<.CRName>>
+  labels:
+    {{- include "<<.Chart>>.labels" . | nindent 4 }}
+spec:
+  skillSets:
+    - name: sk-<<.Name>>
+  # Written explicitly rather than omitted, so the bundle reads as
+  # "this one carries skills only".
+  toolsets: []
+  sourceSetMounts: []
+  hooks: []
+---
+apiVersion: asgard-ai.com/v1alpha1
+kind: SkillSet
+metadata:
+  name: sk-<<.Name>>
+  annotations:
+    asgard-ai.com/skill-set-name: "<<.DisplayName>>"
+  labels:
+    {{- include "<<.Chart>>.labels" . | nindent 4 }}
+spec:
+  sourceSetName: <<if .Connector>><<.Connector>><<else>>ss-skill-repos<<end>>
+  searchPaths:
+    # One path per skill directory. A parent directory resolves to nothing.
+    - TODO/

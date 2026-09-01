@@ -1,0 +1,130 @@
+# <<.DisplayName>>
+#
+<<if .Write>># A WRITE path. The gate is requestConsent: true on the Toolset entry below -
+# the harness intercepts the call and waits for a person.
+#
+# Do not describe an approval flow in any prompt: the gate is the harness's, and
+# prompting around it only adds a fake one the model can talk itself past.
+#
+# This Toolset must NOT be reachable from a Trigger. A scheduled run has nobody
+# to approve, so requestConsent: true parks it until it times out.
+<<else>># A read tool. requestConsent: false because it changes nothing.
+<<end>>#
+# TODO before this is usable:
+#   1. The endpoint, in chart/values-<env>.yaml.
+#   2. The request body - measure it against the real API, do not infer it from
+#      the field names on our side.
+#   3. Auth: add the header as a config, reading a secretKeyRef. Do NOT declare
+#      a secretKeyRef for a key infra has not created yet - config evaluation
+#      fails at call time, so it deploys and then breaks on first use.
+apiVersion: asgard-ai.com/v1alpha1
+kind: Workflow
+metadata:
+  name: <<.CRName>>
+  annotations:
+    asgard-ai.com/workflow-name: "<<.DisplayName>>"
+    {{- include "<<.Chart>>.workflowSetAnnotations" (dict "name" "<<.CRName>>" "displayName" "<<.DisplayName>>") | nindent 4 }}
+  labels:
+    {{- include "<<.Chart>>.workflowSetLabels" (dict "name" "<<.CRName>>" "type" "automation_tool") | nindent 4 }}
+    {{- with .Values.platformMainEnvironmentId }}
+    asgard-ai.com/project-environment-id: {{ . | quote }}
+    {{- end }}
+    {{- include "<<.Chart>>.labels" . | nindent 4 }}
+spec:
+  variables: []
+  entries:
+    - name: entry-main
+      handlingProcessor: proc-input
+      labels:
+        display_name: Entry
+      inputSchema: |-
+        {
+          "type": "object",
+          "properties": {
+            "TODO": {
+              "type": "string",
+              "description": "TODO: what to pass, and what NOT to pass."
+            }
+          },
+          "required": ["TODO"]
+        }
+      tooling:
+        # snake_case: this is the name the model sees, not the CR name.
+        name: <<.Name>>
+        description: |-
+          TODO: what it does and what it returns.
+          Say explicitly that the agent must call this rather than answer from
+          memory, and say what an empty result means - otherwise it will treat
+          "nothing found" as a failed lookup and try another way.
+        allowUploadFile: false
+  exits: []
+  processors:
+    # MUST come first. After http-request, prevPayload is the HTTP response,
+    # not the tool arguments - anything not pulled into context here is gone.
+    - name: proc-input
+      type: update-context
+      labels:
+        display_name: read parameters
+      configs:
+        - name: inputValue
+          expression: |-
+            (() => {
+              return String(prevPayload.TODO || "").trim();
+            })()
+
+    - name: proc-call
+      type: http-request
+      labels:
+        display_name: HTTP Request
+      configs:
+        - name: url
+          value: {{ .Values.<<.ValuesKey>>.endpoint | quote }}
+        - name: method
+          value: <<if .Write>>POST<<else>>GET<<end>>
+        # A string, like every config value.
+        - name: parseJson
+          value: "true"
+        - name: body
+          expression: |-
+            (() => {
+              return JSON.stringify({ TODO: inputValue });
+            })()
+        # Headers are configs, named after the header.
+        - name: Content-Type
+          value: application/json
+
+    - name: proc-response
+      type: push-message
+      labels:
+        display_name: Response
+      configs:
+        - name: payload
+          expression: |-
+            (() => {
+              // Guard the whole path: a failed call leaves httpResponse absent,
+              // and an expression that throws takes the tool with it.
+              const body = (httpResponse && httpResponse.json) || null;
+              return { raw: body };
+            })()
+---
+apiVersion: asgard-ai.com/v1alpha1
+kind: Toolset
+metadata:
+  name: <<.Toolset>>
+  annotations:
+    asgard-ai.com/toolset-name: "<<.DisplayName>>"
+    asgard-ai.com/toolset-description: "TODO"
+  labels:
+    {{- include "<<.Chart>>.labels" . | nindent 4 }}
+spec:
+  toolsetClass: workflow-tooling
+  apiKey:
+    valueFrom:
+      secretKeyRef:
+        key: asgard_resource_api_key
+        name: {{ include "<<.Chart>>.appSecretName" . }}
+  tools:
+    - entrypoint:
+        entry: entry-main
+        workflow: <<.CRName>>
+      requestConsent: <<if .Write>>true<<else>>false<<end>>

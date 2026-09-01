@@ -1,0 +1,55 @@
+# <<.DisplayName>> —— 對話流程
+#
+# The prompt lives here, on the processor. There is no Agent CR in this shape.
+#
+# Keep the graph minimal: greet, listen, answer, back to listen. Routing between
+# topics is the orchestrator's job, informed by the prompt - a workflow per topic
+# puts the routing in two places.
+#
+# Without the workflow-set labels below, this workflow belongs to no set and the
+# UI has nothing to list, while runtime is perfectly fine. Nothing in lint, CRD
+# validation or a dry-run reveals that.
+apiVersion: asgard-ai.com/v1alpha1
+kind: Workflow
+metadata:
+  name: wf-<<.Name>>
+  annotations:
+    asgard-ai.com/workflow-name: "<<.DisplayName>>"
+    {{- include "<<.Chart>>.workflowSetAnnotations" (dict "name" "wf-<<.Name>>" "displayName" "<<.DisplayName>>") | nindent 4 }}
+  labels:
+    {{- include "<<.Chart>>.workflowSetLabels" (dict "name" "wf-<<.Name>>" "type" "bot") | nindent 4 }}
+    {{- with .Values.platformMainEnvironmentId }}
+    asgard-ai.com/project-environment-id: {{ . | quote }}
+    {{- end }}
+    {{- include "<<.Chart>>.labels" . | nindent 4 }}
+spec:
+  variables: []
+  entries:
+    - name: entry-main
+      handlingProcessor: proc-answer
+      labels:
+        display_name: Entry
+  exits: []
+  processors:
+    - name: proc-answer
+      type: stream-llm-completion-message
+      labels:
+        display_name: 回答
+      configs:
+        # Capabilities live one CR further out, on the blueprint. Do NOT also
+        # declare toolsets here - that is a second declaration of the same
+        # capability, and the two drift.
+        - name: sandboxBlueprint
+          value: sbp-<<.Name>>
+        - name: prompt
+          value: |-
+            TODO: four sections that do not overlap.
+              identity      who this is, and that it works through tools rather
+                            than from memory
+              tool choice   which kind of question goes to which capability,
+                            described by what it does, NOT by CR or tool names
+              data meaning  what the numbers mean, what is excluded, how fresh
+                            they are, and what to say when something is missing
+              format        how to answer, and what never to say
+            Keep it high-level: naming a tool here means editing the prompt
+            every time the tools change.

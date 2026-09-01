@@ -1,0 +1,15 @@
+<<.Project.Name>>(<<.Project.Slug>>)已部署到 namespace {{ .Release.Namespace }}。
+
+這個 chart 只包含 Asgard 的 custom resource,沒有 workload —— 沒有 Pod、Service 或
+Ingress 可以看。要確認它有沒有生效,看 CR 本身:
+
+  kubectl get -n {{ .Release.Namespace }} \
+    agents.asgard-ai.com,semanticlayers.asgard-ai.com,dataconnectors.asgard-ai.com,\
+toolsets.asgard-ai.com,workflows.asgard-ai.com,botproviders.asgard-ai.com,\
+skillsets.asgard-ai.com,sourcesets.asgard-ai.com,syncers.asgard-ai.com,triggers.asgard-ai.com
+
+CR 的 status 是平台 reconcile 的結果:
+
+  kubectl describe -n {{ .Release.Namespace }} <kind> <name>
+
+Chart: {{ .Chart.Name }}-{{ .Chart.Version }}, appVersion {{ .Chart.AppVersion }}

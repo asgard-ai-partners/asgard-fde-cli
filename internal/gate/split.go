@@ -1,0 +1,141 @@
+package gate
+
+import (
+	"fmt"
+	"sort"
+	"strings"
+)
+
+const (
+	publishedLabel = annotationPrefix + "agent-published"
+
+	// minSampleQuestions is what a published Agent needs. Unpublished ones are
+	// exempt: they are not going to be given work yet.
+	minSampleQuestions = 2
+)
+
+// AgentSplit checks the "one system, one Agent" split.
+//
+// None of these break helm lint or apply. They make the orchestrator route
+// wrongly, or let an agent's search space grow back:
+//
+//	R1   at most one semantic layer per Agent, and no layer bound twice. At
+//	     most, not exactly: zero is legal, and its search space cannot grow.
+//	R1b  but an Agent cannot have no capability at all - a layer or a Toolset,
+//	     at least one - so that deleting a layer by accident does not pass
+//	     quietly.
+//	R4   no Agent sets allowedCubes, which keeps the standing decision that a
+//	     bound layer is queryable in full.
+//	R7   a published Agent has at least two sampleQuestions. Published is the
+//	     agent-published label, and that label is the only gate on whether a
+//	     caller includes the Agent in agent_hub.agent_names.
+//	R10  no Agent references an OLAP-only layer.
+//	R12  prompt.task and prompt.format are byte-identical across every Agent in
+//	     one render. An Agent CR has no include mechanism, so a shared section
+//	     can only be copied; keeping the copies identical is what lets a later
+//	     change be one substitution and be verified with a diff.
+//
+// Zero Agents is legal and passes: a pure Flow Agent project keeps its prompt in
+// a Workflow and its capability in a SandboxBlueprint, so its chart has no Agent
+// CR at all. The summary says "0 agent(s)" so that a project that lost its
+// Agents by accident is visible to a reviewer.
+func AgentSplit(docs []Doc, opts Options) Result {
+	ix := newIndex(docs)
+	agents := ix.of("Agent")
+
+	olapOnly := map[string]bool{}
+	for _, name := range opts.OLAPOnlyLayers {
+		olapOnly[name] = true
+	}
+
+	var problems []string
+	errf := func(format string, args ...any) {
+		problems = append(problems, fmt.Sprintf(format, args...))
+	}
+
+	boundBy := map[string]string{} // layer -> the first Agent that bound it
+	published := 0
+	var allLayers []string
+
+	for _, a := range agents {
+		managed := mapOf(a.Spec["managed"])
+		layers := digList(managed, "semanticLayers")
+
+		if len(layers) > 1 {
+			names := make([]string, 0, len(layers))
+			for _, l := range layers {
+				names = append(names, digStr(mapOf(l), "name"))
+			}
+			errf("R1 %s: has %d semanticLayers, at most 1 is allowed (%s)",
+				a.Name, len(layers), strings.Join(names, ", "))
+		}
+
+		if len(layers) == 0 && len(strList(managed["toolsetNames"])) == 0 {
+			errf("R1b %s: has neither semanticLayers nor toolsetNames, so this Agent has no source of capability at all", a.Name)
+		}
+
+		for _, item := range layers {
+			layer := mapOf(item)
+			name := digStr(layer, "name")
+			if name == "" {
+				name = "<unnamed>"
+			}
+			allLayers = append(allLayers, name)
+
+			if first, ok := boundBy[name]; ok {
+				errf("R1 %s: %s is already bound by %s, and a semantic layer should have exactly one Agent",
+					a.Name, name, first)
+			} else {
+				boundBy[name] = a.Name
+			}
+
+			if len(digList(layer, "allowedCubes")) > 0 {
+				errf("R4 %s: %s sets allowedCubes, against the standing decision that a bound layer is queryable in full",
+					a.Name, name)
+			}
+
+			if olapOnly[name] {
+				errf("R10 %s: references %s, which is a Data Insight OLAP store and should be bound to no Agent",
+					a.Name, name)
+			}
+		}
+
+		if strings.EqualFold(a.Labels[publishedLabel], "true") {
+			published++
+			if n := len(digList(managed, "sampleQuestions")); n < minSampleQuestions {
+				errf("R7 %s: published but has %d sampleQuestions, and needs at least %d (set %s to \"false\" for an unverified agent rather than leaving the questions empty)",
+					a.Name, n, minSampleQuestions, publishedLabel)
+			}
+		}
+	}
+
+	// R12 is checked across all Agents at once, since it is about them agreeing.
+	if len(agents) > 1 {
+		for _, field := range []string{"task", "format"} {
+			byValue := map[string][]string{}
+			for _, a := range agents {
+				value := digStr(mapOf(a.Spec["managed"]), "prompt", field)
+				byValue[value] = append(byValue[value], a.Name)
+			}
+			if len(byValue) > 1 {
+				var groups []string
+				for value, names := range byValue {
+					sort.Strings(names)
+					groups = append(groups, fmt.Sprintf("%s (%d chars)", strings.Join(names, "+"), len(value)))
+				}
+				sort.Strings(groups)
+				errf("R12 prompt.%s differs: %d distinct values - %s",
+					field, len(byValue), strings.Join(groups, " | "))
+			}
+		}
+	}
+
+	sort.Strings(problems)
+	sort.Strings(allLayers)
+
+	summary := fmt.Sprintf("%d agent(s) (%d published)", len(agents), published)
+	if len(allLayers) > 0 {
+		summary += ", layers: " + strings.Join(allLayers, ", ")
+	}
+	return Result{Problems: problems, Summary: summary}
+}

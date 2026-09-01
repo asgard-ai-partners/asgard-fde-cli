@@ -1,0 +1,33 @@
+# Default values for <<.Project.Slug>>.
+# dev/prod overrides live in ../values-dev.yaml and ../values-prod.yaml.
+#
+# 這個檔案的職責是**替每個 .Values.* 宣告預設值**。`helm lint` 不帶 -f 跑的那一關就是在
+# 驗這件事:少了預設值,模板在 gate 裡照樣渲染得出來(被 -f 蓋過去了),然後對任何跑
+# 純 helm template 的人 nil-pointer。
+
+# 本 project 的 K8s Namespace(= Platform 的一個 Project)在 Platform 建立後,其 main
+# environment 會有一個 ID;填到這裡,供各 CR 的 asgard-ai.com/project-environment-id 取用。
+# 同一 project 的 dev 與 prod 是不同 environment、ID 不同 → 不要在此填死,請在各自的
+# values-<env>.yaml 覆寫。此處留空為預設。
+#
+# 慣例上只有 Workflow / CompletionModel / Trigger 帶這個 label;留空時不渲染該 label。
+platformMainEnvironmentId: ""
+
+# 所有憑證都從這個 K8s Secret 讀,由 tf-asgard 建立,不是這個 repo。
+# chart 裡永遠只寫 secretKeyRef,值不進 values、不進 git。
+appSecretName: "app-secret"
+
+# 模型是平台 builtin,以名字引用;沒有 CompletionModel CR,也沒有模型 API key。
+# 每個 SemanticLayer 都讀這個值 —— 不要在模板裡寫死模型名。
+defaultCompletionModelName: "preset-balanced"
+
+# --- 資料庫座標 -------------------------------------------------------------
+# 每個 DataConnector 一組,per-env 覆寫在 ../values-<env>.yaml。密碼走 app-secret,
+# 不進 values。接上第一個資料庫時在這裡加一組,例如:
+#
+# erpDB:
+#   host: ""
+#   port: 5432
+#   user: ""
+#   database: ""
+#   sslMode: "disable"

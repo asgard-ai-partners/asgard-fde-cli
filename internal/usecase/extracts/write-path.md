@@ -1,0 +1,260 @@
+# Write paths and the approval gate
+
+Anything with a side effect. **This is the shape the platform is built around**,
+and the one a customer is usually asking for when they say "and then it does it
+for me".
+
+**Seen in:** a deployment whose entire architecture is stated as one rule, and a
+notification chain whose single outward action is deliberately mocked.
+
+## The rule the platform is built on
+
+> **Reading is autonomous. Writing stops at a gate and waits for a human.**
+
+Everything a `SELECT` can answer goes through a read path with no gate. Anything
+with a side effect goes through **`Toolset` -> `Workflow`, with
+`requestConsent: true`**, and the harness parks the run until a person approves
+it.
+
+That is not a safety add-on, it is the product. A deployment that lets an agent
+write without a gate has given up the thing that makes it deployable against real
+business systems.
+
+## When this shape, and when not
+
+Use it whenever the action **changes something outside the agent**: placing an
+order, updating a record, sending a message, publishing a listing, calling a
+partner API that does any of those.
+
+Do **not** use it for reads, however expensive or slow. A gate on a read trains
+people to click approve without looking, which is worse than no gate.
+
+**Ask about writes during the interview, not at implementation time.** A customer
+describing "AI prepares it, a person checks it, then it goes out" is describing
+this shape, and it changes the project's architecture: a write path needs its own
+spec, its own credentials, and a decision about what happens when the human says
+no.
+
+## Two questions to settle before writing any of it
+
+**1. Does the write point outward, or at a source system?**
+
+Pointing **outward** - a notification endpoint, a partner platform, a channel the
+customer publishes on - is the common case and the safer one. The systems of
+record stay read-only, and a mistake is visible and usually reversible by a
+person.
+
+Pointing **at a source system** - updating the ERP, changing stock - is a
+different risk class. It needs an explicit decision recorded, and usually a
+narrower tool than the one first proposed. Do not let it arrive by accident
+because a tool "just needed to update one field".
+
+**2. Who is the human, and what are they looking at?**
+
+The gate shows the call being made. If the person approving cannot tell from that
+whether it is right, the gate is theatre. Shape the tool's arguments so the
+approval is reviewable: one listing at a time rather than a batch of forty, the
+resolved values rather than an id the reviewer would have to look up.
+
+## The shape
+
+    Toolset  ts-<name>
+      tools[]
+        entrypoint: (workflow, entry)
+        requestConsent: true        <- the gate
+      -> Workflow  wf-<verb-noun>
+           the actual call: http-request outward, or query-database for a write
+
+Bind it with `Agent.managed.toolsetNames` in the hub shape, or
+`SandboxBlueprint.toolsetNames` in a flow agent.
+
+## Generate it
+
+    asgard-cli add httptool <name> --toolset ts-<name> --write
+
+That writes the structure below with the fields that fail silently already in
+place - the display annotation, the labels the UI needs, the current field names.
+**Copying the skeleton by hand is where those get lost**, because nothing tells
+you they are missing: not helm lint, not CRD validation, not a server dry-run.
+
+The generated file marks the judgement calls TODO. Those are what the rest of
+this page is about.
+
+## The skeleton
+
+`templates/toolset/ts-<name>.yaml` for the gate, and
+`templates/tool/wf-<verb-noun>.yaml` for the call behind it. Keep a write
+Toolset in its own file, separate from any read-only one - they have opposite
+`requestConsent` values and merging them later is how a gate gets dropped.
+
+```yaml
+apiVersion: asgard-ai.com/v1alpha1
+kind: Toolset
+metadata:
+  name: ts-<name>
+  annotations:
+    asgard-ai.com/toolset-name: "<display name>"
+    asgard-ai.com/toolset-description: "<what this can change, in one line>"
+  labels:
+    {{- include "<chart>.labels" . | nindent 4 }}
+spec:
+  toolsetClass: workflow-tooling
+  apiKey:
+    valueFrom:
+      secretKeyRef:
+        key: asgard_resource_api_key
+        name: {{ include "<chart>.appSecretName" . }}
+  tools:
+    - entrypoint:
+        entry: entry-main
+        workflow: wf-<verb-noun>
+      # The gate. The harness intercepts the call and waits for a person.
+      requestConsent: true
+```
+
+The Workflow behind it is the call itself - see `asgard-cli usecase
+external-api` for the `http-request` shape, including where the credential goes
+and why parameters have to be pulled into context before the call.
+
+## Designing the gate - the part the generator leaves TODO
+
+### What the human is looking at
+
+The gate shows the call. **If the person approving cannot tell from those
+arguments whether it is right, the gate is theatre** - and worse than none,
+because it manufactures a record of approval.
+
+Three things follow:
+
+- **Resolve values before they reach the gate.** An id the reviewer would have
+  to look up is not reviewable; the name is.
+- **One action per call.** Forty listings in one argument gets approved as a
+  batch, which means unreviewed.
+- **Include what makes it checkable.** For a published price, the price. For a
+  message, the whole text. The approval screen is not the place to be terse.
+
+### Split preparing from doing
+
+`requestConsent` is per tool, so a job that prepares something and then acts on
+it is **two tools**: preparing is read-only and ungated, acting is gated.
+
+That also makes the conversation better - the person sees the draft, asks for a
+change, sees it again, and only then approves the one call that matters.
+
+### What happens when they say no
+
+Decide it, and say it in the prompt: does the agent revise and re-ask, or stop
+and report? A run that silently loops on refusal is worse than one that stops.
+
+### Deciding what needs a gate at all
+
+Not everything with a side effect deserves the same treatment, but the line is
+not about risk in the abstract - it is about **reversibility and audience**:
+
+| | gate |
+|---|---|
+| changes a system of record | yes, and it needs its own spec |
+| sends something to a person outside the company | yes |
+| writes to a scratch area only this agent reads | no |
+| anything a `SELECT` could have answered | it is not a write; do not gate a read |
+
+## Fields that are not obvious
+
+### The prompt must not describe the approval flow
+
+**Human approval is the harness's mechanism, not the agent's.** Writing "ask the
+user for confirmation before proceeding" into a prompt does not add a gate - it
+adds a second, fake one that the model can talk itself past, and it confuses the
+real one.
+
+Describe **what the tool does**. The gate happens whether or not the prompt
+mentions it.
+
+### The gate is per tool, so split preparing from doing
+
+`requestConsent` sits on a tool, not on a workflow or an agent. So a task that
+prepares something and then acts on it is **two tools**: preparing is read-only
+and ungated, acting is gated.
+
+That is also the better shape for review. The human sees the call that changes
+something, not the research that led to it.
+
+### What the approval actually pins has not been verified
+
+The harness intercepts the call and waits. **Whether the arguments the human
+approved are guaranteed to be the arguments that get sent - with no further model
+turn in between - is not documented anywhere we have found**, and it matters for
+anything where the approved content is the deliverable.
+
+Do not assume either answer. If a customer's requirement depends on it - "the
+person checks the listing, and that exact listing is what goes up" - raise it
+with the platform team, write the answer into a decision record, and cite it.
+This paragraph should be replaced by that citation.
+
+### A scheduled run cannot use a consenting tool
+
+Nobody is there at 03:00. `requestConsent: true` parks the run until it times
+out, so a Trigger's toolset needs `requestConsent: false` - which means the
+scheduled path and the write path **cannot share a Toolset**.
+
+Keep them as separate CRs even when they call the same API, and say why in the
+header. Someone will eventually try to merge them.
+
+### `Toolset.spec.instruction` does not exist
+
+It was removed from the CRD. Usage guidance lives in the Workflow's
+`entries[].tooling.description`.
+
+Adding it back is a trap worth knowing precisely: the CRD **silently prunes**
+undeclared fields, so `kubectl apply --dry-run=server` reports success while the
+field is discarded, and then helm's server-side apply fails **in CD** with
+`field not declared in schema`. That broke a release once, after passing 25 of 25
+dry-runs.
+
+### Credentials are per-namespace, not per-tool
+
+The platform resource key is one per namespace, shared by every CR that needs
+one. A token for the **external** service is its own key in `app-secret`, and
+only ever a `secretKeyRef`.
+
+**Do not declare a `secretKeyRef` for a key that does not exist yet.** Config
+evaluation fails at call time, not at apply time, so the chart deploys and the
+tool breaks the first time someone uses it. Leave the variables list empty until
+infra has provisioned the key.
+
+## A mock is a legitimate state, and it has one rule
+
+Where the endpoint is not available yet - the customer has not provided it, or
+the integration is later in the plan - a mock that echoes the request back is the
+right thing to ship. The whole chain gets exercised, and the drafted call lands
+in the invocation record for review.
+
+**Returning success is deliberate**: a failure would stop a cursor and the path
+would never run end to end.
+
+That makes **disclosure the safety property**. Both the tool's description and
+the agent's prompt must require the summary to say plainly that nothing was
+actually sent. A log that reads as though customers were emailed, or listings
+were published, is the real damage a mock can do - and it is discovered late, by
+someone who trusted it.
+
+## Verify
+
+```bash
+asgard-cli check
+asgard-cli verify <project>
+```
+
+The xref check resolves the `(workflow, entry)` pair. **Nothing checks that
+`requestConsent` is set correctly** - a write tool with it missing or `false`
+lints clean, deploys clean, and then acts without asking.
+
+So check it by reading, every time, and make it part of review:
+
+```bash
+asgard-cli render <project> dev | grep -A2 'requestConsent'
+```
+
+Every `true` should be a tool that changes something; every `false` should be a
+read or a scheduled path. Anything else is the gate being wrong in one of the two
+directions that matter.

@@ -1,0 +1,68 @@
+# <<.DisplayName>>
+#
+# An Agent CR is pure subagent config: it spawns nothing. The entry point is the
+# platform's per-namespace preset-agent-hub, and the caller selects agents per
+# turn with payload.agent_hub.agent_names[].
+#
+# TODO before this is usable:
+#   1. description - this is ROUTING TEXT for the orchestrator, not a
+#      self-introduction. It is the only thing seen when deciding whether to
+#      delegate, so put the business nouns in it. Where another agent looks
+#      similar, say which side of the line each is on.
+#   2. prompt.task and prompt.format must be BYTE-IDENTICAL across every Agent
+#      in this chart - asgard-cli verify diffs them. Copy from a sibling.
+#   3. At least two sampleQuestions while published.
+apiVersion: asgard-ai.com/v1alpha1
+kind: Agent
+metadata:
+  name: <<.CRName>>
+  annotations:
+    asgard-ai.com/agent-name: "<<.DisplayName>>"
+  labels:
+    # The on/off switch: callers build agent_names[] from the published agents.
+    asgard-ai.com/agent-published: "true"
+    {{- include "<<.Chart>>.labels" . | nindent 4 }}
+spec:
+  agentClass: managed
+  managed:
+    # The delegation name. Convention: the CR name without its ag- prefix.
+    aliasName: <<.Name>>
+    description: |-
+      TODO: when to delegate here.
+    prompt:
+      persona: |-
+        TODO: who this agent is. Per agent.
+      task: |-
+        TODO: byte-identical across every agent in this chart.
+      context: |-
+        TODO: what it can reach. Per agent.
+      format: |-
+        TODO: byte-identical across every agent in this chart.
+    sampleQuestions:
+      - TODO
+      - TODO
+<<if .SkillSets>>    skillSetNames:
+<<range .SkillSets>>      - <<.>>
+<<end>><<else>>    # No SkillSet in this chart yet, so none is referenced: a name that does not
+    # exist is a dangling reference the gate rejects.
+    #
+    # An Agent is allowed to have none. But **CD fails a deployed project that
+    # has no Syncer at all**, and a SkillSet brings one, so a project heading for
+    # a deploy wants one:
+    #
+    #     asgard-cli add skillset base --repo <git url>
+    #
+    # Then add it here.
+    # skillSetNames:
+    #   - sk-base
+<<end>><<if .Layer>>    # At most one layer per agent: that is what keeps the search space small.
+    # No allowedCubes - any table in this layer is queryable.
+    semanticLayers:
+      - name: <<.Layer>>
+        allowQuery: true
+        allowWrite: false
+<<else>>    # No semantic layer. An agent needs at least one capability source, so give
+    # it toolsetNames instead, or the gate rejects it.
+    # toolsetNames:
+    #   - ts-<name>
+<<end>>

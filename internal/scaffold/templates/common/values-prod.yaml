@@ -1,0 +1,10 @@
+# common / values-prod.yaml
+# 跨所有 project 共用的 *prod* 環境值。部署時以 -f 疊加在各 project 的 values 之前:
+#   helm ... -f common/values-prod.yaml -f projects/<project>/chart/values-prod.yaml
+#
+# 目前沒有跨 project 共用值:資料庫座標是 per-project 的事實,放在各
+# projects/<project>/chart/values-prod.yaml(每個 DataConnector 一組)。
+# 本檔保留為 -f 疊加點與未來的擴充位置。
+#
+# platformMainEnvironmentId 是 per-project per-env,不放這裡。
+# 密碼一律走 cluster Secret(app-secret),不進 values。

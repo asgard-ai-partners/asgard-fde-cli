@@ -1,0 +1,18 @@
+# projects/<<.Project.Slug>>/chart/values-<<.Env>>.yaml
+#
+# 本 project 在 <<.Env>> 環境的覆寫值。疊加順序(後者覆蓋前者):
+#   common/values-<<.Env>>.yaml  →  這個檔案
+#
+# namespace 由 ../deploy.yaml 宣告:asgard-<<.Workspace.Slug>>-<<.Project.Slug>>-<<.Env>>
+
+# Platform 的 main environment ID。**要等 namespace 被 Platform reconcile 成 Project
+# 之後才拿得到**,所以順序是:tf-asgard 建 namespace + app-secret → Platform 產生
+# environment → 把 ID 填回這裡。
+#
+# 同一個 project 的 dev 與 prod 是不同的 environment,ID 不同 —— 兩份 values 常常
+# 就只差這一個值。
+platformMainEnvironmentId: ""
+
+# --- 資料庫座標 -------------------------------------------------------------
+# 每個 DataConnector 一組,對應 app/values.yaml 裡宣告的鍵。
+# 密碼不在這裡:走 app-secret 的 secretKeyRef。

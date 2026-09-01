@@ -1,0 +1,503 @@
+// Package check verifies the structural invariants of a customer repository -
+// the ones a chart render cannot see, and that only surface at deploy time or
+// when the next person tries to pick the repo up.
+//
+// It replaces the check_repo_consistency.py the layout used to carry, so that
+// the first gate needs no Python environment and every repo gets the same
+// version of the rules.
+package check
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"regexp"
+	"sort"
+	"strings"
+
+	"gopkg.in/yaml.v3"
+
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/config"
+)
+
+// Level separates a problem that fails the gate from one that is only worth
+// mentioning.
+type Level int
+
+const (
+	// Error fails the check.
+	Error Level = iota
+	// Warning is reported but does not fail.
+	Warning
+)
+
+// Finding is one problem.
+type Finding struct {
+	Level   Level
+	Message string
+}
+
+// Report is everything one run found.
+type Report struct {
+	Scope    []string
+	Findings []Finding
+}
+
+// Errors returns the findings that fail the gate.
+func (r Report) Errors() []Finding {
+	var out []Finding
+	for _, f := range r.Findings {
+		if f.Level == Error {
+			out = append(out, f)
+		}
+	}
+	return out
+}
+
+// Warnings returns the findings that do not fail the gate.
+func (r Report) Warnings() []Finding {
+	var out []Finding
+	for _, f := range r.Findings {
+		if f.Level == Warning {
+			out = append(out, f)
+		}
+	}
+	return out
+}
+
+// OK reports whether the repository passed.
+func (r Report) OK() bool {
+	return len(r.Errors()) == 0
+}
+
+type checker struct {
+	root     string
+	findings []Finding
+}
+
+func (c *checker) errf(format string, args ...any) {
+	c.findings = append(c.findings, Finding{Error, fmt.Sprintf(format, args...)})
+}
+
+func (c *checker) warnf(format string, args ...any) {
+	c.findings = append(c.findings, Finding{Warning, fmt.Sprintf(format, args...)})
+}
+
+// Run checks the repository at root. Passing project slugs limits the
+// project-scoped checks to those; repo-wide checks always run.
+func Run(root string, only ...string) (Report, error) {
+	c := &checker{root: root}
+
+	projects, err := c.discoverProjects()
+	if err != nil {
+		return Report{}, err
+	}
+
+	scope := projects
+	if len(only) > 0 {
+		known := make(map[string]bool, len(projects))
+		for _, p := range projects {
+			known[p] = true
+		}
+		scope = nil
+		for _, name := range only {
+			if !known[name] {
+				c.errf("unknown project %q; projects/ has %s", name, strings.Join(projects, ", "))
+				continue
+			}
+			scope = append(scope, name)
+		}
+	}
+
+	for _, name := range scope {
+		if err := c.checkDeploy(name); err != nil {
+			return Report{}, err
+		}
+	}
+	if err := c.checkRegistry(projects); err != nil {
+		return Report{}, err
+	}
+	if err := c.checkCommonSkills(); err != nil {
+		return Report{}, err
+	}
+	c.checkRequirementIndexes()
+	if err := c.checkDocs(); err != nil {
+		return Report{}, err
+	}
+
+	return Report{Scope: scope, Findings: c.findings}, nil
+}
+
+// discoverProjects finds the project directories. A project is a directory
+// under projects/ that has a chart - the same rule the layout documents.
+func (c *checker) discoverProjects() ([]string, error) {
+	dir := filepath.Join(c.root, "projects")
+	entries, err := os.ReadDir(dir)
+	if os.IsNotExist(err) {
+		c.errf("projects/ does not exist; every project is projects/<name>/")
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("read %s: %w", dir, err)
+	}
+
+	var projects []string
+	for _, e := range entries {
+		if !e.IsDir() {
+			continue
+		}
+		chart := filepath.Join(dir, e.Name(), "chart", "app", "Chart.yaml")
+		if _, err := os.Stat(chart); err == nil {
+			projects = append(projects, e.Name())
+		}
+	}
+	sort.Strings(projects)
+	return projects, nil
+}
+
+// deployFile is the subset of deploy.yaml this checks.
+type deployFile struct {
+	Environments map[string]struct {
+		Namespace string `yaml:"namespace"`
+		Values    string `yaml:"values"`
+	} `yaml:"environments"`
+}
+
+// checkDeploy verifies the deployment declaration: CI builds its matrix from
+// these files, so a values path that does not exist is a failed deploy rather
+// than a lint error.
+func (c *checker) checkDeploy(project string) error {
+	dir := filepath.Join(c.root, "projects", project)
+	path := filepath.Join(dir, "deploy.yaml")
+
+	data, err := os.ReadFile(path)
+	if os.IsNotExist(err) {
+		c.errf("%s: missing projects/%s/deploy.yaml; it is the single source of truth for deployment targets, and is required even when no env is declared", project, project)
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("read %s: %w", path, err)
+	}
+
+	var parsed deployFile
+	if err := yaml.Unmarshal(data, &parsed); err != nil {
+		c.errf("%s: projects/%s/deploy.yaml is not valid YAML: %v", project, project, err)
+		return nil
+	}
+
+	if len(parsed.Environments) == 0 {
+		c.warnf("%s: deploy.yaml declares no environment, so CI and asgard-cli render both skip this project", project)
+		return nil
+	}
+
+	envs := make([]string, 0, len(parsed.Environments))
+	for env := range parsed.Environments {
+		envs = append(envs, env)
+	}
+	sort.Strings(envs)
+
+	for _, env := range envs {
+		spec := parsed.Environments[env]
+
+		if !config.Env(env).Valid() {
+			c.errf("%s: deploy.yaml declares env %q; only dev and prod are valid", project, env)
+			continue
+		}
+		if spec.Namespace == "" {
+			c.errf("%s: deploy.yaml %s has no namespace", project, env)
+		}
+		if spec.Values == "" {
+			c.errf("%s: deploy.yaml %s has no values file", project, env)
+			continue
+		}
+		if _, err := os.Stat(filepath.Join(dir, spec.Values)); err != nil {
+			c.errf("%s: deploy.yaml %s points at projects/%s/%s, which does not exist", project, env, project, spec.Values)
+		}
+		shared := filepath.Join(c.root, "common", fmt.Sprintf("values-%s.yaml", env))
+		if _, err := os.Stat(shared); err != nil {
+			c.errf("%s: %s is missing the shared common/values-%s.yaml, which CI overlays first", project, env, env)
+		}
+	}
+	return nil
+}
+
+// projectRow matches the second column of the root README's project table,
+// with or without the projects/ prefix.
+var projectRow = regexp.MustCompile("(?m)^\\|[^|]*\\|\\s*`(?:projects/)?([a-z0-9-]+)/?`\\s*\\|")
+
+// checkRegistry keeps the root README's project table and the directories in
+// step. The table is how a reader learns what exists, so a stale one is worse
+// than none.
+func (c *checker) checkRegistry(projects []string) error {
+	path := filepath.Join(c.root, "README.md")
+	data, err := os.ReadFile(path)
+	if os.IsNotExist(err) {
+		c.errf("README.md does not exist")
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("read %s: %w", path, err)
+	}
+
+	listed := map[string]bool{}
+	for _, m := range projectRow.FindAllSubmatch(data, -1) {
+		listed[string(m[1])] = true
+	}
+	actual := map[string]bool{}
+	for _, p := range projects {
+		actual[p] = true
+	}
+
+	for _, p := range projects {
+		if !listed[p] {
+			c.errf("README.md project table is missing %q, which exists under projects/", p)
+		}
+	}
+	for name := range listed {
+		if !actual[name] {
+			c.errf("README.md project table lists %q, which has no directory under projects/", name)
+		}
+	}
+	return nil
+}
+
+var frontmatterBlock = regexp.MustCompile(`(?s)\A---\n(.*?)\n---\n`)
+
+// frontmatter returns the top-level scalar fields of a markdown file's
+// frontmatter, or nil when there is none.
+func frontmatter(data []byte) map[string]string {
+	m := frontmatterBlock.FindSubmatch(data)
+	if m == nil {
+		return nil
+	}
+	out := map[string]string{}
+	for _, line := range strings.Split(string(m[1]), "\n") {
+		if line == "" || strings.HasPrefix(line, "#") || strings.HasPrefix(line, " ") || strings.HasPrefix(line, "\t") {
+			continue
+		}
+		key, value, found := strings.Cut(line, ":")
+		if !found {
+			continue
+		}
+		out[strings.TrimSpace(key)] = strings.Trim(strings.TrimSpace(value), `"'`)
+	}
+	return out
+}
+
+// checkCommonSkills validates the runtime skills. The platform resolves one
+// directory as one skill, so the directory name and the declared name have to
+// agree or the SkillSet's searchPath silently resolves to nothing.
+func (c *checker) checkCommonSkills() error {
+	dir := filepath.Join(c.root, "common", "skills")
+	entries, err := os.ReadDir(dir)
+	if os.IsNotExist(err) {
+		c.warnf("common/skills/ does not exist; it is where runtime skills live, and there are none yet")
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("read %s: %w", dir, err)
+	}
+
+	found := false
+	for _, e := range entries {
+		if !e.IsDir() {
+			continue
+		}
+		found = true
+		path := filepath.Join(dir, e.Name(), "SKILL.md")
+		data, err := os.ReadFile(path)
+		if os.IsNotExist(err) {
+			c.errf("common/skills/%s/ has no SKILL.md; one directory is one skill", e.Name())
+			continue
+		}
+		if err != nil {
+			return fmt.Errorf("read %s: %w", path, err)
+		}
+
+		fm := frontmatter(data)
+		if fm == nil {
+			c.errf("common/skills/%s/SKILL.md has no frontmatter; it needs name and description", e.Name())
+			continue
+		}
+		for _, key := range []string{"name", "description"} {
+			if fm[key] == "" {
+				c.errf("common/skills/%s/SKILL.md frontmatter is missing %s", e.Name(), key)
+			}
+		}
+		if name := fm["name"]; name != "" && name != e.Name() {
+			c.errf("common/skills/%s/SKILL.md declares name %q, which does not match its directory", e.Name(), name)
+		}
+	}
+	if !found {
+		c.warnf("common/skills/ has no skill directories yet")
+	}
+	return nil
+}
+
+// checkRequirementIndexes verifies the SDD entry points exist.
+func (c *checker) checkRequirementIndexes() {
+	for _, rel := range []string{
+		filepath.Join("requirements", "_index.md"),
+		filepath.Join("requirements", "requests", "_index.md"),
+		filepath.Join("requirements", "tasks", "_index.md"),
+	} {
+		if _, err := os.Stat(filepath.Join(c.root, rel)); err != nil {
+			c.errf("missing %s; it is an SDD entry point, see docs/spec-driven-development.md", filepath.ToSlash(rel))
+		}
+	}
+}
+
+// dateNamed matches the filename convention for dated records.
+var dateNamed = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}-[a-z0-9][a-z0-9-]*\.md$`)
+
+// moduleLink matches a link to a module file from a spec index.
+var moduleLink = regexp.MustCompile(`\]\(([a-z0-9][a-z0-9-]*\.md)\)`)
+
+// markdownLink matches a relative markdown link, ignoring any anchor.
+var markdownLink = regexp.MustCompile(`\]\(([^)\s#]+\.md)(?:#[^)\s]*)?\)`)
+
+// checkDocs validates the spec layer: the files the four-layer model needs, the
+// living spec's module index matching what is on disk, dated filenames, and
+// that every relative link inside docs/ resolves. Rotten links are how this
+// layer decays.
+func (c *checker) checkDocs() error {
+	docs := filepath.Join(c.root, "docs")
+	if _, err := os.Stat(docs); os.IsNotExist(err) {
+		c.errf("docs/ does not exist; it is the spec and decision layer, see docs/README.md")
+		return nil
+	}
+
+	for _, rel := range []string{
+		"README.md",
+		"spec-driven-development.md",
+		filepath.Join("spec", "README.md"),
+		filepath.Join("decisions", "README.md"),
+		filepath.Join("decisions", "_decision-template.md"),
+		filepath.Join("meeting-notes", "README.md"),
+		filepath.Join("meeting-notes", "_template.md"),
+	} {
+		if _, err := os.Stat(filepath.Join(docs, rel)); err != nil {
+			c.errf("missing docs/%s; see the converge loop in docs/README.md", filepath.ToSlash(rel))
+		}
+	}
+
+	if err := c.checkLivingSpec(filepath.Join(docs, "spec")); err != nil {
+		return err
+	}
+	if err := c.checkDatedNames(docs); err != nil {
+		return err
+	}
+	return c.checkDocLinks(docs)
+}
+
+// checkLivingSpec compares each spec slug's module index against the files
+// present. A module written but never indexed is invisible to the next reader.
+func (c *checker) checkLivingSpec(specDir string) error {
+	entries, err := os.ReadDir(specDir)
+	if os.IsNotExist(err) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("read %s: %w", specDir, err)
+	}
+
+	slugs := 0
+	for _, e := range entries {
+		if !e.IsDir() {
+			continue
+		}
+		slugs++
+		slug := e.Name()
+		index := filepath.Join(specDir, slug, "README.md")
+
+		data, err := os.ReadFile(index)
+		if os.IsNotExist(err) {
+			c.errf("missing docs/spec/%s/README.md, the living spec's module index", slug)
+			continue
+		}
+		if err != nil {
+			return fmt.Errorf("read %s: %w", index, err)
+		}
+
+		listed := map[string]bool{}
+		for _, m := range moduleLink.FindAllSubmatch(data, -1) {
+			listed[string(m[1])] = true
+		}
+
+		modules, err := os.ReadDir(filepath.Join(specDir, slug))
+		if err != nil {
+			return fmt.Errorf("read %s: %w", filepath.Join(specDir, slug), err)
+		}
+		actual := map[string]bool{}
+		for _, m := range modules {
+			if m.IsDir() || m.Name() == "README.md" || !strings.HasSuffix(m.Name(), ".md") {
+				continue
+			}
+			actual[m.Name()] = true
+			if !listed[m.Name()] {
+				c.errf("docs/spec/%s/README.md does not index %s, which exists", slug, m.Name())
+			}
+		}
+		for name := range listed {
+			if !actual[name] {
+				c.errf("docs/spec/%s/README.md indexes %s, which does not exist", slug, name)
+			}
+		}
+	}
+	if slugs == 0 {
+		c.warnf("docs/spec/ has no living spec yet; it should be docs/spec/<slug>/")
+	}
+	return nil
+}
+
+// checkDatedNames enforces YYYY-MM-DD-<topic>.md on the immutable layers. The
+// date is what makes a record findable later.
+func (c *checker) checkDatedNames(docs string) error {
+	for _, sub := range []string{"decisions", "meeting-notes"} {
+		dir := filepath.Join(docs, sub)
+		entries, err := os.ReadDir(dir)
+		if os.IsNotExist(err) {
+			continue
+		}
+		if err != nil {
+			return fmt.Errorf("read %s: %w", dir, err)
+		}
+		for _, e := range entries {
+			name := e.Name()
+			if e.IsDir() || name == "README.md" || strings.HasPrefix(name, "_") || !strings.HasSuffix(name, ".md") {
+				continue
+			}
+			if !dateNamed.MatchString(name) {
+				c.errf("docs/%s/%s is not named YYYY-MM-DD-<topic>.md with a lowercase kebab-case topic", sub, name)
+			}
+		}
+	}
+	return nil
+}
+
+// checkDocLinks resolves every relative markdown link inside docs/.
+func (c *checker) checkDocLinks(docs string) error {
+	return filepath.Walk(docs, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() || !strings.HasSuffix(path, ".md") {
+			return nil
+		}
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return fmt.Errorf("read %s: %w", path, err)
+		}
+		rel, _ := filepath.Rel(c.root, path)
+		for _, m := range markdownLink.FindAllSubmatch(data, -1) {
+			target := string(m[1])
+			if strings.HasPrefix(target, "http://") || strings.HasPrefix(target, "https://") || strings.HasPrefix(target, "/") {
+				continue
+			}
+			if _, err := os.Stat(filepath.Join(filepath.Dir(path), target)); err != nil {
+				c.errf("%s links to %s, which does not resolve", filepath.ToSlash(rel), target)
+			}
+		}
+		return nil
+	})
+}

@@ -1,0 +1,108 @@
+# <<.DisplayName>> —— 對外入口
+#
+<<if ne .BotClass "generic">># botProviderClass: <<.BotClass>>.
+#
+# **This field is immutable after creation.** Changing channel means a new
+# BotProvider with a new name, not an edit to this one.
+#
+<<if or (eq .BotClass "discord") (eq .BotClass "slack")>># This class holds an outbound WebSocket, so the operator creates a Connector
+# Deployment for it. The image comes from a platform-level env var, not from this
+# chart, so there is nothing here to configure and nothing to see in values.
+<<else>># This class receives an inbound webhook, so it costs exactly this one CR - no
+# connector pod, nothing else to deploy.
+<<end>><<if eq .BotClass "line">># ONE LINE 官方帳號 CANNOT HOST TWO BOTS. A channel has one webhook URL, so a
+# second BotProvider on the same channel means both receive every event and both
+# answer. Migrating an existing LINE bot is a cutover, not a deployment: deploy
+# this with disabled: true, verify against a test channel, remove the old
+# webhook, then flip disabled.
+#
+# Presentation - avatar, display name, colours - lives in the LINE console, not
+# here. Only the generic class has embedConfig. Write down where it went.
+<<end>>#
+<<end>><<if eq .BotClass "generic">><<if .Public>># authMode: none. An anonymous visitor has no credential, and a key in front-end
+# JavaScript is not a key, so THE PROTECTION IS ON THE CAPABILITY SIDE: the whole
+# chain read-only, tools that take no parameters, mounts read-only. That argument
+# stops holding the moment a parameterised or write-capable tool is added here.
+<<else>># authMode: api-key. The caller holds a credential.
+<<end>><<else>># There is no authMode on this class: the channel's own credentials are the
+# authentication, and anyone who can message the account reaches this bot. So
+# THE PROTECTION IS ON THE CAPABILITY SIDE, exactly as for an anonymous widget:
+# the whole chain read-only, tools that take no parameters, mounts read-only.
+# That argument stops holding the moment a parameterised or write-capable tool is
+# added here.
+<<end>>apiVersion: asgard-ai.com/v1alpha1
+kind: BotProvider
+metadata:
+  name: <<.CRName>>
+  annotations:
+    asgard-ai.com/bot-provider-name: "<<.DisplayName>>"
+<<if eq .BotClass "generic">>    # Widget appearance - avatar, theme, title - so the front end does not own it.
+    # asgard-ai.com/additional-annotation: |-
+    #   {"embedConfig": {}}
+<<end>>  labels:
+    {{- include "<<.Chart>>.labels" . | nindent 4 }}
+spec:
+  botProviderClass: <<.BotClass>>
+  entrypoint:
+    workflow: wf-<<.Name>>
+    entry: entry-main
+  # Flip to take the endpoint down without deleting anything.
+  disabled: {{ .Values.botProviders.<<.ValuesKey>>.disabled }}
+  maxUnsupervisedSteps: 30
+  # Guards the admin API. One platform resource key per namespace, shared.
+  adminApiKey:
+    valueFrom:
+      secretKeyRef:
+        name: {{ include "<<.Chart>>.appSecretName" . }}
+        key: asgard_resource_api_key
+<<if eq .BotClass "generic">>  generic:
+<<if .Public>>    authMode: none
+<<else>>    authMode: api-key
+    apiKey:
+      valueFrom:
+        secretKeyRef:
+          name: {{ include "<<.Chart>>.appSecretName" . }}
+          key: asgard_resource_api_key
+<<end>><<end>><<if eq .BotClass "line">>  # Both come from the LINE Developers console for this channel. They are new
+  # keys in app-secret, so infra has to add them before the first deploy - the
+  # same ordering trap as the namespace itself.
+  line:
+    channelAccessToken:
+      valueFrom:
+        secretKeyRef:
+          name: {{ include "<<.Chart>>.appSecretName" . }}
+          key: line_channel_access_token
+    channelSecret:
+      valueFrom:
+        secretKeyRef:
+          name: {{ include "<<.Chart>>.appSecretName" . }}
+          key: line_channel_secret
+<<end>><<if eq .BotClass "telegram">>  telegram:
+    botToken:
+      valueFrom:
+        secretKeyRef:
+          name: {{ include "<<.Chart>>.appSecretName" . }}
+          key: telegram_bot_token
+    webhookSecretToken:
+      valueFrom:
+        secretKeyRef:
+          name: {{ include "<<.Chart>>.appSecretName" . }}
+          key: telegram_webhook_secret
+<<end>><<if eq .BotClass "discord">>  discord:
+    botToken:
+      valueFrom:
+        secretKeyRef:
+          name: {{ include "<<.Chart>>.appSecretName" . }}
+          key: discord_bot_token
+<<end>><<if eq .BotClass "slack">>  slack:
+    appToken:
+      valueFrom:
+        secretKeyRef:
+          name: {{ include "<<.Chart>>.appSecretName" . }}
+          key: slack_app_token
+    botToken:
+      valueFrom:
+        secretKeyRef:
+          name: {{ include "<<.Chart>>.appSecretName" . }}
+          key: slack_bot_token
+<<end>>

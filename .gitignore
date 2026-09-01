@@ -1,0 +1,55 @@
+# ---- Generated files ---------------------------------------------------
+# Everything produced by a command or a test; see AGENTS.md
+/.out/
+
+# ---- Build output ------------------------------------------------------
+# GoReleaser output directory
+/dist/
+# Binaries from a local `go build`
+/asgard-cli
+/asgard-cli.exe
+# Safety net for binaries built directly under cmd/
+/cmd/*/asgard-cli
+/cmd/*/*.exe
+
+# ---- Go toolchain ------------------------------------------------------
+# go.work is a personal multi-module setup and must not affect anyone else
+go.work
+go.work.sum
+# Note: vendor/ is deliberately not ignored. If vendoring is ever enabled,
+# those dependencies belong in version control.
+
+# ---- Tests, coverage, profiling ----------------------------------------
+*.test
+coverage.out
+coverage.txt
+coverage.html
+*.cover
+# Output of `go test -cpuprofile` and friends
+*.prof
+*.pprof
+
+# ---- Secrets and local config ------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+# Local-only config; commit example files as *.example.yaml instead.
+# Note: .asgard-config.json is deliberately not ignored. It is project
+# configuration and belongs in version control.
+config.local.*
+
+# ---- Editors / IDEs ----------------------------------------------------
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ---- Operating system --------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+desktop.ini

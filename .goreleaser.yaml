@@ -1,0 +1,132 @@
+# GoReleaser config - https://goreleaser.com
+# Verify locally: goreleaser check && goreleaser release --snapshot --clean
+version: 2
+
+project_name: asgard-fde-cli
+
+before:
+  hooks:
+    - go mod tidy
+    - go test ./...
+
+builds:
+  - id: asgard-cli
+    binary: asgard-cli
+    main: ./cmd/asgard-cli
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X github.com/asgard-ai-partners/asgard-fde-cli/internal/version.version={{ .Version }}
+      - -X github.com/asgard-ai-partners/asgard-fde-cli/internal/version.commit={{ .FullCommit }}
+      - -X github.com/asgard-ai-partners/asgard-fde-cli/internal/version.date={{ .CommitDate }}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+archives:
+  - id: default
+    ids: [asgard-cli]
+    # e.g. asgard-fde-cli_1.2.0_darwin_arm64.tar.gz
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    files:
+      - README.md
+      - LICENSE*
+
+# Linux packages. No extra credentials needed; the artifacts are attached to the
+# GitHub Release alongside the archives.
+nfpms:
+  - id: packages
+    ids: [asgard-cli]
+    package_name: asgard-cli
+    vendor: Asgard AI Partners
+    homepage: https://github.com/asgard-ai-partners/asgard-fde-cli
+    maintainer: Asgard AI Partners <service@asgard-ai.com>
+    description: Command line tool for Asgard FDE.
+    license: Proprietary
+    formats:
+      - deb
+      - rpm
+      - apk
+checksum:
+  name_template: checksums.txt
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  use: github
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - "^ci:"
+      - Merge pull request
+      - Merge branch
+  groups:
+    - title: Features
+      regexp: '^.*?feat(\(.+\))??!?:.+$'
+      order: 0
+    - title: Bug fixes
+      regexp: '^.*?fix(\(.+\))??!?:.+$'
+      order: 1
+    - title: Others
+      order: 999
+
+release:
+  prerelease: auto
+  footer: |
+    **Full diff**: https://github.com/asgard-ai-partners/asgard-fde-cli/compare/{{ .PreviousTag }}...{{ .Tag }}
+
+# ---------------------------------------------------------------------------
+# The channels below need extra setup; uncomment once that is in place.
+#
+# None of them declares helm or kubectl as a dependency, deliberately. A
+# dependency only fires on a package-manager install, so it would cover a
+# `brew install` or a `scoop install` and none of the ways people actually get
+# this today - the tar.gz, the zip, or `go install` - which carry no dependency
+# metadata at all and never can. Declaring one anyway would read as a guarantee
+# that does not hold. `asgard-cli doctor` reports a missing tool on every install
+# path instead.
+#
+# Homebrew tap: create the asgard-ai-partners/homebrew-tap repo, add a PAT with
+# write access to it as the HOMEBREW_TAP_TOKEN secret of this repo, and pass it
+# through as an env var in the release workflow. Note `brews` is being phased out
+# in favour of `homebrew_casks`, which is also the right shape for a pre-built
+# binary; check the deprecation notes before enabling either.
+#
+# homebrew_casks:
+#   - name: asgard-cli
+#     ids: [default]
+#     binaries: [asgard-cli]
+#     repository:
+#       owner: asgard-ai-partners
+#       name: homebrew-tap
+#       token: '{{ index .Env "HOMEBREW_TAP_TOKEN" }}'
+#     homepage: https://github.com/asgard-ai-partners/asgard-fde-cli
+#     description: Command line tool for Asgard FDE.
+#
+# Windows scoop: likewise needs a bucket repo.
+#
+# scoops:
+#   - repository:
+#       owner: asgard-ai-partners
+#       name: scoop-bucket
+#       token: '{{ index .Env "SCOOP_BUCKET_TOKEN" }}'
+#     homepage: https://github.com/asgard-ai-partners/asgard-fde-cli
+#     description: Command line tool for Asgard FDE.
+#     license: Proprietary

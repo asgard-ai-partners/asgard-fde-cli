@@ -1,0 +1,46 @@
+# <<.DisplayName>>
+#
+# TODO before this is usable:
+#   1. Introspect the real database. Do not guess a schema - see
+#      .agents/skills/semantic-layer-modeling/
+#   2. One cube per table, with a description in the customer's language on
+#      every cube, dimension and measure. A dimension without one is invisible
+#      to the model.
+#   3. Run every sampleQuery against the live database before committing it.
+#
+# Business rules the column names do not convey go in `instruction` - which
+# table not to trust, which join fans out, which view does not push filters down.
+apiVersion: asgard-ai.com/v1alpha1
+kind: SemanticLayer
+metadata:
+  name: <<.CRName>>
+  annotations:
+    asgard-ai.com/semantic-layer-name: "<<.DisplayName>>"
+  labels:
+    {{- include "<<.Chart>>.labels" . | nindent 4 }}
+spec:
+  # Required on a SemanticLayer, unlike an Agent. Never hardcode a model name.
+  completionModelName: {{ .Values.defaultCompletionModelName | quote }}
+  # Omitting effort is NOT the same as medium: it sends no effort at all and
+  # the model's own default applies.
+  effort: {{ .Values.defaultSemanticLayerEffort | quote }}
+  dataConnectorName: <<.Connector>>
+  locale: zh-TW
+  timezone: Asia/Taipei
+  instruction: |-
+    TODO: rules a reader cannot get from the column names.
+  cubes:
+    - name: <schema>.<table>
+      sqlTable: <schema>.<table>
+      title: TODO
+      description: TODO
+      primaryKeyDimensions: [<pk>]
+      dimensions:
+        # name is the column the sql selects, never a re-cased alias.
+        - name: <Column>
+          sql: '{CUBE}.<Column>'
+          title: TODO
+          description: TODO
+          type: string
+  # Analysis views go here, never as a cube-level sql: virtual cube.
+  sampleQueries: []

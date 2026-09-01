@@ -1,0 +1,463 @@
+# AGENTS.md
+
+> This file is the single source of truth (SoT) for coding agents working in this repo.
+> `CLAUDE.md` only points here (`@AGENTS.md`) so any agent that reads either file gets the same guidance.
+
+## Repo Context
+
+- **Project**: `<<.RepoName>>` — the repo where **all Asgard custom resources for <<.Workspace.Name>> are specified**, and from which they are deployed.
+- **How work is driven**: **spec-driven** — `requirements/` is the implementation source of truth (see Spec-Driven Development below).
+- **Kind**: Helm charts only. No application source code — everything is declarative Kubernetes custom resources under `asgard-ai.com/v1alpha1`. (`scripts/db/` is a local DB tool-chain, not deployed.)
+- **Standard Asgard-Kube layout**: each **Project** is its own Helm chart under `projects/<project>/chart/app`, deployed to its own namespace. Cross-project shared plumbing lives in `common/`. ("Project" is the generalized unit — a Platform Project == a K8s Namespace.)
+<<if .Projects>>- **Projects**:
+<<range .Projects>>  - `<<.Slug>>` — <<.Name>>. TODO: what it does, who calls it, which systems it reads.
+<<end>><<else>>- **Projects**: none yet. Add one with `asgard-cli project add <slug>`.
+<<end>>
+> **TODO — fill this in as the engagement discovers it.** What the customer's business systems
+> are, which are read by which project, and any invariant that would surprise the next person.
+> The rule for what belongs here: **"not knowing this breaks the chart."** What the system
+> *does* goes in `docs/spec/<<.SpecSlug>>/` instead.
+
+### The invariants worth knowing before you change anything
+
+> **TODO.** Record them here as they are settled. The ones that hold on day one:
+>
+> - **Source systems are read-only.** Reads go through a `SemanticLayer` or a fixed query tool.
+>   Any write path points *outward* (a notification endpoint), never at a source system. Adding a
+>   write path to a source system is a behaviour change that needs a spec.
+> - **Nothing is deployed from a laptop.** See Deploy / CI.
+
+## Where this repo is, and what to do first
+
+`asgard-cli` scaffolded this repo. What exists is the platform contract (this
+file), the acceptance gate under `scripts/`, the docs structure, and an empty
+chart skeleton per project. **Everything customer-specific is still to be
+written**, including the sections of this file marked TODO.
+
+Read `docs/spec/<<.SpecSlug>>/` first. If its module index is empty, no behaviour
+has been settled yet and the first job is the three decisions below.
+
+**Ask the CLI what to do next.** It works the stage out from the repository
+itself and prints that stage's guidance:
+
+    asgard-cli next
+
+The eight stages, for orientation - `next` gives you the detail for whichever one
+you are on, so this table does not repeat it:
+
+| # | step | produces |
+|---|---|---|
+| 1 | inventory the customer's systems, and who talks to each one | `docs/meeting-notes/`, then a `docs/decisions/` record |
+| 2 | decide how the work splits into projects | `projects/<slug>/` via `asgard-cli project add` |
+| 3 | wire up the databases | `.env`, `DB_TARGETS` in `scripts/db/pgenv.py`, `DataConnector` CRs |
+| 4 | **decide each project's read path** | `SemanticLayer`, or a fixed-query `Toolset` |
+| 5 | **decide each project's entry point** | the agent hub, or `BotProvider` -> `Workflow` |
+| 6 | **decide where unstructured knowledge lives**, if there is any | a `SourceSet` Drive |
+| 7 | run the gate | see Acceptance Gate |
+| 8 | deploy | see Deploy / CI |
+
+Steps 4, 5 and 6 are the three decisions in the next section. Each one has an
+answer that looks obvious and is wrong.
+
+### The CLI
+
+`asgard-cli` scaffolded this repo and stays useful afterwards:
+
+| command | when |
+|---|---|
+| `asgard-cli next` | **start here.** Reports which stage this repo is at and what to do. `--stage <name>` reads any stage out of order, `--list` shows them all |
+| `asgard-cli usecase` | **before authoring any CR.** How each shape is built, taken from deployments already in production: when to use it, the skeleton, the fields that are not obvious, and what the mistake cost someone. `--search <terms>` finds a shape from what the customer asked for |
+| `asgard-cli check` | the first gate: structural invariants a chart render cannot see |
+| `asgard-cli project add <slug> --env dev` | the engagement discovers a new project |
+| `asgard-cli scaffold` | after adding a project, to write its chart skeleton. Safe to re-run - it never overwrites a file that already exists, so edits to this file survive |
+
+The stage is derived from what is on disk - which files exist, which CR kinds
+each chart declares - not from a counter. It stays right when someone does a step
+by hand, and it cannot claim work is finished that is not.
+
+`.asgard-config.json` holds the workspace slug and the project list. The
+repository name and every namespace are **derived** from that slug rather than
+stored, so edit it through the CLI rather than by hand.
+
+## The three decisions that get answered wrong
+
+Each has an obvious answer, and a correct answer that cost a rewrite. The
+reasoning does not survive in the CRs themselves, which is why it is here.
+
+**Every one of them follows from the same question: who is on the other end?**
+An internal caller that can authenticate and an anonymous visitor need different
+shapes, and the difference is not a preference.
+
+### 1. The read path: semantic layer, or fixed query tools
+
+| audience | answer |
+|---|---|
+| internal, authenticated | `SemanticLayer`, one per source system, one Agent each |
+| public, anonymous | a `Toolset` of **zero-parameter** fixed queries, no semantic layer |
+
+**Why a semantic layer is wrong for a public audience.** Mounted without
+`allowedCubes` it lets the agent compose arbitrary SQL over every cube in it,
+and **the exposed surface grows by itself each time a cube is added** - nobody
+goes back to narrow it. Excluding the sensitive tables is not the fix: the shape
+itself is the risk.
+
+With fixed tools, what can be asked is decided by a few statements in version
+control, no user input reaches SQL so the injection surface is zero, and
+widening it takes a CR change and a review.
+
+> Answered wrong once: a public site got a `SemanticLayer` first, and it was
+> removed and replaced with five zero-parameter query tools.
+
+**One more trap on the tools themselves.** Two tools sitting on the same
+FROM/JOIN and differing only in projection force each one's `description` to
+name the other as the alternative - which is exactly where a model picks wrong.
+Merge them and make the difference a column value instead of a tool choice.
+
+### 2. The entry point: agent hub, or your own BotProvider
+
+| audience | answer |
+|---|---|
+| a caller that can authenticate to the platform | the platform's per-namespace `preset-agent-hub`, with an `Agent` CR per system. You author no BotProvider |
+| an anonymous visitor | your own `BotProvider` -> `Workflow` -> `SandboxBlueprint` |
+
+**Why the agent hub cannot serve a public widget.** An `Agent` CR is reachable
+only through `preset-agent-hub`, and that endpoint requires an authenticated
+caller. `BotProvider.entrypoint` accepts a `Workflow`, **never an `Agent`**. So
+a public audience forces the second shape, no matter how it is configured.
+
+In that shape the capabilities live **one CR further out**, on the
+`SandboxBlueprint`: its own `toolsetNames` / `skillSetNames` / `sourceSetMounts`.
+Searching the `Workflow` CRD for the link finds nothing, and that has produced a
+wrong conclusion before.
+
+A single public agent needs **no subagent**. Attaching one through the
+blueprint's `agents[]` only adds a hop where the orchestrator restates the
+question and restates the answer back.
+
+> Answered wrong once: a public widget was specced onto the agent hub, then
+> re-decided as a self-hosted chain.
+
+### 3. Unstructured knowledge: a SourceSet Drive
+
+There is one answer: a `SourceSet` with `spec.contextIndex`, mounted read-only
+on the `SandboxBlueprint`, queried with the sandbox's builtin **graphify** skill.
+
+**`KnowledgeBase` is deprecated platform-side.** If you find it in an older
+chart or a CR dump, it is not a template to copy.
+
+Setting `contextIndex` is the whole switch: the reconciler derives three
+same-named CRs that mount the Drive writable and run the indexer on a cron.
+Clearing the field tears them down and renames the index aside - **to pause it,
+label the SourceSet `context-index-suspend`, do not remove the field**.
+
+> Answered wrong once: knowledge was built on `KnowledgeBase` + `Loader` +
+> retrieval workflows, and the whole mechanism was removed.
+
+### When you settle one of these
+
+Write a `docs/decisions/YYYY-MM-DD-<topic>.md` for it **on the day it is
+settled**, and say why the rejected option was rejected. That sentence is the
+only part nobody can reconstruct later, and it is what stops the next engagement
+from making the same choice.
+
+## Project Layout
+
+```
+<<.RepoName>>/
+├── common/                        # cross-project shared plumbing
+│   ├── values-dev.yaml            # env-level values shared by ALL projects (an -f overlay point)
+│   ├── values-prod.yaml
+│   ├── skills/<skill>/SKILL.md    # RUNTIME skills, synced into the platform
+│   ├── asgard-cli render                  # local render helper (reads deploy.yaml). Renders only — never deploys.
+│   └── README.md
+├── projects/<project>/
+│   ├── deploy.yaml                # which envs this project deploys to + namespace + values per env
+│   └── chart/
+│       ├── app/templates/<kind>/  # one directory per CR kind, one file per CR
+│       ├── values-dev.yaml        # per-project per-env (platformMainEnvironmentId, DB host …)
+│       └── values-prod.yaml
+├── scripts/                       # acceptance gates + local DB tool-chain
+│   ├── asgard-cli check  # structural invariants
+│   ├── asgard-cli verify        # CR cross-reference completeness on a rendered chart
+│   ├── asgard-cli verify       # one-system-one-Agent invariants on a rendered chart
+│   ├── check_crd_fidelity.py      # fields the CRDs would silently prune
+│   └── db/                        # query + introspection helpers (add as databases are wired up)
+├── .agents/skills/                # DESIGN-TIME skills — for the coding agent working in this repo
+│   ├── spec-workflow/             #   turn unclear work into a reviewable spec
+│   ├── semantic-layer-modeling/   #   connect to the real DBs, introspect, model a SemanticLayer
+│   └── asgard-cr-verification/    #   the four-step acceptance gate
+├── docs/                          # Spec-Driven Development — the spec & decision layers
+│   ├── README.md                  #   the index + the four-layer model + the AGENTS.md boundary
+│   ├── spec-driven-development.md #   the SDD rules (status flow, task spec format, gates)
+│   ├── spec/<<.SpecSlug>>/          # ★ LIVING SPEC — what the system does NOW (read this first)
+│   ├── decisions/                 #   dated, immutable decision records — why it was decided
+│   └── meeting-notes/             #   raw discussion before it converges (optional layer)
+├── requirements/ references/      # executable task specs / background material
+├── .github/workflows/main.yaml    # tag-driven rollout across the projects that declare the env
+├── AGENTS.md                      # ← this file, the SoT
+└── CLAUDE.md                      # one line: @AGENTS.md
+```
+
+Adding a project = add `projects/<project>/chart` **and** a `projects/<project>/deploy.yaml`
+listing only the envs you want deployed. Valid env symbols are exactly `dev` and `prod`; the two
+may be **asymmetric**. Also add it to the root `README.md` project table —
+`asgard-cli check` cross-checks that table against the actual folders.
+
+## Entry point shapes — the field-level difference
+
+**Which shape to use is decided by the audience** - see the three decisions
+above. This table is what each one looks like once chosen.
+
+| | **A. Agent hub** | **B. Self-hosted workflow, tools inline** | **C. Flow Agent** |
+|---|---|---|---|
+| Entry | the platform's per-namespace `preset-agent-hub` — you do not author it | your own `BotProvider` → your own `Workflow` | your own `BotProvider` → your own `Workflow` |
+| Capabilities bound via | an `Agent` CR; the caller passes `agent_hub.agent_names[]` per turn | `toolsets` / `semanticLayers` written straight onto the `stream-llm-completion-message` processor | `sandboxBlueprint` on that processor → `SandboxBlueprint`'s own `toolsetNames` / `skillSetNames` / `sourceSetMounts` |
+| Who can reach it | only a caller that can authenticate | anyone the BotProvider lets in | anyone the BotProvider lets in |
+| `Agent` CRs in the chart | one per source system | none | none, unless a blueprint attaches subagents |
+
+Field shapes to keep straight in shape C, all `ValueExprTemplate`: the names
+fields carry a **comma-separated string** in `value`; `sourceSetMounts` carries a
+**JSON string** the controller unmarshals (`sourceSetName` / optional `subPath` /
+`mountPath` starting with `/` / `readOnly`). The workflow's processor **must not
+re-declare `toolsets`** — that would be a second declaration of the same
+capability, and the two would drift.
+
+## SemanticLayer conventions
+
+Common analysis views go in top-level `sampleQueries[]` (`comment` + `sql`),
+**never** as a cube-level `sql:` virtual cube.
+
+**Run every `sampleQuery` against the live database before committing it.** One
+that errors or returns nonsense actively misleads the agent that reads it.
+
+**A dimension's `name` is the column its `sql` selects** — `name: ProductId` with
+`sql: '{CUBE}.ProductId'`, never a re-cased alias. Measure names are aggregates
+rather than columns, so they stay descriptive.
+
+**`description` on every cube, dimension and measure, in 繁體中文.** It is what
+the agent reads to decide which column answers a question; one without a
+description is effectively invisible to the model.
+
+
+## Two kinds of skills — design time vs runtime
+
+They are **not interchangeable**. Deciding which one you are writing is the first question,
+because the delivery mechanism is completely different.
+
+| | `.agents/skills/<skill>/SKILL.md` | `common/skills/<skill>/SKILL.md` |
+|---|---|---|
+| **Who reads it** | the **coding agent** working in this repo (you) | the **deployed Asgard agent**, at runtime |
+| **When** | design time — while authoring CRs | runtime — while answering a user |
+| **How it is delivered** | read straight from the working tree | committed → `SourceSet` syncs the repo → `SkillSet` `searchPaths` selects it → bound by `Agent.managed.skillSetNames` or `SandboxBlueprint.spec.skillSetNames` |
+| **Reaches the cluster?** | never | yes, that is the point |
+
+**A SkillSet is a trio, not a CR.** The platform's `POST /v1/skill-set/from-git` creates a
+`SkillSet` + its **own** `SourceSet` + the git `Syncer` that fills it, bound 1:1:1. Several
+SkillSets sharing one SourceSet leaves the UI unable to find "this skill set's git config", and it
+renders as a skill set with no source. Keep one file per SkillSet under
+`templates/skill_set/<name>.yaml` holding all three CRs separated by `---`.
+
+Three conventions, and what each one breaks:
+
+| convention | why |
+|---|---|
+| the SourceSet's only member is **`git/`**, trailing slash included | the reconciler keys directory- vs file-member behaviour off that slash — without it the whole clone is treated as a single file |
+| **`asgard-ai.com/managed-by: skill-set`** on the SourceSet *and* the Syncer | it hides the Syncer from the generic list, and it is what the platform cascades on when a SkillSet is deleted |
+| a `searchPath` is **one skill directory** | one searchPath resolves to one skill; naming a parent directory silently resolves to nothing. `git/skills/pdf/`, not `git/skills/` |
+
+## Display Annotations
+
+Every CR the Platform UI lists needs an `asgard-ai.com/<kind>-name` annotation, in 繁體中文 —
+without it the CR applies cleanly and then appears **nameless** in the UI, which no amount of
+linting or dry-running reveals. `asgard-cli verify` enforces it.
+
+| kind | required | also useful |
+|---|---|---|
+| `Agent` | `agent-name` | — (`spec.managed.description` already carries the description) |
+| `SemanticLayer` | `semantic-layer-name` | — |
+| `DataConnector` | `data-connector-name` | — |
+| `SkillSet` | `skill-set-name` | `skill-set-description` |
+| `SourceSet` | `source-set-name` | `source-set-description` |
+| `Syncer` | `syncer-name` | `syncer-description` |
+| `BotProvider` | `bot-provider-name` | `additional-annotation` → `embedConfig`(widget 外觀) |
+| `SandboxBlueprint` | `sandbox-blueprint-name` | `sandbox-blueprint-description` |
+| `Toolset` | `toolset-name` | `toolset-description` |
+| `Workflow` | `workflow-name` | — |
+| `Trigger` | `trigger-name` | — |
+
+> **The authority for every platform key is `asgard-ai-platform/asgard-workflow-service`,
+> `internal/shared.go`** — every `Annotation*` / `Label*` constant the platform reads, with
+> comments on what it does. Read it rather than inferring a convention from another repo's charts.
+> **Anything not on `asgard-cli verify`'s list is invisible to every check here**, so a new UI
+> label is a check to add, not just a line to write.
+
+## Workflow sets — the metadata that decides whether the UI shows anything
+
+**A `Workflow` CR is not the platform's UI unit; a *workflow set* is** — the group of Workflows
+sharing `asgard-ai.com/workflow-set-id`, exactly one of which carries `main-workflow-set: "true"`.
+Everything here is UI-only: **nothing changes runtime**, and a CR omitting all of it is perfectly
+valid, so `helm lint`, CRD validation and server dry-run all stay green.
+
+| what's missing | what the user sees |
+|---|---|
+| the set labels | the Workflow is in no set → nothing to list. An empty Flow Agents / Automations page |
+| annotation `workflow-set-name` | the set is listed, nameless |
+| the Trigger CR's own two labels | the Trigger editor opens as a blank canvas |
+
+| on the Workflow | value | what it decides |
+|---|---|---|
+| label `workflow-set-id` | the CR name (one workflow = one set is the simple case) | which set this Workflow belongs to |
+| label `main-workflow-set` | `"true"` | which member is the set's entry — exactly one. Zero → never listed; two → the front end picks whichever came first |
+| label `workflow-key` | the CR name | the Workflow's own identity inside the set |
+| label `workflow-set-type` | `bot` / `automation_tool` / `trigger` | which UI section it appears in |
+| annotation `workflow-set-name` | 顯示名 | the **set's** name in the UI (`workflow-name` is the single Workflow's) |
+
+**There are three set types, not two.** `trigger` was added later, so a CR dumped from an older
+cluster shows `automation_tool` for a Trigger workflow and **is not a template to copy**.
+
+**A `Trigger` needs two labels of its own**, invisible from the Workflow side: its editor reads
+`asgard-ai.com/workflow-set-id` (equal to its entrypoint Workflow's) and
+`asgard-ai.com/project-environment-id` straight off the Trigger CR. The platform copies both onto
+a Trigger it creates itself; **a hand-written CR has nobody to copy them for it.**
+
+**Write only Workflow + Trigger.** The `Trigger` reconciler provisions the BotProvider, its
+API-key Secret, and the CronJob itself. Hand-writing a BotProvider for a Trigger is wrong.
+
+## `platformMainEnvironmentId`
+
+Each project's K8s Namespace maps to a Platform Project whose main environment has an ID. It is
+**per-project per-env** → set it in each project's `values-<env>.yaml` (default `""` in
+`values.yaml`, never hardcoded in templates). It surfaces as the label
+`asgard-ai.com/project-environment-id`, carried by **`Workflow`, `CompletionModel` and `Trigger`**
+only.
+
+**You cannot get this ID until the namespace exists** and the platform has reconciled it into a
+Project — which is why Terraform comes first (see Deploy / CI).
+
+## Completion Model
+
+Models are the platform's builtins, referenced by name — there is no `CompletionModel` CR and
+therefore no model API key in `app-secret`. One knob: `defaultCompletionModelName`, read by every
+`SemanticLayer` and overridable per-env. **Never hardcode a model name in a template.**
+
+`SemanticLayer.spec.completionModelName` is **required**; an `Agent` takes no model (the caller
+picks the orchestrator's model per turn).
+
+## Secrets
+
+All secrets are read from the Kubernetes secret `app-secret` (configurable via `values.yaml` →
+`appSecretName`), provisioned per project by infra (Terraform), **not by this repo**.
+
+- `asgard_resource_api_key` — the platform resource key. **One key per namespace, shared by every
+  CR that needs one**: `SourceSet.apiKey`, `Toolset.apiKey` and `BotProvider.adminApiKey` are all
+  platform resource credentials of the same kind. Do **not** mint a per-CR key for them.
+- `asgard-github-pat-password` — only needed when a git `Syncer` clones a **private** repo.
+- one `<system>_db_password` per database.
+
+Charts **only ever write `secretKeyRef`**; credential values never enter values files or git.
+
+## Deploy / CI
+
+CI/CD is tag-driven via `.github/workflows/main.yaml`. A single tag rolls out every project **that
+declares this env** in its `deploy.yaml`; projects without that env are skipped. A `setup` job
+resolves env/cluster from the tag and scans every `projects/*/deploy.yaml` into a matrix; a
+`deploy` job runs **one parallel job per matched project**, does `helm upgrade`, then **triggers
+that project's Syncers once and waits for them to complete**.
+
+| Tag | Env |
+|---|---|
+| `dev-x.y.z` | dev |
+| `x.y.z` | prod |
+
+Namespaces follow `asgard-<<.Workspace.Slug>>-<project>-<env>`. The project slug is deliberately
+short so that names derived from the namespace stay short.
+
+> **Two ordering traps, both of which fail in CD rather than locally:**
+>
+> 1. **Terraform first.** Enabling an env for a project means: create that env's namespace and
+>    `app-secret` in tf-asgard **first**, then add `environments.<env>` to its `deploy.yaml` and the
+>    matching `chart/values-<env>.yaml`. In the other order the next tag just fails.
+> 2. **CD requires at least one `Syncer` per deployed project.** The "trigger and wait" step polls
+>    for CronJobs labelled `asgard-ai.com/syncer-name` and **exits 1 after 180s if it finds none**,
+>    even when `helm upgrade` succeeded.
+
+> [!IMPORTANT]
+> **Deployment is CD-only — do not `helm upgrade` from a laptop.** A Syncer that pins
+> `revision: {{ .Chart.AppVersion }}` needs the release tag CI stamps into `appVersion`; a local
+> install renders the placeholder version as a git ref that does not exist, and the Syncer fails to
+> clone every run. `asgard-cli render` therefore renders only; it has no install path.
+
+Required repo secrets: `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_REGION`.
+
+## Helm Commands
+
+```bash
+# Lint a project chart
+helm lint ./projects/<project>/chart/app -f ./projects/<project>/chart/values-dev.yaml
+
+# Render locally — prefer the helper: it takes namespace/values from deploy.yaml, so the
+# output is exactly what CD deploys (same overlay order, --namespace and release name)
+asgard-cli render <project> dev
+```
+
+Release name is the project name, in both CI and locally. `asgard-cli render` needs only `helm`.
+
+## Acceptance Gate
+
+Load the **`asgard-cr-verification`** skill (`.agents/skills/`) and run its gate; project omitted =
+whole repo. **Any red step stops the work.**
+
+1. `asgard-cli check [project]` — structural invariants
+2. `helm lint projects/<project>/chart/app` (bare — proves `values.yaml` defaults every
+   `.Values.*`) and again with `-f projects/<project>/chart/values-dev.yaml`
+`asgard-cli verify <project>`
+   one-system-one-Agent invariants
+4. **Against the cluster you deploy to** (read-only, needs `kubectl`):
+   `kubectl apply --dry-run=server` **and** `python3 scripts/check_crd_fidelity.py - --context <ctx>`
+
+Step 4 is two checks because they catch different things: dry-run answers "will it be accepted",
+fidelity answers "**will it be kept**". See the pruning gotcha below.
+
+## Spec-Driven Development
+
+- Treat `requirements/` as implementation source of truth; `references/` is background only.
+- Task specs: `requirements/tasks/TASK-xxx-*.md`, registered in `requirements/tasks/_index.md`.
+- Status flow: `draft` → `ready` → `in-progress` → `done` (never `in_progress`).
+- SDD is **required** for a new `SemanticLayer`/`DataConnector`, widening an agent's queryable
+  cubes, or re-introducing a write path — the databases are real.
+
+**This file and the living spec answer different questions, and a fact belongs to exactly one:**
+
+| | `AGENTS.md` (here) | `docs/spec/<<.SpecSlug>>/` |
+|---|---|---|
+| Answers | **how to change this repo** | **what the system does** |
+| Holds | layout, template conventions, Helm/CRD gotchas, how to run the gate | capability boundaries, data 口徑, routing rules, state machines, the security argument |
+| Test | "not knowing this breaks the chart" | "not knowing this makes the behaviour wrong" |
+
+**When a change lands**, two obligations beyond the code: apply the behaviour delta to the matching
+`docs/spec/<<.SpecSlug>>/<module>.md`, and write one `docs/decisions/YYYY-MM-DD-<topic>.md` for
+each decision that got settled.
+
+## Helm / Platform Gotchas
+
+- All resources use `apiVersion: asgard-ai.com/v1alpha1`.
+- Keep dev/prod differences in `projects/<project>/chart/values-*.yaml` and `common/values-*.yaml`
+  only.
+- **A field the CRD does not declare is silently pruned, and `kubectl apply --dry-run=server` calls
+  that success.** Helm's server-side apply does not — it builds a typed patch and fails with
+  `field not declared in schema`, so the first sign is a red CD run.
+  `scripts/check_crd_fidelity.py` exists for exactly this.
+- **Read CRD shapes from the cluster you deploy to**, not from a local checkout of the CRD repo —
+  the two can disagree, and a deprecated field is easy to find in an older checkout.
+- **`Workflow.spec.processors[].configs[].name` is a free-form string.** A wrong config name lints
+  clean, passes CRD validation, and then does nothing at runtime. A typo in a *reference* is
+  caught by `asgard-cli verify`; an invented *key* is not.
+- **A failed `helm upgrade` can leave the namespace partially applied.** The previous revision
+  stays `deployed`, so the next upgrade proceeds without a rollback — but do not assume "the deploy
+  failed" means "nothing changed".
+- **A resource the platform created cannot be taken over by helm without a one-time adoption.**
+  Helm refuses with `invalid ownership metadata` unless the live object already carries
+  `app.kubernetes.io/managed-by: Helm`.
+- `Toolset.tools[]` require `requestConsent` (bool); `Agent.managed.prompt` requires all of
+  `persona`/`task`/`context`/`format`, and `managed.aliasName` + `managed.description` are required.
+- Render with `asgard-cli render` before committing template changes; there is no app to run.

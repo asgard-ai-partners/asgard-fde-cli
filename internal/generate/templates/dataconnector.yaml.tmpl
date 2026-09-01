@@ -1,0 +1,26 @@
+# <<.DisplayName>>
+#
+# Connection coordinates live in chart/values-<env>.yaml, one group per
+# connector. The password is only ever a secretKeyRef into app-secret, which
+# infra provisions - never a value, never in git.
+apiVersion: asgard-ai.com/v1alpha1
+kind: DataConnector
+metadata:
+  name: <<.CRName>>
+  annotations:
+    # Required. Without it this applies cleanly and shows up nameless in the UI.
+    asgard-ai.com/data-connector-name: "<<.DisplayName>>"
+  labels:
+    {{- include "<<.Chart>>.labels" . | nindent 4 }}
+spec:
+  dataConnectorClass: <<.DBClass>>
+  <<.DBClass>>:
+    host: {{ .Values.<<.ValuesKey>>DB.host | quote }}
+    port: {{ .Values.<<.ValuesKey>>DB.port }}
+    user: {{ .Values.<<.ValuesKey>>DB.user | quote }}
+    database: {{ .Values.<<.ValuesKey>>DB.database | quote }}
+    password:
+      valueFrom:
+        secretKeyRef:
+          key: <<.ValuesKey>>_db_password
+          name: {{ include "<<.Chart>>.appSecretName" . }}

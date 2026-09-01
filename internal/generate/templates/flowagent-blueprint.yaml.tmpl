@@ -1,0 +1,41 @@
+# <<.DisplayName>> —— 能力宣告
+#
+# Everything this entry point can do is declared here, one CR out from the
+# workflow. Searching the Workflow CRD for the link finds nothing, which has
+# produced a wrong conclusion before.
+#
+# A single-purpose agent needs NO subagent. Adding one only makes the
+# orchestrator restate the question and restate the answer back. Several
+# specialists is a different shape - asgard-cli usecase flow-agent-supervisor.
+apiVersion: asgard-ai.com/v1alpha1
+kind: SandboxBlueprint
+metadata:
+  name: sbp-<<.Name>>
+  annotations:
+    asgard-ai.com/sandbox-blueprint-name: "<<.DisplayName>> 能力"
+  labels:
+    {{- include "<<.Chart>>.labels" . | nindent 4 }}
+spec:
+  # Comma-separated strings, not lists.
+<<if .Toolset>>  toolsetNames:
+    value: "<<.Toolset>>"
+<<else>>  # toolsetNames:
+  #   value: "ts-<name>"
+<<end>><<if .SkillSets>>  skillSetNames:
+    value: "<<join .SkillSets ", ">>"
+<<else>>  # No SkillSet in this chart yet, so none is referenced: a name that does not
+  # exist is a dangling reference, and the gate rejects it.
+  #
+  # **CD fails a deployed project that has no Syncer at all**, and a SkillSet
+  # brings one, so a project heading for a deploy wants one:
+  #
+  #     asgard-cli add skillset base --repo <git url>
+  #
+  # Then name it here, comma-separated.
+  # skillSetNames:
+  #   value: "sk-base"
+<<end>>  # A JSON string the controller unmarshals. readOnly is part of the security
+  # argument, not a detail: an agent that answers questions about knowledge has
+  # no reason to be able to change it.
+  # sourceSetMounts:
+  #   value: '[{"sourceSetName": "ss-<name>", "mountPath": "/knowledge", "readOnly": true}]'
