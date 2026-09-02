@@ -136,8 +136,10 @@ names is not reading a repository.
      exclusion or a summary statistic is somebody's conclusion, not a fact, and
      the ones that exclude a whole directory are where nobody has looked.
 
-  2. **Heimdall has one documentation page and it is a link to a marketing
-     site.** The deployment behind it - a content pipeline with 28 Plugins, the
+  2. ~~**Heimdall has one documentation page and it is a link to a marketing
+     site.**~~ See 2b below.
+
+     ~~The original note:~~ The deployment behind it - a content pipeline with 28 Plugins, the
      only `KnowledgeBase` in any chart, and a scheduled web crawl - is here and
      mined for two extracts. So the product an engagement might be asked about
      has no material, while its deployment is one of the best-documented. Decide
@@ -163,10 +165,33 @@ names is not reading a repository.
      importing the package - not with a regex. A wrong table here is worse than
      none, because a default is exactly the kind of fact nobody re-checks.
 
-  5. **Fehu and the Management Console reached the walk today; neither has an
-     extract.** The Console's fact is a go-live blocker - build a resource, skip
-     the grant, the customer sees nothing - and it is now in `08-deploy.md`.
-     Whether either needs more than that is unjudged.
+  5. ~~**Fehu and the Management Console have no extract.**~~ **Closed 2026-09-02
+     as not a gap.** Raised from a template - "every product should have one" -
+     rather than from a need. An extract describes how a shape is assembled from
+     CRs, and neither product produces any; both wiki pages already say so, which
+     is the convention. `wiki console` turned out to be complete on rereading,
+     including the three things that matter: Agent Hub is the only product with
+     no Roles at all, Data Insight is the only one where the action is
+     **purchasing** a named user rather than inviting, and both authorise a
+     single resource rather than a Project, so a grant is repeated per resource
+     and never inherits.
+
+     **The purchase step is worth carrying into a handover plan**: a Mimir
+     handover has a procurement step in it, not only an admin one, and that can
+     wait on somebody who was not in the room.
+
+  2b. ~~**Heimdall has no material.**~~ **Closed 2026-09-02 as out of scope**,
+     and recording the decision so it is not re-raised. Its documentation is one
+     page linking to a marketing site, and `wiki product-suite` already says
+     Heimdall and Fehu rarely appear in an onboarding unless the customer came
+     for them. This tool onboards customers onto the platform; Heimdall is a
+     product they buy.
+
+     What remains true is that its deployment - the content pipeline with 28
+     Plugins and the only KnowledgeBase in any chart - **is** in scope as a
+     reference chart, and it has been mined twice for exactly that. If a
+     customer does come for Heimdall, that is a conversation for whoever sells
+     it, and this tool's honest answer is that it has nothing.
 
   6. ~~**Three reference charts have been counted and not read.**~~ **Their
      AGENTS.md files are read, 2026-09-02.** Five things came out that nothing
