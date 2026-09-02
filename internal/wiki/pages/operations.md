@@ -61,8 +61,8 @@ rule is about the customer's infrastructure. Ours is the same class of thing, an
 this page was encouraging the opposite. Two documents, opposite instincts, and
 nothing said they were about the same subject.
 
-**In the meeting, ask who can change the firewall.** That is the question. The
-addresses go to that person afterwards.
+**In the meeting, ask whether the change can be made.** Then send the addresses
+to whoever will make it, afterwards and directly.
 
 **Nothing here records how these change.** They read as constants and there is no
 documented channel for a revision, which is itself worth knowing before treating
@@ -70,19 +70,35 @@ a copy of them as durable.
 
 Two things this changes in an interview.
 
-**It is a question with a known answer, so ask it in the first meeting.** "Is
-this system reachable from outside your network, and who can add four addresses
-to our allowlist entry?" - the question, not the addresses. It gives their
-network admin the shape of the change without putting the values into the
-meeting, and it avoids discovering in week three that the credential works, the
-query is right, and nothing can connect.
+**It is a question with a known answer, so ask it in the first meeting.** "Can
+four addresses be added to that system's firewall allowlist?" - the question,
+not the addresses and not the org chart. It avoids discovering in week three
+that the credential works, the query is right, and nothing can connect.
 
-**It has an owner and a lead time on their side.** An allowlist change is a
-firewall change, and in most companies that is a ticket, an approval and a
-window - not something the person in the meeting can do that afternoon. That is
-why it is one of the few things worth tracking as an open question rather than
-handing back as a note: it blocks the first delivery and we cannot do it
-ourselves. Get the name of whoever approves it.
+**Track the outcome, not the person.** This is worth an open question rather
+than a note, because it blocks the first delivery and we cannot do it
+ourselves - but what is tracked is *whether the allowlist can be changed, and
+then whether it has been*. Not who signs it, not how many approvals, not how
+long their process takes.
+
+    ours     can this be changed, and is it done yet
+    theirs   who signs, which queue, how long
+
+**Asking who approves it fails this material's own filter**, and it has been
+asked on a slide: `asgard-cli next --stage requirements` filter 0 tests whether
+an answer changes what we build, and an approver's name does not. Worse, filter
+0 names this exact case - turning an operational precondition into a design
+question - and asking it in front of a customer reads as managing their internal
+process.
+
+It is fine to ask when they expect it, because a date changes our plan. It is
+not fine to ask who, because a name does not.
+
+**This page has now contradicted the interview stage twice** - once by offering a
+VPN or a jump host as alternatives, once here. Its reader is usually somebody
+preparing for a meeting, and it was written as though for somebody doing an
+integration. **Any line here that says "ask this in the meeting" should be run
+through filter 0 before it is followed.**
 
 The order the rest of the setup follows once the path is open is
 [`setup-path.md`](setup-path.md).

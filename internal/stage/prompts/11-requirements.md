@@ -236,9 +236,11 @@ integration from days into weeks by being discovered late:
     If their policy needs a VPN, that is their side's business about how the
     allowlist gets implemented; what we need from them is unchanged.
 
-    Ask who approves a firewall change and how long one takes there - it is a
-    ticket, an approval and a window in most companies, not something the person
-    in the meeting can do that afternoon.
+    Ask whether it can be done and roughly when - a date changes our plan. **Do
+    not ask who approves it**: a name does not change what we build, and filter 0
+    below names this exact case. It is a ticket, an approval and a window in most
+    companies rather than something done that afternoon, and that is their queue
+    to manage, not ours to chase.
 
     **Ask for the person; do not hand out the addresses.** They go to whoever
     makes the change, once, read fresh from `asgard-cli wiki operations` - not
@@ -666,6 +668,20 @@ The test is narrow: **does the answer change what we build?**
                 make about our behaviour
     theirs      how they staff a channel, who maintains a document, how their
                 two systems relate to each other, what their people do today
+
+**Names cut both ways, and the line runs between two kinds of person:**
+
+    the person who will hand us the thing      ask. Without a name, a
+                                               dependency is just a delay
+    the person who authorises them internally  do not ask. Their org chart,
+                                               their queue, and it changes
+                                               nothing we build
+
+So: who issues the read-only account - yes, we will be chasing them. Who signs
+off the firewall change - no. Ask **whether** it can be done and roughly
+**when**, because a date changes our plan; a name in their approval chain does
+not, and asking for one in front of a customer reads as managing their internal
+process. This has reached a slide.
 
 A question about their internal arrangements is not an open question. It is
 either something to hand back as a note - "this is worth deciding before you go
