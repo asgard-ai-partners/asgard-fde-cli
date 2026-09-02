@@ -227,9 +227,26 @@ caveat is a paragraph.
 Embedded, the destination travels with the words. Removing it becomes a
 deliberate act, and that act is the judgement that was missing.
 
-**None of the three is enforced by anything.** They are conventions, and the
+**A fourth shape: handing work to another skill without its constraints.**
+`proposal-deck` said to load the typesetting skill and let it produce the file,
+and did not carry over that skill's own ordering requirement. An FDE arriving
+from this side did not know the requirement existed and worked in the opposite
+order for a whole deck. **That is an omission rather than a contradiction, and
+it fails the same way** - follow the page and get hurt, find out by being hurt.
+
+    when a page delegates, it carries the constraints of what it delegates to,
+    or it says explicitly which of them do not apply here.
+
+That one was resolved by a decision rather than a repair - only the layout
+language is borrowed now, not the process - but the shape stands.
+
+**None of the four is enforced by anything.** They are conventions, and the
 record is that a convention catches this only after somebody has been caught by
-it. Issue #9 tracks whether any can be made mechanical.
+it. Issue #9 tracks whether any can be made mechanical. `hack/imperatives.py` is the
+first step and is deliberately not a detector: it lists every instruction in the
+material on one screen, because the cause is that no two opposing ones are ever
+in front of the same reader. Its first run found two instructions whose reader
+was wrong.
 
 ## Three questions the material has to keep answering
 

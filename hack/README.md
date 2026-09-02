@@ -11,6 +11,30 @@ dry-run do not answer it. The dry-run is worse than silent, because it drops a
 field it does not recognise and reports success while helm's own server-side
 apply refuses.
 
+## Reading every instruction at once
+
+    python3 hack/imperatives.py [--ask] [--unmarked]
+
+Three self-contradictions have reached a customer, all found by somebody walking
+into one, and the cause is structural: the instructions are spread across ninety
+files, so **there is no moment at which two opposing ones are in front of the
+same reader.** This makes that moment - it lists every bolded imperative with
+its file, which is a few hundred lines and therefore one sitting.
+
+It detects nothing, deliberately. Verb-pair matching over prose produces noise,
+and a checker that cries wolf teaches people to change what it can see rather
+than what is wrong - a failure this repository has already had, in a deck.
+
+`--ask` narrows to instructions about asking a customer, which is where all
+three incidents were. `--unmarked` narrows to those that do not say who they are
+for or where the answer goes; most instructions have one obvious reader, so that
+list is where to look rather than a list of defects.
+
+**Its first run found two.** An extract telling a chart author to have asked
+about writes during the interview - a meeting they were not at - and a build
+stage asking a customer question after the interview had closed. Both were
+rewritten to say who they are for.
+
 ## Checking a change against the CRDs
 
 Pull asgard-kube first. Validating against a clone from three weeks ago proves

@@ -40,7 +40,10 @@ partner API that does any of those.
 Do **not** use it for reads, however expensive or slow. A gate on a read trains
 people to click approve without looking, which is worse than no gate.
 
-**Ask about writes during the interview, not at implementation time.** A customer
+**If you are reading this while writing the chart and nobody asked these during
+the interview, stop and go back.** They are interview questions - the list above
+is what to ask - and a write designed from assumptions is the most expensive
+rework in this repository's history A customer
 describing "AI prepares it, a person checks it, then it goes out" is describing
 this shape, and it changes the project's architecture: a write path needs its own
 spec, its own credentials, and a decision about what happens when the human says
