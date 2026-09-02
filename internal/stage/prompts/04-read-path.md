@@ -25,6 +25,32 @@ it takes a CR change and a review.
 > This was answered wrong once already: a public site got a SemanticLayer first,
 > and it was later removed and replaced with five zero-parameter query tools.
 
+## "Zero-parameter" means the model supplies nothing, not that everyone sees the same rows
+
+The two are constantly confused, and the confusion turns into telling a customer
+that something is impossible when it is not.
+
+An anonymous channel can absolutely answer "where is MY repair case". What it
+cannot do is let the **model** choose whose case to look up. The customer's
+identity is injected server-side on every turn - it arrives in the request the
+front end sends, never as a tool argument the model fills in - and the query
+filters on it. The tool still takes no parameters from the model, so the
+injection surface is still zero, which is the whole point of the rule.
+
+    the model         picks WHICH question         zero parameters
+    the caller        supplies WHO is asking       every turn, server-side
+
+Whatever sits in front - a website, a chat channel, a support desk - is what
+knows who is talking and passes it through. If nothing in front knows, then the
+per-customer half genuinely cannot be built, and that is a question for the
+customer rather than a design to work around.
+
+    asgard-cli usecase per-turn-credentials
+
+Read that before promising anything of the form "查我的...". It is also where the
+failure mode lives: a query that forgets to filter on the injected identity fails
+on the anonymous path only, which is the path nobody tests.
+
 Read the shape before writing it:
 
     asgard-cli usecase semantic-layer

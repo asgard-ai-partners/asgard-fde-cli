@@ -26,6 +26,44 @@ is usually the first one asked about.
 
 `botProviderClass` is immutable in the CRD, so it has to be right the first time.
 
+## What the platform does NOT own: the conversation
+
+This is the question every customer service engagement asks, and the answer is
+the same one every time.
+
+**Handing over to a human, pausing the agent while a person replies, resuming
+afterwards, counting how many questions one user has asked - none of these are
+platform features.** There is no CR for any of them, and no field: searching the
+CRDs for a handoff, a takeover, a suspend or a per-user quota finds nothing.
+
+What the platform quota does cover is capacity, not people: 5 requests per second
+per endpoint, 3 minutes and 30 steps per request, 40 projects, 300 GB of
+knowledge base. A multi-system troubleshooting conversation can reach 30 steps,
+which is worth saying out loud before somebody designs one.
+
+The mechanism the platform's own case study describes puts the conversation
+somewhere else entirely. A retail site's support desk receives the customer's
+message, writes it into its own conversation log and answers the customer
+immediately; only then does it forward the message to the Flow Agent in the
+background, with a scope-limited credential. A human can join that same thread at
+any time, because the thread was never the agent's to begin with.
+
+So the shape is:
+
+    the customer     ->  something that owns the conversation  ->  Asgard
+                         (a support desk, a site, a relay)
+
+"Pause the AI" is that middle layer deciding not to forward. "Three strikes then
+a human" is that middle layer counting. "Ten questions a day" is that middle
+layer counting too.
+
+**With a website the middle layer is obvious - the site itself. With LINE it is
+not, and that is the question to ask.** LINE alone does not do any of this, and a
+LINE official account cannot have both its chat mode and its bot mode consuming
+the same webhook. So a customer asking for agent-to-human handoff over LINE
+either already has a support desk in front, or the requirement cannot be built as
+stated. Find out which before designing anything.
+
 ## Two pages in Odin
 
 - **Applications -> Data Insight & Agent Hub** - browse and open the Mimir and
@@ -99,7 +137,20 @@ needs a connector pod.
 - `botProviderClass` being immutable: checked against
   [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `15ded0f` -
   `BotProviderSpec`
+- **The platform owning no handoff, takeover, suspend or per-user quota**:
+  checked 2026-09-02 against
+  [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `15ded0f` -
+  no CRD and no field carries any of those concepts
+- The quota numbers: [Quota and limits](https://docs.asgard-ai.com/docs/help-community/quota-limits)
+  - asgard-docs `f00e0ee`
+- The support desk owning the conversation:
+  [AI customer service answering order enquiries](https://docs.asgard-ai.com/docs/product-suite/odin/case-studies/retail-ai-customer-service)
+  - asgard-docs `f00e0ee`
 
 **Unchecked:** the per-platform credentials come from the product documentation
 only, and **no deployment uses a non-generic class** - every BotProvider across
-every reference deployment is `generic`.
+every reference deployment is `generic`. That the support desk owns the
+conversation is read from one case study and has not been held against a
+deployment; that LINE's chat mode and bot mode cannot share a webhook is LINE's
+own constraint, not Asgard's, and was not re-verified against LINE's current
+documentation.

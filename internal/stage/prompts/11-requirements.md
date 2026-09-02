@@ -154,6 +154,42 @@ An official account with a following is a distribution channel a widget cannot
 reproduce, and asking those people to visit a web page instead loses most of
 them.
 
+**3e. Is there anything between the channel and us?**
+
+Ask this whenever the answer to 3d is a chat platform, and ask it early, because
+a whole class of requirement depends on it and the customer will not raise it
+themselves.
+
+    the customer  ->  ???  ->  Asgard
+
+Whatever sits in that middle - a support desk, a helpdesk product, their own
+relay, or nothing at all - is what owns the conversation. The platform does not:
+there is no CR for handing over to a human, for pausing while a person replies,
+for resuming afterwards, or for counting how many questions one user has asked.
+`asgard-cli wiki integration` has the detail and the sources.
+
+So every requirement of this shape belongs to that middle layer, not to us:
+
+    "transfer to a real agent"           the desk takes the thread
+    "pause the AI while a human replies"  the desk stops forwarding
+    "three failures then a human"         the desk counts
+    "ten questions per user per day"      the desk counts
+
+With a website the middle layer is obvious, because the site is already there.
+**With LINE it usually does not exist**, and a LINE official account cannot have
+its chat mode and its bot mode consuming the same webhook - so "a human takes
+over in LINE" is a constraint on their side before it is a design on ours.
+
+If the answer is "nothing", say so plainly rather than designing around it. The
+choice is theirs: put a desk in front, or drop the requirement. A proposal that
+promises handoff with nothing in the middle is a promise nobody can keep.
+
+Two platform limits worth handing over in the same conversation, because they
+shape what can be asked for: one request gets **30 steps and 3 minutes**, and an
+endpoint serves **5 requests per second**. A troubleshooting conversation that
+consults a knowledge base, then a CRM, then a ticket system, then asks a
+follow-up, can reach 30 steps.
+
 LINE also needs **two-way setup** - Asgard issues a webhook URL that somebody has
 to paste back into the LINE console and verify - so it needs an owner on their
 side, not just a credential. See `asgard-cli wiki integration`.
