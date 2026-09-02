@@ -3,9 +3,10 @@ The repository skeleton has not been written yet.
 **Read ahead before the interview, though.** The rest of this walk is written to
 be read on arrival, and that breaks at the interview: it is the one stage whose
 output is spoken rather than written, so a mistake there ends up in the
-customer's notes rather than in a file you can edit. `asgard-cli next --stage
-requirements` opens with the five things that get said wrong and where the right
-version lives.
+customer's notes rather than in a file you can edit. `asgard-cli brief customer-meeting`
+lists the five things that reach a customer wrong and where the right version
+lives - and it is addressed by what you are about to do rather than by which
+stage you are at, so it is the same command the day before any meeting.
 
     asgard-cli scaffold
 
