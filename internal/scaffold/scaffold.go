@@ -8,6 +8,7 @@
 package scaffold
 
 import (
+	"bytes"
 	"embed"
 	"fmt"
 	"io/fs"
@@ -113,6 +114,10 @@ const (
 	// Updated means only the file's managed region was refreshed, leaving
 	// everything the engagement wrote around it untouched.
 	Updated
+	// Preserved means force was set and the file was left alone anyway,
+	// because it is one the CLI's own commands write into and it no longer
+	// matches the template it started as.
+	Preserved
 )
 
 func (s Status) String() string {
@@ -123,6 +128,8 @@ func (s Status) String() string {
 		return "overwritten"
 	case Updated:
 		return "updated"
+	case Preserved:
+		return "preserved"
 	default:
 		return "skipped"
 	}
@@ -158,6 +165,25 @@ func Write(root string, cfg *config.Config, force bool) ([]Result, error) {
 		content, err := render(j.source, j.data)
 		if err != nil {
 			return nil, err
+		}
+
+		// An accumulator is a file the CLI's other commands write into after
+		// scaffold has run - an index, the open-questions table. --force means
+		// "discard local edits to the skeleton", and these stopped being
+		// skeleton the first time `request add` or `question add` touched them.
+		// Overwriting one silently destroys an engagement's interview, and in a
+		// repo with no commits there is nothing to recover from. Untouched ones
+		// still match their template, so leaving those to the normal path costs
+		// nothing.
+		if exists && force && accumulator(j.target) {
+			current, err := os.ReadFile(target)
+			if err != nil {
+				return nil, fmt.Errorf("read %s: %w", target, err)
+			}
+			if !bytes.Equal(current, content) {
+				results = append(results, Result{Path: j.target, Status: Preserved})
+				continue
+			}
 		}
 
 		if exists && !force {
@@ -198,6 +224,25 @@ type job struct {
 	source string
 	target string
 	data   Data
+}
+
+// accumulators are the files this CLI's own commands append to. The spec
+// module index is matched by suffix because its directory carries the spec slug.
+var accumulators = map[string]bool{
+	filepath.Join("docs", "open-questions.md"):             true,
+	filepath.Join("requirements", "requests", "_index.md"): true,
+	filepath.Join("requirements", "tasks", "_index.md"):    true,
+	filepath.Join("docs", "decisions", "README.md"):        true,
+}
+
+func accumulator(target string) bool {
+	if accumulators[target] {
+		return true
+	}
+	// docs/spec/<slug>/README.md carries the living spec's module index and its
+	// traceability table, both written a row at a time as the work happens.
+	dir, file := filepath.Split(target)
+	return file == "README.md" && strings.HasPrefix(filepath.ToSlash(dir), "docs/spec/")
 }
 
 // plan walks the embedded tree and expands the placeholder path segments. A

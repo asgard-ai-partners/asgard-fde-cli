@@ -58,11 +58,26 @@ a human" is that middle layer counting. "Ten questions a day" is that middle
 layer counting too.
 
 **With a website the middle layer is obvious - the site itself. With LINE it is
-not, and that is the question to ask.** LINE alone does not do any of this, and a
-LINE official account cannot have both its chat mode and its bot mode consuming
-the same webhook. So a customer asking for agent-to-human handoff over LINE
-either already has a support desk in front, or the requirement cannot be built as
-stated. Find out which before designing anything.
+not, and that is the question to ask.**
+
+What is settled is the part above: none of it is ours. What is *not* settled is
+how much LINE gives you for free, and the difference decides whether the customer
+needs a support desk or a small piece of state.
+
+- A person replying in LINE Official Account Manager is a takeover surface LINE
+  may already provide. Older LINE accounts had a 回應模式 that was either chat or
+  bot; whether a current account can run both at once was **not confirmed** -
+  LINE's own Messaging API page on building a bot says nothing either way, and
+  the chat-handling page could not be read.
+- Even if it does, LINE gives the bot **no signal that a human took over**. So
+  the pause/resume state and the counters still have to live somewhere, and that
+  somewhere is still not the platform.
+
+So do not tell a customer this cannot be built. Ask who owns the LINE Official
+Account, get them to say what their agents use today, and check LINE's current
+documentation for the account they actually have. The answer moves the
+requirement between "needs a support desk in front" and "needs a small piece of
+state" - a very different conversation, and not one to have from memory.
 
 ## Two pages in Odin
 
@@ -146,11 +161,18 @@ needs a connector pod.
 - The support desk owning the conversation:
   [AI customer service answering order enquiries](https://docs.asgard-ai.com/docs/product-suite/odin/case-studies/retail-ai-customer-service)
   - asgard-docs `f00e0ee`
+- LINE's own behaviour: [Building a bot](https://developers.line.biz/en/docs/messaging-api/building-bot/)
+  read 2026-09-02, which does not mention response modes or any exclusivity;
+  `messaging-api/handling-chats/` returned 403 and was not read. asgard-docs
+  `f00e0ee` covers only the webhook setup steps and says nothing about a human
+  replying in the same account
 
 **Unchecked:** the per-platform credentials come from the product documentation
 only, and **no deployment uses a non-generic class** - every BotProvider across
 every reference deployment is `generic`. That the support desk owns the
 conversation is read from one case study and has not been held against a
-deployment; that LINE's chat mode and bot mode cannot share a webhook is LINE's
-own constraint, not Asgard's, and was not re-verified against LINE's current
-documentation.
+deployment; **whether a current LINE Official Account can serve both a human
+in Official Account Manager and a webhook at the same time is unresolved** - it
+is LINE's behaviour rather than Asgard's, no source here settles it, and it
+decides how much of a customer's handoff requirement is buildable. Get it from
+LINE's documentation for the account in question before designing around it.

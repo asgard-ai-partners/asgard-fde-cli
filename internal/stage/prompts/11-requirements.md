@@ -176,9 +176,12 @@ So every requirement of this shape belongs to that middle layer, not to us:
     "ten questions per user per day"      the desk counts
 
 With a website the middle layer is obvious, because the site is already there.
-**With LINE it usually does not exist**, and a LINE official account cannot have
-its chat mode and its bot mode consuming the same webhook - so "a human takes
-over in LINE" is a constraint on their side before it is a design on ours.
+With LINE it often does not exist - but **how much LINE gives you for free is
+unresolved**, so do not walk in saying it cannot be done. What is certain is that
+LINE gives the bot no signal that a person has taken over, so the pause/resume
+state and the counters live outside the platform either way. Ask who owns the
+LINE Official Account and what their agents use today, and check LINE's current
+documentation for that account. See `asgard-cli wiki integration`.
 
 If the answer is "nothing", say so plainly rather than designing around it. The
 choice is theirs: put a desk in front, or drop the requirement. A proposal that

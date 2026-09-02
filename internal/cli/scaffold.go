@@ -60,6 +60,7 @@ so it can be re-run after adding a project or when a file was deleted by hand.
 
 			out := cmd.OutOrStdout()
 			var created, overwritten, skipped int
+			var preserved []string
 			for _, r := range results {
 				switch r.Status {
 				case scaffold.Created:
@@ -68,6 +69,9 @@ so it can be re-run after adding a project or when a file was deleted by hand.
 				case scaffold.Overwritten:
 					overwritten++
 					fmt.Fprintf(out, "  overwritten  %s\n", r.Path)
+				case scaffold.Preserved:
+					preserved = append(preserved, r.Path)
+					fmt.Fprintf(out, "  preserved    %s\n", r.Path)
 				default:
 					skipped++
 				}
@@ -81,6 +85,18 @@ so it can be re-run after adding a project or when a file was deleted by hand.
 				fmt.Fprintf(out, ", %d already present", skipped)
 			}
 			fmt.Fprintf(out, " in %s\n", root)
+
+			if len(preserved) > 0 {
+				fmt.Fprintf(out, "\n%d file(s) preserved despite --force, because `asgard-cli`\n"+
+					"writes into them and they no longer match the template they started as:\n\n", len(preserved))
+				for _, p := range preserved {
+					fmt.Fprintf(out, "  %s\n", p)
+				}
+				fmt.Fprintf(out, "\nThese hold the engagement's own records - open questions, the request and\n"+
+					"task indexes, the living spec's module index. --force discards local edits to\n"+
+					"the skeleton, and these stopped being skeleton the first time a command wrote\n"+
+					"to them. To genuinely reset one, delete it and run scaffold again.\n")
+			}
 
 			if created > 0 || overwritten > 0 {
 				fmt.Fprintf(out, `
