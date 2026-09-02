@@ -42,21 +42,40 @@ Create `.asgard-config.json` in the current directory, binding it to a workspace
 The workspace is the customer:
 
 ```bash
-asgard-cli init --workspace-id 7ab7f523-3cd9-7e87-a873-6f1fa6028104
+asgard-cli init
 ```
 
 ```
 Created /path/to/acme-asgard-kube/.asgard-config.json
-  workspace.id    7ab7f523-3cd9-7e87-a873-6f1fa6028104
+  workspace.id    (not set yet)
   workspace.slug  acme
   workspace.name  acme
   repository      acme-asgard-kube
 
+The workspace id is what the platform knows this customer by. Nothing here
+needs it yet - namespaces come from the slug - so it can wait until the
+platform has issued one:
+
+    asgard-cli init --workspace-id ws_xxxxxxxx
+
 No projects yet. Add one with `asgard-cli project add <slug>`.
 ```
 
-`--workspace-id` is issued by the Asgard platform and is required. Its format is
-not validated yet, pending an API to verify it.
+`--workspace-id` is issued by the Asgard platform and is **optional**. Nothing
+this CLI generates reads it, so waiting for one does not block the work that
+comes before it. Its format is not validated, pending an API to verify it.
+
+Setting it later on an already-initialised repository changes nothing else, so it
+needs no `--force`:
+
+```bash
+asgard-cli init --workspace-id 1234567890123456789
+```
+
+Replacing an id that is already recorded does need `--force`, because that binds
+the repository to a different workspace. `project add` and `check` both say when
+the id is still unset - a project is what the platform deploys, so that is the
+point at which it is worth chasing.
 
 `--workspace-slug` defaults to the directory name with a trailing `-asgard-kube`
 removed, so running inside `acme-asgard-kube` yields `acme`.
@@ -64,7 +83,9 @@ removed, so running inside `acme-asgard-kube` yields `acme`.
 that creates projects up front, each with the `dev` environment only.
 
 Rerunning is safe: when the config exists nothing is changed and the current
-settings are printed. `--force` rebinds, and still requires `--workspace-id`.
+settings are printed, except that a missing workspace id is filled in. `--force`
+rebinds, and keeps the projects already recorded - their charts are on disk
+either way - unless `--project` gives a new list.
 
 ### `project add`
 

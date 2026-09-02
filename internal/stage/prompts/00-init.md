@@ -17,22 +17,31 @@ thing to decide up front is the workspace itself.
 
 ## What you need
 
-**The workspace id**, from the Asgard platform. It is a long decimal number
-(around 19 digits), **not** a UUID - if what you have looks like
-`7ab7f523-3cd9-...`, it is the wrong value. It identifies the customer, and it is
-the one value that cannot be derived or guessed. Get it before starting.
-
-Ask for it, or read it off the platform. **Do not copy one from another
-customer's repository or from an example**: it is a live production identifier,
-and a wrong one binds this repository to somebody else's workspace.
-
-**The slug.** Short, lowercase, hyphens only. It is load bearing:
+**The slug**, and that is all. Short, lowercase, hyphens only. It is load
+bearing:
 
     repository   <slug>-asgard-kube
     namespace    asgard-<slug>-<project>-<env>
 
 Kubernetes caps a namespace at 63 characters and names derived from a namespace
 inherit its length, so keep it short. Prefer the customer's own short name.
+
+**The workspace id can wait.** It comes from the Asgard platform and nothing this
+repository renders reads it - namespaces come from the slug - so not having one
+should not stop the work that comes before it. Add it whenever it arrives:
+
+    asgard-cli init --workspace-id <id>
+
+On an already-initialised repository that fills the field in and changes nothing
+else, so it needs no `--force`. `asgard-cli project add` and `asgard-cli check`
+both say when it is still unset, because a project is what the platform deploys
+and so is the point at which it is worth chasing.
+
+When you do get it: it is a long decimal number (around 19 digits), **not** a
+UUID - if what you have looks like `7ab7f523-3cd9-...`, it is the wrong value.
+Ask for it, or read it off the platform. **Do not copy one from another
+customer's repository or from an example**: it is a live production identifier,
+and a wrong one binds this repository to somebody else's workspace.
 
 **Do not ask about projects yet.** How the work splits is decided by interviewing
 the customer, which is stage 2. Starting with none is the normal case.
@@ -43,7 +52,7 @@ the customer, which is stage 2. Starting with none is the normal case.
 case that is the directory you are already in - an empty one, or a repository
 just cloned for this customer:
 
-    asgard-cli init --workspace-id <id>
+    asgard-cli init
 
 **Do not create another directory level.** Check where you are before assuming.
 
@@ -51,7 +60,7 @@ Only if you are sitting in a *parent* directory - the place other
 `*-asgard-kube` repos live - create the workspace first:
 
     mkdir <slug>-asgard-kube && cd <slug>-asgard-kube
-    asgard-cli init --workspace-id <id>
+    asgard-cli init
 
 ### The slug comes from the directory name
 

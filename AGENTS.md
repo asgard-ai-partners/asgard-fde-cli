@@ -63,7 +63,7 @@ Mark status with words or ASCII punctuation:
 
 ```
 ok  .asgard-config.json
-- workspace.id must not be empty
+- workspace.slug must not be empty
 ```
 
 Some scaffold templates and extracts still carry decorative characters from
@@ -107,7 +107,7 @@ outside this one:
 ```bash
 go build -o .out/asgard-cli ./cmd/asgard-cli
 cd $(mktemp -d)
-/path/to/.out/asgard-cli init --workspace-id 0 && /path/to/.out/asgard-cli scaffold
+/path/to/.out/asgard-cli init && /path/to/.out/asgard-cli scaffold
 /path/to/.out/asgard-cli project add app --env dev
 /path/to/.out/asgard-cli add <kind> <name> --project app
 /path/to/.out/asgard-cli check && /path/to/.out/asgard-cli render app dev

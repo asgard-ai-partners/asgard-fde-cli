@@ -40,10 +40,19 @@ namespace are derived from:
   repository   <slug>` + config.RepoSuffix + `
   namespace    asgard-<slug>-<project>-<env>
 
---workspace-id is issued by the Asgard platform and is required. --workspace-slug
-defaults to the directory name with a trailing ` + config.RepoSuffix + ` removed,
-so running this inside acme` + config.RepoSuffix + ` yields acme.
+--workspace-slug defaults to the directory name with a trailing ` + config.RepoSuffix + `
+removed, so running this inside acme` + config.RepoSuffix + ` yields acme.
 --workspace-name defaults to the slug.
+
+--workspace-id is optional. Nothing this CLI generates reads it - namespaces come
+from the slug - so waiting for the platform to issue one should not block the
+work that comes before it. Fill it in whenever you have it:
+
+  asgard-cli init --workspace-id ws_xxxxxxxx
+
+On an already-initialised repository that sets the id and changes nothing else,
+so it needs no --force. Changing an id that is already recorded does, because
+that is a different workspace rather than a missing fact.
 
 Projects are usually added later with "asgard-cli project add", once the
 engagement knows how the work splits. --project is a shortcut for when it is
@@ -51,7 +60,9 @@ already known; it may be repeated, and each project starts with the dev
 environment only.
 
 If the config file already exists nothing is changed and the current settings are
-printed; pass --force to rebind.`,
+printed; pass --force to rebind. A rebind keeps the projects already recorded,
+because their charts are on disk either way - pass --project to replace the list
+instead.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			dir, err := os.Getwd()
@@ -69,7 +80,23 @@ printed; pass --force to rebind.`,
 					if err := existing.Validate(); err != nil {
 						return fmt.Errorf("%s is incomplete, pass --force to reinitialise:\n%w", config.FileName, err)
 					}
-					fmt.Fprintf(out, "%s already exists\n", config.FileName)
+					// Filling in a workspace id that was left empty is not a
+					// rebind, so it does not need --force. Replacing one that is
+					// already there is, because that names a different
+					// workspace.
+					switch {
+					case workspaceID == "" || workspaceID == existing.Workspace.ID:
+						fmt.Fprintf(out, "%s already exists\n", config.FileName)
+					case existing.Workspace.HasID():
+						return fmt.Errorf("%s already records workspace.id %q; pass --force to rebind this repository to %q",
+							config.FileName, existing.Workspace.ID, workspaceID)
+					default:
+						existing.Workspace.ID = workspaceID
+						if err := config.Save(path, existing); err != nil {
+							return err
+						}
+						fmt.Fprintf(out, "Set workspace.id in %s\n", path)
+					}
 					printConfig(out, existing)
 					return nil
 				case !errors.Is(err, config.ErrNotFound):
@@ -79,9 +106,6 @@ printed; pass --force to rebind.`,
 				}
 			}
 
-			if workspaceID == "" {
-				return fmt.Errorf("creating %s requires --workspace-id, for example:\n  asgard-cli init --workspace-id ws_xxxxxxxx", config.FileName)
-			}
 			if workspaceSlug == "" {
 				workspaceSlug = defaultSlug(dir)
 			}
@@ -95,6 +119,18 @@ printed; pass --force to rebind.`,
 					Slug: workspaceSlug,
 					Name: workspaceName,
 				},
+			}
+
+			// Rebinding the workspace does not delete the projects. They exist
+			// on disk as charts, and dropping them from the config leaves a
+			// repository whose charts nothing declares - which `render` will not
+			// touch and `check` did not used to notice. Carry them over unless
+			// --project is given, which is an explicit new list.
+			if force && len(projects) == 0 {
+				if existing, err := config.Load(path); err == nil {
+					cfg.Projects = existing.Projects
+					cfg.OLAPOnlyLayers = existing.OLAPOnlyLayers
+				}
 			}
 			for _, slug := range projects {
 				cfg.Projects = append(cfg.Projects, config.Project{
@@ -117,7 +153,7 @@ printed; pass --force to rebind.`,
 		},
 	}
 
-	cmd.Flags().StringVar(&workspaceID, "workspace-id", "", "workspace id issued by the Asgard platform (required)")
+	cmd.Flags().StringVar(&workspaceID, "workspace-id", "", "workspace id issued by the Asgard platform (optional; can be set later)")
 	cmd.Flags().StringVar(&workspaceSlug, "workspace-slug", "", "slug used to derive the repository and namespace names (defaults to the directory name without "+config.RepoSuffix+")")
 	cmd.Flags().StringVar(&workspaceName, "workspace-name", "", "display name for the customer (defaults to the slug)")
 	cmd.Flags().StringSliceVar(&projects, "project", nil, "project slug to create up front, repeatable (defaults to none)")
@@ -136,10 +172,20 @@ func defaultSlug(dir string) string {
 // printConfig reports what a command just wrote or found, including the two
 // derived names, which are the facts the FDE needs next.
 func printConfig(out io.Writer, cfg *config.Config) {
-	fmt.Fprintf(out, "  workspace.id    %s\n", cfg.Workspace.ID)
+	if cfg.Workspace.HasID() {
+		fmt.Fprintf(out, "  workspace.id    %s\n", cfg.Workspace.ID)
+	} else {
+		fmt.Fprintf(out, "  workspace.id    (not set yet)\n")
+	}
 	fmt.Fprintf(out, "  workspace.slug  %s\n", cfg.Workspace.Slug)
 	fmt.Fprintf(out, "  workspace.name  %s\n", cfg.Workspace.Name)
 	fmt.Fprintf(out, "  repository      %s\n", cfg.RepoName())
+
+	if !cfg.Workspace.HasID() {
+		fmt.Fprintf(out, "\nThe workspace id is what the platform knows this customer by. Nothing here\n"+
+			"needs it yet - namespaces come from the slug - so it can wait until the\n"+
+			"platform has issued one:\n\n    asgard-cli init --workspace-id ws_xxxxxxxx\n")
+	}
 
 	if len(cfg.Projects) == 0 {
 		fmt.Fprintf(out, "\nNo projects yet. Add one with `asgard-cli project add <slug>`.\n")

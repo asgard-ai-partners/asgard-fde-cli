@@ -171,6 +171,30 @@ func (c *checker) discoverProjects() ([]string, error) {
 					"run `asgard-cli scaffold` to write it", config.FileName, p.Slug, p.Slug)
 			}
 		}
+
+		// The other direction: a chart on disk that the config does not
+		// declare. `render` and CD both work from the config, so such a project
+		// is dead weight nobody deploys, and until this check existed the only
+		// symptom was a directory that never appeared in any output.
+		declared := make(map[string]bool, len(cfg.Projects))
+		for _, p := range cfg.Projects {
+			declared[p.Slug] = true
+		}
+		for _, p := range projects {
+			if !declared[p] {
+				c.errf("projects/%s has a chart but %s does not declare it, so nothing renders or deploys it; "+
+					"add it with `asgard-cli project add %s` or delete the directory", p, config.FileName, p)
+			}
+		}
+
+		// A warning and not an error: nothing rendered from this repository
+		// reads the id, so a repo without one is not broken. It is worth saying
+		// once a project exists, because that is what the platform deploys and
+		// an id nobody ever fetched is easy to carry all the way to a handover.
+		if !cfg.Workspace.HasID() && len(cfg.Projects) > 0 {
+			c.warnf("%s has no workspace.id, and %d project(s) are declared; set it with "+
+				"`asgard-cli init --workspace-id ws_xxxxxxxx`", config.FileName, len(cfg.Projects))
+		}
 	}
 	return projects, nil
 }

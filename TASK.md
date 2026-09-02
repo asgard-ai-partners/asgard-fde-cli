@@ -33,7 +33,7 @@ write the customer's Kubernetes resources, because roughly 90% of that repo's
 - **Bundling helm or kubectl into the release.** Four platform/arch combinations
   at ~50MB each, and **kubectl has to stay within one minor of the cluster's API
   server**, so a pinned copy goes stale and is worse than none.
-- **Validating `workspace.id` against the platform.** Waiting on the API.
+- **Validating `workspace.id` against the platform.** Waiting on the API. It is optional as of 2026-09-02, since nothing rendered reads it; `project add` and `check` say when it is still unset.
 - **Reading or writing `platformMainEnvironmentId`.** Per project per env, and it
   only exists after tf-asgard has created the namespace, so it belongs to the
   generated repo's values files.
