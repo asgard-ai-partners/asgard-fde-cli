@@ -55,6 +55,34 @@ answer; "are they internal users?" gets a yes that means nothing, because a
 contractor with a company address is internal to the person answering and
 anonymous to the platform.
 
+**2b. Is this a proof of concept, or will real people use it?**
+
+Ask early, because the answer decides what the rest of the interview is allowed
+to leave open. A POC can be excused, in writing, from things a live service
+cannot - who may see which data, an audit trail an auditor would accept, how long
+conversations and the personal data in them are kept, and writing to a production
+system.
+
+Ask it as three questions, not one:
+
+    which is it              a POC, or something customers will actually touch
+    who signs                the named person who can grant those exemptions
+    when does it stop        an end date, and what the boundary is until then -
+                             test data, test accounts, a sandbox tenant
+
+**"A POC that goes straight into production if it works" is a live service.** It
+is the most common answer and the most expensive one to accept at face value,
+because the exemptions were never real and nobody said so.
+
+If the exemptions cannot be granted, that is not a setback and it is worth saying
+plainly in the room: a security review is on the critical path and the timeline
+is a different one. Heard in week one they plan for it; heard in week eight they
+think you missed it.
+
+Whatever they grant, write it into `docs/decisions/` the day it is agreed. An
+exemption nobody recorded becomes an accusation later, and the person who granted
+it will have moved on.
+
 **3. Which systems hold the data, and how can each one be reached?**
 
 One row per system, including the ones that sound obvious.
@@ -227,6 +255,23 @@ not verifiable; "the warehouse lead stops phoning about location 608" is.
 
 This becomes the acceptance criteria of the task specs, and a request whose
 success nobody can describe produces tasks nobody can close.
+
+**6b. What is the smallest version they would accept as proof?**
+
+Their answer, not yours. You will have one in mind and it will be the one that
+is easiest to build; theirs is the one that gets judged.
+
+    "if it only did ___, would that be worth putting in front of someone?"
+    "of everything here, which one would you want to see working first?"
+    "what would make you say this is not going to work?"
+
+If they handed over a verification list, read it back and ask which item they
+would keep if they could only keep one. That item is the MVP, whatever it costs
+to build - a first delivery that skips the item being judged has failed however
+fast it shipped.
+
+Then work out what that one item genuinely needs, and the two filters below turn
+the rest into deferred scope rather than open questions.
 
 **7. What is explicitly out of scope?**
 
@@ -452,6 +497,8 @@ is not tracked, it is just written down.
   - every system has a row, and every row says how it is reached
   - the open questions have been through both filters, so what is left blocks the
     MVP rather than describing everything still unknown
+  - the customer has said which single item they would keep, and whether this is
+    a POC - both are theirs to answer and neither can be inferred
   - every system we will connect to has a section 4 block, with a named
     credential owner and an answer on network reach - and no secret in it
   - unstructured knowledge is either listed or explicitly ruled out
