@@ -390,15 +390,26 @@ func (c *checker) checkCommonSkills(projects []string) error {
 	return nil
 }
 
-// checkInterviewRecorded reports customer material that has been filed with no
-// request to show for it.
+// checkInterviewRecorded reports customer material that nothing has been done
+// with - read, and left in the repository with no trace of the reading.
 //
 // Every other check here asks whether a file is well formed. This one asks
-// whether a stage of the work left anything behind, because the way the
-// interview fails is not a malformed record - it is no record at all. Material
-// is read, the analysis is done well, it is delivered in conversation, and the
-// repository ends the day looking exactly as it did before. `next` then reports
-// "nothing in flight", correctly, and the second reader starts over.
+// whether work left anything behind, because that failure is not a malformed
+// record - it is no record at all. Material is read, the analysis is done well,
+// it is delivered in conversation, and the repository ends the day looking
+// exactly as it did before.
+//
+// **Filed material is not evidence that an interview happened.** The first
+// version of this check assumed it was, and warned through several hours of a
+// perfectly normal state: a customer sent their own document ahead of the
+// meeting, which is the usual order here because their internal approval comes
+// before they will book one. Nothing was being lost - the material had been
+// read and sixteen open questions written from it - and the tool said otherwise
+// on every run. A warning that fires while somebody is doing the right thing
+// teaches them to stop reading warnings.
+//
+// So open questions count as a record. They are the trace the reading leaves
+// before there is anything to request.
 func (c *checker) checkInterviewRecorded() error {
 	filed, err := work.FiledReferences(c.root)
 	if err != nil {
@@ -416,10 +427,20 @@ func (c *checker) checkInterviewRecorded() error {
 		return nil
 	}
 
-	c.warnf("references/ holds %d file(s) of customer material and %s records no request; "+
-		"an interview that stays in the conversation is lost when it ends - "+
-		"`asgard-cli request add \"<what they asked for, in their words>\"`, one per capability",
-		filed, filepath.ToSlash(work.RequestIndex))
+	questions, err := work.ReadQuestions(c.root)
+	if err != nil {
+		return err
+	}
+	if len(questions) > 0 {
+		return nil
+	}
+
+	c.warnf("references/ holds %d file(s) of customer material, and %s records no request "+
+		"and %s no question - so nothing records that it was read. **A draft is enough**: "+
+		"`asgard-cli request add \"<what they asked for, in their words>\"` before the "+
+		"interview is normal, and a draft naming its open questions is worth more than a "+
+		"ready one that guessed",
+		filed, filepath.ToSlash(work.RequestIndex), filepath.ToSlash(work.QuestionFile))
 	return nil
 }
 
