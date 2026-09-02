@@ -3,7 +3,9 @@
 That request has no target project yet, and deciding it is this stage. The output
 is a decision, not code.<<else>>No request is open, so this page is being read out of order. This stage is the
 interview that decides how the work splits into projects, and it starts from
-something a customer asked for: `asgard-cli request add "<what they asked for>"`.<<end>>
+something a customer asked for: `asgard-cli request add "<what they asked for>"`.
+
+The interview that produces one is `asgard-cli next --stage requirements`.<<end>>
 
 A **project** is one Helm chart deployed to one namespace, and it always lives
 under this workspace at `projects/<slug>/` - `asgard-cli project add` puts it

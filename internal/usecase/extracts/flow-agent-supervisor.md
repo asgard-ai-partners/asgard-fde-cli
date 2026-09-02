@@ -5,6 +5,13 @@ A public entry point that delegates to several specialist agents.
 **Seen in:** three deployments - a commerce back-office with five
 specialists, a manufacturing one with nine, and a finance one with three.
 
+**Checked:** 2026-09-02 against three supervisor deployments and the CRD. The agents field was documented as a YAML list and is a stringified JSON array; corrected.
+
+**Unchecked:** how to split responsibilities between subagents, and the routing prose. Judgement, taken from deployments that have not been re-examined.
+
+**Read the platform side first:** `asgard-cli wiki agents` -
+what a Managed Agent and a Flow Agent each are, and which the audience decides. This page assumes you have.
+
 ## When this shape, and when not
 
 Use it when **one audience needs several specialists** and the caller should not
@@ -98,13 +105,43 @@ metadata:
 spec:
   skillSetNames:
     value: "sk-base,sk-<domain>"
+  # A STRINGIFIED JSON ARRAY, not a YAML list. Every field on a
+  # SandboxBlueprint is a ValueExprTemplate - an object taking value,
+  # expression or template - so a bare YAML list here is rejected by the
+  # apiserver. skillSetNames two lines up has the same shape for the same
+  # reason; agents is the one people get wrong, because its contents look
+  # like a list.
   agents:
-    - baseAgentName: ag-<specialist>
-    - baseAgentName: ag-<other>
+    value: |-
+      [{"baseAgentName":"ag-<specialist>"},
+       {"baseAgentName":"ag-<other>"}]
 ```
 
 Each subagent is an ordinary `Agent` CR - see the agent-hub extract for its
 skeleton. The difference is only how it is reached.
+
+Each entry carries **exactly one** of `baseAgentName` or `aliasName`; giving
+both, or neither, is an error raised while the blueprint is evaluated rather
+than at apply time.
+
+- **`baseAgentName`** references an existing Agent CR as the base, and the other
+  fields on the entry are an override delta on top of it: `description` and the
+  four `prompt` sections are **appended** to the base, `skillSetNames` and
+  `toolsetNames` are **added and deduped**, `sourceSetMounts` and
+  `semanticLayers` **replace** the base entry with the same mountPath or name,
+  and `browser` overrides outright.
+- **`aliasName`** defines an ephemeral subagent with no Agent CR at all, and the
+  same fields are then its whole definition rather than a delta.
+
+Either way the resolved description and the fused prompt must be non-empty.
+
+**A resolved agent can turn the browser on for the whole sandbox.** `browser` is
+OR-aggregated: a blueprint saying `enabled: "false"` does not hold if any agent
+it resolves asks for one. The same aggregation applies to the subagents'
+skillSets, toolsets and semanticLayers, which land on the main orchestrator too -
+so listing a capability on the blueprint as well is redundancy, not a
+requirement. Both supervisor deployments list them anyway, so the supervisor's
+own capability set reads without having to compute the aggregation.
 
 ## Designing the split - the part the generator leaves TODO
 
@@ -145,6 +182,17 @@ two look similar.
 A static list is right until the caller genuinely needs a different roster per
 conversation - per tenant, per user's permissions, per brand. Then the
 `expression` form earns its complexity. Do not start there.
+
+
+### Publish the supervisor to the Agent Hub
+
+`asgard-ai.com/agent-hub-published: "true"` on the BotProvider is what makes this
+supervisor appear in the Hub's agent list, which is where an internal console
+finds it. Both supervisor deployments carry it.
+
+The opposite case is a public widget, which must **not** carry it - see
+`asgard-cli usecase flow-agent-single`. Copying a supervisor's BotProvider into a
+public one is how that mistake actually happened.
 
 ## Fields that are not obvious
 

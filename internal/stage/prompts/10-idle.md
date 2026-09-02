@@ -10,6 +10,7 @@ So there is one question, and it is the customer's to answer:
 
     What do they want the agent to do that it cannot do today?
 
+    asgard-cli next --stage requirements    <- the interview, read it first
     asgard-cli request add "<what they asked for, in their words>"
 
 That writes `requirements/requests/REQ-xxx-<name>.md` with today's date and

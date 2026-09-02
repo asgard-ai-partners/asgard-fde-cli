@@ -6,6 +6,13 @@ with a knowledge graph over it.
 **Seen in:** a public widget whose knowledge comes from a product catalogue
 database, a crawl of its own marketing site, and manually uploaded documents.
 
+**Checked:** 2026-09-02 against a Drive with two Syncers and a contextIndex, and the CRD. Two required Syncer fields and a misplaced column flag were corrected.
+
+**Unchecked:** the contextIndex.prompt guidance. It is advice about the customer's own data and has no source outside the engagement that wrote it.
+
+**Read the platform side first:** `asgard-cli wiki knowledge` -
+Drive, Context Index, and how Knowledge Base differs. This page assumes you have.
+
 ## When this shape, and when not
 
 Use it when the customer's knowledge is **not rows in a database**: product
@@ -17,9 +24,14 @@ complementary and neither does the other's job: a Drive answers "what is this
 machine roughly, how do I choose, how do I fix it"; a query answers "how many,
 which ones, what is the phone number".
 
-**`KnowledgeBase` is deprecated platform-side.** If you find it in an older
-chart, with `Loader` CRs and retrieval workflows, it is not a template to copy -
-that whole mechanism was removed.
+**Prefer this over `KnowledgeBase` for new work, but know what that claim
+rests on.** `KnowledgeBase`, `Loader`, `Indexer` and `Source` are all live CRDs,
+none carries a deprecation marker, and the console ships the feature with its
+own documented UI. What happened is narrower: one engagement built knowledge on
+`KnowledgeBase` + `Loader` + a retrieval workflow and moved it to a Drive with a
+Context Index (TASK-013). So an older chart containing one is not automatically
+wrong - it is a shape somebody chose before that experience existed. Ask the
+platform team before telling a customer the mechanism is going away.
 
 ## The shape
 
@@ -98,11 +110,36 @@ spec:
   timeZone: Asia/Taipei
   database:
     dataConnectorName: dc-<system>
+    batchSize: {{ .Values.<name>Knowledge.catalogSync.batchSize }}
     # Immutable. Changing the projection means a new Syncer.
-    columns: [...]
-    # Strictly-greater-than cursor, kept in the Syncer status.
-    isMaxValueColumn: row_updated_at
+    columns:
+      - name: product_id
+        isIdentifier: true
+      - name: <...the rest of the projection...>
+      # Strictly-greater-than cursor, kept in the Syncer status. At most one.
+      - name: row_updated_at
+        isMaxValueColumn: true
+    query: |
+      select ... from ...
 ```
+
+**`isMaxValueColumn` and `isIdentifier` sit on a column, not on the `database`
+block.** Written one level up, beside `dataConnectorName`, they are unknown
+fields: the apiserver drops them without a word, and what is left is a Syncer
+that re-reads the whole table every run. Nothing in the rendered chart, in
+`helm lint` or in the apply output says so.
+
+`batchSize` and `query` are both **required** - a `database` Syncer missing
+either is rejected at apply time, which in practice means during CD.
+
+The Syncer wraps the query as
+
+```sql
+select <columns> from (query) where <cursor> > $cursor order by <cursor> asc
+```
+
+so every name in `columns` has to appear in the projection spelled exactly the
+same way, and the cursor column has to be comparable.
 
 Mount it read-only from the blueprint:
 
@@ -110,6 +147,33 @@ Mount it read-only from the blueprint:
   sourceSetMounts:
     value: '[{"sourceSetName": "ss-<name>-knowledge", "mountPath": "/knowledge", "readOnly": true}]'
 ```
+
+## The index runs after the Syncers, not with them
+
+`contextIndex.cron` and each Syncer's `schedule` are independent fields and
+nothing orders them. Put the index **after** the Syncers on the same day - the
+deployment runs the two Syncers at 09:00 and the index at 10:00, both
+`Asia/Taipei`.
+
+Reversed or simultaneous, the index walks the volume before the day's content
+lands and the graph describes yesterday, every day, without ever failing. An
+incremental `--update` over an unchanged Drive finishes in seconds, so the gap
+costs nothing.
+
+The derived CRs are named after the SourceSet with a `-ci` suffix, so a Drive
+called `ss-<name>-knowledge` produces `ss-<name>-knowledge-ci`. That is what to
+look for on a cluster when the index is not running.
+
+### Two switches, and one of them does not do what its name suggests
+
+`asgard-ai.com/syncer-suspend: "true"` stops the **scheduler** and **does not
+stop CD**: the deploy step runs `kubectl create job --from`, which works on a
+suspended CronJob. That is deliberate - the skills Syncer relies on it - so CD
+cannot be changed to skip suspended ones.
+
+To stop a Syncer running on deploy as well, it needs this repo's own opt-out
+label `asgard-ai.com/syncer-cd-trigger: "false"`, which only CD reads. **Silence
+takes both.** See `asgard-cli usecase skill-set` for the CD side.
 
 ## The pause that is not a delete
 

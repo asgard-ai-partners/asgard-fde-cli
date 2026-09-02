@@ -6,6 +6,13 @@ author no BotProvider.**
 **Seen in:** a deployment with five agents over six semantic layers, one agent
 per source system.
 
+**Checked:** 2026-09-02 against a hub deployment's 5 Agent CRs (no BotProvider in that project, prompt.task byte-identical across all five) and the CRD.
+
+**Unchecked:** the delegation-design guidance - how many agents, where the line between two of them goes. No deployment contradicts it; none confirms it either.
+
+**Read the platform side first:** `asgard-cli wiki agents` -
+what a Managed Agent and a Flow Agent each are, and which the audience decides. This page assumes you have.
+
 ## When this shape, and when not
 
 Use it when **every caller can authenticate to the platform** - an internal
@@ -91,6 +98,12 @@ rather than a read surface.
 Each Agent mounts **exactly one** semantic layer, so its search space is that one
 system's cubes rather than all of them combined. An agent mounting two has the
 search space the split was meant to shrink.
+
+**No `allowedCubes`** on the binding: an agent may query any table in its own
+layer, and the restriction is which layer it mounts rather than which cubes
+within it. Setting it is a deliberate departure that needs a reason - and the
+reason a *public* audience needs one is why that audience gets fixed query tools
+instead of a layer at all. See `asgard-cli usecase semantic-layer`.
 
 Zero layers is legal when the agent's capability comes from toolsets instead.
 Zero of both is not - an agent with no capability source at all is almost always

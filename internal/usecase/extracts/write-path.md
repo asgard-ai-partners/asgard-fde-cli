@@ -7,6 +7,13 @@ for me".
 **Seen in:** a deployment whose entire architecture is stated as one rule, and a
 notification chain whose single outward action is deliberately mocked.
 
+**Checked:** 2026-09-02 against 72 gated and 14 ungated tool entries across the deployments, with consent level consistent within every Toolset.
+
+**Unchecked:** the reversibility table. It matches what the deployments do, but the deployments did not derive it from this table.
+
+**Read the platform side first:** `asgard-cli wiki sindri` -
+what the governance gate looks like to the person approving it. This page assumes you have.
+
 ## The rule the platform is built on
 
 > **Reading is autonomous. Writing stops at a gate and waits for a human.**

@@ -6,7 +6,6 @@ Command line tool for Asgard FDE (`asgard-cli`).
 
 ```bash
 go build -o asgard-cli ./cmd/asgard-cli   # build
-go test ./...                             # test
 ./asgard-cli version                      # run
 ```
 
@@ -22,13 +21,18 @@ internal/deploy/    reads projects/<project>/deploy.yaml, the deployment SoT
 internal/render/    renders a chart via helm, the way CD does
 internal/gate/      the invariant checks on a rendered chart (xref, agent split)
 internal/tool/      resolves helm/kubectl/python3, and how to install one
+internal/wiki/      the platform wiki: what Asgard is made of and who each piece is for
 internal/version/   build information (injected by GoReleaser via ldflags)
 ```
 
 To add a subcommand, write a `newXxxCmd()` in `internal/cli/` and register it in
 the `cmd.AddCommand(...)` call in `root.go`.
 
-See [AGENTS.md](AGENTS.md) for the conventions this repo follows.
+- [STRUCTURE.md](STRUCTURE.md) - what every directory is for, including the four
+  bodies of embedded material and which one a change belongs to.
+- [AGENTS.md](AGENTS.md) - the conventions this repo follows, and what the gate is
+  now that there is no test suite.
+- [TASK.md](TASK.md) - what this repo is for, and what is not finished.
 
 ## Commands
 
@@ -42,11 +46,11 @@ asgard-cli init --workspace-id 7ab7f523-3cd9-7e87-a873-6f1fa6028104
 ```
 
 ```
-Created /path/to/unitech-e-asgard-kube/.asgard-config.json
+Created /path/to/acme-asgard-kube/.asgard-config.json
   workspace.id    7ab7f523-3cd9-7e87-a873-6f1fa6028104
-  workspace.slug  unitech-e
-  workspace.name  unitech-e
-  repository      unitech-e-asgard-kube
+  workspace.slug  acme
+  workspace.name  acme
+  repository      acme-asgard-kube
 
 No projects yet. Add one with `asgard-cli project add <slug>`.
 ```
@@ -55,7 +59,7 @@ No projects yet. Add one with `asgard-cli project add <slug>`.
 not validated yet, pending an API to verify it.
 
 `--workspace-slug` defaults to the directory name with a trailing `-asgard-kube`
-removed, so running inside `unitech-e-asgard-kube` yields `unitech-e`.
+removed, so running inside `acme-asgard-kube` yields `acme`.
 `--workspace-name` defaults to the slug. `--project` is a repeatable shortcut
 that creates projects up front, each with the `dev` environment only.
 
@@ -73,8 +77,8 @@ asgard-cli project add internal --env dev --env prod
 
 ```
 Added project "internal" to /path/to/.asgard-config.json
-  dev   asgard-unitech-e-internal-dev
-  prod  asgard-unitech-e-internal-prod
+  dev   asgard-acme-internal-dev
+  prod  asgard-acme-internal-prod
 
 Before the first deploy of each environment:
   1. tf-asgard must create the namespace and its app-secret first. Declaring an
@@ -108,7 +112,7 @@ It writes the part of a customer repo that is the same for every engagement:
 | `requirements/` | the task and request indexes |
 | `scripts/check_*.py` | the four acceptance gates |
 | `scripts/db/` | the query and introspection tool-chain, with an empty target registry |
-| `.agents/skills/` | the three design-time skills |
+| `.agents/skills/` | the five design-time skills |
 | `common/` | `asgard-cli render`, the per-env overlay points, the runtime-skill directory |
 | `.github/workflows/main.yaml` | tag-driven CD |
 | `projects/<slug>/` | one chart skeleton per project, with `values-<env>.yaml` only for the environments that project declares |
@@ -127,6 +131,49 @@ The generated skeleton passes its own gate on the first run:
 asgard-cli check                              # structure is consistent
 helm lint projects/<slug>/chart/app           # 0 charts failed
 ```
+
+### `next`
+
+**The command to run after every step.** It reports which stage the onboarding is
+at and what that stage needs, worked out from the repository itself - which files
+exist, which CR kinds each chart declares - not from a counter in the config. So
+it stays right when somebody does a step by hand, and it answers in an empty
+directory too, where the answer is how to begin.
+
+```bash
+asgard-cli next                          # where am I, what now
+asgard-cli next --list                   # every stage
+asgard-cli next --stage requirements     # read one out of order
+```
+
+```
+  0  init           Start the onboarding
+  1  scaffold       Write the repository skeleton
+  -  requirements   Turn what the customer said into a request
+  2  projects       Decide how the work splits into projects
+  3  data-sources   Wire up the customer's databases
+  4  read-path      Decide each project's read path
+  5  entry-point    Decide each project's entry point
+  6  knowledge      Decide where unstructured knowledge lives
+  7  verify         Run the acceptance gate
+  8  deploy         Deploy
+  9  enhance        Add a capability to a repo that is already live
+  -  idle           Nothing in flight
+```
+
+Three of these sit outside the numbered walk. `requirements` is the customer
+interview - it produces the request that stage 2 consumes, and it is read
+deliberately because a conversation leaves no trace on disk until somebody writes
+it down. `enhance` is the loop for a repo already live. `idle` is what an FDE sees
+most often once a repo is running: nothing open, so the only question left is what
+the customer wants next.
+
+**Stages 4, 5 and 6 print the wrong answer next to the right one.** Those are the
+three decisions this engagement got wrong once and reversed, and in each case the
+wrong answer is the one that looks obvious.
+
+Open questions print first, on every run, before anything else the command has to
+say.
 
 ### `request`, `task`, `question`, `decision`
 
@@ -169,6 +216,149 @@ them, and stamps the date rather than asking for it.
 
 `asgard-cli next` reads all four back. Open questions print first, on every run,
 before anything else it has to say.
+
+### `add`
+
+Write a CR skeleton into a project's chart, correct in the parts that fail
+silently.
+
+```bash
+asgard-cli add                                   # list the kinds
+asgard-cli add dataconnector erp --db-class postgres --project erp
+asgard-cli add flowagent support --bot-class line --project site
+```
+
+```
+created projects/erp/chart/app/templates/data_connector/dc-erp.yaml
+updated projects/erp/chart/app/values.yaml (added the values it reads)
+
+Next:
+  1. what it is:      asgard-cli wiki settings
+  2. how to build it: asgard-cli usecase semantic-layer
+  3. fill in the TODOs
+  4. verify:          asgard-cli check
+                      asgard-cli verify erp
+```
+
+Ten kinds: `dataconnector`, `semanticlayer`, `agent`, `httptool`, `querytool`,
+`skillset`, `trigger`, `knowledgedrive`, `plugin`, `flowagent`.
+
+**What it generates is a skeleton**: the structure and the traps are right, the
+content is marked TODO. The parts worth generating are the ones nothing catches -
+a missing display annotation shows a nameless resource in the UI, a Workflow
+without its set labels is invisible there, a Trigger without its own two labels
+opens as a blank canvas, and a field renamed upstream still lints clean under its
+old name. None of those is caught by `helm lint`, by CRD validation, or by a
+server-side dry-run.
+
+It reads the chart before writing into it, so a reference it emits points at
+something that exists: one SemanticLayer in the chart is mounted, several are
+refused by name, a SkillSet is referenced only if one is there. A second query
+tool does not re-emit a Toolset the first one already wrote.
+
+The two pointers it prints are in reading order and answer different questions -
+`wiki` says what the thing is, `usecase` says how it is assembled and assumes you
+already know the first.
+
+### `wiki`, `usecase`
+
+Two bodies of reference material, embedded in the binary rather than written into
+a customer repo: a copy in one engagement goes stale where nobody is looking,
+while a stale page here is fixed for every engagement in one release.
+
+```bash
+asgard-cli wiki                       # what the platform is made of
+asgard-cli wiki agents
+asgard-cli wiki --search "匿名 訪客"
+asgard-cli wiki --conventions         # how the wiki is maintained
+
+asgard-cli usecase                    # how each deployment shape is built
+asgard-cli usecase flow-agent-single
+asgard-cli usecase --search schedule
+```
+
+| | answers | written from |
+|---|---|---|
+| `wiki` | what the platform is, who each piece is for, and where the UI's names stop matching the resources a chart declares | the product documentation, [asgard-docs](https://github.com/asgard-ai-platform/asgard-docs), checked against the CRDs |
+| `usecase` | how one shape of deployment is assembled, field by field, and what a wrong value costs | deployments already in production |
+
+An extract assumes you already know the platform has that shape; a wiki page is
+where that assumption comes from. `asgard-cli add` prints one of each.
+
+**To look something up, use [`find`](#find)**, which searches both and names the
+counterpart of whatever it hits. `--search` on either command is the narrow form,
+for when you already know which half holds the answer.
+
+The wiki's own conventions - its three layers, what a page must carry, and how it
+is kept from going stale as the platform moves - are in `asgard-cli wiki
+--conventions`.
+
+### `find`
+
+Search both bodies of reference material at once, when it is not obvious which
+holds the answer.
+
+```bash
+asgard-cli find schedule
+asgard-cli find anonymous visitor
+```
+
+```
+PLATFORM - what the thing is (asgard-cli wiki <page>)
+
+  automation         Trigger and API
+                     Starts a conversation with an agent on a schedule.
+                     -> field level: asgard-cli usecase trigger
+
+SHAPES - how it is assembled (asgard-cli usecase <name>)
+
+  trigger            Trigger
+                     -> what it is:  asgard-cli wiki automation
+
+Read the platform side first; an extract assumes you have.
+```
+
+It follows the link between the two, so a hit in either half hands over the
+other - in the order they should be read. Every term has to appear, so an extra
+word narrows rather than widens.
+
+### `check`
+
+The first step of the acceptance gate, and the only one that needs no external
+tool. It verifies the invariants a chart render cannot see - the ones that
+otherwise surface at deploy time, or when the next person picks the repo up:
+
+```bash
+asgard-cli check              # whole repo
+asgard-cli check erp          # project-scoped checks limited to erp
+```
+
+```
+warn   common/skills/ has no skill directories yet
+ok  structure is consistent (1 project(s): [erp])
+```
+
+- the root README's project table matches the directories under `projects/`
+- every project has a `deploy.yaml`, its envs are `dev` or `prod`, and the values
+  files it names exist, along with the shared `common/values-<env>.yaml`
+- runtime skills under `common/skills/` carry `name` and `description`
+  frontmatter, with the name matching the directory
+- the SDD entry points under `requirements/` are present
+- the `docs/` spec layer is intact: required files, the living spec's module index
+  matching the files on disk, dated filenames, and every relative link inside
+  `docs/` resolving
+- **no page is an orphan** - a document under `docs/` or `requirements/` that
+  nothing links to is not read, and the person who wrote it never finds out,
+  because the file is still there. A warning rather than an error: a decision
+  recorded today and not yet applied is an orphan for as long as that takes.
+
+Naming projects limits the project-scoped checks to those; the repo-wide checks
+always run. It exits non-zero when anything fails, and warnings do not fail it.
+
+The rot this cannot see - two pages that contradict each other, a claim a newer
+source superseded, a concept every document explains in passing and none owns -
+needs a reader. The `knowledge-base` skill under `.agents/skills/` in the
+generated repo is the pass for that.
 
 ### `render`, `verify`, `doctor`
 
@@ -247,8 +437,8 @@ the gate needs kubectl.
 {
   "workspace": {
     "id": "7ab7f523-3cd9-7e87-a873-6f1fa6028104",
-    "slug": "unitech-e",
-    "name": "unitech-e"
+    "slug": "acme",
+    "name": "acme"
   },
   "projects": [
     { "slug": "internal", "name": "internal", "environments": ["dev", "prod"] },
@@ -262,8 +452,8 @@ so the config cannot drift from the layout on disk:
 
 | derived | rule | example |
 |---|---|---|
-| repository | `<workspace.slug>-asgard-kube` | `unitech-e-asgard-kube` |
-| namespace | `asgard-<workspace.slug>-<project.slug>-<env>` | `asgard-unitech-e-internal-dev` |
+| repository | `<workspace.slug>-asgard-kube` | `acme-asgard-kube` |
+| namespace | `asgard-<workspace.slug>-<project.slug>-<env>` | `asgard-acme-internal-dev` |
 
 Both commands validate before writing, so an invalid config is never created:
 

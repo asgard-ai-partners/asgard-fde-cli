@@ -42,7 +42,7 @@ namespace are derived from:
 
 --workspace-id is issued by the Asgard platform and is required. --workspace-slug
 defaults to the directory name with a trailing ` + config.RepoSuffix + ` removed,
-so running this inside unitech-e` + config.RepoSuffix + ` yields unitech-e.
+so running this inside acme` + config.RepoSuffix + ` yields acme.
 --workspace-name defaults to the slug.
 
 Projects are usually added later with "asgard-cli project add", once the

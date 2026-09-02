@@ -1,5 +1,13 @@
 # Conventions
 
+**Read the platform side first:** `asgard-cli wiki` - what the platform is made
+of, and who each piece is for. These conventions are how this repo writes it
+down; the wiki is what is being written down.
+
+**Checked:** 2026-09-02: the 11 naming prefixes and the templates/<kind>/ layout, against four deployments.
+
+**Unchecked:** the rest of the conventions. They are house style, and house style has no external source to check against.
+
 Where every CR goes, what it is called, and what all of them need.
 Read this once; the shape extracts assume it.
 

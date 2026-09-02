@@ -66,10 +66,14 @@ spec:
 #         entry: entry-main
 #         workflow: <<.CRName>>
 #       requestConsent: false
-#       name: <<.Name>>
-#       description: |-
-#         TODO. This is the text the model reads to choose between tools, so it
-#         has to name the other tool it could be confused with.
+#
+# Those two fields are the whole entry. A Toolset tool carries NO name and NO
+# description - writing them here is an unknown field the apiserver drops in
+# silence, and the tool reaches the model unnamed.
+#
+# Both live on the Workflow entry's `tooling` block above, which is where the
+# text the model reads to choose between tools already is. Say there which
+# other tool this one could be confused with.
 <<else>>---
 apiVersion: asgard-ai.com/v1alpha1
 kind: Toolset

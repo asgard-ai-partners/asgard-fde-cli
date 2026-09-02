@@ -7,6 +7,13 @@ mechanism every other shape is built out of.
 **Seen in:** a two-call mail sender, a search tool that reshapes its API's
 response, a conversation loop, and a nine-branch content pipeline.
 
+**Checked:** 2026-09-02 against workflows in six deployments: prevPayload 134 uses, httpResponse 20, and JavaScript constructs including exactly the 4 occurrences of ?? this page cites.
+
+**Unchecked:** nothing outstanding. The replacement of prevPayload by an http-request is stated in a deployment's own comment in the same words.
+
+**Read the platform side first:** `asgard-cli wiki workflow` -
+the processor types and the three ways a config takes a value. This page assumes you have.
+
 ## When this shape, and when not
 
 You are already in it. A single-processor Workflow is the exception, not the rule
@@ -65,6 +72,7 @@ spec:
         description: |-
           What the model reads to decide whether to call this. Name the tool it
           could be confused with.
+        allowUploadFile: false   # required, and it has no default
       inputSchema: |
         { "type": "object",
           "properties": { "q": { "type": "string" } },
@@ -180,11 +188,17 @@ still the first call's - and it is also why inserting a processor between them
 loses the value. It also means **a broken expression is a runtime failure on
 first use, not a deploy failure**: nothing evaluates configs at apply time.
 
-### `expression` is JavaScript, whatever the docs say
+### `expression` is JavaScript
 
-The platform's CRD documentation calls `expression` a CEL expression. **Every real
-chart writes JavaScript** - arrow functions, `const`, `String()`,
-`encodeURIComponent`, `JSON.stringify`, `??`, `.map()`. None of those are CEL.
+Arrow functions, `const`, `String()`, `encodeURIComponent`, `JSON.stringify`,
+`??`, `.map()` - every real chart uses them, and none of them is CEL.
+
+This was worth stating because the two sources once disagreed: the platform
+documentation described `expression` as a CEL expression while every chart wrote
+JavaScript, so anyone who trusted the docs wrote something that could not work and
+had no way to see why. **Both now say JavaScript** - the product documentation
+states it directly, and the CRD makes no claim either way. The rule is unchanged;
+only the reason to distrust the docs has gone.
 
 Write JavaScript, and the idiom the charts use is an immediately-invoked arrow
 function when there is more than one statement:

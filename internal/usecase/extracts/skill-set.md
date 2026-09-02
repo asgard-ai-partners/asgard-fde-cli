@@ -6,6 +6,13 @@ two repos disagree about how the trio is wired, in a way that is dated.
 **Seen in:** two deployments that wire it differently - one file holding three
 CRs per skill set, versus several skill sets sharing one store.
 
+**Checked:** 2026-09-02 against both shapes: 1:1:1 in the newer deployment, one SourceSet shared across five SkillSets in the older one, and against the CRD.
+
+**Unchecked:** nothing outstanding on the structure. The search-path rule is stated by the deployments themselves rather than enforced anywhere.
+
+**Read the platform side first:** `asgard-cli wiki tools` -
+how MCP Server, Skillset and Plugin differ. This page assumes you have.
+
 ## When this shape, and when not
 
 Decide design time or runtime first - they are not interchangeable.
@@ -44,9 +51,26 @@ the paths its Syncers write to are the whole truth about what is in it.
 >   on the Syncer.** The member registry is gone; the fields are now
 >   `destinationPath` and `statePath`.
 > - **One SourceSet shared across several skill sets**, sliced apart with
->   searchPaths. Changed away from on 2026-08-28: it leaves the Platform UI
+>   searchPaths, *for a skill set that is its own unit*. Changed away from on
+>   2026-08-28: it leaves the Platform UI
 >   unable to find a skill set's git config, so it renders as a skill set with no
 >   source - a UI failure, not a runtime one, which is why it survives unnoticed.
+
+### The one place a shared store is right
+
+A **Plugin bundle** is the exception, and it is deliberate rather than a chart
+that was never updated. A deployment carrying 28 Plugins keeps one
+`ss-skill-repos` and lets each bundle's SkillSet slice it with `searchPaths`,
+because the skills all live in one repository and 28 SourceSets over the same
+repository would be 28 clones of it.
+
+That shape accepts the UI cost knowingly: those SkillSets carry no
+`skill-set-name` annotation and no `managed-by` label, so they are not presented
+as first-class skill sets in the UI at all - they are implementation detail of a
+Plugin. See `asgard-cli usecase plugin`.
+
+**The rule stands for anything a person picks in the UI.** It is a shared skills
+monorepo behind a bundle that earns the exception, not convenience.
 
 ## Generate it
 

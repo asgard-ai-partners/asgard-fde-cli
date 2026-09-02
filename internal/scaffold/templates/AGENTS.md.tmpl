@@ -142,8 +142,11 @@ question and restates the answer back.
 There is one answer: a `SourceSet` with `spec.contextIndex`, mounted read-only
 on the `SandboxBlueprint`, queried with the sandbox's builtin **graphify** skill.
 
-**`KnowledgeBase` is deprecated platform-side.** If you find it in an older
-chart or a CR dump, it is not a template to copy.
+This is a recommendation, not a platform rule. `KnowledgeBase`, `Loader`,
+`Indexer` and `Source` are all live CRDs with no deprecation marker, and the
+console ships the feature. What stands behind the recommendation is one
+engagement that built the Loader-and-retrieval-workflow way and rebuilt it on a
+Drive. An older chart containing one is a shape somebody chose before that.
 
 Setting `contextIndex` is the whole switch: the reconciler derives three
 same-named CRs that mount the Drive writable and run the indexer on a cron.
@@ -237,6 +240,53 @@ rather than columns, so they stay descriptive.
 **`description` on every cube, dimension and measure, in 繁體中文.** It is what
 the agent reads to decide which column answers a question; one without a
 description is effectively invisible to the model.
+
+
+## This repo is a knowledge base, and you maintain it
+
+Most of what is here is not code. It is what this engagement learned about one
+customer's systems, and **this repository is the only place it exists** — the next
+agent to open it starts from these files and nothing else. A pile of accurate
+documents nobody can navigate is worth about what no documents are worth.
+
+Four layers, and **the tense is the only reason they are separate**:
+
+| layer | tense | answers |
+|---|---|---|
+| `docs/meeting-notes/` | a moment before it converged | what was actually discussed |
+| `docs/decisions/` | a dated snapshot, **immutable** | why it was decided that way |
+| `docs/spec/<<.SpecSlug>>/` | **always now** | what the system does today |
+| `requirements/` | the future, then dead | what will be done |
+
+> **If you read one thing to learn what this system does, read the living spec.**
+> `requirements/` is a work queue, not a source of truth: a task spec stops being
+> read the moment it reaches `done`, so anything durable left inside one is lost
+> in place — still on disk, never opened again.
+
+Three rules follow, and they are the whole discipline:
+
+- **One fact, one home; everywhere else links.** About to copy a paragraph? Link
+  instead. Two copies drift, and once they disagree the reader cannot tell which
+  is current — so the second copy is worse than none, because it is believed.
+- **A change is not done until the bookkeeping is done.** Index updated,
+  cross-reference fixed, delta applied to the living spec. That half is yours:
+  you do not get bored and can touch fifteen files in one pass. Do it in the
+  same pass, rather than reporting that an index needs updating.
+- **An answer you had to assemble is new knowledge.** If you answered a question
+  by reading four files, the next reader will read the same four unless you file
+  it. Ask: *would they have to redo this?*
+
+`asgard-cli check` audits the mechanical half — pages nothing links to, a module
+missing from its index, undated filenames, links that do not resolve. The half
+it cannot see (pages that contradict each other, claims a newer source
+superseded, concepts nobody owns) is the **`knowledge-base`** skill under
+`.agents/skills/`. Run that pass when picking up a repo somebody else worked on,
+before a handover, or after a burst of decisions.
+
+Where a fact belongs when it is not obvious:
+[`requirements/README.md`](requirements/README.md) for `requirements/`,
+[`docs/README.md`](docs/README.md) for the layers,
+[`references/README.md`](references/README.md) for the customer's own material.
 
 
 ## Two kinds of skills — design time vs runtime
@@ -423,6 +473,13 @@ fidelity answers "**will it be kept**". See the pruning gotcha below.
 - Treat `requirements/` as implementation source of truth; `references/` is background only.
 - Task specs: `requirements/tasks/TASK-xxx-*.md`, registered in `requirements/tasks/_index.md`.
 - Status flow: `draft` → `ready` → `in-progress` → `done` (never `in_progress`).
+- **What may live in `requirements/` at all is ruled by
+  [`requirements/README.md`](requirements/README.md)** — two record types and
+  nothing else, and the tense test that decides the rest: `requirements/` is
+  written in the future tense, the living spec in the present. A sentence still
+  true after the work is finished belongs in the living spec, not in a task spec
+  that stops being read at `done`. Read it before putting anything in
+  `requirements/` that is not a `REQ-*.md` or a `TASK-*.md`.
 - SDD is **required** for a new `SemanticLayer`/`DataConnector`, widening an agent's queryable
   cubes, or re-introducing a write path — the databases are real.
 

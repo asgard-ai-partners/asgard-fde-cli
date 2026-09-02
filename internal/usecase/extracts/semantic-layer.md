@@ -6,6 +6,13 @@ a chart, and the one that most rewards looking at the real database.**
 **Seen in:** deployments with one layer per source system; the largest single
 layer runs to hundreds of cubes.
 
+**Checked:** 2026-09-02 against 11 SemanticLayer CRs across three deployments (completionModelName present on every one) and the CRD.
+
+**Unchecked:** the modelling guidance - cube granularity, what belongs in instruction. Checkable only against a database, and not checked.
+
+**Read the platform side first:** `asgard-cli wiki semantic-model` -
+what a Semantic Model is, how it is built, and its limits. This page assumes you have.
+
 ## When this shape, and when not
 
 Use it when the audience is **internal and authenticated**, and the questions are

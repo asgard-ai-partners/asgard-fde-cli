@@ -7,6 +7,13 @@ has an integration for.
 **Seen in:** a deployment operating a commerce platform's back office, where the
 capability is a skill describing 88 pages plus everything the menu cannot see.
 
+**Checked:** 2026-09-02 against the reference set it describes - the four map files exist with those names - and the CRD.
+
+**Unchecked:** the cost estimates and the guidance on building the maps. One capability, one team, not repeated anywhere.
+
+**Read the platform side first:** `asgard-cli wiki agents` -
+what a Managed Agent and a Flow Agent each are, and which the audience decides. This page assumes you have.
+
 ## When this shape, and when not
 
 Take it **only after establishing there is no better route**:
@@ -203,6 +210,32 @@ must be `user-prompt-submit` rather than `session-start`.
 **Where a login cannot be automated, hand the browser to the person.** A real
 user completing the login in the sandbox is a legitimate step, and better than
 storing a long-lived credential.
+
+## Inside the capability, the browser is still the fallback
+
+The choice above is made once, at design time. There is a second one made on
+every request, and the reference set that works answers it explicitly: **when an
+API contract has been observed for this operation, call the API - do not open the
+browser.**
+
+The console is a client of its own API. Exploration that records the request each
+operation makes turns most of the capability into HTTP calls, and the browser is
+left for the cases that genuinely need a screen:
+
+| open the browser when | |
+|---|---|
+| no contract was observed | the operation was never exercised, so nothing was recorded |
+| the user asked to be taken to a page | navigation *is* the request |
+| the user wants company while they work through the console | so is this |
+| the page's data is not on the main API | a nested cross-domain app, served from somewhere else |
+
+Everything else is an HTTP call. Driving a screen to do something an API does is
+slower, more fragile, and breaks on the next restyle.
+
+That distinction has to be **in the reference set, per operation** - each row
+carrying either its method and path, or an explicit marker that none was
+observed. A set that only says "here is the page" pushes the agent to the browser
+by default, which is the outcome this section exists to avoid.
 
 ## Skills as their own repository
 

@@ -10,6 +10,14 @@ package work
 // behalf: a filled-in field that was never actually decided is worse than an
 // empty one, because the next reader cannot tell the difference.
 
+// The log headings, named once. Both templates below write them and work.go
+// appends transitions under them, so a section renumbered in one place and not
+// the other is a status that silently stops being recorded.
+const (
+	requestLogHeading = "## 8) Log"
+	taskLogHeading    = "## 4) Execution Log / Change Log"
+)
+
 const requestTemplate = `# {{.ID}} - {{.Title}}
 
 ## Meta
@@ -61,7 +69,58 @@ A row wanting **write** is not a project decision but a warning: the standing
 architecture is read-only, and every write path needs its own spec and human
 approval.
 
-## 4) Scope
+## 4) How each system is actually reached
+
+One block per system in section 3 that we will connect to. This is the record of
+what was agreed in the room: without it, the coordinates live in somebody's chat
+history and the next person asks the customer the same questions again.
+
+> **This file is committed to git. No password, token, key or connection string
+> containing one goes in it - not "temporarily", not redacted-but-guessable.**
+>
+> A secret that reaches a commit is not fixed by deleting the line, because the
+> history keeps it. It is fixed by rotating the credential, which means going
+> back to the customer to ask for a new one. Write the *name* of the key and
+> where it lives; never its value.
+
+    coordinates  -> here, and in projects/<project>/chart/values-<env>.yaml
+    passwords    -> .env locally (gitignored), app-secret in the cluster
+
+### <system name>
+
+- Kind: TODO - postgres, mysql, mssql, oracle, hana, netsuite, trino, athena,
+  an HTTP API, or a web console with no API at all
+- Host / base URL: TODO
+- Port: TODO
+- Database / schema / tenant: TODO
+- Account: TODO - the username, and **whether it is read-only**. Ask for a
+  read-only account explicitly; the one they offer first usually is not.
+- Reachable from the cluster? TODO - yes, or it needs an IP allowlist, a VPN,
+  or a bastion. This is the answer that most often turns a one-day integration
+  into a three-week one, and it is free to ask on day one.
+- Credential owner: TODO - the person or team who issues it, by name or role.
+  A credential with no owner is not a dependency, it is a delay.
+- Secret key name: TODO - the ` + "`.env`" + ` key (` + "`<TARGET>_DB_PASSWORD`" + `) and the
+  ` + "`app-secret`" + ` key (` + "`<target>_db_password`" + `). The names, not the values.
+- Confirmed working: TODO - the date somebody actually connected with it, and
+  how. Credentials that were only ever pasted into a chat have not been tested,
+  and an untested one fails at the least convenient moment.
+
+Once a database is agreed, register it in three places or it will not work end
+to end - ` + "`.env.example`" + ` at the repo root lists them:
+
+    .env                             the real values, locally, never committed
+    scripts/db/pgenv.py DB_TARGETS   so the introspection tooling can reach it
+    chart/values-<env>.yaml          the non-secret coordinates the CR reads
+
+and create the CR with ` + "`asgard-cli add dataconnector <name> --db-class <class>`" + `.
+
+**An HTTP API instead of a database** needs the same block plus the auth scheme
+(bearer, OAuth client credentials, mTLS), who holds the client id and secret,
+whether there is a sandbox environment, and the rate limit. Ask for the rate
+limit even when it sounds generous - it decides whether a Syncer can backfill.
+
+## 5) Scope
 
 In scope:
 
@@ -71,7 +130,7 @@ Out of scope:
 
 - TODO
 
-## 5) Open questions
+## 6) Open questions
 
 Anything this request cannot proceed without goes in ` + "`docs/open-questions.md`" + `
 as well, one row each, with what it blocks and who can answer it:
@@ -82,14 +141,14 @@ It goes there rather than only here because a question buried in a spec
 disappears when that spec reaches ` + "`done`" + `, and ` + "`asgard-cli next`" + ` reads that
 file on every run.
 
-## 6) Task specs
+## 7) Task specs
 
 Written with ` + "`asgard-cli task add \"<title>\" --request {{.ID}}`" + `.
 
 | Task ID | Title | Status |
 |---|---|---|
 
-## 7) Log
+` + requestLogHeading + `
 
 - {{.Raised}} raised, status ` + "`{{.Status}}`" + `
 `
@@ -185,7 +244,7 @@ TODO, or none.
 | # | task | covers |
 |---|---|---|
 
-## 4) Execution Log / Change Log
+` + taskLogHeading + `
 
 - {{.Created}} spec created, status ` + "`{{.Status}}`" + `
 `

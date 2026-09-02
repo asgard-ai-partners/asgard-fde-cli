@@ -5,6 +5,13 @@ A `Toolset` of zero-parameter queries. The read path for a **public** audience.
 **Seen in:** a public catalogue widget with five tools covering products,
 categories, locations, recommendations and downloads.
 
+**Checked:** 2026-09-02 against a five-tool Toolset whose tools all carry a zero-parameter inputSchema, and the CRD.
+
+**Unchecked:** the guidance on writing a tool description. Nothing mechanical checks whether it names the tool it could be confused with.
+
+**Read the platform side first:** `asgard-cli wiki semantic-model` -
+what a Semantic Model is, how it is built, and its limits. This page assumes you have.
+
 ## When this shape, and when not
 
 Use it when the audience is **anonymous**. What can be asked is then decided by a

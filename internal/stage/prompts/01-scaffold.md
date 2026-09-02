@@ -3,9 +3,17 @@ The repository skeleton has not been written yet.
     asgard-cli scaffold
 
 That writes AGENTS.md (the platform contract), the acceptance gate under
-scripts/, the four-layer docs structure, the design-time skills, and the CD
-workflow. It is safe to re-run at any point: it never overwrites a file that
-already exists.
+scripts/, the four-layer docs structure, the requirements/ and references/
+entry points, the design-time skills, and the CD workflow. It is safe to re-run
+at any point: it never overwrites a file that already exists.
+
+Two of those decide where everything later ends up, and are worth reading once
+before writing anything into the repo rather than looking up when it is already
+in the wrong place:
+
+    requirements/README.md   what may live in requirements/, and the tense test
+                             that decides what belongs in the living spec instead
+    docs/README.md           the four layers, and why each one exists
 
 Then confirm it landed:
 

@@ -38,6 +38,8 @@ const (
 	Deploy      Name = "deploy"
 	Enhance     Name = "enhance"
 	Idle        Name = "idle"
+
+	Requirements Name = "requirements"
 )
 
 // Stage is one step, in the order they have to happen.
@@ -72,9 +74,23 @@ var Stages = []Stage{
 // two of them, and the only question it can ask is what the customer wants next.
 var IdleStage = Stage{Idle, -1, "Nothing in flight", "10-idle.md"}
 
+// RequirementsStage is the interview that turns what a customer said into a
+// request. It is outside the numbered walk for the same reason IdleStage is,
+// but the opposite way round: not a state between two steps, but the one an FDE
+// is in before the repository can show anything at all. Current never returns
+// it, because a conversation leaves no trace on disk until it is written down -
+// so it is read deliberately, with `next --stage requirements`, and it is worth
+// reading again at every later request rather than only the first.
+var RequirementsStage = Stage{Requirements, -1, "Turn what the customer said into a request", "11-requirements.md"}
+
+// Readable is every stage a person can ask for by name, which is more than the
+// walk: the two outside it are reached only with `next --stage`, and anything
+// iterating stages (rendering, --list, tests) has to see them too.
+var Readable = append(append([]Stage{}, Stages...), RequirementsStage, IdleStage)
+
 // Find returns the stage with the given name.
 func Find(name string) (Stage, bool) {
-	for _, s := range append(Stages, IdleStage) {
+	for _, s := range Readable {
 		if string(s.Name) == name {
 			return s, true
 		}
@@ -337,10 +353,15 @@ func (s Stage) Prompt(cfg *config.Config, state State) (string, error) {
 }
 
 func (s Stage) String() string {
-	switch s.Number {
-	case IdleStage.Number:
+	// Switch on the name, not the number: the stages outside the walk share the
+	// number -1, so matching on it labelled the requirements interview "nothing
+	// in flight" - the opposite of what a reader is being told at that point.
+	switch s.Name {
+	case Idle:
 		return "nothing in flight"
-	case 0:
+	case Requirements:
+		return "before the walk: the interview"
+	case Init:
 		return "not started yet"
 	}
 	return fmt.Sprintf("stage %d of %d: %s", s.Number, len(Stages)-1, s.Title)
@@ -357,4 +378,81 @@ func (s Stage) NeedsTask() bool {
 	default:
 		return false
 	}
+}
+
+// Raw returns a stage's prompt as written, before rendering. It is what search
+// reads: the template directives are noise to a reader, but the prose around
+// them is the material, and rendering would need a repository to render against.
+func (s Stage) Raw() (string, error) {
+	content, err := prompts.ReadFile("prompts/" + s.promptF)
+	if err != nil {
+		return "", fmt.Errorf("read prompt %s: %w", s.promptF, err)
+	}
+	return string(content), nil
+}
+
+// Match is one stage whose prompt mentions every search term.
+type Match struct {
+	Stage
+	Lines []string
+	Score int
+}
+
+// Search finds stages by subject rather than by position in the walk.
+//
+// The walk is how an onboarding usually goes, not how it has to go: three of
+// this engagement's most expensive decisions were reversed after contact with
+// reality, so an agent that reads the repository and forms its own view of where
+// things stand is doing the right thing. What it then needs is the guidance for
+// the subject at hand - "how is the read path decided" - reachable without
+// having arrived at stage 4 to be told.
+func Search(query string) ([]Match, error) {
+	terms := strings.Fields(strings.ToLower(query))
+	if len(terms) == 0 {
+		return nil, fmt.Errorf("search needs at least one term")
+	}
+
+	var matches []Match
+	for _, s := range Readable {
+		body, err := s.Raw()
+		if err != nil {
+			return nil, err
+		}
+		lower := strings.ToLower(body)
+
+		hitsAll := true
+		for _, term := range terms {
+			if !strings.Contains(lower, term) {
+				hitsAll = false
+				break
+			}
+		}
+		if !hitsAll {
+			continue
+		}
+
+		m := Match{Stage: s}
+		for _, line := range strings.Split(body, "\n") {
+			// Skip the template directives: they are how a prompt is rendered,
+			// not anything a reader wanted to find.
+			if strings.Contains(line, "<<") {
+				continue
+			}
+			lowerLine := strings.ToLower(line)
+			for _, term := range terms {
+				if !strings.Contains(lowerLine, term) {
+					continue
+				}
+				m.Score++
+				if trimmed := strings.TrimSpace(line); len(m.Lines) < 3 && len(trimmed) > 20 {
+					m.Lines = append(m.Lines, trimmed)
+				}
+				break
+			}
+		}
+		matches = append(matches, m)
+	}
+
+	sort.Slice(matches, func(i, j int) bool { return matches[i].Score > matches[j].Score })
+	return matches, nil
 }

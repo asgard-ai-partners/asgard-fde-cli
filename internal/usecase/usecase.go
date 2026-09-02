@@ -5,158 +5,42 @@
 // than written into a customer repo, because an example nobody is using becomes
 // stale boilerplate there, while a stale one here is fixed for every engagement
 // in a single release.
+//
+// The reading and searching are internal/kb's; what lives here is the corpus.
 package usecase
 
 import (
 	"embed"
-	"fmt"
-	"io/fs"
-	"sort"
-	"strings"
+
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/kb"
 )
 
 //go:embed extracts
 var extracts embed.FS
 
-const dir = "extracts"
-
-// Extract is one shape.
-type Extract struct {
-	Name    string
-	Title   string
-	Summary string
-}
-
-// heading pulls the first "# ..." line and the paragraph under it, which is how
-// every extract opens.
-func parse(name string, content []byte) Extract {
-	e := Extract{Name: name}
-
-	var summary []string
-	for _, line := range strings.Split(string(content), "\n") {
-		switch {
-		case strings.HasPrefix(line, "# ") && e.Title == "":
-			e.Title = strings.TrimSpace(line[2:])
-		case e.Title == "":
-			continue
-		case strings.HasPrefix(line, "**Seen in:**"), strings.HasPrefix(line, "#"):
-			// The attribution line and the next heading both end the summary.
-			if len(summary) > 0 {
-				e.Summary = strings.Join(summary, " ")
-				return e
-			}
-		case strings.TrimSpace(line) == "":
-			if len(summary) > 0 {
-				e.Summary = strings.Join(summary, " ")
-				return e
-			}
-		default:
-			summary = append(summary, strings.TrimSpace(line))
-		}
-	}
-	e.Summary = strings.Join(summary, " ")
-	return e
-}
-
-// List returns every extract, README first because it explains how to read one.
-func List() ([]Extract, error) {
-	entries, err := fs.ReadDir(extracts, dir)
-	if err != nil {
-		return nil, fmt.Errorf("read extracts: %w", err)
-	}
-
-	var out []Extract
-	for _, entry := range entries {
-		name := strings.TrimSuffix(entry.Name(), ".md")
-		if name == "README" {
-			continue
-		}
-		content, err := extracts.ReadFile(dir + "/" + entry.Name())
-		if err != nil {
-			return nil, fmt.Errorf("read %s: %w", entry.Name(), err)
-		}
-		out = append(out, parse(name, content))
-	}
-	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
-	return out, nil
-}
-
-// Read returns one extract in full.
-func Read(name string) (string, error) {
-	content, err := extracts.ReadFile(dir + "/" + name + ".md")
-	if err != nil {
-		return "", fmt.Errorf("no extract named %q; list them with `asgard-cli usecase`", name)
-	}
-	return string(content), nil
-}
-
-// Index returns the README, which explains how the extracts are organised.
-func Index() (string, error) {
-	content, err := extracts.ReadFile(dir + "/README.md")
-	if err != nil {
-		return "", fmt.Errorf("read index: %w", err)
-	}
-	return string(content), nil
-}
+// Extract is one shape. It is kb.Doc under a name that reads at the call site.
+type Extract = kb.Doc
 
 // Match is one extract that matched a search, with the lines that matched.
-type Match struct {
-	Extract
-	Lines []string
-	Score int
+type Match = kb.Match
+
+var corpus = kb.Corpus{
+	FS:  extracts,
+	Dir: "extracts",
+	// README explains how to read an extract; it is not one.
+	Unlisted: map[string]bool{"README": true},
+	Noun:     "extract",
+	Command:  "asgard-cli usecase",
 }
 
-// Search finds extracts mentioning all of the given terms. It is how an agent
-// gets from a customer's words ("stock across platforms", "daily report") to
-// the shape that answers them, without knowing what the shapes are called.
-func Search(query string) ([]Match, error) {
-	terms := strings.Fields(strings.ToLower(query))
-	if len(terms) == 0 {
-		return nil, fmt.Errorf("search needs at least one term")
-	}
+// List returns every extract, sorted by name.
+func List() ([]Extract, error) { return corpus.List() }
 
-	all, err := List()
-	if err != nil {
-		return nil, err
-	}
+// Read returns one extract in full.
+func Read(name string) (string, error) { return corpus.Read(name) }
 
-	var matches []Match
-	for _, e := range all {
-		content, err := Read(e.Name)
-		if err != nil {
-			return nil, err
-		}
-		lower := strings.ToLower(content)
+// Index returns the README, which explains how the extracts are organised.
+func Index() (string, error) { return corpus.File("extracts/README.md") }
 
-		// Every term has to appear somewhere, so an extra word narrows rather
-		// than widens - the opposite would make a long query useless.
-		hitsAll := true
-		for _, term := range terms {
-			if !strings.Contains(lower, term) {
-				hitsAll = false
-				break
-			}
-		}
-		if !hitsAll {
-			continue
-		}
-
-		m := Match{Extract: e}
-		for _, line := range strings.Split(content, "\n") {
-			l := strings.ToLower(line)
-			for _, term := range terms {
-				if strings.Contains(l, term) {
-					m.Score++
-					if len(m.Lines) < 3 && len(strings.TrimSpace(line)) > 20 {
-						m.Lines = append(m.Lines, strings.TrimSpace(line))
-					}
-					break
-				}
-			}
-		}
-		matches = append(matches, m)
-	}
-
-	sort.Slice(matches, func(i, j int) bool { return matches[i].Score > matches[j].Score })
-	return matches, nil
-}
+// Search finds extracts mentioning all of the given terms.
+func Search(query string) ([]Match, error) { return corpus.Search(query) }

@@ -4,8 +4,9 @@
 # exactly - counts, prices, stock, contact details belong to a query tool, and
 # putting them here makes the agent paraphrase a number it should have read.
 #
-# KnowledgeBase is deprecated. If you find it in an older chart with Loader CRs
-# and retrieval workflows, it is not a template to copy.
+# KnowledgeBase is still a live CRD and a shipping console feature - preferring
+# this Drive is one engagement's experience, not a platform rule. See
+# `asgard-cli wiki knowledge`.
 apiVersion: asgard-ai.com/v1alpha1
 kind: SourceSet
 metadata:
@@ -51,7 +52,10 @@ metadata:
   annotations:
     asgard-ai.com/syncer-name: "<<.DisplayName>> 資料同步"
   labels:
-    # The platform's switch: stops the scheduler, does NOT stop CD.
+    # The platform's switch: stops the scheduler, does NOT stop CD - the deploy
+    # step uses `kubectl create job --from`, which works on a suspended CronJob.
+    # To stop it on deploy too, add this repo's own opt-out label
+    # asgard-ai.com/syncer-cd-trigger: "false". Silence takes both.
     asgard-ai.com/syncer-suspend: {{ .Values.<<.ValuesKey>>.dbSync.suspend | quote }}
     {{- include "<<.Chart>>.labels" . | nindent 4 }}
 spec:
@@ -66,7 +70,30 @@ spec:
   timeZone: {{ .Values.<<.ValuesKey>>.timeZone | quote }}
   database:
     dataConnectorName: <<.Connector>>
-    # Immutable: changing the projection means a new Syncer, not an edit.
-    columns: []
-    # A strictly-greater-than cursor. A day with no changes writes nothing.
-    isMaxValueColumn: TODO
+    batchSize: {{ .Values.<<.ValuesKey>>.dbSync.batchSize }}
+    # Immutable - the CRD checks self == oldSelf, so changing the projection
+    # means a new Syncer, not an edit.
+    #
+    # Both flags belong to a column. isMaxValueColumn written one level up,
+    # beside dataConnectorName, is an unknown field: the apiserver drops it
+    # without a word and the Syncer then re-reads the whole table every run.
+    columns:
+      - name: TODO
+        # The primary key. A schema-level marker only, but it records which
+        # column carries row identity.
+        isIdentifier: true
+      - name: TODO
+        # The cursor, strictly greater than: a run with no changes writes
+        # nothing. At most one column may carry this.
+        isMaxValueColumn: true
+    # The Syncer wraps this query:
+    #
+    #   select <columns> from (query) where <cursor> > $cursor
+    #   order by <cursor> asc
+    #
+    # so every name in columns must appear in the projection spelled exactly
+    # the same way, and the cursor column has to be comparable.
+    query: |-
+      -- TODO. Run it against the live database before committing, and record
+      -- the row count you measured and when.
+      select 1
