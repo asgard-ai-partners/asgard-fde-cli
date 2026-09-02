@@ -394,11 +394,44 @@ only.
 **You cannot get this ID until the namespace exists** and the platform has reconciled it into a
 Project — which is why Terraform comes first (see Deploy / CI).
 
+## When the tool is wrong
+
+`asgard-cli` carries the platform knowledge, and some of it will be wrong or
+missing. **That does not get fixed here.** A note in this repository is a note
+one engagement has; the next one starts over with the same gap.
+
+    asgard-cli issue-report
+
+It says where to file and what to put in - and the part that gets left out is
+worth naming twice: **the state you were in**, so somebody can stand where you
+stood, and **where the answer actually turned out to be**, because a page that
+does not exist and a page nobody can find need different repairs.
+
+Worth filing even when unsure: "I looked for X and could not tell whether it
+exists" is either a missing page or a wrong signpost, and both are fixes.
+
+**Never paste this customer's content into an upstream issue.** Their document,
+their systems, their people. The shape is enough.
+
 ## Completion Model
 
-Models are the platform's builtins, referenced by name — there is no `CompletionModel` CR and
-therefore no model API key in `app-secret`. One knob: `defaultCompletionModelName`, read by every
-`SemanticLayer` and overridable per-env. **Never hardcode a model name in a template.**
+**Default: use the platform's builtins by name.** No CR, no model API key in `app-secret`. One
+knob — `defaultCompletionModelName`, read by every `SemanticLayer` and overridable per-env.
+**Never hardcode a model name in a template**: the builtin tiers are semantic aliases, and a
+specific name becomes something to come back and fix when that model is retired.
+
+**A `CompletionModel` CR exists and is the exception, not an impossibility.** Write one when the
+customer brings their own model or their own key — three reference deployments do:
+
+    completionModelClass:  aoai-chat | openai-chat | gemini | anthropic | mistral | builtin
+    exactly one of:        aoaiChat, openaiChat, gemini, anthropic, mistral, builtin
+    the key:               spec.<provider>.apiKey.valueFrom.secretKeyRef into app-secret
+
+Two things the CRD enforces and helm will not tell you: **`completionModelClass` is immutable** —
+changing it means a new CR, not an edit — and exactly one provider block may be present, so a
+half-migrated CR with two is rejected by the apiserver, not by `helm lint`.
+
+It also carries `asgard-ai.com/project-environment-id`, like `Workflow` and `Trigger`.
 
 `SemanticLayer.spec.completionModelName` is **required**; an `Agent` takes no model (the caller
 picks the orchestrator's model per turn).

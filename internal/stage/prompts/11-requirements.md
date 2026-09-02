@@ -6,7 +6,8 @@ open during one.
 
 Everything below is how to think during the interview. This is what to do with
 it, and it comes first because the thinking is the part that goes well on its
-own. Three commands, run **as the answers arrive**, not at the end:
+own. Three commands, run **as the answers arrive** - not at the end, and not
+before they start:
 
     asgard-cli request add "<what they asked for, in their words>"
     asgard-cli request target <<.RequestID>> <project>
@@ -16,6 +17,25 @@ own. Three commands, run **as the answers arrive**, not at the end:
 is three requests, because two capabilities in one record cannot be given
 different target projects, and the target project is the decision this whole
 stage exists to reach.
+
+**And not before the interview.** A customer's own document arriving ahead of
+the meeting is normal - their internal approval comes before they will book one -
+and it is not a reason to open a request. Only section 1 exists at that point,
+and it already exists, in `references/`. The other six - audience, target
+project, how each system is reached, writes, success, scope - are what the
+interview decides, so a request written first is one copied section and six
+TODOs. It shows in the index as progress, it cannot pass any of `request
+ready`'s checks, and it puts the customer's words and our translation in one
+file while the translation is the request's whole reason to exist.
+
+Before the interview the material has three correct homes and needs no fourth:
+
+    references/              their document, as they wrote it
+    docs/open-questions.md   what to ask, and who can answer it
+    docs/meeting-notes/      the meeting, and what is taken into it
+
+**An empty `requirements/requests/` before the interview is the right state, not
+a gap.** `asgard-cli check` treats it as one.
 
 The way this stage fails is not a bad analysis. It is a good one that stays in
 the conversation: the material gets read, the questions get filtered well, the
@@ -29,6 +49,12 @@ If you are answering a question rather than running a meeting - "list the open
 questions in this document" - that is still this stage. Write the records, then
 answer from them.
 
+**You will also need something to take into the room.** The deck is the only
+thing in the repository the customer reads, and its shape is not this page's:
+the `proposal-deck` skill in `.agents/skills/` owns it, including the one to
+build while the questions are still open. Read it before writing slides, not
+after.
+
 <<with .Requests>>Open requests:
 
 <<range .>>  <<.ID>>  <<printf "%-8s" (printf "%s" .Status)>>  <<.Title>>
@@ -39,6 +65,33 @@ no record of it. Write the request before going further - `asgard-cli check`
 reports this state until one exists.
 <<else>>Nothing is recorded yet, so start with `asgard-cli request add`.
 <<end>><<end>>
+## Read the later stages before this meeting, not after
+
+Every other page here is written to be read when you arrive at it, and that is
+the right arrangement for them. **It is wrong for this one**, for a reason that
+is about the output rather than the content:
+
+    stage 3 to 9 produce files      a wrong one is edited, re-rendered, reverted
+    this stage produces speech      a wrong one is in the customer's notes
+
+You get one interview. At that point you have not read stages 3 to 6, and **half
+of what you will say out loud is settled there**. So read them first - at least
+`data-sources`, `read-path`, `entry-point` and `knowledge`. An hour before the
+meeting is cheaper than a correction after it.
+
+### The five that get said wrong
+
+They live in `asgard-cli brief customer-meeting`, not here, because meetings
+happen at every stage and a briefing reachable only from this page is
+unreachable to an engagement at stage 5 with a meeting tomorrow.
+
+**Run it before the meeting.** The short version of why: four of the five fail
+in the same direction - the intuitive answer undersells the platform or
+overstates a limit - so when a customer asks whether something is possible and
+the honest-sounding answer is "no" or "not yet", that is the moment to check
+rather than to be modest. Being careful and being wrong look identical from
+their side.
+
 ## Why the interview is a stage of its own
 
 Of the target repo's thirteen task specs, **three were superseded and one was
@@ -58,6 +111,17 @@ Ask it once per capability the customer wants, before anything else.
 The order is not a style preference. Each answer narrows the next question, and
 asking them out of order means designing against an audience nobody confirmed.
 
+**0. What have they already read or been told?**
+
+One sentence, before describing anything. A customer who read the product site
+arrives believing their own staff will build workflows in Odin, carrying a
+vocabulary - Basic Function, Template - that maps to nothing in the product as
+documented anywhere else, and expecting Mimir to forecast.
+
+`asgard-cli wiki what-they-read` has the three and what is actually true. You
+cannot correct a picture you have not seen, and describing the platform over the
+top of a different one produces a customer who nods and disagrees later.
+
 **1. What can the agent not do today?**
 
 In their words, before translation. Write down the sentence they actually said,
@@ -76,6 +140,9 @@ whole stage exists to reach.
     internal, authenticated callers   -> the platform's agent hub, semantic layers
     public, anonymous visitors        -> your own BotProvider, fixed query tools
 
+This decides how they reach it. **2b decides what "it" is**, and the two are
+asked together.
+
 Not a preference and not a later refinement: the two paths share neither an
 entry point nor a read path, so a request that mixes both audiences is two
 requests. Same audience as an existing project means this request goes into that
@@ -85,6 +152,33 @@ Ask it concretely. "Do they log in to something today, and is it ours?" gets an
 answer; "are they internal users?" gets a yes that means nothing, because a
 contractor with a company address is internal to the person answering and
 anonymous to the platform.
+
+**2b. What do they do with the answer?**
+
+Ask it in the same breath as question 2, because it decides **which product this
+is**, and everything from question 3 down assumes the answer.
+
+    look one thing up, in the moment     an agent
+    watch the same numbers every day     a Dashboard - this is Mimir
+    both, for different people           both, and they are separate deliveries
+
+`asgard-cli wiki product-suite` puts it plainly: **Mimir is often what the
+customer actually wants.** "I want an AI that answers stock questions" is not a
+statement about an agent - it is a statement about stock questions, and the two
+products answer it differently. Glancing at a figure each morning is a
+Dashboard; looking one thing up when a customer is on the phone is an agent.
+
+The failure this prevents is the expensive one and it is silent: an agent gets
+built, it works, and the customer keeps asking the same three questions every
+morning because what they actually needed was a page that was already open. Both
+read the same Semantic Model, so the modelling work is not wasted - but the
+delivery is, and so is the meeting where it is demonstrated.
+
+Ask it concretely, the way question 2 is asked: "when you have this number, what
+happens next - does somebody act on it there and then, or is it something you
+check?" A recurring report is a Dashboard, whatever words they used to ask for
+it. Anything they want **pushed** to them - mailed, posted to a group - is a
+third answer again, and a schedule cannot run anything needing approval.
 
 **3. Which systems hold the data, and how can each one be reached?**
 
@@ -111,6 +205,29 @@ A middleware layer, an OMS, a warehouse that consolidates the channels. If one
 exists, several rows collapse into a single database, and that single answer
 changes the design more than anything else on this page.
 
+**3a. Each answer names a shape, and you can say so in the room.**
+
+The mapping is mechanical, and **the walk is where it lives** - one decision per
+stage, each with the case that got it wrong:
+
+    the systems and how each is reached      asgard-cli next --stage data-sources
+    the read surface, per audience           asgard-cli next --stage read-path
+    the entry point, per audience            asgard-cli next --stage entry-point
+    where unstructured knowledge goes        asgard-cli next --stage knowledge
+
+Read them **before** the meeting rather than when you arrive at the stage. They
+are written as build-time decisions, but every one of them is settled by an
+answer the customer gives here, and knowing which answer produces which shape is
+what lets you say it out loud:
+
+    "if that is a read-only account we build A; if it is only the web console it
+     becomes B, and B costs considerably more than everything else together"
+
+That turns an interview into a design conversation, makes the expensive answer
+visible while they can still change it, and gives a discovery deck its
+right-hand column - every question paired with what answering it produces.
+`asgard-cli size <shape>` turns the shape into a count.
+
 **3b. For each system we will actually connect to, get the coordinates.**
 
 Ask in the meeting, not by email afterwards. Every one of these has turned an
@@ -120,14 +237,29 @@ integration from days into weeks by being discovered late:
   - **is the account read-only?** Ask explicitly. The one offered first usually
     is not, and finding out later means going back for a second credential
   - **is it reachable from outside their network?** Asgard is a hosted cloud
-    service - it does not run on the customer's network and cannot be put
-    there - so an internal system stays unreachable until they allowlist our
-    four outbound addresses or bring us on over a VPN. Ask who can approve a
-    firewall change and how long one takes there; it is a ticket and a window
-    in most companies, not something the person in the meeting can do that
-    afternoon. `asgard-cli wiki operations` has the addresses to hand over in
-    the meeting. This is the single most expensive thing to discover in week
-    three, and it costs one sentence to ask in week one
+    service and the agent runs in a sandbox the platform starts, in that cloud.
+    There is nothing of ours to put on their network. So the ask has one shape:
+    **they add Asgard's four outbound addresses to their allowlist.**
+
+    **Ask for that, not for "a VPN, an allowlist or a jump host".** Offering
+    options invites their network team to choose one that does not apply, and
+    the week it takes to find that out is the week you were trying to save.
+    If their policy needs a VPN, that is their side's business about how the
+    allowlist gets implemented; what we need from them is unchanged.
+
+    Ask whether it can be done and roughly when - a date changes our plan. **Do
+    not ask who approves it**: a name does not change what we build, and filter 0
+    below names this exact case. It is a ticket, an approval and a window in most
+    companies rather than something done that afternoon, and that is their queue
+    to manage, not ours to chase.
+
+    **Ask for the person; do not hand out the addresses.** They go to whoever
+    makes the change, once, read fresh from `asgard-cli wiki operations` - not
+    into this repository, not onto a slide, not into a thread that gets
+    forwarded. They can change and a copy will not, and a stale allowlist is the
+    customer's connection dropping. Coordinates in a committed record are the
+    thing section 4 already refuses; ours are the same class as theirs. This is the single most expensive thing
+    to discover in week three, and it costs one sentence to ask in week one
   - who issues the credential, by name or role. A credential with no owner is
     not a dependency, it is a delay
   - for an API instead of a database: the auth scheme, who holds the client id
@@ -148,6 +280,22 @@ Write the *name* of the key in the record - `<TARGET>_DB_PASSWORD` locally,
 `<target>_db_password` in app-secret - and never its value. `.env.example` at
 the repo root has the full pattern, including the three places a new database
 has to be registered before it works end to end.
+
+**A credential the customer's own users supply is a different problem again**,
+and it comes up whenever the agent acts on behalf of individual people rather
+than as one service account: each user's token for a third-party platform has to
+be stored and replayed, so it cannot live in `app-secret` and cannot live in
+`.env` either.
+
+That is a service with a database, not a chart - one existing deployment holds
+them AES-256-GCM sealed in a column, with the key from its own environment,
+masked for display, and the whole boundary isolated behind one package that the
+build refuses to let other layers import. **If a requirement implies this, say
+so early**: it is the point at which the engagement stops being a chart and
+needs somewhere to run code. `asgard-cli usecase per-turn-credentials` is the
+lighter alternative - the caller supplies the credential each turn and nothing
+is stored - and it is worth checking whether that is enough before agreeing to
+hold anything.
 
 If the customer wants to hand over a password during the meeting, take it into
 `.env` there and then and say why it is not going in the notes. Doing that once
@@ -234,6 +382,37 @@ LINE also needs **two-way setup** - Asgard issues a webhook URL that somebody ha
 to paste back into the LINE console and verify - so it needs an owner on their
 side, not just a credential. See `asgard-cli wiki integration`.
 
+**3f. Listen for the sentences that are a skill.**
+
+Section 3 asks where the data is. This asks for something the customer will say
+in passing and never volunteer, because to them it is not a fact about a system -
+it is just how things are:
+
+    "這個代碼的意思是⋯"                a status vocabulary
+    "我們內部把 A 和 B 算成同一件事"     a cross-system mapping
+    "這個數字要這樣加總"                an aggregation convention
+    "那一欄我們只在退貨的時候填"          a field's real meaning
+
+**Any of those is a skill, and the moment to write it down is when they say it.**
+
+There are two halves to this and the second is easier to miss:
+
+    what they say out loud     write a skill there and then
+    a document they hand you   it becomes a skill - it does not stay in references/
+
+Nobody can reconstruct it later from the schema, because it is not in the schema.
+An agent without it does not fail visibly - it answers confidently and wrongly,
+having interpreted a code that meant something else.
+
+It goes to `common/skills/<name>/SKILL.md`, which is synced to the platform. In
+`references/` it is invisible to the running agent, and the failure then looks
+like a model ignoring instructions rather than a file in the wrong place.
+
+This is also the row a proposal forgets, because it is knowledge rather than a
+system: there is no credential to ask for, so it never comes up in the access
+conversation. `asgard-cli usecase skill-layers` is what one looks like at full
+size, and what its layers are for.
+
 **4. Is any of it unstructured?**
 
 Documents, FAQs, pages on a website - things a query cannot answer exactly.
@@ -241,9 +420,58 @@ Those become a Drive with a knowledge graph, and they are a different shape from
 rows in a database. Ask separately; customers rarely volunteer documents when
 the conversation has been about systems.
 
+**And ask whether they need to see where an answer came from.** Citations are
+available and are not automatic: the sources arrive on the completion event
+inside the message's `template`, but only if the Workflow is built to return them
+and the front end reads that field. It is decided when the chart is written, and
+retrofitting it means changing the workflow and the front end together - so it
+belongs in the request rather than in a later conversation. Regulated industries
+and anything replacing a human who cites a manual will want it.
+
+**Retrieval quality depends on how their people ask.** Specific keywords beat
+vague ones, one topic per question, context helps. A customer whose staff ask
+"tell me everything about X" will judge the knowledge base as bad and will be
+describing their questions. Sample questions on the agent are where this gets
+taught without anyone reading a guide.
+
 Anything a query DOES answer exactly - counts, prices, stock levels, contact
 details - belongs to a query tool, not to a Drive. Putting a number in a Drive
 makes the agent paraphrase a figure it should have read.
+
+**4b. Does something have to happen when their system does something?**
+
+"When an order comes in", "when a ticket is escalated", "when the stock drops
+below" - that is a **webhook**, not a schedule, and the two get confused because
+both run with nobody watching:
+
+    their system calls us when it happens    a webhook. `asgard-cli wiki automation`
+    we look on a timer                       a Trigger, and always later than the event
+
+**The question that decides it is whether their system can call out at all.**
+Many cannot - an old ERP, a vendor SaaS with no outbound hooks - and then a
+schedule is the fallback, with a delay the customer should hear about now rather
+than at acceptance.
+
+Ask who can configure that on their side. It is usually a different person from
+whoever gives you a database account.
+
+**4c. Do they expect it to send anything outward?**
+
+Mail, SMS, a message into a group. Customers ask for this constantly and it
+sounds trivial next to reading a database, so it gets nodded through.
+
+**The platform cannot send mail.** No SMTP, no preset mail toolset, nothing in
+the core. So:
+
+    they have an HTTP endpoint that sends mail   we can call it
+    they do not                                  it cannot be built yet, and
+                                                 that is a question for them
+
+**Do not let it be mocked silently.** A mocked send that returns success and
+writes "notified" into a log is worse than nothing - somebody later reads that
+log and believes people were told. If a mock is right for a test phase, say now
+that every summary will lead with "not actually sent". `asgard-cli wiki
+integration` has how one deployment does it.
 
 **5. Is there anything it should change, and not just read?**
 
@@ -279,8 +507,59 @@ would keep if they could only keep one. That item is the MVP, whatever it costs
 to build - a first delivery that skips the item being judged has failed however
 fast it shipped.
 
+**Read it back means arrive with a reading.** A customer who wrote a document
+listing what they want tested has already answered most of this, and asking them
+cold - "so which of your three would you like first?" - hands them our
+sequencing problem and reads as though we cannot do all of it. Their document is
+the answer; bring your reading of it and ask them to correct it:
+
+    no    "三個情境要先做哪一個?"
+    yes   "你們驗證項目裡寫了 X。我們讀下來,情境二最快能證明它,因為 ___。
+           這樣對嗎?"
+
+The second takes the same minute and produces a decision instead of a
+deliberation. It also surfaces disagreement, which the open version cannot: a
+customer correcting your reading tells you something; a customer picking from a
+list tells you what was easiest to say.
+
+**So this is a meeting question, not an open-questions row.** It belongs on the
+agenda, and it only becomes a tracked row in one case: they handed over nothing
+that speaks to it and would not answer when asked. Filing it as a blocker when
+their own document answers it puts a question at the top of a list that the
+customer can see they already answered, and everything under it inherits that
+impression.
+
 Then work out what that one item genuinely needs, and the two filters below turn
 the rest into deferred scope rather than open questions.
+
+**6c. Do they need to know what it will cost to run?**
+
+Not our fee - the platform's usage billing, which is a separate question and one
+a customer with a procurement process will ask before signing anything.
+
+`asgard-cli wiki fehu` has how it is broken down: by **Service** (Platform,
+Knowledge Base, Data Insight, Agent Hub, Heimdall) and by **Item** (Project
+Usage, Processor Usage, Seat), in units of Units-Days, GB-Days and Times.
+
+Two things worth knowing before answering:
+
+  - **the Workspace is the billing unit.** So how the work splits into projects
+    and workspaces has a cost consequence, and the split is decided at stage 2 -
+    before anybody has asked this question. Ask it now
+  - **a seat is a line item.** "Everyone in the company can use it" is a
+    sentence with a price, and the customer usually has not connected the two
+  - **only Odin lets them bring their own model.** Sindri and Mimir use the
+    platform's models and the LLM cannot be swapped, so "we will use our own
+    Claude account" has a different answer per product - and which product this
+    is was decided at 2b. A customer with a model contract or a rule about where
+    inference happens has to hear it there, not here
+  - **a Loader and an Indexer each cost several times a Project, per day**, and
+    a Processor is billed per node per day. So a workflow's node count is a
+    standing cost, and a design that routes through sub-workflows where one
+    prompt would do pays for it every day it exists
+
+If they do not raise it, say the shape of it anyway, once. A cost discovered
+after a pilot is the reason a pilot does not convert.
 
 **7. What is explicitly out of scope?**
 
@@ -288,12 +567,85 @@ Write down what you are NOT building, particularly the things they mentioned in
 passing. An unrecorded "we could also..." returns as an assumption three weeks
 later, and by then nobody remembers whether it was agreed.
 
+## What they ask us
+
+An interview is not one-directional and the material here has been, until now.
+A customer who wrote a test plan usually ends it with a list of things they want
+**us** to confirm - account permissions, whether a channel can do X, what we
+recommend for their existing system. Those have nowhere to live: the
+open-questions file is this engagement's own questions, and
+`asgard-cli wiki platform-unknowns` is what no source settles.
+
+They go in `docs/open-questions.md`, in its own section, and the file the
+scaffold writes now has one.
+
+**Check each against `asgard-cli wiki platform-unknowns` before answering.** A
+surprising share of what a customer asks us is already on that list, because
+they ask about the same things every engagement hits - what a given user is
+allowed to reach, what gets logged and for how long. When one matches:
+
+    say so, plainly, in writing. "We do not have a confirmed answer to this
+    yet and are checking with the platform team" is a real answer and an
+    honest one
+
+The failure it avoids is the expensive kind: answering from a reasonable
+assumption, having it written into their evaluation, and discovering in week
+six that the platform does not do it. Their list is usually also their
+acceptance criteria.
+
+**Answer in writing, with a date, and put the answer next to the question.** A
+verbal answer in a meeting is not traceable to anything, and the next person
+cannot tell what we committed to.
+
 ## Material they hand you
 
-Ask for it in the meeting, before you need it: API documentation, an operation
-manual, a schema dump, an ERD, a field dictionary, a status-code table, the
-screenshots someone made for training new staff. Customers usually have more
+Ask for it in the meeting, before you need it. Customers usually have more
 written down than they think, and none of it arrives unless asked for.
+
+**Asking has an order too, and it is not the one in question 3.** The two look
+alike and are opposite - one is how we reach a system once we have it, the other
+is what to ask them for first:
+
+    question 3, how we READ a system   a database  >  an API  >  a screen
+    here, what we ASK THEM FOR         docs > source > API spec > the DB > the UI
+
+| ask for | what it gives you |
+|---|---|
+| **system documentation / operating manual** | best. Fields, validation rules, status codes and the process are all in it, and it explains what things *mean* |
+| **the source code** | better than a spec, and people forget to ask. The code is what the system does; a spec is what somebody wrote down about it once. For a system they built themselves this is usually available and usually decisive |
+| **the API spec** | a clear contract, and it drifts. Good for shape, weak on business meaning |
+| **the database** | the data without the rules. You can see every field and not what any of them means |
+| **the back office screen** | last. You can look at it and cannot quote it |
+
+**Source code above a spec is the row that surprises people.** A spec describes
+an intention; the code is the behaviour, including the special cases nobody
+documented and the field that means two things depending on another field.
+Customers rarely offer it and often will hand it over when asked - and nobody
+asks.
+
+**For a system they bought, this row does not exist** - skip it and go to the
+API spec. The order does not change; there is simply nothing to ask for, and
+asking anyway spends a request on it.
+
+So establish which kind it is before working down the list. If you do not know
+yet, ask without assuming: *"the API documentation, and if it is something you
+built yourselves, the source as well."*
+
+**A document replaces an interrogation, and that is the point of asking first.**
+Do not go through fields, validation rules or status codes one at a time in the
+meeting: it is slow, and what you get is the version the person remembers.
+Meeting time is for what only they can answer - whether the network reaches it,
+who issues the account, who approves a write.
+
+**Say why you want it, because it makes them more willing to give it:** their
+manual is not background reading for us, it is what the agent will know. A field
+dictionary becomes the thing that stops it inventing a status code.
+
+**Do not design their permissions while asking.** "A read-only account for
+queries and a separate writable one" is our implementation preference stated as
+a request, and it is not always even possible - plenty of systems issue one
+account with different rights. Ask what access they can give and what it allows;
+let them tell you how many credentials that is.
 
 **It does not go in the request record.** Three directories, and the difference
 is who reads them:
@@ -385,6 +737,20 @@ The test is narrow: **does the answer change what we build?**
     theirs      how they staff a channel, who maintains a document, how their
                 two systems relate to each other, what their people do today
 
+**Names cut both ways, and the line runs between two kinds of person:**
+
+    the person who will hand us the thing      ask. Without a name, a
+                                               dependency is just a delay
+    the person who authorises them internally  do not ask. Their org chart,
+                                               their queue, and it changes
+                                               nothing we build
+
+So: who issues the read-only account - yes, we will be chasing them. Who signs
+off the firewall change - no. Ask **whether** it can be done and roughly
+**when**, because a date changes our plan; a name in their approval chain does
+not, and asking for one in front of a customer reads as managing their internal
+process. This has reached a slide.
+
 A question about their internal arrangements is not an open question. It is
 either something to hand back as a note - "this is worth deciding before you go
 live, and it is yours" - or nothing at all.
@@ -402,6 +768,12 @@ Two ways this goes wrong, and both look like diligence:
 What survives filter 0 is almost always a small set of the same shapes: a
 credential, an endpoint, a network path, a document, an account, and the two
 answers only they can give (2b and 6b).
+
+**Those last two are agenda items before they are rows.** Both are answered in
+the meeting by a person in the room, so a row for either is a note that the
+meeting has not happened yet - and 6b in particular has usually been answered
+already, in whatever they handed over. Bring a reading and ask them to correct
+it. File a row only if you asked and got nothing.
 
 ### Filter 1 - the minimum that proves it works (MVP)
 
@@ -425,11 +797,38 @@ filter, and it is the one that gets it wrong in both directions.
                              passes it. The integration is still proved
 
 The pattern that keeps recurring: the hardest question in an engagement is
-usually **how the agent knows who it is talking to**, and it is almost always
-cuttable, because the user can be asked. A lookup keyed on something the user
-types proves the same integration as a lookup keyed on a recognised identity, and
-the identity question moves to phase two without the delivery losing anything the
-customer is measuring.
+usually **how the agent knows who it is talking to**, and it is often cuttable,
+because the user can be asked. A lookup keyed on something the user types proves
+the same integration as a lookup keyed on a recognised identity, and the identity
+question moves to phase two without the delivery losing anything the customer is
+measuring.
+
+**Check whether it needs cutting at all, before you cut it.** This is the
+paragraph that most often produces a promise we did not have to make, and the
+mistake has already been made from it.
+
+An anonymous channel can answer "where is MY order". What it cannot do is let
+the **model** choose whose case to look up. Whatever sits in front - a website, a
+chat channel, a support desk - is what knows who is talking, and it passes the
+identity through server-side on every turn. **LINE's webhook carries a userId.**
+So if the customer's system has the binding stored, per-customer lookup is in the
+first delivery and there is nothing to defer.
+
+    is there a layer in front that knows who is speaking?
+      yes  -> keep it. Cutting it gives away something you had
+      no   -> now it is genuinely cuttable, and that is a question for
+              them rather than a design to work around
+
+Getting this backwards costs more than a deferred feature: it is telling a
+customer their channel cannot recognise their own customers, on a slide, when it
+can. `asgard-cli next --stage read-path` has the mechanism and
+`asgard-cli usecase per-turn-credentials` has the shape - read one of them before
+promising anything of the form 「查我的⋯」.
+
+**And when it is kept, it brings an acceptance criterion with it**, which belongs
+in section 6 now rather than being discovered at verification: a query that
+forgets to filter on the injected identity **fails on the anonymous path only,
+which is the path nobody tests**.
 
 What that leaves blocking the first delivery is normally something duller and far
 more useful to raise in a meeting - whether the system is reachable from a
@@ -492,11 +891,15 @@ is not tracked, it is just written down.
 
   - the customer's own wording is in section 1, unedited
   - the audience is decided, and the target project follows from it
+  - what they do with each answer is decided - an agent, a dashboard, or both -
+    because the product follows from it and every section below assumes one
   - every system has a row, and every row says how it is reached
   - the open questions have been through both filters, so what is left blocks the
     MVP rather than describing everything still unknown
-  - the customer has said which single item they would keep - it is theirs to
-    answer and cannot be inferred
+  - the customer has said which single item they would keep, or corrected the
+    reading you brought them. It is theirs to settle and cannot be decided for
+    them - but arriving without a reading is not neutrality, it is asking them
+    to do the work of the meeting
   - every system we will connect to has a section 4 block, with a named
     credential owner and an answer on network reach - and no secret in it
   - unstructured knowledge is either listed or explicitly ruled out

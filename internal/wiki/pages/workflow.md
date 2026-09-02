@@ -102,6 +102,47 @@ button, carousel, chart, location, video and quick-reply message templates.
 `asgard-cli usecase workflow-chain` covers what actually passes between
 processors; `fixed-query-tools` is the shape of a zero-parameter query tool.
 
+## What goes in a field
+
+Every processor field takes one of three kinds of value - Literal, Expression
+(ECMA5 JavaScript) or Template (Handlebars) - and the six variables in scope,
+the seven built-in functions and the `Blob` shape are in
+[`processors`](processors.md). **Expression is ECMA5**, so no `let`, no arrow
+functions and no optional chaining, in any field of any processor.
+
+## The editor's canvas is a ConfigMap
+
+A Workflow renders as a diagram in the platform's editor, and **where each node
+sits is not on the Workflow**. It is a plain Kubernetes `ConfigMap` holding one
+key:
+
+```yaml
+kind: ConfigMap
+metadata:
+  name: cfgmap-<workflow>
+data:
+  node_positions: |-
+    { "workflow": {"x":40,"y":40},
+      "entry":     {"main": {"x":40,"y":140}},
+      "processor": {"submit-claim": {"x":420,"y":140}, ... },
+      "exit":      {"finish": {"x":1180,"y":140}} }
+```
+
+The Workflow binds it by annotation - `asgard-ai.com/workflow-config-name` - and
+without one the graph opens as a pile at the origin and somebody drags it apart
+by hand, once per environment.
+
+**This is the second thing that decides whether a chart-authored Workflow is
+usable in the UI**, and the two fail the same way and are never mentioned
+together:
+
+    the ConfigMap missing            the nodes open on top of each other
+    project-environment-id missing   the editor opens as a blank canvas
+
+One deployment carries 80 of these, one per Workflow. `ConfigMap` is not an
+Asgard CR and appears in no CRD, which is why nothing else here mentions it -
+and why it is easy to conclude it is somebody else's concern.
+
 ## Sources
 
 - All 16 files under

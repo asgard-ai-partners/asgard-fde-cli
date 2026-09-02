@@ -8,11 +8,25 @@ Things filed under help-community that come up in practice.
 customer's data centre and not on their network, and there is no deployment that
 puts it inside. Everything follows from that.
 
-So a system that is only reachable from inside their network is not reachable at
-all until **they** open a path to it. The work is theirs, not ours: they add
-Asgard's addresses to their firewall allowlist, or bring the platform onto their
-network over a VPN. We supply the addresses; they own the change, the approval
-and the schedule for it.
+**And the agent runs in a sandbox that the platform starts**, in that cloud. So
+there is no fixed machine of ours to put on their network, nothing to install
+behind their firewall, and no endpoint of theirs we can reach out from. The
+traffic leaves Asgard's cloud, and it leaves from the addresses below.
+
+So the ask has exactly one shape, and it is not a menu:
+
+    they add Asgard's outbound addresses to their allowlist
+
+**Do not offer a VPN, a bastion or a jump host as alternatives.** They are the
+shapes for connecting two networks, and this is not that: it is a hosted service
+calling in from fixed addresses. Presenting three options invites their network
+team to pick the one that suits their habits, and then a week is spent
+discovering it does not apply. If their policy requires a VPN, that is a
+conversation for their side about how the allowlist is implemented - it does not
+change what we need from them.
+
+The work is theirs, not ours. We supply the addresses; they own the change, the
+approval and the schedule.
 
 Traffic from the platform to a customer's internal database or service leaves
 from these four fixed addresses:
@@ -27,20 +41,64 @@ from these four fixed addresses:
 All four have to be allowlisted, not one - which of them a given request leaves
 from is not something to rely on.
 
+### How these are handed over, which is not "in the deck"
+
+**Do not copy them into a customer repository, a proposal, or an email that will
+be forwarded.** Give them directly to the person making the firewall change,
+once, and read them from here when you do.
+
+The reason is this material's own core argument, applied to itself. The
+screenshots page refuses to carry images because *a copy in one engagement goes
+stale where nobody is looking* - and an address is the same kind of thing with a
+worse failure. **A stale screenshot is embarrassing; a stale allowlist is the
+customer's connection dropping, and they will come back to us about it.** Every
+copy in a repo, a slide or a mail thread is a copy nobody will update.
+
+It also resolves a contradiction that was sitting in plain sight: the
+`proposal-deck` skill forbids **coordinates** on a customer's screen - hostnames,
+connection strings, account names, not even in a screenshot's corner - and that
+rule is about the customer's infrastructure. Ours is the same class of thing, and
+this page was encouraging the opposite. Two documents, opposite instincts, and
+nothing said they were about the same subject.
+
+**In the meeting, ask whether the change can be made.** Then send the addresses
+to whoever will make it, afterwards and directly.
+
+**Nothing here records how these change.** They read as constants and there is no
+documented channel for a revision, which is itself worth knowing before treating
+a copy of them as durable.
+
 Two things this changes in an interview.
 
-**It is a question with a known answer, so ask it in the first meeting.** "Is
-this system reachable from outside your network, and who can add four addresses
-to the allowlist?" hands their network admin exactly what they need. The failure
-this avoids is discovering in week three that the credential works, the query is
-right, and nothing can connect.
+**It is a question with a known answer, so ask it in the first meeting.** "Can
+four addresses be added to that system's firewall allowlist?" - the question,
+not the addresses and not the org chart. It avoids discovering in week three
+that the credential works, the query is right, and nothing can connect.
 
-**It has an owner and a lead time on their side.** An allowlist change is a
-firewall change, and in most companies that is a ticket, an approval and a
-window - not something the person in the meeting can do that afternoon. That is
-why it is one of the few things worth tracking as an open question rather than
-handing back as a note: it blocks the first delivery and we cannot do it
-ourselves. Get the name of whoever approves it.
+**Track the outcome, not the person.** This is worth an open question rather
+than a note, because it blocks the first delivery and we cannot do it
+ourselves - but what is tracked is *whether the allowlist can be changed, and
+then whether it has been*. Not who signs it, not how many approvals, not how
+long their process takes.
+
+    ours     can this be changed, and is it done yet
+    theirs   who signs, which queue, how long
+
+**Asking who approves it fails this material's own filter**, and it has been
+asked on a slide: `asgard-cli next --stage requirements` filter 0 tests whether
+an answer changes what we build, and an approver's name does not. Worse, filter
+0 names this exact case - turning an operational precondition into a design
+question - and asking it in front of a customer reads as managing their internal
+process.
+
+It is fine to ask when they expect it, because a date changes our plan. It is
+not fine to ask who, because a name does not.
+
+**This page has now contradicted the interview stage twice** - once by offering a
+VPN or a jump host as alternatives, once here. Its reader is usually somebody
+preparing for a meeting, and it was written as though for somebody doing an
+integration. **Any line here that says "ask this in the meeting" should be run
+through filter 0 before it is followed.**
 
 The order the rest of the setup follows once the path is open is
 [`setup-path.md`](setup-path.md).

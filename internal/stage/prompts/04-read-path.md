@@ -6,10 +6,38 @@ Needing a read path:
 <<end>><<end>>
 ## The decision
 
-| audience | answer |
-|---|---|
-| internal, authenticated | SemanticLayer, one per source system, one Agent each |
-| public, anonymous | a Toolset of zero-parameter fixed queries, no semantic layer |
+| audience | what they do with it | answer |
+|---|---|---|
+| internal, authenticated | ask, in the moment | SemanticLayer, one per source system, one Agent each |
+| internal, authenticated | **watch, every day** | **SemanticLayer and nothing else** - see below |
+| public, anonymous | ask, in the moment | a Toolset of zero-parameter fixed queries, no semantic layer |
+
+The second column is the one this page used not to have, and the row it adds is
+not a variant of the first - it is a different product.
+
+## When nobody is asking
+
+**A layer with no Agent on it is a finished deliverable, not an unfinished one.**
+If what the customer wants is to see the same numbers each morning, the consumer
+is **Data Insight (Mimir)**: they explore the model by conversation and save what
+is useful as Views and Dashboards, in the product, and no Agent, Toolset, entry
+point or BotProvider is written at all.
+
+    ask one thing, now        an agent. Everything below applies
+    watch the same numbers    a layer, and the chart stops there
+    both, different people    both - two deliveries over one model
+
+`asgard-cli usecase mimir-dashboard` is the shape, including the trap: a later
+reader finds a SemanticLayer nothing references, assumes it is a missed
+connection, and binds it to an Agent - which hands agents deliberately restricted
+to an API a second path into the database. **Nothing in the gate catches that**,
+because cross-reference checking validates references that exist, never one that
+should not. Say so in the chart, next to the layer.
+
+`asgard-cli next --stage requirements` asks this as question 2b, so the answer
+should already be in the request. If it is not, it was not asked - and the
+expensive version of this mistake is not choosing wrong, it is building the agent
+and finding out at the demo that they wanted a page that was already open.
 
 ## Why a semantic layer is wrong for a public audience
 

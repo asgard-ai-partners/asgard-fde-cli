@@ -36,9 +36,29 @@ afterwards, counting how many questions one user has asked - none of these are
 platform features.** There is no CR for any of them, and no field: searching the
 CRDs for a handoff, a takeover, a suspend or a per-user quota finds nothing.
 
-What the platform quota does cover is capacity, not people: 5 requests per second
-per endpoint, 3 minutes and 30 steps per request, 40 projects, 300 GB of
-knowledge base. A multi-system troubleshooting conversation can reach 30 steps,
+What the platform quota does cover is capacity, not people. All eight numbers,
+and **they apply to the Workspace - projects inside it share them**:
+
+| per request | per workspace |
+|---|---|
+| 5 RPS per endpoint | 40 Projects |
+| 3 minutes | 300 GB of Knowledge Base |
+| 30 steps | 500 Processors |
+| | **10 Loaders** |
+| | 150 Indexers |
+
+**Ten Loaders is the one that bites first.** A Loader is one recurring pull, so a
+customer with a dozen document sources exceeds it before anything else on this
+list - see [`knowledge.md`](knowledge.md).
+
+**These are defaults, not ceilings, and they are per plan.** They are raised by
+contacting sales or writing to service@asgard-ai.com, which is a different
+sentence in a meeting than "that is the limit". The overview says a Workspace
+has a price plan and that how many Projects it may hold depends on it - so 40 is
+one plan's number rather than the platform's. What is not documented is which
+plan gives what. See [`what-they-read.md`](what-they-read.md).
+
+A multi-system troubleshooting conversation can reach 30 steps,
 which is worth saying out loud before somebody designs one.
 
 The mechanism the platform's own case study describes puts the conversation
@@ -131,6 +151,30 @@ client (web / SDK / REST API / chat platform)
 channel costs - which credentials infra has to provide, and whether the class
 needs a connector pod.
 
+## What the platform cannot send
+
+**There is no mail capability anywhere in the platform** - no SMTP, no preset
+mail Toolset, nothing in the core. "Email me when it happens" is one of the most
+common things a customer asks for, and the answer is not "yes, of course".
+
+    they have an HTTP endpoint that sends mail   an external-api call
+    they have no endpoint                        it cannot be built yet
+
+**A deployment that mocks it owes a disclosure**, and this is worth copying. One
+does: `wf-send-mail` is a single `push-message` returning
+`{ok: true, mocked: true, to, subject, body}`, so the whole pipeline runs and
+the drafted mail lands in the invocation record for review. **`ok: true` is
+deliberate** - a false would stop a Trigger's cursor and the path would never be
+exercised.
+
+Which makes disclosure the entire safety property. That deployment requires both
+the tool's `tooling.description` and the agent prompt to lead every summary with
+"MOCK - not actually sent", and to never say "notified".
+
+**A log that reads as though people were emailed is the real damage a mock can
+do.** The same applies to any mocked outward action - a ticket not created, an
+order not placed.
+
 ## Sources
 
 - [LINE](https://docs.asgard-ai.com/docs/integration/line),
@@ -156,8 +200,10 @@ needs a connector pod.
   checked 2026-09-02 against
   [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `15ded0f` -
   no CRD and no field carries any of those concepts
-- The quota numbers: [Quota and limits](https://docs.asgard-ai.com/docs/help-community/quota-limits)
-  - asgard-docs `f00e0ee`
+- The quota numbers, all eight, that they are Workspace-level and shared, and
+  that they are raised through sales:
+  [Quota and limits](https://docs.asgard-ai.com/docs/help-community/quota-limits)
+  - asgard-docs `f00e0ee`, read in full 2026-09-02
 - The support desk owning the conversation:
   [AI customer service answering order enquiries](https://docs.asgard-ai.com/docs/product-suite/odin/case-studies/retail-ai-customer-service)
   - asgard-docs `f00e0ee`

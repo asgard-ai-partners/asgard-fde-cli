@@ -18,8 +18,20 @@ language can use them and write its own caption.
 **Open one before it goes on a slide.** Nothing records when any of these was
 captured, so a form that has since changed looks exactly like a current one - and
 a stale screen in front of the customer who uses that screen daily costs more
-than having no picture. A screenshot is also the most common way a credential or
-another customer's name reaches a deck, in a corner nobody read.
+than having no picture.
+
+Three things to look for, and the third is the one that catches people:
+
+  - **a credential** - a hostname, an account, a connection string
+  - **another customer** - a name, a logo, anything recognisable
+  - **our own implementation nouns, inside the picture.** A CR name, a `ts-` /
+    `sl-` / `dc-` / `ss-` prefix, an internal tool name, the admin console's own
+    navigation. The `proposal-deck` skill bans these in the deck's text and the
+    ban applies just as much to a screenshot of them - **and several images below
+    contain them.** They are marked, with what to crop
+
+Cropping is normal and usually costs nothing: the part that carries the argument
+is rarely the part carrying the noun.
 
 ## For a proposal: what it looks like to use
 
@@ -32,7 +44,7 @@ the governance gate, which is the hardest thing to explain in words.
 |---|---|
 | `sindri-retail-stockout-transfer/00-available-agents.png` | the hub with five agents, before anything is asked |
 | `sindri-retail-stockout-transfer/01-allocation-answer.png` | a real answer: current state, available quantity, three options to choose from |
-| `sindri-retail-stockout-transfer/02-approval-gate.png` | **the approval dialog** - the tool it wants to call, and nothing running until a person allows it |
+| `sindri-retail-stockout-transfer/02-approval-gate.png` | **the approval dialog** - the tool it wants to call, and nothing running until a person allows it. **CROP FIRST:** the dialog names `工具集:ts-wms` and `工具:create_transfer_order`. Keep the title line and the three buttons, drop the two rows between them - the argument is entirely in "it stopped and asked", which survives the crop |
 | `sindri-retail-stockout-transfer/03-execution-result.png` | after approval: what was created, and the resulting stock forecast |
 
 The third one is worth a slide on its own whenever the requirement has a write in
@@ -87,7 +99,7 @@ A worked example of step 3 filled in, rather than empty:
 |---|---|
 | the governance gate, as a list | `retail-stockout-transfer/04-automation-tools.png` - seven approval-gated tools |
 | what a gated tool declares | `retail-stockout-transfer/11-transfer-order-tool.png` - its input schema |
-| how many systems one agent reads | `retail-stockout-transfer/03-semantic-models.png` - CRM, ERP, e-commerce, POS, supplier, OLAP, WMS |
+| how many systems one agent reads | `retail-stockout-transfer/03-semantic-models.png` - CRM, ERP, e-commerce, POS, supplier, OLAP, WMS. **CROP FIRST:** the whole Odin console navigation is down the left - Agent Hub, MCP Servers, Skillsets, Plugins, Settings. Keep the card area only |
 | conversational analysis | `mimir-thread/answer.png`, `mimir-thread/chart-result.png` |
 | a dashboard that gets shared | `mimir-dashboard/share-dashboard.png` |
 | teaching the model the business's own questions | `mimir-knowledge/add-question-sql-pair.png` |
@@ -115,8 +127,34 @@ slide about limiting access is the overstatement this tool warns about most.
 Not everything does, and assuming otherwise wastes a search:
 
   - the chart, the CRs, the cluster - there is no UI for any of it
-  - a chat platform's own console (LINE, Slack, Telegram). The integration pages
-    have a few unnamed images; their own vendor documentation is better
+  - **LINE: images exist and they are of a product that no longer looks like
+    that.** `integration/LINE` carries two, hash-named rather than in a topic
+    directory, which is why a survey of the topic folders misses them:
+
+        /img/docs/60e2492a66bf.png    the prerequisites
+        /img/docs/f3563b5553dc.png    the integration dialog, LINE selected,
+                                      Channel Secret and Access Token fields
+
+    The second one is the screen a customer would want to see. **It is the old
+    console** - a left nav of Overview / Workflows / Knowledge / Environment /
+    Apps, and a card dated 2024/09/20 - and today's Odin has none of those.
+    `integration.md` already flags those four pages as possibly stale for the
+    same reason.
+
+    So the answer is still not to use them, but for a checkable reason rather
+    than because none exist: **a screenshot of a console the customer will not
+    recognise is worse than no screenshot**, and this is the exact failure this
+    page warns about, in the one place somebody would most want to ignore it.
+
+    What to do instead, and it is better than it sounds: describe the exchange
+    in their words - "your customer types their order number in LINE, it replies
+    with the repair status, and says so plainly when it cannot find it". Slide 5
+    is an interaction, not a screen. A vendor's own documentation screenshot is
+    not an option either: it is someone else's product surface in our proposal.
+
+    **If somebody captures a current one, this is the highest-value screenshot
+    missing** - it is the channel a Taiwanese customer asks about first.
+
   - anything about handoff, pausing, or per-user counters, because the platform
     does not have them - see [`integration.md`](integration.md)
 
@@ -126,10 +164,15 @@ Not everything does, and assuming otherwise wastes a search:
   asgard-docs' own `.mdx` pages, so a caption is the documentation's rather than
   a guess about what the file contains
   - asgard-docs `f00e0ee`
-- **Checked** 2026-09-02: `settings/data-source/data-source-create-provider-open.png`,
-  `agent-hub-managed-agent/create.png` and `sindri-home/home-available-agents.png`
-  were opened and match their captions
+- **Checked** 2026-09-02, opened rather than listed:
+  `settings/data-source/data-source-create-provider-open.png`,
+  `agent-hub-managed-agent/create.png`, `sindri-home/home-available-agents.png`,
+  and the two marked CROP FIRST above - which is how the crops came to be
+  marked. An engagement found the first of them by downloading it, after this
+  page had recommended it as the single most useful image here
 
 **Unchecked:** everything else here is described by its alt text, not by having
-been looked at, and **no capture date exists for any of them**. The grouping into
+been looked at, and **no capture date exists for any of them**. Five of roughly a
+hundred have been opened, and two of those five needed cropping - so assume an
+unopened one does too, rather than that the marked ones are the only ones. The grouping into
 situations is this tool's judgement rather than anything the documentation says.

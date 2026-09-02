@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -204,6 +205,56 @@ func reportTerms(out io.Writer, query string, sets ...[]string) {
 		len(terms)-len(missing), len(terms), strings.Join(missing, "  "))
 }
 
+// crossLanguage maps the words a Taiwanese FDE actually types into the words
+// this material uses. The corpus is English by convention - the wiki's README
+// says so - and a customer conversation is not, so a query in Chinese lands on
+// nothing and the reader concludes the subject is missing rather than named
+// differently. Every entry here is a term somebody searched for.
+var crossLanguage = map[string]string{
+	"原始碼": "source, repository",
+	"程式碼": "source",
+	"文件":  "documentation, sources",
+	"電商":  "commerce, marketplace, channel - and `asgard-cli wiki taiwan-channels`",
+	"庫存":  "inventory, stock",
+	"訂單":  "order",
+	"客服":  "customer service, help desk, chat-channel",
+	"權限":  "permission, scope, console - and `asgard-cli wiki platform-unknowns` P1",
+	"稽核":  "audit, logging - and `asgard-cli wiki platform-unknowns` P2",
+	"報表":  "dashboard, report, view - and `asgard-cli usecase mimir-dashboard`",
+	"儀表板": "dashboard - and `asgard-cli usecase mimir-dashboard`",
+	"知識庫": "knowledge, drive, context index",
+	"白名單": "allowlist, outbound - and `asgard-cli wiki operations`",
+	"網路":  "network, reachable, allowlist",
+	"排程":  "schedule, trigger, cron",
+	"核准":  "approval, consent, requestConsent - and `asgard-cli usecase write-path`",
+	"寫入":  "write - and `asgard-cli usecase write-path`",
+	"投影片": "deck, slides - and `.agents/skills/proposal-deck/`",
+	"簡報":  "deck, slides - and `.agents/skills/proposal-deck/`",
+	"截圖":  "screenshot - and `asgard-cli wiki screenshots`",
+	"語意層": "semantic layer",
+	"資料庫": "database, DataConnector",
+	"技能":  "skill, SkillSet",
+	"價格":  "cost, billing - and `asgard-cli wiki fehu`",
+	"計費":  "billing - and `asgard-cli wiki fehu`",
+}
+
+// suggest returns cross-language hints for the terms in a query that matched
+// nothing at all.
+func suggest(query string) []string {
+	var out []string
+	seen := map[string]bool{}
+	for _, term := range kb.Terms(query) {
+		for zh, en := range crossLanguage {
+			if strings.Contains(term, zh) && !seen[zh] {
+				seen[zh] = true
+				out = append(out, fmt.Sprintf("%-8s %s", zh, en))
+			}
+		}
+	}
+	sort.Strings(out)
+	return out
+}
+
 // nothingMatched is the dead end, and it is the one place the tool can lose a
 // reader entirely: an agent that searches twice, gets nothing twice, and falls
 // back on what it already believed has stopped using the material this command
@@ -216,6 +267,14 @@ func nothingMatched(out io.Writer, query string) error {
 		"than a customer's systems: a marketplace integration is under whichever\n"+
 		"shape reaches it, a device protocol is a question about the sandbox.\n\n"+
 		"Everything there is, in full:\n\n", query)
+
+	if hints := suggest(query); len(hints) > 0 {
+		fmt.Fprintf(out, "Terms in that query, in the words this material uses:\n\n")
+		for _, h := range hints {
+			fmt.Fprintf(out, "  %s\n", h)
+		}
+		fmt.Fprintln(out)
+	}
 
 	pages, err := wiki.List()
 	if err != nil {

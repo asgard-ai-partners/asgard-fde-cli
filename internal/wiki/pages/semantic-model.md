@@ -79,6 +79,36 @@ tools rather than a Semantic Model. The reasoning, and what `allowedCubes` does,
 is in `asgard-cli usecase fixed-query-tools`; the modelling itself is in
 `semantic-layer`, and opening a write path is in `write-path`.
 
+## Two join failures nothing local catches
+
+**A join that renders fine can match zero rows.** Neither `helm lint` nor the
+CRD can see that the two sides hold the same code in different *formats*; only
+running it can. Both cases found in one deployment returned empty sets silently
+rather than erroring:
+
+    a single-character code  against  a four-character one   0 rows
+    a 12-char zero-padded id against  the 10-char form       0 rows
+
+Both were fixed with a derived dimension - `substr(...)`, `regexp_replace(...)` -
+rather than by changing either table. And in the same layer, two similar-looking
+tables disagreed: one pair needed the prefix stripped and another carried the
+full code and must not be touched.
+
+**So `count(*)` every new join against the live database before committing it.**
+A cardinality check catches fan-out; **a zero-row join looks perfectly healthy to
+it**, because nothing is wrong except that nothing matches.
+
+**`joins[].relationship` has no `many_to_many`.** The enum is `one_to_one`,
+`one_to_many`, `many_to_one`. **Never force a many-to-many into one of them** -
+the agent joins detail rows and fans out, and the measured inflation in one case
+was 18.2x and 5.6x on the same layer's sums. A genuine many-to-many is left
+undeclared, and the correct pre-aggregation goes in `sampleQueries` and the
+layer's `instruction` instead.
+
+That inflation is the worst kind of failure this platform produces: **a number
+that is wrong and looks fine.** Nothing errors, and the customer reads it as an
+answer.
+
 ## Sources
 
 - [Semantic Model](https://docs.asgard-ai.com/docs/product-suite/odin/features/data-insight-semantic-model)

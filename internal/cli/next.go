@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sort"
 
 	"github.com/spf13/cobra"
 
@@ -205,4 +206,63 @@ func printQuestions(out io.Writer, state stage.State) {
 	}
 	fmt.Fprintf(out, "\nDo not design past one of these. Either get the answer, or record the\n"+
 		"assumption you are proceeding on and which branch it commits you to.\n")
+
+	printWaiting(out, state)
+}
+
+// printWaiting reports who the open questions are with.
+//
+// The walk assumes the next move is ours, and for long stretches it is not: an
+// engagement waits on a meeting, on an account, on a document, on somebody's
+// internal approval. Told only that no request is open, an FDE in that state
+// reads the tool as saying they are behind - and the information to say
+// otherwise was already in the file, in the column that names who can answer.
+//
+// Waiting is a state the work is in, not a gap in it.
+func printWaiting(out io.Writer, state stage.State) {
+	if state.InFlight() {
+		return
+	}
+
+	byOwner := map[string]int{}
+	var unowned int
+	for _, q := range state.Questions {
+		if q.Owner == "" || q.Owner == "-" {
+			unowned++
+			continue
+		}
+		byOwner[q.Owner]++
+	}
+	if len(byOwner) == 0 && unowned == 0 {
+		return
+	}
+
+	owners := make([]string, 0, len(byOwner))
+	for o := range byOwner {
+		owners = append(owners, o)
+	}
+	sort.Slice(owners, func(i, j int) bool {
+		if byOwner[owners[i]] != byOwner[owners[j]] {
+			return byOwner[owners[i]] > byOwner[owners[j]]
+		}
+		return owners[i] < owners[j]
+	})
+
+	fmt.Fprintf(out, "\nWAITING - nothing is in flight because the answers are with somebody else:\n\n")
+	for _, o := range owners {
+		fmt.Fprintf(out, "  %-3d %s\n", byOwner[o], o)
+	}
+	if unowned > 0 {
+		fmt.Fprintf(out, "  %-3d **nobody named** - a question with no owner is not tracked,\n"+
+			"      it is just written down\n", unowned)
+	}
+
+	fmt.Fprintf(out, "\nThat is a normal state and not a gap. What is worth checking while it\nlasts:\n\n"+
+		"  - the questions that are **ours** rather than theirs - anything for the\n"+
+		"    platform team gets asked before the next meeting, not during it.\n"+
+		"    `asgard-cli wiki platform-unknowns`\n"+
+		"  - whether the meeting has something to take into it - the\n"+
+		"    `proposal-deck` skill in `.agents/skills/`\n"+
+		"  - whether each question names a person or a role. The ones that do not\n"+
+		"    are the ones that come back unanswered\n")
 }

@@ -22,10 +22,12 @@
 | [`semantic-model`](semantic-model.md) | the modelling flow, its limits, the Mimir side |
 | [`tools`](tools.md) | MCP Server, Skillset and Plugin; hook events |
 | [`automation`](automation.md) | Trigger and API, and why only cron is left |
+| [`processors`](processors.md) | what each of the 13 takes, and the fields that decide behaviour |
 | [`workflow`](workflow.md) | the 13 processors; Expression is JavaScript, Template is Handlebars |
 | [`settings`](settings.md) | Completion and Embedding Model, Data Source, Connection |
 | [`integration`](integration.md) | chat platforms, the two Applications pages, the architecture |
 | [`api`](api.md) | the endpoint and its actions, the SSE sequence, four patterns, the SDK |
+| [`crd-rules`](crd-rules.md) | the validations helm lint does not run, and the one the schema cannot express |
 | [`platform-unknowns`](platform-unknowns.md) | what no source answers, and who to ask |
 
 ## In practice
@@ -33,6 +35,8 @@
 | page | covers |
 |---|---|
 | [`operations`](operations.md) | Asgard's outbound IPs, checking model capability, vocabulary |
+| [`taiwan-channels`](taiwan-channels.md) | the commerce channels a customer will name, what SHOPLINE cost, and what we have not built |
+| [`what-they-read`](what-they-read.md) | the picture a customer arrives with, and the three places it is wrong |
 | [`case-studies`](case-studies.md) | the retail stockout from three angles, plus a Flow Agent help desk |
 | [`screenshots`](screenshots.md) | which picture answers which question, and the URL to fetch it from |
 
@@ -53,15 +57,52 @@ Each is written on the page it affects:
 
 ## Coverage
 
-Measured 2026-09-02: asgard-docs holds 162 files, of which 130 are cited by some
-page's source block - **100% of what is in scope**. The 32 excluded below are the
-denominator's difference.
+**The number this section used to report was 100%, and it was measuring one
+source out of nine.**
+
+asgard-docs holds 162 files under `docs/`, of which 130 are cited by some page's
+source block; the 32 excluded below are the difference. That is a true statement
+about the product documentation and it was being read as a statement about the
+material, which is how a wiki with nothing about SHOPLINE, nothing about Mimir as
+a deliverable, and nothing about the largest chart repository in existence could
+report itself complete.
+
+The sources this material is actually built from:
+
+| source | what it holds | state |
+|---|---|---|
+| asgard-docs | the product documentation | 130 / 162 cited, 32 deliberately excluded below |
+| asgard-kube `crd/` | the contract | read per page, per field, and dated on the page |
+| **asgard-kube `pkg/apis/`** | **the Go types the CRDs are generated from, with the reasoning as comments** | read once, 2026-09-02, for the validation rules - `crd-rules`. 134KB of declarations; what has been taken is the behavioural comments, not the field list |
+| **asgard-core** `internal/constants.go` | **the processor definitions the CRD is generated from** | read once, 2026-09-02, for the type list. Its per-processor config definitions are not carried anywhere |
+| **asgard-freyr-skills** | **nine runtime skills, incl. the SHOPLINE pair** | one page - `usecase skill-layers` |
+| **seven deployment charts** | **every shape the extracts describe** | see below |
+
+**Deployment coverage cannot be measured from this material, by design.** An
+extract names no customer and no deployment - it says "seen in a deployment
+whose..." - so nothing here can be counted against the charts it came from. The
+inventory has to be run separately, over the charts, and its result lives in
+`TASK.md` rather than in a number here.
+
+**Do not add a percentage back to this section** unless it names its denominator
+in the same sentence. The one that was here did not, and it is the reason this
+pass found four bodies of material nobody had opened.
 
 ## Deliberately not covered
 
+**One row of this table was wrong.** `asgard-builtin/` was excluded whole as
+lookup material; four of its pages are the expression language every processor
+field is written in, including the ECMA5 limit and the six variables in scope.
+They are now in [`processors`](processors.md). The message-template pages remain
+excluded, and that part of the judgement holds.
+
+**An exclusion is a judgement someone made once.** Recheck one before relying on
+it, particularly if it excludes a whole directory - that is the shape of an
+exclusion nobody has looked inside.
+
 | excluded | count | why |
 |---|---|---|
-| `developer-reference/asgard-builtin/` | 18 | Expression variables, function lists and message templates. Lookup material: copying it here only produces a copy that goes stale. Read the source when needed |
+| `developer-reference/asgard-builtin/message-template-*` | 14 | Message template shapes - button, carousel, image, video, location. Genuinely lookup material, and per-channel. Read the source when writing one |
 | `help-community/release-notes/` | 10 | historical, and does not describe the present |
 | `superpowers/` | 5 | the documentation site's own redesign plans, not an Asgard feature |
 

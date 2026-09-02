@@ -3,6 +3,21 @@ Projects exist but no DataConnector does, so nothing can be read yet.
 Missing a connector:
 <<range .Projects>><<if not (.Has "DataConnector")>>  - <<.Slug>>
 <<end>><<end>>
+## Two ladders, and this page is only one of them
+
+    what to ASK THEM FOR      docs > source code > API spec > the DB > the UI
+    how to READ it, below     a database  >  an API  >  a screen
+
+They have the same shape and opposite purposes, and an FDE uses both in one
+meeting. **The asking ladder runs first and makes this page easier**: with the
+system's documentation - or better, its source - the fields, validation rules and
+status codes are read rather than extracted from somebody by questioning, and
+what arrives here is a design decision rather than a guess.
+
+If you are at this stage with no documentation, that is worth going back for
+before writing a connector. `asgard-cli next --stage requirements` has the full
+ladder and why source code sits above a spec.
+
 ## Take the most capable route each system offers
 
     a database we can read   -> DataConnector + SemanticLayer

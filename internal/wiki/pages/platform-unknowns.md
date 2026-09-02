@@ -21,7 +21,8 @@ engagement starts with the answer rather than rediscovering it.
 | P3 | **Between a human approving a call and that call going out, can the content change?** Asked because an engagement had to write "the approved listing is the one that gets published" as an assumption with nothing to cite. | Any case where the approved content **is** the deliverable - a listing, a message, a document |
 | ~~P4~~ | ~~Can the platform reach a system over something other than HTTP?~~ **Answered: yes.** The agent gets a sandbox, so any protocol with a client - SNMP, SSH, a vendor CLI - is reachable by running that client. Reads may happen there; **writes still go through a Toolset with `requestConsent`**. See `asgard-cli usecase external-api`. | - |
 | P5 | **Before an agent can operate a system that only has a web console, someone has to write down what that console contains** - every page, what each page does, and what is behind the buttons the menu does not show. One deployment has such a document covering 88 pages. **Is producing it tooling-assisted, or does a person work through the system by hand?** And when the vendor restyles their UI, is it redone? | Any web-only system. It is the difference between a day and a week, and it decides the maintenance cost |
-| P6 | **Are the per-request limits adjustable per workspace?** One request gets 30 steps and 3 minutes, and an endpoint serves 5 requests per second. A conversation that consults a knowledge base, then a CRM, then a ticket system, then asks a follow-up can reach 30 steps. Whether that ceiling can be raised, and at what tier, is not documented. | Any multi-system agent, and every customer-service scenario that troubleshoots across more than two systems |
+| ~~P6~~ | ~~**Are the per-request limits adjustable per workspace?**~~ **Partly answered 2026-09-02.** They can be raised: the quota page says to contact sales or write to **service@asgard-ai.com**. **What is still unanswered is by how much, and whether it is tiered.** So the sentence to say in a meeting is "that is the default, and it can be raised" - not "that is the limit". The difference matters to a proposal | any multi-system agent |
+| P7 | **What is a "step"?** The ceiling is 30 per request and the platform enforces it - the error is `Max execution steps 30 reached` - and **no source defines the unit**. Not the quota page, not the CRDs, not the processor documentation. A tool call? A model turn? A processor execution? Without it you cannot tell whether a design will exceed it, and you cannot answer the customer who asks. **Until it is answered, do not put "30 steps" in front of a customer** - say the three-minute ceiling, which they can check | any design that consults several systems in one turn, and any proposal that quotes the limit |
 
 ## Why this is not in the customer's repository
 
@@ -54,5 +55,8 @@ designs that were made without it.
 
 - Each row names the engagement or the customer requirement that produced it
 - P4's answer: `asgard-cli usecase external-api`
-- P6's numbers: [Quota and limits](https://docs.asgard-ai.com/docs/help-community/quota-limits)
-  - asgard-docs `f00e0ee`
+- P6 and P7's numbers, and that quotas are raised by contacting sales:
+  [Quota and limits](https://docs.asgard-ai.com/docs/help-community/quota-limits)
+  - asgard-docs `f00e0ee`, read in full 2026-09-02. An earlier reading took four
+  of its eight numbers and its closing section, which is where the answer to P6
+  was

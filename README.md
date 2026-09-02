@@ -22,6 +22,8 @@ internal/render/    renders a chart via helm, the way CD does
 internal/gate/      the invariant checks on a rendered chart (xref, agent split)
 internal/tool/      resolves helm/kubectl/python3, and how to install one
 internal/wiki/      the platform wiki: what Asgard is made of and who each piece is for
+internal/brief/     what one activity gets wrong, addressed by intent not by stage
+internal/size/      what a capability is made of, before it is written
 internal/version/   build information (injected by GoReleaser via ldflags)
 ```
 

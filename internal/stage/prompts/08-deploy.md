@@ -17,6 +17,30 @@ project's Syncers after helm upgrade and waits; it polls for CronJobs labelled
 syncer-name and **exits 1 after 180 seconds if it finds none** - even when the
 upgrade itself succeeded.
 
+## After the deploy, and before saying it is live
+
+**A green deploy is not a working deployment**, and the step between them is not
+in this repository at all.
+
+Building a semantic model or an agent does **not** make it visible to anyone.
+Somebody has to go to the **Management Console**, open the page for that product,
+use *Manage Accounts in* to select the resource, and add the people. Every new
+resource repeats it - **permissions do not inherit**, and nothing in a chart, in
+`check`, in `verify` or in CD can see that the step was skipped.
+
+    the symptom     "we deployed it and the customer says there is nothing there"
+    the cause       not a chart problem, and looking for one wastes a day
+    the fix         `asgard-cli wiki console` - which page, and which scope
+
+Two things to settle before the day it goes live rather than on it:
+
+  - **who in the customer's organisation can do this.** It is their Console and
+    their Workspace. If nobody has been named, the deployment waits on an
+    introduction
+  - **who should see each resource.** Not everyone, usually - and the Console is
+    where that is decided, because the platform has no answer for scoping what a
+    caller may reach after they are in. `asgard-cli wiki platform-unknowns` P1
+
 ## Deploying
 
 This is the first step that needs a remote at all. **Getting the repository onto

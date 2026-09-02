@@ -13,6 +13,15 @@ chart is eight CRs.
 **Read the platform side first:** `asgard-cli wiki agents` -
 what a Managed Agent and a Flow Agent each are, and which the audience decides. This page assumes you have.
 
+**A brand-new channel's first message may never be answered.** If the entry
+processor runs into the wait point rather than into the agent, the platform
+finalises the request when the flow reaches `listen-message` - so that first turn
+runs the init and stops. A returning channel resumes from the wait point and is
+unaffected, so this is invisible in every test after the first, and it looks like
+a bug in a demo with a fresh user. One deployment accepts it deliberately and
+documents the cost; if you cannot, the entry has to reach the agent on that
+turn.
+
 ## When this shape, and when not
 
 Use it when the audience is **anonymous** and there is **one job**. A public

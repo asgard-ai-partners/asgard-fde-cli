@@ -99,6 +99,58 @@ proposal built on one of them can be estimated, because somebody has already
 paid for it. A proposal built on a shape nobody has assembled is an estimate of
 a guess.
 
+**First, is it an agent at all?** The whole vocabulary below is agent-shaped, and
+so is most of what this tool carries, which is exactly why this question gets
+skipped. Something they want to **watch** - the same numbers every morning, a
+figure trending the wrong way - is a **Mimir dashboard**, not an agent. Something
+they want to **ask** in the moment is an agent. Many customers want both, and
+they are two deliveries over one Semantic Model, not one delivery.
+
+A proposal that answers "we want to see stock across all our channels" with an
+agent has answered a question they did not ask. `asgard-cli wiki mimir` is the
+product; `asgard-cli wiki product-suite` is the fork.
+
+Then, what their answers turn into - and it is not one row per system:
+
+| what they have | what we build |
+|---|---|
+| numbers somebody checks on a schedule | a **Dashboard** in Mimir, over the model below |
+| a database we can read | a **Semantic Model** - the agent composes its own queries |
+| a database, but only a few answers should be reachable | **fixed query tools** |
+| an HTTP API | a **Workflow** wrapped as an **MCP Server** |
+| documents, manuals, FAQs, a support site | a **Drive** with a Context Index |
+| only a web console | **browser operation** - costs more than everything else combined |
+| **systems whose concepts do not line up with each other** | a **Skill** |
+
+**That last row is the one that gets left out of every proposal**, because it is
+not a system to connect - it is knowledge about the systems, and it has no
+credential to ask for, so it never comes up in the access conversation.
+
+It is what you need whenever the customer's own systems disagree: four
+marketplaces with four sets of order-status codes, a SKU that is written three
+ways, "shipped" meaning something different in the WMS than on the channel, a
+returns flow with vocabulary only their staff knows. **Somebody has to write
+down how those correspond**, or the agent guesses, and it guesses plausibly -
+which is worse than failing, because the answer looks right.
+
+Two things about it worth saying out loud to the customer, because both are
+counter-intuitive:
+
+  - **This is the part that needs them most, and it is not an IT task.** A
+    credential comes from their network admin; this comes from whoever actually
+    knows that channel B's "processing" is channel A's "paid". It is an hour of
+    an operations person's time, and there is no substitute for it
+  - **It is the cheapest thing on the list and the one that decides whether the
+    rest is usable.** Nothing to procure, nothing to provision - a document
+
+It goes to `common/skills/<name>/SKILL.md` and is synced to the platform. In
+`references/` it is invisible to the running agent, and the failure then looks
+like a model ignoring instructions rather than a file in the wrong place -
+`asgard-cli next --stage requirements` has the full rule.
+
+An integration across several channels that proposes only the connections has
+proposed half of it.
+
 The cost ladder for reaching a system is worth putting in front of the customer
 in words, because it is what decides the timeline:
 
@@ -114,6 +166,13 @@ list, phase 1 has to reach the hardest item on it; a first delivery that avoids
 the thing being judged has failed however fast it shipped. What phase 1 cuts is
 a **mechanism, not a capability** - "for now the user tells us which record they
 mean" is a cut, "we will not read your system yet" is a failure.
+
+**A document they give us is a deliverable line, not an input.** The commonest
+omission in the right-hand column is the skill: "we take your RMA manual and turn
+its fields, validation rules and status codes into something the agent knows" is
+a concrete thing we do with what we asked for, and it is the answer to "why do
+you need our documentation". Every capability reading a system the customer
+documented has one.
 
 **Decide what we are not doing, in the same sitting.** Not as an afterthought at
 slide 7: a scope line written after the shape is chosen is a line someone
@@ -153,7 +212,7 @@ in step 5; forcing this one when the facts are missing is what produces slides
 | 6 | what it reads | which systems, and who can see what |
 | 7 | what is NOT in scope | the slide that prevents the argument in month three |
 | 8 | how we get there | phases with dates, and what we need from them |
-| 9 | what we still do not know | the open questions, named as questions |
+| 9 | what we still do not know | **the customer's unknowns only** - see below |
 
 Slide 2 is the one that makes the deck work, and the one most often skipped.
 A customer who hears their own problem stated back accurately will accept a
@@ -162,6 +221,25 @@ recognise will argue with every slide after it.
 
 Slide 7 is the one that saves the engagement. Scope stated narrowly is a proposal
 that can be delivered; scope left open is a proposal that grows until it fails.
+
+**Slide 9 holds one kind of unknown, and the two kinds are opposite.**
+
+| whose unknown | on the slide | why |
+|---|---|---|
+| **theirs** - how their CRM is read, which network their devices are on, whether a channel has an API | **yes**, and it is most of the deck | only they can answer. Listing it asks for their help |
+| **ours** - whether the platform can scope what a user may reach, what it logs and for how long | **no** | it is our product. "We do not know what we can do" is not honesty, it is not having prepared |
+
+`asgard-cli wiki platform-unknowns` is the second kind, and its own instruction
+is **ask the platform team when a requirement touches one** - before the meeting.
+Printing that list onto a slide does the opposite of what the page says, and
+announces that we have not read our own product.
+
+If an answer has not come back in time, say it in the room, once, and put the
+written reply in the follow-up. It does not get a slide.
+
+So the closing slide is **what each side does next**: what we reply on and by
+when, which accounts and documents they provide, and the date you meet again.
+Both sides have an action on it. That is a different page from a confession.
 
 ## Step 4 - say it in their words, and no further than the evidence goes
 
@@ -232,6 +310,76 @@ nobody has approved, or a system nobody has connected to is not a phase - it is
 a dependency, and it goes on slide 8 as **what we need from them**, with an owner
 and a date, or on slide 9.
 
+### Say the same thing every time
+
+Banning implementation nouns without offering replacements means every FDE
+invents their own, and the same customer sees two names for one thing across two
+documents. These are the replacements. **Use them rather than a fresh
+paraphrase**, and `asgard-cli size --plain` produces the same wording from a
+count.
+
+| what it is | what the customer is told |
+|---|---|
+| a read-only Toolset with four query Workflows | 四個查詢 / four kinds of question it can answer |
+| a SkillSet carrying status vocabulary | 一份狀態對照 / a translation of your own codes |
+| a SkillSet built from their manual | 手冊裡的欄位與規則會變成 AI 知道的東西 / the manual becomes something it knows |
+| SourceSet + Syncer + contextIndex | 產品知識庫 / it reads from your own documents |
+| a tool with `requestConsent: true` | 需要人工確認的動作 / an action that stops for a person |
+| BotProvider + Workflow + SandboxBlueprint | 對外客服入口 / one way in for people outside |
+| an Agent mounting a SemanticLayer | 一個能自己查資料的專員 / it works out its own query |
+| a Trigger | 定期自動跑 / it runs on a schedule and only reports |
+| a SemanticLayer over a database | 讀得到那套系統 / it can read that system |
+| the outbound-IP allowlist request | 把這四個位址加進防火牆白名單 / add these four addresses to the firewall's allowed list. **The sentence, not the values** |
+| browser operation | 沒有介接管道,要照著人的操作做 / no way in but the screen |
+
+The browser-operation row is the one to say plainly rather than smooth over. It
+is the most expensive answer on the list and the customer is the only person who
+can change it, by finding an API.
+
+The allowlist row has a rule of its own: **ask for the allowlist, not for "a VPN
+or an allowlist or a jump host".** Asgard is hosted and the agent runs in a
+sandbox in that cloud, so there is nothing of ours to place on their network and
+the other two options do not apply. A slide offering three invites their network
+team to pick the wrong one, and that is discovered a week later.
+`asgard-cli wiki operations` has the addresses; hand them over in the meeting.
+
+**Two names for one thing is worse than a clumsy name.** If a phrase here is
+wrong for a customer's industry, change it once and use the changed one
+everywhere, including in the meeting notes.
+
+### Who is pointing at whom - a rule for Chinese decks only
+
+**Do not write 「你們」.** A deck that says it fourteen times has stopped being a
+shared document and become one side addressing the other.
+
+This does not transfer from English, and that is why it is easy to miss. English
+cannot avoid "you", so it carries no weight and nobody notices it. **Chinese can
+drop the subject entirely**, so writing 「你們」 is an active choice, and the
+reader feels the choice being made - as a finger pointed across the table rather
+than two people reading the same page.
+
+Three rewrites, none of which needs added politeness:
+
+| instead of | write | how |
+|---|---|---|
+| 你們現在的日報怎麼做 | 現在的日報怎麼做 | drop the subject |
+| **你們文件寫的是** | **測試計畫寫的是** | **make their document the subject, not them** |
+| 哪些數值算異常由你們定義 | 異常門檻可自行定義 | state it as a capability |
+
+**Every row of the vocabulary table in step 4 was written this way**, and three
+of them had to be corrected after this rule existed - which is the evidence that
+it is not obvious. 「請你們把我們的四個位址加進白名單」 became 「把這四個位址加
+進防火牆白名單」: same request, no finger.
+
+**The second is the one to reach for.** It keeps the whole point of quoting them
+- this is what you said - and removes the pointing. It is also the only one that
+is correct for the rest of the room: a meeting has their IT lead and their
+network admin in it, and 「你們」 addresses them for a document they did not
+write.
+
+The worst case is the one that looks most respectful: 「你們文件寫的是⋯」 reads
+as raising an old account rather than as citing a source.
+
 ### The register
 
 Confidence in a proposal comes from specificity, not from adjectives. 全面、
@@ -274,14 +422,24 @@ has to guess why each one matters, and the ones that sound like bureaucracy get
 deferred. **Pair every question with what it unlocks**, and the same meeting asks
 for access rather than for patience:
 
-    each capability they asked for, one section:
+    1     cover
+    2     what you told us            their words, close to verbatim
+    3     capability A                their own description, whole. Asks nothing
+    4     A, sub-topic 1              what we need | what that gets you
+    5     A, sub-topic 2              same
+    ...                               one slide per sub-heading of theirs
+    k     capability B                their description again, and so on
+    n-1   what we are not doing this round
+    n     what we are going back to check
 
-      what you told us      their own words, from their own document
-      what we would ask     the two or three questions that actually block it
-      what that gets you    the shape it becomes ONCE those are answered
+**The pairing is the shape, and the two halves are separate slides.** One slide
+carries one claim and one evidence shape, so a question table and the answer to
+"why are you asking" do not share a page. This layout has been taken to a real
+first meeting; the question pages are worked through line by line in the room and
+the answer pages are what make that bearable.
 
-The third line is step 2 run conditionally, and it is the whole reason this deck
-works. **State the condition in the same sentence as the capability** - "given a
+The second of each pair is step 2 run conditionally, and it is the whole reason
+this deck works. **State the condition in the same sentence as the capability** - "given a
 read-only account on the CRM and a route to it, this becomes X" - so the customer
 sees the access request and the thing they get for it as one trade, which is what
 it is. `asgard-cli usecase` is where those shapes come from, so what you promise
@@ -298,6 +456,82 @@ Two things this deck must still refuse, and they are the ones the shape tempts:
 
 What it does not have is a phase plan with dates. That is the proposal, and it
 comes after the answers.
+
+### The discovery deck's own rules, which are not the proposal's
+
+Three rules elsewhere on this page belong to the **proposal** and produce a bad
+discovery deck when applied. Each has been made and rejected by the person who
+had to present it.
+
+**Titles: the customer's own section names, unedited.** The ghost deck test -
+titles as assertions - assumes you have facts and a conclusion. In discovery you
+have neither, and an asserted title does two kinds of damage:
+
+    no    「你們要測的三件事,卡點都不在 AI,而在能不能讀到你們的系統」
+    no    「情境一能不能做,取決於 CRM 和 RMA 能用什麼方式讀」
+    yes   「測試情境一:AI 客服與 CRM / RMA 整合」   ← their document's heading
+
+The first states a conclusion **before asking the questions that would support
+it**, on slide 2, and contradicts the customer's framing to their face - while
+pre-empting exactly what the question slides exist to elicit. The second is worse
+in a quieter way: 情境一 is our numbering. Their document says the whole heading,
+and using it verbatim costs nothing and buys a shared vocabulary for the meeting.
+They recognise the slide instead of learning what our number refers to.
+
+**A customer who wrote a document has already classified their own problem**, in
+the words they use internally. Take the classification.
+
+**Their own words go on the slide, at whatever length they wrote them.** This is
+the positive rule, and it is the one the density rules actively prevent.
+
+A proposal is **us** talking, and every word we cut is respect for the reader's
+time. A discovery deck is **the customer** talking - we are spreading their own
+document on the table so everyone can look at it together - and compressing it
+is not economy, it is distortion.
+
+The room is the reason. The person who wrote the plan is in it, but so are their
+IT lead, their network admin, their e-commerce manager, and **none of those read
+the document**. A five-bullet summary is legible only to its author; everyone
+else sees questions with no provenance. Their own 情境說明, verbatim, is a page
+every person in the room recognises as theirs.
+
+So: **give each capability a context slide before any question slide.** Their
+description as they wrote it, their sub-items, their diagram if they drew one.
+That page asks nothing. It exists so that the pages after it have somewhere to
+stand.
+
+    the one-line-per-bullet rule    a proposal rule. Does not apply here
+    the three-to-five items bound   a proposal rule. Does not apply here
+    a paragraph of theirs           goes on whole
+
+**Density: one sub-topic per slide, following their sub-headings.** Three to five
+items is the proposal's density rule. Applied here it compresses a whole
+capability's questions into one table, and five questions with no context read as
+a questionnaire - three such tables read as an audit.
+
+Their document is already broken down: a capability with four sub-items is four
+slides, each saying what we need and what it unlocks. **More slides is not the
+problem; a compressed one is.** This deck is worked through line by line in the
+room, and a page per subject is what makes that possible.
+
+**`cap`: not the narration, and often nothing at all.** The line under a slide is
+for something the reader will write down, and a context slide carrying the
+customer's own words usually needs none - the page is already theirs. Leave it
+empty rather than inventing one. It is never for:
+
+    no    「以上引號內文字出自你們 8/31 的測試計畫」     where the material came from
+    no    「今天要談的,是每個情境要拿到什麼才做得起來」   what we are about to do
+    no    「這一頁說明三個情境的差異」                  what this slide is
+
+All three are things you say out loud. Printing what you are about to say wastes
+the line and tells the room you are reading it. If a reader would not copy it
+into their notes, delete it.
+
+The last two slides are the two filters made visible: what came out as deferred
+scope, with what has to be answered before it comes back, and the questions that
+are ours to chase rather than theirs - the ones `asgard-cli wiki
+platform-unknowns` says nobody has settled. Both are written as sentences a
+reader outside this repository can follow, not as counts of rows.
 
 ### What a handover deck actually walks through
 
@@ -357,6 +591,9 @@ second the moment anyone else opens the deck.
   prefixes, no namespaces, no Helm, no chart, no CRD. The customer bought an
   outcome. A handover may name what they will click - Managed Agent, Drive,
   Skillset - and still never needs the CR behind it.
+- **The second person, in a Chinese deck.** 「你們」 on every page turns a shared
+  document into two sides. See step 4 - it is a register rule rather than a leak,
+  and it does not apply to a deck in English.
 - **This repository's own bookkeeping.** No question numbers, no `REQ-` or
   `TASK-` ids, no "the items the two filters removed", no "out of scope table".
   These are the easiest words to leak, because they are what you have just
@@ -369,7 +606,7 @@ second the moment anyone else opens the deck.
   not the row it lives in.
 
       no    第 14-16 題:平台未解項目
-      yes   有三件事我們要回去跟平台團隊確認,再回覆你們
+      yes   有三件事要回去跟平台團隊確認,確認後書面回覆
 
       no    被兩道篩選刷掉的五項
       yes   這五項這一輪不做,以及各自要先有什麼答案才會回來
@@ -380,14 +617,83 @@ second the moment anyone else opens the deck.
 - **Another customer.** No name, no logo, no screenshot, no "we did this for a
   retailer with 200 stores" that is recognisable. Their engagement is not ours to
   spend.
-- **Credentials and coordinates.** No hostnames, no connection strings, no
-  account names, not even in a screenshot's corner. Check the screenshots.
+- **Credentials and coordinates - theirs and ours.** No hostnames, no connection
+  strings, no account names, not even in a screenshot's corner. Check the
+  screenshots.
+
+  **And not Asgard's outbound addresses either.** They belong in the firewall
+  ticket, given to the person making the change - not on a slide, not in the
+  repository, not in a mail thread that gets forwarded. They can change, and a
+  copy will not; a stale allowlist is the customer's connection dropping.
+  `asgard-cli wiki operations` is the source to read them from each time. What
+  goes in the deck is the request - 把這四個位址加進防火牆白名單 - and never
+  the values.
 - **A capability nobody has verified.** If it is not in `references/`, in a
   meeting note, or measured, it is not a promise.
+- **An implementation noun inside a screenshot.** The rule above is not only
+  about the words you type: an approval dialog naming `ts-wms` and
+  `create_transfer_order`, or a console screenshot with the whole build-platform
+  navigation down its left edge, breaks it exactly as a slide title would. Crop
+  before using; `asgard-cli wiki screenshots` marks the ones known to need it.
 - **Precision we do not have.** "Around 10 minutes, from your own figures" beats
   "11.4 minutes" when 11.4 came from one afternoon's sample.
 
 ## Step 6 - write it, with kami
+
+**Read this before the first slide, not after the tenth.** Everything below the
+next two sections is content; these are the things that cost an FDE a working
+afternoon and are invisible until they happen.
+
+### Never edit a slide to satisfy a checker
+
+The most expensive mistake made with this skill so far, and it looks like
+diligence while it happens.
+
+A content check reported an eyebrow as missing. It was there - the checker
+collapses whitespace when comparing CJK, so a cover date running straight into
+the eyebrow made the string unfindable. To turn the check green, the FDE removed
+the sub-numbering from every eyebrow. The check went green. **Every sub-topic
+slide then claimed the wrong level** - the customer's own numbering says the
+scenario, and the slides were now saying it about a sub-topic of it.
+
+The user caught it. The checker could not, because the regression was in
+something it does not look at.
+
+    a check that fails on text you can see    the check is wrong. Investigate it
+    a change to the slide to make it pass     never
+
+**`--check-content` never goes fully green on slides**, and chasing it to zero is
+how the above happens: `audience` and each slide's `layout` are schema fields and
+are not printed anywhere. Read the list, fix what is genuinely missing, and stop.
+
+### Four things about the template that nothing warns you about
+
+  - **Slides are fixed height with `break-after`.** Anything added to normal
+    flow can push content onto a new page **with no error** - one deck went from
+    14 pages to 18 by gaining a line of links. Footers, links and page marks go
+    in absolutely positioned elements, and **re-count the pages after every
+    edit**
+  - **`.co` and `.footer-mark` overlap**, at 12mm and 10mm. Use one. The
+    template's own example page uses both, so copying it reproduces the bug
+  - **`<b>` does nothing.** The CJK faces embed weights 400 and 500 only, so
+    bold silently falls back to normal. Write `font-weight: 500`
+  - **Write `content.json` first and generate from it.** Editing the HTML and
+    back-filling the structured form loses things, and the loss is found by a
+    coverage check rather than by reading
+
+### The density checks encode a proposal's assumptions
+
+A discovery deck's question pages read as sparse to a density check, and its
+alternation of question and answer pages reads as monotonous to a rhythm check.
+**In both cases the deck is right and the check is measuring the wrong document**
+- the alternation is the shape, and the whitespace is deliberate.
+
+So on a discovery deck those two are advisory. That is a smaller problem than it
+sounds: the typesetting produces the document correctly, and it is only the
+checks that disagree. But it means a green run is not the goal, and the previous
+section is why that distinction matters.
+
+### The rest
 
 Typesetting, layout and the visual language belong to the **`kami`** skill. Load
 it and let it produce the file; this skill has already decided what goes on each
@@ -395,14 +701,23 @@ slide.
 
 What kami expects, and what is worth knowing before you write:
 
-- **The ghost deck test.** Reading only the titles, in order, must tell the whole
-  argument. If a title is a topic label - "Current situation", "Architecture" -
-  it fails. Titles are assertions: "Support answers one ticket by opening four
-  systems".
+- **The ghost deck test**, for a **proposal**. Reading only the titles, in order,
+  must tell the whole argument. If a title is a topic label - "Current
+  situation", "Architecture" - it fails. Titles are assertions: "Support answers
+  one ticket by opening four systems". **This inverts for a discovery deck**,
+  where you have no facts to assert and the customer's own section headings are
+  the right titles - see step 5.
 - **One evidence shape per slide.** A slide is a claim plus one thing that backs
-  it: three to five items, or a chart, or a quote. Not two of them.
+  it: three to five items, or a chart, or a quote. Not two of them. **Both the
+  three-to-five bound and "trim each bullet to one line" are proposal rules**, and
+  a layout skill's own density checks will enforce them on a discovery deck where
+  they do not belong - the checks go green on a deck that has compressed the
+  customer's document into something only its author can read. See step 5.
 - **`cap`** is the line that says why the slide matters - a trade-off, a
-  boundary, a next step. It never restates the title.
+  boundary, a next step. It never restates the title, and it is **never the
+  narration**: not where the material came from, not what the slide is about,
+  not what you are about to talk about. If a reader would not copy it into their
+  notes, it does not earn the line.
 - Its content contract is `references/schemas/slides.json` in the kami skill, and
   its layouts are `cover`, `chapter`, `content`, `quote`, `metrics`, `close`.
 
@@ -427,8 +742,9 @@ Ten questions, and the last five are the ones that get skipped:
 4. Is there an implementation noun anywhere, including in a screenshot?
 5. Is another customer recognisable anywhere, including in a screenshot?
 6. Could we deliver everything on slide 8 if they said yes today? If any part
-   rests on something nobody has built or verified, it belongs on slide 9
-   instead.
+   rests on something nobody has built or verified, **first ask whose unknown it
+   is**: theirs moves to slide 9, ours goes back to the platform team before the
+   meeting and is answered out loud, never printed.
 7. Is there a decision record for the shape, written before the deck?
 8. Has every claim on slides 4, 5 and 6 been held against
    `asgard-cli wiki platform-unknowns`? Anything on that list is a slide 9
@@ -438,6 +754,8 @@ Ten questions, and the last five are the ones that get skipped:
 9b. Is there a question number, a `REQ-`/`TASK-` id, or a phrase like "the items
     the filters removed" anywhere on a slide - or in the outline you showed
     internally? Those name rows in files the reader cannot open.
+9c. Chinese deck: count 「你們」. Every one of them is a choice, because the
+    subject could have been dropped. Most should be the document instead.
 10. If it shows a console screen: was every screenshot opened, is it current,
     and is this a handover rather than a proposal? A proposal showing admin
     screens has usually skipped `asgard-cli wiki screenshots`, where the
