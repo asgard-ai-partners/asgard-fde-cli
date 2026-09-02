@@ -53,7 +53,8 @@ would be stale before it was useful. What does not change is the ladder:
 
     an open API with a test environment   `asgard-cli usecase external-api`
     an open API, production only          the same shape - and **ask whether
-                                          they permit testing against it**,
+                                          they permit testing against it** - in
+                                          the meeting, not assumed here,
                                           rather than assuming
     a data export only            a Syncer over files, not a live integration
     only a web back office        browser operation - and SHOPLINE is what that
@@ -63,7 +64,7 @@ would be stale before it was useful. What does not change is the ladder:
 called that, everywhere, because the agent runs in a sandbox the platform starts
 and the two collide in the same paragraph otherwise.
 
-**Ask about each channel separately.** They differ, and one back-office-only
+**Ask about each channel separately, in the interview.** This page is read by whoever is building an integration; that question is not theirs to answer, it is one to have asked before they got here. They differ, and one back-office-only
 channel among four sets the cost of the whole item. A customer answering "yes we
 have API access" usually means the one they use most.
 

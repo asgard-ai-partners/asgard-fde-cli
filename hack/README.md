@@ -30,6 +30,11 @@ three incidents were. `--unmarked` narrows to those that do not say who they are
 for or where the answer goes; most instructions have one obvious reader, so that
 list is where to look rather than a list of defects.
 
+**Run it after adding any instruction to the material**, and read the `--ask`
+list whole - it is 24 lines and it is the set where every incident so far has
+happened. That is the point of the tool: not that it judges, but that the whole
+set fits in one reading.
+
 **Its first run found two.** An extract telling a chart author to have asked
 about writes during the interview - a meeting they were not at - and a build
 stage asking a customer question after the interview had closed. Both were

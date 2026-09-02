@@ -92,6 +92,73 @@ the honest-sounding answer is "no" or "not yet", that is the moment to check
 rather than to be modest. Being careful and being wrong look identical from
 their side.
 
+## Before writing a single slide
+
+The deck is where these questions actually get written, and the skill that owns
+it is long. **These are the ones needed before the first page**, and they are
+here rather than only there because this text is printed to you and a file is
+not - an FDE received every change made to this page and only the parts of that
+skill a correction pointed at.
+
+`.agents/skills/proposal-deck/` has the reasoning, the counter-examples and the
+review checklist. This is the part you cannot start without.
+
+**Every outcome ends with what happens when it fails.** "It says it cannot find
+that number rather than guessing one." Written once, never revised in twenty
+rounds, because failure behaviour has one right answer where a capability has
+twenty phrasings. Cheapest line on the page and the most persuasive.
+
+**One page per sub-heading of theirs, and the page list is not yours to design** -
+their document already decided it. Two columns on that page: the question on the
+left, what it produces on the right. Not two slides; splitting them removes the
+sense of a trade.
+
+**Titles are their headings, unedited.** If you split one of their items, the
+title is still a phrase from their document and the lead says which item it came
+from. A capability's context page contains nothing you wrote - their heading,
+their description, their list. Those pages needed no correction at all.
+
+**Ask, and stop.** Do not supply the consequence; that is theirs to state, and
+supplying it invents branches that do not exist.
+
+**A slide is not an agenda and not a tracking list.** "Who is responsible" is
+right to ask aloud and wrong to print. The test is the carrier: is this answer
+somebody we chase, or something we build?
+
+**A question that works asks what they do now, offers two concrete
+possibilities, and the two answers fork the design.** The version in our
+vocabulary collects a no:
+
+    no    有沒有 OMS 或電商中台?
+    yes   現在要看各平台庫存,是一個一個後台登,還是有一個地方全看得到?
+
+**State the condition in the same sentence as the capability.** And claim nothing
+past `asgard-cli wiki platform-unknowns` - what is on that list is asked of the
+platform team **before** the meeting and answered aloud, never printed.
+
+**No 「你們」 in a Chinese deck.** Drop the subject, or make their document the
+subject. Chinese can omit it, so writing it is a choice the reader feels.
+
+**Check the subject of every line.** On an anonymous channel the person approving
+a write is the person in the conversation, not staff.
+
+**Say what identifies the person, both ways.** A self-service lookup needs to
+name what identifies the caller - a number they type is not an answer. A write
+needs to name which field says who the record is for; the agent fills that one,
+and whose account it sits under is theirs.
+
+**Nothing only we can resolve.** No question numbers, no `REQ-` ids, no "the
+five the filters removed" - if a reader with only the deck cannot resolve the
+reference, it does not go on.
+
+**Borrow the layout skill's visual language, not its authoring process.** One
+source, the HTML. Layout checks yes, content checks no - and **never edit a
+slide to make a checker pass.**
+
+**Write back to `docs/open-questions.md` in the same edit.** Rewording a
+question, dropping one or finding one all belong in the row immediately;
+`asgard-cli check` warns when the deck is newer than the questions.
+
 ## Why the interview is a stage of its own
 
 Of the target repo's thirteen task specs, **three were superseded and one was

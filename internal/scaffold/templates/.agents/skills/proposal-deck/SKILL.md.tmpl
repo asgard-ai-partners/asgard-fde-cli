@@ -450,7 +450,23 @@ for access rather than for patience:
       A, sub-topic 1      the question | what it produces, one page
       A, sub-topic 2      same, one page per sub-heading of theirs
     capability B          and so on
-    close                 what we deliver this round
+    close                 see below - one half of this is general, one is not
+
+**How to close.** The general half: **do not close on our own unknowns.** Anything
+we cannot answer about our own product is asked of the platform team before the
+meeting and answered aloud, never printed - that is the same rule as elsewhere on
+this page.
+
+What to close on instead **depends on the engagement, and the one worked example
+is not general.** That deck closed on what would be delivered that round, which
+worked because there were three concrete things to name. An engagement whose
+round delivers "an agent" would produce a thin page, and a thin closing page is
+worse than none. If there are concrete deliverables, close there. If not, close
+on what each side does next, which at least has an action on both sides.
+
+*(The deck that worked used deliverables, and that content was specified by the
+reviewer rather than arrived at - so there is no comparison against any other
+ending.)*
 
 **Three page kinds and no others.** The deck that worked had cover, context,
 subject and close - and every attempt to invent a fifth kind, or to group
@@ -564,6 +580,21 @@ line below is one recollection or a guess, it says so. **Treat an untested one a
 a suggestion and not as a rule** - and if you find it wrong in practice, that is
 the more useful outcome.
 
+**0a. Every outcome ends with what happens when it fails.**
+
+First because it is the cheapest and the most certain. "It says it cannot find
+that number rather than guessing one." "It says it cannot reach the system rather
+than giving you yesterday's figure."
+
+**Those lines were written once and never touched**, through twenty rounds that
+rewrote half of everything else - because **failure behaviour has one correct
+answer and a capability has twenty phrasings.** A rule with no room for choice
+cannot be worded wrong, so it costs one line and never comes back.
+
+It is also the most persuasive thing on the page. In a support scenario "it says
+it cannot find it, it does not invent one" carries more weight with a customer
+than any description of what it can do.
+
 **0. A slide is not an agenda, and it is not a tracking list.**
 
 The rule the other six are downstream of, and the one an FDE said would actually
@@ -610,8 +641,15 @@ Three things, and the third is what makes it worth a page:
   - **the two answers fork the design.** One consolidating system is one
     integration; separate back offices are six
 
-The version that would have failed - "do you have an OMS or a middleware
-layer?" - is the same question in our vocabulary, and it collects a no.
+**The counter-example is what makes this usable**, because the rule alone still
+produces the wrong one:
+
+    no    有沒有 OMS 或電商中台?
+          do you have an OMS or a middleware layer?
+    yes   現在要看各平台庫存,是一個一個後台登,還是有一個地方全看得到?
+
+The first collects a "no" - not because they have nothing, but because their
+name for it is not ours.
 
 *(Established: this exact sentence went through twenty rounds of correction
 without being touched.)*
@@ -625,10 +663,13 @@ what they have to give; the right is what they get for it. There is no reason
 those are the same size, and a page with three lines on the left and five on the
 right means this item needs little, not that something is missing.
 
-That is here because two of the six were written to fill a left column - and
-**not because it was short in itself, but because it was shorter than the one
-beside it.** Two columns create an obligation to align that nothing else on the
-page does.
+**Two columns create an obligation to align that nothing else on a page does.**
+That much is a property of the layout rather than of one deck, and it is why this
+sentence exists at all.
+
+*(The observation that a three-line column beside a five-line one reads as
+unfinished is one person's account of one deck. If it does not feel that way to
+you, the paragraph below still stands and this part does not.)*
 
 Two things follow, and the second is the sharper one:
 
@@ -642,8 +683,13 @@ Two things follow, and the second is the sharper one:
     is the cheapest true sentence available about any system: always true, always
     sensible, and it sounds like concern
 
-**Then the test: assume they give you the most specific answer possible, and ask
-what you would do differently.** "Ming issues it" and "Ming spends five hours a
+**The test below is for reviewing, not for writing.** It fires when you know you
+are making a choice - which was two of the six times, both while adding a line.
+The other four were copying or complying, and nothing you have to remember to run
+fires then. Use it when re-reading a page, and see the review section above.
+
+**The test: assume they give you the most specific answer possible, and ask what
+you would do differently.** "Ming issues it" and "Ming spends five hours a
 day on it" are perfect answers that change nothing. **Three of the six were copied out of this material**, not reasoned into
 existence - from filter 0 saying to ask who issues an account, from
 `wiki operations` saying to get the name of whoever approves a change, and from
@@ -726,6 +772,17 @@ ticket.
 **Check who the subject is on every line.** On an anonymous channel the person
 approving a write is usually the person in the conversation, not staff.
 
+**5b. A write with no field saying who it is for.** The counterpart to 6 below,
+and the same boundary confused in the other direction.
+
+    ours     which field on the record says which of their customers it is
+             for. The agent fills it, so it is a data question
+    theirs   whose account the record sits under, whether their system routes
+             or counts SLA by creator. Do not ask
+
+Getting this backwards is easy because a write makes every question feel
+responsible. It was asked wrongly the first time.
+
 **6. A self-service lookup with no identity.** The deck offered "if there is no
 account binding, the customer can give us their ticket number" - and presented
 it as a clean scope cut.
@@ -793,6 +850,11 @@ stand.
     the one-line-per-bullet rule    a proposal rule. Does not apply here
     the three-to-five items bound   a proposal rule. Does not apply here
     a paragraph of theirs           goes on whole
+
+**The page list is not something you design.** Their document already decided
+it: three capabilities with three or four sub-items each are those pages. Time
+spent working out how to group them or how many pages is right is time spent
+re-deciding something already settled, and it was several rounds in one deck.
 
 **Density: one sub-topic per slide, following their sub-headings.** Three to five
 items is the proposal's density rule. Applied here it compresses a whole
@@ -893,7 +955,11 @@ second the moment anyone else opens the deck.
 - **The second person, in a Chinese deck.** 「你們」 on every page turns a shared
   document into two sides. See step 4 - it is a register rule rather than a leak,
   and it does not apply to a deck in English.
-- **This repository's own bookkeeping.** No question numbers, no `REQ-` or
+- **Anything only we can resolve.** Question numbers and `REQ-` ids are the
+  obvious form, and the rule is wider than numbers: "the five the filters
+  removed", "that mechanism mentioned earlier" and "item 3 above" fail the same
+  way. **The test is whether a reader who has only this deck can resolve the
+  reference.** No question numbers, no `REQ-` or
   `TASK-` ids, no "the items the two filters removed", no "out of scope table".
   These are the easiest words to leak, because they are what you have just
   finished writing and they feel like the content - but they are an index into

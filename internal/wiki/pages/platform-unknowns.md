@@ -3,7 +3,7 @@
 Questions no source settles - not the CRDs, not the product documentation. Each
 one is here because an engagement hit it and had to proceed without an answer.
 
-**Ask the platform team when a requirement touches one. Do not assume.** Then
+**Ask the platform team before the meeting, not the customer and not during one.** Do not assume. Then
 write the answer into the customer repo's `docs/decisions/`, cite it wherever the
 design depends on it, and tell whoever maintains `asgard-cli` so the next
 engagement starts with the answer rather than rediscovering it.
