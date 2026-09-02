@@ -102,6 +102,14 @@ button, carousel, chart, location, video and quick-reply message templates.
 `asgard-cli usecase workflow-chain` covers what actually passes between
 processors; `fixed-query-tools` is the shape of a zero-parameter query tool.
 
+## What goes in a field
+
+Every processor field takes one of three kinds of value - Literal, Expression
+(ECMA5 JavaScript) or Template (Handlebars) - and the six variables in scope,
+the seven built-in functions and the `Blob` shape are in
+[`processors`](processors.md). **Expression is ECMA5**, so no `let`, no arrow
+functions and no optional chaining, in any field of any processor.
+
 ## The editor's canvas is a ConfigMap
 
 A Workflow renders as a diagram in the platform's editor, and **where each node

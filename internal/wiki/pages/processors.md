@@ -8,6 +8,57 @@ this material. A chart author writing a Workflow was working from a type list.
 Every processor has **Success** and **Failure** outputs. The error branch is
 universal, not a property of the risky ones.
 
+## Every field is one of three kinds of value
+
+This is the vocabulary the per-processor pages all assume, and `workflow.md` says
+only that one is JavaScript and one is Handlebars:
+
+    Literal      a fixed value
+    Expression   JavaScript, evaluated per run. `prevMessage || '訪客'`
+    Template     Handlebars, for producing text. `{{#if prevMessage}}...{{/if}}`
+
+**Expression is ECMA5**, the same limit `execute-script` declares - so no `let`,
+no arrow functions, no template literals, in any field of any processor.
+
+### The six variables in scope
+
+| variable | type | what it is |
+|---|---|---|
+| `prevMessage` | string | the previous user message |
+| `prevBlobs` | array of Blob | files attached to it |
+| `prevPayload` | object | the payload from whatever called in - **this is what a BotProvider passes through**, and what `pluginNames` and `sourceSetMounts` expressions read |
+| `prevError` | | the previous step's error, on a Failure branch |
+| `customChannelId` | string | the conversation key, chosen by the caller |
+| `customMessageId` | string | the message id, optional |
+
+    interface Blob {
+      blobId: number; fileType: FileType; fileName?: string;
+      size: number; mime: string;
+    }
+    type FileType = 'BINARY' | 'IMAGE' | 'VIDEO' | 'AUDIO' | 'DOCUMENT'
+
+**Every one of them can be absent, and ECMA5 has no optional chaining.** So the
+documentation's own examples are all defensive, and a chart that is not will
+throw at run time on the turn where a user sends no file:
+
+    prevBlobs && prevBlobs[0] && prevBlobs[0].fileName
+    prevPayload && 'property' in prevPayload ? prevPayload.property : '預設值'
+
+### The seven built-in functions
+
+| function | what it does |
+|---|---|
+| `history(start, end)` | conversation history as plain text, one line per turn. Indices are inclusive and **negative counts from the end** - `history(0, -1)` is everything |
+| `historySize()` | how many turns there are |
+| `urlEncode(s)` | for building a URL in an `http-request` |
+| `xpathExtract(...)` | pull a value out of XML or HTML |
+| `vecToStr(...)` | a vector as a string |
+| `isoNow()` / `isoToday()` | the timestamp and the date |
+
+**`history` is the one that decides a design.** Feeding a whole conversation into
+a prompt is one call, and it is also how a run reaches the 30-step and
+three-minute ceiling early. `historySize()` first, then a bounded window.
+
 ## The two LLM processors are not variants of each other
 
 They share almost every field and differ in the two that matter:
@@ -86,6 +137,13 @@ worth knowing from their pages:
 
 ## Sources
 
+- The value types, variables and functions:
+  [expression-introduction](https://docs.asgard-ai.com/docs/developer-reference/asgard-builtin/expression-introduction),
+  [expression-variable](https://docs.asgard-ai.com/docs/developer-reference/asgard-builtin/expression-variable),
+  [expression-ecma-script-functions](https://docs.asgard-ai.com/docs/developer-reference/asgard-builtin/expression-ecma-script-functions)
+  - asgard-docs `f00e0ee`. That section was listed here as deliberately not
+  covered, on the grounds that lookup material only goes stale - a judgement made
+  before anyone noticed the ECMA5 limit lives in it
 - The sixteen pages under
   [developer-reference/processor](https://docs.asgard-ai.com/docs/developer-reference/processor)
   - asgard-docs `f00e0ee`. **None of them had been read into this material

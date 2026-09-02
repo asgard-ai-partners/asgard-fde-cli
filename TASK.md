@@ -120,17 +120,21 @@ names is not reading a repository.
      | ~~`processor/` - 16 pages, one per processor~~ | **done 2026-09-02** - `wiki processors`. This was the largest single gap: a chart author writing a Workflow had a type list and no fields |
      | ~~`api-doc/send-message/sse-response/**` - 11 event pages~~ | **done 2026-09-02** - the envelope, the `fact` tagged union and `runError.location`, which names the Workflow and processor that failed. `api.md` had the event list and none of the payloads |
      | `api-doc/send-message/` - the four endpoint pages | `api.md` covers the endpoint, actions and `customChannelId` accurately. What is unread is the file path: `blob` upload as multipart, and append-file-and-send |
-     | `asgard-builtin/**` - 18 pages of expression variables, Handlebars helpers, message templates | listed as deliberately excluded, and the `ECMA5` limit found today suggests that exclusion deserves rechecking |
+     | ~~`asgard-builtin/**` - 18 pages~~ | **rechecked 2026-09-02, and the exclusion was wrong for four of them.** The expression language every processor field is written in - three value types, six variables, seven functions, the Blob shape, and that Expression is ECMA5 with no optional chaining. Now in `wiki processors`. The 14 message-template pages stay excluded and that half of the judgement holds |
      | `examples/` - webhook-integration, knowledge-base-query, streaming-response | worked examples, which nothing here has |
      | `sdk/`, `asgard-sdk`, `others/channel-log` | the front-end path, which `api.md` covers from the platform side only |
      | `overview/asgard-concepts`, `why-asgard`, `product-suite/*/intro` | the vocabulary a customer will have read before meeting us |
 
-     **`asgard-builtin/**` next.** Eighteen pages, currently listed as
-     deliberately excluded on the grounds that lookup material only goes stale
-     here. That exclusion predates finding that `execute-script` runs ECMA5
-     only - a limit that lives in exactly that section and changes what can be
-     written. Recheck the exclusion before trusting it; it is the same kind of
-     inherited judgement as the coverage number.
+     **`examples/` and the file path next.** Four worked examples - webhook
+     integration, knowledge-base query, streaming response - and the `blob`
+     upload endpoint, which is the only part of the API contract `api.md` still
+     describes without having read.
+
+     **And a habit to keep**: three inherited judgements were checked today and
+     three were wrong - the coverage percentage, the `asgard-builtin` exclusion,
+     and this repo's own claim that there is no `CompletionModel` CR. An
+     exclusion or a summary statistic is somebody's conclusion, not a fact, and
+     the ones that exclude a whole directory are where nobody has looked.
 
   2. **Heimdall has one documentation page and it is a link to a marketing
      site.** The deployment behind it - a content pipeline with 28 Plugins, the

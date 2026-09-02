@@ -87,9 +87,19 @@ pass found four bodies of material nobody had opened.
 
 ## Deliberately not covered
 
+**One row of this table was wrong.** `asgard-builtin/` was excluded whole as
+lookup material; four of its pages are the expression language every processor
+field is written in, including the ECMA5 limit and the six variables in scope.
+They are now in [`processors`](processors.md). The message-template pages remain
+excluded, and that part of the judgement holds.
+
+**An exclusion is a judgement someone made once.** Recheck one before relying on
+it, particularly if it excludes a whole directory - that is the shape of an
+exclusion nobody has looked inside.
+
 | excluded | count | why |
 |---|---|---|
-| `developer-reference/asgard-builtin/` | 18 | Expression variables, function lists and message templates. Lookup material: copying it here only produces a copy that goes stale. Read the source when needed |
+| `developer-reference/asgard-builtin/message-template-*` | 14 | Message template shapes - button, carousel, image, video, location. Genuinely lookup material, and per-channel. Read the source when writing one |
 | `help-community/release-notes/` | 10 | historical, and does not describe the present |
 | `superpowers/` | 5 | the documentation site's own redesign plans, not an Asgard feature |
 
