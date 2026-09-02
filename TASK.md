@@ -144,9 +144,9 @@ names is not reading a repository.
      whether Heimdall is in scope for an FDE at all, and write that down either
      way.
 
-  3. **`ConfigMap` is now documented; `size` does not count them.** One per
-     Workflow, and a chart with six Workflows needs six. Small, and the estimate
-     is wrong by exactly that much.
+  3. ~~**`size` does not count ConfigMaps.**~~ **Done 2026-09-02** - one per
+     Workflow, labelled in the output as what it is, since a reader who has
+     never seen one will otherwise assume the estimate is wrong.
 
   4. **The per-processor config definitions in `asgard-core` are not carried.**
      Name, type, required, default and description for every config key of every

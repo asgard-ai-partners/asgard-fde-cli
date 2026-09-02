@@ -76,6 +76,8 @@ them.`,
 				} else if _, gap := size.Undocumented[k]; gap {
 					fmt.Fprintf(out, "   (no documentation page - see below)")
 					missing = append(missing, k)
+				} else if note, plain := size.NotACR[k]; plain {
+					fmt.Fprintf(out, "   %s", strings.SplitN(note, "\n", 2)[0])
 				}
 				fmt.Fprintln(out)
 			}
