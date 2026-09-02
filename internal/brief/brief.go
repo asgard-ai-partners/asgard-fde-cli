@@ -110,7 +110,13 @@ edited and re-rendered; a wrong sentence is in their notes.`,
 				"asgard-cli wiki integration",
 			},
 		},
-		Close: `**Before the meeting, not during it:** anything on
+		Close: `**Ask what they have already read**, before describing anything. The
+product site tells them Odin is for non-technical staff, gives them a vocabulary
+- Basic Function, Template - that maps to nothing here, and says Mimir simulates
+the future. ` + "`asgard-cli wiki what-they-read`" + ` has the three, and it costs
+one sentence to find out which of them you are correcting.
+
+**Before the meeting, not during it:** anything on
 ` + "`asgard-cli wiki platform-unknowns`" + ` that this engagement touches is ours to
 chase, not theirs to hear about. Standing in front of a customer saying we do
 not know what our own product does is not honesty.

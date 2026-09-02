@@ -123,7 +123,7 @@ names is not reading a repository.
      | ~~`asgard-builtin/**` - 18 pages~~ | **rechecked 2026-09-02, and the exclusion was wrong for four of them.** The expression language every processor field is written in - three value types, six variables, seven functions, the Blob shape, and that Expression is ECMA5 with no optional chaining. Now in `wiki processors`. The 14 message-template pages stay excluded and that half of the judgement holds |
      | `examples/` - webhook-integration, knowledge-base-query, streaming-response | worked examples, which nothing here has |
      | `sdk/`, `asgard-sdk`, `others/channel-log` | the front-end path, which `api.md` covers from the platform side only |
-     | `overview/asgard-concepts`, `why-asgard`, `product-suite/*/intro` | the vocabulary a customer will have read before meeting us |
+     | ~~`overview/*`, `core-concepts-ecosystem`~~ | **done 2026-09-02** - `wiki what-they-read`. Three mismatches between what a customer reads first and what we deliver, and one correction to this material: the Project and storage limits are per price plan, not properties of the platform |
 
      **`examples/` and the file path next.** Four worked examples - webhook
      integration, knowledge-base query, streaming response - and the `blob`

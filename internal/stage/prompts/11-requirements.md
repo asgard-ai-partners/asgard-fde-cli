@@ -111,6 +111,17 @@ Ask it once per capability the customer wants, before anything else.
 The order is not a style preference. Each answer narrows the next question, and
 asking them out of order means designing against an audience nobody confirmed.
 
+**0. What have they already read or been told?**
+
+One sentence, before describing anything. A customer who read the product site
+arrives believing their own staff will build workflows in Odin, carrying a
+vocabulary - Basic Function, Template - that maps to nothing in the product as
+documented anywhere else, and expecting Mimir to forecast.
+
+`asgard-cli wiki what-they-read` has the three and what is actually true. You
+cannot correct a picture you have not seen, and describing the platform over the
+top of a different one produces a customer who nods and disagrees later.
+
 **1. What can the agent not do today?**
 
 In their words, before translation. Write down the sentence they actually said,

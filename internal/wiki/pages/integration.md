@@ -51,9 +51,12 @@ and **they apply to the Workspace - projects inside it share them**:
 customer with a dozen document sources exceeds it before anything else on this
 list - see [`knowledge.md`](knowledge.md).
 
-**These are defaults, not ceilings.** They are raised by contacting sales or
-writing to service@asgard-ai.com, which is a different sentence to say in a
-meeting than "that is the limit". What is not documented is by how much.
+**These are defaults, not ceilings, and they are per plan.** They are raised by
+contacting sales or writing to service@asgard-ai.com, which is a different
+sentence in a meeting than "that is the limit". The overview says a Workspace
+has a price plan and that how many Projects it may hold depends on it - so 40 is
+one plan's number rather than the platform's. What is not documented is which
+plan gives what. See [`what-they-read.md`](what-they-read.md).
 
 A multi-system troubleshooting conversation can reach 30 steps,
 which is worth saying out loud before somebody designs one.
