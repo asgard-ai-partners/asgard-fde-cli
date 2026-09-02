@@ -108,6 +108,18 @@ widening it takes a CR change and a review.
 > Answered wrong once: a public site got a `SemanticLayer` first, and it was
 > removed and replaced with five zero-parameter query tools.
 
+**"Zero-parameter" means the model supplies nothing** - not that every caller
+sees the same rows. An anonymous channel can still answer "where is MY repair
+case": the identity is injected server-side on every turn, arriving in the
+request the front end sends rather than as a tool argument the model fills in,
+and the query filters on it. The model still picks only *which question*, so the
+injection surface is still zero. Whatever sits in front is what knows who is
+talking; if nothing in front knows, the per-customer half cannot be built at all,
+and that is a question for the customer. See `asgard-cli usecase
+per-turn-credentials`, which also carries the failure mode - a query that forgets
+to filter on the injected identity fails on the anonymous path only, and that is
+the path nobody tests.
+
 **One more trap on the tools themselves.** Two tools sitting on the same
 FROM/JOIN and differing only in projection force each one's `description` to
 name the other as the alternative - which is exactly where a model picks wrong.
@@ -171,19 +183,16 @@ from making the same choice.
 │   ├── values-dev.yaml            # env-level values shared by ALL projects (an -f overlay point)
 │   ├── values-prod.yaml
 │   ├── skills/<skill>/SKILL.md    # RUNTIME skills, synced into the platform
-│   ├── asgard-cli render                  # local render helper (reads deploy.yaml). Renders only — never deploys.
-│   └── README.md
+│   └── README.md                  # what the overlay points are
+│                                  # (rendering is `asgard-cli render <project> <env>`, not a file here)
 ├── projects/<project>/
 │   ├── deploy.yaml                # which envs this project deploys to + namespace + values per env
 │   └── chart/
 │       ├── app/templates/<kind>/  # one directory per CR kind, one file per CR
 │       ├── values-dev.yaml        # per-project per-env (platformMainEnvironmentId, DB host …)
 │       └── values-prod.yaml
-├── scripts/                       # acceptance gates + local DB tool-chain
-│   ├── asgard-cli check  # structural invariants
-│   ├── asgard-cli verify        # CR cross-reference completeness on a rendered chart
-│   ├── asgard-cli verify       # one-system-one-Agent invariants on a rendered chart
-│   ├── check_crd_fidelity.py      # fields the CRDs would silently prune
+├── scripts/                       # what needs a cluster or a database — the rest is asgard-cli
+│   ├── check_crd_fidelity.py      # fields the CRDs would silently prune (needs kubectl)
 │   └── db/                        # query + introspection helpers (add as databases are wired up)
 ├── .agents/skills/                # DESIGN-TIME skills — for the coding agent working in this repo
 │   ├── spec-workflow/             #   turn unclear work into a reviewable spec
@@ -461,8 +470,8 @@ whole repo. **Any red step stops the work.**
 1. `asgard-cli check [project]` — structural invariants
 2. `helm lint projects/<project>/chart/app` (bare — proves `values.yaml` defaults every
    `.Values.*`) and again with `-f projects/<project>/chart/values-dev.yaml`
-`asgard-cli verify <project>`
-   one-system-one-Agent invariants
+3. `asgard-cli verify [project]` — renders, then checks CR cross-reference completeness
+   **and** the one-system-one-Agent invariants. One command, both sets.
 4. **Against the cluster you deploy to** (read-only, needs `kubectl`):
    `kubectl apply --dry-run=server` **and** `python3 scripts/check_crd_fidelity.py - --context <ctx>`
 

@@ -91,9 +91,6 @@ on the other end, which is section 2 of the spec. Until it is set,
 			if slug == "" {
 				slug = work.Slugify(title)
 			}
-			if slug == "" {
-				return fmt.Errorf("cannot derive a file name from %q; pass --slug <short-name>", title)
-			}
 
 			request := work.Request{
 				Title:    title,

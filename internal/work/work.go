@@ -14,6 +14,7 @@ package work
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -66,7 +67,42 @@ var (
 	QuestionFile = filepath.Join("docs", "open-questions.md")
 	DecisionDir  = filepath.Join("docs", "decisions")
 	DecisionTmpl = filepath.Join(DecisionDir, "_decision-template.md")
+	ReferenceDir = "references"
 )
+
+// FiledReferences counts the customer material sitting in references/, ignoring
+// the README the scaffold puts there. It exists to catch the one state nothing
+// else in the repository can see: material has been filed and read, an
+// interview has effectively happened, and no request records any of it.
+//
+// That state is not a missing file - it is a conversation that only exists in
+// somebody's terminal. `check` and the interview prompt both report it, because
+// the next run of `next` will otherwise say "nothing in flight" and be right.
+func FiledReferences(root string) (int, error) {
+	dir := filepath.Join(root, ReferenceDir)
+	var n int
+	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			if os.IsNotExist(err) && path == dir {
+				return filepath.SkipAll
+			}
+			return err
+		}
+		if d.IsDir() {
+			return nil
+		}
+		switch name := d.Name(); {
+		case name == "README.md", strings.HasPrefix(name, "_"), strings.HasPrefix(name, "."):
+			return nil
+		}
+		n++
+		return nil
+	})
+	if err != nil {
+		return 0, fmt.Errorf("read %s: %w", ReferenceDir, err)
+	}
+	return n, nil
+}
 
 // TraceabilityAnchor marks the table in the living spec's README that lists
 // every decision record. It is an HTML comment rather than the heading above the
@@ -92,7 +128,7 @@ type Request struct {
 
 // File is the request's path relative to the repository root.
 func (r Request) File() string {
-	return filepath.Join(RequestDir, r.ID+"-"+r.Slug+".md")
+	return filepath.Join(RequestDir, recordName(r.ID, r.Slug))
 }
 
 // Task is one executable task spec.
@@ -111,7 +147,7 @@ type Task struct {
 
 // File is the task's path relative to the repository root.
 func (t Task) File() string {
-	return filepath.Join(TaskDir, t.ID+"-"+t.Slug+".md")
+	return filepath.Join(TaskDir, recordName(t.ID, t.Slug))
 }
 
 // Question is one thing nobody has answered yet.
@@ -250,9 +286,6 @@ func ActiveTasks(tasks []Task) []Task {
 // what is already on disk when r.ID is empty, and the request returned carries
 // the ID and file it ended up with.
 func AddRequest(root string, r Request) (Request, error) {
-	if r.Slug == "" {
-		return r, fmt.Errorf("request needs a slug for its file name")
-	}
 	if r.ID == "" {
 		id, err := nextID(filepath.Join(root, RequestDir), "REQ")
 		if err != nil {
@@ -276,7 +309,7 @@ func AddRequest(root string, r Request) (Request, error) {
 		spec = "projects/" + r.Project
 	}
 	row := fmt.Sprintf("| [%s](%s) | %s | %s | `%s` | %s |",
-		r.ID, r.ID+"-"+r.Slug+".md", r.Title, orDash(r.Priority), r.Status, spec)
+		r.ID, recordName(r.ID, r.Slug), r.Title, orDash(r.Priority), r.Status, spec)
 	if err := appendRow(filepath.Join(root, RequestIndex), "", row); err != nil {
 		return r, err
 	}
@@ -286,9 +319,6 @@ func AddRequest(root string, r Request) (Request, error) {
 // AddTask writes the task spec, registers it, and points the index's Next Task
 // section at it. The task returned carries the ID and file it ended up with.
 func AddTask(root string, t Task) (Task, error) {
-	if t.Slug == "" {
-		return t, fmt.Errorf("task needs a slug for its file name")
-	}
 	if t.ID == "" {
 		// Task IDs are global across projects: two branches numbering from
 		// their own project is how a collision happens.
@@ -310,7 +340,7 @@ func AddTask(root string, t Task) (Task, error) {
 	}
 
 	row := fmt.Sprintf("| [%s](%s) | %s | %s | %s | `%s` |",
-		t.ID, t.ID+"-"+t.Slug+".md", t.Title, orDash(t.Owner), orDash(t.Complexity), t.Status)
+		t.ID, recordName(t.ID, t.Slug), t.Title, orDash(t.Owner), orDash(t.Complexity), t.Status)
 	if err := appendRow(filepath.Join(root, TaskIndex), "## Task Queue", row); err != nil {
 		return t, err
 	}
@@ -442,16 +472,10 @@ func AddQuestion(root string, q Question) (Question, error) {
 		return q, fmt.Errorf("a question needs text")
 	}
 
-	existing, err := ReadQuestions(root)
-	if err != nil {
-		return q, err
-	}
 	if q.Number == "" {
-		highest := 0
-		for _, e := range existing {
-			if n, err := strconv.Atoi(e.Number); err == nil && n > highest {
-				highest = n
-			}
+		highest, err := highestQuestion(root)
+		if err != nil {
+			return q, err
 		}
 		q.Number = strconv.Itoa(highest + 1)
 	}
@@ -462,6 +486,30 @@ func AddQuestion(root string, q Question) (Question, error) {
 		return q, err
 	}
 	return q, nil
+}
+
+// highestQuestion is the largest number in the file, counting the Answered
+// table as well as the Open one.
+//
+// Numbering off the open rows alone reused a number the moment one was
+// answered: answer 3, add another, and the file has 3 twice - once in each
+// table. The number is how a request, a task or a meeting note refers to a
+// question, so reusing it silently makes every one of those references
+// ambiguous, and `question answered <n>` then acts on whichever row it finds
+// first. The Answered table exists precisely because the history matters; that
+// history has to keep its numbers with it.
+func highestQuestion(root string) (int, error) {
+	text, err := readOptional(filepath.Join(root, QuestionFile))
+	if err != nil {
+		return 0, err
+	}
+	highest := 0
+	for _, m := range questionRow.FindAllStringSubmatch(text, -1) {
+		if n, err := strconv.Atoi(m[1]); err == nil && n > highest {
+			highest = n
+		}
+	}
+	return highest, nil
 }
 
 // AnswerQuestion moves a row out of Open and into Answered, keeping the row
@@ -517,7 +565,14 @@ func AnswerQuestion(root, number, answer, decision, date string) error {
 // override that. It returns the path written, relative to root.
 func AddDecision(root, topic, slug, specSlug, module, date string) (string, error) {
 	if slug == "" {
-		return "", fmt.Errorf("decision needs a slug for its file name")
+		// Unlike a request or a task, a decision record has no ID: its file
+		// name is the date and the topic, and `check` requires that shape. So
+		// this is the one record that cannot fall back to a number when the
+		// topic slugifies to nothing, which a topic in Chinese does.
+		return "", fmt.Errorf("cannot derive a file name from %q; a decision is named "+
+			"docs/decisions/YYYY-MM-DD-<topic>.md and has no ID to fall back on, "+
+			"so pass --slug <short-name> in ASCII. The record's own heading keeps the "+
+			"topic as written", topic)
 	}
 
 	data, err := os.ReadFile(filepath.Join(root, DecisionTmpl))
@@ -887,6 +942,20 @@ func readOptional(path string) (string, error) {
 		return "", fmt.Errorf("read %s: %w", path, err)
 	}
 	return string(data), nil
+}
+
+// recordName is a record's file name. The slug is what makes a directory
+// listing readable, and it is optional because it cannot always exist: the
+// interview requires the customer's own words, and a title in Chinese, Japanese
+// or Korean slugifies to nothing at all. Refusing the record in that case made
+// the tool reject the one input it insists on being given, so the ID stands
+// alone instead - REQ-001.md - and the title lives in the index and the record's
+// own heading, which is where a reader looks anyway.
+func recordName(id, slug string) string {
+	if slug == "" {
+		return id + ".md"
+	}
+	return id + "-" + slug + ".md"
 }
 
 // slugPattern collapses everything that is not a lowercase ASCII word

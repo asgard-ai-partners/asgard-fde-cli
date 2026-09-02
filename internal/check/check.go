@@ -18,6 +18,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/config"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/work"
 )
 
 // Level separates a problem that fails the gate from one that is only worth
@@ -117,10 +118,13 @@ func Run(root string, only ...string) (Report, error) {
 	if err := c.checkRegistry(projects); err != nil {
 		return Report{}, err
 	}
-	if err := c.checkCommonSkills(); err != nil {
+	if err := c.checkCommonSkills(projects); err != nil {
 		return Report{}, err
 	}
 	c.checkRequirementIndexes()
+	if err := c.checkInterviewRecorded(); err != nil {
+		return Report{}, err
+	}
 	if err := c.checkDocs(); err != nil {
 		return Report{}, err
 	}
@@ -331,11 +335,19 @@ func frontmatter(data []byte) map[string]string {
 // checkCommonSkills validates the runtime skills. The platform resolves one
 // directory as one skill, so the directory name and the declared name have to
 // agree or the SkillSet's searchPath silently resolves to nothing.
-func (c *checker) checkCommonSkills() error {
+//
+// The "none yet" warning is held back until there is a project. A freshly
+// scaffolded repo has no agent to carry a skill, so warning there fires on
+// every run of every new repo and teaches the reader that a warn from this
+// command means nothing - which matters, because the interview check below
+// reports something worth acting on through the same channel.
+func (c *checker) checkCommonSkills(projects []string) error {
 	dir := filepath.Join(c.root, "common", "skills")
 	entries, err := os.ReadDir(dir)
 	if os.IsNotExist(err) {
-		c.warnf("common/skills/ does not exist; it is where runtime skills live, and there are none yet")
+		if len(projects) > 0 {
+			c.warnf("common/skills/ does not exist; it is where runtime skills live, and there are none yet")
+		}
 		return nil
 	}
 	if err != nil {
@@ -372,9 +384,42 @@ func (c *checker) checkCommonSkills() error {
 			c.errf("common/skills/%s/SKILL.md declares name %q, which does not match its directory", e.Name(), name)
 		}
 	}
-	if !found {
+	if !found && len(projects) > 0 {
 		c.warnf("common/skills/ has no skill directories yet")
 	}
+	return nil
+}
+
+// checkInterviewRecorded reports customer material that has been filed with no
+// request to show for it.
+//
+// Every other check here asks whether a file is well formed. This one asks
+// whether a stage of the work left anything behind, because the way the
+// interview fails is not a malformed record - it is no record at all. Material
+// is read, the analysis is done well, it is delivered in conversation, and the
+// repository ends the day looking exactly as it did before. `next` then reports
+// "nothing in flight", correctly, and the second reader starts over.
+func (c *checker) checkInterviewRecorded() error {
+	filed, err := work.FiledReferences(c.root)
+	if err != nil {
+		return err
+	}
+	if filed == 0 {
+		return nil
+	}
+
+	requests, err := work.ReadRequests(c.root)
+	if err != nil {
+		return err
+	}
+	if len(requests) > 0 {
+		return nil
+	}
+
+	c.warnf("references/ holds %d file(s) of customer material and %s records no request; "+
+		"an interview that stays in the conversation is lost when it ends - "+
+		"`asgard-cli request add \"<what they asked for, in their words>\"`, one per capability",
+		filed, filepath.ToSlash(work.RequestIndex))
 	return nil
 }
 

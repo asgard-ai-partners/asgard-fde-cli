@@ -66,9 +66,6 @@ that changed it keeps its version.`,
 			if slug == "" {
 				slug = work.Slugify(topic)
 			}
-			if slug == "" {
-				return fmt.Errorf("cannot derive a file name from %q; pass --slug <short-name>", topic)
-			}
 
 			specSlug := cfg.Workspace.Slug + "-asgard"
 			path, linkErr := work.AddDecision(root, topic, slug, specSlug, module, today())

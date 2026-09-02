@@ -122,11 +122,22 @@ limit even when it sounds generous - it decides whether a Syncer can backfill.
 
 ## 5) Scope
 
-In scope:
+The smallest version they said they would accept as proof (question 6b - their
+answer, not ours):
 
 - TODO
 
-Out of scope:
+In scope, to deliver that:
+
+- TODO
+
+Out of scope for now, with what would have to be answered before it comes back:
+
+| deferred | what has to be answered first |
+|---|---|
+| TODO | TODO |
+
+Out of scope, full stop:
 
 - TODO
 
