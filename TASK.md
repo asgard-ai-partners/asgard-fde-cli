@@ -102,22 +102,31 @@ names is not reading a repository.
 
 ### Open, in the order an engagement hits them
 
-  1. **69 of asgard-docs' 162 pages are cited by a wiki page. 93 are not.** The
-     index reported 130 cited and "100% of what is in scope", and that number
-     was believed rather than checked - twice, including by whoever is reading
-     this. Its own exclusions account for 33, so **60 pages are uncited and
-     unaccounted for**. What is in them:
+  1. **83 of asgard-docs' 162 pages are not read into any wiki page**, and the
+     hole is one section rather than scattered.
+
+     Two wrong numbers preceded this one and both were believed rather than
+     checked. The index said 130 cited, "100% of what is in scope" - measuring
+     one source of nine. Then this entry said 93, from a comparison that was
+     case-sensitive and matched paths against pages that cite URLs, so it
+     counted every channel page as missing when `integration.md` is built from
+     all of them. **Do not quote a coverage number here without saying how it
+     was measured.** Three have been wrong in one day.
+
+     What is actually missing is **the whole of `developer-reference/`**:
 
      | uncited | why it matters |
      |---|---|
-     | `integration/LINE`, `Slack`, `Telegram`, `SDK`, and the four `integration-with-asgard/` pages | **every channel page.** `integration.md` cites them in prose and no page is built from them. LINE is what a Taiwanese customer asks about first |
-     | `developer-reference/api-doc/**` - 15 pages of send-message, SSE events, file upload | `api.md` describes the SSE sequence; the per-event pages are the contract |
-     | `overview/asgard-concepts`, `asgard-ai-workflow`, `why-asgard` | the vocabulary a customer will have read before meeting us |
-     | `product-suite/*/about-*/intro`, `product-suite/index`, `quickstarts-guide` | the product framing, per product |
-     | `help-community/other/compare-conversation-context-retrieve-method` | a comparison of retrieval methods, and this repo has reversed a retrieval decision once |
+     | ~~`processor/` - 16 pages, one per processor~~ | **done 2026-09-02** - `wiki processors`. This was the largest single gap: a chart author writing a Workflow had a type list and no fields |
+     | `api-doc/send-message/**` - 15 pages of the call, its SSE events and file upload | `api.md` describes the sequence; these are the contract, per event |
+     | `asgard-builtin/**` - 18 pages of expression variables, Handlebars helpers, message templates | listed as deliberately excluded, and the `ECMA5` limit found today suggests that exclusion deserves rechecking |
+     | `examples/` - webhook-integration, knowledge-base-query, streaming-response | worked examples, which nothing here has |
+     | `sdk/`, `asgard-sdk`, `others/channel-log` | the front-end path, which `api.md` covers from the platform side only |
+     | `overview/asgard-concepts`, `why-asgard`, `product-suite/*/intro` | the vocabulary a customer will have read before meeting us |
 
-     **Walk them in that order.** The channel pages first: that is where an
-     engagement is blocked today.
+     **`api-doc/send-message/**` next.** It is the contract for the one route a
+     customer's own front end takes, and `api.md` describes it from memory of
+     the sequence rather than from those pages.
 
   2. **Heimdall has one documentation page and it is a link to a marketing
      site.** The deployment behind it - a content pipeline with 28 Plugins, the

@@ -22,6 +22,7 @@
 | [`semantic-model`](semantic-model.md) | the modelling flow, its limits, the Mimir side |
 | [`tools`](tools.md) | MCP Server, Skillset and Plugin; hook events |
 | [`automation`](automation.md) | Trigger and API, and why only cron is left |
+| [`processors`](processors.md) | what each of the 13 takes, and the fields that decide behaviour |
 | [`workflow`](workflow.md) | the 13 processors; Expression is JavaScript, Template is Handlebars |
 | [`settings`](settings.md) | Completion and Embedding Model, Data Source, Connection |
 | [`integration`](integration.md) | chat platforms, the two Applications pages, the architecture |
