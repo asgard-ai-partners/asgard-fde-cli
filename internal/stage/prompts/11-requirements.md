@@ -523,6 +523,15 @@ Two things worth knowing before answering:
     before anybody has asked this question. Ask it now
   - **a seat is a line item.** "Everyone in the company can use it" is a
     sentence with a price, and the customer usually has not connected the two
+  - **only Odin lets them bring their own model.** Sindri and Mimir use the
+    platform's models and the LLM cannot be swapped, so "we will use our own
+    Claude account" has a different answer per product - and which product this
+    is was decided at 2b. A customer with a model contract or a rule about where
+    inference happens has to hear it there, not here
+  - **a Loader and an Indexer each cost several times a Project, per day**, and
+    a Processor is billed per node per day. So a workflow's node count is a
+    standing cost, and a design that routes through sub-workflows where one
+    prompt would do pays for it every day it exists
 
 If they do not raise it, say the shape of it anyway, once. A cost discovered
 after a pilot is the reason a pilot does not convert.

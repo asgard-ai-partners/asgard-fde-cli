@@ -42,6 +42,12 @@ failover. **A custom `CompletionModel` gives that up**: one provider, one key,
 one point of failure, and an outage at that provider is an outage for the
 customer.
 
+**And it is only available on Odin.** Sindri and Mimir use the platform's
+designated models and the LLM cannot be swapped there - see
+[`fehu.md`](fehu.md). So a custom `CompletionModel` does not make a hub agent or
+a dashboard use the customer's key, and "we will use our own model" has a
+different answer per product.
+
 That is the trade to state when a customer asks for a specific model. They may
 still want it - a compliance requirement, an existing contract, a model they have
 tested against - and those are good reasons. "We prefer this one" usually is not.

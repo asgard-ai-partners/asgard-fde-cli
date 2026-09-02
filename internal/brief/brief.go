@@ -92,6 +92,12 @@ edited and re-rendered; a wrong sentence is in their notes.`,
 				"asgard-cli wiki tools",
 			},
 			{
+				"whether they can use their own model or their own key",
+				`"yes, we can point it at your account"`,
+				"**Only on Odin.** Sindri and Mimir use the platform's designated models and the LLM cannot be swapped there. So the answer depends on which product the capability lands in - which is question 2b, decided before anyone thinks about billing. A customer with a model contract or a rule about where inference happens needs this while the shape is still open",
+				"asgard-cli wiki fehu",
+			},
+			{
 				"whether they can have a specific model",
 				`"of course, we will configure that one"`,
 				"You can, and it costs something worth saying: a builtin tier is a **logical model backed by several providers with automatic failover**, and a custom `CompletionModel` is one provider, one key, one point of failure. A good reason - compliance, an existing contract, a model they tested against - is fine. A preference usually is not",

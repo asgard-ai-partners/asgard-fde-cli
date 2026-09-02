@@ -207,9 +207,22 @@ names is not reading a repository.
      customer asks for a named model. Now in `wiki settings` and in
      `brief customer-meeting`.
 
-     Still unopened: `content-pipeline` (1674 Python files), `deleteme` (130
-     CRs, 1131 Python files, despite the name), `asgard-bussiness-plan`,
-     `partner-finder`, `ppt`, `hugin`, `just-inference`, `asgard-html2img`.
+     **`deleteme/` is this tool's own test scaffolds**, not deployments -
+     `coldstart`, `coldstart2`, `coldstart3`, `final`, `final2`, `classes`,
+     `classes2`, `precommit`, plus one named for a customer engagement. It
+     carries no platform knowledge and should not be read as a reference chart;
+     its 130 CRs inflated every count in this file until today.
+
+     It is worth one thing: **somebody ran a cold start three times.** The three
+     attempts differ in which projects they ended with - `erp`, then `erp` and
+     `site`, then `site` alone - which reads as the project split being redone
+     rather than a command failing. That is the decision stage 2 exists to make,
+     and it suggests the split was being discovered by trying it. Not
+     actionable on its own; worth remembering if the same shape appears again.
+
+     Still unopened: `content-pipeline` (1674 Python files),
+     `asgard-bussiness-plan`, `partner-finder`, `ppt`, `hugin`,
+     `just-inference`, `asgard-html2img`.
 
   7. **The kami formatting report is unactioned.** An FDE built the deck and
      reported back; nothing has been written from it yet. The substance, so it
