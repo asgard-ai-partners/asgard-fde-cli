@@ -99,6 +99,7 @@ deeply than "asgard-cli usecase" and each says how far it got.
 
 			if len(args) == 1 {
 				text, err := wiki.Read(args[0])
+				recallHere("wiki", args[0])
 				if err != nil {
 					return err
 				}

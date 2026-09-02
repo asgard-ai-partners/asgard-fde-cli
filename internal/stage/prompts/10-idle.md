@@ -1,6 +1,13 @@
 <<if .Projects>>No request is open, no task is open, and every project has a read path and an
 entry point:
 
+**Before picking the next thing up, one minute on what was never read.**
+`asgard-cli reading` lists the pages this engagement opened and the ones it did
+not. Most of the second list is irrelevant and that is fine; the ones worth a
+look are those you would expect to be relevant - a page about the thing that took
+a day. Every expensive mistake found in this material so far was a page in that
+column, present and never followed.
+
 <<range .Projects>>  <<printf "%-12s" .Slug>><<.Summary>>
 <<end>><<else>>No request is open and no task is open. There are no projects either, which at
 this point means the split has not been decided rather than that work is

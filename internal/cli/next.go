@@ -118,6 +118,7 @@ Use --stage to read any stage out of order, and --list to see them all.`,
 				current = found
 			}
 
+			work.Recall(root, "stage", string(current.Name))
 			prompt, err := current.Prompt(cfg, state)
 			if err != nil {
 				return err

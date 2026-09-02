@@ -2,9 +2,13 @@
 package cli
 
 import (
+	"path/filepath"
+
 	"github.com/spf13/cobra"
 
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/config"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/version"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/work"
 )
 
 // NewRootCmd builds the root command. Every call returns a fresh tree so tests
@@ -55,6 +59,7 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 		newDecisionCmd(),
 		newDoctorCmd(),
 		newBriefCmd(),
+		newReadingCmd(),
 		newFindCmd(),
 		newIssueCmd(),
 		newSizeCmd(),
@@ -73,4 +78,16 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 	)
 
 	return cmd
+}
+
+// recallHere notes a page as opened, when the command was run inside an
+// engagement. Both `wiki` and `usecase` work with no repository at all - that
+// is deliberate, they are reference material - so this finds one if there is
+// one and does nothing if there is not.
+func recallHere(kind, name string) {
+	path, err := config.Find(".")
+	if err != nil {
+		return
+	}
+	work.Recall(filepath.Dir(path), kind, name)
 }

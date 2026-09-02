@@ -97,6 +97,7 @@ Weight a claim by that, and re-check before betting a deployment on one.
 
 			if len(args) == 1 {
 				content, err := usecase.Read(args[0])
+				recallHere("usecase", args[0])
 				if err != nil {
 					return err
 				}

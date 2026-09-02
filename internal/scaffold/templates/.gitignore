@@ -4,3 +4,7 @@ __pycache__/
 .venv-mssql/
 .env
 .claude/
+
+# docs/.reading-log is committed on purpose - it records which pages of
+# asgard-cli's own material this engagement opened, and nothing about the
+# customer. Six months on it says what the person before you knew.
