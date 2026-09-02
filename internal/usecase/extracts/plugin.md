@@ -6,6 +6,13 @@ A named bundle of capabilities that a blueprint loads by name - and can pick
 **Seen in:** a content-generation deployment with 28 of them, split into domain
 knowledge (`pg-med-*`, `pg-biz-*`, `pg-pr-*`) and writing style (`pg-style-*`).
 
+**Checked:** 2026-09-02 against a deployment carrying 28 Plugins, all sharing one skill store, and the CRD.
+
+**Unchecked:** how to divide capability into bundles. The naming IS the taxonomy, and no deployment's taxonomy has been reviewed here.
+
+**Read the platform side first:** `asgard-cli wiki tools` -
+how MCP Server, Skillset and Plugin differ. This page assumes you have.
+
 ## When this shape, and when not
 
 Use a Plugin when **the same agent needs different capabilities on different
@@ -39,6 +46,20 @@ place. **Copying a skeleton by hand is where those get lost**, because nothing
 tells you they are missing: not helm lint, not CRD validation, not a server
 dry-run. The generated file marks the judgement calls TODO - those are what the
 rest of this page is about.
+
+## The shared skill store
+
+Every Plugin's SkillSet points at **one** `ss-skill-repos`, not at a SourceSet of
+its own. That is the opposite of the 1:1:1 rule in
+`asgard-cli usecase skill-set`, and it is deliberate: the skills live in one
+repository, so a SourceSet per bundle would clone the same repository once per
+bundle. The deployment with 28 Plugins has exactly one.
+
+The cost is paid on the UI side and paid knowingly - these SkillSets carry no
+`skill-set-name` annotation and no `managed-by: skill-set` label, so the platform
+does not present them as skill sets a person picks. They are the Plugin's
+implementation. A skill set someone is meant to choose from the UI still gets its
+own SourceSet.
 
 ## The skeleton
 

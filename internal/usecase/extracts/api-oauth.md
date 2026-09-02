@@ -7,11 +7,23 @@ mechanism that carries the token between them is not obvious.
 **Seen in:** a notification path that sends mail through a corporate mail API,
 built and held behind a mock for days before anyone let it send.
 
+**Checked:** 2026-09-02 against token usage in two deployments, and the CRD.
+
+**Unchecked:** the two-call client-credentials shape itself. The deployments read tokens supplied per turn rather than fetching them - see per-turn-credentials - so this page's own shape is less exercised than it looks.
+
+**Read the platform side first:** `asgard-cli wiki api` -
+the endpoint, the SSE event sequence, and the four integration patterns. This page assumes you have.
+
 ## When this shape, and when not
 
 Use it when the API's auth is **OAuth 2.0 client credentials** - no user, no
 consent screen, a service acting as itself. Corporate APIs, most cloud vendors'
 management APIs, and anything behind an identity provider are this.
+
+**A per-user credential is a different shape.** When the token belongs to the
+person talking to the agent rather than to the service, it arrives in the
+BotProvider payload every turn and lands in the sandbox through a hook - see
+`asgard-cli usecase per-turn-credentials`.
 
 Do **not** use it when:
 

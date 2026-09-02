@@ -56,7 +56,8 @@ Run "asgard-cli add" with no arguments to list the kinds.`,
 				fmt.Fprintf(out, "Kinds, in the order they are usually created:\n\n")
 				for _, k := range generate.Kinds {
 					fmt.Fprintf(out, "  %-14s %s\n", k.Name, k.Summary)
-					fmt.Fprintf(out, "  %-14s read first: asgard-cli usecase %s\n", "", k.Extract)
+					fmt.Fprintf(out, "  %-14s what it is:  asgard-cli wiki %s\n", "", k.Wiki)
+					fmt.Fprintf(out, "  %-14s how to build: asgard-cli usecase %s\n", "", k.Extract)
 					if len(k.Needs) > 0 {
 						fmt.Fprintf(out, "  %-14s needs: %s\n", "", strings.Join(k.Needs, ", "))
 					}
@@ -132,16 +133,20 @@ Run "asgard-cli add" with no arguments to list the kinds.`,
 				}
 			}
 
+			// Both, in reading order: the wiki page says what the thing is,
+			// the extract says how it is assembled and assumes you know the
+			// first. The listing prints the same pair.
 			fmt.Fprintf(out, "\nNext:\n")
-			fmt.Fprintf(out, "  1. read the shape:  asgard-cli usecase %s\n", kind.Extract)
+			fmt.Fprintf(out, "  1. what it is:      asgard-cli wiki %s\n", kind.Wiki)
+			fmt.Fprintf(out, "  2. how to build it: asgard-cli usecase %s\n", kind.Extract)
 			// The mechanism extracts, where they apply. A reader who knows the
 			// shape and not how values cross between processors writes the
 			// silent failures back in.
 			for _, also := range kind.AlsoRead {
 				fmt.Fprintf(out, "     and:            asgard-cli usecase %s\n", also)
 			}
-			fmt.Fprintf(out, `  2. fill in the TODOs
-  3. verify:          asgard-cli check
+			fmt.Fprintf(out, `  3. fill in the TODOs
+  4. verify:          asgard-cli check
                       asgard-cli verify %s
 `, opts.Project)
 			return nil

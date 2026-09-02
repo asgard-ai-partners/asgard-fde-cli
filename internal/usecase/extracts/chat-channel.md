@@ -7,6 +7,13 @@ unchanged - and that field is **immutable after creation**.
 **Seen in:** the platform's BotProvider contract, and a deployment that decided
 against LINE and wrote down exactly what taking it on would have cost.
 
+**Checked:** 2026-09-02 against the CRD only.
+
+**Unchecked:** EVERYTHING ELSE. **No deployment uses a chat class** - all BotProviders across every reference deployment are generic. The credential blocks and the per-class costs are read off the contract, not off anything that has run. The first customer on LINE is this page's first test.
+
+**Read the platform side first:** `asgard-cli wiki integration` -
+which credentials each chat platform needs, and who fills in what. This page assumes you have.
+
 ## When this shape, and when not
 
 Use it when **the customer's users already live on that platform**. A LINE

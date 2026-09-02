@@ -1,0 +1,128 @@
+package cli
+
+import (
+	"fmt"
+	"regexp"
+	"strings"
+
+	"github.com/spf13/cobra"
+
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/usecase"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/wiki"
+)
+
+// pointer finds the cross-reference a page or extract makes to the other body
+// of material. That link is what makes a search in one language reach material
+// written in the other.
+var (
+	toWiki    = regexp.MustCompile(`asgard-cli wiki ([a-z][a-z-]*)`)
+	toUsecase = regexp.MustCompile(`asgard-cli usecase ([a-z][a-z-]*)`)
+)
+
+func newFindCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "find <terms>",
+		Short: "Search both bodies of material at once",
+		Long: `Search the platform wiki and the deployment extracts together.
+
+The two answer different questions - what the platform has, and how one shape is
+assembled - and which of them holds an answer is often not obvious before
+searching. This searches both.
+
+It also **follows the link between them**: a wiki page that matches names the
+extract covering the same subject at field level, and an extract names its wiki
+page. So a hit in either half hands over the other, in the order they should be
+read.
+
+    asgard-cli find schedule
+    asgard-cli find anonymous visitor
+    asgard-cli find knowledge graph
+
+Every term has to appear, so an extra word narrows rather than widens.
+
+To read one in full: "asgard-cli wiki <page>" or "asgard-cli usecase <name>".`,
+		Args: cobra.MinimumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			out := cmd.OutOrStdout()
+			query := strings.Join(args, " ")
+
+			pages, err := wiki.Search(query)
+			if err != nil {
+				return err
+			}
+			extracts, err := usecase.Search(query)
+			if err != nil {
+				return err
+			}
+
+			if len(pages) == 0 && len(extracts) == 0 {
+				fmt.Fprintf(out, "Nothing in either body matched %q.\n\n"+
+					"Both are searched literally, so a term in one language will not reach\n"+
+					"material written in the other unless a page mentions it. List them with\n"+
+					"`asgard-cli wiki` and `asgard-cli usecase`.\n", query)
+				return nil
+			}
+
+			if len(pages) > 0 {
+				fmt.Fprintf(out, "PLATFORM - what the thing is (asgard-cli wiki <page>)\n\n")
+				for _, m := range pages {
+					fmt.Fprintf(out, "  %-18s %s\n", m.Name, m.Title)
+					for _, line := range m.Lines {
+						fmt.Fprintf(out, "  %-18s %s\n", "", truncate(line, 84))
+					}
+					if body, err := wiki.Read(m.Name); err == nil {
+						if to := firstRef(toUsecase, body); to != "" {
+							fmt.Fprintf(out, "  %-18s -> field level: asgard-cli usecase %s\n", "", to)
+						}
+					}
+					fmt.Fprintln(out)
+				}
+			}
+
+			if len(extracts) > 0 {
+				fmt.Fprintf(out, "SHAPES - how it is assembled (asgard-cli usecase <name>)\n\n")
+				for _, m := range extracts {
+					fmt.Fprintf(out, "  %-18s %s\n", m.Name, m.Title)
+					for _, line := range m.Lines {
+						fmt.Fprintf(out, "  %-18s %s\n", "", truncate(line, 84))
+					}
+					if body, err := usecase.Read(m.Name); err == nil {
+						if to := firstRef(toWiki, body); to != "" {
+							fmt.Fprintf(out, "  %-18s -> what it is:  asgard-cli wiki %s\n", "", to)
+						}
+					}
+					fmt.Fprintln(out)
+				}
+			}
+
+			// The reading order is the same whichever half you landed in.
+			fmt.Fprintf(out, "Read the platform side first; an extract assumes you have.\n")
+			return nil
+		},
+	}
+
+	return cmd
+}
+
+// primarySection is where a page or extract names its counterpart deliberately,
+// as opposed to mentioning one in passing. Taking the first match anywhere sends
+// a reader to whichever reference happened to appear earliest, which on the
+// knowledge page was the CD note pointing at skill-set rather than the page's
+// own knowledge-drive.
+var primarySection = regexp.MustCompile(
+	`(?s)##+ (?:Before writing the chart|Corresponding extracts|Read the platform side first)[^
+]*
+(.*?)(?:
+##|\z)`)
+
+func firstRef(re *regexp.Regexp, body string) string {
+	if sec := primarySection.FindStringSubmatch(body); sec != nil {
+		if m := re.FindStringSubmatch(sec[1]); m != nil {
+			return m[1]
+		}
+	}
+	if m := re.FindStringSubmatch(body); m != nil {
+		return m[1]
+	}
+	return ""
+}

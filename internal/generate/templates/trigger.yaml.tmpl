@@ -25,6 +25,10 @@ metadata:
     {{- include "<<.Chart>>.labels" . | nindent 4 }}
 spec:
   triggerClass: cron
+  # The CRD pattern takes *, a single number, or */n per field - NOT ranges and
+  # NOT comma lists. "0 9-18 * * *" and "0 9,13,17 * * *" are both rejected by
+  # the apiserver, so business hours are every hour or nothing. helm lint does
+  # not check it; the rejection arrives during CD.
   cron:
     schedule: {{ .Values.triggers.<<.ValuesKey>>.schedule | quote }}
     timeZone: {{ .Values.triggers.<<.ValuesKey>>.timeZone | quote }}
@@ -64,10 +68,17 @@ spec:
       configs:
 <<if .Layers>>        # An ARRAY: one run can mount several systems and do the cross-system
         # matching in its own reasoning. That is what replaces an ETL.
+        #
+        # allowWrite: false is written out on every entry and must stay that
+        # way. This processor resolves a MISSING allowWrite to true, so leaving
+        # it off is not "read-only by default" - it hands a run that nobody is
+        # watching a write path into the customer's systems, and nothing in the
+        # rendered chart shows that it happened.
         - name: semanticLayers
-          expression: '[<<range $i, $l := .Layers>><<if $i>>, <<end>>{"name": "<<$l>>", "allowQuery": true}<<end>>]'
-<<else>>        # - name: semanticLayers
-        #   expression: '[{"name": "sl-<name>", "allowQuery": true}]'
+          expression: '[<<range $i, $l := .Layers>><<if $i>>, <<end>>{"name": "<<$l>>", "allowQuery": true, "allowWrite": false}<<end>>]'
+<<else>>        # allowWrite: false is not optional here - omitting it resolves to true.
+        # - name: semanticLayers
+        #   expression: '[{"name": "sl-<name>", "allowQuery": true, "allowWrite": false}]'
 <<end>>        # Any outward action. A scheduled run cannot use a consenting tool -
         # nobody is there to approve - so this Toolset needs requestConsent: false
         # and must not be shared with a write path.

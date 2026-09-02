@@ -34,9 +34,15 @@ graph points at - tell it that in the prompt, or it will crawl the whole Drive.
 
 ## Two things that will bite
 
-  - destinationMemberKey must end with / for database and web Syncers, and both
-    it and stateMemberKey must name declared members. The CRD only checks this at
-    runtime: a typo is a CronJob that fails every run while apply stays green.
+  - destinationPath must end with / for database and web Syncers, and statePath
+    must not. Both are immutable once set, so a typo is a new Syncer rather than
+    an edit. (The member registry these used to name - members on the SourceSet,
+    destinationMemberKey and stateMemberKey on the Syncer - was retired: the
+    paths a Syncer writes to are now the whole truth about what is in a Drive.)
+  - On a database Syncer, isMaxValueColumn and isIdentifier sit on a column, not
+    on the database block, and both query and batchSize are required. A flag
+    written one level up is an unknown field the apiserver drops in silence,
+    leaving a Syncer that re-reads the whole table every run.
   - After deploying, someone has to upload the manual documents and let the
     Syncers and the index run once. Until then the knowledge answers are poor.
     Say so in the chart README rather than letting a demo discover it.

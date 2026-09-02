@@ -25,12 +25,40 @@ type Extract struct {
 	Name    string
 	Title   string
 	Summary string
+
+	// Checked and Unchecked are how far this page has been held against a
+	// source, and what has not been. They exist because the two are not the
+	// same claim and a reader cannot tell them apart from the prose: a field
+	// name is checkable against the CRD, a shape is checkable against a
+	// deployment, and "why it was designed this way" is checkable against
+	// nothing at all.
+	//
+	// An extract carrying neither line is UNKNOWN, not fine. That is the
+	// honest default and Verified() reports it as such.
+	Checked   string
+	Unchecked string
 }
+
+// Verified reports whether this extract records having been held against a
+// source. False means nobody has written down that it was - which is different
+// from it being wrong, and different from it being right.
+func (e Extract) Verified() bool { return e.Checked != "" }
 
 // heading pulls the first "# ..." line and the paragraph under it, which is how
 // every extract opens.
 func parse(name string, content []byte) Extract {
 	e := Extract{Name: name}
+
+	// A separate pass: these lines sit below the attribution, by which point
+	// the summary loop has already returned.
+	for _, line := range strings.Split(string(content), "\n") {
+		switch {
+		case strings.HasPrefix(line, "**Checked:**"):
+			e.Checked = strings.TrimSpace(strings.TrimPrefix(line, "**Checked:**"))
+		case strings.HasPrefix(line, "**Unchecked:**"):
+			e.Unchecked = strings.TrimSpace(strings.TrimPrefix(line, "**Unchecked:**"))
+		}
+	}
 
 	var summary []string
 	for _, line := range strings.Split(string(content), "\n") {

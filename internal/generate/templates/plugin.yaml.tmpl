@@ -10,6 +10,10 @@ apiVersion: asgard-ai.com/v1alpha1
 kind: Plugin
 metadata:
   name: <<.CRName>>
+  annotations:
+    # Required. Without it the CR applies cleanly and shows up nameless in the
+    # UI - and the gate rejects it, which is the only thing that catches it.
+    asgard-ai.com/plugin-name: "<<.DisplayName>>"
   labels:
     {{- include "<<.Chart>>.labels" . | nindent 4 }}
 spec:

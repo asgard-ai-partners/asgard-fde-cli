@@ -40,6 +40,21 @@ metadata:
     # asgard-ai.com/additional-annotation: |-
     #   {"embedConfig": {}}
 <<end>>  labels:
+    # NOT published to the Agent Hub, and that is a decision rather than an
+    # omission. The Hub serves callers that can authenticate to the platform; a
+    # bot reached here is the opposite audience, so listing it puts something in
+    # the internal Hub list that does not belong there.
+    #
+    # Add asgard-ai.com/agent-hub-published: "true" ONLY when this bot is meant
+    # to appear in the Hub's agent list - a supervisor an internal console calls.
+    # One deployment inherited it by copying a supervisor's BotProvider into a
+    # public widget and had to take it back out.
+    #
+    # Setting it also changes how the platform classifies the release: with the
+    # label it is an agent-hub release, without it a channel release typed from
+    # botProviderClass - which is what makes the embedConfig annotation count as
+    # this bot's appearance. Outward reachability is NOT affected either way;
+    # that is decided by authMode alone.
     {{- include "<<.Chart>>.labels" . | nindent 4 }}
 spec:
   botProviderClass: <<.BotClass>>

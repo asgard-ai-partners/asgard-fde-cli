@@ -43,12 +43,18 @@ Use --stage to read any stage out of order, and --list to see them all.`,
 			out := cmd.OutOrStdout()
 
 			if list {
+				// Neither requirements nor idle is a step of the walk, so
+				// neither carries a number - but requirements is printed where
+				// it actually happens, after the skeleton exists and before the
+				// split is decided. Listed at the end it read as though it came
+				// after deploy.
 				for _, s := range stage.Stages {
 					fmt.Fprintf(out, "  %d  %-14s %s\n", s.Number, s.Name, s.Title)
+					if s.Name == stage.Scaffold {
+						fmt.Fprintf(out, "  -  %-14s %s\n",
+							stage.RequirementsStage.Name, stage.RequirementsStage.Title)
+					}
 				}
-				// Idle is not a step of the walk, so it has no number - but it
-				// is readable, and it is what an FDE sees most often once a repo
-				// is live.
 				fmt.Fprintf(out, "  -  %-14s %s\n", stage.IdleStage.Name, stage.IdleStage.Title)
 				fmt.Fprintf(out, "\nRead one with `asgard-cli next --stage <name>`.\n")
 				return nil

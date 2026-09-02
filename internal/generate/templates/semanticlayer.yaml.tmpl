@@ -42,5 +42,19 @@ spec:
           title: TODO
           description: TODO
           type: string
+      # REQUIRED on every cube, even a cube that is only ever read row by row.
+      # An empty list is a declaration the apiserver accepts; omitting the key
+      # is rejected outright, and helm lint does not see the difference.
+      #
+      # Every measure needs sql EXCEPT type: count, which counts rows and takes
+      # none. Getting that backwards is a CEL rejection at apply time.
+      measures: []
   # Analysis views go here, never as a cube-level sql: virtual cube.
   sampleQueries: []
+  # REQUIRED, and the same trap as measures: a single-cube layer still has to
+  # say `joins: []` rather than leave the key out.
+  #
+  # Each join names a from cube and a to cube with the SAME number of
+  # dimensions on each side - the CRD checks the counts match, so a composite
+  # key has to be spelled out on both.
+  joins: []

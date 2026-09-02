@@ -23,8 +23,32 @@ Keep it that way: when adding an extract, put the customer-facing shape in
 | auto-post | 28 Plugin CRs, knowledge bases, api workflows | 60 | not yet cited |
 | industry-demo-generator | 12 industries, read/write governance split, a Claude Code plugin of commands + skills | many | not yet cited |
 
-All under `~/projects/asgard/<name>-asgard-kube` (the demo generator and
-auto-post use their own names).
+### Which customer each one is
+
+**This is the only file that makes this link.** Nothing under `internal/` names a
+customer, and nothing under `internal/` may.
+
+| repo | who |
+|---|---|
+| [unitech-e-asgard-kube](https://github.com/asgard-ai-platform/unitech-e-asgard-kube) | 台新 |
+| [xxentria-asgard-kube](https://github.com/asgard-ai-platform/xxentria-asgard-kube) | 森鉅 |
+| [finance-ai-asgard-kube](https://github.com/asgard-ai-platform/finance-ai-asgard-kube) | FinanceAI |
+| [buy123-asgard-kube](https://github.com/asgard-ai-platform/buy123-asgard-kube) | Buy123 |
+| [asgard-freyr-kube](https://github.com/asgard-ai-platform/asgard-freyr-kube) | Freyr |
+| [asgard-auto-post-kube](https://github.com/asgard-ai-platform/asgard-auto-post-kube) | Heimdall |
+| [asgard-industry-demo-generator](https://github.com/asgard-ai-platform/asgard-industry-demo-generator) | Demo Generator |
+| [asgard-freyr-skills](https://github.com/asgard-ai-platform/asgard-freyr-skills) | Freyr (runtime skills, a separate repo from the chart) |
+
+The demo generator and auto-post are Asgard's own rather than a customer engagement. **`Heimdall` is
+also the name of a product in the suite** (Media & PR AI, see `asgard-cli wiki
+product-suite`) - the repo and the product are not the same thing, and an extract
+saying "Heimdall" without saying which is ambiguous.
+
+The platform contract itself is
+[asgard-kube](https://github.com/asgard-ai-platform/asgard-kube), and the product
+documentation is
+[asgard-docs](https://github.com/asgard-ai-platform/asgard-docs). Neither is a
+deployment; both are listed in `AGENTS.md` alongside these.
 
 ## Generational conflicts found so far
 
@@ -46,7 +70,7 @@ on.
 
 | topic | the CRD documentation says | every chart does | evidence |
 |---|---|---|---|
-| `config.expression` | "CEL 表達式" | **JavaScript**: arrow functions (26 occurrences), `const` (11), `String()` (7), `encodeURIComponent` (5), `??` (4), `JSON.stringify` (3) | CEL has none of those constructs. Counted across every chart under `~/projects/asgard/` on 2026-09-01 |
+| `config.expression` | "CEL 表達式" | **JavaScript**: arrow functions (26 occurrences), `const` (11), `String()` (7), `encodeURIComponent` (5), `??` (4), `JSON.stringify` (3) | CEL has none of those constructs. Counted across every chart in the deployments listed above, on 2026-09-01 |
 
 `internal/usecase/extracts/workflow-chain.md` states the corrected version and
 says the docs are wrong, because an agent handed "it is CEL" writes something

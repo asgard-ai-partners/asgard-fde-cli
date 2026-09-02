@@ -4,10 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/config"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/scaffold"
 )
 
 func newProjectCmd() *cobra.Command {
@@ -95,6 +97,30 @@ means running this command again with --force, or editing the config.`,
 				fmt.Fprintf(out, "  %-5s %s\n", env, cfg.Namespace(slug, env))
 			}
 
+			// Write the project's chart skeleton now rather than leaving the
+			// repo in a state where the config declares a project that has no
+			// deploy.yaml. Adding a project used to require remembering to run
+			// scaffold again, and forgetting produced a repo where `check`
+			// passed and `render` failed. Existing files are left alone, so
+			// this is safe on a repo that already has the project.
+			root := filepath.Dir(path)
+			if _, err := os.Stat(filepath.Join(root, "AGENTS.md")); err == nil {
+				written, err := scaffold.Write(root, cfg, false)
+				if err != nil {
+					return fmt.Errorf("write the chart skeleton for %q: %w", slug, err)
+				}
+				var created int
+				for _, r := range written {
+					if r.Status == scaffold.Created {
+						created++
+					}
+				}
+				fmt.Fprintf(out, "\nWrote %d file(s) for it, including projects/%s/deploy.yaml.\n", created, slug)
+			} else {
+				fmt.Fprintf(out, "\nThe repository skeleton is not written yet, so this project has no chart:\n"+
+					"    asgard-cli scaffold\n")
+			}
+
 			// Both of these are ordering traps rather than things to look up
 			// later: getting either wrong fails in CD, not here.
 			fmt.Fprintf(out, `
@@ -104,6 +130,15 @@ Before the first deploy of each environment:
   2. the project needs at least one Syncer. CD waits for a CronJob labelled
      asgard-ai.com/syncer-name and exits 1 after 180s if it finds none, even
      when helm upgrade succeeded.
+
+A new project means a new audience, which is a thing to have asked rather than
+assumed - along with which systems it reads and how each one is reached:
+
+    asgard-cli next --stage requirements
+
+Connection coordinates belong in the request record and in
+chart/values-<env>.yaml. Passwords belong in .env, which is gitignored, and in
+app-secret, which infra provisions. Never in a file this repo commits.
 `)
 			return nil
 		},

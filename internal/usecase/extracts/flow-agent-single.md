@@ -6,6 +6,13 @@ anonymous audience.
 **Seen in:** a public product-catalogue widget, and a deployment whose whole
 chart is eight CRs.
 
+**Checked:** 2026-09-02 against a public widget's BotProvider, Workflow and SandboxBlueprint, and the CRD. A required field was missing from the skeleton and was added.
+
+**Unchecked:** the security argument for authMode: none. It rests on the whole chain staying read-only, which is a property of the chart you write, not of this page.
+
+**Read the platform side first:** `asgard-cli wiki agents` -
+what a Managed Agent and a Flow Agent each are, and which the audience decides. This page assumes you have.
+
 ## When this shape, and when not
 
 Use it when the audience is **anonymous** and there is **one job**. A public
@@ -74,6 +81,9 @@ spec:
   entrypoint:
     workflow: wf-<name>
     entry: entry-main
+  # Required. Omitting it is an apiserver rejection at apply time, which in
+  # practice means during CD. The deployments run 30.
+  maxUnsupervisedSteps: 30
   disabled: {{ .Values.botProviders.<name>.disabled }}
   adminApiKey:
     valueFrom:
@@ -105,6 +115,29 @@ spec:
 The Workflow carries the prompt on its `stream-llm-completion-message`
 processor, with `sandboxBlueprint` in that processor's configs pointing at
 `sbp-<name>`, and the full workflow-set label set described below.
+
+
+### The label that decides which list it lands in
+
+`asgard-ai.com/agent-hub-published: "true"` on the BotProvider publishes it to
+the Agent Hub. **A public widget must not carry it**, and getting that wrong is
+easy because the mistake arrives by copying: a supervisor's BotProvider has it,
+and the supervisor is the thing you copy from.
+
+The Hub serves callers that can authenticate to the platform. An anonymous widget
+is the opposite audience, so the label only puts something in the internal Hub
+list that does not belong there. One deployment inherited it exactly that way and
+removed it, with three consequences it checked first:
+
+| | |
+|---|---|
+| the Hub stops serving it | not merely stops listing it - the API returns "not published" |
+| it re-classifies as a **channel release**, typed from `botProviderClass` | which is what makes `additional-annotation` count as this bot's appearance again |
+| outward reachability is **unchanged** | that is decided by `generic.authMode` alone |
+
+This label and the workflow-set labels answer different questions and neither
+substitutes for the other: the set labels decide whether the bot **exists** in the
+UI, this one decides **which list** it lands in.
 
 ## Fields that are not obvious
 

@@ -350,7 +350,7 @@ func SetRequestStatus(root, id string, to Status, date string) error {
 	if err := setIndexStatus(filepath.Join(root, RequestIndex), requestRow, id, to); err != nil {
 		return err
 	}
-	return setSpecStatus(root, RequestDir, id, from, to, date, "## 7) Log")
+	return setSpecStatus(root, RequestDir, id, from, to, date, requestLogHeading)
 }
 
 // SetTaskStatus moves a task's status in the queue and in its own spec file,
@@ -382,7 +382,7 @@ func SetTaskStatus(root, id string, to Status, date string) error {
 	if err := setIndexStatus(filepath.Join(root, TaskIndex), taskRow, id, to); err != nil {
 		return err
 	}
-	if err := setSpecStatus(root, TaskDir, id, from, to, date, "## 4) Execution Log / Change Log"); err != nil {
+	if err := setSpecStatus(root, TaskDir, id, from, to, date, taskLogHeading); err != nil {
 		return err
 	}
 	return refreshNextTask(root)
@@ -424,7 +424,7 @@ func SetRequestProject(root, id, project, date string) error {
 			return fmt.Errorf("read %s: %w", path, err)
 		}
 		text := target.ReplaceAllString(string(data), "- Target project: "+project)
-		text, err = appendUnderHeading(text, "## 7) Log", fmt.Sprintf("- %s target project set to `%s`", orDash(date), project))
+		text, err = appendUnderHeading(text, requestLogHeading, fmt.Sprintf("- %s target project set to `%s`", orDash(date), project))
 		if err != nil {
 			return fmt.Errorf("%s: %w", path, err)
 		}

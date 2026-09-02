@@ -5,6 +5,13 @@ Scheduled work. A cron that starts an agent run rather than a pipeline.
 **Seen in:** an hourly job that notices new arrivals in one system, matches them
 against records in another, and mails whoever asked for them.
 
+**Checked:** 2026-09-02 against a cron Trigger and its entrypoint Workflow, and the CRD - including testing the cron pattern against real expressions.
+
+**Unchecked:** the prompt-writing guidance and the cursor rules. Taken from one deployment's experience, not re-derived.
+
+**Read the platform side first:** `asgard-cli wiki automation` -
+Trigger and API, and why only cron is left. This page assumes you have.
+
 ## When this shape, and when not
 
 Use it when work should happen **on a schedule with no one watching**, and the
@@ -89,7 +96,7 @@ spec:
         # one run can mount several source systems and do the cross-system
         # matching in its own reasoning, which is what replaces the ETL.
         - name: semanticLayers
-          expression: '[{"name": "sl-a", "allowQuery": true}, {"name": "sl-b", "allowQuery": true}]'
+          expression: '[{"name": "sl-a", "allowQuery": true, "allowWrite": false}, {"name": "sl-b", "allowQuery": true, "allowWrite": false}]'
         # Comma-separated string. The outward action, if there is one.
         - name: toolsets
           value: ts-<name>
@@ -98,8 +105,15 @@ spec:
             <the whole instruction for the run>
 ```
 
-Note `allowQuery` without `allowWrite`: the source systems stay read-only, and
-the only side effect points outward through the Toolset.
+**Write `allowWrite: false` on every entry.** This processor resolves a
+*missing* `allowWrite` to **true**, so leaving it off is not "read-only by
+default" - it is a silent write path into the customer's systems, granted to
+the one kind of run that has nobody watching it. Spelled out, the source
+systems stay read-only and the only side effect points outward through the
+Toolset.
+
+The same rule is why `Agent.managed.semanticLayers[]` always carries an
+explicit `allowWrite: false`.
 
 **No `listen-message` processor.** This is not a conversation - the Trigger
 fires once, the run does the whole batch, and it ends. There is no second turn
@@ -110,6 +124,26 @@ The Workflow still needs the full workflow-set label set, with
 
 **Do not write a BotProvider.** The Trigger reconciler provisions it, its
 API-key Secret, and the CronJob.
+
+
+### The cron field takes less than crontab does
+
+The CRD's pattern accepts `*`, a single number, and `*/n` per field. It does
+**not** accept ranges or comma lists, which are the two things an ordinary
+crontab reaches for first:
+
+| expression | |
+|---|---|
+| `0 * * * *` | accepted |
+| `*/15 * * * *` | accepted |
+| `0 9-18 * * *` | **rejected** - no ranges |
+| `0 9,13,17 * * *` | **rejected** - no comma lists |
+
+So "every hour during business hours" cannot be expressed; it is every hour or
+nothing. The day-of-month field also starts at 1 rather than 0.
+
+`helm lint` does not check the pattern - the rejection comes from the apiserver
+at apply time, which means during CD.
 
 ## The two labels that decide whether it is editable
 

@@ -41,6 +41,12 @@ type Kind struct {
 	Needs   []string
 	Extract string // which usecase extract covers it
 
+	// Wiki is the platform wiki page that says what this thing IS, as opposed
+	// to how it is assembled. An extract assumes the reader already knows the
+	// platform has this shape; the wiki page is where that comes from, so the
+	// two are read in that order.
+	Wiki string
+
 	// AlsoRead are extracts that cover the mechanism rather than the shape.
 	// Without these a reader is told how the shape is arranged and not how the
 	// pieces inside it pass values to each other, which is where the silent
@@ -58,6 +64,7 @@ var Kinds = []Kind{
 		Prefix: "dc-", Files: []File{{Dir: "data_connector", Template: "dataconnector.yaml.tmpl"}},
 		Needs:   []string{"--db-class postgres|mssql"},
 		Extract: "semantic-layer",
+		Wiki:    "settings",
 		Values: `
 # <<.DisplayName>>
 <<.ValuesKey>>DB:
@@ -73,6 +80,7 @@ var Kinds = []Kind{
 		Prefix: "sl-", Files: []File{{Dir: "semantic_layer", Template: "semanticlayer.yaml.tmpl"}},
 		Needs:   []string{"--connector dc-<name>"},
 		Extract: "semantic-layer",
+		Wiki:    "semantic-model",
 		After: []string{
 			"Introspect the real database before filling in cubes. Do not guess a",
 			"  schema: load .agents/skills/semantic-layer-modeling/ and query it.",
@@ -88,6 +96,7 @@ defaultSemanticLayerEffort: "medium"
 		Prefix: "ag-", Files: []File{{Dir: "agent", Template: "agent.yaml.tmpl"}},
 		Needs:   []string{"--layer sl-<name> (optional)"},
 		Extract: "agent-hub",
+		Wiki:    "agents",
 		After: []string{
 			"a project heading for a deploy needs at least one Syncer, and a SkillSet",
 			"  brings one - CD fails a deployed project that has no Syncer at all:",
@@ -104,6 +113,7 @@ defaultSemanticLayerEffort: "medium"
 		Prefix: "wf-", Files: []File{{Dir: "tool", Template: "httptool.yaml.tmpl"}},
 		Needs:    []string{"--toolset ts-<name>", "--write for a gated write path"},
 		Extract:  "external-api",
+		Wiki:     "api",
 		AlsoRead: []string{"api-oauth", "workflow-chain"},
 		After: []string{
 			"Measure the request and response against the real API. The body field",
@@ -122,6 +132,7 @@ defaultSemanticLayerEffort: "medium"
 		Prefix: "wf-", Files: []File{{Dir: "tool", Template: "querytool.yaml.tmpl"}},
 		Needs:    []string{"--connector dc-<name>", "--toolset ts-<name>"},
 		Extract:  "fixed-query-tools",
+		Wiki:     "workflow",
 		AlsoRead: []string{"workflow-chain"},
 	},
 	{
@@ -129,6 +140,7 @@ defaultSemanticLayerEffort: "medium"
 		Prefix: "sk-", Files: []File{{Dir: "skill_set", Template: "skillset.yaml.tmpl"}},
 		Needs:   []string{"--repo <git url>", "--private if it needs a PAT"},
 		Extract: "skill-set",
+		Wiki:    "tools",
 		After: []string{
 			"searchPaths must name one directory per skill. A parent directory",
 			"  resolves to nothing, and no check catches it - the symptom is an agent",
@@ -138,8 +150,9 @@ defaultSemanticLayerEffort: "medium"
 	{
 		Name: "trigger", Summary: "scheduled run, with its entrypoint Workflow",
 		Prefix: "tr-", Files: []File{{Dir: "trigger", Template: "trigger.yaml.tmpl"}},
-		Needs:    []string{"--layer sl-<name> (repeatable)"},
+		Needs:    []string{"--layers sl-<name> (repeatable; --layer, singular, is a different flag this kind ignores)"},
 		Extract:  "trigger",
+		Wiki:     "automation",
 		AlsoRead: []string{"workflow-chain"},
 		After: []string{
 			"platformMainEnvironmentId must be a real value in chart/values-<env>.yaml.",
@@ -163,6 +176,7 @@ triggers:
 		Files:   []File{{Dir: "source_set", Template: "knowledgedrive.yaml.tmpl"}},
 		Needs:   []string{"--connector dc-<name> for the database Syncer"},
 		Extract: "knowledge-drive",
+		Wiki:    "knowledge",
 		After: []string{
 			"Mount it read-only from the blueprint, and tell the agent in its prompt",
 			"  to query the graph first and then read only the files it points at -",
@@ -178,6 +192,7 @@ triggers:
   dbSync:
     schedule: "0 9 * * *"
     suspend: "false"
+    batchSize: 1000
   contextIndex:
     schedule: "0 10 * * *"
     suspend: "false"
@@ -189,6 +204,7 @@ triggers:
 		Files:   []File{{Dir: "plugin", Template: "plugin.yaml.tmpl"}},
 		Needs:   []string{"--connector ss-<name> for the skill store (defaults to ss-skill-repos)"},
 		Extract: "plugin",
+		Wiki:    "tools",
 		After: []string{
 			"Load it from a blueprint: pluginNames is a comma-separated string, or",
 			"  an expression that computes the list from the caller's payload.",
@@ -204,7 +220,8 @@ triggers:
 		},
 		Needs:    []string{"--public for an anonymous audience", "--toolset / --layer for its capabilities", "--bot-class generic|line|telegram|discord|slack (defaults to generic)"},
 		Extract:  "flow-agent-single",
-		AlsoRead: []string{"workflow-chain", "chat-channel"},
+		Wiki:     "agents",
+		AlsoRead: []string{"workflow-chain", "chat-channel", "per-turn-credentials"},
 		After: []string{
 			"a project heading for a deploy needs at least one Syncer, and a SkillSet",
 			"  brings one - CD fails a deployed project that has no Syncer at all:",
@@ -382,6 +399,22 @@ func Resolve(root string, kind Kind, opts Options) (Options, []string, error) {
 		if note := botClassNote(opts.BotClass); note != "" {
 			notes = append(notes, note)
 		}
+	}
+
+	// A Plugin's skill store is a decision, not something to guess. Defaulting
+	// to a name nobody created writes a dangling reference; picking whichever
+	// SourceSet happens to exist picks a knowledge Drive about half the time,
+	// and the gate then rejects it for a reason that reads as unrelated.
+	if kind.Name == "plugin" && opts.Connector == "" {
+		return opts, nil, fmt.Errorf(
+			"a plugin's SkillSet needs a skill store, and which one is a decision:\n\n"+
+				"    asgard-cli add plugin %s --project %s --connector ss-<store>\n\n"+
+				"Every plugin in a chart shares ONE store - the skills live in one\n"+
+				"repository, so a SourceSet per bundle would clone it per bundle. It is\n"+
+				"not a knowledge Drive: that holds documents an agent reads, this holds\n"+
+				"skills it loads. If the chart has no store yet, create it with a git\n"+
+				"Syncer first. See `asgard-cli usecase plugin`",
+			opts.Name, opts.Project)
 	}
 
 	opts.SkillSets = chart.NamesOf(refs, "SkillSet")

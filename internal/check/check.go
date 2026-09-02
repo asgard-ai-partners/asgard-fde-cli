@@ -124,6 +124,9 @@ func Run(root string, only ...string) (Report, error) {
 	if err := c.checkDocs(); err != nil {
 		return Report{}, err
 	}
+	if err := c.checkOrphans(); err != nil {
+		return Report{}, err
+	}
 
 	return Report{Scope: scope, Findings: c.findings}, nil
 }
@@ -152,6 +155,23 @@ func (c *checker) discoverProjects() ([]string, error) {
 		}
 	}
 	sort.Strings(projects)
+
+	// A project the config declares but that has no chart on disk is the
+	// failure this check exists for: everything else here inspects files, so
+	// without this the repo passes and `render` is the first thing to say the
+	// project is not real.
+	if cfg, err := config.Load(filepath.Join(c.root, config.FileName)); err == nil {
+		on := make(map[string]bool, len(projects))
+		for _, p := range projects {
+			on[p] = true
+		}
+		for _, p := range cfg.Projects {
+			if !on[p.Slug] {
+				c.errf("%s declares project %q but projects/%s/chart/app has no Chart.yaml; "+
+					"run `asgard-cli scaffold` to write it", config.FileName, p.Slug, p.Slug)
+			}
+		}
+	}
 	return projects, nil
 }
 
@@ -500,4 +520,114 @@ func (c *checker) checkDocLinks(docs string) error {
 		}
 		return nil
 	})
+}
+
+// wikiPage reports whether a file under docs/ or requirements/ is a page that
+// somebody is expected to reach by following a link. READMEs are entry points
+// and are reached by opening a directory; a leading underscore marks an index
+// or a template, which is linked TO rather than linked FROM.
+func wikiPage(rel string) bool {
+	dir := filepath.ToSlash(filepath.Dir(rel))
+	if !strings.HasPrefix(dir, "docs") && !strings.HasPrefix(dir, "requirements") {
+		return false
+	}
+	// A living spec module is owned by checkLivingSpec, which compares the slug
+	// README against the files on disk and says exactly which is missing. That
+	// is the same defect stated more precisely, so reporting it here as well
+	// would print two findings for one problem.
+	if strings.HasPrefix(dir, "docs/spec/") {
+		return false
+	}
+	name := filepath.Base(rel)
+	return strings.HasSuffix(name, ".md") &&
+		name != "README.md" &&
+		!strings.HasPrefix(name, "_")
+}
+
+// checkOrphans reports pages nothing links to.
+//
+// It is the one part of a knowledge base's decay that is mechanical. A page
+// with no inbound link is not read, and the person who wrote it never finds
+// out, because the file is still sitting there: a decision nobody applied, a
+// module missing from its index, a task spec that fell out of the queue.
+//
+// A warning, not an error. A decision recorded today and not yet applied to the
+// living spec is an orphan for as long as that takes, and that is a normal
+// state to pass through - failing the gate on it would leave the gate red in
+// the middle of ordinary work. The three kinds of rot that are NOT mechanical -
+// two pages that contradict each other, a claim a newer source superseded, and
+// a concept discussed everywhere but owned by no page - need a reader, and the
+// knowledge-base skill under .agents/skills/ is how that pass is run.
+func (c *checker) checkOrphans() error {
+	linked := map[string]bool{}
+	var pages []string
+
+	err := filepath.Walk(c.root, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			switch info.Name() {
+			case ".git", ".out", "node_modules", ".venv":
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if !strings.HasSuffix(path, ".md") {
+			return nil
+		}
+
+		// Every markdown file in the repo counts as a source of links, not just
+		// the ones under docs/: AGENTS.md is where an agent starts, and a page
+		// reachable only from a skill is still reachable.
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return fmt.Errorf("read %s: %w", path, err)
+		}
+		for _, m := range markdownLink.FindAllSubmatch(data, -1) {
+			target := string(m[1])
+			if strings.HasPrefix(target, "http://") || strings.HasPrefix(target, "https://") || strings.HasPrefix(target, "/") {
+				continue
+			}
+			linked[filepath.Clean(filepath.Join(filepath.Dir(path), target))] = true
+		}
+
+		if rel, err := filepath.Rel(c.root, path); err == nil && wikiPage(rel) {
+			pages = append(pages, path)
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	sort.Strings(pages)
+	for _, path := range pages {
+		if linked[filepath.Clean(path)] {
+			continue
+		}
+		rel, _ := filepath.Rel(c.root, path)
+		c.warnf("%s has no inbound link, so nothing leads a reader to it: %s",
+			filepath.ToSlash(rel), orphanHint(rel))
+	}
+	return nil
+}
+
+// orphanHint names the index that was supposed to carry the link, because the
+// fix differs by layer and "add a link" does not say where.
+func orphanHint(rel string) string {
+	switch dir := filepath.ToSlash(filepath.Dir(rel)); {
+	case strings.HasPrefix(dir, "docs/decisions"):
+		return "link it from the living spec module it changed, and from docs/decisions/README.md"
+	case strings.HasPrefix(dir, "docs/meeting-notes"):
+		return "link it from the decision it converged into, or from docs/meeting-notes/README.md"
+	case strings.HasPrefix(dir, "docs/spec"):
+		return "add it to that slug's README module index"
+	case strings.HasPrefix(dir, "requirements/requests"):
+		return "register it in requirements/requests/_index.md"
+	case strings.HasPrefix(dir, "requirements/tasks"):
+		return "register it in requirements/tasks/_index.md"
+	default:
+		return "link it from the index of its layer"
+	}
 }

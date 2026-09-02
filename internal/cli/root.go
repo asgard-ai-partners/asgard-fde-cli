@@ -54,6 +54,7 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 		newCheckCmd(),
 		newDecisionCmd(),
 		newDoctorCmd(),
+		newFindCmd(),
 		newInitCmd(),
 		newNextCmd(),
 		newProjectCmd(),
@@ -65,6 +66,7 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 		newUsecaseCmd(),
 		newVerifyCmd(),
 		newVersionCmd(),
+		newWikiCmd(),
 	)
 
 	return cmd

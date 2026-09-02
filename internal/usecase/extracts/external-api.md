@@ -6,6 +6,13 @@ a partner's REST API, an internal service.
 **Seen in:** a shopping assistant whose entire read path is two HTTP APIs, and a
 notification chain that posts outward to a mail endpoint.
 
+**Checked:** 2026-09-02 against a search tool's http-request workflow - update-context first, parseJson, header configs, httpResponse - and the CRD.
+
+**Unchecked:** the advice on measuring the request against the real API. That is the step this page exists to make you take, and it cannot be done here.
+
+**Read the platform side first:** `asgard-cli wiki api` -
+the endpoint, the SSE event sequence, and the four integration patterns. This page assumes you have.
+
 ## First: is an API the right route at all?
 
 Per system, take the most capable route it offers:

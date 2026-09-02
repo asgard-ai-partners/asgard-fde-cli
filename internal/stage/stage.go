@@ -38,6 +38,8 @@ const (
 	Deploy      Name = "deploy"
 	Enhance     Name = "enhance"
 	Idle        Name = "idle"
+
+	Requirements Name = "requirements"
 )
 
 // Stage is one step, in the order they have to happen.
@@ -72,9 +74,23 @@ var Stages = []Stage{
 // two of them, and the only question it can ask is what the customer wants next.
 var IdleStage = Stage{Idle, -1, "Nothing in flight", "10-idle.md"}
 
+// RequirementsStage is the interview that turns what a customer said into a
+// request. It is outside the numbered walk for the same reason IdleStage is,
+// but the opposite way round: not a state between two steps, but the one an FDE
+// is in before the repository can show anything at all. Current never returns
+// it, because a conversation leaves no trace on disk until it is written down -
+// so it is read deliberately, with `next --stage requirements`, and it is worth
+// reading again at every later request rather than only the first.
+var RequirementsStage = Stage{Requirements, -1, "Turn what the customer said into a request", "11-requirements.md"}
+
+// Readable is every stage a person can ask for by name, which is more than the
+// walk: the two outside it are reached only with `next --stage`, and anything
+// iterating stages (rendering, --list, tests) has to see them too.
+var Readable = append(append([]Stage{}, Stages...), RequirementsStage, IdleStage)
+
 // Find returns the stage with the given name.
 func Find(name string) (Stage, bool) {
-	for _, s := range append(Stages, IdleStage) {
+	for _, s := range Readable {
 		if string(s.Name) == name {
 			return s, true
 		}
@@ -337,10 +353,15 @@ func (s Stage) Prompt(cfg *config.Config, state State) (string, error) {
 }
 
 func (s Stage) String() string {
-	switch s.Number {
-	case IdleStage.Number:
+	// Switch on the name, not the number: the stages outside the walk share the
+	// number -1, so matching on it labelled the requirements interview "nothing
+	// in flight" - the opposite of what a reader is being told at that point.
+	switch s.Name {
+	case Idle:
 		return "nothing in flight"
-	case 0:
+	case Requirements:
+		return "before the walk: the interview"
+	case Init:
 		return "not started yet"
 	}
 	return fmt.Sprintf("stage %d of %d: %s", s.Number, len(Stages)-1, s.Title)

@@ -97,6 +97,15 @@ type xref struct {
 	// skillSetsBySourceSet finds a SourceSet shared by two SkillSets, which
 	// leaves the UI unable to show either one's git configuration.
 	skillSetsBySourceSet map[string][]string
+
+	// bundledSkillSets are the SkillSets a Plugin carries. They are exempt from
+	// the one-SourceSet-each rule: a chart of bundles shares one skill store on
+	// purpose, because the skills live in one repository and a store per bundle
+	// would clone it per bundle. A deployment with 28 Plugins has exactly one
+	// store. Those SkillSets are the Plugin's implementation rather than
+	// something a person picks in the UI, so the UI cost the rule protects
+	// against is one the shape accepts knowingly.
+	bundledSkillSets map[string]bool
 }
 
 func (x *xref) errf(format string, args ...any) {
@@ -109,6 +118,7 @@ func (x *xref) buildLookups() {
 	x.labelsBySourceSet = map[string]map[string]string{}
 	x.syncerDestsBySourceSet = map[string]map[string]bool{}
 	x.skillSetsBySourceSet = map[string][]string{}
+	x.bundledSkillSets = map[string]bool{}
 
 	for _, d := range x.docs {
 		switch d.Kind {
@@ -138,6 +148,13 @@ func (x *xref) buildLookups() {
 		case "SkillSet":
 			if ref := digStr(d.Spec, "sourceSetName"); ref != "" {
 				x.skillSetsBySourceSet[ref] = append(x.skillSetsBySourceSet[ref], d.Name)
+			}
+
+		case "Plugin":
+			for _, e := range digList(d.Spec, "skillSets") {
+				if name := digStr(mapOf(e), "name"); name != "" {
+					x.bundledSkillSets[name] = true
+				}
 			}
 		}
 	}
@@ -327,7 +344,22 @@ func (x *xref) checkSkillSet(d Doc) {
 	// POST /v1/skill-set/from-git creates the three together and binds them,
 	// and the UI shows them that way; sharing a SourceSet leaves the UI unable
 	// to find a given skill set's git configuration.
-	owners := x.skillSetsBySourceSet[ref]
+	// A SkillSet a Plugin bundles is exempt from both rules below: the shared
+	// store is the point of the shape, and it carries no managed-by label
+	// because the platform is not meant to present it as a skill set at all.
+	if x.bundledSkillSets[d.Name] {
+		return
+	}
+
+	// Count only the SkillSets a person is meant to pick in the UI. A Plugin's
+	// bundled ones share the store on purpose and are filtered out on both
+	// sides: they neither trigger the rule nor make another SkillSet trigger it.
+	var owners []string
+	for _, o := range x.skillSetsBySourceSet[ref] {
+		if !x.bundledSkillSets[o] {
+			owners = append(owners, o)
+		}
+	}
 	if len(owners) > 1 {
 		sorted := append([]string(nil), owners...)
 		sort.Strings(sorted)
