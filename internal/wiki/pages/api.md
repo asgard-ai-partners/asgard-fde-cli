@@ -51,6 +51,27 @@ The ordinary sequence is `run.init`, `message.start`, one or more
 `message.delta`, `message.complete`, then either back to `message.start` or on to
 `run.done`.
 
+## Sending a file is two calls
+
+A file does not travel with the message. Upload it, keep the id, send the
+message referencing it:
+
+    POST .../bot-provider/<name>/blob            multipart/form-data
+      customChannelId, file                      -> a blobId
+
+    POST .../bot-provider/<name>/message/sse     the ordinary send
+      customChannelId, text, blobIds: [ ... ]    an array, several files
+
+**`customChannelId` has to match across both**, as it does for everything else -
+it is what ties a conversation together, and an upload that used a different one
+is attached to a conversation nobody is having.
+
+Inside the workflow the files arrive as `prevBlobs`, an array of Blob with
+`blobId`, `fileType`, `fileName`, `size` and `mime` - see
+[`processors.md`](processors.md), including that ECMA5 has no optional chaining,
+so every access to it is written defensively or throws on the turn somebody sends
+no file.
+
 ## What an event actually looks like
 
 Every event carries the same envelope, and the payload is a **tagged union**:
@@ -165,6 +186,10 @@ token chain, and `workflow-chain` what passes between processors.
 - [Authentication](https://docs.asgard-ai.com/docs/developer-reference/authentication)
   - asgard-docs `f00e0ee`
 
+- The two-call file path and `blobIds`:
+  [upload file](https://docs.asgard-ai.com/docs/developer-reference/api-doc/send-message/upload-file-api)
+  and [append file and send](https://docs.asgard-ai.com/docs/developer-reference/api-doc/send-message/append-file-and-send-message-api)
+  - asgard-docs `f00e0ee`, read 2026-09-02
 - The event envelope, the `fact` union and `runError.location`: the eleven pages
   under [send-message/sse-response](https://docs.asgard-ai.com/docs/developer-reference/api-doc/send-message/sse-response),
   read 2026-09-02. They had not been read into this material before then - this

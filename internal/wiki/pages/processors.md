@@ -50,6 +50,7 @@ throw at run time on the turn where a user sends no file:
 |---|---|
 | `history(start, end)` | conversation history as plain text, one line per turn. Indices are inclusive and **negative counts from the end** - `history(0, -1)` is everything |
 | `historySize()` | how many turns there are |
+| | **`prevMessage` against `history`** is the choice: one turn, or context. `history(-3, -1)` is the last three, and an echo or a single lookup wants neither |
 | `urlEncode(s)` | for building a URL in an `http-request` |
 | `xpathExtract(...)` | pull a value out of XML or HTML |
 | `vecToStr(...)` | a vector as a string |
