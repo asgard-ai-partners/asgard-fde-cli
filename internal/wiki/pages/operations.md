@@ -41,13 +41,41 @@ from these four fixed addresses:
 All four have to be allowlisted, not one - which of them a given request leaves
 from is not something to rely on.
 
+### How these are handed over, which is not "in the deck"
+
+**Do not copy them into a customer repository, a proposal, or an email that will
+be forwarded.** Give them directly to the person making the firewall change,
+once, and read them from here when you do.
+
+The reason is this material's own core argument, applied to itself. The
+screenshots page refuses to carry images because *a copy in one engagement goes
+stale where nobody is looking* - and an address is the same kind of thing with a
+worse failure. **A stale screenshot is embarrassing; a stale allowlist is the
+customer's connection dropping, and they will come back to us about it.** Every
+copy in a repo, a slide or a mail thread is a copy nobody will update.
+
+It also resolves a contradiction that was sitting in plain sight: the
+`proposal-deck` skill forbids **coordinates** on a customer's screen - hostnames,
+connection strings, account names, not even in a screenshot's corner - and that
+rule is about the customer's infrastructure. Ours is the same class of thing, and
+this page was encouraging the opposite. Two documents, opposite instincts, and
+nothing said they were about the same subject.
+
+**In the meeting, ask who can change the firewall.** That is the question. The
+addresses go to that person afterwards.
+
+**Nothing here records how these change.** They read as constants and there is no
+documented channel for a revision, which is itself worth knowing before treating
+a copy of them as durable.
+
 Two things this changes in an interview.
 
 **It is a question with a known answer, so ask it in the first meeting.** "Is
 this system reachable from outside your network, and who can add four addresses
-to the allowlist?" hands their network admin exactly what they need. The failure
-this avoids is discovering in week three that the credential works, the query is
-right, and nothing can connect.
+to our allowlist entry?" - the question, not the addresses. It gives their
+network admin the shape of the change without putting the values into the
+meeting, and it avoids discovering in week three that the credential works, the
+query is right, and nothing can connect.
 
 **It has an owner and a lead time on their side.** An allowlist change is a
 firewall change, and in most companies that is a ticket, an approval and a

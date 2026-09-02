@@ -329,7 +329,7 @@ count.
 | an Agent mounting a SemanticLayer | 一個能自己查資料的專員 / it works out its own query |
 | a Trigger | 定期自動跑 / it runs on a schedule and only reports |
 | a SemanticLayer over a database | 讀得到那套系統 / it can read that system |
-| the outbound-IP allowlist request | 把這四個位址加進防火牆白名單 / add these four addresses to the firewall's allowed list |
+| the outbound-IP allowlist request | 把這四個位址加進防火牆白名單 / add these four addresses to the firewall's allowed list. **The sentence, not the values** |
 | browser operation | 沒有介接管道,要照著人的操作做 / no way in but the screen |
 
 The browser-operation row is the one to say plainly rather than smooth over. It
@@ -617,8 +617,17 @@ second the moment anyone else opens the deck.
 - **Another customer.** No name, no logo, no screenshot, no "we did this for a
   retailer with 200 stores" that is recognisable. Their engagement is not ours to
   spend.
-- **Credentials and coordinates.** No hostnames, no connection strings, no
-  account names, not even in a screenshot's corner. Check the screenshots.
+- **Credentials and coordinates - theirs and ours.** No hostnames, no connection
+  strings, no account names, not even in a screenshot's corner. Check the
+  screenshots.
+
+  **And not Asgard's outbound addresses either.** They belong in the firewall
+  ticket, given to the person making the change - not on a slide, not in the
+  repository, not in a mail thread that gets forwarded. They can change, and a
+  copy will not; a stale allowlist is the customer's connection dropping.
+  `asgard-cli wiki operations` is the source to read them from each time. What
+  goes in the deck is the request - 把這四個位址加進防火牆白名單 - and never
+  the values.
 - **A capability nobody has verified.** If it is not in `references/`, in a
   meeting note, or measured, it is not a promise.
 - **An implementation noun inside a screenshot.** The rule above is not only

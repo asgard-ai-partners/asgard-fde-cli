@@ -191,8 +191,14 @@ integration from days into weeks by being discovered late:
 
     Ask who approves a firewall change and how long one takes there - it is a
     ticket, an approval and a window in most companies, not something the person
-    in the meeting can do that afternoon. `asgard-cli wiki operations` has the
-    addresses to hand over on the spot. This is the single most expensive thing
+    in the meeting can do that afternoon.
+
+    **Ask for the person; do not hand out the addresses.** They go to whoever
+    makes the change, once, read fresh from `asgard-cli wiki operations` - not
+    into this repository, not onto a slide, not into a thread that gets
+    forwarded. They can change and a copy will not, and a stale allowlist is the
+    customer's connection dropping. Coordinates in a committed record are the
+    thing section 4 already refuses; ours are the same class as theirs. This is the single most expensive thing
     to discover in week three, and it costs one sentence to ask in week one
   - who issues the credential, by name or role. A credential with no owner is
     not a dependency, it is a delay
