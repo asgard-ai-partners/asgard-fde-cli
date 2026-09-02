@@ -127,26 +127,34 @@ slide about limiting access is the overstatement this tool warns about most.
 Not everything does, and assuming otherwise wastes a search:
 
   - the chart, the CRs, the cluster - there is no UI for any of it
-  - **a chat platform's own console (LINE, Slack, Telegram), and LINE is the
-    one that hurts.** `integration.md` says a Taiwanese customer usually asks
-    about LINE first, and there is no picture of an Asgard agent answering in
-    it - not here, not in the product documentation, not in any reference
-    deployment, where every BotProvider is `generic`. So the channel asked about
-    most often is the one a proposal cannot show.
+  - **LINE: images exist and they are of a product that no longer looks like
+    that.** `integration/LINE` carries two, hash-named rather than in a topic
+    directory, which is why a survey of the topic folders misses them:
 
-    **Do not go looking; this square is empty.** Two ways through it, and the
-    second is better than it sounds:
+        /img/docs/60e2492a66bf.png    the prerequisites
+        /img/docs/f3563b5553dc.png    the integration dialog, LINE selected,
+                                      Channel Secret and Access Token fields
 
-        weak      show the retail demo and say "this is not LINE, but the
-                  mechanism is the same". It reads as not having one
-        better    show nothing, and describe the exchange in their words -
-                  "your customer types their order number in LINE, it replies
-                  with the repair status, and says so plainly when it cannot
-                  find it". Slide 5 is an interaction, not a screen, and this
-                  is the one case where writing it out beats a picture
+    The second one is the screen a customer would want to see. **It is the old
+    console** - a left nav of Overview / Workflows / Knowledge / Environment /
+    Apps, and a card dated 2024/09/20 - and today's Odin has none of those.
+    `integration.md` already flags those four pages as possibly stale for the
+    same reason.
 
-    A vendor's own documentation screenshot is not an option: it is someone
-    else's product surface in our proposal.
+    So the answer is still not to use them, but for a checkable reason rather
+    than because none exist: **a screenshot of a console the customer will not
+    recognise is worse than no screenshot**, and this is the exact failure this
+    page warns about, in the one place somebody would most want to ignore it.
+
+    What to do instead, and it is better than it sounds: describe the exchange
+    in their words - "your customer types their order number in LINE, it replies
+    with the repair status, and says so plainly when it cannot find it". Slide 5
+    is an interaction, not a screen. A vendor's own documentation screenshot is
+    not an option either: it is someone else's product surface in our proposal.
+
+    **If somebody captures a current one, this is the highest-value screenshot
+    missing** - it is the channel a Taiwanese customer asks about first.
+
   - anything about handoff, pausing, or per-user counters, because the platform
     does not have them - see [`integration.md`](integration.md)
 

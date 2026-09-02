@@ -102,47 +102,49 @@ names is not reading a repository.
 
 ### Open, in the order an engagement hits them
 
-  1. **`asgard-freyr-skills` has a skill taxonomy nothing here describes** -
-     baseline (how to call safely), domain (what each screen does and the task
-     flows), role (how one job holder reasons). Nine skills across three layers,
-     with explicit dependencies between them. This is the answer to "when do you
-     need a skill", which `usecase skill-set` does not give - it answers
-     design-time versus runtime and stops. **Write `skill-layers`.**
-  2. **Slide 9 of a proposal mixes two opposite kinds of unknown.** The
-     customer's environment belongs there; our own platform's capabilities do
-     not - standing in front of a customer saying we do not know what our own
-     product does is not honesty. `wiki platform-unknowns` already says to ask
-     the platform team **before** the meeting; `proposal-deck` tells you to
-     print the list. The two documents contradict each other.
-  3. **Freyr is multi-tenant and `next --stage init` says it cannot be.** "One
-     workspace is one repository" is stated as the shape; Freyr runs several
-     tenants from one repository, each with its own namespace and its own
-     `deploy.yaml`, with the CI matrix built by scanning them. Either the rule
-     has an exception or Freyr is the exception - unresolved either way, and an
-     FDE reading both is stuck.
-  4. **`ConfigMap` is undocumented and there are 82 of them.** They carry
-     `node_positions` - the x/y layout of a Workflow in the platform's editor -
-     and are bound by the `asgard-ai.com/workflow-config-name` annotation.
-     Without one the graph opens as a pile. Same family as the missing
-     `project-environment-id` label, and nothing says either.
-  5. **`KnowledgeBase` + `Loader` + `Source` appear in exactly one chart** and
-     nothing covers them. The wiki says the Drive is preferred for new work and
-     that this path is still live; the only deployment using it is Heimdall.
-  6. **Fehu and the Management Console have no proposable shape.** Both are in
-     `wiki product-suite` as products. Neither is anything an engagement can put
-     in a proposal, and the next customer question about cost or about
-     permissions lands here.
-  7. ~~**`asgard-core`'s processor constants have never been read.**~~ **Done.**
-     Fetched through the API rather than cloned. `wiki workflow`'s 13 types match
-     `ProcessorDefinitions` exactly. The remaining value in that file is the
-     per-processor static config definitions - name, type, required, default,
-     description for every config key - which nothing here carries and which is
-     what a chart author actually needs while writing a processor. Worth a pass.
-  7b. **~~`asgard-core`'s processor constants have never been read.~~** The
-     authoritative list is `internal/constants.go`; `wiki workflow` says 13
-     processors, sourced from the CRD. Four processors named in the contract
-     appear in no chart, and this is the file that would say whether they exist.
-     The repository is not cloned locally.
+  1. **69 of asgard-docs' 162 pages are cited by a wiki page. 93 are not.** The
+     index reported 130 cited and "100% of what is in scope", and that number
+     was believed rather than checked - twice, including by whoever is reading
+     this. Its own exclusions account for 33, so **60 pages are uncited and
+     unaccounted for**. What is in them:
+
+     | uncited | why it matters |
+     |---|---|
+     | `integration/LINE`, `Slack`, `Telegram`, `SDK`, and the four `integration-with-asgard/` pages | **every channel page.** `integration.md` cites them in prose and no page is built from them. LINE is what a Taiwanese customer asks about first |
+     | `developer-reference/api-doc/**` - 15 pages of send-message, SSE events, file upload | `api.md` describes the SSE sequence; the per-event pages are the contract |
+     | `overview/asgard-concepts`, `asgard-ai-workflow`, `why-asgard` | the vocabulary a customer will have read before meeting us |
+     | `product-suite/*/about-*/intro`, `product-suite/index`, `quickstarts-guide` | the product framing, per product |
+     | `help-community/other/compare-conversation-context-retrieve-method` | a comparison of retrieval methods, and this repo has reversed a retrieval decision once |
+
+     **Walk them in that order.** The channel pages first: that is where an
+     engagement is blocked today.
+
+  2. **Heimdall has one documentation page and it is a link to a marketing
+     site.** The deployment behind it - a content pipeline with 28 Plugins, the
+     only `KnowledgeBase` in any chart, and a scheduled web crawl - is here and
+     mined for two extracts. So the product an engagement might be asked about
+     has no material, while its deployment is one of the best-documented. Decide
+     whether Heimdall is in scope for an FDE at all, and write that down either
+     way.
+
+  3. **`ConfigMap` is now documented; `size` does not count them.** One per
+     Workflow, and a chart with six Workflows needs six. Small, and the estimate
+     is wrong by exactly that much.
+
+  4. **The per-processor config definitions in `asgard-core` are not carried.**
+     Name, type, required, default and description for every config key of every
+     processor - which is what a chart author needs while writing one, and the
+     only place it exists. `wiki workflow` has the type list and nothing below
+     it.
+
+  5. **Fehu and the Management Console reached the walk today; neither has an
+     extract.** The Console's fact is a go-live blocker - build a resource, skip
+     the grant, the customer sees nothing - and it is now in `08-deploy.md`.
+     Whether either needs more than that is unjudged.
+
+  6. **No engagement has been walked end to end with the current material.**
+     Everything above was found by watching one, at stage 2. Stages 3 to 9 have
+     been read but not exercised since any of this changed.
 
 ## What is not done
 

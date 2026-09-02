@@ -388,6 +388,26 @@ impression.
 Then work out what that one item genuinely needs, and the two filters below turn
 the rest into deferred scope rather than open questions.
 
+**6c. Do they need to know what it will cost to run?**
+
+Not our fee - the platform's usage billing, which is a separate question and one
+a customer with a procurement process will ask before signing anything.
+
+`asgard-cli wiki fehu` has how it is broken down: by **Service** (Platform,
+Knowledge Base, Data Insight, Agent Hub, Heimdall) and by **Item** (Project
+Usage, Processor Usage, Seat), in units of Units-Days, GB-Days and Times.
+
+Two things worth knowing before answering:
+
+  - **the Workspace is the billing unit.** So how the work splits into projects
+    and workspaces has a cost consequence, and the split is decided at stage 2 -
+    before anybody has asked this question. Ask it now
+  - **a seat is a line item.** "Everyone in the company can use it" is a
+    sentence with a price, and the customer usually has not connected the two
+
+If they do not raise it, say the shape of it anyway, once. A cost discovered
+after a pilot is the reason a pilot does not convert.
+
 **7. What is explicitly out of scope?**
 
 Write down what you are NOT building, particularly the things they mentioned in
