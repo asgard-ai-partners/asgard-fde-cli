@@ -263,8 +263,46 @@ integration from days into weeks by being discovered late:
   - who issues the credential, by name or role. A credential with no owner is
     not a dependency, it is a delay
   - for an API instead of a database: the auth scheme, who holds the client id
-    and secret, whether there is a sandbox, and the rate limit - the rate limit
-    decides whether a Syncer can backfill at all
+    and secret, and the rate limit - the rate limit decides whether a Syncer can
+    backfill at all
+  - **is there a test environment for this system?** Ask it of every system, not
+    only of APIs. It decides what the first delivery can actually do:
+
+        there is one        the test period runs against it, and the whole path
+                            is genuinely proved - fields, validation, status
+                            codes, all of it
+        there is not, read  ask whether they permit reading production data
+                            during a test. Some security policies do not, and
+                            that is a go/no-go for the first meeting rather
+                            than for week three
+        there is not, write drafting or a mock, and say so now
+
+    **Do not call it a sandbox in front of anyone.** In this material a sandbox
+    is the thing the platform starts to run an agent in - a different subject
+    that appears a few paragraphs above this one.
+
+    And when there is one: **production and test schemas differ**, in shape and
+    in volume. A query built against a test database is not proved against
+    production, which is the same problem as guessing a schema.
+
+**For a system we will write into, that list asks nothing useful.** Host and
+port and read-only do not describe creating a record. Ask instead:
+
+  - **what is the token allowed to do?** Not how many credentials they will
+    issue and not whose name it sits under - what the one we get may do
+  - **what does creating one of these require?** The mandatory fields and the
+    validation rules, and ask for the document rather than the answer - see the
+    asking ladder above
+  - **which field on the record says which of their customers this is for?**
+    The one genuinely ours, because the agent fills it. Everything else about
+    that record is their system's business
+
+**Their side of that record is not ours to design.** Whether the token is a
+service account or sits under a named person, whether their system routes or
+counts SLA by creator, how they notify - **do not ask**. It changes nothing we
+build, and asking it in front of a customer is designing their permissions for
+them. Filter 0 below is the test; this is the case it catches most often,
+because a write makes the questions feel responsible.
 
 They go in the request's section 4, one block per system.
 

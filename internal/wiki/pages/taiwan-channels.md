@@ -51,11 +51,17 @@ having SHOPLINE behind it: it says the work is understood rather than unfamiliar
 No table of which platform offers an open API, because that changes and this page
 would be stale before it was useful. What does not change is the ladder:
 
-    an open API with a sandbox    `asgard-cli usecase external-api`
-    an open API, no sandbox       the same shape, tested against production
+    an open API with a test environment   `asgard-cli usecase external-api`
+    an open API, production only          the same shape - and **ask whether
+                                          they permit testing against it**,
+                                          rather than assuming
     a data export only            a Syncer over files, not a live integration
     only a web back office        browser operation - and SHOPLINE is what that
                                   costs: 88 pages before the first useful call
+
+**"Sandbox" means the platform's own here.** A customer's test environment is
+called that, everywhere, because the agent runs in a sandbox the platform starts
+and the two collide in the same paragraph otherwise.
 
 **Ask about each channel separately.** They differ, and one back-office-only
 channel among four sets the cost of the whole item. A customer answering "yes we

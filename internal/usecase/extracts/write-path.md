@@ -46,6 +46,25 @@ this shape, and it changes the project's architecture: a write path needs its ow
 spec, its own credentials, and a decision about what happens when the human says
 no.
 
+## What to ask the customer, before any of the below
+
+This page was implementation-only, and an FDE asked to design a write had to
+invent the questions - which is how a list arrived that designed the customer's
+permission model for them. Four things, and only four:
+
+    what may the token we get actually do?
+    what does creating one of these require - fields, validation rules?
+      and ask for their document rather than for the answer
+    is there a test environment we can write into?
+    which field on the record identifies the end customer it is for?
+
+**The last one is the only part of their record that is ours.** The agent fills
+it. Everything else about how that record behaves inside their system - who it
+is attributed to, whether it routes by creator, whether it counts against
+somebody's SLA - is theirs, and asking reads as designing their organisation.
+
+**The third one comes before deciding to mock.** See below.
+
 ## Two questions to settle before writing any of it
 
 **1. Does the write point outward, or at a source system?**
@@ -233,11 +252,23 @@ evaluation fails at call time, not at apply time, so the chart deploys and the
 tool breaks the first time someone uses it. Leave the variables list empty until
 infra has provisioned the key.
 
-## A mock is a legitimate state, and it has one rule
+## A mock is a fallback, not the default
 
-Where the endpoint is not available yet - the customer has not provided it, or
-the integration is later in the plan - a mock that echoes the request back is the
-right thing to ship. The whole chain gets exercised, and the drafted call lands
+**Ask whether there is a test environment first.** If there is, write into it -
+the whole path is then genuinely proved, including the fields, the validation
+rules and the status codes, and none of that is proved by a mock. Reaching for
+a mock before asking loses the strongest version of the first delivery, and
+"shall we really create the ticket, or just draft it" is a question that assumes
+they have only production.
+
+Two situations where it is right, and they are different:
+
+    no test environment, and they will not
+    let us write to production                a mock. Their call, not ours
+    the endpoint does not exist yet -
+    not provided, or later in the plan        a mock
+
+A mock that echoes the request back is the right thing to ship in either case. The whole chain gets exercised, and the drafted call lands
 in the invocation record for review.
 
 **Returning success is deliberate**: a failure would stop a cursor and the path

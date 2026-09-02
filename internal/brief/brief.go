@@ -74,6 +74,12 @@ edited and re-rendered; a wrong sentence is in their notes.`,
 				"asgard-cli size flow-agent-single",
 			},
 			{
+				"how a write is tested",
+				`"during the test, shall we really create the ticket or just draft it?"`,
+				"**Ask whether they have a test environment first.** That question assumes they only have production, and it gives away the strongest version of the first delivery: writing into a test system proves the fields, the validation rules and the status codes, and a mock proves none of them. A mock is the fallback when there is no test environment - or when they will not let us write to production, which is their call",
+				"asgard-cli usecase write-path",
+			},
+			{
 				"whether it can do things, not only answer",
 				`"we would have to build an approval step for that"`,
 				"The approval gate is **what the platform is built around**. A write stops, names the tool, and nothing runs until a person allows it. It is not custom work",
