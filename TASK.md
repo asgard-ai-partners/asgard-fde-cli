@@ -98,6 +98,44 @@ reason is next to it.
   `retrieve-knowledge` processors** appear in the platform's contract and in no
   chart that has been read. Either they are unused in practice, which is worth
   knowing, or the sample of deployments read so far is too small.
+- **Which deployments have been mined has never been written down, and the
+  suspicion above turned out to be right.** A finance deployment sitting in the
+  same parent directory the whole time carries a shape nothing here covered - a
+  SemanticLayer deliberately bound to no Agent, whose consumer is Mimir - and it
+  was found by a customer asking for it, not by anyone looking. `mimir-dashboard`
+  now covers it. What is still missing is the audit: the six reference charts
+  between them declare `Toolset`, `Trigger`, `KnowledgeBase`, `Loader`, `Source`,
+  `Plugin` and `CompletionModel`, and nobody has checked those uses against the
+  extracts that claim to describe them.
+
+  **Do this before writing another extract.** One pass over the charts, listing
+  which shapes each one actually uses, turns "we think the sample is too small"
+  into a list. Every extract written without it is written from whichever
+  deployment somebody happened to remember.
+
+### The solution vocabulary is agent-shaped
+
+Not a missing extract - a missing **kind** of extract, and it is the one that
+changes what gets proposed to a customer.
+
+Every shape here assembles an agent. So does the interview, until 2b was added:
+its ordered questions go from what they cannot do today, to who is on the other
+end, to which systems hold the data, and every one of them assumes the
+deliverable is something you talk to. An agent asked what to propose therefore
+proposes an agent, and does it fluently, which is what makes this hard to notice.
+
+It has already cost one proposal. A customer's cross-channel inventory question
+- exactly the thing Mimir is for, and the subject of one of the product
+documentation's own case studies - came back as an agent over a semantic layer,
+because nothing in the interview asks what they do with the answer and no shape
+existed to propose instead.
+
+`mimir-dashboard` and the interview's 2b close the Mimir case. **Four products
+are still unrepresented**: Heimdall, Fehu, the Management Console as work in its
+own right, and Knowledge Base as distinct from a Drive. `wiki product-suite`
+describes all six in a table; nothing turns any of them into something an
+engagement can propose. The next one to hit this will be a customer whose
+question is about permissions or about cost.
 
 ### Three CRDs nothing covers
 
@@ -112,6 +150,21 @@ of its documentation, or these may not be meant for an engagement to reach for.
 Worth one question to the platform team, and cheap to answer.
 
 ### Gates that could be stronger
+
+- **Two gates disagree about an empty `platformMainEnvironmentId`.**
+  `gate/deploy.go` treats it as a warning and says why - the platform issues the
+  id after the namespace exists, so it is empty through the whole middle of an
+  onboarding. `gate/xref.go` errs on the same condition for a `Trigger`, with a
+  message that names neither the cause nor the fix. So a freshly scaffolded
+  project that adds a Trigger fails `verify` and is told to look at a label the
+  template already writes. Reported, not fixed.
+- **Nothing knows that a SemanticLayer may have no consumer on purpose.** That
+  is the whole of `mimir-dashboard`, and the deployment it came from says
+  plainly that its own cross-reference check does not protect it: the danger is
+  a later reader binding the layer to an Agent as a tidy-up, which silently
+  gives agents restricted to an API a second path into the database. A gate
+  cannot tell that apart from a genuine omission without being told which it is,
+  and no CR field says. Worth a marker the chart can carry.
 
 - **`project add`'s terraform prerequisite is a notice, not a gate.** The demo
   generator's equivalent command *refuses* to continue without the namespace and
@@ -148,6 +201,17 @@ Worth one question to the platform team, and cheap to answer.
 
 ### Material that is thinner than it looks
 
+- **`wiki screenshots` describes about a hundred images and three were opened.**
+  The rest carry the documentation's own alt text, which describes the file
+  honestly but does not say whether the product still looks like that -
+  **nothing anywhere records when any of them was captured**. A stale form in
+  front of the customer who uses that form daily is worse than no picture. The
+  page says so; saying so is not the same as checking.
+- **`wiki setup-path` states an order no source states.** Every step comes from
+  the page that owns it, but the sequence is assembled, and only its first fork
+  - that an HTTP API's credential has no home under Settings - was held against
+  a real console screen.
+
 - **The wiki is checked less deeply than the extracts, by nature.** An extract has
   a chart to hold it against; the wiki's source is product documentation
   describing a UI, much of which is in no chart at all. Every page says so on its
@@ -181,6 +245,18 @@ Worth one question to the platform team, and cheap to answer.
   but no source states the sequence, and three screenshots were opened out of
   the hundred-odd the screenshot index names. The claim worth testing first is
   that an HTTP API's credential has no home under Settings.
+- **Open-question numbers still collide across branches.** Fixed within one
+  file - an answered question keeps its number now - but two branches each
+  number one past what their own copy shows, and the merge produces two rows
+  with the same number and no conflict marker, because they are different lines.
+  A number derived from a count cannot survive that; the raised date is already
+  in the row and is the obvious material, and changing the format breaks every
+  existing reference, which is why it was not done inside a bug fix.
+- **`decision add` still needs an ASCII `--slug`.** A request and a task fall
+  back to their ID when the title is Chinese; a decision has no ID, because its
+  file name is the date plus the topic and `check` requires that shape. The
+  error says so. Giving it a numbered fallback would produce
+  `2026-09-02-decision-2.md`, which defeats the naming convention.
 - **A Claude Code plugin in the customer repo.**
   `.claude-plugin/marketplace.json` + `plugins/asgard-fde/{commands,skills}`, as
   the demo generator does it. The `asgard-fde-onboarding` design-time skill does

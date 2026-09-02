@@ -99,6 +99,58 @@ proposal built on one of them can be estimated, because somebody has already
 paid for it. A proposal built on a shape nobody has assembled is an estimate of
 a guess.
 
+**First, is it an agent at all?** The whole vocabulary below is agent-shaped, and
+so is most of what this tool carries, which is exactly why this question gets
+skipped. Something they want to **watch** - the same numbers every morning, a
+figure trending the wrong way - is a **Mimir dashboard**, not an agent. Something
+they want to **ask** in the moment is an agent. Many customers want both, and
+they are two deliveries over one Semantic Model, not one delivery.
+
+A proposal that answers "we want to see stock across all our channels" with an
+agent has answered a question they did not ask. `asgard-cli wiki mimir` is the
+product; `asgard-cli wiki product-suite` is the fork.
+
+Then, what their answers turn into - and it is not one row per system:
+
+| what they have | what we build |
+|---|---|
+| numbers somebody checks on a schedule | a **Dashboard** in Mimir, over the model below |
+| a database we can read | a **Semantic Model** - the agent composes its own queries |
+| a database, but only a few answers should be reachable | **fixed query tools** |
+| an HTTP API | a **Workflow** wrapped as an **MCP Server** |
+| documents, manuals, FAQs, a support site | a **Drive** with a Context Index |
+| only a web console | **browser operation** - costs more than everything else combined |
+| **systems whose concepts do not line up with each other** | a **Skill** |
+
+**That last row is the one that gets left out of every proposal**, because it is
+not a system to connect - it is knowledge about the systems, and it has no
+credential to ask for, so it never comes up in the access conversation.
+
+It is what you need whenever the customer's own systems disagree: four
+marketplaces with four sets of order-status codes, a SKU that is written three
+ways, "shipped" meaning something different in the WMS than on the channel, a
+returns flow with vocabulary only their staff knows. **Somebody has to write
+down how those correspond**, or the agent guesses, and it guesses plausibly -
+which is worse than failing, because the answer looks right.
+
+Two things about it worth saying out loud to the customer, because both are
+counter-intuitive:
+
+  - **This is the part that needs them most, and it is not an IT task.** A
+    credential comes from their network admin; this comes from whoever actually
+    knows that channel B's "processing" is channel A's "paid". It is an hour of
+    an operations person's time, and there is no substitute for it
+  - **It is the cheapest thing on the list and the one that decides whether the
+    rest is usable.** Nothing to procure, nothing to provision - a document
+
+It goes to `common/skills/<name>/SKILL.md` and is synced to the platform. In
+`references/` it is invisible to the running agent, and the failure then looks
+like a model ignoring instructions rather than a file in the wrong place -
+`asgard-cli next --stage requirements` has the full rule.
+
+An integration across several channels that proposes only the connections has
+proposed half of it.
+
 The cost ladder for reaching a system is worth putting in front of the customer
 in words, because it is what decides the timeline:
 

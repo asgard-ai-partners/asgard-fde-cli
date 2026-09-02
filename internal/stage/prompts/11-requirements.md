@@ -76,6 +76,9 @@ whole stage exists to reach.
     internal, authenticated callers   -> the platform's agent hub, semantic layers
     public, anonymous visitors        -> your own BotProvider, fixed query tools
 
+This decides how they reach it. **2b decides what "it" is**, and the two are
+asked together.
+
 Not a preference and not a later refinement: the two paths share neither an
 entry point nor a read path, so a request that mixes both audiences is two
 requests. Same audience as an existing project means this request goes into that
@@ -85,6 +88,33 @@ Ask it concretely. "Do they log in to something today, and is it ours?" gets an
 answer; "are they internal users?" gets a yes that means nothing, because a
 contractor with a company address is internal to the person answering and
 anonymous to the platform.
+
+**2b. What do they do with the answer?**
+
+Ask it in the same breath as question 2, because it decides **which product this
+is**, and everything from question 3 down assumes the answer.
+
+    look one thing up, in the moment     an agent
+    watch the same numbers every day     a Dashboard - this is Mimir
+    both, for different people           both, and they are separate deliveries
+
+`asgard-cli wiki product-suite` puts it plainly: **Mimir is often what the
+customer actually wants.** "I want an AI that answers stock questions" is not a
+statement about an agent - it is a statement about stock questions, and the two
+products answer it differently. Glancing at a figure each morning is a
+Dashboard; looking one thing up when a customer is on the phone is an agent.
+
+The failure this prevents is the expensive one and it is silent: an agent gets
+built, it works, and the customer keeps asking the same three questions every
+morning because what they actually needed was a page that was already open. Both
+read the same Semantic Model, so the modelling work is not wasted - but the
+delivery is, and so is the meeting where it is demonstrated.
+
+Ask it concretely, the way question 2 is asked: "when you have this number, what
+happens next - does somebody act on it there and then, or is it something you
+check?" A recurring report is a Dashboard, whatever words they used to ask for
+it. Anything they want **pushed** to them - mailed, posted to a group - is a
+third answer again, and a schedule cannot run anything needing approval.
 
 **3. Which systems hold the data, and how can each one be reached?**
 
@@ -279,6 +309,28 @@ would keep if they could only keep one. That item is the MVP, whatever it costs
 to build - a first delivery that skips the item being judged has failed however
 fast it shipped.
 
+**Read it back means arrive with a reading.** A customer who wrote a document
+listing what they want tested has already answered most of this, and asking them
+cold - "so which of your three would you like first?" - hands them our
+sequencing problem and reads as though we cannot do all of it. Their document is
+the answer; bring your reading of it and ask them to correct it:
+
+    no    "三個情境要先做哪一個?"
+    yes   "你們驗證項目裡寫了 X。我們讀下來,情境二最快能證明它,因為 ___。
+           這樣對嗎?"
+
+The second takes the same minute and produces a decision instead of a
+deliberation. It also surfaces disagreement, which the open version cannot: a
+customer correcting your reading tells you something; a customer picking from a
+list tells you what was easiest to say.
+
+**So this is a meeting question, not an open-questions row.** It belongs on the
+agenda, and it only becomes a tracked row in one case: they handed over nothing
+that speaks to it and would not answer when asked. Filing it as a blocker when
+their own document answers it puts a question at the top of a list that the
+customer can see they already answered, and everything under it inherits that
+impression.
+
 Then work out what that one item genuinely needs, and the two filters below turn
 the rest into deferred scope rather than open questions.
 
@@ -403,6 +455,12 @@ What survives filter 0 is almost always a small set of the same shapes: a
 credential, an endpoint, a network path, a document, an account, and the two
 answers only they can give (2b and 6b).
 
+**Those last two are agenda items before they are rows.** Both are answered in
+the meeting by a person in the room, so a row for either is a note that the
+meeting has not happened yet - and 6b in particular has usually been answered
+already, in whatever they handed over. Bring a reading and ask them to correct
+it. File a row only if you asked and got nothing.
+
 ### Filter 1 - the minimum that proves it works (MVP)
 
 **Ask: what is the smallest thing that proves what THEY said they are testing?**
@@ -492,11 +550,15 @@ is not tracked, it is just written down.
 
   - the customer's own wording is in section 1, unedited
   - the audience is decided, and the target project follows from it
+  - what they do with each answer is decided - an agent, a dashboard, or both -
+    because the product follows from it and every section below assumes one
   - every system has a row, and every row says how it is reached
   - the open questions have been through both filters, so what is left blocks the
     MVP rather than describing everything still unknown
-  - the customer has said which single item they would keep - it is theirs to
-    answer and cannot be inferred
+  - the customer has said which single item they would keep, or corrected the
+    reading you brought them. It is theirs to settle and cannot be decided for
+    them - but arriving without a reading is not neutrality, it is asking them
+    to do the work of the meeting
   - every system we will connect to has a section 4 block, with a named
     credential owner and an answer on network reach - and no secret in it
   - unstructured knowledge is either listed or explicitly ruled out

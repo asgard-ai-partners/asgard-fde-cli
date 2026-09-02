@@ -53,7 +53,7 @@ the source is, and they are not interchangeable:
 | an HTTP API | a Workflow with `http-request`, wrapped as an **MCP Server** | `asgard-cli usecase external-api` |
 | an existing MCP server somebody already wrote | **MCP Server**, From Existing | [`tools.md`](tools.md) |
 | documents, manuals, FAQs | a **Drive** with a Context Index | [`knowledge.md`](knowledge.md) |
-| procedural knowledge the agent needs while running | a **Skillset** | [`tools.md`](tools.md) |
+| how the customer's systems correspond, where their concepts do not line up - status codes, an id written three ways, a word that means two things | a **Skillset**. The row people forget, because it has no credential to ask for | [`tools.md`](tools.md) |
 
 **New MCP Server has two entries and they lead to different work.** From
 Workflow asks only for Name and Description, then drops you into an empty
