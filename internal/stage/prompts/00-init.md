@@ -11,6 +11,22 @@ project lives inside it:
       projects/<project>/        <- every project, always here
       docs/ requirements/ common/ scripts/ .agents/
 
+**One production deployment does it differently, and knowing why matters.** A
+commerce middleware repository serves several **tenants** from one repo -
+`tenants/<tenant>/chart/`, each with its own namespace and its own
+`deploy.yaml`, and the CI matrix is built by scanning those files, so a tenant
+can be prod-only and dev/prod are fully asymmetric. Namespaces are declared
+there rather than derived from folder names.
+
+That shape is right when the tenants are **instances of one product** - the same
+chart, the same skills, different customers of a platform we built. It is wrong
+for what this tool is for: a customer whose systems, audience and read path are
+their own shares nothing with the next one, and putting two of them in one
+repository means every change is reviewed against a customer it does not affect.
+
+**Take the exception only when the second tenant is the same product.** If you
+are asking the question, it is not.
+
 So there is no question of "where does a project go" - projects only ever exist
 under the workspace root, and `asgard-cli project add` puts them there. The only
 thing to decide up front is the workspace itself.

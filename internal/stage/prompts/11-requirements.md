@@ -149,27 +149,26 @@ changes the design more than anything else on this page.
 
 **3a. Each answer names a shape, and you can say so in the room.**
 
-The mapping is mechanical and the same every engagement, so there is no reason
-to leave the customer's answer sitting as a fact when it is already a design:
+The mapping is mechanical, and **the walk is where it lives** - one decision per
+stage, each with the case that got it wrong:
 
-| what they answer | the shape it is |
-|---|---|
-| a read-only database account, and the audience is internal | `semantic-layer` |
-| a read-only database account, and the audience is anonymous | `fixed-query-tools` |
-| an HTTP API | `external-api`; `api-oauth` when a token has to be fetched first |
-| only a web back office | `browser-operation`, and a different order of cost |
-| manuals, FAQs, a site | `knowledge-drive` |
-| it has to change something, not only read | `write-path`, split into prepare and execute |
-| it has to run on a schedule | `trigger`, and it cannot share a Toolset with anything gated |
+    the systems and how each is reached      asgard-cli next --stage data-sources
+    the read surface, per audience           asgard-cli next --stage read-path
+    the entry point, per audience            asgard-cli next --stage entry-point
+    where unstructured knowledge goes        asgard-cli next --stage knowledge
 
-`asgard-cli usecase <name>` is each one in full, and `asgard-cli size <shape>`
-turns it into a count.
+Read them **before** the meeting rather than when you arrive at the stage. They
+are written as build-time decisions, but every one of them is settled by an
+answer the customer gives here, and knowing which answer produces which shape is
+what lets you say it out loud:
 
-**Say it out loud as you go.** "If the answer is a read-only account we build A;
-if it is only the web console it becomes B, and B costs considerably more" turns
-an interview into a design conversation, and it makes the cost of the last row
-visible while they can still do something about it. It also gives the deck its
-right-hand column: every question paired with what answering it produces.
+    "if that is a read-only account we build A; if it is only the web console it
+     becomes B, and B costs considerably more than everything else together"
+
+That turns an interview into a design conversation, makes the expensive answer
+visible while they can still change it, and gives a discovery deck its
+right-hand column - every question paired with what answering it produces.
+`asgard-cli size <shape>` turns the shape into a count.
 
 **3b. For each system we will actually connect to, get the coordinates.**
 
@@ -568,11 +567,38 @@ filter, and it is the one that gets it wrong in both directions.
                              passes it. The integration is still proved
 
 The pattern that keeps recurring: the hardest question in an engagement is
-usually **how the agent knows who it is talking to**, and it is almost always
-cuttable, because the user can be asked. A lookup keyed on something the user
-types proves the same integration as a lookup keyed on a recognised identity, and
-the identity question moves to phase two without the delivery losing anything the
-customer is measuring.
+usually **how the agent knows who it is talking to**, and it is often cuttable,
+because the user can be asked. A lookup keyed on something the user types proves
+the same integration as a lookup keyed on a recognised identity, and the identity
+question moves to phase two without the delivery losing anything the customer is
+measuring.
+
+**Check whether it needs cutting at all, before you cut it.** This is the
+paragraph that most often produces a promise we did not have to make, and the
+mistake has already been made from it.
+
+An anonymous channel can answer "where is MY order". What it cannot do is let
+the **model** choose whose case to look up. Whatever sits in front - a website, a
+chat channel, a support desk - is what knows who is talking, and it passes the
+identity through server-side on every turn. **LINE's webhook carries a userId.**
+So if the customer's system has the binding stored, per-customer lookup is in the
+first delivery and there is nothing to defer.
+
+    is there a layer in front that knows who is speaking?
+      yes  -> keep it. Cutting it gives away something you had
+      no   -> now it is genuinely cuttable, and that is a question for
+              them rather than a design to work around
+
+Getting this backwards costs more than a deferred feature: it is telling a
+customer their channel cannot recognise their own customers, on a slide, when it
+can. `asgard-cli next --stage read-path` has the mechanism and
+`asgard-cli usecase per-turn-credentials` has the shape - read one of them before
+promising anything of the form 「查我的⋯」.
+
+**And when it is kept, it brings an acceptance criterion with it**, which belongs
+in section 6 now rather than being discovered at verification: a query that
+forgets to filter on the injected identity **fails on the anonymous path only,
+which is the path nobody tests**.
 
 What that leaves blocking the first delivery is normally something duller and far
 more useful to raise in a meeting - whether the system is reachable from a
