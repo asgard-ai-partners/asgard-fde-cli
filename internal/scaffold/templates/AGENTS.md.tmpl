@@ -394,6 +394,25 @@ only.
 **You cannot get this ID until the namespace exists** and the platform has reconciled it into a
 Project — which is why Terraform comes first (see Deploy / CI).
 
+## When the tool is wrong
+
+`asgard-cli` carries the platform knowledge, and some of it will be wrong or
+missing. **That does not get fixed here.** A note in this repository is a note
+one engagement has; the next one starts over with the same gap.
+
+    asgard-cli issue-report
+
+It says where to file and what to put in - and the part that gets left out is
+worth naming twice: **the state you were in**, so somebody can stand where you
+stood, and **where the answer actually turned out to be**, because a page that
+does not exist and a page nobody can find need different repairs.
+
+Worth filing even when unsure: "I looked for X and could not tell whether it
+exists" is either a missing page or a wrong signpost, and both are fixes.
+
+**Never paste this customer's content into an upstream issue.** Their document,
+their systems, their people. The shape is enough.
+
 ## Completion Model
 
 **Default: use the platform's builtins by name.** No CR, no model API key in `app-secret`. One
