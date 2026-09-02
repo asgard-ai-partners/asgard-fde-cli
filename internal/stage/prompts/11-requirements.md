@@ -247,7 +247,9 @@ integration from days into weeks by being discovered late:
     If their policy needs a VPN, that is their side's business about how the
     allowlist gets implemented; what we need from them is unchanged.
 
-    Ask whether it can be done and roughly when - a date changes our plan. **Do
+    Ask whether it can be done and roughly when - a date changes our plan. **This
+    is the single most expensive thing to discover in week three, and it costs
+    one sentence to ask in week one.** **Do
     not ask who approves it**: a name does not change what we build, and filter 0
     below names this exact case. It is a ticket, an approval and a window in most
     companies rather than something done that afternoon, and that is their queue
@@ -258,9 +260,8 @@ integration from days into weeks by being discovered late:
     into this repository, not onto a slide, not into a thread that gets
     forwarded. They can change and a copy will not, and a stale allowlist is the
     customer's connection dropping. Coordinates in a committed record are the
-    thing section 4 already refuses; ours are the same class as theirs. This is the single most expensive thing
-    to discover in week three, and it costs one sentence to ask in week one
-  - **who issues the credential, for the tracking row** - by name or role. A
+    thing section 4 already refuses; ours are the same class as theirs.
+  - **who issues the credential, for the tracking row in `docs/open-questions.md`** - by name or role. A
     credential with no owner is not a dependency, it is a delay
   - for an API instead of a database: the auth scheme, who holds the client id
     and secret, and the rate limit - the rate limit decides whether a Syncer can
@@ -490,7 +491,7 @@ Many cannot - an old ERP, a vendor SaaS with no outbound hooks - and then a
 schedule is the fallback, with a delay the customer should hear about now rather
 than at acceptance.
 
-**Ask who can configure that on their side, for the tracking row.** It is
+**Ask who can configure that on their side, for the row in `docs/open-questions.md`.** It is
 usually a different person from whoever gives you a database account.
 
 **4c. Do they expect it to send anything outward?**

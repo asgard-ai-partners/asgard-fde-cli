@@ -568,6 +568,31 @@ have to remember to apply does not fire when you do not think you are choosing.
 A rule about where a right thing goes does fire, because it does not ask you to
 overrule anything.
 
+**0b. What a question that works looks like.**
+
+Everything else here is a counter-example. This one survived twenty rounds
+untouched:
+
+> 現在要看各平台庫存,是一個一個後台登,還是有一個地方全看得到?
+> *(To see stock across your channels today, do you log into each back office,
+> or is there one place that shows all of it?)*
+
+Three things, and the third is what makes it worth a page:
+
+  - **it asks what they do now**, not what they have. People answer their own
+    behaviour immediately and accurately; they answer "do you have an OMS" with
+    "no", because their name for it is not ours
+  - **it offers two concrete possibilities**, so the answer arrives in one breath
+    rather than after a pause
+  - **the two answers fork the design.** One consolidating system is one
+    integration; separate back offices are six
+
+The version that would have failed - "do you have an OMS or a middleware
+layer?" - is the same question in our vocabulary, and it collects a no.
+
+*(Established: this exact sentence went through twenty rounds of correction
+without being touched.)*
+
 **1. Asking what changes nothing.** Six of the twenty. Who maintains the
 documents, who approves the firewall change, who issues the account, whose name
 the ticket goes under, who does the daily report and how long it takes.
@@ -653,6 +678,22 @@ that then needed grouping.
 and it still happened - so: **most pages need no caption at all**, and empty is
 better than composed.
 
+**4b. Counting what we deliver instead of describing how it behaves.** The same
+number, rejected one way and accepted the other:
+
+    no    四個查詢:客戶資料、已登錄產品、報修案件、維修進度
+          four queries: customer record, registered product, ticket, repair status
+    yes   它只查這四件事,不會自己去翻別的資料
+          it looks up these four things and nothing else in your systems
+
+Same four, same systems. The first is an inventory of what we hand over; the
+second is what it does in front of their customer - **and it answers the question
+they were actually holding**, which was whether the thing will go rummaging
+through their data.
+
+This is the "who is the subject" rule applied to a number: **the subject has to
+be theirs, and the quantity has to be expressed as behaviour.**
+
 **5. Getting the subject wrong.** A page described the approval screen as
 showing "the customer's name, product and fault description" - which is the
 shape of an internal supervisor reviewing somebody else's record. The actual
@@ -679,6 +720,15 @@ identity fails only on the anonymous path, which is the path nobody tests.
 Three rules elsewhere on this page belong to the **proposal** and produce a bad
 discovery deck when applied. Each has been made and rejected by the person who
 had to present it.
+
+**A page you created must say where it came from.** Splitting one of their items
+into two pages is often right - one of them carried a security question that
+deserved its own - but a title that is not theirs makes the page look like a
+demand we invented. The reaction to one was "stop drifting the titles".
+
+    the title    a phrase that does appear in their document, even when the
+                 split is ours
+    the lead     "your document's item 2 says: ..." - so the page traces back
 
 **Titles: the customer's own section names, unedited.** The ghost deck test -
 titles as assertions - assumes you have facts and a conclusion. In discovery you
@@ -766,6 +816,15 @@ handover deck from being wrong:
     hub" step is a slide about a button that does not exist
 
 ### Screenshots
+
+**A discovery deck almost never wants one, and you can know that before starting.**
+Its pages fill with the customer's own words, and one evidence shape per page
+then leaves no room. One deck's images were downloaded, cropped and checked one
+by one, and not one was used.
+
+**Decide whether the deck takes images before doing any of that work**, and
+default to no for a discovery deck. Cropping and checking are real work, they are
+the slow part, and they are not recoverable.
 
 There are none in this repository and none in `asgard-cli`. They live in the
 product documentation and are fetched by URL:
