@@ -961,9 +961,15 @@ something it does not look at.
     a check that fails on text you can see    the check is wrong. Investigate it
     a change to the slide to make it pass     never
 
-**`--check-content` never goes fully green on slides**, and chasing it to zero is
-how the above happens: `audience` and each slide's `layout` are schema fields and
-are not printed anywhere. Read the list, fix what is genuinely missing, and stop.
+**On a discovery deck, do not run the content checks at all.** They are not
+broken; they are the right instrument for a document whose text was fixed before
+layout, and this is not that document. Running them produces failures you then
+have to decide to ignore - and the section above is what happens on the round
+where somebody stops ignoring one.
+
+Where they are run - on a proposal - **they never go fully green on slides**
+anyway: `audience` and each slide's `layout` are schema fields and are not
+printed anywhere. Read the list, fix what is genuinely missing, and stop.
 
 ### Four things about the template that nothing warns you about
 
@@ -976,27 +982,55 @@ are not printed anywhere. Read the list, fix what is genuinely missing, and stop
     template's own example page uses both, so copying it reproduces the bug
   - **`<b>` does nothing.** The CJK faces embed weights 400 and 500 only, so
     bold silently falls back to normal. Write `font-weight: 500`
-  - **Write `content.json` first and generate from it.** Editing the HTML and
-    back-filling the structured form loses things, and the loss is found by a
-    coverage check rather than by reading
+  - **Do not keep a second copy of the content.** For a proposal, whose text is
+    settled before layout, writing the structured form first and generating from
+    it is right. For a discovery deck it is not - see below - and a half-kept
+    second copy is worse than neither
 
-### The density checks encode a proposal's assumptions
+### Borrow the layout language, not the process
 
-A discovery deck's question pages read as sparse to a density check, and its
-alternation of question and answer pages reads as monotonous to a rhythm check.
-**In both cases the deck is right and the check is measuring the wrong document**
-- the alternation is the shape, and the whitespace is deliberate.
+    take        the template, the palette, the serif hierarchy, the page
+                geometry, the CJK font handling, the PDF output
+    do not take the structured-content step, or the content checks built on it
 
-So on a discovery deck those two are advisory. That is a smaller problem than it
-sounds: the typesetting produces the document correctly, and it is only the
-checks that disagree. But it means a green run is not the goal, and the previous
-section is why that distinction matters.
+**Not because that process is wrong** - it is a good process, and it is designed
+to prevent exactly what went wrong here. Writing the content first, in a file
+with no columns and no pages, makes it impossible to add a line because the left
+column looks short. The mechanism existed, it was documented, it was skipped,
+and then the error it prevents was made about twenty times.
+
+**The reason not to take it is what a discovery deck is.** Its content is not
+settled before layout; **it grows through being rejected.** Twenty rounds of
+revision reworded about half the question sentences - and those sentences are
+precisely what a locked content file exists to fix in place. Fixing something and
+then changing it twenty times is not fixing it, and maintaining two files through
+those rounds doubles the work of each one.
+
+**And two sources drift on their own.** In that engagement the content file
+caught exactly one thing: an inconsistency between itself and the HTML. That
+inconsistency could only exist because there were two truths. The single source
+is the HTML.
+
+**Say the cost out loud:** without a structured source there is no coverage gate,
+so nothing verifies that no fact was dropped while filling the layout. That is
+acceptable here for the same reason - with one source there is nothing to drop
+between; an edit is the edit.
+
+**Layout checks still run**, and they earn it. Style and placeholder checks and
+the page count caught real defects in that deck: a line-height over its bound,
+and the silent overflow that turned 14 pages into 18. Those measure the page, not
+the words.
 
 ### The rest
 
-Typesetting, layout and the visual language belong to the **`kami`** skill. Load
-it and let it produce the file; this skill has already decided what goes on each
-slide.
+Typesetting and the visual language belong to the **`kami`** skill. **Load it for
+the layout language and not for its authoring process** - which of the two you
+take is decided above, and the answer differs between a proposal and a discovery
+deck. This skill has already decided what goes on each slide.
+
+For a discovery deck there is a working starting point beside this file:
+`discovery-deck.html`, eight pages, plain HTML with no separate content file,
+every customer noun neutralised and the question wording left as it ended up.
 
 What kami expects, and what is worth knowing before you write:
 
