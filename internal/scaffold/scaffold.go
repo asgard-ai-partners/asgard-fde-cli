@@ -118,6 +118,10 @@ const (
 	// because it is one the CLI's own commands write into and it no longer
 	// matches the template it started as.
 	Preserved
+	// Stale means the file is shipped material the CLI has since changed. It
+	// is left alone - the point is to say so, because "already present" reads
+	// as "up to date" and an agent acted on that reading.
+	Stale
 )
 
 func (s Status) String() string {
@@ -130,6 +134,8 @@ func (s Status) String() string {
 		return "updated"
 	case Preserved:
 		return "preserved"
+	case Stale:
+		return "stale"
 	default:
 		return "skipped"
 	}
@@ -196,6 +202,14 @@ func Write(root string, cfg *config.Config, force bool) ([]Result, error) {
 				return nil, err
 			}
 			if !updated {
+				drifted, err := differs(target, content)
+				if err != nil {
+					return nil, err
+				}
+				if drifted && shipped(j.target) {
+					results = append(results, Result{Path: j.target, Status: Stale})
+					continue
+				}
 				results = append(results, Result{Path: j.target, Status: Skipped})
 				continue
 			}
@@ -233,6 +247,34 @@ var accumulators = map[string]bool{
 	filepath.Join("requirements", "requests", "_index.md"): true,
 	filepath.Join("requirements", "tasks", "_index.md"):    true,
 	filepath.Join("docs", "decisions", "README.md"):        true,
+}
+
+// shipped reports whether a file is material this CLI owns outright - written
+// once and never edited by the engagement, the way a wiki page is never edited
+// by a reader. Only these are worth reporting as stale: everything else in the
+// skeleton is meant to be edited, so a difference there is the engagement's
+// work, not drift.
+func shipped(target string) bool {
+	t := filepath.ToSlash(target)
+	switch {
+	case strings.HasPrefix(t, ".agents/skills/"):
+		return true
+	case t == "AGENTS.md":
+		return true
+	case strings.HasPrefix(t, "scripts/"):
+		return true
+	}
+	return false
+}
+
+// differs reports whether the file on disk has moved away from what the current
+// template renders.
+func differs(path string, content []byte) (bool, error) {
+	current, err := os.ReadFile(path)
+	if err != nil {
+		return false, fmt.Errorf("read %s: %w", path, err)
+	}
+	return !bytes.Equal(current, content), nil
 }
 
 func accumulator(target string) bool {
