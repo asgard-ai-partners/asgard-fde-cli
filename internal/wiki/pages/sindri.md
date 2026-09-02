@@ -41,6 +41,25 @@ the user allows or refuses.
 This is what `requestConsent` looks like to the person. A scheduled run has
 nobody to press the button.
 
+**There is no product documentation page for the approval gate.** Not under
+Sindri, not under Odin - the sources at the foot of this page cover Project, the
+home page, My Chat, Directory and settings, and none of them is about this. So
+the platform's most-asked-about mechanism, and the one hardest to explain in
+words, has nothing to link when a customer asks for documentation - and they do
+ask, because "important actions can be confirmed by a person before they run" is
+the kind of line that appears on their own acceptance list.
+
+What there is:
+
+    the screen        `asgard-cli wiki screenshots`, the four-image sequence.
+                      Crop the dialog first - it names a `ts-` prefix and an
+                      internal tool name
+    the mechanism     `asgard-cli usecase write-path`
+    the limit         a schedule cannot approve anything, so a gated tool and a
+                      scheduled run cannot share a Toolset
+
+**Do not spend time looking for the page.** It was looked for.
+
 ## My Chat and Directory
 
 Two ways of organising conversations:

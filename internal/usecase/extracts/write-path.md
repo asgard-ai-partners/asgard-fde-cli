@@ -14,6 +14,10 @@ notification chain whose single outward action is deliberately mocked.
 **Read the platform side first:** `asgard-cli wiki sindri` -
 what the governance gate looks like to the person approving it. This page assumes you have.
 
+**Nothing to link.** This shape has no product documentation page - see
+`asgard-cli wiki sindri`. When a customer asks for documentation on the approval
+gate, and they will, the answer is a cropped screenshot and this page.
+
 ## The rule the platform is built on
 
 > **Reading is autonomous. Writing stops at a gate and waits for a human.**

@@ -21,6 +21,22 @@ be shared:
 So the question that decides the split is **who is on the other end**, asked once
 per capability the customer wants.
 
+**A second question decides whether it is a project at all.** What do they do
+with the answer - ask it in the moment, or watch the same numbers every day? The
+second is a **Mimir dashboard**: a chart of DataConnector and SemanticLayer with
+no entry point, no Agent and nothing to publish, and the deliverable after that
+is built by the customer in the product rather than by us in a chart.
+
+    ask     -> a project, in the sense this page means
+    watch   -> a read surface, and the Views and Dashboards are theirs to make
+    both    -> one model, two deliveries. Do not merge them into one estimate
+
+It still lives under `projects/<slug>/` and still deploys to a namespace, so it
+is a project mechanically. What it is not is a project shaped like the rest of
+this walk: stages 5 and 6 have nothing to say about it, and `asgard-cli verify`
+will report an Agent with no capability only because there is no Agent.
+`asgard-cli usecase mimir-dashboard` is the shape.
+
 ## What to ask the customer
 
   - Which business systems hold the data an agent would need to read?

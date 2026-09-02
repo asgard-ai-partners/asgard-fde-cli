@@ -54,9 +54,35 @@ Each is written on the page it affects:
 
 ## Coverage
 
-Measured 2026-09-02: asgard-docs holds 162 files, of which 130 are cited by some
-page's source block - **100% of what is in scope**. The 32 excluded below are the
-denominator's difference.
+**The number this section used to report was 100%, and it was measuring one
+source out of nine.**
+
+asgard-docs holds 162 files under `docs/`, of which 130 are cited by some page's
+source block; the 32 excluded below are the difference. That is a true statement
+about the product documentation and it was being read as a statement about the
+material, which is how a wiki with nothing about SHOPLINE, nothing about Mimir as
+a deliverable, and nothing about the largest chart repository in existence could
+report itself complete.
+
+The sources this material is actually built from:
+
+| source | what it holds | state |
+|---|---|---|
+| asgard-docs | the product documentation | 130 / 162 cited, 32 deliberately excluded below |
+| asgard-kube `crd/` | the contract | read per page, per field, and dated on the page |
+| **asgard-core** `internal/constants.go` | **the processor definitions the CRD is generated from** | read once, 2026-09-02, for the type list. Its per-processor config definitions are not carried anywhere |
+| **asgard-freyr-skills** | **nine runtime skills, incl. the SHOPLINE pair** | one page - `usecase skill-layers` |
+| **seven deployment charts** | **every shape the extracts describe** | see below |
+
+**Deployment coverage cannot be measured from this material, by design.** An
+extract names no customer and no deployment - it says "seen in a deployment
+whose..." - so nothing here can be counted against the charts it came from. The
+inventory has to be run separately, over the charts, and its result lives in
+`TASK.md` rather than in a number here.
+
+**Do not add a percentage back to this section** unless it names its denominator
+in the same sentence. The one that was here did not, and it is the reason this
+pass found four bodies of material nobody had opened.
 
 ## Deliberately not covered
 

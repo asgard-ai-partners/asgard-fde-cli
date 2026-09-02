@@ -2,6 +2,14 @@ The onboarding is done: every project reads through a shape, is reachable, and
 has been deployed. **From here the repo is not "finished", it is live** - and
 the work changes character. New capability arrives as a request, not as a stage.
 
+**The commonest later request is not an agent.** A repo that is live has a
+SemanticLayer somebody trusts, and the next thing asked for is usually to *see*
+it - the same numbers every morning, without asking. That is Mimir, it needs no
+new CR beyond the model that already exists, and it is the cheapest thing this
+walk ever delivers. Check before designing an agent for it:
+`asgard-cli usecase mimir-dashboard`, and question 2b of
+`asgard-cli next --stage requirements`.
+
 This is the loop for adding one.
 
 ## 0. Open it as a request

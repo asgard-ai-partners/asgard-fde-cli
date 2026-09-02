@@ -68,8 +68,16 @@ them.`,
 
 			fmt.Fprintf(out, "One project. A second audience is a second project and a second estimate.\n\n")
 			fmt.Fprintf(out, "CRs, for the estimate - not for a customer's screen:\n\n")
+			var missing []string
 			for _, k := range e.Sorted() {
-				fmt.Fprintf(out, "  %-18s %d\n", k, e.CRs[k])
+				fmt.Fprintf(out, "  %-18s %d", k, e.CRs[k])
+				if url, ok := size.Docs[k]; ok {
+					fmt.Fprintf(out, "   %s", url)
+				} else if _, gap := size.Undocumented[k]; gap {
+					fmt.Fprintf(out, "   (no documentation page - see below)")
+					missing = append(missing, k)
+				}
+				fmt.Fprintln(out)
 			}
 			fmt.Fprintf(out, "  %-18s %d\n", "TOTAL", e.Total)
 			if e.CRs["Agent"] == 0 {
@@ -85,6 +93,14 @@ them.`,
 				fmt.Fprintf(out, "\nWhat makes this number conditional:\n\n")
 				for _, w := range e.Warnings {
 					fmt.Fprintf(out, "  %s\n\n", strings.ReplaceAll(w, "\n", "\n  "))
+				}
+			}
+
+			if len(missing) > 0 {
+				fmt.Fprintf(out, "\nParts with nothing to link:\n\n")
+				for _, k := range missing {
+					fmt.Fprintf(out, "  %s - %s\n\n", k,
+						strings.ReplaceAll(size.Undocumented[k], "\n", "\n  "))
 				}
 			}
 

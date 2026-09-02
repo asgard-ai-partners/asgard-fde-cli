@@ -275,6 +275,42 @@ func (e Estimate) Plain() []string {
 	return out
 }
 
+// Docs is the product documentation page for each CR kind, so an estimate can
+// hand over the reading rather than sending somebody back through the wiki's
+// source blocks to reassemble it. A customer asking for the shape usually asks
+// for the documentation in the same sentence.
+//
+// A kind with no entry has no page, and that is worth saying rather than
+// leaving blank - see Undocumented.
+var Docs = map[string]string{
+	"DataConnector":    "https://docs.asgard-ai.com/docs/product-suite/odin/features/settings/data-source",
+	"SemanticLayer":    "https://docs.asgard-ai.com/docs/product-suite/odin/features/data-insight-semantic-model",
+	"SourceSet":        "https://docs.asgard-ai.com/docs/product-suite/odin/features/drive",
+	"Syncer":           "https://docs.asgard-ai.com/docs/product-suite/odin/features/drive",
+	"SkillSet":         "https://docs.asgard-ai.com/docs/product-suite/odin/features/skillsets",
+	"Agent":            "https://docs.asgard-ai.com/docs/product-suite/odin/features/agent-hub-managed-agent",
+	"SandboxBlueprint": "https://docs.asgard-ai.com/docs/product-suite/odin/features/agent-hub-flow-agent",
+	"Workflow":         "https://docs.asgard-ai.com/docs/product-suite/odin/features/mcp-servers",
+	"Trigger":          "https://docs.asgard-ai.com/docs/product-suite/odin/features/automation-trigger",
+	"Plugin":           "https://docs.asgard-ai.com/docs/product-suite/odin/features/plugins",
+	"CompletionModel":  "https://docs.asgard-ai.com/docs/product-suite/odin/features/settings/completion-model",
+}
+
+// Undocumented names the parts with no product documentation page at all, and
+// why each absence matters. A customer's own test plan usually asks for
+// technical documentation by name, so "there is no page for this" is an answer
+// somebody needs before the meeting rather than during it.
+var Undocumented = map[string]string{
+	"Toolset": "the approval gate. `asgard-cli usecase write-path` calls it the shape the\n" +
+		"platform is built around, and it has **no product documentation page** -\n" +
+		"not under Sindri, not under Odin. A proposal can show the dialog as a\n" +
+		"screenshot (`asgard-cli wiki screenshots`, and crop it first) and has\n" +
+		"nothing to link. This is the most commonly asked-about mechanism here, and\n" +
+		"the one hardest to explain in words.",
+	"BotProvider": "the channel. Which page applies depends on the channel, and for LINE\n" +
+		"the platform's own integration page is thin - `asgard-cli wiki integration`.",
+}
+
 // Sorted returns the CR counts in a fixed order.
 func (e Estimate) Sorted() []string {
 	keys := make([]string, 0, len(e.CRs))
