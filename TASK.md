@@ -113,17 +113,24 @@ names is not reading a repository.
      all of them. **Do not quote a coverage number here without saying how it
      was measured.** Three have been wrong in one day.
 
-     What is actually missing is **the whole of `developer-reference/`**:
+     What was missing was **the whole of `developer-reference/`**, and it has now
+     been read:
 
-     | uncited | why it matters |
+     | was uncited | outcome |
      |---|---|
-     | ~~`processor/` - 16 pages, one per processor~~ | **done 2026-09-02** - `wiki processors`. This was the largest single gap: a chart author writing a Workflow had a type list and no fields |
-     | ~~`api-doc/send-message/sse-response/**` - 11 event pages~~ | **done 2026-09-02** - the envelope, the `fact` tagged union and `runError.location`, which names the Workflow and processor that failed. `api.md` had the event list and none of the payloads |
-     | `api-doc/send-message/` - the four endpoint pages | `api.md` covers the endpoint, actions and `customChannelId` accurately. What is unread is the file path: `blob` upload as multipart, and append-file-and-send |
-     | ~~`asgard-builtin/**` - 18 pages~~ | **rechecked 2026-09-02, and the exclusion was wrong for four of them.** The expression language every processor field is written in - three value types, six variables, seven functions, the Blob shape, and that Expression is ECMA5 with no optional chaining. Now in `wiki processors`. The 14 message-template pages stay excluded and that half of the judgement holds |
-     | ~~`examples/`~~ | **done 2026-09-02.** webhook-integration gave the automation-tool shape and that its endpoint is the same message/sse URL; knowledge-base-query gave citations on `message.template.sources` and the question-shape guidance. `streaming-response` and `send-message` are client-side recipes - JS, Python, React - and carry nothing this material needs |
-     | `sdk/`, `asgard-sdk`, `others/channel-log` | the front-end path, which `api.md` covers from the platform side only |
-     | ~~`overview/*`, `core-concepts-ecosystem`~~ | **done 2026-09-02** - `wiki what-they-read`. Three mismatches between what a customer reads first and what we deliver, and one correction to this material: the Project and storage limits are per price plan, not properties of the platform |
+     | `processor/` - 16 pages | **`wiki processors`.** The largest single gap: a chart author had a type list and no fields |
+     | `api-doc/send-message/sse-response/` - 11 pages | the envelope, the `fact` tagged union, and `runError.location` naming the Workflow and processor that failed |
+     | `api-doc/send-message/` - 4 endpoint pages | the file path is two calls, `blob` then a send carrying `blobIds` |
+     | `asgard-builtin/` - 18 pages | **the exclusion was wrong for four of them** - the expression language every processor field is written in, including that it is ECMA5. The 14 message-template pages stay excluded |
+     | `examples/` - 4 pages | the webhook shape and its endpoint; citations on `message.template.sources`. Two are client-side recipes and carry nothing |
+     | `overview/`, `core-concepts-ecosystem` | **`wiki what-they-read`** - what a customer believes on arrival, and one correction: the quotas are per price plan |
+     | `help-community/other/compare-conversation-context` | not a retrieval comparison - `prevMessage` against `history`. One line |
+
+     **What is left uncited is the part deliberately excluded** - the 14
+     message-template pages, the release notes, the site's own redesign plans -
+     plus `developer-reference/sdk/`, `asgard-sdk` and `others/channel-log`,
+     which are the front-end path. `api.md` covers that from the platform side
+     and nothing has checked whether the SDK pages disagree with it.
 
      **`examples/` and the file path next.** Four worked examples - webhook
      integration, knowledge-base query, streaming response - and the `blob`
