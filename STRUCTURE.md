@@ -123,6 +123,12 @@ A `.tmpl` suffix means the file is rendered; anything else is copied verbatim.
 `.agents/skills/` under it holds the six design-time skills the coding agent in
 the customer repo loads.
 
+Those six are **searchable**, and `scaffold/skills.go` is what makes them so.
+They are material like the wiki is material, and leaving them out of `find` meant
+an agent asked to build a deck searched for one and was told nothing matched
+anywhere - while the skill that owns the subject sat in the repository it was
+standing in.
+
 ## `source/` - never ships
 
 `source/SOURCES.md` traces each extract back to the deployment it came from, and

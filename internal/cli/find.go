@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/kb"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/scaffold"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/stage"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/usecase"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/wiki"
@@ -28,9 +29,10 @@ func newFindCmd() *cobra.Command {
 		Short: "Search both bodies of material at once",
 		Long: `Search the platform wiki and the deployment extracts together.
 
-Three bodies answer different questions - what the platform has, how one shape is
-assembled, and what to weigh when deciding - and which of them holds an answer is
-often not obvious before searching. This searches all three.
+Four bodies answer different questions - what the platform has, how one shape is
+assembled, what to weigh when deciding, and what the agent in a customer repo
+loads to do one kind of work - and which of them holds an answer is often not
+obvious before searching. This searches all four.
 
 The stage prompts are searchable **by subject** rather than only by position in
 the walk. An onboarding is not linear - three of this engagement's most expensive
@@ -72,8 +74,12 @@ To read one in full: "asgard-cli wiki <page>" or "asgard-cli usecase <name>".`,
 			if err != nil {
 				return err
 			}
+			skills, err := scaffold.SearchSkills(query)
+			if err != nil {
+				return err
+			}
 
-			if len(pages) == 0 && len(extracts) == 0 && len(stages) == 0 {
+			if len(pages) == 0 && len(extracts) == 0 && len(stages) == 0 && len(skills) == 0 {
 				return nothingMatched(out, query)
 			}
 
@@ -81,7 +87,7 @@ To read one in full: "asgard-cli wiki <page>" or "asgard-cli usecase <name>".`,
 			// match reads exactly like a whole one, and a reader who does not
 			// know that "shopee" found nothing will take what came back as the
 			// material on the subject they asked about.
-			reportTerms(out, query, matchedTerms(pages), matchedTerms(extracts), stageTerms(stages))
+			reportTerms(out, query, matchedTerms(pages), matchedTerms(extracts), stageTerms(stages), skillTerms(skills))
 
 			if len(pages) > 0 {
 				fmt.Fprintf(out, "PLATFORM - what the thing is (asgard-cli wiki <page>)\n\n")
@@ -123,6 +129,17 @@ To read one in full: "asgard-cli wiki <page>" or "asgard-cli usecase <name>".`,
 						fmt.Fprintf(out, "  %-18s %s\n", "", truncate(line, 84))
 					}
 					fmt.Fprintln(out)
+				}
+			}
+
+			if len(skills) > 0 {
+				fmt.Fprintf(out, "SKILLS - what the agent in the customer repo loads (.agents/skills/)\n\n")
+				for _, m := range skills {
+					fmt.Fprintf(out, "  %-18s %s\n", m.Name, truncate(m.Description, 84))
+					for _, line := range m.Lines {
+						fmt.Fprintf(out, "  %-18s %s\n", "", truncate(line, 84))
+					}
+					fmt.Fprintf(out, "  %-18s -> read it:     %s\n\n", "", m.Path)
 				}
 			}
 
@@ -193,7 +210,7 @@ func reportTerms(out io.Writer, query string, sets ...[]string) {
 // exists to serve. So it does not offer advice about phrasing - it hands over
 // the contents, which is what the reader would have to ask for next.
 func nothingMatched(out io.Writer, query string) error {
-	fmt.Fprintf(out, "No term in %q appears anywhere in the three bodies.\n\n"+
+	fmt.Fprintf(out, "No term in %q appears anywhere in the four bodies.\n\n"+
 		"That usually means the subject is named differently here, not that it is\n"+
 		"absent. This material is in English, and it describes platform parts rather\n"+
 		"than a customer's systems: a marketplace integration is under whichever\n"+
@@ -215,6 +232,16 @@ func nothingMatched(out io.Writer, query string) error {
 	fmt.Fprintf(out, "DECISIONS - what to weigh (asgard-cli next --stage <name>)\n\n")
 	for _, s := range stage.List() {
 		fmt.Fprintf(out, "  %-18s %s\n", s.Name, truncate(s.Title, 84))
+	}
+	fmt.Fprintln(out)
+
+	skills, err := scaffold.Skills()
+	if err != nil {
+		return err
+	}
+	fmt.Fprintf(out, "SKILLS - loaded by the agent in the customer repo (.agents/skills/<name>/SKILL.md)\n\n")
+	for _, s := range skills {
+		fmt.Fprintf(out, "  %-24s %s\n", s.Name, truncate(s.Description, 78))
 	}
 	fmt.Fprintln(out)
 	return nil
@@ -240,6 +267,14 @@ func matchedTerms(matches []kb.Match) []string {
 }
 
 func stageTerms(matches []stage.Match) []string {
+	var out []string
+	for _, m := range matches {
+		out = append(out, m.Terms...)
+	}
+	return out
+}
+
+func skillTerms(matches []scaffold.SkillMatch) []string {
 	var out []string
 	for _, m := range matches {
 		out = append(out, m.Terms...)
