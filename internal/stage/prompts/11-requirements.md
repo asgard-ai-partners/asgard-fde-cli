@@ -45,6 +45,40 @@ no record of it. Write the request before going further - `asgard-cli check`
 reports this state until one exists.
 <<else>>Nothing is recorded yet, so start with `asgard-cli request add`.
 <<end>><<end>>
+## Read the later stages before this meeting, not after
+
+Every other page here is written to be read when you arrive at it, and that is
+the right arrangement for them. **It is wrong for this one**, for a reason that
+is about the output rather than the content:
+
+    stage 3 to 9 produce files      a wrong one is edited, re-rendered, reverted
+    this stage produces speech      a wrong one is in the customer's notes
+
+You get one interview. At that point you have not read stages 3 to 6, and **half
+of what you will say out loud is settled there**. So read them first - at least
+`data-sources`, `read-path`, `entry-point` and `knowledge`. An hour before the
+meeting is cheaper than a correction after it.
+
+### The five that get said wrong, and always in the same direction
+
+Each of these has been said wrongly to a customer. In four of the five the
+intuitive answer **undersells the platform or overstates a limit** - so the
+error is not neutral, it costs scope or confidence:
+
+| what gets said | what is true | where |
+|---|---|---|
+| "a VPN, an allowlist or a jump host - whichever suits you" | one shape only: they allowlist our outbound addresses. There is nothing of ours to put on their network | `wiki operations` |
+| "on an anonymous channel it cannot tell who is asking, so identity has to wait" | **an anonymous channel answers 「查我的維修進度」 perfectly well.** The caller supplies who is asking, server-side, every turn; only the *model* supplies nothing. LINE's webhook carries a userId | `--stage read-path` |
+| "one agent, then" | a flow-agent shape renders **zero `Agent` CRs**. The prompt is on a Workflow processor. Answer the count from `asgard-cli size`, not from instinct | `usecase flow-agent-single` |
+| "we would have to build an approval step" | the approval gate is **what the platform is built around**. A write stops and asks; nothing runs until a person allows it | `usecase write-path` |
+| "30 steps and 3 minutes is the limit" | those are **defaults**, raised by contacting sales. And do not quote the step count at all - nothing defines what a step is | `wiki integration`, `wiki platform-unknowns` P7 |
+
+**The pattern is worth more than the list.** When a customer asks whether
+something is possible and the honest-sounding answer is "no" or "not yet", that
+is the moment to check rather than to be modest - four of the five above are an
+FDE being careful and being wrong. The list will grow; the habit is what
+transfers.
+
 ## Why the interview is a stage of its own
 
 Of the target repo's thirteen task specs, **three were superseded and one was
