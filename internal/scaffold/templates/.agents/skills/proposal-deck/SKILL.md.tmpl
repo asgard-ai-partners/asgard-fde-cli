@@ -322,14 +322,14 @@ count.
 |---|---|
 | a read-only Toolset with four query Workflows | 四個查詢 / four kinds of question it can answer |
 | a SkillSet carrying status vocabulary | 一份狀態對照 / a translation of your own codes |
-| a SkillSet built from their manual | 把你們的手冊變成 AI 看得懂的一部分 / your own documentation, turned into something it knows |
+| a SkillSet built from their manual | 手冊裡的欄位與規則會變成 AI 知道的東西 / the manual becomes something it knows |
 | SourceSet + Syncer + contextIndex | 產品知識庫 / it reads from your own documents |
 | a tool with `requestConsent: true` | 需要人工確認的動作 / an action that stops for a person |
 | BotProvider + Workflow + SandboxBlueprint | 對外客服入口 / one way in for people outside |
 | an Agent mounting a SemanticLayer | 一個能自己查資料的專員 / it works out its own query |
 | a Trigger | 定期自動跑 / it runs on a schedule and only reports |
-| a SemanticLayer over a database | 讀得到你們的系統 / it can read that system |
-| the outbound-IP allowlist request | 請你們把我們的四個位址加進白名單 / add our four addresses to your firewall's allowed list |
+| a SemanticLayer over a database | 讀得到那套系統 / it can read that system |
+| the outbound-IP allowlist request | 把這四個位址加進防火牆白名單 / add these four addresses to the firewall's allowed list |
 | browser operation | 沒有介接管道,要照著人的操作做 / no way in but the screen |
 
 The browser-operation row is the one to say plainly rather than smooth over. It
@@ -346,6 +346,39 @@ team to pick the wrong one, and that is discovered a week later.
 **Two names for one thing is worse than a clumsy name.** If a phrase here is
 wrong for a customer's industry, change it once and use the changed one
 everywhere, including in the meeting notes.
+
+### Who is pointing at whom - a rule for Chinese decks only
+
+**Do not write 「你們」.** A deck that says it fourteen times has stopped being a
+shared document and become one side addressing the other.
+
+This does not transfer from English, and that is why it is easy to miss. English
+cannot avoid "you", so it carries no weight and nobody notices it. **Chinese can
+drop the subject entirely**, so writing 「你們」 is an active choice, and the
+reader feels the choice being made - as a finger pointed across the table rather
+than two people reading the same page.
+
+Three rewrites, none of which needs added politeness:
+
+| instead of | write | how |
+|---|---|---|
+| 你們現在的日報怎麼做 | 現在的日報怎麼做 | drop the subject |
+| **你們文件寫的是** | **測試計畫寫的是** | **make their document the subject, not them** |
+| 哪些數值算異常由你們定義 | 異常門檻可自行定義 | state it as a capability |
+
+**Every row of the vocabulary table in step 4 was written this way**, and three
+of them had to be corrected after this rule existed - which is the evidence that
+it is not obvious. 「請你們把我們的四個位址加進白名單」 became 「把這四個位址加
+進防火牆白名單」: same request, no finger.
+
+**The second is the one to reach for.** It keeps the whole point of quoting them
+- this is what you said - and removes the pointing. It is also the only one that
+is correct for the rest of the room: a meeting has their IT lead and their
+network admin in it, and 「你們」 addresses them for a document they did not
+write.
+
+The worst case is the one that looks most respectful: 「你們文件寫的是⋯」 reads
+as raising an old account rather than as citing a source.
 
 ### The register
 
@@ -558,6 +591,9 @@ second the moment anyone else opens the deck.
   prefixes, no namespaces, no Helm, no chart, no CRD. The customer bought an
   outcome. A handover may name what they will click - Managed Agent, Drive,
   Skillset - and still never needs the CR behind it.
+- **The second person, in a Chinese deck.** 「你們」 on every page turns a shared
+  document into two sides. See step 4 - it is a register rule rather than a leak,
+  and it does not apply to a deck in English.
 - **This repository's own bookkeeping.** No question numbers, no `REQ-` or
   `TASK-` ids, no "the items the two filters removed", no "out of scope table".
   These are the easiest words to leak, because they are what you have just
@@ -570,7 +606,7 @@ second the moment anyone else opens the deck.
   not the row it lives in.
 
       no    第 14-16 題:平台未解項目
-      yes   有三件事我們要回去跟平台團隊確認,再回覆你們
+      yes   有三件事要回去跟平台團隊確認,確認後書面回覆
 
       no    被兩道篩選刷掉的五項
       yes   這五項這一輪不做,以及各自要先有什麼答案才會回來
@@ -654,6 +690,8 @@ Ten questions, and the last five are the ones that get skipped:
 9b. Is there a question number, a `REQ-`/`TASK-` id, or a phrase like "the items
     the filters removed" anywhere on a slide - or in the outline you showed
     internally? Those name rows in files the reader cannot open.
+9c. Chinese deck: count 「你們」. Every one of them is a choice, because the
+    subject could have been dropped. Most should be the document instead.
 10. If it shows a console screen: was every screenshot opened, is it current,
     and is this a handover rather than a proposal? A proposal showing admin
     screens has usually skipped `asgard-cli wiki screenshots`, where the
