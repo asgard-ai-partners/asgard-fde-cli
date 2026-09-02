@@ -9,6 +9,7 @@ package check
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -123,6 +124,9 @@ func Run(root string, only ...string) (Report, error) {
 	}
 	c.checkRequirementIndexes()
 	if err := c.checkInterviewRecorded(); err != nil {
+		return Report{}, err
+	}
+	if err := c.checkQuestionsFollowTheDeck(); err != nil {
 		return Report{}, err
 	}
 	if err := c.checkDocs(); err != nil {
@@ -449,6 +453,80 @@ func (c *checker) checkInterviewRecorded() error {
 		"**A request comes after the interview, not before it** - six of its seven sections "+
 		"are what the interview decides",
 		filed, filepath.ToSlash(work.QuestionFile))
+	return nil
+}
+
+// checkQuestionsFollowTheDeck reports a deck edited more recently than the
+// questions it came from.
+//
+// The deck is not a rendering of `docs/open-questions.md` - it is that file's
+// second editor. Working through one with a customer rewrites the questions,
+// retires some and finds others, and one engagement's twenty rounds of revision
+// changed about half of them, dropped three and added six. None of it went
+// back, because nothing said it should.
+//
+// That matters more than an ordinary staleness because **`next` prints the
+// questions before anything else**. The next person to pick the repository up
+// reads the superseded file first, and walks into a meeting with questions
+// already abandoned. Worse, a judgement that was overturned survives there
+// looking considered - in that engagement, a security reasoning the deck had
+// corrected was still sitting in the file, argued well.
+//
+// Modification time is a weak signal and the right one here: it is exactly the
+// question being asked, it needs no parsing, and a false positive costs one
+// glance.
+func (c *checker) checkQuestionsFollowTheDeck() error {
+	questions := filepath.Join(c.root, work.QuestionFile)
+	qi, err := os.Stat(questions)
+	if err != nil {
+		return nil
+	}
+
+	dir := filepath.Join(c.root, "docs", "meeting-notes")
+	var newer []string
+	err = filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			if os.IsNotExist(err) && path == dir {
+				return filepath.SkipAll
+			}
+			return err
+		}
+		if d.IsDir() {
+			return nil
+		}
+		switch ext := strings.ToLower(filepath.Ext(d.Name())); ext {
+		case ".html", ".md", ".json", ".pdf":
+		default:
+			return nil
+		}
+		if d.Name() == "README.md" || strings.HasPrefix(d.Name(), "_") {
+			return nil
+		}
+		info, err := d.Info()
+		if err != nil {
+			return err
+		}
+		if info.ModTime().After(qi.ModTime()) {
+			rel, _ := filepath.Rel(c.root, path)
+			newer = append(newer, filepath.ToSlash(rel))
+		}
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("read %s: %w", dir, err)
+	}
+	if len(newer) == 0 {
+		return nil
+	}
+
+	sort.Strings(newer)
+	c.warnf("%s was edited after %s - %d file(s), the newest being %s. **Working a deck "+
+		"rewrites the questions**, so if any was reworded, retired or discovered while "+
+		"building it, that belongs back in the row. `asgard-cli next` prints those "+
+		"questions before anything else, and a stale one does not merely lag: it keeps "+
+		"a judgement that has been overturned, argued well",
+		filepath.ToSlash(filepath.Join("docs", "meeting-notes")),
+		filepath.ToSlash(work.QuestionFile), len(newer), newer[len(newer)-1])
 	return nil
 }
 

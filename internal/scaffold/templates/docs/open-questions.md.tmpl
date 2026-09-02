@@ -22,6 +22,16 @@ by making the wrong assumption first.
   `docs/decisions/YYYY-MM-DD-<topic>.md` if it settled anything, and apply the
   delta to the living spec. **Do not delete the row** - the fact that it was once
   open explains why the design has the shape it has.
+- **Numbers never move.** Retire a row in place rather than renumbering, and
+  leave the gap. Once anything cites a question by number - a deck, a meeting
+  note, the prose under this table - renumbering breaks every reference at once,
+  and the cost of that overtakes the cost of a gap almost immediately.
+- **A deck edits this file.** Reworking questions with somebody rewrites them,
+  and whatever is reworded, retired or discovered while building one belongs
+  back in these rows in the same edit. `asgard-cli next` prints this file before
+  anything else, so a stale row is what the next person reads first - and it
+  does not merely lag, it keeps a judgement that has been overturned, still
+  reading as though it were considered.
 - **Do not park a question here to avoid asking it.** If the customer can answer
   it in the next meeting, it belongs in the agenda, not in a table.
 

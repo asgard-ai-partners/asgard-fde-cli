@@ -53,7 +53,30 @@ order:
 | `references/` | their own manuals, schema dumps, field dictionaries, screenshots |
 | `docs/meeting-notes/` | what they said, before we tidied it |
 | `requirements/requests/` | what they asked for, in their words |
-| `docs/open-questions.md` | what is still unknown - a slide's worth of honesty |
+| `docs/open-questions.md` | what is still unknown - and **this one is also an output**, see below |
+
+**`docs/open-questions.md` is both the source and the product.** Working a deck
+through with somebody rewrites the questions: one engagement's revisions
+reworded about half of them, retired three and found six more, and none of it
+went back because nothing said it should.
+
+    reworded a question on a slide   change the row, in the same edit
+    dropped one                      retire the row, with why
+    found one                        add it, with who can answer
+
+**In the same edit, not afterwards.** The FDE who reported this intended to
+reconcile at the end; after twenty rounds the two had diverged far enough that
+the reconciliation kept being deferred.
+
+**Why this one matters more than ordinary staleness:** `asgard-cli next` prints
+the open questions before anything else, so whoever picks the repository up next
+reads that file first. A stale one sends them into a meeting with questions
+already abandoned - and worse, it preserves a judgement that has since been
+overturned, still argued convincingly. In that engagement a security reasoning
+the deck had corrected was sitting in the file, written well.
+
+`asgard-cli check` warns when anything under `docs/meeting-notes/` is newer than
+the questions file.
 
 **Not** `docs/spec/` and **not** `projects/*/chart/`. Those describe our
 implementation. A customer looking at a slide made from a chart sees a diagram of
