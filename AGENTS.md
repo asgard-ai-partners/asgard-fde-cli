@@ -211,9 +211,21 @@ material rather than reasoned into existence.**
     somebody copying reads one page, and it is not that one.
 
 So when a line tells a reader to find out who somebody is, or to ask a customer
-anything, **that line says in the same breath what it is for** - tracked, or said
-aloud, or printed. Not in a section further down, and not on the page that owns
-the rule.
+anything, **the destination goes inside the imperative** - not beside it:
+
+    no    who issues the credential          ...and a paragraph explaining
+                                             that the name is for tracking
+    yes   who issues the credential, for the tracking row
+
+**Adjacency was tried and it failed.** `wiki operations` had the boundary two
+lines above the instruction; an FDE read both sentences and copied only the
+imperative onto a customer slide. An imperative is the shape a reader scanning
+for "what do I do" hooks on, and prose beside one reads as elaboration rather
+than as a limit - especially when the imperative is short and bold and the
+caveat is a paragraph.
+
+Embedded, the destination travels with the words. Removing it becomes a
+deliberate act, and that act is the judgement that was missing.
 
 **None of the three is enforced by anything.** They are conventions, and the
 record is that a convention catches this only after somebody has been caught by
