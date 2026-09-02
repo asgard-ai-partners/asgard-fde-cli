@@ -456,16 +456,25 @@ Ask for it in the meeting, before you need it. Customers usually have more
 written down than they think, and none of it arrives unless asked for.
 
 **Asking has an order too, and it is not the one in question 3.** The two look
-alike and are opposite:
+alike and are opposite - one is how we reach a system once we have it, the other
+is what to ask them for first:
 
-    question 3, how we READ a system      a database  >  an API  >  a screen
-    here, what we ASK THEM FOR            docs  >  API docs  >  access to a screen
+    question 3, how we READ a system   a database  >  an API  >  a screen
+    here, what we ASK THEM FOR         docs > source > API spec > the DB > the UI
 
 | ask for | what it gives you |
 |---|---|
-| **the system manual / operating documentation** | best. Fields, validation rules, status codes and the process are all in it, and it explains what things *mean* |
-| **API documentation** | next. A clear contract, but it rarely explains the business meaning behind a field |
-| **access to the back office** | last. You can look at it and cannot quote it |
+| **system documentation / operating manual** | best. Fields, validation rules, status codes and the process are all in it, and it explains what things *mean* |
+| **the source code** | better than a spec, and people forget to ask. The code is what the system does; a spec is what somebody wrote down about it once. For a system they built themselves this is usually available and usually decisive |
+| **the API spec** | a clear contract, and it drifts. Good for shape, weak on business meaning |
+| **the database** | the data without the rules. You can see every field and not what any of them means |
+| **the back office screen** | last. You can look at it and cannot quote it |
+
+**Source code above a spec is the row that surprises people.** A spec describes
+an intention; the code is the behaviour, including the special cases nobody
+documented and the field that means two things depending on another field.
+Customers rarely offer it and often will hand it over when asked, particularly
+for something built in-house - and nobody asks.
 
 **A document replaces an interrogation, and that is the point of asking first.**
 Do not go through fields, validation rules or status codes one at a time in the
