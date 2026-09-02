@@ -29,6 +29,12 @@ If you are answering a question rather than running a meeting - "list the open
 questions in this document" - that is still this stage. Write the records, then
 answer from them.
 
+**You will also need something to take into the room.** The deck is the only
+thing in the repository the customer reads, and its shape is not this page's:
+the `proposal-deck` skill in `.agents/skills/` owns it, including the one to
+build while the questions are still open. Read it before writing slides, not
+after.
+
 <<with .Requests>>Open requests:
 
 <<range .>>  <<.ID>>  <<printf "%-8s" (printf "%s" .Status)>>  <<.Title>>
@@ -339,6 +345,36 @@ the rest into deferred scope rather than open questions.
 Write down what you are NOT building, particularly the things they mentioned in
 passing. An unrecorded "we could also..." returns as an assumption three weeks
 later, and by then nobody remembers whether it was agreed.
+
+## What they ask us
+
+An interview is not one-directional and the material here has been, until now.
+A customer who wrote a test plan usually ends it with a list of things they want
+**us** to confirm - account permissions, whether a channel can do X, what we
+recommend for their existing system. Those have nowhere to live: the
+open-questions file is this engagement's own questions, and
+`asgard-cli wiki platform-unknowns` is what no source settles.
+
+They go in `docs/open-questions.md`, in its own section, and the file the
+scaffold writes now has one.
+
+**Check each against `asgard-cli wiki platform-unknowns` before answering.** A
+surprising share of what a customer asks us is already on that list, because
+they ask about the same things every engagement hits - what a given user is
+allowed to reach, what gets logged and for how long. When one matches:
+
+    say so, plainly, in writing. "We do not have a confirmed answer to this
+    yet and are checking with the platform team" is a real answer and an
+    honest one
+
+The failure it avoids is the expensive kind: answering from a reasonable
+assumption, having it written into their evaluation, and discovering in week
+six that the platform does not do it. Their list is usually also their
+acceptance criteria.
+
+**Answer in writing, with a date, and put the answer next to the question.** A
+verbal answer in a meeting is not traceable to anything, and the next person
+cannot tell what we committed to.
 
 ## Material they hand you
 

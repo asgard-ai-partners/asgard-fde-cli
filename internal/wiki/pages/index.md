@@ -33,6 +33,7 @@
 | page | covers |
 |---|---|
 | [`operations`](operations.md) | Asgard's outbound IPs, checking model capability, vocabulary |
+| [`taiwan-channels`](taiwan-channels.md) | the commerce channels a customer will name, what SHOPLINE cost, and what we have not built |
 | [`case-studies`](case-studies.md) | the retail stockout from three angles, plus a Flow Agent help desk |
 | [`screenshots`](screenshots.md) | which picture answers which question, and the URL to fetch it from |
 

@@ -79,6 +79,65 @@ record of what an agent did, whether approved content can change before it goes
 out, non-HTTP protocol reach (answered: yes, via the sandbox), and the cost of
 producing a web console's page map.
 
+## The worklist, 2026-09-02
+
+Written down because this pass was run reactively - each gap found by walking
+into it - and the same mistake was made twice: asserting what the material
+contains without reading it. **`taiwan-channels` first said nobody had
+integrated a commerce channel. A middleware deployment integrates SHOPLINE
+across two skills, one of them an 88-page back-office map.** Searching for four
+names is not reading a repository.
+
+### Done this pass
+
+  - `mimir-dashboard`, `demo-generation`, `taiwan-channels`, `setup-path`,
+    `screenshots` - five new pieces of material
+  - `asgard-cli size` - what a capability is made of, before it is written
+  - the interview's 2b (which product), and 6b turned from a blocker into a
+    read-back
+  - the discovery deck, and the six rules of the proposal's that invert for it
+  - `CompletionModel` corrected in `AGENTS.md.tmpl` and `wiki settings`
+  - `find` searches the design-time skills; `scaffold` reports stale material;
+    a record can be named by its ID; a question number is not reused
+
+### Open, in the order an engagement hits them
+
+  1. **`asgard-freyr-skills` has a skill taxonomy nothing here describes** -
+     baseline (how to call safely), domain (what each screen does and the task
+     flows), role (how one job holder reasons). Nine skills across three layers,
+     with explicit dependencies between them. This is the answer to "when do you
+     need a skill", which `usecase skill-set` does not give - it answers
+     design-time versus runtime and stops. **Write `skill-layers`.**
+  2. **Slide 9 of a proposal mixes two opposite kinds of unknown.** The
+     customer's environment belongs there; our own platform's capabilities do
+     not - standing in front of a customer saying we do not know what our own
+     product does is not honesty. `wiki platform-unknowns` already says to ask
+     the platform team **before** the meeting; `proposal-deck` tells you to
+     print the list. The two documents contradict each other.
+  3. **Freyr is multi-tenant and `next --stage init` says it cannot be.** "One
+     workspace is one repository" is stated as the shape; Freyr runs several
+     tenants from one repository, each with its own namespace and its own
+     `deploy.yaml`, with the CI matrix built by scanning them. Either the rule
+     has an exception or Freyr is the exception - unresolved either way, and an
+     FDE reading both is stuck.
+  4. **`ConfigMap` is undocumented and there are 82 of them.** They carry
+     `node_positions` - the x/y layout of a Workflow in the platform's editor -
+     and are bound by the `asgard-ai.com/workflow-config-name` annotation.
+     Without one the graph opens as a pile. Same family as the missing
+     `project-environment-id` label, and nothing says either.
+  5. **`KnowledgeBase` + `Loader` + `Source` appear in exactly one chart** and
+     nothing covers them. The wiki says the Drive is preferred for new work and
+     that this path is still live; the only deployment using it is Heimdall.
+  6. **Fehu and the Management Console have no proposable shape.** Both are in
+     `wiki product-suite` as products. Neither is anything an engagement can put
+     in a proposal, and the next customer question about cost or about
+     permissions lands here.
+  7. **`asgard-core`'s processor constants have never been read.** The
+     authoritative list is `internal/constants.go`; `wiki workflow` says 13
+     processors, sourced from the CRD. Four processors named in the contract
+     appear in no chart, and this is the file that would say whether they exist.
+     The repository is not cloned locally.
+
 ## What is not done
 
 Ordered by what an engagement would hit first. Everything here is known, not

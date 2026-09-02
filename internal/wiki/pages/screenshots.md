@@ -127,8 +127,26 @@ slide about limiting access is the overstatement this tool warns about most.
 Not everything does, and assuming otherwise wastes a search:
 
   - the chart, the CRs, the cluster - there is no UI for any of it
-  - a chat platform's own console (LINE, Slack, Telegram). The integration pages
-    have a few unnamed images; their own vendor documentation is better
+  - **a chat platform's own console (LINE, Slack, Telegram), and LINE is the
+    one that hurts.** `integration.md` says a Taiwanese customer usually asks
+    about LINE first, and there is no picture of an Asgard agent answering in
+    it - not here, not in the product documentation, not in any reference
+    deployment, where every BotProvider is `generic`. So the channel asked about
+    most often is the one a proposal cannot show.
+
+    **Do not go looking; this square is empty.** Two ways through it, and the
+    second is better than it sounds:
+
+        weak      show the retail demo and say "this is not LINE, but the
+                  mechanism is the same". It reads as not having one
+        better    show nothing, and describe the exchange in their words -
+                  "your customer types their order number in LINE, it replies
+                  with the repair status, and says so plainly when it cannot
+                  find it". Slide 5 is an interaction, not a screen, and this
+                  is the one case where writing it out beats a picture
+
+    A vendor's own documentation screenshot is not an option: it is someone
+    else's product surface in our proposal.
   - anything about handoff, pausing, or per-user counters, because the platform
     does not have them - see [`integration.md`](integration.md)
 
