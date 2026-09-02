@@ -270,8 +270,8 @@ would keep if they could only keep one. That item is the MVP, whatever it costs
 to build - a first delivery that skips the item being judged has failed however
 fast it shipped.
 
-Then work out what that one item genuinely needs, and the two filters below turn
-the rest into deferred scope rather than open questions.
+Then work out what that one item genuinely needs, and the three filters below
+turn the rest into deferred scope rather than open questions.
 
 **7. What is explicitly out of scope?**
 
@@ -350,16 +350,49 @@ The pattern in all three: **"like everything else" is the wrong reason**, becaus
 the audience is what decides, and the audience is the one thing "everything
 else" does not share.
 
-## Two filters before a question becomes a row
+## Three filters before a question becomes a row
 
 An interview that ends with twenty-five open questions has not narrowed anything.
 It has moved the customer's whole document into a table, and the meeting that
-follows spends its time on questions nobody needed answered yet. Both filters
-below turn a question into either "not now" or "a signature", and most questions
-are one of the two.
+follows spends its time on questions nobody needed answered yet.
 
-Apply them to every question before filing it. What survives is short, and what
-survives is what the meeting is actually for.
+Apply all three to every question before filing it. Each turns a question into
+something other than a blocker - not our problem, not now, or a signature - and
+most questions are one of the three. What survives is short, and short is what
+the meeting is for.
+
+### Filter 0 - is this ours to answer at all?
+
+**Ask first, because it removes the most rows.** We are delivering an agent. We
+are not designing the customer's support operation, and an interview that drifts
+into how their own systems and teams fit together has stopped being a
+requirements interview.
+
+The test is narrow: **does the answer change what we build?**
+
+    ours        what we need FROM them to build it - a credential, an endpoint,
+                a network path, a document, an account, a decision only they can
+                make about our behaviour
+    theirs      how they staff a channel, who maintains a document, how their
+                two systems relate to each other, what their people do today
+
+A question about their internal arrangements is not an open question. It is
+either something to hand back as a note - "this is worth deciding before you go
+live, and it is yours" - or nothing at all.
+
+Two ways this goes wrong, and both look like diligence:
+
+- **Doing their integration analysis for them.** How their channel binds to their
+  CRM is their business unless we are the thing doing the binding. Asking it
+  makes us look thorough and produces a table nobody uses.
+- **Turning an operational precondition into a design question.** "Is a person
+  already answering on this account" matters, but it is one line in the handover
+  - a thing they must sort out before we attach anything - not a row we track
+  and chase.
+
+What survives filter 0 is almost always a small set of the same shapes: a
+credential, an endpoint, a network path, a document, an account, and the two
+answers only they can give (2b and 6b).
 
 ### Filter 1 - the minimum that proves it works (MVP)
 
@@ -457,15 +490,19 @@ critical path, and the timeline is a different one. A customer who hears that in
 week one plans for it. A customer who hears it in week eight thinks you missed
 it.
 
-### What is left after both filters
+### What is left after all three
 
-Whatever neither filter removes. Those are the real questions, and there are
-usually three or four:
+Whatever none of them removes. Those are the real questions, and there are
+usually two or three:
 
-  - what blocks the MVP itself, which is almost always **how a system is reached**
-  - anything where the customer has to do something before we can - provision an
-    account, paste a webhook URL back, open a network path
+  - **how a system is reached** - the one that blocks the MVP nearly every time
+  - anything the customer must do before we can - provision an account, paste a
+    webhook URL back, open a network path
   - anything where two of their answers contradict each other
+
+If a surviving row is not one of those shapes, run it through filter 0 again.
+Most of what gets past these filters and still turns out to be noise is a
+question about the customer's own arrangements that felt too important to drop.
 
 ## Write it down as you go
 
