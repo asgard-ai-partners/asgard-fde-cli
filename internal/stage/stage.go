@@ -379,3 +379,80 @@ func (s Stage) NeedsTask() bool {
 		return false
 	}
 }
+
+// Raw returns a stage's prompt as written, before rendering. It is what search
+// reads: the template directives are noise to a reader, but the prose around
+// them is the material, and rendering would need a repository to render against.
+func (s Stage) Raw() (string, error) {
+	content, err := prompts.ReadFile("prompts/" + s.promptF)
+	if err != nil {
+		return "", fmt.Errorf("read prompt %s: %w", s.promptF, err)
+	}
+	return string(content), nil
+}
+
+// Match is one stage whose prompt mentions every search term.
+type Match struct {
+	Stage
+	Lines []string
+	Score int
+}
+
+// Search finds stages by subject rather than by position in the walk.
+//
+// The walk is how an onboarding usually goes, not how it has to go: three of
+// this engagement's most expensive decisions were reversed after contact with
+// reality, so an agent that reads the repository and forms its own view of where
+// things stand is doing the right thing. What it then needs is the guidance for
+// the subject at hand - "how is the read path decided" - reachable without
+// having arrived at stage 4 to be told.
+func Search(query string) ([]Match, error) {
+	terms := strings.Fields(strings.ToLower(query))
+	if len(terms) == 0 {
+		return nil, fmt.Errorf("search needs at least one term")
+	}
+
+	var matches []Match
+	for _, s := range Readable {
+		body, err := s.Raw()
+		if err != nil {
+			return nil, err
+		}
+		lower := strings.ToLower(body)
+
+		hitsAll := true
+		for _, term := range terms {
+			if !strings.Contains(lower, term) {
+				hitsAll = false
+				break
+			}
+		}
+		if !hitsAll {
+			continue
+		}
+
+		m := Match{Stage: s}
+		for _, line := range strings.Split(body, "\n") {
+			// Skip the template directives: they are how a prompt is rendered,
+			// not anything a reader wanted to find.
+			if strings.Contains(line, "<<") {
+				continue
+			}
+			lowerLine := strings.ToLower(line)
+			for _, term := range terms {
+				if !strings.Contains(lowerLine, term) {
+					continue
+				}
+				m.Score++
+				if trimmed := strings.TrimSpace(line); len(m.Lines) < 3 && len(trimmed) > 20 {
+					m.Lines = append(m.Lines, trimmed)
+				}
+				break
+			}
+		}
+		matches = append(matches, m)
+	}
+
+	sort.Slice(matches, func(i, j int) bool { return matches[i].Score > matches[j].Score })
+	return matches, nil
+}

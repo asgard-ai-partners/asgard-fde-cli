@@ -285,8 +285,9 @@ asgard-cli usecase --search schedule
 An extract assumes you already know the platform has that shape; a wiki page is
 where that assumption comes from. `asgard-cli add` prints one of each.
 
-`--search` on either takes the customer's own words rather than a name, which is
-what you have when you know the requirement but not what the thing is called.
+**To look something up, use [`find`](#find)**, which searches both and names the
+counterpart of whatever it hits. `--search` on either command is the narrow form,
+for when you already know which half holds the answer.
 
 The wiki's own conventions - its three layers, what a page must carry, and how it
 is kept from going stale as the platform moves - are in `asgard-cli wiki

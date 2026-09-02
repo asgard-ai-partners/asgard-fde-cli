@@ -1,10 +1,14 @@
 # Asgard platform wiki
 
+    asgard-cli find <terms>         look something up - searches here AND the
+                                    extracts, and names the counterpart it finds
     asgard-cli wiki                 list every page
     asgard-cli wiki <page>          read one
-    asgard-cli wiki --search <term> find one by what the customer said
     asgard-cli wiki --unverified    what each page has NOT been held against
     asgard-cli wiki --conventions   this file
+
+`find` is the way in. `wiki --search` exists for when you already know the answer
+is on the platform side rather than in a deployment shape.
 
 What the Asgard platform is made of, and who each piece is for.
 

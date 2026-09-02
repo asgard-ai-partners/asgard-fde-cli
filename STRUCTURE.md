@@ -14,7 +14,7 @@ that repo is what the next agent opens.
 cmd/asgard-cli/       main; signal handling and exit codes only
 internal/             every package, none exported
 source/               internal notes that must never ship
-.github/workflows/    CI and the tag-driven release
+.github/             CI, the tag-driven release, and the PR template
 .goreleaser.yaml      how the binary is built and published
 ```
 

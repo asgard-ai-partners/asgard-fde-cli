@@ -29,6 +29,15 @@ The stage is worked out from the repository itself - which files exist, which CR
 kinds each chart declares - not from a counter in the config. So it stays right
 when someone does a step by hand, and it never claims work is done that is not.
 
+It is an opinion rather than an instruction. It reads a fixed set of signals; a
+reader can read more - the living spec, the open questions, what the charts
+actually declare, what the customer just asked. Where the two disagree, the
+reader is usually right: an onboarding is not linear, and the three most
+expensive decisions in the engagement this was built from were each made once,
+built, and reversed. To reach a stage's material by subject rather than by
+position, "asgard-cli find <terms>" searches the stage guidance alongside the
+wiki and the extracts.
+
 Stages 4, 5 and 6 are the decisions that have been answered wrong before. Those
 stages print the wrong answer as well as the right one, because the wrong one is
 what looks obvious.

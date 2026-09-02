@@ -35,13 +35,15 @@ and what it was not - a field name is checkable against the CRD, a shape against
 a deployment, and a design rationale against nothing at all. --unverified lists
 that for every shape at once; it is worth reading before a first engagement.
 
-With no arguments it lists the shapes. Naming one prints it in full. --search
-finds shapes by what the customer asked for, which is useful when you know the
-requirement but not what the shape is called:
+With no arguments it lists the shapes. Naming one prints it in full.
 
-    asgard-cli usecase --search "public anonymous"
-    asgard-cli usecase --search schedule
-    asgard-cli usecase flow-agent-supervisor`,
+    asgard-cli usecase flow-agent-supervisor
+    asgard-cli usecase --search schedule      # this half only
+
+**To look something up, use "asgard-cli find" instead.** It searches this and the
+wiki together and names the counterpart of whatever it finds, which is what you
+want when you know the requirement but not which half holds the answer. --search
+here is the narrow form, for when you already know it is a deployment shape.`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			out := cmd.OutOrStdout()
@@ -114,8 +116,8 @@ Weight a claim by that, and re-check before betting a deployment on one.
 				}
 			}
 			fmt.Fprintf(out, `
-Read one with "asgard-cli usecase <name>", or find one by what the customer
-asked for with "asgard-cli usecase --search <terms>".
+Read one with "asgard-cli usecase <name>". To look something up, "asgard-cli
+find <terms>" searches this and the wiki together.
 
 Every shape says what it was checked against and what it was not. Before betting
 a deployment on one, see "asgard-cli usecase --unverified" - some of these are
@@ -130,7 +132,7 @@ For what the platform is and who each piece is for, "asgard-cli wiki".
 		},
 	}
 
-	cmd.Flags().StringVar(&search, "search", "", "find shapes mentioning all of these terms")
+	cmd.Flags().StringVar(&search, "search", "", "search this half only; `asgard-cli find` searches both")
 	cmd.Flags().BoolVar(&unverified, "unverified", false,
 		"list only what has NOT been held against a real deployment, and what about each is unchecked")
 

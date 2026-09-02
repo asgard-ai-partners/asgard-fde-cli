@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/stage"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/usecase"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/wiki"
 )
@@ -25,9 +26,16 @@ func newFindCmd() *cobra.Command {
 		Short: "Search both bodies of material at once",
 		Long: `Search the platform wiki and the deployment extracts together.
 
-The two answer different questions - what the platform has, and how one shape is
-assembled - and which of them holds an answer is often not obvious before
-searching. This searches both.
+Three bodies answer different questions - what the platform has, how one shape is
+assembled, and what to weigh when deciding - and which of them holds an answer is
+often not obvious before searching. This searches all three.
+
+The stage prompts are searchable **by subject** rather than only by position in
+the walk. An onboarding is not linear - three of this engagement's most expensive
+decisions were reversed after contact with reality - so an agent that reads the
+repository and forms its own view of where things stand is doing the right thing.
+What it then needs is the guidance for the question at hand, without having to
+arrive at a stage to be handed it.
 
 It also **follows the link between them**: a wiki page that matches names the
 extract covering the same subject at field level, and an extract names its wiki
@@ -54,12 +62,16 @@ To read one in full: "asgard-cli wiki <page>" or "asgard-cli usecase <name>".`,
 			if err != nil {
 				return err
 			}
+			stages, err := stage.Search(query)
+			if err != nil {
+				return err
+			}
 
-			if len(pages) == 0 && len(extracts) == 0 {
-				fmt.Fprintf(out, "Nothing in either body matched %q.\n\n"+
-					"Both are searched literally, so a term in one language will not reach\n"+
-					"material written in the other unless a page mentions it. List them with\n"+
-					"`asgard-cli wiki` and `asgard-cli usecase`.\n", query)
+			if len(pages) == 0 && len(extracts) == 0 && len(stages) == 0 {
+				fmt.Fprintf(out, "Nothing matched %q in any of the three bodies.\n\n"+
+					"They are searched literally and every term has to appear, so try fewer\n"+
+					"words. List them with `asgard-cli wiki`, `asgard-cli usecase` and\n"+
+					"`asgard-cli next --list`.\n", query)
 				return nil
 			}
 
@@ -90,6 +102,17 @@ To read one in full: "asgard-cli wiki <page>" or "asgard-cli usecase <name>".`,
 						if to := firstRef(toWiki, body); to != "" {
 							fmt.Fprintf(out, "  %-18s -> what it is:  asgard-cli wiki %s\n", "", to)
 						}
+					}
+					fmt.Fprintln(out)
+				}
+			}
+
+			if len(stages) > 0 {
+				fmt.Fprintf(out, "DECISIONS - what to weigh at this point in the work (asgard-cli next --stage <name>)\n\n")
+				for _, m := range stages {
+					fmt.Fprintf(out, "  %-18s %s\n", m.Name, m.Title)
+					for _, line := range m.Lines {
+						fmt.Fprintf(out, "  %-18s %s\n", "", truncate(line, 84))
 					}
 					fmt.Fprintln(out)
 				}

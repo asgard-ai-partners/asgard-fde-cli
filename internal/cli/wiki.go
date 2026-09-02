@@ -31,13 +31,14 @@ how one shape of deployment is assembled, field by field, and assumes the reader
 already knows the platform has that shape. These pages are where that assumption
 comes from, so they deliberately do not repeat what an extract already covers.
 
-With no arguments it lists the pages. Naming one prints it in full. --search
-finds pages by what the customer said, which is useful when you know the
-requirement but not what the feature is called:
+With no arguments it lists the pages. Naming one prints it in full.
 
     asgard-cli wiki agents
-    asgard-cli wiki --search "匿名 訪客"
-    asgard-cli wiki --search dashboard
+    asgard-cli wiki --search dashboard        # this half only
+
+**To look something up, use "asgard-cli find" instead.** It searches this and the
+extracts together and names the counterpart of whatever it finds. --search here
+is the narrow form, for when you already know the answer is on the platform side.
 
 --conventions prints how the wiki is maintained: where its sources are, what a
 page has to carry, and how it is kept from going stale as the platform moves.`,
@@ -117,8 +118,8 @@ deeply than "asgard-cli usecase" and each says how far it got.
 				}
 			}
 			fmt.Fprintf(out, `
-Read one with "asgard-cli wiki <page>", or find one by what the customer said
-with "asgard-cli wiki --search <terms>".
+Read one with "asgard-cli wiki <page>". To look something up, "asgard-cli find
+<terms>" searches this and the extracts together.
 
 For how a deployment shape is actually assembled, "asgard-cli usecase".
 For how the wiki is maintained, "asgard-cli wiki --conventions".
@@ -127,7 +128,7 @@ For how the wiki is maintained, "asgard-cli wiki --conventions".
 		},
 	}
 
-	cmd.Flags().StringVar(&search, "search", "", "find pages mentioning all of these terms")
+	cmd.Flags().StringVar(&search, "search", "", "search this half only; `asgard-cli find` searches both")
 	cmd.Flags().BoolVar(&conventions, "conventions", false, "print how the wiki is maintained and where its sources are")
 	cmd.Flags().BoolVar(&unverified, "unverified", false,
 		"list what each page has NOT been held against a real deployment")

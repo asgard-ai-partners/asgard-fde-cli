@@ -119,6 +119,66 @@ CRD schemas in [`asgard-kube/crd/`](https://github.com/asgard-ai-platform/asgard
 which is how four required fields were missing from two templates until somebody
 looked.
 
+## Before you say it is done
+
+The gate above is mechanical and catches almost nothing that has actually gone
+wrong here. These are the questions that would have. Each one is on the list
+because skipping it shipped something.
+
+`.github/pull_request_template.md` asks for the answers to three of them, which
+is where they are hardest to skip - a PR body is written at the moment somebody
+believes the work is finished. The rest are here because they are cheaper to ask
+while the work is still being done.
+
+**`gh pr create --body` replaces that template rather than filling it in.** The
+template only prefills the web form, so a PR opened from the command line - which
+is how they are opened here - silently skips it. Structure the body you pass
+around the template's sections, or read it first with
+`cat .github/pull_request_template.md`.
+
+**Did you run it, or only read it?**
+Auditing material is not using the tool. `project add` left the repository with a
+project the config declared and the disk did not - `check` passed, `render`
+failed - and that survived a long review of the material because nobody had run
+`init`, `scaffold`, `project add`, `add` and `render` in sequence. Do that, in a
+throwaway directory, for anything that touches a command.
+
+**What else claimed the thing you just changed?**
+A trap lives in a template, an extract, a stage prompt and a wiki page, and only
+one of them is in your diff. Changing `allowWrite` in a template while an extract
+still teaches the old value leaves the repository disagreeing with itself.
+`asgard-cli find <the thing>` finds the other copies.
+
+**Did you break the thing that was enforcing it?**
+Renumbering the request template's sections silently broke `work.go`, which
+appended status transitions under a heading by its literal number. If a rule was
+being kept by something, changing the shape it keeps is the same change.
+
+**Does anything point at what you added?**
+Material nothing links to is not read, and the writer never finds out, because
+the file is there. The `find` command shipped with every routing document still
+sending readers to the two narrower commands it replaced - it worked, and nothing
+mentioned it outside its own source file. Writing something and pointing at it
+are separate acts; `source/FINDINGS.md` records this repo doing only the first,
+repeatedly. Grep for the name of what you added.
+
+**Is the claim verified, or asserted?**
+The wiki was described as covering its sources completely, in the repository, in
+prose. Counting the citations against the source files gave 65 of 162. If a claim
+is countable, count it before writing it, and put the number somewhere the next
+person can recount it - `internal/wiki/pages/index.md` carries that one.
+
+**Would this be recognisable to the customer it came from?**
+`--help` shipped a real customer's repository name as its example, and a stage
+prompt's illustration is still modelled on one engagement's actual systems.
+Nothing under `internal/` may name or portray a customer.
+
+**Is "done" as wide as what you checked?**
+Say what was verified and what was not. "The extracts are correct" and "the
+extracts' YAML skeletons validate against the CRD" are different claims, and
+reporting the first when you did the second is how a review passes something
+broken.
+
 ## Reference material lives outside this repo
 
 Ten repositories, read-only, never vendored in. **The URL is the source of

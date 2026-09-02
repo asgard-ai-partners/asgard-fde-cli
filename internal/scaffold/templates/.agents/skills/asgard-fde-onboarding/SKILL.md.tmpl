@@ -21,28 +21,51 @@ asgard-cli next
 ```
 
 It works out where the onboarding is **from the repository itself** - which files
-exist, which CR kinds each chart declares - and prints that stage's guidance.
+exist, which CR kinds each chart declares - and prints that stage's guidance. It
+stays right when a step was done by hand, and it answers in an empty directory,
+where there is nothing yet to read.
 
-Run it again after each step rather than working from memory. It cannot claim
-work is finished that is not, and it stays right when a step was done by hand.
+**But it is an opinion, not an instruction.** It derives a stage from a fixed set
+of signals; you can read more than that - `AGENTS.md`, the living spec, the open
+questions, what the charts actually declare, and what the person in front of you
+just asked. **Where you disagree with it, you are probably right**: an onboarding
+is not linear, and three of this engagement's most expensive decisions were made
+once, built, and reversed after contact with reality. A tool that walks you into
+the same first answer is the failure mode, not the goal.
 
-**Do not reproduce what it says.** Run it and follow it: the guidance is
+So form your own view of where things stand, and reach for the guidance by
+subject rather than by position:
+
+```bash
+asgard-cli find "<what you are actually deciding>"
+```
+
+That searches the platform wiki, the deployment shapes and the stage guidance
+together, so "how is the read path decided" reaches stage 4's material without
+having to have arrived at stage 4.
+
+**Do not reproduce what any of it says.** Run it and read it: the guidance is
 versioned with the tool, while a copy pasted into a transcript goes stale.
 
-## Routing
+## Where the material is
+
+Not a sequence to follow - a map of what answers what.
 
 | what you are doing | where to look |
 |---|---|
 | anything, first | `asgard-cli next` |
-| **about to write a CR** | `asgard-cli usecase` - the shape, its skeleton, and its traps |
-| you know the requirement but not the shape | `asgard-cli usecase --search "<the customer's words>"` |
+| **the customer said something and you have to turn it into work** | `asgard-cli next --stage requirements` - the interview, then `asgard-cli request add "<their words>"` |
+| **looking something up** | `asgard-cli find "<the customer's words>"` - searches both bodies of reference material and hands you the other half |
+| **about to write a CR** | `asgard-cli usecase <shape>` - the skeleton and its traps |
+| what a thing on the platform even is | `asgard-cli wiki <page>` - read this before the extract, which assumes it |
 | how to change this repo - layout, conventions, CRD traps | `AGENTS.md` |
 | what the system currently does | `docs/spec/<<.SpecSlug>>/` |
 | why something was decided | `docs/decisions/` |
 | a `SemanticLayer` or `DataConnector`, or any query against a customer database | `semantic-layer-modeling` skill |
 | before committing anything under `projects/*/chart` or `common/` | `asgard-cr-verification` skill |
 | work that needs a spec before implementation | `spec-workflow` skill |
-| registering a new project | `asgard-cli project add <slug>`, then `asgard-cli scaffold` |
+| registering a new project | `asgard-cli project add <slug>` - it writes the chart skeleton too |
+| the repo has drifted: contradictions, stale claims, a term nobody owns | `knowledge-base` skill, after `asgard-cli check` |
 
 ## The question behind the three big decisions
 
