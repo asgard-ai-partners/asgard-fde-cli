@@ -307,6 +307,16 @@ names is not reading a repository.
      product documentation page; LINE having no current screenshot. The last two
      are asks for asgard-docs rather than for this repository.
 
+  8b. **The first measured reading baseline, from before the log existed.** One
+     engagement read about 15 of ~36 pages, and the rule was: the stage it was
+     told it was in, plus whatever that stage pointed at. Never opened, and
+     needed: `wiki operations` - in the index the whole time under the title
+     Connectivity, while that engagement spent a day on connectivity.
+
+     `asgard-cli reading` records this from now on. **That number is the
+     baseline to beat**, and the thing to watch is not the ratio but which
+     pages sit in the never-opened column while being relevant.
+
   9. ~~**No engagement has been walked end to end with the current material.**~~
      **Walked 2026-09-02**, in a throwaway repository, through every state this
      session changed: init, scaffold, material filed with nothing recorded

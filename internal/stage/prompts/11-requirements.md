@@ -113,13 +113,24 @@ their document already decided it. Two columns on that page: the question on the
 left, what it produces on the right. Not two slides; splitting them removes the
 sense of a trade.
 
-**Titles are their headings, unedited.** If you split one of their items, the
-title is still a phrase from their document and the lead says which item it came
-from. A capability's context page contains nothing you wrote - their heading,
-their description, their list. Those pages needed no correction at all.
+**Titles are their headings, unedited.** A page titled with a name of our
+invention drew "stop drifting the titles" - it reads as a demand nobody made. If
+you split one of their items, the title is still a phrase from their document and
+the lead says which item it came from.
 
-**Ask, and stop.** Do not supply the consequence; that is theirs to state, and
-supplying it invents branches that do not exist.
+A capability's context page contains **nothing you wrote** - their heading, their
+description, their list. Those pages went through twenty rounds without a single
+correction, and that is the measurement worth remembering: **the number of
+revisions tracks how much of the page was ours.**
+
+**Ask, and stop.** The consequence is theirs to state, and supplying it invents
+branches that do not exist. The shape it takes:
+
+    有沒有測試環境?
+    有沒有測試環境?沒有的話讀正式資料可以嗎     <- added five times, rejected five
+
+Each addition rehearses their answer. "No test environment" does not mean no
+integration, and writing the second half creates a fork nobody was standing at.
 
 **A slide is not an agenda and not a tracking list.** "Who is responsible" is
 right to ask aloud and wrong to print. The test is the carrier: is this answer
@@ -132,32 +143,58 @@ vocabulary collects a no:
     no    有沒有 OMS 或電商中台?
     yes   現在要看各平台庫存,是一個一個後台登,還是有一個地方全看得到?
 
-**State the condition in the same sentence as the capability.** And claim nothing
-past `asgard-cli wiki platform-unknowns` - what is on that list is asked of the
-platform team **before** the meeting and answered aloud, never printed.
+**State the condition in the same sentence as the capability.**
+
+    no    given an API, we can integrate all five channels
+    yes   given a read-only account on the CRM and a route to it, this becomes X
+
+**Claim nothing past `asgard-cli wiki platform-unknowns`.** What is on that list
+is asked of the platform team **before** the meeting and answered aloud, never
+printed. Standing in front of a customer saying we do not know what our own
+product does is not honesty.
 
 **No 「你們」 in a Chinese deck.** Drop the subject, or make their document the
 subject. Chinese can omit it, so writing it is a choice the reader feels.
 
-**Check the subject of every line.** On an anonymous channel the person approving
-a write is the person in the conversation, not staff.
+**On an anonymous channel the person approving a write is the visitor in the
+conversation, not staff.** One page described the approval screen as showing
+"the customer's name, product and fault description" - the shape of a supervisor
+reviewing somebody else's record, when the scenario was that customer, in their
+own chat, being asked whether to open the ticket. **Check the subject of every
+line.**
 
-**Say what identifies the person, both ways.** A self-service lookup needs to
-name what identifies the caller - a number they type is not an answer. A write
-needs to name which field says who the record is for; the agent fills that one,
-and whose account it sits under is theirs.
+**Say what identifies the person, both ways.**
+
+    no    if there is no account binding, the customer gives us their
+          ticket number and we look it up
+    why   ticket numbers are usually sequential. That lets anybody
+          enumerate other people's cases, and it is not authentication
+
+A self-service lookup has to name what identifies the caller, and a number they
+type is not an answer. A write has to name **which field says who the record is
+for** - the agent fills that one, so it is ours; whose account it sits under is
+theirs and is not asked.
 
 **Nothing only we can resolve.** No question numbers, no `REQ-` ids, no "the
 five the filters removed" - if a reader with only the deck cannot resolve the
 reference, it does not go on.
 
 **Borrow the layout skill's visual language, not its authoring process.** One
-source, the HTML. Layout checks yes, content checks no - and **never edit a
-slide to make a checker pass.**
+source, the HTML. Layout checks yes, content checks no.
 
-**Write back to `docs/open-questions.md` in the same edit.** Rewording a
-question, dropping one or finding one all belong in the row immediately;
-`asgard-cli check` warns when the deck is newer than the questions.
+**Never edit a slide to make a checker pass.** A content check reported an
+eyebrow as missing; it was there, and the fix that turned the check green
+removed the sub-numbering from every eyebrow - after which every page claimed the
+wrong level. **A check failing on text you can see means the check is wrong.**
+
+**Write back to `docs/open-questions.md` in the same edit**, not afterwards.
+Rewording a question, dropping one, finding one - each belongs in the row now.
+
+One engagement deferred it and after twenty rounds the two had diverged too far
+to reconcile. What survived in the file was a security judgement the deck had
+already corrected, **still argued convincingly**. `asgard-cli next` prints that
+file before anything else, so the next person reads the superseded version
+first. `asgard-cli check` warns when the deck is newer.
 
 ## Why the interview is a stage of its own
 
