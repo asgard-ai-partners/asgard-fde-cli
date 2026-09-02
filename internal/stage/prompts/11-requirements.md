@@ -305,6 +305,87 @@ The pattern in all three: **"like everything else" is the wrong reason**, becaus
 the audience is what decides, and the audience is the one thing "everything
 else" does not share.
 
+## Two filters before a question becomes a row
+
+An interview that ends with twenty-five open questions has not narrowed anything.
+It has moved the customer's whole document into a table, and the meeting that
+follows spends its time on questions nobody needed answered yet. Both filters
+below turn a question into either "not now" or "a signature", and most questions
+are one of the two.
+
+Apply them to every question before filing it. What survives is short, and what
+survives is what the meeting is actually for.
+
+### Filter 1 - the minimum that proves it works (MVP)
+
+**Ask: does the smallest useful version need this answer?**
+
+Find the one scenario that can ship alone and prove the thing works at all -
+usually the one that reads something the agent already has and touches no other
+system. Anything that scenario does not need is not an open question. It is a
+line in section 7, out of scope for now, with a note of what would have to be
+answered before it comes back.
+
+A worked example, from a customer asking for LINE support over a CRM and a
+ticket system, with human handoff and per-user quotas:
+
+    the MVP        answer product questions from the product documentation
+                   needs: the LINE channel, a Drive. That is all
+    not the MVP    who is asking, the CRM, the ticket system, creating a case,
+                   handoff, quotas
+
+The MVP needs no identity, no read path into a customer system, no write path,
+and nothing in front of LINE. So the identity question - which is genuinely the
+hardest one in that engagement - **does not block the first delivery**, and
+filing it as a blocker makes the first delivery look impossible when it is a
+week's work.
+
+It still gets asked. It gets asked as "before phase 2", not as "before we can
+start", and that difference is what a customer hears as competence.
+
+**The MVP is not a demo.** It runs against their real channel with their real
+documents and a real person can use it. A demo on sample data proves nothing and
+the questions it defers all come back at once.
+
+### Filter 2 - what a POC can be excused from, in writing (資安豁免條款)
+
+**Ask: is this a design problem, or a waiver?**
+
+A whole class of question blocks a production system and does not block a POC,
+provided the exemption is written down rather than assumed. These are the usual
+ones, and each is currently unanswerable from the platform's own documentation -
+see `asgard-cli wiki platform-unknowns`:
+
+| the question | as a POC exemption |
+|---|---|
+| can different users be limited to different data | every POC user sees the same scope, and the scope is test data |
+| is there an audit trail we can show an auditor | the POC is not audited; a record is a phase-2 requirement |
+| how long are conversations retained, and the personal data in them | test accounts only, no real customer data, deleted at the end |
+| can the agent write to the production system | it cannot. Writes go to a test instance, or the POC stops at proposing the write |
+| what happens on a security review | there is no review before the exemption expires |
+
+Get the exemption **from a named person, in writing, with a boundary and an end
+date**. Test data or a sandbox tenant, which accounts, and when the exemption
+stops. Then write it into `docs/decisions/` on the day it is agreed - an
+exemption nobody recorded becomes an accusation later, and the person who granted
+it will have moved on.
+
+**If it cannot be waived, this is not a POC.** That is not a setback and it is
+worth saying plainly in the meeting: it means a security review is on the
+critical path, and the timeline is a different one. A customer who hears that in
+week one plans for it. A customer who hears it in week eight thinks you missed
+it.
+
+### What is left after both filters
+
+Whatever neither filter removes. Those are the real questions, and there are
+usually three or four:
+
+  - what blocks the MVP itself, which is almost always **how a system is reached**
+  - anything where the customer has to do something before we can - provision an
+    account, paste a webhook URL back, open a network path
+  - anything where two of their answers contradict each other
+
 ## Write it down as you go
 
 Not afterwards. A record written after the meeting is a record of what you
@@ -333,6 +414,8 @@ is not tracked, it is just written down.
   - the customer's own wording is in section 1, unedited
   - the audience is decided, and the target project follows from it
   - every system has a row, and every row says how it is reached
+  - the open questions have been through both filters, so what is left blocks the
+    MVP rather than describing everything still unknown
   - every system we will connect to has a section 4 block, with a named
     credential owner and an answer on network reach - and no secret in it
   - unstructured knowledge is either listed or explicitly ruled out
