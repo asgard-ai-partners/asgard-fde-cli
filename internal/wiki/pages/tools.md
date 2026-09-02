@@ -84,6 +84,33 @@ API types themselves ([asgard-kube](https://github.com/asgard-ai-platform/asgard
 content has to be stable; anything derived from the turn's payload belongs in
 `user-prompt-submit`.
 
+## The sandbox's own tools cannot be switched off
+
+An agent runs in a sandbox that is a coding-agent CLI, and **that CLI's built-in
+tools are present in every sandbox** - web search, web fetch, task and schedule
+listing. They are not Asgard domain tools, they are not a leak from the agent
+hub, and **no Toolset or SandboxBlueprint setting removes them**. The platform
+hard-codes its disallow list to two planning tools and there is **no field on any
+CRD to opt out**.
+
+So the only control today is the prompt, which is a weak defence and the only
+one there is:
+
+    a deployment that needs them off   says so in the prompt, explicitly
+    that instruction                   must not be deleted as redundant
+
+**This matters in front of a customer who asks what the agent can reach.** The
+honest answer is that it can search the web unless told not to, and that the
+instruction not to is a prompt rather than a permission. Anyone answering "it
+only sees what you connect" is wrong.
+
+## `Toolset.spec.instruction` is gone
+
+Removed from the live CRD. Tool usage guidance now lives on
+`Workflow.entries[].tooling.description`. A chart carrying `spec.instruction` is
+carrying a field the apiserver no longer knows, and re-adding it is a common
+repair to make when guidance seems to be missing.
+
 ## Sources
 
 - [MCP Servers](https://docs.asgard-ai.com/docs/product-suite/odin/features/mcp-servers)

@@ -414,6 +414,24 @@ than at acceptance.
 Ask who can configure that on their side. It is usually a different person from
 whoever gives you a database account.
 
+**4c. Do they expect it to send anything outward?**
+
+Mail, SMS, a message into a group. Customers ask for this constantly and it
+sounds trivial next to reading a database, so it gets nodded through.
+
+**The platform cannot send mail.** No SMTP, no preset mail toolset, nothing in
+the core. So:
+
+    they have an HTTP endpoint that sends mail   we can call it
+    they do not                                  it cannot be built yet, and
+                                                 that is a question for them
+
+**Do not let it be mocked silently.** A mocked send that returns success and
+writes "notified" into a log is worse than nothing - somebody later reads that
+log and believes people were told. If a mock is right for a test phase, say now
+that every summary will lead with "not actually sent". `asgard-cli wiki
+integration` has how one deployment does it.
+
 **5. Is there anything it should change, and not just read?**
 
 The standing architecture is read-only. A write is not a project decision to be

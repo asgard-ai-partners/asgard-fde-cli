@@ -159,16 +159,33 @@ names is not reading a repository.
      the grant, the customer sees nothing - and it is now in `08-deploy.md`.
      Whether either needs more than that is unjudged.
 
-  6. **Three reference charts have been counted and not read.**
-     `unitech-e-asgard-kube`, `xxentria-asgard-kube` and `buy123-asgard-kube`
-     contributed their CR kind counts to the inventory and nothing else. Each
-     has its own `AGENTS.md` stating that repository's rules, and those are
-     where a deployment records what it learned - which is how the finance
-     deployment's Mimir shape was found. **Read the three AGENTS.md files
-     first**; that is an hour and it is where the surprises are.
+  6. ~~**Three reference charts have been counted and not read.**~~ **Their
+     AGENTS.md files are read, 2026-09-02.** Five things came out that nothing
+     here had, all now written up: the platform sends no mail at all; a
+     brand-new channel's first message may never be answered; a join can render
+     fine and match zero rows; `joins[].relationship` has no `many_to_many` and
+     forcing one inflated sums 18.2x; and the sandbox's own CLI tools cannot be
+     disabled by any CRD field. Also that `Toolset.spec.instruction` is gone
+     from the live CRD.
 
-     They are also the source most of the older extracts came from, so reading
-     them is also the only way to check whether those extracts still match.
+     **What is still unread in those three is the charts themselves** - the
+     AGENTS.md files say what each deployment learned, and the templates say
+     what it actually emits. Most of the older extracts came from these repos,
+     and nothing has checked whether those extracts still match what is there.
+
+  6b. **And the repository set was scoped from memory and was wrong.** Every
+     count of "the seven reference deployments" in this file and in the material
+     excluded the platform's own code. Under `projects/asgard/` there are also
+     `asgard-freyr-api` (873 Go files - the application behind the Freyr
+     skills), `asgard-router` (154), `content-pipeline` (1674 Python files),
+     `deleteme` (130 CRs, 1131 Python files, despite the name), plus
+     `asgard-bussiness-plan`, `partner-finder`, `ppt`, `hugin`,
+     `just-inference` and `asgard-html2img`. **None has been opened.**
+
+     `asgard-kube/pkg/apis/` was in the same blind spot until today and produced
+     `wiki crd-rules` in one pass, so the expected yield from the rest is not
+     low. **Take `asgard-freyr-api` next**: the Freyr skills are generated from
+     its Swagger, so it is the source behind material this tool already ships.
 
   7. **The kami formatting report is unactioned.** An FDE built the deck and
      reported back; nothing has been written from it yet. The substance, so it

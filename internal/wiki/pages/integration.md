@@ -148,6 +148,30 @@ client (web / SDK / REST API / chat platform)
 channel costs - which credentials infra has to provide, and whether the class
 needs a connector pod.
 
+## What the platform cannot send
+
+**There is no mail capability anywhere in the platform** - no SMTP, no preset
+mail Toolset, nothing in the core. "Email me when it happens" is one of the most
+common things a customer asks for, and the answer is not "yes, of course".
+
+    they have an HTTP endpoint that sends mail   an external-api call
+    they have no endpoint                        it cannot be built yet
+
+**A deployment that mocks it owes a disclosure**, and this is worth copying. One
+does: `wf-send-mail` is a single `push-message` returning
+`{ok: true, mocked: true, to, subject, body}`, so the whole pipeline runs and
+the drafted mail lands in the invocation record for review. **`ok: true` is
+deliberate** - a false would stop a Trigger's cursor and the path would never be
+exercised.
+
+Which makes disclosure the entire safety property. That deployment requires both
+the tool's `tooling.description` and the agent prompt to lead every summary with
+"MOCK - not actually sent", and to never say "notified".
+
+**A log that reads as though people were emailed is the real damage a mock can
+do.** The same applies to any mocked outward action - a ticket not created, an
+order not placed.
+
 ## Sources
 
 - [LINE](https://docs.asgard-ai.com/docs/integration/line),

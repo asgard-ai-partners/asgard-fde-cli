@@ -80,6 +80,18 @@ edited and re-rendered; a wrong sentence is in their notes.`,
 				"asgard-cli usecase write-path",
 			},
 			{
+				"whether it can email or message people",
+				`"sure, we can have it send you a summary"`,
+				"**The platform sends nothing.** No SMTP, no mail toolset, nothing in the core. It can call an endpoint of theirs that sends mail - if they have one. Promising a notification without asking that first is promising something with no way to build it",
+				"asgard-cli wiki integration",
+			},
+			{
+				"what the agent can reach",
+				`"only the systems you connect to it"`,
+				"**Not true.** Every sandbox carries the coding CLI's own tools - web search and fetch among them - and no Toolset or blueprint setting removes them. The only control is an instruction in the prompt",
+				"asgard-cli wiki tools",
+			},
+			{
 				"what the limits are",
 				`"30 steps and 3 minutes per request is the limit"`,
 				"Those are **defaults**, raised by contacting sales or service@asgard-ai.com. And **do not quote the step count at all**: nothing defines what a step is, so the next question has no answer",
