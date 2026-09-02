@@ -1,5 +1,12 @@
 The repository skeleton has not been written yet.
 
+**Read ahead before the interview, though.** The rest of this walk is written to
+be read on arrival, and that breaks at the interview: it is the one stage whose
+output is spoken rather than written, so a mistake there ends up in the
+customer's notes rather than in a file you can edit. `asgard-cli next --stage
+requirements` opens with the five things that get said wrong and where the right
+version lives.
+
     asgard-cli scaffold
 
 That writes AGENTS.md (the platform contract), the acceptance gate under
