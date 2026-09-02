@@ -261,7 +261,9 @@ integration from days into weeks by being discovered late:
     thing section 4 already refuses; ours are the same class as theirs. This is the single most expensive thing
     to discover in week three, and it costs one sentence to ask in week one
   - who issues the credential, by name or role. A credential with no owner is
-    not a dependency, it is a delay
+    not a dependency, it is a delay. **Ask this aloud and do not print it** - it
+    goes in the open-questions row's ask column, never onto a slide. This exact
+    line has been copied onto one
   - for an API instead of a database: the auth scheme, who holds the client id
     and secret, and the rate limit - the rate limit decides whether a Syncer can
     backfill at all
@@ -490,8 +492,8 @@ Many cannot - an old ERP, a vendor SaaS with no outbound hooks - and then a
 schedule is the fallback, with a delay the customer should hear about now rather
 than at acceptance.
 
-Ask who can configure that on their side. It is usually a different person from
-whoever gives you a database account.
+Ask who can configure that on their side - aloud, and not on a slide. It is
+usually a different person from whoever gives you a database account.
 
 **4c. Do they expect it to send anything outward?**
 
@@ -938,7 +940,8 @@ in a spec disappears when that spec reaches `done`, and `asgard-cli next` reads
 the open-questions file on every run and prints it before anything else.
 
 Ask who can answer, by name or by role, in the meeting. A question with no owner
-is not tracked, it is just written down.
+is not tracked, it is just written down. **The name lives in the row, not on a
+slide** - that is our chase list rather than their agenda.
 
 ## When the request is ready
 

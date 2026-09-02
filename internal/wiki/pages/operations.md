@@ -61,8 +61,10 @@ rule is about the customer's infrastructure. Ours is the same class of thing, an
 this page was encouraging the opposite. Two documents, opposite instincts, and
 nothing said they were about the same subject.
 
-**In the meeting, ask whether the change can be made.** Then send the addresses
-to whoever will make it, afterwards and directly.
+**In the meeting, ask whether the change can be made** - aloud. Then send the
+addresses to whoever will make it, afterwards and directly. **Neither the
+question nor the person goes on a slide**; identifying them is our follow-up
+list, and printing it reads as managing their organisation.
 
 **Nothing here records how these change.** They read as constants and there is no
 documented channel for a revision, which is itself worth knowing before treating

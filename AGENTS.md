@@ -200,9 +200,24 @@ contradicted anything; the reader took the wrong sense.
     specific. Check it before introducing a word, and before using one of
     those for something else.
 
-**Neither is enforced by anything.** They are conventions, and the record so far
-is that a convention catches this only after somebody has been caught by it.
-Issue #9 tracks whether either can be made mechanical.
+**A third shape, and it is the one that scales worst.** An instruction that is
+right for one reader is copied by another. `wiki operations` says to get the name
+of whoever approves a firewall change - correct for tracking, wrong on a slide -
+and an FDE put it on one. Filter 0 says to ask who issues an account; same
+outcome. **Three of one deck's six worst questions were copied out of this
+material rather than reasoned into existence.**
+
+    a correction only in the canonical place does not work.
+    somebody copying reads one page, and it is not that one.
+
+So when a line tells a reader to find out who somebody is, or to ask a customer
+anything, **that line says in the same breath what it is for** - tracked, or said
+aloud, or printed. Not in a section further down, and not on the page that owns
+the rule.
+
+**None of the three is enforced by anything.** They are conventions, and the
+record is that a convention catches this only after somebody has been caught by
+it. Issue #9 tracks whether any can be made mechanical.
 
 ## Three questions the material has to keep answering
 

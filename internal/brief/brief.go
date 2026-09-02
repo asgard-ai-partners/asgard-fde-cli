@@ -122,7 +122,15 @@ edited and re-rendered; a wrong sentence is in their notes.`,
 				"asgard-cli wiki integration",
 			},
 		},
-		Close: `**Ask what they have already read**, before describing anything. The
+		Close: `**A slide is not an agenda and not a tracking list.** "Who is
+responsible for this?" is right to ask in the room and wrong to print - asking it
+says you intend to follow through, printing it reads as managing their
+organisation. The carrier is the test, not the content: is this answer somebody
+we chase after the meeting, or something we build? Six of one deck's twenty
+corrections were this, more than any other kind, and three of those were copied
+out of this tool's own material.
+
+**Ask what they have already read**, before describing anything. The
 product site tells them Odin is for non-technical staff, gives them a vocabulary
 - Basic Function, Template - that maps to nothing here, and says Mimir simulates
 the future. ` + "`asgard-cli wiki what-they-read`" + ` has the three, and it costs
