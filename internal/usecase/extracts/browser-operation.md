@@ -278,6 +278,13 @@ references, no orphan entries - is worth writing once the format settles.
 is not recorded in the material this extract came from. That decides whether
 producing one is a day or a week, so establish it before committing to a date.
 
+**"A day or a week" is the cost of producing the map, and nothing else.** Not
+the integration, not the capability, not the item on a proposal. It has already
+been quoted one size too large, on a slide, in front of a customer - where it
+also read as pressure. The map is a prerequisite; what follows it is separate and
+larger. If a number has to be said out loud, say what it measures in the same
+sentence.
+
 **Whether the maps can be regenerated** when the vendor ships a UI change, or
 whether it is manual work each time, is likewise unknown. It decides the
 maintenance cost of every integration built this way.

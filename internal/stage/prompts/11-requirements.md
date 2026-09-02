@@ -480,8 +480,16 @@ is what to ask them for first:
 **Source code above a spec is the row that surprises people.** A spec describes
 an intention; the code is the behaviour, including the special cases nobody
 documented and the field that means two things depending on another field.
-Customers rarely offer it and often will hand it over when asked, particularly
-for something built in-house - and nobody asks.
+Customers rarely offer it and often will hand it over when asked - and nobody
+asks.
+
+**For a system they bought, this row does not exist** - skip it and go to the
+API spec. The order does not change; there is simply nothing to ask for, and
+asking anyway spends a request on it.
+
+So establish which kind it is before working down the list. If you do not know
+yet, ask without assuming: *"the API documentation, and if it is something you
+built yourselves, the source as well."*
 
 **A document replaces an interrogation, and that is the point of asking first.**
 Do not go through fields, validation rules or status codes one at a time in the
