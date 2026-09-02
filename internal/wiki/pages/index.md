@@ -25,6 +25,7 @@
 | [`settings`](settings.md) | Completion and Embedding Model, Data Source, Connection |
 | [`integration`](integration.md) | chat platforms, the two Applications pages, the architecture |
 | [`api`](api.md) | the endpoint and its actions, the SSE sequence, four patterns, the SDK |
+| [`platform-unknowns`](platform-unknowns.md) | what no source answers, and who to ask |
 
 ## In practice
 

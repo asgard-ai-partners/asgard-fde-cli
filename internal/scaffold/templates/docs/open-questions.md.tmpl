@@ -29,30 +29,20 @@ by making the wrong assumption first.
 | # | Question | What it blocks | Who can answer | Raised |
 |---|---|---|---|---|
 
-## Known platform unknowns
+## Questions the platform itself does not answer
 
-**These are not specific to this engagement.** They are questions the platform's
-own documentation does not answer, carried here so that each onboarding does not
-rediscover them one wrong assumption at a time.
+Some questions are not about this customer at all - they are things the Asgard
+platform's own documentation does not settle, and every engagement hits the same
+ones. Those live in the tool rather than in this file, so that an answer reaches
+every engagement at once instead of ageing in whichever repo happened to write it
+down:
 
-Most of them do not matter until a requirement touches them. When one does:
-**ask the platform team, do not assume**. Write the answer into
-`docs/decisions/`, cite it where the design depends on it, and tell whoever
-maintains `asgard-cli` so the next engagement starts with the answer.
+    asgard-cli wiki platform-unknowns
 
-| # | Question | When it matters |
-|---|---|---|
-| P1 | **Can one user be allowed to see or operate only some of the resources, while another sees others?** The entry point authenticates the caller, but nothing found so far scopes what a given user may then reach. Asked because a customer's own test plan required "限制不同使用者可查詢或操作的設備範圍" and there was no answer. | Any customer with more than one team. Security review asks it early |
-| P2 | **Is there a record of what an agent did - who asked, what was called, what came back - and can it be shown to an auditor?** CRs carry a label the platform echoes into audit events, so something is recorded, but not what or for how long. Asked because a customer's test plan required "保留設備操作紀錄". | Anything with a side effect, and every regulated customer |
-| P3 | **Between a human approving a call and that call going out, can the content change?** Asked because an engagement had to write "the approved listing is the one that gets published" as an assumption with nothing to cite. | Any case where the approved content **is** the deliverable - a listing, a message, a document |
-| ~~P4~~ | ~~Can the platform reach a system over something other than HTTP?~~ **Answered: yes.** The agent gets a sandbox, so any protocol with a client - SNMP, SSH, a vendor CLI - is reachable by running that client. Reads may happen there; **writes still go through a Toolset with `requestConsent`**. See `asgard-cli usecase external-api`. | - |
-| P5 | **Before an agent can operate a system that only has a web console, someone has to write down what that console contains** - every page, what each page does, and what is behind the buttons the menu does not show. One deployment has such a document covering 88 pages. **Is producing it tooling-assisted, or does a person work through the system by hand?** And when the vendor restyles their UI, is it redone? | Any web-only system. It is the difference between a day and a week, and it decides the maintenance cost |
-
-**Every row here came from an engagement actually hitting it** - a customer's
-test plan asking for something with no answer, or a design that had to proceed
-on an assumption with nothing to cite. Add a row the same way. A question that
-merely seems like a good thing to know does not belong here: it dilutes the
-list, and the list only works if every row is one somebody has already paid for.
+Read that list before assuming the platform can or cannot do something. When one
+of those questions blocks *this* engagement, add a row above naming it, and when
+the platform team answers it, tell whoever maintains `asgard-cli` so the next
+engagement starts with the answer.
 
 ## Answered
 

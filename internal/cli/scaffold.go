@@ -92,10 +92,9 @@ so it can be re-run after adding a project or when a file was deleted by hand.
 				for _, p := range preserved {
 					fmt.Fprintf(out, "  %s\n", p)
 				}
-				fmt.Fprintf(out, "\nThese hold the engagement's own records - open questions, the request and\n"+
-					"task indexes, the living spec's module index. --force discards local edits to\n"+
-					"the skeleton, and these stopped being skeleton the first time a command wrote\n"+
-					"to them. To genuinely reset one, delete it and run scaffold again.\n")
+				fmt.Fprintf(out, "\n--force discards local edits to the skeleton, and each of these stopped\n"+
+					"being skeleton the first time an `asgard-cli` command wrote to it. To reset\n"+
+					"one deliberately, delete it and run scaffold again.\n")
 			}
 
 			if created > 0 || overwritten > 0 {

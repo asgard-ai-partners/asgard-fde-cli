@@ -95,3 +95,22 @@ time, and editing removes exactly that.
   the corpus does not have to carry both languages, and one language removes the
   split where a Chinese question could reach only the wiki and an English one only
   the extracts
+- `add` 2026-09-02 `platform-unknowns`, moved out of the customer repo's
+  `docs/open-questions.md`. It was cross-engagement knowledge shipped as a copy
+  into every repo, which is the arrangement the rest of this material exists to
+  avoid: once an engagement filed its first question the file stopped matching
+  its template, and after `scaffold --force` learned to preserve it the table
+  could never be refreshed again. Two repos onboarded a quarter apart would have
+  disagreed about it forever, with the older one still showing an answered
+  question as open. Nothing read it programmatically, so the move changed no
+  behaviour and made it searchable through `find` for the first time
+- `add` 2026-09-02 P6 to that list, on whether the 30-step / 3-minute
+  per-request ceiling is adjustable. Raised by a customer service requirement
+  spanning product knowledge, a CRM and a ticket system, which is exactly the
+  shape that reaches 30 steps
+- `add` 2026-09-02 to `integration`: what the platform does not own - handoff to
+  a human, pausing, resuming, per-user question counts. No CRD carries any of
+  them. An earlier version of this section asserted that a LINE Official Account
+  cannot run chat and a webhook at once, and that was retracted: neither source
+  of truth says it, LINE's own building-a-bot page does not mention response
+  modes, and it was being used to tell a customer something could not be built

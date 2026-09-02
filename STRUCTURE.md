@@ -61,7 +61,7 @@ to.
 | where | files | answers | language |
 |---|---|---|---|
 | `stage/prompts/` | 12 | what to do at this point in an onboarding | English |
-| `wiki/pages/` | 18 | what the platform is, and who each piece is for | English |
+| `wiki/pages/` | 19 | what the platform is, and who each piece is for | English |
 | `usecase/extracts/` | 18 | how one shape of deployment is assembled, field by field | English |
 | `generate/templates/` | 12 | the CR skeletons `asgard-cli add` writes | English |
 | `scaffold/templates/` | 45 | the part of a customer repo that is the same every time | mixed |
