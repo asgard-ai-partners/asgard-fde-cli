@@ -36,9 +36,26 @@ afterwards, counting how many questions one user has asked - none of these are
 platform features.** There is no CR for any of them, and no field: searching the
 CRDs for a handoff, a takeover, a suspend or a per-user quota finds nothing.
 
-What the platform quota does cover is capacity, not people: 5 requests per second
-per endpoint, 3 minutes and 30 steps per request, 40 projects, 300 GB of
-knowledge base. A multi-system troubleshooting conversation can reach 30 steps,
+What the platform quota does cover is capacity, not people. All eight numbers,
+and **they apply to the Workspace - projects inside it share them**:
+
+| per request | per workspace |
+|---|---|
+| 5 RPS per endpoint | 40 Projects |
+| 3 minutes | 300 GB of Knowledge Base |
+| 30 steps | 500 Processors |
+| | **10 Loaders** |
+| | 150 Indexers |
+
+**Ten Loaders is the one that bites first.** A Loader is one recurring pull, so a
+customer with a dozen document sources exceeds it before anything else on this
+list - see [`knowledge.md`](knowledge.md).
+
+**These are defaults, not ceilings.** They are raised by contacting sales or
+writing to service@asgard-ai.com, which is a different sentence to say in a
+meeting than "that is the limit". What is not documented is by how much.
+
+A multi-system troubleshooting conversation can reach 30 steps,
 which is worth saying out loud before somebody designs one.
 
 The mechanism the platform's own case study describes puts the conversation
@@ -156,8 +173,10 @@ needs a connector pod.
   checked 2026-09-02 against
   [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `15ded0f` -
   no CRD and no field carries any of those concepts
-- The quota numbers: [Quota and limits](https://docs.asgard-ai.com/docs/help-community/quota-limits)
-  - asgard-docs `f00e0ee`
+- The quota numbers, all eight, that they are Workspace-level and shared, and
+  that they are raised through sales:
+  [Quota and limits](https://docs.asgard-ai.com/docs/help-community/quota-limits)
+  - asgard-docs `f00e0ee`, read in full 2026-09-02
 - The support desk owning the conversation:
   [AI customer service answering order enquiries](https://docs.asgard-ai.com/docs/product-suite/odin/case-studies/retail-ai-customer-service)
   - asgard-docs `f00e0ee`

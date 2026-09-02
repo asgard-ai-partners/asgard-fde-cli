@@ -117,6 +117,24 @@ number in a Drive makes the agent paraphrase a figure it should have read.
 
 `asgard-cli usecase knowledge-drive` has the full Drive-plus-Syncer shape.
 
+## Ten Loaders, workspace-wide
+
+A Loader is one recurring pull, and the platform allows **10 per Workspace** -
+shared across every project in it, not per knowledge base. Indexers are capped at
+150 and Processors at 500 on the same basis.
+
+**A customer with a dozen document sources exceeds this before anything else in
+the quota list**, and the failure arrives when the eleventh is created rather
+than at design time. Two consequences worth carrying into an interview:
+
+  - **count the sources, not the documents.** Fifty files behind one crawl is
+    one Loader; five files from five places is five
+  - a Drive with a Syncer is a different mechanism and is not counted here -
+    which is one more reason it is the recommendation for new work
+
+They are defaults rather than ceilings - `asgard-cli wiki integration` has all
+eight numbers and how they are raised.
+
 ## Sources
 
 - [Drive](https://docs.asgard-ai.com/docs/product-suite/odin/features/drive)
