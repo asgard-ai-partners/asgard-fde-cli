@@ -55,34 +55,6 @@ answer; "are they internal users?" gets a yes that means nothing, because a
 contractor with a company address is internal to the person answering and
 anonymous to the platform.
 
-**2b. Is this a proof of concept, or will real people use it?**
-
-Ask early, because the answer decides what the rest of the interview is allowed
-to leave open. A POC can be excused, in writing, from things a live service
-cannot - who may see which data, an audit trail an auditor would accept, how long
-conversations and the personal data in them are kept, and writing to a production
-system.
-
-Ask it as three questions, not one:
-
-    which is it              a POC, or something customers will actually touch
-    who signs                the named person who can grant those exemptions
-    when does it stop        an end date, and what the boundary is until then -
-                             test data, test accounts, a sandbox tenant
-
-**"A POC that goes straight into production if it works" is a live service.** It
-is the most common answer and the most expensive one to accept at face value,
-because the exemptions were never real and nobody said so.
-
-If the exemptions cannot be granted, that is not a setback and it is worth saying
-plainly in the room: a security review is on the critical path and the timeline
-is a different one. Heard in week one they plan for it; heard in week eight they
-think you missed it.
-
-Whatever they grant, write it into `docs/decisions/` the day it is agreed. An
-exemption nobody recorded becomes an accusation later, and the person who granted
-it will have moved on.
-
 **3. Which systems hold the data, and how can each one be reached?**
 
 One row per system, including the ones that sound obvious.
@@ -270,8 +242,8 @@ would keep if they could only keep one. That item is the MVP, whatever it costs
 to build - a first delivery that skips the item being judged has failed however
 fast it shipped.
 
-Then work out what that one item genuinely needs, and the three filters below
-turn the rest into deferred scope rather than open questions.
+Then work out what that one item genuinely needs, and the two filters below turn
+the rest into deferred scope rather than open questions.
 
 **7. What is explicitly out of scope?**
 
@@ -350,16 +322,16 @@ The pattern in all three: **"like everything else" is the wrong reason**, becaus
 the audience is what decides, and the audience is the one thing "everything
 else" does not share.
 
-## Three filters before a question becomes a row
+## Two filters before a question becomes a row
 
 An interview that ends with twenty-five open questions has not narrowed anything.
 It has moved the customer's whole document into a table, and the meeting that
 follows spends its time on questions nobody needed answered yet.
 
-Apply all three to every question before filing it. Each turns a question into
-something other than a blocker - not our problem, not now, or a signature - and
-most questions are one of the three. What survives is short, and short is what
-the meeting is for.
+Apply both to every question before filing it. Each turns a question into
+something other than a blocker - not our problem, or not now - and most questions
+are one of the two. What survives is short, and short is what the meeting is
+for.
 
 ### Filter 0 - is this ours to answer at all?
 
@@ -435,11 +407,6 @@ people are already answering on changes their experience on day one, before any
 of the deferred machinery exists. That is an operational precondition of the
 first delivery, not a phase-two design. Split the row and keep that half.
 
-Note what this does to the other filter. A lookup keyed on something the user
-types is usually a data-scoping problem, which is what the POC exemption below
-covers. The two work together: the MVP is what lets a question defer, and the
-exemption is what lets the deferred version run in the meantime.
-
 Also note what "we already have that system" does not tell you. It says the data
 exists. It says nothing about a network path, a read replica, or an account.
 
@@ -447,52 +414,9 @@ exists. It says nothing about a network path, a read replica, or an account.
 documents and a real person can use it. A demo on sample data proves nothing and
 the questions it defers all come back at once.
 
-### Filter 2 - what a POC can be excused from, in writing (資安豁免條款)
+### What is left after both
 
-**Ask: is this a design problem, or a waiver?**
-
-A whole class of question blocks a production system and does not block a POC,
-provided the exemption is written down rather than assumed. These are the usual
-ones, and each is currently unanswerable from the platform's own documentation -
-see `asgard-cli wiki platform-unknowns`:
-
-| the question | as a POC exemption |
-|---|---|
-| can different users be limited to different data | every POC user sees the same scope, and the scope is test data |
-| is there an audit trail we can show an auditor | the POC is not audited; a record is a phase-2 requirement |
-| how long are conversations retained, and the personal data in them | test accounts only, no real customer data, deleted at the end |
-| can the agent write to the production system | it cannot. Writes go to a test instance, or the POC stops at proposing the write |
-| what happens on a security review | there is no review before the exemption expires |
-
-Get the exemption **from a named person, in writing, with a boundary and an end
-date**. Test data or a sandbox tenant, which accounts, and when the exemption
-stops. Then write it into `docs/decisions/` on the day it is agreed - an
-exemption nobody recorded becomes an accusation later, and the person who granted
-it will have moved on.
-
-**When the waived capability IS the requirement, the waiver is a scope change.**
-The table above unblocks a design, but check what each exemption costs the test.
-If the customer asked to see the agent create a record and the exemption stops at
-proposing one, that scenario is not being tested - and they have signed a
-security exemption while quietly losing part of what they asked to validate.
-Those are two different agreements with two different people: the person who can
-waive a security control is usually not the person who decides the test may prove
-less. Get both, and say plainly which is which.
-
-It also promotes one detail into a decisive question: **does the system have a
-test instance at all?** Without one, the exemption is not "write somewhere safe",
-it is "that scenario cannot be validated in this engagement", and that is worth
-knowing in week one.
-
-**If it cannot be waived, this is not a POC.** That is not a setback and it is
-worth saying plainly in the meeting: it means a security review is on the
-critical path, and the timeline is a different one. A customer who hears that in
-week one plans for it. A customer who hears it in week eight thinks you missed
-it.
-
-### What is left after all three
-
-Whatever none of them removes. Those are the real questions, and there are
+Whatever neither removes. Those are the real questions, and there are
 usually two or three:
 
   - **how a system is reached** - the one that blocks the MVP nearly every time
@@ -534,8 +458,8 @@ is not tracked, it is just written down.
   - every system has a row, and every row says how it is reached
   - the open questions have been through both filters, so what is left blocks the
     MVP rather than describing everything still unknown
-  - the customer has said which single item they would keep, and whether this is
-    a POC - both are theirs to answer and neither can be inferred
+  - the customer has said which single item they would keep - it is theirs to
+    answer and cannot be inferred
   - every system we will connect to has a section 4 block, with a named
     credential owner and an answer on network reach - and no secret in it
   - unstructured knowledge is either listed or explicitly ruled out

@@ -141,13 +141,6 @@ Out of scope, full stop:
 
 - TODO
 
-Proof of concept, or a live service (question 2b):
-
-- which: TODO
-- exemptions granted, by whom, and until when: TODO, or "none - this is a live
-  service and a security review is on the critical path"
-- recorded in: docs/decisions/TODO
-
 ## 6) Open questions
 
 Anything this request cannot proceed without goes in ` + "`docs/open-questions.md`" + `

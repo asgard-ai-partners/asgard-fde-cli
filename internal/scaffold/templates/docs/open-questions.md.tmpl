@@ -24,13 +24,13 @@ by making the wrong assumption first.
 - **Do not park a question here to avoid asking it.** If the customer can answer
   it in the next meeting, it belongs in the agenda, not in a table.
 
-## Three filters, before a question becomes a row
+## Two filters, before a question becomes a row
 
 A table of twenty-five questions has not narrowed anything - it has moved the
 customer's document into a table. Most questions are removed by one of these
-three, and what survives is short.
+two, and what survives is short.
 
-**0. Is this ours to answer at all?** Ask first; it removes the most. We deliver
+**1. Is this ours to answer at all?** Ask first; it removes the most. We deliver
 an agent, we do not design the customer's operation. The test is whether the
 answer changes what we build. What we need *from* them is ours to chase - a
 credential, an endpoint, a network path, a document, an account. How they staff a
@@ -39,7 +39,7 @@ is theirs: hand it back as a note before go-live, do not track it as a row. Doin
 their integration analysis looks like diligence and produces a table nobody
 uses.
 
-**1. What is the smallest thing that proves what the customer said they are
+**2. What is the smallest thing that proves what the customer said they are
 testing?** Not the smallest thing that is easy to build - if they gave you a
 verification list, a first delivery that skips the item they most want to see has
 failed however fast it shipped. Find the smallest slice that reaches the hardest
@@ -53,18 +53,6 @@ your system yet" fails the test, because that is the thing being judged. Droppin
 something the user types proves the same integration as one keyed on a recognised
 identity. The hardest question in an engagement usually does not block the first
 delivery, and filing it as a blocker makes a week's work look impossible.
-
-**2. Is this a design problem, or a waiver?** Per-user data scoping, an audit
-trail, how long conversations and the personal data in them are kept, writing to
-a production system - each blocks a production rollout and none of them blocks a
-POC, provided the exemption is written down rather than assumed. Get it from a
-named person, in writing, with a boundary and an end date - test data or a
-sandbox tenant, which accounts, when it expires - and record it in
-`docs/decisions/` the day it is agreed. An exemption nobody wrote down becomes an
-accusation later.
-
-If it cannot be waived, this is not a POC. Say so early: a security review is
-then on the critical path and the timeline is a different one.
 
 What is left after both filters is usually three or four rows - what blocks the
 minimum itself, anything the customer must do before we can proceed, and anywhere
