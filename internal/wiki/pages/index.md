@@ -27,6 +27,7 @@
 | [`settings`](settings.md) | Completion and Embedding Model, Data Source, Connection |
 | [`integration`](integration.md) | chat platforms, the two Applications pages, the architecture |
 | [`api`](api.md) | the endpoint and its actions, the SSE sequence, four patterns, the SDK |
+| [`crd-rules`](crd-rules.md) | the validations helm lint does not run, and the one the schema cannot express |
 | [`platform-unknowns`](platform-unknowns.md) | what no source answers, and who to ask |
 
 ## In practice
@@ -71,6 +72,7 @@ The sources this material is actually built from:
 |---|---|---|
 | asgard-docs | the product documentation | 130 / 162 cited, 32 deliberately excluded below |
 | asgard-kube `crd/` | the contract | read per page, per field, and dated on the page |
+| **asgard-kube `pkg/apis/`** | **the Go types the CRDs are generated from, with the reasoning as comments** | read once, 2026-09-02, for the validation rules - `crd-rules`. 134KB of declarations; what has been taken is the behavioural comments, not the field list |
 | **asgard-core** `internal/constants.go` | **the processor definitions the CRD is generated from** | read once, 2026-09-02, for the type list. Its per-processor config definitions are not carried anywhere |
 | **asgard-freyr-skills** | **nine runtime skills, incl. the SHOPLINE pair** | one page - `usecase skill-layers` |
 | **seven deployment charts** | **every shape the extracts describe** | see below |

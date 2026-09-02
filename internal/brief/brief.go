@@ -132,6 +132,12 @@ built, and reversed. They are obvious in the same way again each time.`,
 				"asgard-cli wiki processors",
 			},
 			{
+				"a SandboxBlueprint's subagents",
+				"it deployed, so the blueprint is right",
+				"**Exactly one of `baseAgentName` or `aliasName`, and no CRD checks it** - the shape rides inside a JSON string where CEL cannot see it, so the controller enforces it at evaluation time. Both set, or neither, deploys green and fails the first time somebody talks to the agent. The only rule worth reading a blueprint by hand for",
+				"asgard-cli wiki crd-rules",
+			},
+			{
 				"whether the chart is enough",
 				"a green render means it is done",
 				"A Workflow needs a `ConfigMap` of node positions or its editor opens as a pile, and `project-environment-id` or the editor opens blank. Neither is an Asgard CR, so nothing in the gate mentions them",
