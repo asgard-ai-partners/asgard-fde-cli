@@ -30,14 +30,20 @@ A table of twenty-five questions has not narrowed anything - it has moved the
 customer's document into a table. Most questions are removed by one of these two,
 and what survives is short.
 
-**1. Does the smallest useful version need this answer?** Find the one scenario
-that can ship alone and prove the thing works, usually the one that reads
-something the agent already has and touches no other system. Anything that
-scenario does not need is not an open question: it is a line in the request's
-"out of scope", with a note of what has to be answered before it comes back. The
-hardest question in an engagement often does not block the first delivery, and
-filing it as a blocker makes that delivery look impossible when it is a week's
-work.
+**1. What is the smallest thing that proves what the customer said they are
+testing?** Not the smallest thing that is easy to build - if they gave you a
+verification list, a first delivery that skips the item they most want to see has
+failed however fast it shipped. Find the smallest slice that reaches the hardest
+item on their list. What that slice does not need is not an open question: it is
+a line in the request's "out of scope", with a note of what has to be answered
+before it comes back.
+
+**What gets cut is a mechanism, not a capability.** Dropping "read their CRM"
+fails the test. Dropping "work out who is talking without being told" does not,
+because the customer can be asked - a lookup by a reference number they type
+proves the same integration while the identity question stays open. The hardest
+question in an engagement usually does not block the first delivery, and filing
+it as a blocker makes a week's work look impossible.
 
 **2. Is this a design problem, or a waiver?** Per-user data scoping, an audit
 trail, how long conversations and the personal data in them are kept, writing to

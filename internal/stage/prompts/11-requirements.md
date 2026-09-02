@@ -318,30 +318,53 @@ survives is what the meeting is actually for.
 
 ### Filter 1 - the minimum that proves it works (MVP)
 
-**Ask: does the smallest useful version need this answer?**
+**Ask: what is the smallest thing that proves what THEY said they are testing?**
 
-Find the one scenario that can ship alone and prove the thing works at all -
-usually the one that reads something the agent already has and touches no other
-system. Anything that scenario does not need is not an open question. It is a
-line in section 7, out of scope for now, with a note of what would have to be
-answered before it comes back.
+Not the smallest thing that is easy to build. A customer who hands over a test
+plan has already written down what counts as success, and a first delivery that
+avoids the item they most want to see is a delivery that failed, however quickly
+it shipped.
 
-A worked example, from a customer asking for LINE support over a CRM and a
-ticket system, with human handoff and per-user quotas:
+So read their verification list first, then find the smallest slice that reaches
+the hardest item on it. What the slice does not need is not an open question: it
+is a line in section 7, out of scope for now, with a note of what would have to
+be answered before it comes back.
 
-    the MVP        answer product questions from the product documentation
-                   needs: the LINE channel, a Drive. That is all
-    not the MVP    who is asking, the CRM, the ticket system, creating a case,
-                   handoff, quotas
+**What gets cut is a mechanism, not a capability.** That distinction is the whole
+filter. Dropping "integrate with their CRM" fails the test plan. Dropping "work
+out who is talking without being told" does not, because the customer can simply
+be asked.
 
-The MVP needs no identity, no read path into a customer system, no write path,
-and nothing in front of LINE. So the identity question - which is genuinely the
-hardest one in that engagement - **does not block the first delivery**, and
-filing it as a blocker makes the first delivery look impossible when it is a
-week's work.
+A worked example, from a customer whose test plan asked for LINE support over an
+existing CRM and repair-tracking system, with human handoff and per-user quotas.
+Their own verification list had six items and the second was integration with
+those two systems, so an MVP of product questions alone would have delivered one
+of six and skipped the one being judged.
 
-It still gets asked. It gets asked as "before phase 2", not as "before we can
-start", and that difference is what a customer hears as competence.
+    the MVP        answer product questions from their documents, AND look up a
+                   repair case by a case number the customer types in the chat
+                   needs: the LINE channel, a Drive, one read path into RMA
+    cut            binding a LINE account to a known customer, creating a case,
+                   handoff, per-user quotas
+
+**The cut is the LINE-to-customer binding, and asking for the case number is what
+makes it possible to cut.** Recognising a LINE user as a known customer - account
+linking, OTP, a serial number, manual binding by staff - is the hardest question
+in that engagement and it stays unanswered. A lookup by a number they type proves
+the CRM and RMA integration anyway, which is what the test plan is judging. So
+the binding becomes phase 2 rather than a blocker, and **how the RMA system is
+reached from a cluster** becomes the question that actually matters this week.
+
+Note what this does to the other filter: a lookup by a number anyone could type
+is a data-scoping problem, which is why it needs the POC exemption below. The two
+work together - the MVP is what lets a question defer, the exemption is what lets
+the deferred version run in the meantime.
+
+Also note what "we already have a CRM" does not tell you. It says the data
+exists. It says nothing about whether the system is reachable from a cluster,
+whether there is a read replica or only production, or whether anybody can grant
+an account this month. That is what the MVP is now blocked on, and it is a far
+better thing to take into a meeting than twenty questions about identity.
 
 **The MVP is not a demo.** It runs against their real channel with their real
 documents and a real person can use it. A demo on sample data proves nothing and
