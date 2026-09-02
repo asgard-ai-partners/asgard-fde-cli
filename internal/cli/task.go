@@ -103,9 +103,6 @@ Next Task section at whatever is now most advanced.
 			if slug == "" {
 				slug = work.Slugify(title)
 			}
-			if slug == "" {
-				return fmt.Errorf("cannot derive a file name from %q; pass --slug <short-name>", title)
-			}
 
 			task := work.Task{
 				Title:      title,
