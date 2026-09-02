@@ -27,6 +27,25 @@ The built-in tiers are semantic aliases rather than specific model names, which
 is usually the right default: customers rarely have a view, and a hardcoded model
 name becomes something to come back and fix when the model is retired.
 
+**A builtin tier is a logical model, and a router resolves it.** This is what
+the alias buys, and none of it is visible from the platform side:
+
+  - one logical name is backed by **several provider-model pairs**, and the
+    selection policy is weighted-random, weighted round-robin or ordered
+    fallback
+  - **automatic failover**: a 5xx or a timeout from one provider retries the
+    next candidate rather than failing the run
+  - the managed key lives in the router's own environment
+
+So a builtin tier is not "a model we picked for you" - it is a pool with
+failover. **A custom `CompletionModel` gives that up**: one provider, one key,
+one point of failure, and an outage at that provider is an outage for the
+customer.
+
+That is the trade to state when a customer asks for a specific model. They may
+still want it - a compliance requirement, an existing contract, a model they have
+tested against - and those are good reasons. "We prefer this one" usually is not.
+
 **In a chart, a custom model is a `CompletionModel` CR** - the built-in tiers are
 that CR's `builtin` class rather than the absence of one, which is the reading
 that gets this wrong. Three reference deployments declare their own, with the
@@ -109,6 +128,10 @@ in a chart.
 - The CR mapping and the provider list: checked 2026-09-02 against
   [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `15ded0f` -
   `DataConnectorClass`, `CompletionModelClass`, `EmbeddingModelClass`
+
+- The router's behaviour behind a builtin alias - logical models, the three
+  selection policies, failover on 5xx or timeout, and the managed key in its own
+  environment: `asgard-router`'s README, read 2026-09-02
 
 **Checked:** 2026-09-02 against asgard-kube `15ded0f`
 (`completionModelClass` enum, the immutability rule and the ExactlyOneOf

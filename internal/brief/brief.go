@@ -92,6 +92,12 @@ edited and re-rendered; a wrong sentence is in their notes.`,
 				"asgard-cli wiki tools",
 			},
 			{
+				"whether they can have a specific model",
+				`"of course, we will configure that one"`,
+				"You can, and it costs something worth saying: a builtin tier is a **logical model backed by several providers with automatic failover**, and a custom `CompletionModel` is one provider, one key, one point of failure. A good reason - compliance, an existing contract, a model they tested against - is fine. A preference usually is not",
+				"asgard-cli wiki settings",
+			},
+			{
 				"what the limits are",
 				`"30 steps and 3 minutes per request is the limit"`,
 				"Those are **defaults**, raised by contacting sales or service@asgard-ai.com. And **do not quote the step count at all**: nothing defines what a step is, so the next question has no answer",

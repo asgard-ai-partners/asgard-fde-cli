@@ -196,9 +196,20 @@ names is not reading a repository.
      because it is the point where an engagement stops being a chart and needs
      somewhere to run code, and it should be said early rather than discovered.
 
-     Still unopened: `asgard-router`, `content-pipeline`, `deleteme`,
-     `asgard-bussiness-plan`, `partner-finder`, `ppt`, `hugin`,
-     `just-inference`, `asgard-html2img`.
+     **`asgard-router` read 2026-09-02**, and it answered a question the wiki
+     had been treating as opaque. `settings` said the builtin tiers are
+     "semantic aliases rather than specific model names" and stopped there. The
+     router is what resolves one: a logical model backed by several
+     provider-model pairs, with weighted-random, round-robin or ordered-fallback
+     selection, and **automatic failover on a 5xx or a timeout**. So a builtin
+     tier is a pool, and choosing a custom `CompletionModel` gives that up for
+     one provider and one point of failure - which is the trade to state when a
+     customer asks for a named model. Now in `wiki settings` and in
+     `brief customer-meeting`.
+
+     Still unopened: `content-pipeline` (1674 Python files), `deleteme` (130
+     CRs, 1131 Python files, despite the name), `asgard-bussiness-plan`,
+     `partner-finder`, `ppt`, `hugin`, `just-inference`, `asgard-html2img`.
 
   7. **The kami formatting report is unactioned.** An FDE built the deck and
      reported back; nothing has been written from it yet. The substance, so it
