@@ -17,6 +17,7 @@ import (
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/chart"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/config"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/kb"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/work"
 )
 
@@ -105,6 +106,13 @@ type State struct {
 	Requests   []work.Request
 	Tasks      []work.Task
 	Questions  []work.Question
+
+	// References is how many files of customer material have been filed. It is
+	// here so the interview prompt can tell the difference between an interview
+	// that has not happened and one that happened and left nothing behind - the
+	// second is the failure worth naming, and it looks identical from the
+	// records alone.
+	References int
 }
 
 // InFlight reports whether the repository records any work not yet done. It is
@@ -214,6 +222,12 @@ func Inspect(root string, cfg *config.Config) (State, error) {
 	}
 	state.Requests, state.Tasks, state.Questions = requests, tasks, questions
 
+	filed, err := work.FiledReferences(root)
+	if err != nil {
+		return state, err
+	}
+	state.References = filed
+
 	return state, nil
 }
 
@@ -291,12 +305,13 @@ func mustFind(name Name) Stage {
 
 // Data is what a stage prompt is rendered with.
 type Data struct {
-	Workspace config.Workspace
-	Projects  []ProjectState
-	Requests  []work.Request
-	RepoName  string
-	SpecSlug  string
-	Stage     Stage
+	Workspace  config.Workspace
+	Projects   []ProjectState
+	Requests   []work.Request
+	References int
+	RepoName   string
+	SpecSlug   string
+	Stage      Stage
 }
 
 // InterviewRequests are the open requests whose target project is not decided
@@ -339,12 +354,13 @@ func (s Stage) Prompt(cfg *config.Config, state State) (string, error) {
 
 	var out strings.Builder
 	err = tmpl.Execute(&out, Data{
-		Workspace: cfg.Workspace,
-		Projects:  state.Projects,
-		Requests:  work.ActiveRequests(state.Requests),
-		RepoName:  cfg.RepoName(),
-		SpecSlug:  cfg.Workspace.Slug + "-asgard",
-		Stage:     s,
+		Workspace:  cfg.Workspace,
+		Projects:   state.Projects,
+		Requests:   work.ActiveRequests(state.Requests),
+		References: state.References,
+		RepoName:   cfg.RepoName(),
+		SpecSlug:   cfg.Workspace.Slug + "-asgard",
+		Stage:      s,
 	})
 	if err != nil {
 		return "", fmt.Errorf("render prompt %s: %w", s.promptF, err)
@@ -391,12 +407,20 @@ func (s Stage) Raw() (string, error) {
 	return string(content), nil
 }
 
-// Match is one stage whose prompt mentions every search term.
+// Match is one stage whose prompt covers the search.
 type Match struct {
 	Stage
 	Lines []string
 	Score int
+
+	// Terms are the query terms this prompt actually contains, as in kb.Match.
+	// The three bodies are searched together and reported together, so they
+	// have to agree on what a partial match is.
+	Terms []string
 }
+
+// List names every readable stage, for a caller handing over the contents.
+func List() []Stage { return Readable }
 
 // Search finds stages by subject rather than by position in the walk.
 //
@@ -407,7 +431,7 @@ type Match struct {
 // the subject at hand - "how is the read path decided" - reachable without
 // having arrived at stage 4 to be told.
 func Search(query string) ([]Match, error) {
-	terms := strings.Fields(strings.ToLower(query))
+	terms := kb.Terms(query)
 	if len(terms) == 0 {
 		return nil, fmt.Errorf("search needs at least one term")
 	}
@@ -420,27 +444,20 @@ func Search(query string) ([]Match, error) {
 		}
 		lower := strings.ToLower(body)
 
-		hitsAll := true
+		m := Match{Stage: s}
 		for _, term := range terms {
-			if !strings.Contains(lower, term) {
-				hitsAll = false
-				break
+			if kb.Covers(lower, term) {
+				m.Terms = append(m.Terms, term)
 			}
 		}
-		if !hitsAll {
+		if len(m.Terms) == 0 {
 			continue
 		}
 
-		m := Match{Stage: s}
 		for _, line := range strings.Split(body, "\n") {
-			// Skip the template directives: they are how a prompt is rendered,
-			// not anything a reader wanted to find.
-			if strings.Contains(line, "<<") {
-				continue
-			}
 			lowerLine := strings.ToLower(line)
-			for _, term := range terms {
-				if !strings.Contains(lowerLine, term) {
+			for _, term := range m.Terms {
+				if !kb.Covers(lowerLine, term) {
 					continue
 				}
 				m.Score++
@@ -453,6 +470,19 @@ func Search(query string) ([]Match, error) {
 		matches = append(matches, m)
 	}
 
-	sort.Slice(matches, func(i, j int) bool { return matches[i].Score > matches[j].Score })
+	sort.Slice(matches, func(i, j int) bool {
+		if len(matches[i].Terms) != len(matches[j].Terms) {
+			return len(matches[i].Terms) > len(matches[j].Terms)
+		}
+		return matches[i].Score > matches[j].Score
+	})
+
+	if len(matches) > 0 && len(matches[0].Terms) == len(terms) {
+		for i, m := range matches {
+			if len(m.Terms) < len(terms) {
+				return matches[:i], nil
+			}
+		}
+	}
 	return matches, nil
 }

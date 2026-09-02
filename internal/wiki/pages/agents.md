@@ -39,7 +39,10 @@ Customer Support, Knowledge Base Q&A, Data Analyst, General Assistant.
 
 Every Managed Agent is published to Sindri and can also be managed from the
 Management Console. An enabled agent serves immediately; a disabled one stops
-serving but keeps its configuration.
+serving but keeps its configuration. **There is no publish step and nothing to
+import on the Sindri side** - what makes an agent findable there is the
+Description, because that is what the orchestrator routes on.
+[`setup-path.md`](setup-path.md) is the order this sits in.
 
 ## Flow Agent
 

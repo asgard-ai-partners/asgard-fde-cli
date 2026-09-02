@@ -2,11 +2,13 @@ package cli
 
 import (
 	"fmt"
+	"io"
 	"regexp"
 	"strings"
 
 	"github.com/spf13/cobra"
 
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/kb"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/stage"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/usecase"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/wiki"
@@ -46,7 +48,11 @@ read.
     asgard-cli find anonymous visitor
     asgard-cli find knowledge graph
 
-Every term has to appear, so an extra word narrows rather than widens.
+An extra term narrows: what carries every one of them is listed first and alone.
+When nothing carries all of them the search widens rather than returning nothing,
+and says which terms it could not place - a query taken from a customer's own
+document usually has a word or two this material has never heard of, and one of
+them should not suppress what the rest would have found.
 
 To read one in full: "asgard-cli wiki <page>" or "asgard-cli usecase <name>".`,
 		Args: cobra.MinimumNArgs(1),
@@ -68,12 +74,14 @@ To read one in full: "asgard-cli wiki <page>" or "asgard-cli usecase <name>".`,
 			}
 
 			if len(pages) == 0 && len(extracts) == 0 && len(stages) == 0 {
-				fmt.Fprintf(out, "Nothing matched %q in any of the three bodies.\n\n"+
-					"They are searched literally and every term has to appear, so try fewer\n"+
-					"words. List them with `asgard-cli wiki`, `asgard-cli usecase` and\n"+
-					"`asgard-cli next --list`.\n", query)
-				return nil
+				return nothingMatched(out, query)
 			}
+
+			// Say which words carried the result before showing it. A partial
+			// match reads exactly like a whole one, and a reader who does not
+			// know that "shopee" found nothing will take what came back as the
+			// material on the subject they asked about.
+			reportTerms(out, query, matchedTerms(pages), matchedTerms(extracts), stageTerms(stages))
 
 			if len(pages) > 0 {
 				fmt.Fprintf(out, "PLATFORM - what the thing is (asgard-cli wiki <page>)\n\n")
@@ -148,4 +156,93 @@ func firstRef(re *regexp.Regexp, body string) string {
 		return m[1]
 	}
 	return ""
+}
+
+// reportTerms names the query terms that appear nowhere in what was returned.
+func reportTerms(out io.Writer, query string, sets ...[]string) {
+	terms := kb.Terms(query)
+	if len(terms) < 2 {
+		return
+	}
+
+	found := map[string]bool{}
+	for _, set := range sets {
+		for _, t := range set {
+			found[t] = true
+		}
+	}
+
+	var missing []string
+	for _, t := range terms {
+		if !found[t] {
+			missing = append(missing, t)
+		}
+	}
+	if len(missing) == 0 {
+		return
+	}
+
+	fmt.Fprintf(out, "Matched %d of %d terms. These results answer that much of the query, not\n"+
+		"all of it. Nothing here mentions:\n\n    %s\n\n",
+		len(terms)-len(missing), len(terms), strings.Join(missing, "  "))
+}
+
+// nothingMatched is the dead end, and it is the one place the tool can lose a
+// reader entirely: an agent that searches twice, gets nothing twice, and falls
+// back on what it already believed has stopped using the material this command
+// exists to serve. So it does not offer advice about phrasing - it hands over
+// the contents, which is what the reader would have to ask for next.
+func nothingMatched(out io.Writer, query string) error {
+	fmt.Fprintf(out, "No term in %q appears anywhere in the three bodies.\n\n"+
+		"That usually means the subject is named differently here, not that it is\n"+
+		"absent. This material is in English, and it describes platform parts rather\n"+
+		"than a customer's systems: a marketplace integration is under whichever\n"+
+		"shape reaches it, a device protocol is a question about the sandbox.\n\n"+
+		"Everything there is, in full:\n\n", query)
+
+	pages, err := wiki.List()
+	if err != nil {
+		return err
+	}
+	extracts, err := usecase.List()
+	if err != nil {
+		return err
+	}
+
+	listDocs(out, "PLATFORM - what the thing is", "asgard-cli wiki <page>", pages)
+	listDocs(out, "SHAPES - how it is assembled", "asgard-cli usecase <name>", extracts)
+
+	fmt.Fprintf(out, "DECISIONS - what to weigh (asgard-cli next --stage <name>)\n\n")
+	for _, s := range stage.List() {
+		fmt.Fprintf(out, "  %-18s %s\n", s.Name, truncate(s.Title, 84))
+	}
+	fmt.Fprintln(out)
+	return nil
+}
+
+func listDocs(out io.Writer, heading, command string, docs []kb.Doc) {
+	fmt.Fprintf(out, "%s (%s)\n\n", heading, command)
+	for _, d := range docs {
+		fmt.Fprintf(out, "  %-18s %s\n", d.Name, truncate(d.Title, 84))
+	}
+	fmt.Fprintln(out)
+}
+
+// matchedTerms and stageTerms collect what landed. Two functions because the
+// stage corpus is not a kb.Corpus - it is the prompts, which are files with a
+// position in the walk - so its Match carries a Stage rather than a Doc.
+func matchedTerms(matches []kb.Match) []string {
+	var out []string
+	for _, m := range matches {
+		out = append(out, m.Terms...)
+	}
+	return out
+}
+
+func stageTerms(matches []stage.Match) []string {
+	var out []string
+	for _, m := range matches {
+		out = append(out, m.Terms...)
+	}
+	return out
 }

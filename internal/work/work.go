@@ -14,6 +14,7 @@ package work
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -66,7 +67,42 @@ var (
 	QuestionFile = filepath.Join("docs", "open-questions.md")
 	DecisionDir  = filepath.Join("docs", "decisions")
 	DecisionTmpl = filepath.Join(DecisionDir, "_decision-template.md")
+	ReferenceDir = "references"
 )
+
+// FiledReferences counts the customer material sitting in references/, ignoring
+// the README the scaffold puts there. It exists to catch the one state nothing
+// else in the repository can see: material has been filed and read, an
+// interview has effectively happened, and no request records any of it.
+//
+// That state is not a missing file - it is a conversation that only exists in
+// somebody's terminal. `check` and the interview prompt both report it, because
+// the next run of `next` will otherwise say "nothing in flight" and be right.
+func FiledReferences(root string) (int, error) {
+	dir := filepath.Join(root, ReferenceDir)
+	var n int
+	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			if os.IsNotExist(err) && path == dir {
+				return filepath.SkipAll
+			}
+			return err
+		}
+		if d.IsDir() {
+			return nil
+		}
+		switch name := d.Name(); {
+		case name == "README.md", strings.HasPrefix(name, "_"), strings.HasPrefix(name, "."):
+			return nil
+		}
+		n++
+		return nil
+	})
+	if err != nil {
+		return 0, fmt.Errorf("read %s: %w", ReferenceDir, err)
+	}
+	return n, nil
+}
 
 // TraceabilityAnchor marks the table in the living spec's README that lists
 // every decision record. It is an HTML comment rather than the heading above the

@@ -2,7 +2,17 @@
 
 Things filed under help-community that come up in practice.
 
-## Asgard's outbound IPs
+## Reaching a system inside the customer's network
+
+**Asgard is a hosted cloud service.** It runs in Asgard's own cloud, not in the
+customer's data centre and not on their network, and there is no deployment that
+puts it inside. Everything follows from that.
+
+So a system that is only reachable from inside their network is not reachable at
+all until **they** open a path to it. The work is theirs, not ours: they add
+Asgard's addresses to their firewall allowlist, or bring the platform onto their
+network over a VPN. We supply the addresses; they own the change, the approval
+and the schedule for it.
 
 Traffic from the platform to a customer's internal database or service leaves
 from these four fixed addresses:
@@ -14,11 +24,26 @@ from these four fixed addresses:
 57.181.108.84
 ```
 
-A customer whose firewall restricts source IPs needs all four allowlisted.
+All four have to be allowlisted, not one - which of them a given request leaves
+from is not something to rely on.
 
-This is the concrete answer to "can it reach us from the cluster" during an
-interview. It is exactly what the customer's network admin wants, and it can be
-handed over in the first meeting rather than after a connection fails.
+Two things this changes in an interview.
+
+**It is a question with a known answer, so ask it in the first meeting.** "Is
+this system reachable from outside your network, and who can add four addresses
+to the allowlist?" hands their network admin exactly what they need. The failure
+this avoids is discovering in week three that the credential works, the query is
+right, and nothing can connect.
+
+**It has an owner and a lead time on their side.** An allowlist change is a
+firewall change, and in most companies that is a ticket, an approval and a
+window - not something the person in the meeting can do that afternoon. That is
+why it is one of the few things worth tracking as an open question rather than
+handing back as a note: it blocks the first delivery and we cannot do it
+ourselves. Get the name of whoever approves it.
+
+The order the rest of the setup follows once the path is open is
+[`setup-path.md`](setup-path.md).
 
 ## Checking what a model supports
 
@@ -106,5 +131,8 @@ Connectivity and vocabulary produce no CRs, so there is no extract for them.
   as the current one
 
 **Unchecked:** the IPs and the model lists come from the product documentation
-only. How a platform Environment corresponds to a chart's dev/prod is
+only. That Asgard is hosted and therefore always needs the customer to open the
+path inward is the FDE team's account of how every engagement so far has gone,
+recorded 2026-09-02; no document states it, and it has not been held against a
+deployment that failed for the opposite reason. How a platform Environment corresponds to a chart's dev/prod is
 undocumented and unconfirmed.

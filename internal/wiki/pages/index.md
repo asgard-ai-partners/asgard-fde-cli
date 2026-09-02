@@ -16,6 +16,7 @@
 
 | page | covers |
 |---|---|
+| [`setup-path`](setup-path.md) | the order: where a credential goes, what to build from it, why Sindri needs no import |
 | [`agents`](agents.md) | Flow Agent against Managed Agent, how to choose, UI-to-CR names |
 | [`knowledge`](knowledge.md) | Drive, Context Index, and how Knowledge Base differs |
 | [`semantic-model`](semantic-model.md) | the modelling flow, its limits, the Mimir side |
@@ -33,6 +34,7 @@
 |---|---|
 | [`operations`](operations.md) | Asgard's outbound IPs, checking model capability, vocabulary |
 | [`case-studies`](case-studies.md) | the retail stockout from three angles, plus a Flow Agent help desk |
+| [`screenshots`](screenshots.md) | which picture answers which question, and the URL to fetch it from |
 
 ## Known gaps between the documentation and the CRD
 

@@ -50,6 +50,12 @@ type Match struct {
 	// document that talks about the subject most comes first rather than the
 	// one whose name sorts earliest.
 	Score int
+
+	// Terms are the query terms this document actually contains. A caller needs
+	// them to say which half of a query landed: a search that quietly matched
+	// on one word of six reads as an answer to the whole question, and the
+	// reader acts on material about something else.
+	Terms []string
 }
 
 // Corpus is one body of material: where the files are, and which of them are
@@ -166,11 +172,19 @@ func (c Corpus) File(path string) (string, error) {
 	return string(data), nil
 }
 
-// Search finds documents mentioning all of the given terms. It is how somebody
-// gets from a customer's words to the material that covers them, without
-// knowing what any of it is called.
+// Search finds documents covering the given terms. It is how somebody gets from
+// a customer's words to the material that covers them, without knowing what any
+// of it is called.
+//
+// All the terms first, then any of them. Requiring all of them is right when the
+// query is well aimed - an extra word should narrow - but it is the wrong answer
+// to a query that is a handful of words from a customer's document, where one
+// unknown word suppresses everything the other five would have found. So a query
+// that matches nothing outright falls back to the documents matching the most
+// terms, and Match.Terms records which ones, so the caller can say what did not
+// land rather than presenting a partial hit as a whole one.
 func (c Corpus) Search(query string) ([]Match, error) {
-	terms := strings.Fields(strings.ToLower(query))
+	terms := Terms(query)
 	if len(terms) == 0 {
 		return nil, fmt.Errorf("search needs at least one term")
 	}
@@ -188,24 +202,20 @@ func (c Corpus) Search(query string) ([]Match, error) {
 		}
 		lower := strings.ToLower(body)
 
-		// Every term has to appear somewhere, so an extra word narrows rather
-		// than widens - the opposite would make a long query useless.
-		hitsAll := true
+		m := Match{Doc: d}
 		for _, term := range terms {
-			if !strings.Contains(lower, term) {
-				hitsAll = false
-				break
+			if Covers(lower, term) {
+				m.Terms = append(m.Terms, term)
 			}
 		}
-		if !hitsAll {
+		if len(m.Terms) == 0 {
 			continue
 		}
 
-		m := Match{Doc: d}
 		for _, line := range strings.Split(body, "\n") {
 			lowerLine := strings.ToLower(line)
-			for _, term := range terms {
-				if !strings.Contains(lowerLine, term) {
+			for _, term := range m.Terms {
+				if !Covers(lowerLine, term) {
 					continue
 				}
 				m.Score++
@@ -220,6 +230,62 @@ func (c Corpus) Search(query string) ([]Match, error) {
 		matches = append(matches, m)
 	}
 
-	sort.Slice(matches, func(i, j int) bool { return matches[i].Score > matches[j].Score })
+	// A document carrying every term outranks one carrying more mentions of
+	// fewer, so the exact hit stays on top and the fallback only ever appears
+	// underneath it - or alone, when there was no exact hit at all.
+	sort.Slice(matches, func(i, j int) bool {
+		if len(matches[i].Terms) != len(matches[j].Terms) {
+			return len(matches[i].Terms) > len(matches[j].Terms)
+		}
+		return matches[i].Score > matches[j].Score
+	})
+
+	// Once something matches every term, the partial matches are noise: they
+	// are what the fallback is for, and the fallback is not needed.
+	if len(matches) > 0 && len(matches[0].Terms) == len(terms) {
+		for i, m := range matches {
+			if len(m.Terms) < len(terms) {
+				return matches[:i], nil
+			}
+		}
+	}
 	return matches, nil
+}
+
+// Terms splits a query the way Search reads it.
+func Terms(query string) []string {
+	return strings.Fields(strings.ToLower(query))
+}
+
+// Covers reports whether the body covers one term. Short terms are held to a
+// word boundary: as a substring "ap" is inside "api", "apply" and "happen", so a
+// query naming an access point matched almost the whole corpus and the result
+// looked like an answer.
+func Covers(lowerBody, term string) bool {
+	if len(term) > 3 {
+		return strings.Contains(lowerBody, term)
+	}
+	for i := 0; ; {
+		j := strings.Index(lowerBody[i:], term)
+		if j < 0 {
+			return false
+		}
+		start := i + j
+		end := start + len(term)
+		if !wordByte(lowerBody, start-1) && !wordByte(lowerBody, end) {
+			return true
+		}
+		i = start + 1
+	}
+}
+
+// wordByte reports whether the byte at i is one a word can be made of, treating
+// anything outside the string as a boundary.
+func wordByte(s string, i int) bool {
+	if i < 0 || i >= len(s) {
+		return false
+	}
+	c := s[i]
+	return c == '_' || c >= 0x80 ||
+		(c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
 }

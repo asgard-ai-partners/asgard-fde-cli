@@ -1,0 +1,135 @@
+# Screenshots, and which situation each one is for
+
+Every screenshot of this platform lives in the product documentation. There are
+none in this binary and none in a customer repository, and that is deliberate:
+an image copied into an engagement goes stale where nobody is looking, and 1.7MB
+of PNGs teaches nobody anything. What is worth carrying is **which picture
+answers which question**, which is this page.
+
+Both places serve the same file:
+
+    https://docs.asgard-ai.com/img/docs/<path>          the published site
+    <clone of asgard-docs>/static/img/docs/<path>       a checkout
+
+The paths below are that `<path>`. The captions are the documentation's own alt
+text, in zh-TW; **the console itself is in English**, so a deck in either
+language can use them and write its own caption.
+
+**Open one before it goes on a slide.** Nothing records when any of these was
+captured, so a form that has since changed looks exactly like a current one - and
+a stale screen in front of the customer who uses that screen daily costs more
+than having no picture. A screenshot is also the most common way a credential or
+another customer's name reaches a deck, in a corner nobody read.
+
+## For a proposal: what it looks like to use
+
+**This is the set most proposals need and most decks miss**, because the obvious
+instinct is to show the console - which is our side, not theirs. These four are
+one continuous story from a user's question to a completed action, and they carry
+the governance gate, which is the hardest thing to explain in words.
+
+| path | what it shows |
+|---|---|
+| `sindri-retail-stockout-transfer/00-available-agents.png` | the hub with five agents, before anything is asked |
+| `sindri-retail-stockout-transfer/01-allocation-answer.png` | a real answer: current state, available quantity, three options to choose from |
+| `sindri-retail-stockout-transfer/02-approval-gate.png` | **the approval dialog** - the tool it wants to call, and nothing running until a person allows it |
+| `sindri-retail-stockout-transfer/03-execution-result.png` | after approval: what was created, and the resulting stock forecast |
+
+The third one is worth a slide on its own whenever the requirement has a write in
+it. `asgard-cli usecase write-path` is the argument; this is the picture of it.
+
+For a customer-service shape rather than an internal one:
+
+| path | what it shows |
+|---|---|
+| `retail-ai-customer-service/21-flow-agent-canvas.png` | the four-node flow: Entry, Init, Agent, Listen, with an error branch |
+| `retail-ai-customer-service/23-agent-node-open.png` | the prompt deciding what a **logged-out** visitor is told, versus a logged-in one |
+
+And the one that shows Description doing its job in public:
+
+| path | what it shows |
+|---|---|
+| `sindri-home/home-available-agents.png` | each card's line is that agent's Description, as routing text |
+
+## For a handover: the setup path
+
+The order these belong in is [`setup-path.md`](setup-path.md). Use them when the
+audience is the people who will operate the thing - never in a proposal.
+
+| step | path | what it shows |
+|---|---|---|
+| 1 | `settings/data-source/data-source-create-provider-open.png` | the Provider list open: nine, all databases. **The screen that settles where an API key does not go** |
+| 1 | `settings/data-source/data-source-create.png` | the form, with Test Connection before Save |
+| 1 | `settings/connection/connection-create-options-open.png` | Connection types, grouped by syncer / For Loader / For Trigger |
+| 2 | `mcp-servers/new-menu.png` | From Workflow against From Existing - the fork that decides how much work step 2 is |
+| 2 | `mcp-servers/mcp-from-existing.png` | Transport Type, Command, Environment Variables - where an API key actually lives |
+| 2 | `skillsets/new-menu.png` | From Scratch against From Git |
+| 2 | `drive/drive-syncer-wizard-step1.png` | the five syncer sources: Google Drive, OneDrive, Git, Web Crawler, Data Source |
+| 2 | `drive/drive-detail-context-index.png` | Context Index, and the switch that turns it on |
+| 2 | `data-insight-semantic-model/table-setting-select.png` | picking tables, with live Data Preview |
+| 2 | `data-insight-semantic-model/modeling-built.png` | ten tables modelled, one expanded to Description / Primary Key / Columns |
+| 3 | `agent-hub-managed-agent/list.png` | the five built-in templates - show this when they think it starts from nothing |
+| 3 | `agent-hub-managed-agent/create.png` | **the one screen most handovers need**: Alias, Description, and Prompt as Persona / Task / Context / Format, with the live preview |
+| 3 | `agent-hub-managed-agent/resources-section.png` | mounting what step 2 produced |
+| 5 | `agent-hub-flow-agent/create.png` | Name, Description, Advanced Sandbox Settings |
+
+A worked example of step 3 filled in, rather than empty:
+
+| path | what it shows |
+|---|---|
+| `retail-stockout-transfer/12-allocation-top.png` | a real agent's Alias, Description and four Prompt sections |
+| `retail-stockout-transfer/13-allocation-resources.png` | its sample questions and everything it mounts |
+| `retail-stockout-transfer/01-managed-agents.png` | five agents, all `Released` |
+
+## For explaining a capability
+
+| subject | path |
+|---|---|
+| the governance gate, as a list | `retail-stockout-transfer/04-automation-tools.png` - seven approval-gated tools |
+| what a gated tool declares | `retail-stockout-transfer/11-transfer-order-tool.png` - its input schema |
+| how many systems one agent reads | `retail-stockout-transfer/03-semantic-models.png` - CRM, ERP, e-commerce, POS, supplier, OLAP, WMS |
+| conversational analysis | `mimir-thread/answer.png`, `mimir-thread/chart-result.png` |
+| a dashboard that gets shared | `mimir-dashboard/share-dashboard.png` |
+| teaching the model the business's own questions | `mimir-knowledge/add-question-sql-pair.png` |
+| a Knowledge Base loading documents | `knowledge-base-knowledge/auto-load-form.png` |
+| scheduled runs | `automation-trigger/new-trigger.png` - Schedule, Timezone, Model, Prompt |
+
+## For a cost or governance conversation
+
+| subject | path |
+|---|---|
+| what a bill looks like | `fehu/fehu-billing-reports-list.png`, `fehu/fehu-bill-detail-service.png` |
+| usage against quota | `fehu/fehu-quota-limits-top.png`, `fehu/fehu-usage-reports.png` |
+| who can reach which product | `console-product-permission/agent-hub-accounts.png` |
+| workspace membership | `console-workspace-settings/workspace-accounts.png` |
+
+**These four are the ones to be careful with.** Permissions and billing are where
+a customer most easily reads a screenshot as a promise about what can be
+restricted. `asgard-cli wiki platform-unknowns` still has scope control as
+unanswered: the Console decides who reaches a product, and what a caller can
+touch **after** that is the part no source settles. A permissions screenshot on a
+slide about limiting access is the overstatement this tool warns about most.
+
+## What has no screenshot
+
+Not everything does, and assuming otherwise wastes a search:
+
+  - the chart, the CRs, the cluster - there is no UI for any of it
+  - a chat platform's own console (LINE, Slack, Telegram). The integration pages
+    have a few unnamed images; their own vendor documentation is better
+  - anything about handoff, pausing, or per-user counters, because the platform
+    does not have them - see [`integration.md`](integration.md)
+
+## Sources
+
+- Every path here was read off the `![alt](/img/docs/...)` references in
+  asgard-docs' own `.mdx` pages, so a caption is the documentation's rather than
+  a guess about what the file contains
+  - asgard-docs `f00e0ee`
+- **Checked** 2026-09-02: `settings/data-source/data-source-create-provider-open.png`,
+  `agent-hub-managed-agent/create.png` and `sindri-home/home-available-agents.png`
+  were opened and match their captions
+
+**Unchecked:** everything else here is described by its alt text, not by having
+been looked at, and **no capture date exists for any of them**. The grouping into
+situations is this tool's judgement rather than anything the documentation says.

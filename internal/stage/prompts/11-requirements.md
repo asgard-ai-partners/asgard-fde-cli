@@ -2,12 +2,43 @@ This is the interview, and it produces a **request** - not a design, not a task,
 not a chart. Read it before the working session with the customer, and keep it
 open during one.
 
+## What this stage produces is a file
+
+Everything below is how to think during the interview. This is what to do with
+it, and it comes first because the thinking is the part that goes well on its
+own. Three commands, run **as the answers arrive**, not at the end:
+
+    asgard-cli request add "<what they asked for, in their words>"
+    asgard-cli request target <<.RequestID>> <project>
+    asgard-cli question add "<what blocks it>" --blocks <<.RequestID>> --ask "<who>"
+
+**One request per capability they asked for.** A document with three scenarios
+is three requests, because two capabilities in one record cannot be given
+different target projects, and the target project is the decision this whole
+stage exists to reach.
+
+The way this stage fails is not a bad analysis. It is a good one that stays in
+the conversation: the material gets read, the questions get filtered well, the
+answer is delivered to whoever asked, and the repository ends the day looking
+exactly as it did before. The next run of `asgard-cli next` then says nothing is
+in flight, and it is right. Anything worth telling someone is worth `request
+add` first - **the message is the summary of the record, not a substitute for
+it.**
+
+If you are answering a question rather than running a meeting - "list the open
+questions in this document" - that is still this stage. Write the records, then
+answer from them.
+
 <<with .Requests>>Open requests:
 
 <<range .>>  <<.ID>>  <<printf "%-8s" (printf "%s" .Status)>>  <<.Title>>
 <<end>>
+<<else>><<if .References>>**<<.References>> file(s) of customer material are filed in `references/`, and no
+request records any of it.** The interview has started and the repository has
+no record of it. Write the request before going further - `asgard-cli check`
+reports this state until one exists.
 <<else>>Nothing is recorded yet, so start with `asgard-cli request add`.
-<<end>>
+<<end>><<end>>
 ## Why the interview is a stage of its own
 
 Of the target repo's thirteen task specs, **three were superseded and one was
@@ -88,9 +119,15 @@ integration from days into weeks by being discovered late:
   - host, port, database or schema, and the account name
   - **is the account read-only?** Ask explicitly. The one offered first usually
     is not, and finding out later means going back for a second credential
-  - **is it reachable from the cluster**, or does it need an IP allowlist, a
-    VPN, or a bastion? This is the single most expensive thing to discover in
-    week three, and it costs one sentence to ask in week one
+  - **is it reachable from outside their network?** Asgard is a hosted cloud
+    service - it does not run on the customer's network and cannot be put
+    there - so an internal system stays unreachable until they allowlist our
+    four outbound addresses or bring us on over a VPN. Ask who can approve a
+    firewall change and how long one takes there; it is a ticket and a window
+    in most companies, not something the person in the meeting can do that
+    afternoon. `asgard-cli wiki operations` has the addresses to hand over in
+    the meeting. This is the single most expensive thing to discover in week
+    three, and it costs one sentence to ask in week one
   - who issues the credential, by name or role. A credential with no owner is
     not a dependency, it is a delay
   - for an API instead of a database: the auth scheme, who holds the client id
@@ -419,7 +456,10 @@ the questions it defers all come back at once.
 Whatever neither removes. Those are the real questions, and there are
 usually two or three:
 
-  - **how a system is reached** - the one that blocks the MVP nearly every time
+  - **how a system is reached** - the one that blocks the MVP nearly every time,
+    and where "we have that system" means the data exists and nothing more. A
+    hosted platform reaching an internal system needs a firewall change only
+    they can make, with an approver and a lead time
   - anything the customer must do before we can - provision an account, paste a
     webhook URL back, open a network path
   - anything where two of their answers contradict each other
@@ -431,11 +471,8 @@ question about the customer's own arrangements that felt too important to drop.
 ## Write it down as you go
 
 Not afterwards. A record written after the meeting is a record of what you
-remember, and what you remember is the design you were already forming.
-
-    asgard-cli request add "<what they asked for, in their words>"
-    asgard-cli request target <<.RequestID>> <project>
-    asgard-cli question add "<what blocks it>" --blocks <<.RequestID>> --ask "<who can answer>"
+remember, and what you remember is the design you were already forming. The
+three commands are at the top of this page.
 
 `request add` writes `requirements/requests/REQ-xxx-<name>.md` with today's date
 and `draft` on it, and its seven sections are this interview in the same order.
@@ -470,6 +507,13 @@ is not tracked, it is just written down.
 Not ready is a normal state to be in. A `draft` that names its open questions is
 more useful than a `ready` that guessed at them, and `asgard-cli next` will keep
 the request in front of you either way.
+
+What usually comes before the task specs is saying it back to them: what we
+propose to do, what phase 1 is, and what we are not doing. That is the
+`proposal-deck` skill in `.agents/skills/` - it owns choosing the shape as well
+as the deck, and it is where the rule about claiming no further than the
+evidence goes lives. Do not decide the shape here and write the deck from
+memory afterwards.
 
 Then split it into task specs:
 
