@@ -132,7 +132,13 @@ names is not reading a repository.
      `wiki product-suite` as products. Neither is anything an engagement can put
      in a proposal, and the next customer question about cost or about
      permissions lands here.
-  7. **`asgard-core`'s processor constants have never been read.** The
+  7. ~~**`asgard-core`'s processor constants have never been read.**~~ **Done.**
+     Fetched through the API rather than cloned. `wiki workflow`'s 13 types match
+     `ProcessorDefinitions` exactly. The remaining value in that file is the
+     per-processor static config definitions - name, type, required, default,
+     description for every config key - which nothing here carries and which is
+     what a chart author actually needs while writing a processor. Worth a pass.
+  7b. **~~`asgard-core`'s processor constants have never been read.~~** The
      authoritative list is `internal/constants.go`; `wiki workflow` says 13
      processors, sourced from the CRD. Four processors named in the contract
      appear in no chart, and this is the file that would say whether they exist.
@@ -153,10 +159,14 @@ reason is next to it.
   example. auto-post's content pipeline has nine branches across several
   workflows, and the question that shape answers - when a branch belongs in the
   graph rather than in the prompt - is exactly the one an FDE gets wrong.
-- **The `execute-script`, `validate-payload`, `generate-embedding` and
+- ~~**The `execute-script`, `validate-payload`, `generate-embedding` and
   `retrieve-knowledge` processors** appear in the platform's contract and in no
-  chart that has been read. Either they are unused in practice, which is worth
-  knowing, or the sample of deployments read so far is too small.
+  chart that has been read.~~ **Answered 2026-09-02** against `asgard-core`'s
+  `internal/constants.go`, which is the source of truth the CRD is generated
+  from: all four are real, defined in `ProcessorDefinitions` with full static
+  config definitions. So the answer is the second one - the sample of
+  deployments was too small - and the wiki's list of 13 processor types matches
+  the source exactly, with no extras and none missing.
 - **Which deployments have been mined has never been written down, and the
   suspicion above turned out to be right.** A finance deployment sitting in the
   same parent directory the whole time carries a shape nothing here covered - a
