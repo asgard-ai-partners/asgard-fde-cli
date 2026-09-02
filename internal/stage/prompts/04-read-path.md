@@ -30,7 +30,7 @@ it takes a CR change and a review.
 The two are constantly confused, and the confusion turns into telling a customer
 that something is impossible when it is not.
 
-An anonymous channel can absolutely answer "where is MY repair case". What it
+An anonymous channel can absolutely answer "where is MY order". What it
 cannot do is let the **model** choose whose case to look up. The customer's
 identity is injected server-side on every turn - it arrives in the request the
 front end sends, never as a tool argument the model fills in - and the query

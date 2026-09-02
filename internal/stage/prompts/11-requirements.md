@@ -322,49 +322,48 @@ survives is what the meeting is actually for.
 
 Not the smallest thing that is easy to build. A customer who hands over a test
 plan has already written down what counts as success, and a first delivery that
-avoids the item they most want to see is a delivery that failed, however quickly
-it shipped.
+avoids the item they most want to see has failed, however quickly it shipped.
 
 So read their verification list first, then find the smallest slice that reaches
-the hardest item on it. What the slice does not need is not an open question: it
-is a line in section 7, out of scope for now, with a note of what would have to
-be answered before it comes back.
+the hardest item on it. What that slice does not need is not an open question: it
+is a line in the request's section 5, Scope, with a note of what would have to be
+answered before it comes back.
 
 **What gets cut is a mechanism, not a capability.** That distinction is the whole
-filter. Dropping "integrate with their CRM" fails the test plan. Dropping "work
-out who is talking without being told" does not, because the customer can simply
-be asked.
+filter, and it is the one that gets it wrong in both directions.
 
-A worked example, from a customer whose test plan asked for LINE support over an
-existing CRM and repair-tracking system, with human handoff and per-user quotas.
-Their own verification list had six items and the second was integration with
-those two systems, so an MVP of product questions alone would have delivered one
-of six and skipped the one being judged.
+    cutting a capability     "we will not read your system yet"
+                             fails their test. It is the thing being judged
+    cutting a mechanism      "for now the user tells us which record they mean"
+                             passes it. The integration is still proved
 
-    the MVP        answer product questions from their documents, AND look up a
-                   repair case by a case number the customer types in the chat
-                   needs: the LINE channel, a Drive, one read path into RMA
-    cut            binding a LINE account to a known customer, creating a case,
-                   handoff, per-user quotas
+The pattern that keeps recurring: the hardest question in an engagement is
+usually **how the agent knows who it is talking to**, and it is almost always
+cuttable, because the user can be asked. A lookup keyed on something the user
+types proves the same integration as a lookup keyed on a recognised identity, and
+the identity question moves to phase two without the delivery losing anything the
+customer is measuring.
 
-**The cut is the LINE-to-customer binding, and asking for the case number is what
-makes it possible to cut.** Recognising a LINE user as a known customer - account
-linking, OTP, a serial number, manual binding by staff - is the hardest question
-in that engagement and it stays unanswered. A lookup by a number they type proves
-the CRM and RMA integration anyway, which is what the test plan is judging. So
-the binding becomes phase 2 rather than a blocker, and **how the RMA system is
-reached from a cluster** becomes the question that actually matters this week.
+What that leaves blocking the first delivery is normally something duller and far
+more useful to raise in a meeting - whether the system is reachable from a
+cluster at all, and who can grant an account this month.
 
-Note what this does to the other filter: a lookup by a number anyone could type
-is a data-scoping problem, which is why it needs the POC exemption below. The two
-work together - the MVP is what lets a question defer, the exemption is what lets
-the deferred version run in the meantime.
+**Apply the filter per question, not per row.** Some rows are two questions
+wearing one sentence, and the filter then defers the half that should have
+stayed. "Is there anything in front of the channel" is the recurring one: the
+half about identity defers cleanly, while the half about **whether that channel
+is already staffed today** does not. Attaching a webhook to an account real
+people are already answering on changes their experience on day one, before any
+of the deferred machinery exists. That is an operational precondition of the
+first delivery, not a phase-two design. Split the row and keep that half.
 
-Also note what "we already have a CRM" does not tell you. It says the data
-exists. It says nothing about whether the system is reachable from a cluster,
-whether there is a read replica or only production, or whether anybody can grant
-an account this month. That is what the MVP is now blocked on, and it is a far
-better thing to take into a meeting than twenty questions about identity.
+Note what this does to the other filter. A lookup keyed on something the user
+types is usually a data-scoping problem, which is what the POC exemption below
+covers. The two work together: the MVP is what lets a question defer, and the
+exemption is what lets the deferred version run in the meantime.
+
+Also note what "we already have that system" does not tell you. It says the data
+exists. It says nothing about a network path, a read replica, or an account.
 
 **The MVP is not a demo.** It runs against their real channel with their real
 documents and a real person can use it. A demo on sample data proves nothing and
@@ -392,6 +391,20 @@ date**. Test data or a sandbox tenant, which accounts, and when the exemption
 stops. Then write it into `docs/decisions/` on the day it is agreed - an
 exemption nobody recorded becomes an accusation later, and the person who granted
 it will have moved on.
+
+**When the waived capability IS the requirement, the waiver is a scope change.**
+The table above unblocks a design, but check what each exemption costs the test.
+If the customer asked to see the agent create a record and the exemption stops at
+proposing one, that scenario is not being tested - and they have signed a
+security exemption while quietly losing part of what they asked to validate.
+Those are two different agreements with two different people: the person who can
+waive a security control is usually not the person who decides the test may prove
+less. Get both, and say plainly which is which.
+
+It also promotes one detail into a decisive question: **does the system have a
+test instance at all?** Without one, the exemption is not "write somewhere safe",
+it is "that scenario cannot be validated in this engagement", and that is worth
+knowing in week one.
 
 **If it cannot be waived, this is not a POC.** That is not a setback and it is
 worth saying plainly in the meeting: it means a security review is on the
