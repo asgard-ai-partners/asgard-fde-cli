@@ -147,6 +147,30 @@ A middleware layer, an OMS, a warehouse that consolidates the channels. If one
 exists, several rows collapse into a single database, and that single answer
 changes the design more than anything else on this page.
 
+**3a. Each answer names a shape, and you can say so in the room.**
+
+The mapping is mechanical and the same every engagement, so there is no reason
+to leave the customer's answer sitting as a fact when it is already a design:
+
+| what they answer | the shape it is |
+|---|---|
+| a read-only database account, and the audience is internal | `semantic-layer` |
+| a read-only database account, and the audience is anonymous | `fixed-query-tools` |
+| an HTTP API | `external-api`; `api-oauth` when a token has to be fetched first |
+| only a web back office | `browser-operation`, and a different order of cost |
+| manuals, FAQs, a site | `knowledge-drive` |
+| it has to change something, not only read | `write-path`, split into prepare and execute |
+| it has to run on a schedule | `trigger`, and it cannot share a Toolset with anything gated |
+
+`asgard-cli usecase <name>` is each one in full, and `asgard-cli size <shape>`
+turns it into a count.
+
+**Say it out loud as you go.** "If the answer is a read-only account we build A;
+if it is only the web console it becomes B, and B costs considerably more" turns
+an interview into a design conversation, and it makes the cost of the last row
+visible while they can still do something about it. It also gives the deck its
+right-hand column: every question paired with what answering it produces.
+
 **3b. For each system we will actually connect to, get the coordinates.**
 
 Ask in the meeting, not by email afterwards. Every one of these has turned an
@@ -269,6 +293,31 @@ follow-up, can reach 30 steps.
 LINE also needs **two-way setup** - Asgard issues a webhook URL that somebody has
 to paste back into the LINE console and verify - so it needs an owner on their
 side, not just a credential. See `asgard-cli wiki integration`.
+
+**3f. Listen for the sentences that are a skill.**
+
+Section 3 asks where the data is. This asks for something the customer will say
+in passing and never volunteer, because to them it is not a fact about a system -
+it is just how things are:
+
+    "這個代碼的意思是⋯"                a status vocabulary
+    "我們內部把 A 和 B 算成同一件事"     a cross-system mapping
+    "這個數字要這樣加總"                an aggregation convention
+    "那一欄我們只在退貨的時候填"          a field's real meaning
+
+**Any of those is a skill, and the moment to write it down is when they say it.**
+Nobody can reconstruct it later from the schema, because it is not in the schema.
+An agent without it does not fail visibly - it answers confidently and wrongly,
+having interpreted a code that meant something else.
+
+It goes to `common/skills/<name>/SKILL.md`, which is synced to the platform. In
+`references/` it is invisible to the running agent, and the failure then looks
+like a model ignoring instructions rather than a file in the wrong place.
+
+This is also the row a proposal forgets, because it is knowledge rather than a
+system: there is no credential to ask for, so it never comes up in the access
+conversation. `asgard-cli usecase skill-layers` is what one looks like at full
+size, and what its layers are for.
 
 **4. Is any of it unstructured?**
 

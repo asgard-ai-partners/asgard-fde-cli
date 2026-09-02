@@ -205,7 +205,7 @@ in step 5; forcing this one when the facts are missing is what produces slides
 | 6 | what it reads | which systems, and who can see what |
 | 7 | what is NOT in scope | the slide that prevents the argument in month three |
 | 8 | how we get there | phases with dates, and what we need from them |
-| 9 | what we still do not know | the open questions, named as questions |
+| 9 | what we still do not know | **the customer's unknowns only** - see below |
 
 Slide 2 is the one that makes the deck work, and the one most often skipped.
 A customer who hears their own problem stated back accurately will accept a
@@ -214,6 +214,25 @@ recognise will argue with every slide after it.
 
 Slide 7 is the one that saves the engagement. Scope stated narrowly is a proposal
 that can be delivered; scope left open is a proposal that grows until it fails.
+
+**Slide 9 holds one kind of unknown, and the two kinds are opposite.**
+
+| whose unknown | on the slide | why |
+|---|---|---|
+| **theirs** - how their CRM is read, which network their devices are on, whether a channel has an API | **yes**, and it is most of the deck | only they can answer. Listing it asks for their help |
+| **ours** - whether the platform can scope what a user may reach, what it logs and for how long | **no** | it is our product. "We do not know what we can do" is not honesty, it is not having prepared |
+
+`asgard-cli wiki platform-unknowns` is the second kind, and its own instruction
+is **ask the platform team when a requirement touches one** - before the meeting.
+Printing that list onto a slide does the opposite of what the page says, and
+announces that we have not read our own product.
+
+If an answer has not come back in time, say it in the room, once, and put the
+written reply in the follow-up. It does not get a slide.
+
+So the closing slide is **what each side does next**: what we reply on and by
+when, which accounts and documents they provide, and the date you meet again.
+Both sides have an action on it. That is a different page from a confession.
 
 ## Step 4 - say it in their words, and no further than the evidence goes
 
@@ -283,6 +302,34 @@ yes today. Anything resting on a credential nobody has issued, a firewall change
 nobody has approved, or a system nobody has connected to is not a phase - it is
 a dependency, and it goes on slide 8 as **what we need from them**, with an owner
 and a date, or on slide 9.
+
+### Say the same thing every time
+
+Banning implementation nouns without offering replacements means every FDE
+invents their own, and the same customer sees two names for one thing across two
+documents. These are the replacements. **Use them rather than a fresh
+paraphrase**, and `asgard-cli size --plain` produces the same wording from a
+count.
+
+| what it is | what the customer is told |
+|---|---|
+| a read-only Toolset with four query Workflows | 四個查詢 / four kinds of question it can answer |
+| a SkillSet carrying status vocabulary | 一份狀態對照 / a translation of your own codes |
+| SourceSet + Syncer + contextIndex | 產品知識庫 / it reads from your own documents |
+| a tool with `requestConsent: true` | 需要人工確認的動作 / an action that stops for a person |
+| BotProvider + Workflow + SandboxBlueprint | 對外客服入口 / one way in for people outside |
+| an Agent mounting a SemanticLayer | 一個能自己查資料的專員 / it works out its own query |
+| a Trigger | 定期自動跑 / it runs on a schedule and only reports |
+| a SemanticLayer over a database | 讀得到你們的系統 / it can read that system |
+| browser operation | 沒有介接管道,要照著人的操作做 / no way in but the screen |
+
+The last row is the one to say plainly rather than smooth over. It is the most
+expensive answer on the list and the customer is the only person who can change
+it, by finding an API.
+
+**Two names for one thing is worse than a clumsy name.** If a phrase here is
+wrong for a customer's industry, change it once and use the changed one
+everywhere, including in the meeting notes.
 
 ### The register
 
@@ -579,8 +626,9 @@ Ten questions, and the last five are the ones that get skipped:
 4. Is there an implementation noun anywhere, including in a screenshot?
 5. Is another customer recognisable anywhere, including in a screenshot?
 6. Could we deliver everything on slide 8 if they said yes today? If any part
-   rests on something nobody has built or verified, it belongs on slide 9
-   instead.
+   rests on something nobody has built or verified, **first ask whose unknown it
+   is**: theirs moves to slide 9, ours goes back to the platform team before the
+   meeting and is answered out loud, never printed.
 7. Is there a decision record for the shape, written before the deck?
 8. Has every claim on slides 4, 5 and 6 been held against
    `asgard-cli wiki platform-unknowns`? Anything on that list is a slide 9
