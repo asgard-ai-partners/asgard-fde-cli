@@ -326,15 +326,15 @@ has to guess why each one matters, and the ones that sound like bureaucracy get
 deferred. **Pair every question with what it unlocks**, and the same meeting asks
 for access rather than for patience:
 
-    1   cover
-    2   what you told us          their words, close to verbatim
-    3   capability A: what we need to ask
-    4   capability A: what that gets you
-    5   capability B: what we need to ask
-    6   capability B: what that gets you
-    ...
-    n-1 what we are not doing this round
-    n   what we are going back to check
+    1     cover
+    2     what you told us            their words, close to verbatim
+    3     capability A                their own description, whole. Asks nothing
+    4     A, sub-topic 1              what we need | what that gets you
+    5     A, sub-topic 2              same
+    ...                               one slide per sub-heading of theirs
+    k     capability B                their description again, and so on
+    n-1   what we are not doing this round
+    n     what we are going back to check
 
 **The pairing is the shape, and the two halves are separate slides.** One slide
 carries one claim and one evidence shape, so a question table and the answer to
@@ -360,6 +360,76 @@ Two things this deck must still refuse, and they are the ones the shape tempts:
 
 What it does not have is a phase plan with dates. That is the proposal, and it
 comes after the answers.
+
+### The discovery deck's own rules, which are not the proposal's
+
+Three rules elsewhere on this page belong to the **proposal** and produce a bad
+discovery deck when applied. Each has been made and rejected by the person who
+had to present it.
+
+**Titles: the customer's own section names, unedited.** The ghost deck test -
+titles as assertions - assumes you have facts and a conclusion. In discovery you
+have neither, and an asserted title does two kinds of damage:
+
+    no    「你們要測的三件事,卡點都不在 AI,而在能不能讀到你們的系統」
+    no    「情境一能不能做,取決於 CRM 和 RMA 能用什麼方式讀」
+    yes   「測試情境一:AI 客服與 CRM / RMA 整合」   ← their document's heading
+
+The first states a conclusion **before asking the questions that would support
+it**, on slide 2, and contradicts the customer's framing to their face - while
+pre-empting exactly what the question slides exist to elicit. The second is worse
+in a quieter way: 情境一 is our numbering. Their document says the whole heading,
+and using it verbatim costs nothing and buys a shared vocabulary for the meeting.
+They recognise the slide instead of learning what our number refers to.
+
+**A customer who wrote a document has already classified their own problem**, in
+the words they use internally. Take the classification.
+
+**Their own words go on the slide, at whatever length they wrote them.** This is
+the positive rule, and it is the one the density rules actively prevent.
+
+A proposal is **us** talking, and every word we cut is respect for the reader's
+time. A discovery deck is **the customer** talking - we are spreading their own
+document on the table so everyone can look at it together - and compressing it
+is not economy, it is distortion.
+
+The room is the reason. The person who wrote the plan is in it, but so are their
+IT lead, their network admin, their e-commerce manager, and **none of those read
+the document**. A five-bullet summary is legible only to its author; everyone
+else sees questions with no provenance. Their own 情境說明, verbatim, is a page
+every person in the room recognises as theirs.
+
+So: **give each capability a context slide before any question slide.** Their
+description as they wrote it, their sub-items, their diagram if they drew one.
+That page asks nothing. It exists so that the pages after it have somewhere to
+stand.
+
+    the one-line-per-bullet rule    a proposal rule. Does not apply here
+    the three-to-five items bound   a proposal rule. Does not apply here
+    a paragraph of theirs           goes on whole
+
+**Density: one sub-topic per slide, following their sub-headings.** Three to five
+items is the proposal's density rule. Applied here it compresses a whole
+capability's questions into one table, and five questions with no context read as
+a questionnaire - three such tables read as an audit.
+
+Their document is already broken down: a capability with four sub-items is four
+slides, each saying what we need and what it unlocks. **More slides is not the
+problem; a compressed one is.** This deck is worked through line by line in the
+room, and a page per subject is what makes that possible.
+
+**`cap`: not the narration, and often nothing at all.** The line under a slide is
+for something the reader will write down, and a context slide carrying the
+customer's own words usually needs none - the page is already theirs. Leave it
+empty rather than inventing one. It is never for:
+
+    no    「以上引號內文字出自你們 8/31 的測試計畫」     where the material came from
+    no    「今天要談的,是每個情境要拿到什麼才做得起來」   what we are about to do
+    no    「這一頁說明三個情境的差異」                  what this slide is
+
+All three are things you say out loud. Printing what you are about to say wastes
+the line and tells the room you are reading it. If a reader would not copy it
+into their notes, delete it.
 
 The last two slides are the two filters made visible: what came out as deferred
 scope, with what has to be answered before it comes back, and the questions that
@@ -468,14 +538,23 @@ slide.
 
 What kami expects, and what is worth knowing before you write:
 
-- **The ghost deck test.** Reading only the titles, in order, must tell the whole
-  argument. If a title is a topic label - "Current situation", "Architecture" -
-  it fails. Titles are assertions: "Support answers one ticket by opening four
-  systems".
+- **The ghost deck test**, for a **proposal**. Reading only the titles, in order,
+  must tell the whole argument. If a title is a topic label - "Current
+  situation", "Architecture" - it fails. Titles are assertions: "Support answers
+  one ticket by opening four systems". **This inverts for a discovery deck**,
+  where you have no facts to assert and the customer's own section headings are
+  the right titles - see step 5.
 - **One evidence shape per slide.** A slide is a claim plus one thing that backs
-  it: three to five items, or a chart, or a quote. Not two of them.
+  it: three to five items, or a chart, or a quote. Not two of them. **Both the
+  three-to-five bound and "trim each bullet to one line" are proposal rules**, and
+  a layout skill's own density checks will enforce them on a discovery deck where
+  they do not belong - the checks go green on a deck that has compressed the
+  customer's document into something only its author can read. See step 5.
 - **`cap`** is the line that says why the slide matters - a trade-off, a
-  boundary, a next step. It never restates the title.
+  boundary, a next step. It never restates the title, and it is **never the
+  narration**: not where the material came from, not what the slide is about,
+  not what you are about to talk about. If a reader would not copy it into their
+  notes, it does not earn the line.
 - Its content contract is `references/schemas/slides.json` in the kami skill, and
   its layouts are `cover`, `chapter`, `content`, `quote`, `metrics`, `close`.
 
