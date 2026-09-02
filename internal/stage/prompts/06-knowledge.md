@@ -1,6 +1,13 @@
 Optional stage. Do this only if the customer has knowledge that is **not rows in
 a database** - product documents, FAQs, pages on a website.
 
+**Ask whether they need to see where an answer came from.** Citations are
+available - the sources arrive on the completion event inside the message's
+`template` - but **only if the Workflow is built to return them**, and only if
+the front end reads that field. It is a decision made here, and retrofitting it
+means changing the workflow and the front end together. `asgard-cli wiki
+knowledge` has the shape.
+
 **This is the third decision that gets answered wrong**, and it has one answer:
 
     SourceSet + spec.contextIndex, mounted read-only, queried with graphify

@@ -420,6 +420,20 @@ Those become a Drive with a knowledge graph, and they are a different shape from
 rows in a database. Ask separately; customers rarely volunteer documents when
 the conversation has been about systems.
 
+**And ask whether they need to see where an answer came from.** Citations are
+available and are not automatic: the sources arrive on the completion event
+inside the message's `template`, but only if the Workflow is built to return them
+and the front end reads that field. It is decided when the chart is written, and
+retrofitting it means changing the workflow and the front end together - so it
+belongs in the request rather than in a later conversation. Regulated industries
+and anything replacing a human who cites a manual will want it.
+
+**Retrieval quality depends on how their people ask.** Specific keywords beat
+vague ones, one topic per question, context helps. A customer whose staff ask
+"tell me everything about X" will judge the knowledge base as bad and will be
+describing their questions. Sample questions on the agent are where this gets
+taught without anyone reading a guide.
+
 Anything a query DOES answer exactly - counts, prices, stock levels, contact
 details - belongs to a query tool, not to a Drive. Putting a number in a Drive
 makes the agent paraphrase a figure it should have read.

@@ -135,6 +135,39 @@ than at design time. Two consequences worth carrying into an interview:
 They are defaults rather than ceilings - `asgard-cli wiki integration` has all
 eight numbers and how they are raised.
 
+## Citations are possible, and they are not automatic
+
+"Where did that answer come from" is on most customers' lists, and the answer is
+**yes, if the Workflow is built to return them**.
+
+Retrieval happens entirely server-side - there is no separate knowledge endpoint,
+the same message call runs the retrieve processor and the model - and the sources
+come back on `asgard.message.complete`, inside the message's `template`:
+
+    fact.messageComplete.message.template.sources[]
+      title, and url or fileName
+
+**`template`'s shape is whatever the Workflow puts there.** So citations are a
+design decision made when the chart is written, not a switch, and a front end
+that does not read `template` shows an answer with no provenance no matter what
+the retrieval did. Decide it before the chart, because retrofitting it means
+touching the workflow and the front end together.
+
+## Retrieval quality depends on how the question is asked
+
+Worth handing over rather than discovering. The documentation's own guidance:
+
+    specific keywords beat vague ones     "how many working days for a refund"
+    one topic per question                not "tell me everything you have"
+    context helps                         "as a business customer, what is the
+                                          renewal process"
+
+**A customer whose staff ask broad questions will judge the knowledge base as
+bad**, and they will be describing their questions rather than the corpus. This
+belongs in the handover and in the sample questions on the agent - `On-boarding
+Settings` exists for exactly this, and a good set of starter questions teaches
+the shape without anyone reading a guide.
+
 ## Sources
 
 - [Drive](https://docs.asgard-ai.com/docs/product-suite/odin/features/drive)
@@ -151,6 +184,11 @@ eight numbers and how they are raised.
   2026-09-02 - `knowledgebases`, `loaders`, `indexers` and `sources` all exist
   and none is marked deprecated - and against asgard-docs `f00e0ee`, which
   documents the feature as current
+
+- Citations on `message.template.sources`, that retrieval is server-side on the
+  same endpoint, and the question-shape guidance:
+  [Knowledge base query](https://docs.asgard-ai.com/docs/developer-reference/examples/knowledge-base-query)
+  - asgard-docs `f00e0ee`, read 2026-09-02
 
 **Unchecked:** the syncer classes and contextIndex were held against the CRD and
 one deployment; the UI steps come from the product documentation only.
