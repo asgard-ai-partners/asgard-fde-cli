@@ -11,7 +11,7 @@ database, a crawl of its own marketing site, and manually uploaded documents.
 **Unchecked:** the contextIndex.prompt guidance. It is advice about the customer's own data and has no source outside the engagement that wrote it.
 
 **Read the platform side first:** `asgard-cli wiki knowledge` -
-Drive, Context Index, and the deprecated Knowledge Base. This page assumes you have.
+Drive, Context Index, and how Knowledge Base differs. This page assumes you have.
 
 ## When this shape, and when not
 
@@ -24,9 +24,14 @@ complementary and neither does the other's job: a Drive answers "what is this
 machine roughly, how do I choose, how do I fix it"; a query answers "how many,
 which ones, what is the phone number".
 
-**`KnowledgeBase` is deprecated platform-side.** If you find it in an older
-chart, with `Loader` CRs and retrieval workflows, it is not a template to copy -
-that whole mechanism was removed.
+**Prefer this over `KnowledgeBase` for new work, but know what that claim
+rests on.** `KnowledgeBase`, `Loader`, `Indexer` and `Source` are all live CRDs,
+none carries a deprecation marker, and the console ships the feature with its
+own documented UI. What happened is narrower: one engagement built knowledge on
+`KnowledgeBase` + `Loader` + a retrieval workflow and moved it to a Drive with a
+Context Index (TASK-013). So an older chart containing one is not automatically
+wrong - it is a shape somebody chose before that experience existed. Ask the
+platform team before telling a customer the mechanism is going away.
 
 ## The shape
 

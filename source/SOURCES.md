@@ -61,7 +61,7 @@ disagreement is dated rather than a matter of taste.
 | `bot-provider-type` label | stamped, "front end breaks without it" (freyr) | dropped, platform derives it from `botProviderClass` (unitech-e, workflow-service #336) | later, but stamping it anyway is harmless |
 | canvas metadata | hand-written `node_positions` ConfigMaps (demo generator) | dropped, platform auto-lays-out (unitech-e, #336-#340, 2026-08-31) | later |
 | `Agent.managed.completionModelName` | required (demo generator's GOAL.md) | Agent takes no model; the caller picks per turn (unitech-e) | later |
-| `KnowledgeBase` | in use (auto-post) | deprecated platform-side, replaced by a SourceSet Drive with contextIndex (unitech-e, TASK-013) | later |
+| `KnowledgeBase` | in use (auto-post) | one deployment replaced it with a SourceSet Drive + contextIndex (TASK-013). Live and unmarked in the CRDs; do not restate as a platform deprecation | later |
 
 ## Where the platform's own documentation disagrees with every chart
 

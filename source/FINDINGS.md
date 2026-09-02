@@ -57,7 +57,7 @@ and they are the three decisions that matter most:
 |---|---|---|---|
 | how `website` reads catalog data | a SemanticLayer (TASK-003) | five zero-parameter query tools (TASK-010) | a layer without `allowedCubes` is arbitrary SQL over every cube, and the exposed surface grows by itself each time a table is added |
 | how `website` is reached | the platform's agent hub (TASK-007) | Flow Agent: own BotProvider -> Workflow -> SandboxBlueprint (TASK-011) | an anonymous visitor cannot authenticate to the agent hub, and `BotProvider.entrypoint` takes a Workflow, never an Agent |
-| how `website` stores knowledge | `KnowledgeBase` + `Loader` + Toolset (TASK-012) | `SourceSet` Drive + contextIndex + read-only mount (TASK-013) | the KnowledgeBase mechanism is deprecated platform-side |
+| how `website` stores knowledge | `KnowledgeBase` + `Loader` + Toolset (TASK-012) | `SourceSet` Drive + contextIndex + read-only mount (TASK-013) | the Loader-and-retrieval-workflow path was harder to keep correct. NOT a platform deprecation: all four CRDs are live and unmarked at `15ded0f`, and asgard-docs `f00e0ee` documents the console feature as current. This repo said "deprecated platform-side" in nine places until 2026-09-02 |
 
 **So a linear wizard is the wrong shape.** Each was answered once, implemented,
 and reversed after contact with reality. What the next customer needs is not a

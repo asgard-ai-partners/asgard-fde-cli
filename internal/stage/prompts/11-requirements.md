@@ -260,7 +260,7 @@ hypothetical.
 |---|---|---|
 | a public website should read through a **SemanticLayer**, like everything else | **five zero-parameter query tools** | a layer without `allowedCubes` is arbitrary SQL over every cube, and the exposed surface grows by itself every time a table is added. Nobody widens it on purpose |
 | a public website is reached through **the platform's agent hub**, like everything else | its **own BotProvider -> Workflow -> SandboxBlueprint** | an anonymous visitor cannot authenticate to the agent hub. `BotProvider.entrypoint` takes a Workflow, never an Agent |
-| unstructured knowledge is a **KnowledgeBase** with Loaders and a retrieval workflow | a **SourceSet Drive with `contextIndex`** | KnowledgeBase is deprecated platform-side. An older chart still containing one is not a template to copy |
+| unstructured knowledge is a **KnowledgeBase** with Loaders and a retrieval workflow | a **SourceSet Drive with `contextIndex`** | the Loader-and-retrieval-workflow path was harder to keep correct than a Context Index over files. `KnowledgeBase` is still live and still shipping, so this one is experience rather than a platform rule |
 
 The pattern in all three: **"like everything else" is the wrong reason**, because
 the audience is what decides, and the audience is the one thing "everything

@@ -75,7 +75,12 @@ Hooks belong to a Plugin and to nothing else.
 | `user-prompt-submit` | before each user message reaches the CLI | usable |
 | `pre-tool-call` / `post-tool-call` | - | **never implemented; declaring one is a silent no-op** |
 
-The last row exists only so older CRs stay valid. A `session-start` hook's
+The last row exists only so older CRs stay valid, and nothing catches it for
+you: the generated CRD lists both events in the enum with no marking, so a CR
+declaring one is accepted and then does nothing. The statement comes from the
+API types themselves ([asgard-kube](https://github.com/asgard-ai-platform/asgard-kube)
+`15ded0f`, `pkg/apis/asgard/v1alpha1/types.go`): "Deprecated: never implemented
+... declaring a hook with either event is a silent no-op". A `session-start` hook's
 content has to be stable; anything derived from the turn's payload belongs in
 `user-prompt-submit`.
 

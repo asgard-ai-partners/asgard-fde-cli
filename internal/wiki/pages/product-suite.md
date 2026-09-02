@@ -42,7 +42,7 @@ This layer maps to the CRs in a chart; see the name mapping in
 | Automation | Trigger (schedules) and API |
 | Data Insight | Semantic Model - the read surface over a database |
 | Drive | where document knowledge lives |
-| Knowledge Base | the deprecated knowledge mechanism |
+| Knowledge Base | the older knowledge mechanism - live, but a Drive is preferred for new work |
 | MCP Servers | external tools |
 | Plugins | capability bundles |
 | Skillsets | skill sets |

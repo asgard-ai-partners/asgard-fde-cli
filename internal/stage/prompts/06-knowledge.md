@@ -5,11 +5,14 @@ a database** - product documents, FAQs, pages on a website.
 
     SourceSet + spec.contextIndex, mounted read-only, queried with graphify
 
-KnowledgeBase is deprecated platform-side. If you find it in an older chart or a
-CR dump, it is not a template to copy.
+`KnowledgeBase` is still a live CRD and still a shipping console feature, so
+this is a recommendation rather than a platform rule. It rests on one engagement
+that built the other way and reversed.
 
 > Answered wrong once: knowledge was built on KnowledgeBase + Loader + retrieval
-> workflows, and the whole mechanism was later removed.
+> workflows, and was later rebuilt on a Drive with a Context Index (TASK-013).
+> An older chart containing one is a shape somebody chose before that, not
+> proof the mechanism is going away.
 
     asgard-cli usecase knowledge-drive
 

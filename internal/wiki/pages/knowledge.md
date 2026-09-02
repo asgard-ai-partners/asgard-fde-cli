@@ -1,16 +1,21 @@
 # Drive and Knowledge Base
 
-Both hold unstructured knowledge, but **only Drive is current**.
+Both hold unstructured knowledge and both are live. Drive is what this repo
+recommends for new work, and the reason is one engagement's experience rather
+than anything the platform has announced.
 
 | | Drive | Knowledge Base |
 |---|---|---|
-| status | current | **deprecated platform-side** |
+| status | live | live - no deprecation marker on any of its four CRDs, and the console ships the feature |
 | CRs | `SourceSet` (+ `Syncer`) | `KnowledgeBase` + `Loader` + `Indexer` + `Source` |
 | retrieval | a Context Index knowledge graph | RAG over chunks |
 
-The Knowledge Base CRD and its UI both still exist, so it turns up in older
-charts. **Do not start anything new on it.** New knowledge goes into a Drive with
-a Context Index.
+Start new knowledge on a Drive with a Context Index. That is a recommendation
+with a traceable origin - one deployment moved off `KnowledgeBase` + `Loader` +
+a retrieval workflow and found the Drive simpler to keep correct - and not a
+statement that the platform is retiring anything. Before repeating it to a
+customer as platform direction, ask the platform team, because nothing in the
+CRDs or the product documentation says so.
 
 ## Drive
 
@@ -122,7 +127,12 @@ number in a Drive makes the agent paraphrase a figure it should have read.
   against [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube)
   `15ded0f` - `SyncerClass`, `SourceSetContextIndex`
 - The schedule ordering and the two switches: read off a deployment's own Drive
-- KnowledgeBase being deprecated: this repo's `source/SOURCES.md`
+- Preferring a Drive over `KnowledgeBase`: one deployment's migration, recorded
+  in this repo's `source/SOURCES.md`. Held against
+  [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `15ded0f` on
+  2026-09-02 - `knowledgebases`, `loaders`, `indexers` and `sources` all exist
+  and none is marked deprecated - and against asgard-docs `f00e0ee`, which
+  documents the feature as current
 
 **Unchecked:** the syncer classes and contextIndex were held against the CRD and
 one deployment; the UI steps come from the product documentation only.

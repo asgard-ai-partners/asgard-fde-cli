@@ -142,8 +142,11 @@ question and restates the answer back.
 There is one answer: a `SourceSet` with `spec.contextIndex`, mounted read-only
 on the `SandboxBlueprint`, queried with the sandbox's builtin **graphify** skill.
 
-**`KnowledgeBase` is deprecated platform-side.** If you find it in an older
-chart or a CR dump, it is not a template to copy.
+This is a recommendation, not a platform rule. `KnowledgeBase`, `Loader`,
+`Indexer` and `Source` are all live CRDs with no deprecation marker, and the
+console ships the feature. What stands behind the recommendation is one
+engagement that built the Loader-and-retrieval-workflow way and rebuilt it on a
+Drive. An older chart containing one is a shape somebody chose before that.
 
 Setting `contextIndex` is the whole switch: the reconciler derives three
 same-named CRs that mount the Drive writable and run the indexer on a cron.

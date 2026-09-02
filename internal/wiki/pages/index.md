@@ -17,7 +17,7 @@
 | page | covers |
 |---|---|
 | [`agents`](agents.md) | Flow Agent against Managed Agent, how to choose, UI-to-CR names |
-| [`knowledge`](knowledge.md) | Drive, Context Index, the deprecated Knowledge Base |
+| [`knowledge`](knowledge.md) | Drive, Context Index, and how Knowledge Base differs |
 | [`semantic-model`](semantic-model.md) | the modelling flow, its limits, the Mimir side |
 | [`tools`](tools.md) | MCP Server, Skillset and Plugin; hook events |
 | [`automation`](automation.md) | Trigger and API, and why only cron is left |
@@ -41,7 +41,7 @@ Each is written on the page it affects:
 |---|---|
 | the UI's Flow Agent is three CRs; `agentClass` has one value | `agents` |
 | the Drive Syncer UI offers five sources, the CRD supports ten | `knowledge` |
-| Knowledge Base is still in the UI and the CRD, but deprecated | `knowledge` |
+| Knowledge Base and Drive both exist and which one new work should use | `knowledge` |
 | Connection's "For Trigger" group names removed trigger classes | `automation`, `settings` |
 | Semantic Model lists six data sources, the settings page nine (unexplained) | `semantic-model` |
 | the four `integration-with-asgard/` pages are `draft` and name an older UI | `integration` |
