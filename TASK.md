@@ -300,9 +300,25 @@ names is not reading a repository.
      product documentation page; LINE having no current screenshot. The last two
      are asks for asgard-docs rather than for this repository.
 
-  9. **No engagement has been walked end to end with the current material.**
-     Everything above was found by watching one, at stage 2. Stages 3 to 9 have
-     been read but not exercised since any of this changed.
+  9. ~~**No engagement has been walked end to end with the current material.**~~
+     **Walked 2026-09-02**, in a throwaway repository, through every state this
+     session changed: init, scaffold, material filed with nothing recorded
+     (warns), read into a question (silent), `next` reporting who the answers
+     are with, a request opened after the interview, a project, a target, three
+     CR kinds, `check`, `render`, `verify`, and all twelve stage prompts
+     rendered. Nothing broke and the stage progression tracked the repository
+     state correctly.
+
+     **What it did not exercise**: a real deployment (there is no cluster in
+     this loop), `--force` against a repository with local edits beyond the one
+     copy tested earlier, and the multi-capability case - one repository with
+     three capabilities in three different states, which is item 8's `next`
+     problem and cannot be tested without building one.
+
+     **And what it confirmed is narrower than it sounds.** It shows the commands
+     work together. It does not show the material is right - every finding this
+     session came from somebody using it against a real customer, not from a
+     walk-through, and no synthetic walk would have produced any of them.
 
 ## What is not done
 
