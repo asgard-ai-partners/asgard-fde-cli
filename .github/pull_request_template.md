@@ -44,7 +44,8 @@
   Render every kind and validate the documents against asgard-kube/crd/:
   required fields, fields not in the schema, enums, patterns, ExactlyOneOf. Do
   the same for the YAML skeletons in the extracts, since those are what somebody
-  copies by hand.
+  copies by hand. `hack/README.md` is the procedure; both counts come from
+  `hack/validate-crs.py`.
 
   If the contract HAS moved since the last time this repo looked, say what
   changed and what it means here - a retired field, a flipped default and a new

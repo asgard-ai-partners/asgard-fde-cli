@@ -85,6 +85,7 @@ spec:
         description: |-
           Sends one notice. Returns ok: false when it did not go out - do not
           treat that as sent.
+        allowUploadFile: false   # required, and it has no default
       inputSchema: |
         {
           "type": "object",

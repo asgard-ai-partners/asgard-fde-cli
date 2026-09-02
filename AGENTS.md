@@ -200,7 +200,8 @@ answer.
 Render every kind and validate the result against the schemas: required fields,
 fields that are not in the schema, enums, patterns, and the `ExactlyOneOf` rules.
 Do the same for the YAML skeletons in the extracts, because those are what
-somebody copies by hand.
+somebody copies by hand. `hack/README.md` is the procedure and `hack/` holds the
+two scripts; this is not a check to do by eye.
 
 If the contract has moved since this repo last looked, say what changed and what
 it means here. A retired field, a flipped default and a new required field each

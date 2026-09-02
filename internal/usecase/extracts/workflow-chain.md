@@ -72,6 +72,7 @@ spec:
         description: |-
           What the model reads to decide whether to call this. Name the tool it
           could be confused with.
+        allowUploadFile: false   # required, and it has no default
       inputSchema: |
         { "type": "object",
           "properties": { "q": { "type": "string" } },

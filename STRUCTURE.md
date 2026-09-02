@@ -14,6 +14,7 @@ that repo is what the next agent opens.
 cmd/asgard-cli/       main; signal handling and exit codes only
 internal/             every package, none exported
 source/               internal notes that must never ship
+hack/                 this repo's own tooling: the CRD contract check
 .github/             CI, the tag-driven release, and the PR template
 .goreleaser.yaml      how the binary is built and published
 ```
@@ -124,6 +125,21 @@ dated rather than a matter of taste.
 It lives outside `internal/` deliberately, so `go:embed` cannot reach it even by
 accident. Everything under `internal/` ships to every engagement and names no
 customer; this file is the one place that does.
+
+## `hack/` - the contract check
+
+`hack/validate-crs.py` holds rendered CRs and the extracts' skeletons against
+asgard-kube's schemas: required fields, unknown fields, enums, patterns,
+`maxItems`, `ExactlyOneOf`. `hack/extract-crs.py` gets the skeletons out of the
+extracts, which are chart fragments rather than parseable YAML.
+
+It exists because nothing else looks. `helm lint`, `asgard-cli check` and a
+server-side dry-run all pass a document the apiserver would reject or silently
+prune. `hack/README.md` is the procedure, and the PR template asks for its
+output.
+
+Not to be confused with the `scripts/` directory `asgard-cli scaffold` writes
+into a **customer** repo, which holds that repo's acceptance gates.
 
 ## Reference material that is not in this repo
 
