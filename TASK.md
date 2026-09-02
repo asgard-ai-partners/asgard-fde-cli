@@ -147,6 +147,29 @@ material was written from deployments that all use builtins. Every remaining
 `AGENTS.md` claim about what does not exist deserves the same check against the
 seven charts, and that has not been done.
 
+### What automated checks cannot see
+
+Six defects in `proposal-deck` were found by an engagement building a real deck,
+and **every one passed the layout skill's own checks** - density, rhythm and
+content all green. They shared a cause: the skill carried the proposal's rules
+and applied them to a discovery deck, where several of them invert.
+
+Titles as assertions become conclusions stated before the questions that would
+support them. The three-to-five item bound compresses a customer's document into
+something only its author can read. `cap` fills with narration. Two recommended
+screenshots carry `ts-` prefixes and the build console's own navigation, which
+the same skill's first rule forbids.
+
+All six are fixed. **The pattern is worth keeping**: the rules that produce a
+good artefact of one kind silently produce a bad one of another, and a checker
+that validates shape cannot tell them apart. Any recipe added here should say
+which kind of artefact it is for, and what inverts for the others.
+
+The counterpart is also worth recording: **`demo-generation` is now an extract**,
+and the demo generator remains the largest body of Asgard chart material there
+is. What it has that nothing else does is an orphan check in both directions -
+every asset must be used by a story, not only every reference resolved.
+
 ### The solution vocabulary is agent-shaped
 
 Not a missing extract - a missing **kind** of extract, and it is the one that
