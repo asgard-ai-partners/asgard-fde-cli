@@ -8,11 +8,25 @@ Things filed under help-community that come up in practice.
 customer's data centre and not on their network, and there is no deployment that
 puts it inside. Everything follows from that.
 
-So a system that is only reachable from inside their network is not reachable at
-all until **they** open a path to it. The work is theirs, not ours: they add
-Asgard's addresses to their firewall allowlist, or bring the platform onto their
-network over a VPN. We supply the addresses; they own the change, the approval
-and the schedule for it.
+**And the agent runs in a sandbox that the platform starts**, in that cloud. So
+there is no fixed machine of ours to put on their network, nothing to install
+behind their firewall, and no endpoint of theirs we can reach out from. The
+traffic leaves Asgard's cloud, and it leaves from the addresses below.
+
+So the ask has exactly one shape, and it is not a menu:
+
+    they add Asgard's outbound addresses to their allowlist
+
+**Do not offer a VPN, a bastion or a jump host as alternatives.** They are the
+shapes for connecting two networks, and this is not that: it is a hosted service
+calling in from fixed addresses. Presenting three options invites their network
+team to pick the one that suits their habits, and then a week is spent
+discovering it does not apply. If their policy requires a VPN, that is a
+conversation for their side about how the allowlist is implemented - it does not
+change what we need from them.
+
+The work is theirs, not ours. We supply the addresses; they own the change, the
+approval and the schedule.
 
 Traffic from the platform to a customer's internal database or service leaves
 from these four fixed addresses:

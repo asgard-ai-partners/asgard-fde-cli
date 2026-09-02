@@ -329,11 +329,19 @@ count.
 | an Agent mounting a SemanticLayer | 一個能自己查資料的專員 / it works out its own query |
 | a Trigger | 定期自動跑 / it runs on a schedule and only reports |
 | a SemanticLayer over a database | 讀得到你們的系統 / it can read that system |
+| the outbound-IP allowlist request | 請你們把我們的四個位址加進白名單 / add our four addresses to your firewall's allowed list |
 | browser operation | 沒有介接管道,要照著人的操作做 / no way in but the screen |
 
-The last row is the one to say plainly rather than smooth over. It is the most
-expensive answer on the list and the customer is the only person who can change
-it, by finding an API.
+The browser-operation row is the one to say plainly rather than smooth over. It
+is the most expensive answer on the list and the customer is the only person who
+can change it, by finding an API.
+
+The allowlist row has a rule of its own: **ask for the allowlist, not for "a VPN
+or an allowlist or a jump host".** Asgard is hosted and the agent runs in a
+sandbox in that cloud, so there is nothing of ours to place on their network and
+the other two options do not apply. A slide offering three invites their network
+team to pick the wrong one, and that is discovered a week later.
+`asgard-cli wiki operations` has the addresses; hand them over in the meeting.
 
 **Two names for one thing is worse than a clumsy name.** If a phrase here is
 wrong for a customer's industry, change it once and use the changed one

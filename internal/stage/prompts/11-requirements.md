@@ -179,14 +179,21 @@ integration from days into weeks by being discovered late:
   - **is the account read-only?** Ask explicitly. The one offered first usually
     is not, and finding out later means going back for a second credential
   - **is it reachable from outside their network?** Asgard is a hosted cloud
-    service - it does not run on the customer's network and cannot be put
-    there - so an internal system stays unreachable until they allowlist our
-    four outbound addresses or bring us on over a VPN. Ask who can approve a
-    firewall change and how long one takes there; it is a ticket and a window
-    in most companies, not something the person in the meeting can do that
-    afternoon. `asgard-cli wiki operations` has the addresses to hand over in
-    the meeting. This is the single most expensive thing to discover in week
-    three, and it costs one sentence to ask in week one
+    service and the agent runs in a sandbox the platform starts, in that cloud.
+    There is nothing of ours to put on their network. So the ask has one shape:
+    **they add Asgard's four outbound addresses to their allowlist.**
+
+    **Ask for that, not for "a VPN, an allowlist or a jump host".** Offering
+    options invites their network team to choose one that does not apply, and
+    the week it takes to find that out is the week you were trying to save.
+    If their policy needs a VPN, that is their side's business about how the
+    allowlist gets implemented; what we need from them is unchanged.
+
+    Ask who approves a firewall change and how long one takes there - it is a
+    ticket, an approval and a window in most companies, not something the person
+    in the meeting can do that afternoon. `asgard-cli wiki operations` has the
+    addresses to hand over on the spot. This is the single most expensive thing
+    to discover in week three, and it costs one sentence to ask in week one
   - who issues the credential, by name or role. A credential with no owner is
     not a dependency, it is a delay
   - for an API instead of a database: the auth scheme, who holds the client id
