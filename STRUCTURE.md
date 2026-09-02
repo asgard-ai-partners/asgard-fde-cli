@@ -113,7 +113,7 @@ docs/spec/__SPEC_SLUG__/README.md.tmpl
 ```
 
 A `.tmpl` suffix means the file is rendered; anything else is copied verbatim.
-`.agents/skills/` under it holds the five design-time skills the coding agent in
+`.agents/skills/` under it holds the six design-time skills the coding agent in
 the customer repo loads.
 
 ## `source/` - never ships

@@ -133,7 +133,7 @@ It writes the part of a customer repo that is the same for every engagement:
 | `requirements/` | the task and request indexes |
 | `scripts/check_*.py` | the four acceptance gates |
 | `scripts/db/` | the query and introspection tool-chain, with an empty target registry |
-| `.agents/skills/` | the five design-time skills |
+| `.agents/skills/` | the six design-time skills |
 | `common/` | `asgard-cli render`, the per-env overlay points, the runtime-skill directory |
 | `.github/workflows/main.yaml` | tag-driven CD |
 | `projects/<slug>/` | one chart skeleton per project, with `values-<env>.yaml` only for the environments that project declares |

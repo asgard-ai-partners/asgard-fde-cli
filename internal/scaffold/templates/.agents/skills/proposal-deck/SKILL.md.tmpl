@@ -1,0 +1,157 @@
+---
+name: proposal-deck
+description: Use when building a slide deck for the customer - a proposal, a scope review, a phase kick-off, or a readout after a discovery round. Covers where a deck lives in this repo, which material it is allowed to be built from, the order a proposal argues in, and the things that must never appear on a customer's screen. Typesetting is delegated to the kami skill; this one owns the content.
+---
+
+# Proposal decks for <<.Workspace.Name>>
+
+A deck is the only thing in this repository the customer reads. Everything else
+records what we think; a deck records what they were told, and they agree to
+scope on the strength of it.
+
+That is the whole reason this skill exists. A deck assembled from the chart is
+accurate and useless. A deck assembled from an ambition is readable and turns
+into a broken promise. What works is a deck assembled from **their own material**,
+saying back to them what they said, and then one paragraph of what we will do
+about it.
+
+## Where it goes
+
+A deck belongs to the meeting it was presented at, so it is filed as one. There
+is no new directory for decks: a meeting note that has attachments becomes a
+directory instead of a file.
+
+    docs/meeting-notes/YYYY-MM-DD-<topic>/
+      README.md    the meeting note - who was there, what they said
+      deck.md      what we presented
+      deck.pdf     the file they were given
+      assets/
+
+The meeting note is what makes the deck readable later. Without it nobody can
+tell whether a deck is what was proposed or what was agreed, and those are
+different things - what was agreed goes to `docs/decisions/`.
+
+Add four lines to the note, because a deck is a claim about where its content
+came from:
+
+    - 對象:營運主管 + IT 窗口(4 人)
+    - 材料來源:references/erp-manual/、requirements/requests/REQ-003-*.md
+    - 當天結果:一階段範圍確認;退貨流程延到二階段
+    - 講出去之後改過嗎:沒有。要改就開新的一場日期。
+
+**A presented deck is not edited afterwards.** The customer's copy does not
+change with ours, and a repository version that differs from the one in their
+hands is worse than no copy at all. Changed your mind: new date, new directory.
+
+## Step 1 - find the material, and refuse to invent any
+
+A proposal is built from what the customer gave us and what they said, in this
+order:
+
+| where | what it gives you |
+|---|---|
+| `references/` | their own manuals, schema dumps, field dictionaries, screenshots |
+| `docs/meeting-notes/` | what they said, before we tidied it |
+| `requirements/requests/` | what they asked for, in their words |
+| `docs/open-questions.md` | what is still unknown - a slide's worth of honesty |
+
+**Not** `docs/spec/` and **not** `projects/*/chart/`. Those describe our
+implementation. A customer looking at a slide made from a chart sees a diagram of
+something they did not ask about.
+
+If a claim you want to make is in none of the four, it is not yet a claim. Two
+ways out: ask, or put it on the open-questions slide. Do not smooth it over -
+this repository records three decisions that were made confidently, built, and
+reversed after contact with reality. Any of the three, written into a proposal,
+would have been a commitment we could not keep.
+
+Every number carries where it came from:
+
+- a number the customer gave us - say so, and say when they gave it
+- a number we measured - say what was measured and when
+- a number nobody has - leave it out, or put a question on the slide
+
+## Step 2 - the order a proposal argues in
+
+Nine slides, in this order, is a complete proposal. Longer decks are usually a
+short one with the same slide repeated.
+
+| # | slide | the job it does |
+|---|---|---|
+| 1 | cover | who this is for, and the date |
+| 2 | what you told us | their words, close to verbatim. Earns the rest |
+| 3 | what it costs today | the number they gave us, attributed to them |
+| 4 | what we propose | one sentence a non-technical reader repeats correctly |
+| 5 | what it looks like to use | the interaction, not the architecture |
+| 6 | what it reads | which systems, and who can see what |
+| 7 | what is NOT in scope | the slide that prevents the argument in month three |
+| 8 | how we get there | phases with dates, and what we need from them |
+| 9 | what we still do not know | the open questions, named as questions |
+
+Slide 2 is the one that makes the deck work, and the one most often skipped.
+A customer who hears their own problem stated back accurately will accept a
+rough solution; one who hears a polished solution to a problem they do not
+recognise will argue with every slide after it.
+
+Slide 7 is the one that saves the engagement. Scope stated narrowly is a proposal
+that can be delivered; scope left open is a proposal that grows until it fails.
+
+## Step 3 - what must never be on a customer's screen
+
+- **Implementation nouns.** No CR kinds, no `sl-` / `dc-` / `ss-` prefixes, no
+  namespaces, no Helm, no chart, no CRD. The customer bought an outcome.
+- **Another customer.** No name, no logo, no screenshot, no "we did this for a
+  retailer with 200 stores" that is recognisable. Their engagement is not ours to
+  spend.
+- **Credentials and coordinates.** No hostnames, no connection strings, no
+  account names, not even in a screenshot's corner. Check the screenshots.
+- **A capability nobody has verified.** If it is not in `references/`, in a
+  meeting note, or measured, it is not a promise.
+- **Precision we do not have.** "Around 10 minutes, from your own figures" beats
+  "11.4 minutes" when 11.4 came from one afternoon's sample.
+
+## Step 4 - write it, with kami
+
+Typesetting, layout and the visual language belong to the **`kami`** skill. Load
+it and let it produce the file; this skill has already decided what goes on each
+slide.
+
+What kami expects, and what is worth knowing before you write:
+
+- **The ghost deck test.** Reading only the titles, in order, must tell the whole
+  argument. If a title is a topic label - "Current situation", "Architecture" -
+  it fails. Titles are assertions: "Support answers one ticket by opening four
+  systems".
+- **One evidence shape per slide.** A slide is a claim plus one thing that backs
+  it: three to five items, or a chart, or a quote. Not two of them.
+- **`cap`** is the line that says why the slide matters - a trade-off, a
+  boundary, a next step. It never restates the title.
+- Its content contract is `references/schemas/slides.json` in the kami skill, and
+  its layouts are `cover`, `chapter`, `content`, `quote`, `metrics`, `close`.
+
+Ask kami for the deck in the customer's language. Default output is a PDF, which
+is what gets handed over; ask for the editable path only when the customer has
+said they want to edit it.
+
+If kami is not installed, write `deck.md` as plain Marp markdown - `---` between
+slides - and say in the handover that it has not been typeset. Do not invent a
+second house style; a plain deck that says what it means beats a decorated one
+that does not.
+
+## Before you send it
+
+Six questions, and the last two are the ones that get skipped:
+
+1. Do the titles alone tell the argument?
+2. Is every number attributed - their figure, our measurement, or absent?
+3. Does slide 7 say what is not in scope, specifically enough to point at later?
+4. Is there an implementation noun anywhere, including in a screenshot?
+5. Is another customer recognisable anywhere, including in a screenshot?
+6. Could we deliver everything on slide 8 if they said yes today? If any part
+   rests on something nobody has built or verified, it belongs on slide 9
+   instead.
+
+Then file it: write `README.md` beside the deck saying who it was for, what
+material it came from, and what happened in the room. A deck without that label
+is unusable six months later, because nobody can tell whether it is what was
+proposed or what was agreed.
