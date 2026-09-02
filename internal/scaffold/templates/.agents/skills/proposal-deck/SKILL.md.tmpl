@@ -457,6 +457,71 @@ Two things this deck must still refuse, and they are the ones the shape tempts:
 What it does not have is a phase plan with dates. That is the proposal, and it
 comes after the answers.
 
+### Six ways a question page goes wrong
+
+From one deck that took about twenty rounds of correction. **They share a root,
+and the root is worth more than the list:** every one of them was writing
+something that *looks like having done the homework* rather than something whose
+answer changes what happens. The first is short and each line can say why it is
+there; the second is long and reassuring.
+
+**1. Asking what changes nothing.** Six of the twenty. Who maintains the
+documents, who approves the firewall change, who issues the account, whose name
+the ticket goes under, who does the daily report and how long it takes.
+
+**The test: assume they give you the most specific answer possible, then ask
+what you would do differently.** "Ming issues it" and "Ming spends five hours a
+day on it" are perfect answers that change nothing. One of these came from
+reading the interview's filter 0, which says to ask who issues an account -
+**that decides what to track, not what to put on a slide.** Knowing who to chase
+is project management; a slide carries questions whose answer changes the design.
+
+**2. Asking, then supplying the consequence yourself.** Five of the twenty:
+
+    is there a test environment?   ...and if not, may we read production?
+    is there an existing binding?  ...if not, they can give us an order number
+    is there a controller?         ...if not, this costs weeks more
+
+**Ask, and stop.** The consequence is theirs to state. Supplying it rehearses
+their answer, and every one of those additions invented a branch that does not
+exist - "no test environment" does not mean no integration.
+
+**3. Inventing groupings, then bending content to fit them.** Eight different
+group labels across ten pages, and content distorted to sit under them: three
+things that are all required presented as a ladder, a question filed under
+"things you can give us".
+
+**The fix is not better labels, it is not needing any.** Write the question as a
+complete sentence in the title, put supporting detail under it, and **leave the
+detail empty when there is none**. A title that is a real question stands on its
+own. The labels only existed because the content had been cut into fragments
+that then needed grouping.
+
+**4. Printing the narration.** Nine caption lines, all deleted. Covered above,
+and it still happened - so: **most pages need no caption at all**, and empty is
+better than composed.
+
+**5. Getting the subject wrong.** A page described the approval screen as
+showing "the customer's name, product and fault description" - which is the
+shape of an internal supervisor reviewing somebody else's record. The actual
+scenario was the customer, in their own chat, being asked whether to open the
+ticket.
+
+**Check who the subject is on every line.** On an anonymous channel the person
+approving a write is usually the person in the conversation, not staff.
+
+**6. A self-service lookup with no identity.** The deck offered "if there is no
+account binding, the customer can give us their ticket number" - and presented
+it as a clean scope cut.
+
+**Ticket numbers are usually sequential.** A lookup keyed on one alone lets
+anybody enumerate other people's cases, and it is not authentication. **Any
+self-service query on an anonymous channel has to say what identifies the
+person.** If the answer is "a number they type", that is not an answer -
+`asgard-cli next --stage read-path` has what a real one looks like, and it
+carries the failure mode: a query that forgets to filter on the injected
+identity fails only on the anonymous path, which is the path nobody tests.
+
 ### The discovery deck's own rules, which are not the proposal's
 
 Three rules elsewhere on this page belong to the **proposal** and produce a bad

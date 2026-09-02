@@ -769,11 +769,28 @@ requirements interview.
 
 The test is narrow: **does the answer change what we build?**
 
+**Apply it by imagining the most specific answer possible.** Not "would this be
+useful to know" - assume they answer perfectly, then ask what you would do
+differently. "Ming issues it" and "Ming spends five hours a day on it" are both
+perfect answers and neither changes anything. That version of the test catches
+in one pass what the categories below catch one at a time.
+
     ours        what we need FROM them to build it - a credential, an endpoint,
                 a network path, a document, an account, a decision only they can
                 make about our behaviour
     theirs      how they staff a channel, who maintains a document, how their
                 two systems relate to each other, what their people do today
+
+**Filter 0 decides what to track, not what to put on a slide.** These are two
+different lists and this section has been read as one - an FDE saw "who issues
+the read-only account: ask" and put that question on a customer slide, where it
+was rejected on sight.
+
+    tracked      knowing who to chase is project management. It belongs in
+                 the open-questions row, with the name in the ask column
+    on a slide   only questions whose answer changes the design
+
+Everything below is about the first list.
 
 **Names cut both ways, and the line runs between two kinds of person:**
 

@@ -74,6 +74,12 @@ edited and re-rendered; a wrong sentence is in their notes.`,
 				"asgard-cli size flow-agent-single",
 			},
 			{
+				"how an anonymous caller is identified",
+				`"they can give us their ticket number and we look it up"`,
+				"**A ticket number is not authentication.** They are usually sequential, so a lookup keyed on one alone lets anybody enumerate other people's cases. Any self-service query on a public channel has to say what identifies the person - and if the answer is a number they type, there is no answer yet",
+				"asgard-cli next --stage read-path",
+			},
+			{
 				"how a write is tested",
 				`"during the test, shall we really create the ticket or just draft it?"`,
 				"**Ask whether they have a test environment first.** That question assumes they only have production, and it gives away the strongest version of the first delivery: writing into a test system proves the fields, the validation rules and the status codes, and a mock proves none of them. A mock is the fallback when there is no test environment - or when they will not let us write to production, which is their call",

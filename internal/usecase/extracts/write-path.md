@@ -46,6 +46,17 @@ this shape, and it changes the project's architecture: a write path needs its ow
 spec, its own credentials, and a decision about what happens when the human says
 no.
 
+## Unknown: what this looks like on an anonymous channel
+
+Every image of the gate is Sindri's dialog, and Sindri is where authenticated
+staff work. **On a public channel the person approving is usually the visitor in
+the conversation**, not an operator - so whether `requestConsent` renders there,
+and as what, is not established. `asgard-cli wiki platform-unknowns` P8.
+
+Do not promise a customer an approval step on a public channel by showing them a
+screenshot of the internal one. A prompt asking "shall I go ahead?" is not the
+gate; it is the model being polite, and it can be talked past.
+
 ## What to ask the customer, before any of the below
 
 This page was implementation-only, and an FDE asked to design a write had to
