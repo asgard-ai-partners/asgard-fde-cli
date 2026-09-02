@@ -88,6 +88,13 @@ var Shapes = []Shape{
 	},
 }
 
+// Authenticated reports whether this shape's callers can authenticate, which is
+// what decides the read surface. `asgard-cli next --stage requirements` asks it
+// as question 2 and calls it the decision the whole interview exists to reach.
+func (s Shape) Authenticated() bool {
+	return !strings.HasPrefix(s.Audience, "public")
+}
+
 // Find returns a shape by name.
 func Find(name string) (Shape, bool) {
 	for _, s := range Shapes {
@@ -136,9 +143,19 @@ func Of(s Shape, in Inputs) Estimate {
 		crs[k] += v
 	}
 
-	// A database is a connector plus a read surface over it.
+	// A database is a connector plus a read surface over it - but which read
+	// surface depends on the audience, and this is one of the three decisions
+	// this engagement reversed after building it the obvious way.
+	//
+	// An anonymous caller does not get a SemanticLayer. A layer without
+	// allowedCubes is arbitrary SQL over every cube, and the exposed surface
+	// grows by itself every time a table is added. Anonymous audiences get
+	// fixed query tools instead - Workflows, counted below - so a database
+	// contributes a connector and nothing else here.
 	crs["DataConnector"] += in.Databases
-	crs["SemanticLayer"] += in.Databases
+	if s.Authenticated() {
+		crs["SemanticLayer"] += in.Databases
+	}
 
 	// An API is reached by a Workflow, and the Workflows a caller may reach are
 	// grouped into one Toolset. Same for fixed query tools.
@@ -202,6 +219,12 @@ func warnings(s Shape, in Inputs) []string {
 	if s.Name == "mimir-dashboard" && in.Agents > 0 {
 		out = append(out, "Agents counted against a dashboard shape. Those are a second delivery\n"+
 			"over the same model, not part of this one - estimate them separately.")
+	}
+	if in.Databases > 0 && !s.Authenticated() && in.Queries == 0 {
+		out = append(out, "A database and an anonymous audience, with no query tools counted.\n"+
+			"Anonymous callers do not get a SemanticLayer - a layer without allowedCubes is\n"+
+			"arbitrary SQL over every cube - so the read surface is a fixed set of query\n"+
+			"tools, and how many there are is a design decision nobody has made yet.")
 	}
 	if in.Databases == 0 && in.APIs == 0 && in.Consoles == 0 && s.Name != "mimir-dashboard" {
 		out = append(out, "No system is being read. Either the interview has not reached\n"+
