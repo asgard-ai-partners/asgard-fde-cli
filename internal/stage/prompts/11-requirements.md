@@ -138,6 +138,26 @@ to live alongside.
     whose approval is needed before anything touches it. Integration work stalls
     on this more often than on anything technical
 
+**3d. If they are reached through a chat platform, which one?**
+
+Question 2 decides whether the entry point is the platform's hub or one of your
+own. This is the separate question of **which channel**, and it is worth asking
+in the same breath because `botProviderClass` is **immutable once created** -
+changing it later means a new BotProvider, not an edit.
+
+    LINE / Telegram          the platform posts a webhook; one CR
+    Slack / Discord          a connector pod holds a socket; infra provisions it
+    your own front end       generic, and you own the appearance
+
+Ask where their users already are, not where it would be convenient to put them.
+An official account with a following is a distribution channel a widget cannot
+reproduce, and asking those people to visit a web page instead loses most of
+them.
+
+LINE also needs **two-way setup** - Asgard issues a webhook URL that somebody has
+to paste back into the LINE console and verify - so it needs an owner on their
+side, not just a credential. See `asgard-cli wiki integration`.
+
 **4. Is any of it unstructured?**
 
 Documents, FAQs, pages on a website - things a query cannot answer exactly.

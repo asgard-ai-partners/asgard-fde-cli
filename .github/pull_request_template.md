@@ -23,6 +23,38 @@
   asgard-kube/crd/. Say which of these you did.
 -->
 
+## Contract conformance
+
+<!--
+  Delete this section only if nothing here touches a CR template, an extract's
+  YAML, or a claim about a platform field.
+
+  FIRST: pull. Validating against a clone from three weeks ago proves nothing,
+  and asgard-kube moves without announcing it.
+
+      git -C <asgard-kube> fetch && git -C <asgard-kube> status -sb
+
+  State the commit you validated against and whether it was head when you did.
+  "Checked against the CRD" without a commit is not an answer.
+
+  This repo does not define CRDs, it consumes them, so the question is not
+  whether a CRD is right - it is whether what we now emit is still accepted by
+  the contract as it stands.
+
+  Render every kind and validate the documents against asgard-kube/crd/:
+  required fields, fields not in the schema, enums, patterns, ExactlyOneOf. Do
+  the same for the YAML skeletons in the extracts, since those are what somebody
+  copies by hand.
+
+  If the contract HAS moved since the last time this repo looked, say what
+  changed and what it means here - a retired field, a flipped default and a new
+  required field each land differently.
+
+  helm lint, `asgard-cli check` and a server-side dry-run do NOT do any of this.
+  The dry-run is worse than silent: it drops a field it does not recognise and
+  reports success, while helm's own server-side apply refuses.
+-->
+
 ## What else says the same thing
 
 <!--

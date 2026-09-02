@@ -179,6 +179,83 @@ extracts' YAML skeletons validate against the CRD" are different claims, and
 reporting the first when you did the second is how a review passes something
 broken.
 
+## Three questions the material has to keep answering
+
+The seven above are asked of a change. These three are asked of the tool, because
+they are what it is for, and each has been *nearly* true while missing something
+specific. None of them is settled by reading - run the check.
+
+**Does what it generates still satisfy the contract?**
+
+This repo does not define CRDs; it consumes them. So the claim is not that a CRD
+is correct, it is that **what the templates emit, and what the extracts show a
+reader, are both accepted by the CRDs as they stand today** - which move without
+telling anyone.
+
+**Pull first.** Validating against a clone from three weeks ago proves nothing,
+and asgard-kube moves without announcing it. Record the commit, and whether it
+was head when you looked - "checked against the CRD" without one is not an
+answer.
+
+Render every kind and validate the result against the schemas: required fields,
+fields that are not in the schema, enums, patterns, and the `ExactlyOneOf` rules.
+Do the same for the YAML skeletons in the extracts, because those are what
+somebody copies by hand.
+
+If the contract has moved since this repo last looked, say what changed and what
+it means here. A retired field, a flipped default and a new required field each
+land differently - the first breaks a template silently, the second changes
+behaviour with no diff at all, and only the third fails loudly.
+
+```bash
+asgard-cli render <project> <env> | \
+  <validate each document against asgard-kube/crd/*.yaml openAPIV3Schema>
+```
+
+**Neither `helm lint` nor `asgard-cli check` nor a server-side dry-run does this.**
+That is how four required fields went missing from two templates, and how an
+extract taught `agents` as a YAML list when the field is a stringified JSON
+array. A dry-run is worse than useless here: it silently drops a field it does
+not recognise and reports success, while helm's own server-side apply refuses.
+
+**Can it get an FDE to the right integration by asking?**
+
+Every entry point the platform offers has to be reachable through a question the
+interview actually asks. `botProviderClass` is immutable once applied, so a
+channel decided by assumption is a new BotProvider rather than an edit.
+
+```bash
+# the classes the platform has
+grep -A3 'botProviderClass' ~/asgard-kube/crd/asgard-ai.com_botproviders.yaml | grep enum
+
+# whether the interview asks about each route
+asgard-cli next --stage requirements | grep -in 'chat\|channel\|LINE\|other end\|API\|console'
+```
+
+The interview asked who was on the other end - the question deciding hub against
+flow agent - without ever asking **which channel**, which is a separate decision
+on an immutable field.
+
+**Does an agent have enough to assemble a chart?**
+
+Every CR kind a chart may need has to have a generator, an extract, or a written
+statement that it is not for an engagement to reach for. A kind with a CRD and
+nothing else leaves the reader with a schema and no judgement.
+
+```bash
+# every kind the platform defines
+ls ~/asgard-kube/crd/*.yaml | sed 's/.*com_//;s/s.yaml//'
+
+# what any of the material mentions
+cat internal/usecase/extracts/*.md internal/generate/templates/*.tmpl \
+    internal/wiki/pages/*.md | grep -o 'kind: [A-Z][A-Za-z]*' | sort -u
+```
+
+That comparison currently leaves three: `ImageGenerationModel`,
+`TranscriptionModel` and `SourceSetEditorServer` are in the contract and in no
+page, template or extract - and in no product documentation either, which is why
+nobody noticed. `TASK.md` carries it.
+
 ## Reference material lives outside this repo
 
 Ten repositories, read-only, never vendored in. **The URL is the source of

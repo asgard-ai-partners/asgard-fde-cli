@@ -99,6 +99,18 @@ reason is next to it.
   chart that has been read. Either they are unused in practice, which is worth
   knowing, or the sample of deployments read so far is too small.
 
+### Three CRDs nothing covers
+
+`ImageGenerationModel`, `TranscriptionModel` and `SourceSetEditorServer` exist in
+the platform contract and appear in **no** product documentation page and **no**
+material here. An engagement whose customer needs image generation or
+transcription would find the CRD and nothing else - no shape, no traps, no
+statement that they are not meant to be used yet.
+
+Which of the two it is matters and is not known: the platform may simply be ahead
+of its documentation, or these may not be meant for an engagement to reach for.
+Worth one question to the platform team, and cheap to answer.
+
 ### Gates that could be stronger
 
 - **`project add`'s terraform prerequisite is a notice, not a gate.** The demo
