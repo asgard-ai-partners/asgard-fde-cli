@@ -472,16 +472,10 @@ func AddQuestion(root string, q Question) (Question, error) {
 		return q, fmt.Errorf("a question needs text")
 	}
 
-	existing, err := ReadQuestions(root)
-	if err != nil {
-		return q, err
-	}
 	if q.Number == "" {
-		highest := 0
-		for _, e := range existing {
-			if n, err := strconv.Atoi(e.Number); err == nil && n > highest {
-				highest = n
-			}
+		highest, err := highestQuestion(root)
+		if err != nil {
+			return q, err
 		}
 		q.Number = strconv.Itoa(highest + 1)
 	}
@@ -492,6 +486,30 @@ func AddQuestion(root string, q Question) (Question, error) {
 		return q, err
 	}
 	return q, nil
+}
+
+// highestQuestion is the largest number in the file, counting the Answered
+// table as well as the Open one.
+//
+// Numbering off the open rows alone reused a number the moment one was
+// answered: answer 3, add another, and the file has 3 twice - once in each
+// table. The number is how a request, a task or a meeting note refers to a
+// question, so reusing it silently makes every one of those references
+// ambiguous, and `question answered <n>` then acts on whichever row it finds
+// first. The Answered table exists precisely because the history matters; that
+// history has to keep its numbers with it.
+func highestQuestion(root string) (int, error) {
+	text, err := readOptional(filepath.Join(root, QuestionFile))
+	if err != nil {
+		return 0, err
+	}
+	highest := 0
+	for _, m := range questionRow.FindAllStringSubmatch(text, -1) {
+		if n, err := strconv.Atoi(m[1]); err == nil && n > highest {
+			highest = n
+		}
+	}
+	return highest, nil
 }
 
 // AnswerQuestion moves a row out of Open and into Answered, keeping the row
