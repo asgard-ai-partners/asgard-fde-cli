@@ -36,6 +36,7 @@
 |---|---|
 | [`operations`](operations.md) | Asgard's outbound IPs, checking model capability, vocabulary |
 | [`taiwan-channels`](taiwan-channels.md) | the commerce channels a customer will name, what SHOPLINE cost, and what we have not built |
+| [`glossary`](glossary.md) | words that mean one thing here, and what the other senses are called |
 | [`what-they-read`](what-they-read.md) | the picture a customer arrives with, and the three places it is wrong |
 | [`case-studies`](case-studies.md) | the retail stockout from three angles, plus a Flow Agent help desk |
 | [`screenshots`](screenshots.md) | which picture answers which question, and the URL to fetch it from |

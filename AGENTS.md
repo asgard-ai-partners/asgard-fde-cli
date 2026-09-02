@@ -179,6 +179,31 @@ extracts' YAML skeletons validate against the CRD" are different claims, and
 reporting the first when you did the second is how a review passes something
 broken.
 
+## Two rules the material contradicted itself on
+
+Three self-contradictions have been found, all by somebody walking into one, and
+they come in two shapes.
+
+**Opposite instructions in two pages.** Twice, both `wiki operations` against the
+interview stage - offering a VPN or a jump host as alternatives when there is one
+shape, and asking who approves a firewall change when filter 0 rejects exactly
+that. Both times the FDE followed the page in front of them.
+
+    anything that tells a reader to ask a customer something
+    has to pass filter 0 first: does the answer change what we build?
+
+**One word, two meanings.** `sandbox` meant the platform's agent runtime and the
+customer's test environment, twenty lines apart in one section. Nothing
+contradicted anything; the reader took the wrong sense.
+
+    `wiki/pages/glossary.md` lists the terms that already mean something
+    specific. Check it before introducing a word, and before using one of
+    those for something else.
+
+**Neither is enforced by anything.** They are conventions, and the record so far
+is that a convention catches this only after somebody has been caught by it.
+Issue #9 tracks whether either can be made mechanical.
+
 ## Three questions the material has to keep answering
 
 The seven above are asked of a change. These three are asked of the tool, because

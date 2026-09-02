@@ -1,0 +1,57 @@
+# Words with one meaning here
+
+A word that means two things inside one body of material produces the failure
+that is hardest to see: nothing contradicts anything, and the reader takes the
+wrong sense. It has happened - **"sandbox" meant the platform's agent runtime in
+one paragraph and the customer's test environment twenty lines later**, in the
+same section, and an FDE read the second as the first.
+
+So each of these has one meaning here, and the other senses have their own words.
+**Check this page before introducing a term, and before using one of these for
+something else.**
+
+| word | means, here | not |
+|---|---|---|
+| **sandbox** | the isolated runtime the platform starts to run an agent in | the customer's test environment - call that a **test environment** |
+| **project** | one Helm chart deployed to one namespace, under `projects/<slug>/` | the platform's own Project object, which is a division inside a Workspace - say **platform Project** |
+| **environment** | `dev` or `prod`, a namespace and a values file | the platform's Environment inside a platform Project - say **platform Environment**. How the two correspond is undocumented |
+| **agent** | a `Agent` CR, which the UI calls a Managed Agent | the flow-agent shape, which contains no `Agent` CR at all; and not the coding agent working in a repository |
+| **workspace** | the customer, and the repository root | nothing else. It is also the platform's billing unit, which is the same thing seen from Fehu |
+| **template** | a Go template this tool renders | the "Template" node type the product overview describes, which maps to nothing else here - see `what-they-read` |
+| **skill** | `common/skills/<name>/SKILL.md`, read by the deployed agent at runtime | `.agents/skills/`, which the coding agent reads while authoring. Say **design-time skill** for the second |
+| **request** | a record under `requirements/requests/` | an HTTP request, and not one run of an agent. For the platform's per-request limits, say **per run** |
+| **source** | a `Source` CR under a KnowledgeBase | source code, and not a documentation source. For the material's provenance say **source block**; for code say **source code** |
+| **check** | `asgard-cli check`, the structural gate | a layout or content checker in a typesetting skill - say which one |
+
+## Two more that collide with the customer's vocabulary
+
+Not this material's fault, and worth knowing before a meeting.
+
+**"Project"** is the word a customer uses for the engagement. When they say
+"how many projects", they mean pieces of work; when this tool says it, it means
+charts and namespaces. Ask which they mean rather than answering.
+
+**"Agent"** is the word they will use for the whole thing they are buying. "How
+many agents do we need" is a question about capability, and the honest answer
+starts by saying the count of `Agent` CRs is not the same number - see
+`asgard-cli size`.
+
+## How a word gets onto this page
+
+When it has been read the wrong way once. Not when it is ambiguous in principle:
+this page is only useful while it is short enough to read, and every entry here
+was a real misreading.
+
+## Corresponding extracts
+
+None. This is about the material rather than about a deployment.
+
+## Sources
+
+- Each row is a term already defined somewhere in this material; this page adds
+  no meanings and only collects the ones that collide. `sandbox` was raised by an
+  engagement in 2026-09; the rest were found while writing the row above it
+
+**Unchecked:** nothing enforces this. A new page can redefine any of these and
+no command will notice, which is the open half of the problem this page only
+half solves.

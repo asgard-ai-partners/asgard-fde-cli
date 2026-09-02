@@ -135,6 +135,15 @@ Four more:
 
 - **One fact, one home; everywhere else links.** Turn a paragraph you were about
   to copy into a link.
+- **One word, one meaning.** `pages/glossary.md` lists the terms that already
+  mean something specific here. Check it before introducing a word, and before
+  using one of those for something else - a word with two senses in one body
+  produces the failure nobody can see, because nothing contradicts anything and
+  the reader simply takes the wrong one.
+- **Anything telling a reader to ask a customer something has to pass filter 0.**
+  `asgard-cli next --stage requirements` carries it: does the answer change what
+  we build? Two pages have told an FDE to ask a question that filter rejects, and
+  both times they followed the page in front of them rather than the rule.
 - **Say which layer a statement comes from.** Product documentation describes
   objects in an interface, the CRD describes resources, and the vocabulary is not
   one to one. Where they diverge, say so on the page - `pages/agents.md` has the
