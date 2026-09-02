@@ -118,15 +118,19 @@ names is not reading a repository.
      | uncited | why it matters |
      |---|---|
      | ~~`processor/` - 16 pages, one per processor~~ | **done 2026-09-02** - `wiki processors`. This was the largest single gap: a chart author writing a Workflow had a type list and no fields |
-     | `api-doc/send-message/**` - 15 pages of the call, its SSE events and file upload | `api.md` describes the sequence; these are the contract, per event |
+     | ~~`api-doc/send-message/sse-response/**` - 11 event pages~~ | **done 2026-09-02** - the envelope, the `fact` tagged union and `runError.location`, which names the Workflow and processor that failed. `api.md` had the event list and none of the payloads |
+     | `api-doc/send-message/` - the four endpoint pages | `api.md` covers the endpoint, actions and `customChannelId` accurately. What is unread is the file path: `blob` upload as multipart, and append-file-and-send |
      | `asgard-builtin/**` - 18 pages of expression variables, Handlebars helpers, message templates | listed as deliberately excluded, and the `ECMA5` limit found today suggests that exclusion deserves rechecking |
      | `examples/` - webhook-integration, knowledge-base-query, streaming-response | worked examples, which nothing here has |
      | `sdk/`, `asgard-sdk`, `others/channel-log` | the front-end path, which `api.md` covers from the platform side only |
      | `overview/asgard-concepts`, `why-asgard`, `product-suite/*/intro` | the vocabulary a customer will have read before meeting us |
 
-     **`api-doc/send-message/**` next.** It is the contract for the one route a
-     customer's own front end takes, and `api.md` describes it from memory of
-     the sequence rather than from those pages.
+     **`asgard-builtin/**` next.** Eighteen pages, currently listed as
+     deliberately excluded on the grounds that lookup material only goes stale
+     here. That exclusion predates finding that `execute-script` runs ECMA5
+     only - a limit that lives in exactly that section and changes what can be
+     written. Recheck the exclusion before trusting it; it is the same kind of
+     inherited judgement as the coverage number.
 
   2. **Heimdall has one documentation page and it is a link to a marketing
      site.** The deployment behind it - a content pipeline with 28 Plugins, the

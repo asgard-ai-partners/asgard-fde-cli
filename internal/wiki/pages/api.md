@@ -51,6 +51,50 @@ The ordinary sequence is `run.init`, `message.start`, one or more
 `message.delta`, `message.complete`, then either back to `message.start` or on to
 `run.done`.
 
+## What an event actually looks like
+
+Every event carries the same envelope, and the payload is a **tagged union**:
+
+```json
+{ "eventType": "asgard.message.delta",
+  "requestId": "...", "eventId": "...",
+  "namespace": "proj-...", "botProviderName": "bp-...",
+  "customChannelId": "...",
+  "fact": { "runInit": null, "runDone": null, "runError": null,
+            "messageStart": null,
+            "messageDelta": { "message": { "text": "...", "idx": 3, ... } },
+            "messageComplete": null } }
+```
+
+**`fact` has one key per event type and only the one matching `eventType` is
+populated; the rest are `null`.** A front end reads `fact.<name>` rather than
+inspecting the shape - which matters because the keys present in `fact` vary
+between events, so pattern-matching on shape breaks the first time the platform
+adds one.
+
+`requestId` groups every event of one run and is what to quote in a bug report.
+`eventId` orders them; on a delta, `idx` orders within the message.
+
+## The error event names the processor that failed
+
+`asgard.run.error`'s `fact.runError.error` is the most useful thing in this
+stream and nothing else here mentioned it:
+
+    message   human-readable
+    code      INVALID_ARGUMENT and friends
+    inner     the underlying error, often empty
+    location  namespace, workflowName, processorName,
+              processorType, processorConfigName, processId
+
+**`location` is which node of which Workflow failed.** For a chart of any size
+that is the difference between reading a stream and reading a diagram. The fields
+are empty when the failure happens before a processor runs - the example in the
+documentation is an empty message rejected at the channel - and an empty
+`workflowName` is therefore itself information: it did not reach the flow.
+
+Surface it. A front end that shows only `message` throws away the location, and
+whoever debugs it later has to reproduce the failure to get it back.
+
 ## Four integration patterns
 
 The documentation groups integrations into four patterns, and the choice governs
@@ -120,6 +164,11 @@ token chain, and `workflow-chain` what passes between processors.
   - asgard-docs `f00e0ee`
 - [Authentication](https://docs.asgard-ai.com/docs/developer-reference/authentication)
   - asgard-docs `f00e0ee`
+
+- The event envelope, the `fact` union and `runError.location`: the eleven pages
+  under [send-message/sse-response](https://docs.asgard-ai.com/docs/developer-reference/api-doc/send-message/sse-response),
+  read 2026-09-02. They had not been read into this material before then - this
+  page had the event list and not the payloads
 
 **Unchecked:** everything here comes from the product documentation; no actual
 integration was examined.
