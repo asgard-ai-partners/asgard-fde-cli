@@ -396,9 +396,23 @@ Project — which is why Terraform comes first (see Deploy / CI).
 
 ## Completion Model
 
-Models are the platform's builtins, referenced by name — there is no `CompletionModel` CR and
-therefore no model API key in `app-secret`. One knob: `defaultCompletionModelName`, read by every
-`SemanticLayer` and overridable per-env. **Never hardcode a model name in a template.**
+**Default: use the platform's builtins by name.** No CR, no model API key in `app-secret`. One
+knob — `defaultCompletionModelName`, read by every `SemanticLayer` and overridable per-env.
+**Never hardcode a model name in a template**: the builtin tiers are semantic aliases, and a
+specific name becomes something to come back and fix when that model is retired.
+
+**A `CompletionModel` CR exists and is the exception, not an impossibility.** Write one when the
+customer brings their own model or their own key — three reference deployments do:
+
+    completionModelClass:  aoai-chat | openai-chat | gemini | anthropic | mistral | builtin
+    exactly one of:        aoaiChat, openaiChat, gemini, anthropic, mistral, builtin
+    the key:               spec.<provider>.apiKey.valueFrom.secretKeyRef into app-secret
+
+Two things the CRD enforces and helm will not tell you: **`completionModelClass` is immutable** —
+changing it means a new CR, not an edit — and exactly one provider block may be present, so a
+half-migrated CR with two is rejected by the apiserver, not by `helm lint`.
+
+It also carries `asgard-ai.com/project-environment-id`, like `Workflow` and `Trigger`.
 
 `SemanticLayer.spec.completionModelName` is **required**; an `Agent` takes no model (the caller
 picks the orchestrator's model per turn).

@@ -113,6 +113,40 @@ reason is next to it.
   into a list. Every extract written without it is written from whichever
   deployment somebody happened to remember.
 
+  **That pass has now been run once**, over the seven reference charts, counting
+  declared kinds. What it found, beyond the Mimir shape:
+
+  | | what nothing here covers |
+  |---|---|
+  | the demo generator | 123 SkillSets, 80 Workflows, 64 SemanticLayers and 64 Agents from one parameterised source. Generating a deployment per industry is a shape in itself, and it is the largest body of Asgard chart material in existence |
+  | Heimdall (auto-post) | 28 `Plugin` + 28 `SkillSet` one-to-one, and the only `KnowledgeBase` + `Loader` + `Source` in any chart - the older knowledge path the wiki says is still live |
+  | Freyr | 5 Agents over 5 SkillSets with **no SemanticLayer at all** - capability entirely from skills and one Toolset |
+  | `ConfigMap` | 80 in the demo generator, 2 in Freyr. Not an Asgard CR; no material says what one is doing in these charts or when to reach for it |
+  | `CompletionModel` | corrected below, but no extract - the shape is a customer bringing their own model |
+
+  The counts are declared kinds, not shapes. Turning each row into an extract
+  still needs the chart read rather than counted.
+
+### A statement that shipped and was wrong
+
+The scaffolded `AGENTS.md` told every engagement that **there is no
+`CompletionModel` CR and therefore no model API key in `app-secret`**. There is
+one, the CRD defines it with six classes, and three of seven reference
+deployments declare their own with the provider's key as a secretKeyRef. The
+same file listed `CompletionModel` among the CRs carrying
+`project-environment-id`, eleven lines above - so it contradicted itself and
+nobody read the two together.
+
+What it was describing is the `builtin` class, generalised into the absence of
+the CR. Corrected in `AGENTS.md.tmpl` and in `wiki settings`, with the two things
+the CRD enforces that helm does not: the class is immutable, and exactly one
+provider block may be present.
+
+**The lesson is about the sample, not the sentence.** This survived because the
+material was written from deployments that all use builtins. Every remaining
+`AGENTS.md` claim about what does not exist deserves the same check against the
+seven charts, and that has not been done.
+
 ### The solution vocabulary is agent-shaped
 
 Not a missing extract - a missing **kind** of extract, and it is the one that

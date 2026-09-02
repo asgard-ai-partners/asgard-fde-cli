@@ -27,6 +27,22 @@ The built-in tiers are semantic aliases rather than specific model names, which
 is usually the right default: customers rarely have a view, and a hardcoded model
 name becomes something to come back and fix when the model is retired.
 
+**In a chart, a custom model is a `CompletionModel` CR** - the built-in tiers are
+that CR's `builtin` class rather than the absence of one, which is the reading
+that gets this wrong. Three reference deployments declare their own, with the
+provider's key as a secretKeyRef into app-secret:
+
+| | |
+|---|---|
+| `completionModelClass` | `aoai-chat`, `openai-chat`, `gemini`, `anthropic`, `mistral`, `builtin` |
+| provider block | exactly one of `aoaiChat`, `openaiChat`, `gemini`, `anthropic`, `mistral`, `builtin` |
+| the key | `spec.<provider>.apiKey.valueFrom.secretKeyRef` |
+
+**`completionModelClass` is immutable**, so moving a customer from one provider
+to another is a new CR rather than an edit - the same trap as
+`BotProvider.botProviderClass`. The exactly-one rule is a CRD validation, so a CR
+carrying two provider blocks is refused by the apiserver and passes `helm lint`.
+
 ## Embedding Model
 
 Only one built-in, Builtin (Balanced).
@@ -93,6 +109,10 @@ in a chart.
 - The CR mapping and the provider list: checked 2026-09-02 against
   [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `15ded0f` -
   `DataConnectorClass`, `CompletionModelClass`, `EmbeddingModelClass`
+
+**Checked:** 2026-09-02 against asgard-kube `15ded0f`
+(`completionModelClass` enum, the immutability rule and the ExactlyOneOf
+validation) and against three deployments that declare their own model.
 
 **Unchecked:** the provider list was held against the CRD; the UI form fields come
 from the product documentation only.
