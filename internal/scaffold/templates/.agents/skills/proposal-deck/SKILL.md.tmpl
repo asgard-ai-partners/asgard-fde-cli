@@ -1,6 +1,6 @@
 ---
 name: proposal-deck
-description: Use when deciding what to propose to the customer, or building the deck that says it - a proposal, a scope review, a phase kick-off, or a readout after a discovery round. Covers how the shape is chosen and what phase 1 is, where a deck lives in this repo, which material it is allowed to be built from, the order a proposal argues in, how to say it in the customer's own words without claiming further than the evidence goes, and what must never appear on a customer's screen. Typesetting is delegated to the kami skill; this one owns the content.
+description: Use when deciding what to propose to the customer, or building any deck they will see - a discovery deck taken while the questions are still open, a proposal, a scope review, a phase kick-off, or a handover after the work lands. Covers how the shape is chosen and what phase 1 is, where a deck lives in this repo, which material it is allowed to be built from, the order a proposal argues in, how to say it in the customer's own words without claiming further than the evidence goes, and what must never appear on a customer's screen. Typesetting is delegated to the kami skill; this one owns the content.
 ---
 
 # Proposal decks for <<.Workspace.Name>>
@@ -128,13 +128,20 @@ Two things this step produces before anything is typeset:
   - the request's own scope section, updated - what is in phase 1, what is
     deferred, and what is out
 
-If you cannot write the decision record, the shape is not decided yet, and the
-deck would be a slide-shaped version of the same uncertainty.
+If you cannot write the decision record, the shape is not decided yet - and a
+**proposal** built on it would be a slide-shaped version of the same
+uncertainty. That is not the same as having nothing to say. Run this step
+conditionally instead - "given a read-only account and a route to it, this
+becomes X" - and take a discovery deck, which is step 5's first shape. What you
+must not do is state the conditional shape as a decided one.
 
 ## Step 3 - the order a proposal argues in
 
 Nine slides, in this order, is a complete proposal. Longer decks are usually a
-short one with the same slide repeated.
+short one with the same slide repeated. **This is the proposal's order.** A
+discovery deck - the one taken while the questions are still open - has its own,
+in step 5; forcing this one when the facts are missing is what produces slides
+4, 5 and 6 full of a shape nobody has confirmed.
 
 | # | slide | the job it does |
 |---|---|---|
@@ -240,23 +247,57 @@ customer is going to test this - that is what the test plan they sent is for.
 
 ## Step 5 - what to show, and what must never be shown
 
-### Two kinds of deck, and only one of them is a proposal
+### Three kinds of deck, and only one of them is a proposal
 
-Everything above is about the deck that runs **before they say yes**. There is a
-second kind, and applying the first one's rules to it produces a deck that shows
-nothing:
-
-| | proposal | handover / walkthrough |
-|---|---|---|
-| when | before the decision | after it - training, a phase readout, a kick-off with their IT |
-| audience | whoever decides | whoever will operate or maintain it |
-| may show a console screen | **no** | **yes - it is the point** |
-| may name platform parts | no | the ones they will click, and only those |
-| built from | steps 1-3 above | the same, plus `asgard-cli wiki setup-path` |
+| | discovery | proposal | handover |
+|---|---|---|---|
+| when | **the questions are still open** | before the decision | after it - training, a readout, a kick-off with their IT |
+| audience | whoever can answer them | whoever decides | whoever will operate it |
+| what it asks for | answers and access | a yes | nothing - it explains |
+| may show a console screen | no | no | **yes - it is the point** |
+| may name platform parts | no | no | the ones they will click |
+| built from | open questions, and step 2 run **conditionally** | steps 1-3 | the same, plus `asgard-cli wiki setup-path` |
 
 Ask which one you are making before writing a slide. "Show them how the agent
 gets set up" in a proposal is a request for slide 5 - the interaction - not for
 the console. In a handover it is the whole deck.
+
+### The discovery deck, because it is the one that gets made wrong
+
+A first meeting usually happens with most of the interview still unanswered, and
+the instinct is to force the nine-slide proposal anyway. Slides 4, 5 and 6 then
+get filled with a shape nobody has the facts for - which the pre-send checklist
+correctly rejects, and the deck collapses back into a list of questions.
+
+That is the wrong conclusion. A list of questions is a bad meeting: the customer
+has to guess why each one matters, and the ones that sound like bureaucracy get
+deferred. **Pair every question with what it unlocks**, and the same meeting asks
+for access rather than for patience:
+
+    each capability they asked for, one section:
+
+      what you told us      their own words, from their own document
+      what we would ask     the two or three questions that actually block it
+      what that gets you    the shape it becomes ONCE those are answered
+
+The third line is step 2 run conditionally, and it is the whole reason this deck
+works. **State the condition in the same sentence as the capability** - "given a
+read-only account on the CRM and a route to it, this becomes X" - so the customer
+sees the access request and the thing they get for it as one trade, which is what
+it is. `asgard-cli usecase` is where those shapes come from, so what you promise
+is something somebody has already built.
+
+Two things this deck must still refuse, and they are the ones the shape tempts:
+
+  - **A conditional is not a promise, and it is not licence to skip step 4.**
+    "Given an API, we can integrate all five channels" is a claim about five
+    APIs nobody has seen. Name the condition per system, not once for the slide
+  - **A question the platform cannot answer stays a question.**
+    `asgard-cli wiki platform-unknowns` does not become answerable by being
+    written as a conditional
+
+What it does not have is a phase plan with dates. That is the proposal, and it
+comes after the answers.
 
 ### What a handover deck actually walks through
 
@@ -316,6 +357,26 @@ second the moment anyone else opens the deck.
   prefixes, no namespaces, no Helm, no chart, no CRD. The customer bought an
   outcome. A handover may name what they will click - Managed Agent, Drive,
   Skillset - and still never needs the CR behind it.
+- **This repository's own bookkeeping.** No question numbers, no `REQ-` or
+  `TASK-` ids, no "the items the two filters removed", no "out of scope table".
+  These are the easiest words to leak, because they are what you have just
+  finished writing and they feel like the content - but they are an index into
+  files the customer cannot open, and a slide made of them is unreadable to
+  everyone except whoever built the records.
+
+  The test is the same one as for platform nouns: **would a reader who has never
+  seen this repository know what the slide says?** Write what the question asks,
+  not the row it lives in.
+
+      no    第 14-16 題:平台未解項目
+      yes   有三件事我們要回去跟平台團隊確認,再回覆你們
+
+      no    被兩道篩選刷掉的五項
+      yes   這五項這一輪不做,以及各自要先有什麼答案才會回來
+
+  This also applies to an outline you show internally before the deck exists.
+  An outline written in row numbers cannot be reviewed by the person who has to
+  present it.
 - **Another customer.** No name, no logo, no screenshot, no "we did this for a
   retailer with 200 stores" that is recognisable. Their engagement is not ours to
   spend.
@@ -359,6 +420,8 @@ that does not.
 Ten questions, and the last five are the ones that get skipped:
 
 1. Do the titles alone tell the argument?
+1b. Which of the three decks is this? A proposal made while the interview is
+    still open is a discovery deck wearing the wrong slide order.
 2. Is every number attributed - their figure, our measurement, or absent?
 3. Does slide 7 say what is not in scope, specifically enough to point at later?
 4. Is there an implementation noun anywhere, including in a screenshot?
@@ -372,6 +435,9 @@ Ten questions, and the last five are the ones that get skipped:
    question, not a feature.
 9. Read slide 4 aloud to someone who does not work here. Do they repeat it back
    correctly? That is the whole plain-language test, and it takes a minute.
+9b. Is there a question number, a `REQ-`/`TASK-` id, or a phrase like "the items
+    the filters removed" anywhere on a slide - or in the outline you showed
+    internally? Those name rows in files the reader cannot open.
 10. If it shows a console screen: was every screenshot opened, is it current,
     and is this a handover rather than a proposal? A proposal showing admin
     screens has usually skipped `asgard-cli wiki screenshots`, where the
