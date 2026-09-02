@@ -167,6 +167,13 @@ the thing being judged has failed however fast it shipped. What phase 1 cuts is
 a **mechanism, not a capability** - "for now the user tells us which record they
 mean" is a cut, "we will not read your system yet" is a failure.
 
+**A document they give us is a deliverable line, not an input.** The commonest
+omission in the right-hand column is the skill: "we take your RMA manual and turn
+its fields, validation rules and status codes into something the agent knows" is
+a concrete thing we do with what we asked for, and it is the answer to "why do
+you need our documentation". Every capability reading a system the customer
+documented has one.
+
 **Decide what we are not doing, in the same sitting.** Not as an afterthought at
 slide 7: a scope line written after the shape is chosen is a line someone
 remembers, and a line written while choosing is a line with a reason attached.
@@ -315,6 +322,7 @@ count.
 |---|---|
 | a read-only Toolset with four query Workflows | 四個查詢 / four kinds of question it can answer |
 | a SkillSet carrying status vocabulary | 一份狀態對照 / a translation of your own codes |
+| a SkillSet built from their manual | 把你們的手冊變成 AI 看得懂的一部分 / your own documentation, turned into something it knows |
 | SourceSet + Syncer + contextIndex | 產品知識庫 / it reads from your own documents |
 | a tool with `requestConsent: true` | 需要人工確認的動作 / an action that stops for a person |
 | BotProvider + Workflow + SandboxBlueprint | 對外客服入口 / one way in for people outside |

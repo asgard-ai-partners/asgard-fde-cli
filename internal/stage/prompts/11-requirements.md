@@ -305,6 +305,12 @@ it is just how things are:
     "那一欄我們只在退貨的時候填"          a field's real meaning
 
 **Any of those is a skill, and the moment to write it down is when they say it.**
+
+There are two halves to this and the second is easier to miss:
+
+    what they say out loud     write a skill there and then
+    a document they hand you   it becomes a skill - it does not stay in references/
+
 Nobody can reconstruct it later from the schema, because it is not in the schema.
 An agent without it does not fail visibly - it answers confidently and wrongly,
 having interpreted a code that meant something else.
@@ -446,10 +452,36 @@ cannot tell what we committed to.
 
 ## Material they hand you
 
-Ask for it in the meeting, before you need it: API documentation, an operation
-manual, a schema dump, an ERD, a field dictionary, a status-code table, the
-screenshots someone made for training new staff. Customers usually have more
+Ask for it in the meeting, before you need it. Customers usually have more
 written down than they think, and none of it arrives unless asked for.
+
+**Asking has an order too, and it is not the one in question 3.** The two look
+alike and are opposite:
+
+    question 3, how we READ a system      a database  >  an API  >  a screen
+    here, what we ASK THEM FOR            docs  >  API docs  >  access to a screen
+
+| ask for | what it gives you |
+|---|---|
+| **the system manual / operating documentation** | best. Fields, validation rules, status codes and the process are all in it, and it explains what things *mean* |
+| **API documentation** | next. A clear contract, but it rarely explains the business meaning behind a field |
+| **access to the back office** | last. You can look at it and cannot quote it |
+
+**A document replaces an interrogation, and that is the point of asking first.**
+Do not go through fields, validation rules or status codes one at a time in the
+meeting: it is slow, and what you get is the version the person remembers.
+Meeting time is for what only they can answer - whether the network reaches it,
+who issues the account, who approves a write.
+
+**Say why you want it, because it makes them more willing to give it:** their
+manual is not background reading for us, it is what the agent will know. A field
+dictionary becomes the thing that stops it inventing a status code.
+
+**Do not design their permissions while asking.** "A read-only account for
+queries and a separate writable one" is our implementation preference stated as
+a request, and it is not always even possible - plenty of systems issue one
+account with different rights. Ask what access they can give and what it allows;
+let them tell you how many credentials that is.
 
 **It does not go in the request record.** Three directories, and the difference
 is who reads them:
