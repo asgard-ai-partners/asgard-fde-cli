@@ -640,6 +640,61 @@ second the moment anyone else opens the deck.
 
 ## Step 6 - write it, with kami
 
+**Read this before the first slide, not after the tenth.** Everything below the
+next two sections is content; these are the things that cost an FDE a working
+afternoon and are invisible until they happen.
+
+### Never edit a slide to satisfy a checker
+
+The most expensive mistake made with this skill so far, and it looks like
+diligence while it happens.
+
+A content check reported an eyebrow as missing. It was there - the checker
+collapses whitespace when comparing CJK, so a cover date running straight into
+the eyebrow made the string unfindable. To turn the check green, the FDE removed
+the sub-numbering from every eyebrow. The check went green. **Every sub-topic
+slide then claimed the wrong level** - the customer's own numbering says the
+scenario, and the slides were now saying it about a sub-topic of it.
+
+The user caught it. The checker could not, because the regression was in
+something it does not look at.
+
+    a check that fails on text you can see    the check is wrong. Investigate it
+    a change to the slide to make it pass     never
+
+**`--check-content` never goes fully green on slides**, and chasing it to zero is
+how the above happens: `audience` and each slide's `layout` are schema fields and
+are not printed anywhere. Read the list, fix what is genuinely missing, and stop.
+
+### Four things about the template that nothing warns you about
+
+  - **Slides are fixed height with `break-after`.** Anything added to normal
+    flow can push content onto a new page **with no error** - one deck went from
+    14 pages to 18 by gaining a line of links. Footers, links and page marks go
+    in absolutely positioned elements, and **re-count the pages after every
+    edit**
+  - **`.co` and `.footer-mark` overlap**, at 12mm and 10mm. Use one. The
+    template's own example page uses both, so copying it reproduces the bug
+  - **`<b>` does nothing.** The CJK faces embed weights 400 and 500 only, so
+    bold silently falls back to normal. Write `font-weight: 500`
+  - **Write `content.json` first and generate from it.** Editing the HTML and
+    back-filling the structured form loses things, and the loss is found by a
+    coverage check rather than by reading
+
+### The density checks encode a proposal's assumptions
+
+A discovery deck's question pages read as sparse to a density check, and its
+alternation of question and answer pages reads as monotonous to a rhythm check.
+**In both cases the deck is right and the check is measuring the wrong document**
+- the alternation is the shape, and the whitespace is deliberate.
+
+So on a discovery deck those two are advisory. That is a smaller problem than it
+sounds: the typesetting produces the document correctly, and it is only the
+checks that disagree. But it means a green run is not the goal, and the previous
+section is why that distinction matters.
+
+### The rest
+
 Typesetting, layout and the visual language belong to the **`kami`** skill. Load
 it and let it produce the file; this skill has already decided what goes on each
 slide.

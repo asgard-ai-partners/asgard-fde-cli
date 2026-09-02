@@ -224,7 +224,11 @@ names is not reading a repository.
      `asgard-bussiness-plan`, `partner-finder`, `ppt`, `hugin`,
      `just-inference`, `asgard-html2img`.
 
-  7. **The kami formatting report is unactioned.** An FDE built the deck and
+  7. ~~**The kami formatting report is unactioned.**~~ **Written into step 6 of
+     the deck skill, 2026-09-02.** Kept below because the first item is a rule
+     about checkers in general, not about this one.
+
+     ~~The substance:~~ An FDE built the deck and
      reported back; nothing has been written from it yet. The substance, so it
      is not lost if the message is:
 
@@ -253,13 +257,14 @@ names is not reading a repository.
        checks will fail, which is a smaller problem than one the typesetting
        cannot produce, but it is unstated.
 
-  8. **Five issues were drafted and one was filed.** #9 covers the
-     self-contradiction class. Still unfiled, and each is written up in this
-     file rather than upstream: `next` reporting one state for a repo whose
-     capabilities are in several states; `verify` and `deploy` disagreeing on an
-     empty `platformMainEnvironmentId`; question numbers colliding across
-     branches; the approval gate having no product documentation page; LINE
-     having no current screenshot.
+  8. **Issues are for other agents to file, not for me.** `asgard-cli
+     issue-report` is the channel and #9 is the worked example. The five things
+     drafted as issues are maintainer work and stay in this file: `next`
+     reporting one state for a repo whose capabilities are in several states;
+     `verify` and `deploy` disagreeing on an empty `platformMainEnvironmentId`;
+     question numbers colliding across branches; the approval gate having no
+     product documentation page; LINE having no current screenshot. The last two
+     are asks for asgard-docs rather than for this repository.
 
   9. **No engagement has been walked end to end with the current material.**
      Everything above was found by watching one, at stage 2. Stages 3 to 9 have
