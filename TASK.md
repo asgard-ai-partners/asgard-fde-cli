@@ -159,7 +159,55 @@ names is not reading a repository.
      the grant, the customer sees nothing - and it is now in `08-deploy.md`.
      Whether either needs more than that is unjudged.
 
-  6. **No engagement has been walked end to end with the current material.**
+  6. **Three reference charts have been counted and not read.**
+     `unitech-e-asgard-kube`, `xxentria-asgard-kube` and `buy123-asgard-kube`
+     contributed their CR kind counts to the inventory and nothing else. Each
+     has its own `AGENTS.md` stating that repository's rules, and those are
+     where a deployment records what it learned - which is how the finance
+     deployment's Mimir shape was found. **Read the three AGENTS.md files
+     first**; that is an hour and it is where the surprises are.
+
+     They are also the source most of the older extracts came from, so reading
+     them is also the only way to check whether those extracts still match.
+
+  7. **The kami formatting report is unactioned.** An FDE built the deck and
+     reported back; nothing has been written from it yet. The substance, so it
+     is not lost if the message is:
+
+     - **`--check-content` induced a content regression.** Its CJK matching
+       collapses whitespace, so a cover date running into an eyebrow made the
+       eyebrow unfindable. To turn it green the FDE removed the sub-numbering
+       from every eyebrow - and every sub-topic slide then claimed the wrong
+       level. **A check drove a change it could not itself see.** The rule that
+       follows: never edit what is on a slide to satisfy a checker.
+     - `--check-content` never goes fully green on slides: `audience` and
+       per-slide `layout` are schema fields and are not printed. Read the list;
+       do not chase it to zero.
+     - Fixed-height slides with `break-after`: anything added to normal flow
+       silently turned 14 pages into 18. Footers and links must be absolutely
+       positioned, and page count re-checked after every edit.
+     - `.co` at 12mm and `.footer-mark` at 10mm always overlap, and the
+       template's own example page uses both.
+     - `<b>` does nothing: the CJK faces embed 400 and 500 only, so bold
+       silently falls back. Use `font-weight:500`.
+     - Write `content.json` first and generate the HTML from it. Editing HTML
+       and back-filling the IR loses things.
+     - **The content rules did not fight the template - they fight the
+       checkers.** `--check-density` reads a discovery deck's question pages as
+       sparse and `--check-rhythm` reads its alternation as monotonous, and in
+       both cases the deck is right. So the skill asks for a document its own
+       checks will fail, which is a smaller problem than one the typesetting
+       cannot produce, but it is unstated.
+
+  8. **Five issues were drafted and one was filed.** #9 covers the
+     self-contradiction class. Still unfiled, and each is written up in this
+     file rather than upstream: `next` reporting one state for a repo whose
+     capabilities are in several states; `verify` and `deploy` disagreeing on an
+     empty `platformMainEnvironmentId`; question numbers colliding across
+     branches; the approval gate having no product documentation page; LINE
+     having no current screenshot.
+
+  9. **No engagement has been walked end to end with the current material.**
      Everything above was found by watching one, at stage 2. Stages 3 to 9 have
      been read but not exercised since any of this changed.
 
