@@ -49,7 +49,11 @@ namespace inherit its length, and Kubernetes caps a namespace at 63 characters.
 
 --env may be repeated and defaults to dev. The two environments are independent:
 a project may declare dev only, prod only, or both. Adding an environment later
-means running this command again with --force, or editing the config.`,
+means running this command again with --force, or editing the config.
+
+If the workspace id is still unset this says so, because a project is what the
+platform deploys and so is the point at which the id is worth chasing. It is a
+reminder, not a gate - nothing rendered from this repository reads it.`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			slug := args[0]
@@ -119,6 +123,17 @@ means running this command again with --force, or editing the config.`,
 			} else {
 				fmt.Fprintf(out, "\nThe repository skeleton is not written yet, so this project has no chart:\n"+
 					"    asgard-cli scaffold\n")
+			}
+
+			// A project is the first point where the workspace id stops being a
+			// formality: it names the workspace the platform will deploy this
+			// into. Still not a blocker - nothing rendered reads it - but this
+			// is the moment to go and get it.
+			if !cfg.Workspace.HasID() {
+				fmt.Fprintf(out, "\nworkspace.id is still unset in %s. Nothing here needs it - the\n"+
+					"namespaces above come from the slug - but a project is what the platform\n"+
+					"deploys, so this is the point to ask for it:\n\n"+
+					"    asgard-cli init --workspace-id ws_xxxxxxxx\n", config.FileName)
 			}
 
 			// Both of these are ordering traps rather than things to look up

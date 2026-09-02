@@ -48,6 +48,13 @@ Connection can be run before Save. The form marks nothing as required.
 In a chart, the non-secret coordinates go in `chart/values-<env>.yaml` and the
 password is always a secretKeyRef into `app-secret`.
 
+**An HTTP API does not go here.** Data Source is these nine database providers
+and nothing else, and Connection below is OAuth to five named services. A REST
+API with a key or a bearer token is configured on the tool that calls it - an
+`http-request` step in a Workflow, or an MCP Server's environment variables.
+[`setup-path.md`](setup-path.md) has the fork; `asgard-cli usecase external-api`
+has the shape.
+
 ## Connection
 
 Manages authorisation to third-party apps and services over OAuth, as distinct

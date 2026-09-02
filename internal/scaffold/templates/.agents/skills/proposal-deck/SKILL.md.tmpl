@@ -1,0 +1,383 @@
+---
+name: proposal-deck
+description: Use when deciding what to propose to the customer, or building the deck that says it - a proposal, a scope review, a phase kick-off, or a readout after a discovery round. Covers how the shape is chosen and what phase 1 is, where a deck lives in this repo, which material it is allowed to be built from, the order a proposal argues in, how to say it in the customer's own words without claiming further than the evidence goes, and what must never appear on a customer's screen. Typesetting is delegated to the kami skill; this one owns the content.
+---
+
+# Proposal decks for <<.Workspace.Name>>
+
+A deck is the only thing in this repository the customer reads. Everything else
+records what we think; a deck records what they were told, and they agree to
+scope on the strength of it.
+
+That is the whole reason this skill exists. A deck assembled from the chart is
+accurate and useless. A deck assembled from an ambition is readable and turns
+into a broken promise. What works is a deck assembled from **their own material**,
+saying back to them what they said, and then one paragraph of what we will do
+about it.
+
+## Where it goes
+
+A deck belongs to the meeting it was presented at, so it is filed as one. There
+is no new directory for decks: a meeting note that has attachments becomes a
+directory instead of a file.
+
+    docs/meeting-notes/YYYY-MM-DD-<topic>/
+      README.md    the meeting note - who was there, what they said
+      deck.md      what we presented
+      deck.pdf     the file they were given
+      assets/
+
+The meeting note is what makes the deck readable later. Without it nobody can
+tell whether a deck is what was proposed or what was agreed, and those are
+different things - what was agreed goes to `docs/decisions/`.
+
+Add four lines to the note, because a deck is a claim about where its content
+came from:
+
+    - 對象:營運主管 + IT 窗口(4 人)
+    - 材料來源:references/erp-manual/、requirements/requests/REQ-003-*.md
+    - 當天結果:一階段範圍確認;退貨流程延到二階段
+    - 講出去之後改過嗎:沒有。要改就開新的一場日期。
+
+**A presented deck is not edited afterwards.** The customer's copy does not
+change with ours, and a repository version that differs from the one in their
+hands is worse than no copy at all. Changed your mind: new date, new directory.
+
+## Step 1 - find the material, and refuse to invent any
+
+A proposal is built from what the customer gave us and what they said, in this
+order:
+
+| where | what it gives you |
+|---|---|
+| `references/` | their own manuals, schema dumps, field dictionaries, screenshots |
+| `docs/meeting-notes/` | what they said, before we tidied it |
+| `requirements/requests/` | what they asked for, in their words |
+| `docs/open-questions.md` | what is still unknown - a slide's worth of honesty |
+
+**Not** `docs/spec/` and **not** `projects/*/chart/`. Those describe our
+implementation. A customer looking at a slide made from a chart sees a diagram of
+something they did not ask about.
+
+If a claim you want to make is in none of the four, it is not yet a claim. Two
+ways out: ask, or put it on the open-questions slide. Do not smooth it over -
+this repository records three decisions that were made confidently, built, and
+reversed after contact with reality. Any of the three, written into a proposal,
+would have been a commitment we could not keep.
+
+Every number carries where it came from:
+
+- a number the customer gave us - say so, and say when they gave it
+- a number we measured - say what was measured and when
+- a number nobody has - leave it out, or put a question on the slide
+
+## Step 2 - decide what we are proposing
+
+A deck cannot be written from open questions alone. Between what they said and
+what goes on slide 4 there is a decision - **what shape we are proposing** - and
+it is made here, deliberately, rather than arrived at while typesetting. It is
+the step most often skipped, because the material from step 1 reads like it
+already contains an answer. It does not: it contains a problem.
+
+These rules are the interview's, restated here because a deck gets built weeks
+after the interview and often by somebody else. `asgard-cli next --stage
+requirements` is where they live in full, with the worked examples.
+
+**The shape follows the audience, not the capability.**
+
+    internal, authenticated callers   -> the platform's agent hub, semantic layers
+    public, anonymous visitors        -> your own BotProvider, fixed query tools
+
+The two paths share neither an entry point nor a read path. A proposal covering
+both audiences is two proposals, or one with two phases - never one shape
+stretched over both. This repository records three decisions that were made the
+other way, built, and reversed, and all three were reversed by the audience.
+
+**Take a shape that already exists.** `asgard-cli usecase` lists the ones taken
+from deployments in production, and each says what it costs to assemble. A
+proposal built on one of them can be estimated, because somebody has already
+paid for it. A proposal built on a shape nobody has assembled is an estimate of
+a guess.
+
+The cost ladder for reaching a system is worth putting in front of the customer
+in words, because it is what decides the timeline:
+
+    a database we can read   >   an API   >   a screen a person clicks
+
+The last one is browser operation, and it costs more than the other two
+combined - not because it is technically hard, but because somebody has to
+document every page and every dialog the menu does not show first.
+
+**Phase 1 is the smallest thing that proves what THEY said they are testing.**
+Not the smallest thing that is easy to build. If they handed over a verification
+list, phase 1 has to reach the hardest item on it; a first delivery that avoids
+the thing being judged has failed however fast it shipped. What phase 1 cuts is
+a **mechanism, not a capability** - "for now the user tells us which record they
+mean" is a cut, "we will not read your system yet" is a failure.
+
+**Decide what we are not doing, in the same sitting.** Not as an afterthought at
+slide 7: a scope line written after the shape is chosen is a line someone
+remembers, and a line written while choosing is a line with a reason attached.
+Each one gets a note of what would have to be answered before it comes back.
+
+Two things this step produces before anything is typeset:
+
+  - a `docs/decisions/YYYY-MM-DD-<topic>.md` for the shape, and why the
+    alternative was not taken. The deck states the choice; the decision record
+    is where the reasoning survives being presented
+  - the request's own scope section, updated - what is in phase 1, what is
+    deferred, and what is out
+
+If you cannot write the decision record, the shape is not decided yet, and the
+deck would be a slide-shaped version of the same uncertainty.
+
+## Step 3 - the order a proposal argues in
+
+Nine slides, in this order, is a complete proposal. Longer decks are usually a
+short one with the same slide repeated.
+
+| # | slide | the job it does |
+|---|---|---|
+| 1 | cover | who this is for, and the date |
+| 2 | what you told us | their words, close to verbatim. Earns the rest |
+| 3 | what it costs today | the number they gave us, attributed to them |
+| 4 | what we propose | one sentence a non-technical reader repeats correctly |
+| 5 | what it looks like to use | the interaction, not the architecture |
+| 6 | what it reads | which systems, and who can see what |
+| 7 | what is NOT in scope | the slide that prevents the argument in month three |
+| 8 | how we get there | phases with dates, and what we need from them |
+| 9 | what we still do not know | the open questions, named as questions |
+
+Slide 2 is the one that makes the deck work, and the one most often skipped.
+A customer who hears their own problem stated back accurately will accept a
+rough solution; one who hears a polished solution to a problem they do not
+recognise will argue with every slide after it.
+
+Slide 7 is the one that saves the engagement. Scope stated narrowly is a proposal
+that can be delivered; scope left open is a proposal that grows until it fails.
+
+## Step 4 - say it in their words, and no further than the evidence goes
+
+Two failures, and they pull in opposite directions, which is why they are one
+step. A deck written to avoid the first usually commits the second.
+
+### Speak the way they do
+
+**The test:** can someone who was not in the room repeat the sentence to a
+colleague and get it right? If the sentence needs one of our nouns to survive,
+it has not been translated yet.
+
+    no    Workflow 會呼叫 Toolset 查詢 CRM,再由 Managed Agent 組出回覆
+    yes   客戶在 LINE 問訂單到哪了,它去 CRM 查,查到就回,查不到就說查不到
+
+The second sentence is longer and worse-sounding and it is the right one, because
+the customer can check it. The first cannot be checked by anyone who does not
+work here, and a claim nobody can check is not a claim - it is a mood.
+
+Three habits do most of the work:
+
+  - **name the person, not the component.** Who is at the keyboard, what they
+    typed, what came back. Slide 5 is an interaction, not an architecture
+  - **keep their vocabulary, even when ours is more precise.** If they say 報修
+    單, the deck says 報修單, not "RMA ticket entity". Correcting a customer's
+    own word for their own thing reads as not having listened
+  - **say what it does when it fails.** A deck that only describes the happy path
+    is the single strongest signal that nobody has built it yet. "查不到就說查
+    不到" is worth a line
+
+### Claim no further than the evidence goes
+
+Overstating is not a tone problem. It is a delivery problem that arrives eight
+weeks late, at the acceptance meeting, where the deck is read back to you.
+
+Four sources of it, in the order they actually happen:
+
+**1. A capability the platform does not have.** The list is not a matter of
+judgement - it is written down:
+
+    asgard-cli wiki platform-unknowns
+
+Check every claim on slides 4, 5 and 6 against it. Anything that appears there
+belongs on **slide 9, phrased as a question**, and never on 4 or 6. The two that
+catch people are the two customers most often put on their own verification
+list, because they read as table stakes: **限制不同使用者能查到什麼**, and
+**操作紀錄可稽核**. Neither is settled. Writing them into a proposal as existing
+features is the most expensive sentence in this document.
+
+**2. A capability that belongs to the layer in front of us.** Handoff to a human,
+pausing the AI while a person replies, resuming afterwards, counting how many
+questions one user has asked in a day - **no CR carries any of these.** They
+belong to whatever owns the conversation: a support desk, a helpdesk product,
+their own relay. With a website that layer exists; with LINE it usually does not.
+
+So a proposal that promises 轉真人 with nothing in the middle is a promise
+nobody can keep. Say plainly which layer would have to own it, and make it the
+customer's choice - put a desk in front, or drop the requirement. That sentence
+is uncomfortable once, in a meeting. The alternative is uncomfortable for the
+rest of the engagement.
+
+**3. A number nobody measured.** Covered in step 1, and it is the easiest to
+catch: every figure is theirs, ours-and-measured, or absent.
+
+**4. A phase 8 we could not start on Monday.** Read slide 8 as though they said
+yes today. Anything resting on a credential nobody has issued, a firewall change
+nobody has approved, or a system nobody has connected to is not a phase - it is
+a dependency, and it goes on slide 8 as **what we need from them**, with an owner
+and a date, or on slide 9.
+
+### The register
+
+Confidence in a proposal comes from specificity, not from adjectives. 全面、
+智慧化、無縫、大幅提升 say nothing and cost nothing to write, which is exactly
+why a reader discounts them. One checkable sentence outranks a paragraph of them:
+
+    no    全面提升客服效率,智慧化整合各系統
+    yes   客服現在要開四個系統才答得出一張報修單的狀態。第一階段目標是在 LINE
+          裡問一句就回答得出來,前提是 CRM 給得到唯讀帳號。
+
+A small promise that lands beats a complete-sounding one that does not. The
+customer is going to test this - that is what the test plan they sent is for.
+
+## Step 5 - what to show, and what must never be shown
+
+### Two kinds of deck, and only one of them is a proposal
+
+Everything above is about the deck that runs **before they say yes**. There is a
+second kind, and applying the first one's rules to it produces a deck that shows
+nothing:
+
+| | proposal | handover / walkthrough |
+|---|---|---|
+| when | before the decision | after it - training, a phase readout, a kick-off with their IT |
+| audience | whoever decides | whoever will operate or maintain it |
+| may show a console screen | **no** | **yes - it is the point** |
+| may name platform parts | no | the ones they will click, and only those |
+| built from | steps 1-3 above | the same, plus `asgard-cli wiki setup-path` |
+
+Ask which one you are making before writing a slide. "Show them how the agent
+gets set up" in a proposal is a request for slide 5 - the interaction - not for
+the console. In a handover it is the whole deck.
+
+### What a handover deck actually walks through
+
+`asgard-cli wiki setup-path` is the order, written for exactly this: where a
+credential goes, what gets built from it, the agent's configuration, and why
+there is no import step on the Sindri side. Two things on that page save a
+handover deck from being wrong:
+
+  - **An HTTP API's credential has no home under Settings.** Data Source is nine
+    database providers; Connection is OAuth to five named services. A deck that
+    shows their API key going into Data Source is teaching them something that
+    does not work
+  - **Nothing is published to Sindri manually.** Every Managed Agent is there
+    already; enabled serves, disabled does not. A slide with a "publish to the
+    hub" step is a slide about a button that does not exist
+
+### Screenshots
+
+There are none in this repository and none in `asgard-cli`. They live in the
+product documentation and are fetched by URL:
+
+    https://docs.asgard-ai.com/img/docs/<path>
+
+**`asgard-cli wiki screenshots` is the index** - every picture, what it shows,
+and which situation it is for. Read it rather than browsing the docs site: it is
+grouped by what you are trying to say, which the documentation is not.
+
+Two things in it are worth knowing before you go looking.
+
+**A proposal usually wants the case-study set, not the console.** The instinct is
+to screenshot the admin screens, and those are our side of the work. The four
+`sindri-retail-stockout-transfer/` images are one continuous story from a user's
+question to a completed action, and the third of them is the approval dialog -
+which is the only way anybody has found to explain the governance gate on a slide
+without a paragraph.
+
+**A handover wants the setup path**, and `asgard-cli wiki setup-path` is the
+narration for it. `agent-hub-managed-agent/create.png` is the one screen most
+handovers need.
+
+The console is in **English**; only the documentation's captions are zh-TW, so a
+zh-TW deck can carry these and write its own captions.
+
+**Open every one before it goes on a slide.** Nothing records when any of them
+was captured, so a form that has since changed looks exactly like a current one -
+and a stale screen in front of the customer who uses that screen daily is worse
+than no picture. A screenshot is also the most common way a credential or another
+customer's name reaches a deck, in a corner nobody read.
+
+Download it into the deck's own `assets/` rather than hot-linking the docs site
+or a path on somebody's machine: the first breaks when the docs are rebuilt, the
+second the moment anyone else opens the deck.
+
+### What must never be on a customer's screen
+
+- **Implementation nouns**, in a proposal. No CR kinds, no `sl-` / `dc-` / `ss-`
+  prefixes, no namespaces, no Helm, no chart, no CRD. The customer bought an
+  outcome. A handover may name what they will click - Managed Agent, Drive,
+  Skillset - and still never needs the CR behind it.
+- **Another customer.** No name, no logo, no screenshot, no "we did this for a
+  retailer with 200 stores" that is recognisable. Their engagement is not ours to
+  spend.
+- **Credentials and coordinates.** No hostnames, no connection strings, no
+  account names, not even in a screenshot's corner. Check the screenshots.
+- **A capability nobody has verified.** If it is not in `references/`, in a
+  meeting note, or measured, it is not a promise.
+- **Precision we do not have.** "Around 10 minutes, from your own figures" beats
+  "11.4 minutes" when 11.4 came from one afternoon's sample.
+
+## Step 6 - write it, with kami
+
+Typesetting, layout and the visual language belong to the **`kami`** skill. Load
+it and let it produce the file; this skill has already decided what goes on each
+slide.
+
+What kami expects, and what is worth knowing before you write:
+
+- **The ghost deck test.** Reading only the titles, in order, must tell the whole
+  argument. If a title is a topic label - "Current situation", "Architecture" -
+  it fails. Titles are assertions: "Support answers one ticket by opening four
+  systems".
+- **One evidence shape per slide.** A slide is a claim plus one thing that backs
+  it: three to five items, or a chart, or a quote. Not two of them.
+- **`cap`** is the line that says why the slide matters - a trade-off, a
+  boundary, a next step. It never restates the title.
+- Its content contract is `references/schemas/slides.json` in the kami skill, and
+  its layouts are `cover`, `chapter`, `content`, `quote`, `metrics`, `close`.
+
+Ask kami for the deck in the customer's language. Default output is a PDF, which
+is what gets handed over; ask for the editable path only when the customer has
+said they want to edit it.
+
+If kami is not installed, write `deck.md` as plain Marp markdown - `---` between
+slides - and say in the handover that it has not been typeset. Do not invent a
+second house style; a plain deck that says what it means beats a decorated one
+that does not.
+
+## Before you send it
+
+Ten questions, and the last five are the ones that get skipped:
+
+1. Do the titles alone tell the argument?
+2. Is every number attributed - their figure, our measurement, or absent?
+3. Does slide 7 say what is not in scope, specifically enough to point at later?
+4. Is there an implementation noun anywhere, including in a screenshot?
+5. Is another customer recognisable anywhere, including in a screenshot?
+6. Could we deliver everything on slide 8 if they said yes today? If any part
+   rests on something nobody has built or verified, it belongs on slide 9
+   instead.
+7. Is there a decision record for the shape, written before the deck?
+8. Has every claim on slides 4, 5 and 6 been held against
+   `asgard-cli wiki platform-unknowns`? Anything on that list is a slide 9
+   question, not a feature.
+9. Read slide 4 aloud to someone who does not work here. Do they repeat it back
+   correctly? That is the whole plain-language test, and it takes a minute.
+10. If it shows a console screen: was every screenshot opened, is it current,
+    and is this a handover rather than a proposal? A proposal showing admin
+    screens has usually skipped `asgard-cli wiki screenshots`, where the
+    customer-facing set is.
+
+Then file it: write `README.md` beside the deck saying who it was for, what
+material it came from, and what happened in the room. A deck without that label
+is unusable six months later, because nobody can tell whether it is what was
+proposed or what was agreed.

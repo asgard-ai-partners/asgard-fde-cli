@@ -54,14 +54,14 @@ templates as text rather than rendering them.
 
 ## `internal/` - the embedded material
 
-Most of this repo's value is not code. Four bodies of material are compiled into
+Most of this repo's value is not code. Five bodies of material are compiled into
 the binary, and the first question when adding anything is which one it belongs
 to.
 
 | where | files | answers | language |
 |---|---|---|---|
 | `stage/prompts/` | 12 | what to do at this point in an onboarding | English |
-| `wiki/pages/` | 18 | what the platform is, and who each piece is for | English |
+| `wiki/pages/` | 21 | what the platform is, and who each piece is for | English |
 | `usecase/extracts/` | 18 | how one shape of deployment is assembled, field by field | English |
 | `generate/templates/` | 12 | the CR skeletons `asgard-cli add` writes | English |
 | `scaffold/templates/` | 45 | the part of a customer repo that is the same every time | mixed |
@@ -72,6 +72,13 @@ every engagement in a single release.
 
 **One fact, one home; everywhere else links.** A trap belonging to a CR template
 is not also explained in a wiki page.
+
+**No images.** The platform's screenshots are the product documentation's and are
+fetched by URL; `wiki/pages/screenshots.md` indexes which one answers which
+question. Carrying the files themselves would put a copy here that goes stale
+against asgard-docs while looking current, which is the failure the whole
+embedding argument above exists to avoid - it holds for text because text is
+where the judgement is, and inverts for assets.
 
 ### `stage/prompts/`
 
@@ -113,8 +120,14 @@ docs/spec/__SPEC_SLUG__/README.md.tmpl
 ```
 
 A `.tmpl` suffix means the file is rendered; anything else is copied verbatim.
-`.agents/skills/` under it holds the five design-time skills the coding agent in
+`.agents/skills/` under it holds the six design-time skills the coding agent in
 the customer repo loads.
+
+Those six are **searchable**, and `scaffold/skills.go` is what makes them so.
+They are material like the wiki is material, and leaving them out of `find` meant
+an agent asked to build a deck searched for one and was told nothing matched
+anywhere - while the skill that owns the subject sat in the repository it was
+standing in.
 
 ## `source/` - never ships
 

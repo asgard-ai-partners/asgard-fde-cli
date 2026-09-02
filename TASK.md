@@ -33,7 +33,7 @@ write the customer's Kubernetes resources, because roughly 90% of that repo's
 - **Bundling helm or kubectl into the release.** Four platform/arch combinations
   at ~50MB each, and **kubectl has to stay within one minor of the cluster's API
   server**, so a pinned copy goes stale and is worse than none.
-- **Validating `workspace.id` against the platform.** Waiting on the API.
+- **Validating `workspace.id` against the platform.** Waiting on the API. It is optional as of 2026-09-02, since nothing rendered reads it; `project add` and `check` say when it is still unset.
 - **Reading or writing `platformMainEnvironmentId`.** Per project per env, and it
   only exists after tf-asgard has created the namespace, so it belongs to the
   generated repo's values files.
@@ -166,6 +166,21 @@ Worth one question to the platform team, and cheap to answer.
 
 ### Deliberately deferred
 
+- **`asgard-cli reference add <file>`.** Filing a customer's document into
+  `references/` is a step every engagement takes and none does the same way: the
+  agent invents a provenance table each time, and `references/customer-source/`
+  is a convention one engagement made up. A command would make provenance
+  mechanical. Not built because the shape of the record is a decision, not a
+  detail - what it must carry is the argument, and nobody has had it yet.
+- **Nothing enforces that a project split follows a recorded requirement.**
+  `next` states the rule and `11-requirements.md` explains it; `project add`
+  accepts a split with no request on file. The interview check added to `check`
+  catches the common case - material filed, nothing recorded - but not this one.
+- **The order in `wiki/pages/setup-path.md` is unverified against a live
+  console.** Every step is documented and every claim comes from its own page,
+  but no source states the sequence, and three screenshots were opened out of
+  the hundred-odd the screenshot index names. The claim worth testing first is
+  that an HTTP API's credential has no home under Settings.
 - **A Claude Code plugin in the customer repo.**
   `.claude-plugin/marketplace.json` + `plugins/asgard-fde/{commands,skills}`, as
   the demo generator does it. The `asgard-fde-onboarding` design-time skill does

@@ -26,6 +26,59 @@ is usually the first one asked about.
 
 `botProviderClass` is immutable in the CRD, so it has to be right the first time.
 
+## What the platform does NOT own: the conversation
+
+This is the question every customer service engagement asks, and the answer is
+the same one every time.
+
+**Handing over to a human, pausing the agent while a person replies, resuming
+afterwards, counting how many questions one user has asked - none of these are
+platform features.** There is no CR for any of them, and no field: searching the
+CRDs for a handoff, a takeover, a suspend or a per-user quota finds nothing.
+
+What the platform quota does cover is capacity, not people: 5 requests per second
+per endpoint, 3 minutes and 30 steps per request, 40 projects, 300 GB of
+knowledge base. A multi-system troubleshooting conversation can reach 30 steps,
+which is worth saying out loud before somebody designs one.
+
+The mechanism the platform's own case study describes puts the conversation
+somewhere else entirely. A retail site's support desk receives the customer's
+message, writes it into its own conversation log and answers the customer
+immediately; only then does it forward the message to the Flow Agent in the
+background, with a scope-limited credential. A human can join that same thread at
+any time, because the thread was never the agent's to begin with.
+
+So the shape is:
+
+    the customer     ->  something that owns the conversation  ->  Asgard
+                         (a support desk, a site, a relay)
+
+"Pause the AI" is that middle layer deciding not to forward. "Three strikes then
+a human" is that middle layer counting. "Ten questions a day" is that middle
+layer counting too.
+
+**With a website the middle layer is obvious - the site itself. With LINE it is
+not, and that is the question to ask.**
+
+What is settled is the part above: none of it is ours. What is *not* settled is
+how much LINE gives you for free, and the difference decides whether the customer
+needs a support desk or a small piece of state.
+
+- A person replying in LINE Official Account Manager is a takeover surface LINE
+  may already provide. Older LINE accounts had a 回應模式 that was either chat or
+  bot; whether a current account can run both at once was **not confirmed** -
+  LINE's own Messaging API page on building a bot says nothing either way, and
+  the chat-handling page could not be read.
+- Even if it does, LINE gives the bot **no signal that a human took over**. So
+  the pause/resume state and the counters still have to live somewhere, and that
+  somewhere is still not the platform.
+
+So do not tell a customer this cannot be built. Ask who owns the LINE Official
+Account, get them to say what their agents use today, and check LINE's current
+documentation for the account they actually have. The answer moves the
+requirement between "needs a support desk in front" and "needs a small piece of
+state" - a very different conversation, and not one to have from memory.
+
 ## Two pages in Odin
 
 - **Applications -> Data Insight & Agent Hub** - browse and open the Mimir and
@@ -99,7 +152,27 @@ needs a connector pod.
 - `botProviderClass` being immutable: checked against
   [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `15ded0f` -
   `BotProviderSpec`
+- **The platform owning no handoff, takeover, suspend or per-user quota**:
+  checked 2026-09-02 against
+  [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `15ded0f` -
+  no CRD and no field carries any of those concepts
+- The quota numbers: [Quota and limits](https://docs.asgard-ai.com/docs/help-community/quota-limits)
+  - asgard-docs `f00e0ee`
+- The support desk owning the conversation:
+  [AI customer service answering order enquiries](https://docs.asgard-ai.com/docs/product-suite/odin/case-studies/retail-ai-customer-service)
+  - asgard-docs `f00e0ee`
+- LINE's own behaviour: [Building a bot](https://developers.line.biz/en/docs/messaging-api/building-bot/)
+  read 2026-09-02, which does not mention response modes or any exclusivity;
+  `messaging-api/handling-chats/` returned 403 and was not read. asgard-docs
+  `f00e0ee` covers only the webhook setup steps and says nothing about a human
+  replying in the same account
 
 **Unchecked:** the per-platform credentials come from the product documentation
 only, and **no deployment uses a non-generic class** - every BotProvider across
-every reference deployment is `generic`.
+every reference deployment is `generic`. That the support desk owns the
+conversation is read from one case study and has not been held against a
+deployment; **whether a current LINE Official Account can serve both a human
+in Official Account Manager and a webhook at the same time is unresolved** - it
+is LINE's behaviour rather than Asgard's, no source here settles it, and it
+decides how much of a customer's handoff requirement is buildable. Get it from
+LINE's documentation for the account in question before designing around it.

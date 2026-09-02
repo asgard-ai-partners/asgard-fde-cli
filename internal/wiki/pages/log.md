@@ -95,3 +95,44 @@ time, and editing removes exactly that.
   the corpus does not have to carry both languages, and one language removes the
   split where a Chinese question could reach only the wiki and an English one only
   the extracts
+- `add` 2026-09-02 `platform-unknowns`, moved out of the customer repo's
+  `docs/open-questions.md`. It was cross-engagement knowledge shipped as a copy
+  into every repo, which is the arrangement the rest of this material exists to
+  avoid: once an engagement filed its first question the file stopped matching
+  its template, and after `scaffold --force` learned to preserve it the table
+  could never be refreshed again. Two repos onboarded a quarter apart would have
+  disagreed about it forever, with the older one still showing an answered
+  question as open. Nothing read it programmatically, so the move changed no
+  behaviour and made it searchable through `find` for the first time
+- `add` 2026-09-02 P6 to that list, on whether the 30-step / 3-minute
+  per-request ceiling is adjustable. Raised by a customer service requirement
+  spanning product knowledge, a CRM and a ticket system, which is exactly the
+  shape that reaches 30 steps
+- `add` 2026-09-02 to `integration`: what the platform does not own - handoff to
+  a human, pausing, resuming, per-user question counts. No CRD carries any of
+  them. An earlier version of this section asserted that a LINE Official Account
+  cannot run chat and a webhook at once, and that was retracted: neither source
+  of truth says it, LINE's own building-a-bot page does not mention response
+  modes, and it was being used to tell a customer something could not be built
+- `add` 2026-09-02 to `operations`: Asgard is a hosted cloud service, so a system
+  inside a customer's network is unreachable until they allowlist the four
+  outbound addresses or bring the platform on over a VPN. The addresses were
+  already here; what was missing was whose job the change is. From the FDE team,
+  not from a document - raised by an engagement whose three scenarios all read
+  internal systems
+- `add` 2026-09-02 `setup-path`: the order from a handed-over credential to an
+  agent a user can talk to, and the screenshot paths in asgard-docs for
+  illustrating it. Every step was already documented on its own page; the
+  sequence was not documented anywhere, which is the condition the README says
+  obliges a page. Carries two corrections it is worth reading for on their own -
+  an HTTP API's credential has no home under Settings, and Sindri has no import
+  step because publishing is automatic
+- `add` 2026-09-02 `screenshots`: an index of the product documentation's images
+  - path, what each shows, and which situation it is for - fetched by URL rather
+  than carried. Thirteen PNGs were briefly embedded instead and that was wrong:
+  an image is not judgement, the copy would have gone stale against asgard-docs
+  while looking current, and the site was already a source. The captions are
+  harvested from asgard-docs' own alt text, so they describe the file rather
+  than guess at it. Opening three of them corrected two things `setup-path` had
+  asserted: the console is in English (only the captions are zh-TW), and the
+  Data Source Provider list does show nine databases and no HTTP option

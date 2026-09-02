@@ -65,14 +65,22 @@ func ValidateSlug(field, s string) error {
 	return nil
 }
 
-// Workspace is the customer this repository serves. The id is issued by the
-// Asgard platform; the slug is what repository and namespace names are built
-// from.
+// Workspace is the customer this repository serves. The slug is what repository
+// and namespace names are built from; the id is issued by the Asgard platform.
+//
+// The id may be empty. Nothing this CLI generates reads it - namespaces come
+// from the slug, and the charts never mention it - so requiring it at init only
+// blocked work that had not reached the platform yet. It is recorded because the
+// repository should say which workspace it belongs to, and the moment that
+// starts to matter is the first project.
 type Workspace struct {
 	ID   string `json:"id"`
 	Slug string `json:"slug"`
 	Name string `json:"name"`
 }
+
+// HasID reports whether the platform's workspace id has been filled in.
+func (w Workspace) HasID() bool { return w.ID != "" }
 
 // Project is one Helm chart deployed to one namespace per environment.
 type Project struct {
@@ -123,14 +131,14 @@ func (c *Config) Project(slug string) (*Project, bool) {
 // problems with errors.Join so a caller can report them one by one rather than
 // making the user fix them one round trip at a time.
 //
-// The workspace id is only checked for being non-empty: the platform will grow
-// an API to verify it, and a guessed pattern would reject valid ids today.
+// workspace.id is deliberately not checked. It is not validated for shape,
+// because the platform will grow an API to verify it and a guessed pattern would
+// reject valid ids today; and it is not required to be present, because nothing
+// downstream reads it. Commands that are a good moment to fill it in say so
+// instead - see Workspace.HasID.
 func (c *Config) Validate() error {
 	var errs []error
 
-	if c.Workspace.ID == "" {
-		errs = append(errs, errors.New("workspace.id must not be empty"))
-	}
 	if err := ValidateSlug("workspace.slug", c.Workspace.Slug); err != nil {
 		errs = append(errs, err)
 	}

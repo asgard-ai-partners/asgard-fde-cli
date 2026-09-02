@@ -2,12 +2,43 @@ This is the interview, and it produces a **request** - not a design, not a task,
 not a chart. Read it before the working session with the customer, and keep it
 open during one.
 
+## What this stage produces is a file
+
+Everything below is how to think during the interview. This is what to do with
+it, and it comes first because the thinking is the part that goes well on its
+own. Three commands, run **as the answers arrive**, not at the end:
+
+    asgard-cli request add "<what they asked for, in their words>"
+    asgard-cli request target <<.RequestID>> <project>
+    asgard-cli question add "<what blocks it>" --blocks <<.RequestID>> --ask "<who>"
+
+**One request per capability they asked for.** A document with three scenarios
+is three requests, because two capabilities in one record cannot be given
+different target projects, and the target project is the decision this whole
+stage exists to reach.
+
+The way this stage fails is not a bad analysis. It is a good one that stays in
+the conversation: the material gets read, the questions get filtered well, the
+answer is delivered to whoever asked, and the repository ends the day looking
+exactly as it did before. The next run of `asgard-cli next` then says nothing is
+in flight, and it is right. Anything worth telling someone is worth `request
+add` first - **the message is the summary of the record, not a substitute for
+it.**
+
+If you are answering a question rather than running a meeting - "list the open
+questions in this document" - that is still this stage. Write the records, then
+answer from them.
+
 <<with .Requests>>Open requests:
 
 <<range .>>  <<.ID>>  <<printf "%-8s" (printf "%s" .Status)>>  <<.Title>>
 <<end>>
+<<else>><<if .References>>**<<.References>> file(s) of customer material are filed in `references/`, and no
+request records any of it.** The interview has started and the repository has
+no record of it. Write the request before going further - `asgard-cli check`
+reports this state until one exists.
 <<else>>Nothing is recorded yet, so start with `asgard-cli request add`.
-<<end>>
+<<end>><<end>>
 ## Why the interview is a stage of its own
 
 Of the target repo's thirteen task specs, **three were superseded and one was
@@ -88,9 +119,15 @@ integration from days into weeks by being discovered late:
   - host, port, database or schema, and the account name
   - **is the account read-only?** Ask explicitly. The one offered first usually
     is not, and finding out later means going back for a second credential
-  - **is it reachable from the cluster**, or does it need an IP allowlist, a
-    VPN, or a bastion? This is the single most expensive thing to discover in
-    week three, and it costs one sentence to ask in week one
+  - **is it reachable from outside their network?** Asgard is a hosted cloud
+    service - it does not run on the customer's network and cannot be put
+    there - so an internal system stays unreachable until they allowlist our
+    four outbound addresses or bring us on over a VPN. Ask who can approve a
+    firewall change and how long one takes there; it is a ticket and a window
+    in most companies, not something the person in the meeting can do that
+    afternoon. `asgard-cli wiki operations` has the addresses to hand over in
+    the meeting. This is the single most expensive thing to discover in week
+    three, and it costs one sentence to ask in week one
   - who issues the credential, by name or role. A credential with no owner is
     not a dependency, it is a delay
   - for an API instead of a database: the auth scheme, who holds the client id
@@ -154,6 +191,45 @@ An official account with a following is a distribution channel a widget cannot
 reproduce, and asking those people to visit a web page instead loses most of
 them.
 
+**3e. Is there anything between the channel and us?**
+
+Ask this whenever the answer to 3d is a chat platform, and ask it early, because
+a whole class of requirement depends on it and the customer will not raise it
+themselves.
+
+    the customer  ->  ???  ->  Asgard
+
+Whatever sits in that middle - a support desk, a helpdesk product, their own
+relay, or nothing at all - is what owns the conversation. The platform does not:
+there is no CR for handing over to a human, for pausing while a person replies,
+for resuming afterwards, or for counting how many questions one user has asked.
+`asgard-cli wiki integration` has the detail and the sources.
+
+So every requirement of this shape belongs to that middle layer, not to us:
+
+    "transfer to a real agent"           the desk takes the thread
+    "pause the AI while a human replies"  the desk stops forwarding
+    "three failures then a human"         the desk counts
+    "ten questions per user per day"      the desk counts
+
+With a website the middle layer is obvious, because the site is already there.
+With LINE it often does not exist - but **how much LINE gives you for free is
+unresolved**, so do not walk in saying it cannot be done. What is certain is that
+LINE gives the bot no signal that a person has taken over, so the pause/resume
+state and the counters live outside the platform either way. Ask who owns the
+LINE Official Account and what their agents use today, and check LINE's current
+documentation for that account. See `asgard-cli wiki integration`.
+
+If the answer is "nothing", say so plainly rather than designing around it. The
+choice is theirs: put a desk in front, or drop the requirement. A proposal that
+promises handoff with nothing in the middle is a promise nobody can keep.
+
+Two platform limits worth handing over in the same conversation, because they
+shape what can be asked for: one request gets **30 steps and 3 minutes**, and an
+endpoint serves **5 requests per second**. A troubleshooting conversation that
+consults a knowledge base, then a CRM, then a ticket system, then asks a
+follow-up, can reach 30 steps.
+
 LINE also needs **two-way setup** - Asgard issues a webhook URL that somebody has
 to paste back into the LINE console and verify - so it needs an owner on their
 side, not just a credential. See `asgard-cli wiki integration`.
@@ -188,6 +264,23 @@ not verifiable; "the warehouse lead stops phoning about location 608" is.
 
 This becomes the acceptance criteria of the task specs, and a request whose
 success nobody can describe produces tasks nobody can close.
+
+**6b. What is the smallest version they would accept as proof?**
+
+Their answer, not yours. You will have one in mind and it will be the one that
+is easiest to build; theirs is the one that gets judged.
+
+    "if it only did ___, would that be worth putting in front of someone?"
+    "of everything here, which one would you want to see working first?"
+    "what would make you say this is not going to work?"
+
+If they handed over a verification list, read it back and ask which item they
+would keep if they could only keep one. That item is the MVP, whatever it costs
+to build - a first delivery that skips the item being judged has failed however
+fast it shipped.
+
+Then work out what that one item genuinely needs, and the two filters below turn
+the rest into deferred scope rather than open questions.
 
 **7. What is explicitly out of scope?**
 
@@ -266,14 +359,120 @@ The pattern in all three: **"like everything else" is the wrong reason**, becaus
 the audience is what decides, and the audience is the one thing "everything
 else" does not share.
 
+## Two filters before a question becomes a row
+
+An interview that ends with twenty-five open questions has not narrowed anything.
+It has moved the customer's whole document into a table, and the meeting that
+follows spends its time on questions nobody needed answered yet.
+
+Apply both to every question before filing it. Each turns a question into
+something other than a blocker - not our problem, or not now - and most questions
+are one of the two. What survives is short, and short is what the meeting is
+for.
+
+### Filter 0 - is this ours to answer at all?
+
+**Ask first, because it removes the most rows.** We are delivering an agent. We
+are not designing the customer's support operation, and an interview that drifts
+into how their own systems and teams fit together has stopped being a
+requirements interview.
+
+The test is narrow: **does the answer change what we build?**
+
+    ours        what we need FROM them to build it - a credential, an endpoint,
+                a network path, a document, an account, a decision only they can
+                make about our behaviour
+    theirs      how they staff a channel, who maintains a document, how their
+                two systems relate to each other, what their people do today
+
+A question about their internal arrangements is not an open question. It is
+either something to hand back as a note - "this is worth deciding before you go
+live, and it is yours" - or nothing at all.
+
+Two ways this goes wrong, and both look like diligence:
+
+- **Doing their integration analysis for them.** How their channel binds to their
+  CRM is their business unless we are the thing doing the binding. Asking it
+  makes us look thorough and produces a table nobody uses.
+- **Turning an operational precondition into a design question.** "Is a person
+  already answering on this account" matters, but it is one line in the handover
+  - a thing they must sort out before we attach anything - not a row we track
+  and chase.
+
+What survives filter 0 is almost always a small set of the same shapes: a
+credential, an endpoint, a network path, a document, an account, and the two
+answers only they can give (2b and 6b).
+
+### Filter 1 - the minimum that proves it works (MVP)
+
+**Ask: what is the smallest thing that proves what THEY said they are testing?**
+
+Not the smallest thing that is easy to build. A customer who hands over a test
+plan has already written down what counts as success, and a first delivery that
+avoids the item they most want to see has failed, however quickly it shipped.
+
+So read their verification list first, then find the smallest slice that reaches
+the hardest item on it. What that slice does not need is not an open question: it
+is a line in the request's section 5, Scope, with a note of what would have to be
+answered before it comes back.
+
+**What gets cut is a mechanism, not a capability.** That distinction is the whole
+filter, and it is the one that gets it wrong in both directions.
+
+    cutting a capability     "we will not read your system yet"
+                             fails their test. It is the thing being judged
+    cutting a mechanism      "for now the user tells us which record they mean"
+                             passes it. The integration is still proved
+
+The pattern that keeps recurring: the hardest question in an engagement is
+usually **how the agent knows who it is talking to**, and it is almost always
+cuttable, because the user can be asked. A lookup keyed on something the user
+types proves the same integration as a lookup keyed on a recognised identity, and
+the identity question moves to phase two without the delivery losing anything the
+customer is measuring.
+
+What that leaves blocking the first delivery is normally something duller and far
+more useful to raise in a meeting - whether the system is reachable from a
+cluster at all, and who can grant an account this month.
+
+**Apply the filter per question, not per row.** Some rows are two questions
+wearing one sentence, and the filter then defers the half that should have
+stayed. "Is there anything in front of the channel" is the recurring one: the
+half about identity defers cleanly, while the half about **whether that channel
+is already staffed today** does not. Attaching a webhook to an account real
+people are already answering on changes their experience on day one, before any
+of the deferred machinery exists. That is an operational precondition of the
+first delivery, not a phase-two design. Split the row and keep that half.
+
+Also note what "we already have that system" does not tell you. It says the data
+exists. It says nothing about a network path, a read replica, or an account.
+
+**The MVP is not a demo.** It runs against their real channel with their real
+documents and a real person can use it. A demo on sample data proves nothing and
+the questions it defers all come back at once.
+
+### What is left after both
+
+Whatever neither removes. Those are the real questions, and there are
+usually two or three:
+
+  - **how a system is reached** - the one that blocks the MVP nearly every time,
+    and where "we have that system" means the data exists and nothing more. A
+    hosted platform reaching an internal system needs a firewall change only
+    they can make, with an approver and a lead time
+  - anything the customer must do before we can - provision an account, paste a
+    webhook URL back, open a network path
+  - anything where two of their answers contradict each other
+
+If a surviving row is not one of those shapes, run it through filter 0 again.
+Most of what gets past these filters and still turns out to be noise is a
+question about the customer's own arrangements that felt too important to drop.
+
 ## Write it down as you go
 
 Not afterwards. A record written after the meeting is a record of what you
-remember, and what you remember is the design you were already forming.
-
-    asgard-cli request add "<what they asked for, in their words>"
-    asgard-cli request target <<.RequestID>> <project>
-    asgard-cli question add "<what blocks it>" --blocks <<.RequestID>> --ask "<who can answer>"
+remember, and what you remember is the design you were already forming. The
+three commands are at the top of this page.
 
 `request add` writes `requirements/requests/REQ-xxx-<name>.md` with today's date
 and `draft` on it, and its seven sections are this interview in the same order.
@@ -294,6 +493,10 @@ is not tracked, it is just written down.
   - the customer's own wording is in section 1, unedited
   - the audience is decided, and the target project follows from it
   - every system has a row, and every row says how it is reached
+  - the open questions have been through both filters, so what is left blocks the
+    MVP rather than describing everything still unknown
+  - the customer has said which single item they would keep - it is theirs to
+    answer and cannot be inferred
   - every system we will connect to has a section 4 block, with a named
     credential owner and an answer on network reach - and no secret in it
   - unstructured knowledge is either listed or explicitly ruled out
@@ -304,6 +507,13 @@ is not tracked, it is just written down.
 Not ready is a normal state to be in. A `draft` that names its open questions is
 more useful than a `ready` that guessed at them, and `asgard-cli next` will keep
 the request in front of you either way.
+
+What usually comes before the task specs is saying it back to them: what we
+propose to do, what phase 1 is, and what we are not doing. That is the
+`proposal-deck` skill in `.agents/skills/` - it owns choosing the shape as well
+as the deck, and it is where the rule about claiming no further than the
+evidence goes lives. Do not decide the shape here and write the deck from
+memory afterwards.
 
 Then split it into task specs:
 
