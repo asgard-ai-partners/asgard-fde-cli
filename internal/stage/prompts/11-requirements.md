@@ -342,6 +342,23 @@ Anything a query DOES answer exactly - counts, prices, stock levels, contact
 details - belongs to a query tool, not to a Drive. Putting a number in a Drive
 makes the agent paraphrase a figure it should have read.
 
+**4b. Does something have to happen when their system does something?**
+
+"When an order comes in", "when a ticket is escalated", "when the stock drops
+below" - that is a **webhook**, not a schedule, and the two get confused because
+both run with nobody watching:
+
+    their system calls us when it happens    a webhook. `asgard-cli wiki automation`
+    we look on a timer                       a Trigger, and always later than the event
+
+**The question that decides it is whether their system can call out at all.**
+Many cannot - an old ERP, a vendor SaaS with no outbound hooks - and then a
+schedule is the fallback, with a delay the customer should hear about now rather
+than at acceptance.
+
+Ask who can configure that on their side. It is usually a different person from
+whoever gives you a database account.
+
 **5. Is there anything it should change, and not just read?**
 
 The standing architecture is read-only. A write is not a project decision to be

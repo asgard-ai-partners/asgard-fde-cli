@@ -48,6 +48,39 @@ Publishes a workflow as a callable HTTP API. The list shows Name, Group,
 Description, Active, Last Modified. Creating one needs only a Name and a
 Description.
 
+### As a webhook, which is what a customer usually means
+
+"When an order arrives, do X" is this, not a Trigger: an external system calls
+in when something happens rather than us checking on a schedule. The shape is
+three stages and each is a processor - see [`processors`](processors.md):
+
+    the external system  ->  the endpoint
+                               |
+      1. validate-payload      the Payload Schema, a Secret Signature to prove
+                               where it came from, and the allowed Content-Type
+                               |
+      2. whatever it does      query, model, http-request - the ordinary middle
+                               |
+      3. automation-tool-response  what the caller gets back
+
+**Enable the Secret Signature.** Without it the endpoint runs whatever anyone who
+finds the URL sends it, and a webhook URL travels: it is pasted into somebody's
+CI, their vendor console, a ticket.
+
+**The endpoint is the same URL a chat message goes to**, and this surprises
+people:
+
+    POST {{base_url}}/generic/ns/{{namespace}}/bot-provider/{{name}}/message/sse
+
+So an inbound webhook and a person typing reach the platform the same way, and
+`asgard-cli wiki api` describes the request and its SSE response for both. What
+differs is what is on the other end of the Workflow, not the route in.
+
+**A webhook and a schedule are not interchangeable** even though both start a run
+with nobody watching. A webhook fires when their system decides; a Trigger fires
+when we decide. If the customer cannot make their system call out, a schedule is
+the fallback and it will always be later than the event.
+
 ## Before writing the chart
 
 `asgard-cli usecase trigger` has the rules a scheduled run needs: the cursor and
@@ -55,6 +88,11 @@ the cold start, why not to write a BotProvider yourself, and why a schedule
 cannot use a tool that asks for consent. Not repeated here.
 
 ## Sources
+
+- The webhook shape, its three stages, the Secret Signature and that the
+  endpoint is the same one:
+  [Webhook integration](https://docs.asgard-ai.com/docs/developer-reference/examples/webhook-integration)
+  - asgard-docs `f00e0ee`, read 2026-09-02
 
 - [Trigger](https://docs.asgard-ai.com/docs/product-suite/odin/features/automation-trigger)
   - asgard-docs `f00e0ee`
