@@ -235,12 +235,16 @@ Worth one question to the platform team, and cheap to answer.
 
 ### Material that is thinner than it looks
 
-- **`wiki screenshots` describes about a hundred images and three were opened.**
+- **`wiki screenshots` describes about a hundred images and five were opened**,
+  and two of those five turned out to need cropping before a customer could see
+  them - one of which this page had recommended as the single most useful image
+  it carries. So the marked ones are not the only ones; they are the ones
+  somebody happened to download.
   The rest carry the documentation's own alt text, which describes the file
-  honestly but does not say whether the product still looks like that -
-  **nothing anywhere records when any of them was captured**. A stale form in
-  front of the customer who uses that form daily is worse than no picture. The
-  page says so; saying so is not the same as checking.
+  honestly but does not say whether the product still looks like that, and
+  **nothing anywhere records when any of them was captured**. Alt text also
+  cannot see what this pass learned to look for: our own implementation nouns
+  inside the picture. Only opening one finds those.
 - **`wiki setup-path` states an order no source states.** Every step comes from
   the page that owns it, but the sequence is assembled, and only its first fork
   - that an HTTP API's credential has no home under Settings - was held against

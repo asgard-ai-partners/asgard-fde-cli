@@ -18,8 +18,20 @@ language can use them and write its own caption.
 **Open one before it goes on a slide.** Nothing records when any of these was
 captured, so a form that has since changed looks exactly like a current one - and
 a stale screen in front of the customer who uses that screen daily costs more
-than having no picture. A screenshot is also the most common way a credential or
-another customer's name reaches a deck, in a corner nobody read.
+than having no picture.
+
+Three things to look for, and the third is the one that catches people:
+
+  - **a credential** - a hostname, an account, a connection string
+  - **another customer** - a name, a logo, anything recognisable
+  - **our own implementation nouns, inside the picture.** A CR name, a `ts-` /
+    `sl-` / `dc-` / `ss-` prefix, an internal tool name, the admin console's own
+    navigation. The `proposal-deck` skill bans these in the deck's text and the
+    ban applies just as much to a screenshot of them - **and several images below
+    contain them.** They are marked, with what to crop
+
+Cropping is normal and usually costs nothing: the part that carries the argument
+is rarely the part carrying the noun.
 
 ## For a proposal: what it looks like to use
 
@@ -32,7 +44,7 @@ the governance gate, which is the hardest thing to explain in words.
 |---|---|
 | `sindri-retail-stockout-transfer/00-available-agents.png` | the hub with five agents, before anything is asked |
 | `sindri-retail-stockout-transfer/01-allocation-answer.png` | a real answer: current state, available quantity, three options to choose from |
-| `sindri-retail-stockout-transfer/02-approval-gate.png` | **the approval dialog** - the tool it wants to call, and nothing running until a person allows it |
+| `sindri-retail-stockout-transfer/02-approval-gate.png` | **the approval dialog** - the tool it wants to call, and nothing running until a person allows it. **CROP FIRST:** the dialog names `工具集:ts-wms` and `工具:create_transfer_order`. Keep the title line and the three buttons, drop the two rows between them - the argument is entirely in "it stopped and asked", which survives the crop |
 | `sindri-retail-stockout-transfer/03-execution-result.png` | after approval: what was created, and the resulting stock forecast |
 
 The third one is worth a slide on its own whenever the requirement has a write in
@@ -87,7 +99,7 @@ A worked example of step 3 filled in, rather than empty:
 |---|---|
 | the governance gate, as a list | `retail-stockout-transfer/04-automation-tools.png` - seven approval-gated tools |
 | what a gated tool declares | `retail-stockout-transfer/11-transfer-order-tool.png` - its input schema |
-| how many systems one agent reads | `retail-stockout-transfer/03-semantic-models.png` - CRM, ERP, e-commerce, POS, supplier, OLAP, WMS |
+| how many systems one agent reads | `retail-stockout-transfer/03-semantic-models.png` - CRM, ERP, e-commerce, POS, supplier, OLAP, WMS. **CROP FIRST:** the whole Odin console navigation is down the left - Agent Hub, MCP Servers, Skillsets, Plugins, Settings. Keep the card area only |
 | conversational analysis | `mimir-thread/answer.png`, `mimir-thread/chart-result.png` |
 | a dashboard that gets shared | `mimir-dashboard/share-dashboard.png` |
 | teaching the model the business's own questions | `mimir-knowledge/add-question-sql-pair.png` |
@@ -126,10 +138,15 @@ Not everything does, and assuming otherwise wastes a search:
   asgard-docs' own `.mdx` pages, so a caption is the documentation's rather than
   a guess about what the file contains
   - asgard-docs `f00e0ee`
-- **Checked** 2026-09-02: `settings/data-source/data-source-create-provider-open.png`,
-  `agent-hub-managed-agent/create.png` and `sindri-home/home-available-agents.png`
-  were opened and match their captions
+- **Checked** 2026-09-02, opened rather than listed:
+  `settings/data-source/data-source-create-provider-open.png`,
+  `agent-hub-managed-agent/create.png`, `sindri-home/home-available-agents.png`,
+  and the two marked CROP FIRST above - which is how the crops came to be
+  marked. An engagement found the first of them by downloading it, after this
+  page had recommended it as the single most useful image here
 
 **Unchecked:** everything else here is described by its alt text, not by having
-been looked at, and **no capture date exists for any of them**. The grouping into
+been looked at, and **no capture date exists for any of them**. Five of roughly a
+hundred have been opened, and two of those five needed cropping - so assume an
+unopened one does too, rather than that the marked ones are the only ones. The grouping into
 situations is this tool's judgement rather than anything the documentation says.

@@ -326,14 +326,24 @@ has to guess why each one matters, and the ones that sound like bureaucracy get
 deferred. **Pair every question with what it unlocks**, and the same meeting asks
 for access rather than for patience:
 
-    each capability they asked for, one section:
+    1   cover
+    2   what you told us          their words, close to verbatim
+    3   capability A: what we need to ask
+    4   capability A: what that gets you
+    5   capability B: what we need to ask
+    6   capability B: what that gets you
+    ...
+    n-1 what we are not doing this round
+    n   what we are going back to check
 
-      what you told us      their own words, from their own document
-      what we would ask     the two or three questions that actually block it
-      what that gets you    the shape it becomes ONCE those are answered
+**The pairing is the shape, and the two halves are separate slides.** One slide
+carries one claim and one evidence shape, so a question table and the answer to
+"why are you asking" do not share a page. This layout has been taken to a real
+first meeting; the question pages are worked through line by line in the room and
+the answer pages are what make that bearable.
 
-The third line is step 2 run conditionally, and it is the whole reason this deck
-works. **State the condition in the same sentence as the capability** - "given a
+The second of each pair is step 2 run conditionally, and it is the whole reason
+this deck works. **State the condition in the same sentence as the capability** - "given a
 read-only account on the CRM and a route to it, this becomes X" - so the customer
 sees the access request and the thing they get for it as one trade, which is what
 it is. `asgard-cli usecase` is where those shapes come from, so what you promise
@@ -350,6 +360,12 @@ Two things this deck must still refuse, and they are the ones the shape tempts:
 
 What it does not have is a phase plan with dates. That is the proposal, and it
 comes after the answers.
+
+The last two slides are the two filters made visible: what came out as deferred
+scope, with what has to be answered before it comes back, and the questions that
+are ours to chase rather than theirs - the ones `asgard-cli wiki
+platform-unknowns` says nobody has settled. Both are written as sentences a
+reader outside this repository can follow, not as counts of rows.
 
 ### What a handover deck actually walks through
 
@@ -436,6 +452,11 @@ second the moment anyone else opens the deck.
   account names, not even in a screenshot's corner. Check the screenshots.
 - **A capability nobody has verified.** If it is not in `references/`, in a
   meeting note, or measured, it is not a promise.
+- **An implementation noun inside a screenshot.** The rule above is not only
+  about the words you type: an approval dialog naming `ts-wms` and
+  `create_transfer_order`, or a console screenshot with the whole build-platform
+  navigation down its left edge, breaks it exactly as a slide title would. Crop
+  before using; `asgard-cli wiki screenshots` marks the ones known to need it.
 - **Precision we do not have.** "Around 10 minutes, from your own figures" beats
   "11.4 minutes" when 11.4 came from one afternoon's sample.
 
