@@ -118,6 +118,30 @@ when a failed tool call must not be retried - which is most writes.
 | `push-message` | **Flush** | whether the reply buffer is sent immediately |
 | `router` | **Else** | the unmatched branch. A router without one silently drops what does not match |
 
+## Defaults the documentation does not give
+
+The type definitions carry a default per config key and the documentation pages
+do not, so a field marked 必填 there can still have a value it falls back to -
+which changes whether leaving it out is an error or a silent choice.
+
+Two read directly, and they are the two most likely to matter:
+
+| processor | field | |
+|---|---|---|
+| `retrieve-knowledge` | `sampleK` | **required, and defaults to 20.** How many chunks come back. Nothing in the documentation gives the number, so a retrieval returning "too much" or "not enough" is being tuned against an invisible 20 |
+| `validate-payload` | `path` | defaults to `"$"` - the whole payload. Set it to validate a subtree instead |
+
+`retrieve-knowledge` also requires **five** fields: the knowledge bases, the
+query text, the similarity threshold, the result field and `sampleK`. Four of
+them have no default at all, so a partially configured one fails rather than
+guessing.
+
+**The rest of this mapping has not been extracted.** The declarations exist for
+every processor and a full table would be the single most useful thing left to
+add here - what each key defaults to, and which required keys have a fallback.
+It needs parsing properly rather than by pattern, and a wrong table is worse
+than none.
+
 ## Entry, Exit and Router
 
 `flow-entry` and `flow-exit` are connection points rather than work. Two things
@@ -150,8 +174,10 @@ worth knowing from their pages:
   before 2026-09-02**, which is why `workflow.md` carried a type table and
   nothing below it
 - `ProcessorDefinitions` in asgard-core `internal/constants.go`, read 2026-09-02
-  through the API: the same set, with the static config definitions the
-  documentation describes in prose
+  through the API: the same set, plus per-key `IsRequired` and `DefaultValue`
+  that the documentation does not carry. Only `retrieve-knowledge` and
+  `validate-payload`'s defaults were read individually; a bulk extraction
+  misaligned and was discarded rather than published
 
 **Unchecked:** every field here comes from the product documentation, not from a
 chart that sets it. Where an extract uses one - `http-request`, `query-sql`,

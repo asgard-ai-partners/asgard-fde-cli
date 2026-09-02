@@ -148,11 +148,20 @@ names is not reading a repository.
      Workflow, labelled in the output as what it is, since a reader who has
      never seen one will otherwise assume the estimate is wrong.
 
-  4. **The per-processor config definitions in `asgard-core` are not carried.**
-     Name, type, required, default and description for every config key of every
-     processor - which is what a chart author needs while writing one, and the
-     only place it exists. `wiki workflow` has the type list and nothing below
-     it.
+  4. **The per-processor config definitions in `asgard-core` are still not
+     carried, and one attempt was discarded.** `ProcessorDefinitions` holds
+     name, type, `IsRequired` and `DefaultValue` for every config key - the only
+     place the defaults exist, since the documentation pages give none.
+
+     A pattern-based extraction on 2026-09-02 misaligned, attributing one
+     processor's fields to the next, and was thrown away rather than published.
+     Two were then read individually and are in `wiki processors`:
+     `retrieve-knowledge.sampleK` is required and defaults to **20**, and
+     `validate-payload.path` defaults to `"$"`.
+
+     **Do it with a real parse** - `go/ast` over the file, or a small Go program
+     importing the package - not with a regex. A wrong table here is worse than
+     none, because a default is exactly the kind of fact nobody re-checks.
 
   5. **Fehu and the Management Console reached the walk today; neither has an
      extract.** The Console's fact is a go-live blocker - build a resource, skip
