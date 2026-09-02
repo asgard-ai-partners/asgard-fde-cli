@@ -270,6 +270,22 @@ Write the *name* of the key in the record - `<TARGET>_DB_PASSWORD` locally,
 the repo root has the full pattern, including the three places a new database
 has to be registered before it works end to end.
 
+**A credential the customer's own users supply is a different problem again**,
+and it comes up whenever the agent acts on behalf of individual people rather
+than as one service account: each user's token for a third-party platform has to
+be stored and replayed, so it cannot live in `app-secret` and cannot live in
+`.env` either.
+
+That is a service with a database, not a chart - one existing deployment holds
+them AES-256-GCM sealed in a column, with the key from its own environment,
+masked for display, and the whole boundary isolated behind one package that the
+build refuses to let other layers import. **If a requirement implies this, say
+so early**: it is the point at which the engagement stops being a chart and
+needs somewhere to run code. `asgard-cli usecase per-turn-credentials` is the
+lighter alternative - the caller supplies the credential each turn and nothing
+is stored - and it is worth checking whether that is enough before agreeing to
+hold anything.
+
 If the customer wants to hand over a password during the meeting, take it into
 `.env` there and then and say why it is not going in the notes. Doing that once
 in front of them is usually the last time they paste one into a chat.

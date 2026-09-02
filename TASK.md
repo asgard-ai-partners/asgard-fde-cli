@@ -184,8 +184,21 @@ names is not reading a repository.
 
      `asgard-kube/pkg/apis/` was in the same blind spot until today and produced
      `wiki crd-rules` in one pass, so the expected yield from the rest is not
-     low. **Take `asgard-freyr-api` next**: the Freyr skills are generated from
-     its Swagger, so it is the source behind material this tool already ships.
+     low.
+
+     **`asgard-freyr-api` read 2026-09-02, and the yield was one thing.** It is
+     a conventional Go service - Gin, fx, GORM, layered handlers/services/
+     repositories - and carries almost no platform knowledge, so nobody should
+     re-read it hoping. What it does carry is the shape for **a credential the
+     customer's own users supply**: AES-256-GCM sealed in a column, key from the
+     environment, masked for display, the boundary isolated behind one package
+     the build stops other layers importing. That is now in the interview at 3b,
+     because it is the point where an engagement stops being a chart and needs
+     somewhere to run code, and it should be said early rather than discovered.
+
+     Still unopened: `asgard-router`, `content-pipeline`, `deleteme`,
+     `asgard-bussiness-plan`, `partner-finder`, `ppt`, `hugin`,
+     `just-inference`, `asgard-html2img`.
 
   7. **The kami formatting report is unactioned.** An FDE built the deck and
      reported back; nothing has been written from it yet. The substance, so it
