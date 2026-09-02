@@ -6,7 +6,8 @@ open during one.
 
 Everything below is how to think during the interview. This is what to do with
 it, and it comes first because the thinking is the part that goes well on its
-own. Three commands, run **as the answers arrive**, not at the end:
+own. Three commands, run **as the answers arrive** - not at the end, and not
+before they start:
 
     asgard-cli request add "<what they asked for, in their words>"
     asgard-cli request target <<.RequestID>> <project>
@@ -16,6 +17,25 @@ own. Three commands, run **as the answers arrive**, not at the end:
 is three requests, because two capabilities in one record cannot be given
 different target projects, and the target project is the decision this whole
 stage exists to reach.
+
+**And not before the interview.** A customer's own document arriving ahead of
+the meeting is normal - their internal approval comes before they will book one -
+and it is not a reason to open a request. Only section 1 exists at that point,
+and it already exists, in `references/`. The other six - audience, target
+project, how each system is reached, writes, success, scope - are what the
+interview decides, so a request written first is one copied section and six
+TODOs. It shows in the index as progress, it cannot pass any of `request
+ready`'s checks, and it puts the customer's words and our translation in one
+file while the translation is the request's whole reason to exist.
+
+Before the interview the material has three correct homes and needs no fourth:
+
+    references/              their document, as they wrote it
+    docs/open-questions.md   what to ask, and who can answer it
+    docs/meeting-notes/      the meeting, and what is taken into it
+
+**An empty `requirements/requests/` before the interview is the right state, not
+a gap.** `asgard-cli check` treats it as one.
 
 The way this stage fails is not a bad analysis. It is a good one that stays in
 the conversation: the material gets read, the questions get filtered well, the

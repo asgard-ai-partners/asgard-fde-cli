@@ -435,13 +435,45 @@ func (c *checker) checkInterviewRecorded() error {
 		return nil
 	}
 
-	c.warnf("references/ holds %d file(s) of customer material, and %s records no request "+
-		"and %s no question - so nothing records that it was read. **A draft is enough**: "+
-		"`asgard-cli request add \"<what they asked for, in their words>\"` before the "+
-		"interview is normal, and a draft naming its open questions is worth more than a "+
-		"ready one that guessed",
-		filed, filepath.ToSlash(work.RequestIndex), filepath.ToSlash(work.QuestionFile))
+	scheduled, err := meetingScheduled(c.root)
+	if err != nil {
+		return err
+	}
+	if scheduled {
+		return nil
+	}
+
+	c.warnf("references/ holds %d file(s) of customer material, and nothing records that it "+
+		"was read - no question in %s, no meeting filed, no request. Read it into questions "+
+		"first: `asgard-cli question add \"<what blocks it>\" --ask \"<who can answer>\"`. "+
+		"**A request comes after the interview, not before it** - six of its seven sections "+
+		"are what the interview decides",
+		filed, filepath.ToSlash(work.QuestionFile))
 	return nil
+}
+
+// meetingScheduled reports whether a meeting has been filed under
+// docs/meeting-notes/. A directory or a dated file there means the material has
+// not only been read but turned into an agenda, which is the whole of what the
+// warning above is asking for.
+func meetingScheduled(root string) (bool, error) {
+	dir := filepath.Join(root, "docs", "meeting-notes")
+	entries, err := os.ReadDir(dir)
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	if err != nil {
+		return false, fmt.Errorf("read %s: %w", dir, err)
+	}
+	for _, e := range entries {
+		if strings.HasPrefix(e.Name(), "_") || e.Name() == "README.md" {
+			continue
+		}
+		if dateNamed.MatchString(e.Name()) || (e.IsDir() && len(e.Name()) > 10) {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 // checkRequirementIndexes verifies the SDD entry points exist.
