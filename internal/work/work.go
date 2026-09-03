@@ -488,6 +488,51 @@ func AddQuestion(root string, q Question) (Question, error) {
 	return q, nil
 }
 
+// NumberedQuestion is one row with the section it sits in, which is what
+// separates "the same question, answered" from "two different questions
+// wearing the same number".
+type NumberedQuestion struct {
+	Number   string
+	Text     string
+	Answered bool
+}
+
+// AllQuestions returns every row in the file, Open and Answered alike, in file
+// order.
+//
+// AddQuestion numbers off the highest number present, which is correct on one
+// branch and cannot be correct across two. Two people each add a question to
+// their own branch, each is numbered 7, and git merges both rows without a
+// conflict because they are different lines in the same table. Nothing about
+// the merge looks wrong, and from then on "question 7" means two things - in a
+// request, in a meeting note, and to `question answered 7`, which acts on
+// whichever row it reaches first.
+//
+// So the collision cannot be prevented at the point of writing; it has to be
+// caught at the point of merging, which is what `asgard-cli check` uses this
+// for.
+func AllQuestions(root string) ([]NumberedQuestion, error) {
+	text, err := readOptional(filepath.Join(root, QuestionFile))
+	if err != nil {
+		return nil, err
+	}
+	open, answered := text, ""
+	if idx := strings.Index(text, "## Answered"); idx >= 0 {
+		open, answered = text[:idx], text[idx:]
+	}
+
+	var out []NumberedQuestion
+	for _, part := range []struct {
+		text string
+		done bool
+	}{{open, false}, {answered, true}} {
+		for _, m := range questionRow.FindAllStringSubmatch(part.text, -1) {
+			out = append(out, NumberedQuestion{Number: m[1], Text: m[2], Answered: part.done})
+		}
+	}
+	return out, nil
+}
+
 // highestQuestion is the largest number in the file, counting the Answered
 // table as well as the Open one.
 //
@@ -571,8 +616,9 @@ func AddDecision(root, topic, slug, specSlug, module, date string) (string, erro
 		// topic slugifies to nothing, which a topic in Chinese does.
 		return "", fmt.Errorf("cannot derive a file name from %q; a decision is named "+
 			"docs/decisions/YYYY-MM-DD-<topic>.md and has no ID to fall back on, "+
-			"so pass --slug <short-name> in ASCII. The record's own heading keeps the "+
-			"topic as written", topic)
+			"so pass --slug <short-name> in ASCII - or --module <the living spec module "+
+			"this changes>, which is named after and is ASCII by construction. The "+
+			"record's own heading keeps the topic as written", topic)
 	}
 
 	data, err := os.ReadFile(filepath.Join(root, DecisionTmpl))
@@ -675,6 +721,14 @@ func writeNew(path, tmpl string, data any) error {
 // section. An empty section means the first table in the file.
 func appendRow(path, section, row string) error {
 	data, err := os.ReadFile(path)
+	if os.IsNotExist(err) {
+		// The file is scaffolded, not created on demand, because its prose is
+		// most of what it does - the customer-questions table and the pointer
+		// to platform-unknowns are both instructions. Creating a bare table
+		// here would produce a file that works and teaches nothing, so say
+		// what is missing instead.
+		return fmt.Errorf("%s does not exist yet. `asgard-cli scaffold` writes it, along with the rest of the documents this repository expects", filepath.Base(path))
+	}
 	if err != nil {
 		return fmt.Errorf("read %s: %w", path, err)
 	}

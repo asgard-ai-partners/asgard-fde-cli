@@ -44,9 +44,11 @@ func Deployability(docs []Doc, opts Options) Result {
 	// skills is exactly the shape a fresh chart has, and the one shape CD
 	// refuses.
 	if syncers == 0 {
-		warnf("no Syncer yet. CD exits 1 after 180s when a deployed project has none, even after a successful helm upgrade, so this has to exist before the first tag. "+
+		warnf("no Syncer. Whether that fails your CD depends on one `if` in its workflow: some poll for CronJobs labelled syncer-name and exit 1 after 180s when none appear, even after a successful helm upgrade, and some count what the chart declares first and skip the step at zero. A production chart runs today with no Syncer under the second kind. "+
+			"Check with `grep -n syncer-name -A15 .github/workflows/*.y*ml` before the first tag. If it waits unconditionally, "+
 			"`asgard-cli add skillset base --project %s --repo <git url>` creates one, as does "+
-			"`asgard-cli add knowledgedrive <name> --project %s`",
+			"`asgard-cli add knowledgedrive <name> --project %s`. "+
+			"If it skips, nothing in the pipeline is checking this project at all - green means helm returned",
 			opts.ProjectOr(), opts.ProjectOr())
 	}
 
@@ -66,7 +68,8 @@ func Deployability(docs []Doc, opts Options) Result {
 	if len(unlabelled) > 0 {
 		sort.Strings(unlabelled)
 		warnf("platformMainEnvironmentId is empty, so %s render without a project-environment-id label. "+
-			"The platform issues it after tf-asgard creates the namespace; put it in projects/%s/chart/values-<env>.yaml before tagging",
+			"On a cluster they work - a Trigger fires on schedule - while their editors open as a blank canvas, which is why this is worth clearing before anyone looks. "+
+			"The platform issues the id after tf-asgard creates the namespace; put it in projects/%s/chart/values-<env>.yaml before tagging",
 			strings.Join(unlabelled, ", "), opts.ProjectOr())
 	}
 

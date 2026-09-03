@@ -66,6 +66,10 @@ spec:
       labels:
         display_name: Run
       configs:
+        # Required, with no default. A processor without it is rejected. The
+        # values key is the one every SemanticLayer in this project reads.
+        - name: completionModel
+          value: {{ .Values.defaultCompletionModelName | quote }}
 <<if .Layers>>        # An ARRAY: one run can mount several systems and do the cross-system
         # matching in its own reasoning. That is what replaces an ETL.
         #
@@ -89,3 +93,7 @@ spec:
             TODO: the whole instruction for the run. Say that nobody is online,
             that it must finish the batch in one turn, and how to read the
             <trigger_state> block that already holds the cursor.
+            If this run writes anything a person will read - a report, a
+            message, a summary - write the prompt to
+            .agents/skills/plain-chinese/, because nobody is online to catch
+            how it comes out.

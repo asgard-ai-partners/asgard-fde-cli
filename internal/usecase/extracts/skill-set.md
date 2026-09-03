@@ -263,10 +263,18 @@ of it.
 
 ## And one that fails the deploy
 
-**CD requires at least one Syncer per deployed project.** The trigger-and-wait
-step polls for CronJobs labelled `asgard-ai.com/syncer-name` and **exits 1 after
-180 seconds if it finds none** - even when `helm upgrade` succeeded. A project
-whose only skills are design-time still needs one.
+**Whether CD requires at least one Syncer per deployed project is one `if` in
+your own workflow.** The trigger-and-wait step polls for CronJobs labelled
+`asgard-ai.com/syncer-name` and exits 1 after 180 seconds if it finds none, even
+when `helm upgrade` succeeded - but some workflows count what the chart declares
+first and skip the whole step at zero, and a production chart runs today with
+none. Check before the first tag:
+
+    grep -n syncer-name -A15 .github/workflows/*.y*ml
+
+If it waits unconditionally, a project whose only skills are design-time still
+needs one. If it skips, nothing in the pipeline is checking that project at all,
+and a green deploy means helm returned.
 
 ## Verify
 

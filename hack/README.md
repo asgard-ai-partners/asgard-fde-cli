@@ -13,32 +13,21 @@ apply refuses.
 
 ## Reading every instruction at once
 
-    python3 hack/imperatives.py [--ask] [--unmarked]
+    asgard-cli audit-material [--ask] [--unmarked] [--crossref]
 
-Three self-contradictions have reached a customer, all found by somebody walking
-into one, and the cause is structural: the instructions are spread across ninety
-files, so **there is no moment at which two opposing ones are in front of the
-same reader.** This makes that moment - it lists every bolded imperative with
-its file, which is a few hundred lines and therefore one sitting.
+**In the binary, not here.** It began as a script in this directory and was
+moved, for a reason worth keeping: an audit that only runs on the maintainer's
+machine only finds what the maintainer can see. What a maintainer finds by
+reading is inconsistency; what costs money is somebody following an instruction
+into a wall, and that person has the binary and not this repository. Now they can
+run it at the moment they hit one.
 
-It detects nothing, deliberately. Verb-pair matching over prose produces noise,
-and a checker that cries wolf teaches people to change what it can see rather
-than what is wrong - a failure this repository has already had, in a deck.
+It also reads the **embedded** material, which is what an engagement gets. A
+script over `internal/wiki/pages/*.md` audits the input instead, and the thing
+being audited is what somebody actually read.
 
-`--ask` narrows to instructions about asking a customer, which is where all
-three incidents were. `--unmarked` narrows to those that do not say who they are
-for or where the answer goes; most instructions have one obvious reader, so that
-list is where to look rather than a list of defects.
-
-**Run it after adding any instruction to the material**, and read the `--ask`
-list whole - it is 24 lines and it is the set where every incident so far has
-happened. That is the point of the tool: not that it judges, but that the whole
-set fits in one reading.
-
-**Its first run found two.** An extract telling a chart author to have asked
-about writes during the interview - a meeting they were not at - and a build
-stage asking a customer question after the interview had closed. Both were
-rewritten to say who they are for.
+Hidden from `--help`, because its reader edits this material and the help output
+belongs to whoever is onboarding a customer.
 
 ## Checking a change against the CRDs
 
@@ -74,6 +63,21 @@ python3 hack/validate-crs.py .out/crdjson .out/extracts.ndjson
 
 Both should print `0 schema violation(s)`. Put the counts and the asgard-kube
 commit in the PR body - `.github/pull_request_template.md` asks for them.
+
+## Checking the pinned tables against the CRDs
+
+    python3 hack/check-tables.py .out/crdjson
+
+`internal/gate` holds three copies of the platform contract, extracted from
+asgard-kube's **Go types**. The Go types are not the contract; the generated
+CRDs are, and the two are not the same document. `status` carries three values
+in the Asgard types and six in the CRD, because Kubernetes' own condition
+schema uses that field name - the wrong three sat in the enum table for a day.
+
+Run it after regenerating a table and whenever asgard-kube moves. A field it
+reports as absent from the CRD is not automatically a bug - `baseAgentName`
+lives inside a JSON string rather than in the schema - but it is always
+something to explain rather than leave.
 
 ## What this catches that nothing else does
 

@@ -129,6 +129,15 @@ func Run(root string, only ...string) (Report, error) {
 	if err := c.checkQuestionsFollowTheDeck(); err != nil {
 		return Report{}, err
 	}
+	if err := c.checkQuestionNumbersUnique(); err != nil {
+		return Report{}, err
+	}
+	if err := c.checkProjectsFollowRequests(projects); err != nil {
+		return Report{}, err
+	}
+	if err := c.checkReferenceProvenance(); err != nil {
+		return Report{}, err
+	}
 	if err := c.checkDocs(); err != nil {
 		return Report{}, err
 	}
@@ -453,6 +462,159 @@ func (c *checker) checkInterviewRecorded() error {
 		"**A request comes after the interview, not before it** - six of its seven sections "+
 		"are what the interview decides",
 		filed, filepath.ToSlash(work.QuestionFile))
+	return nil
+}
+
+// checkReferenceProvenance reports a filed document whose row does not say what
+// it is, who gave it to you, or when it was written.
+//
+// All three are recoverable only from the person who handed it over, and that
+// person stops being available at roughly the point somebody needs to know. The
+// date is the one that decides whether the material is stale, and a customer's
+// own documentation reads exactly the same whether it is current or four years
+// old.
+//
+// A warning, and only for documents filed through `reference add` - a row exists
+// because somebody used the command, and complaining about documents copied in
+// by hand would mean complaining about every repository that predates it.
+func (c *checker) checkReferenceProvenance() error {
+	gaps, err := work.ReferenceGaps(c.root)
+	if err != nil || len(gaps) == 0 {
+		return err
+	}
+	c.warnf("%s has %d row(s) with provenance missing: %s. Ask whoever supplied the document, while you still can - the date is the one that matters, because a stale page reads exactly like a current one",
+		filepath.ToSlash(work.ReferenceIndex), len(gaps), strings.Join(gaps, "; "))
+	return nil
+}
+
+// checkProjectsFollowRequests reports a project no recorded requirement asks
+// for.
+//
+// The split is supposed to follow the audience: a project exists because
+// somebody on the other end needs something, and that somebody is written down
+// as a request. `next` states the rule and stage 2 explains it at length, and
+// `project add` has always accepted a split with nothing on file - so the rule
+// was advice, and the repository could not tell a considered split from a
+// project somebody made because the chart was getting long.
+//
+// It is a warning and it is conditional on there being any requests at all. A
+// repository that has not started filing them is at an earlier stage and
+// `checkInterviewRecorded` covers that; complaining here as well would give one
+// situation two voices. Once one request exists, the convention is in use, and a
+// project outside it is worth a sentence.
+func (c *checker) checkProjectsFollowRequests(projects []string) error {
+	if len(projects) == 0 {
+		return nil
+	}
+
+	requests, err := work.ReadRequests(c.root)
+	if err != nil {
+		return err
+	}
+	if len(requests) == 0 {
+		return nil
+	}
+
+	asked := map[string]bool{}
+	for _, r := range requests {
+		if r.Project != "" {
+			asked[r.Project] = true
+		}
+	}
+
+	var orphans []string
+	for _, p := range projects {
+		if !asked[p] {
+			orphans = append(orphans, p)
+		}
+	}
+	if len(orphans) == 0 {
+		return nil
+	}
+	sort.Strings(orphans)
+
+	noun, verb := "project", "names"
+	if len(orphans) > 1 {
+		noun, verb = "projects", "name"
+	}
+	c.warnf("%s %s: no request in %s %s %s as its target. The split follows the audience, so a project usually exists because a recorded requirement asked for one - "+
+		"either point an existing request at it (`--project <slug>` when you open it, or edit the row) or write down what it is for. "+
+		"If it deliberately has no requirement behind it, say so in the decision record for the split; the next person reading the chart cannot tell that from an omission",
+		noun, strings.Join(orphans, ", "), filepath.ToSlash(work.RequestIndex), verb, pluralOne(len(orphans)))
+	return nil
+}
+
+// pluralOne keeps the sentence above readable for one project and for several.
+func pluralOne(n int) string {
+	if n == 1 {
+		return "it"
+	}
+	return "them"
+}
+
+// checkQuestionNumbersUnique catches two questions wearing the same number.
+//
+// This is a merge artefact and cannot be caught anywhere else. Numbers are
+// assigned from the highest already in the file, so two branches that each add
+// a question both produce the same number, and git merges the two rows cleanly
+// because they are different lines. The repository is then one where "question
+// 7" is ambiguous in every request and meeting note that cites it, and where
+// `asgard-cli question answered 7` moves whichever row it reaches first.
+//
+// It is an error rather than a warning because the fix costs a minute now and
+// gets more expensive with every document that cites the number - and because
+// unlike the deploy-gate warnings, there is no phase of an onboarding during
+// which this condition is correct.
+func (c *checker) checkQuestionNumbersUnique() error {
+	all, err := work.AllQuestions(c.root)
+	if err != nil {
+		return err
+	}
+
+	byNumber := map[string][]work.NumberedQuestion{}
+	var order []string
+	for _, q := range all {
+		if _, seen := byNumber[q.Number]; !seen {
+			order = append(order, q.Number)
+		}
+		byNumber[q.Number] = append(byNumber[q.Number], q)
+	}
+
+	for _, n := range order {
+		rows := byNumber[n]
+		if len(rows) < 2 {
+			continue
+		}
+		// The same number in both tables with the same text is one question
+		// that was answered, which is the history the file is meant to keep.
+		same := true
+		for _, r := range rows[1:] {
+			if r.Text != rows[0].Text {
+				same = false
+			}
+		}
+		if same && len(rows) == 2 && rows[0].Text == rows[1].Text {
+			continue
+		}
+
+		var texts []string
+		for _, r := range rows {
+			where := "Open"
+			if r.Answered {
+				where = "Answered"
+			}
+			// Questions are written in Chinese, so this counts runes: a
+			// byte slice at 60 lands mid-character and prints a replacement.
+			text := r.Text
+			if rs := []rune(text); len(rs) > 40 {
+				text = string(rs[:40]) + "..."
+			}
+			texts = append(texts, fmt.Sprintf("%s: %q", where, text))
+		}
+		c.errf("%s has question %s %d times - %s. Two branches numbered a question from the same highest number and the merge kept both. "+
+			"Renumber the later one and fix anything that cites it: `grep -rn 'question %s' docs/ requests/`",
+			filepath.ToSlash(work.QuestionFile), n, len(rows), strings.Join(texts, "; "), n)
+	}
 	return nil
 }
 

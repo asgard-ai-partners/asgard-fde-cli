@@ -97,10 +97,26 @@ There is no test suite - it was removed on 2026-09-02. What is left:
 go build ./...
 go vet ./...
 gofmt -l internal/ cmd/
+asgard-cli audit-material --links
+asgard-cli audit-material --urls   # needs the network
 ```
 
-None of those sees a wrong string in an embedded template, a stage prompt that
-sends a reader to a page that does not exist, or a generated CR the apiserver
+`--urls` fetches every `docs.asgard-ai.com` link the material cites and fails on
+a 404. It is separate because it needs the network, and a gate that only works
+online is one that fails on a plane. A citation that already says the link 404s
+- a page marked `draft: true`, which asgard-docs does not publish - is reported
+and does not fail, so disclosing one is how you keep it.
+
+`--links` resolves every `asgard-cli wiki <page>`, `usecase <extract>`,
+`brief <activity>` and `next --stage <name>` the material writes - in prose and
+in the generator's own `Wiki:`, `Extract:` and `AlsoRead:` fields - and exits 1
+on one that goes nowhere. **Run it after renaming or removing a page**, which is
+the only way to leave a dead pointer behind; it reads correctly and resolves to
+nothing, and the reader who follows it cannot tell that from a page they failed
+to find.
+
+None of those sees a wrong string in an embedded template, a pointer that
+resolves to the wrong page rather than to none, or a generated CR the apiserver
 would reject. **So exercise the change by hand**, against a scratch repository
 outside this one:
 
@@ -178,6 +194,31 @@ Say what was verified and what was not. "The extracts are correct" and "the
 extracts' YAML skeletons validate against the CRD" are different claims, and
 reporting the first when you did the second is how a review passes something
 broken.
+
+**Did you say how the number was measured?**
+Four coverage figures in this repo have been wrong, and each was believed rather
+than checked: an index claiming 100%, a comparison that was case-sensitive, 39
+divided by every image in asgard-docs rather than by the ones any page uses, and
+the guess that preceded it. A percentage with no method beside it is a claim
+nobody can check and everybody repeats. Write the denominator and how you got
+it, or write the raw counts and no percentage.
+
+**Would this check fire on material that is correct?**
+Three checks were written this way and deleted rather than tuned. One flagged a
+processor config key the definitions do not declare - and fired on five of five
+production charts, always for `await`, which is real and documented. One flagged
+camelCase terms absent from the CRD - 29 findings, 0 defects. One flagged an
+extract for listing two of ten syncer classes, which is exactly what an extract
+about a git-backed SkillSet should do. **A checker that cries wolf teaches people
+to change what it can see rather than what is wrong**, and this material has
+already caused that once, in a customer deck. Delete it; do not soften it.
+
+**If it is a pinned copy of the platform's contract, which way can it go stale?**
+`gate` holds three: the processor definitions, the CRD enums, the CRD patterns.
+A copy can only be wrong by being behind, so a rule built on one is a **warning**
+- the platform adds a value and a correct chart looks wrong. The exception is a
+condition broken against every version, like a required key with no default, and
+that one may fail. Say which you are writing before you write it.
 
 ## Two rules the material contradicted itself on
 

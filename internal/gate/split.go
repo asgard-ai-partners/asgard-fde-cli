@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/config"
 )
 
 const (
@@ -30,6 +32,9 @@ const (
 //	     agent-published label, and that label is the only gate on whether a
 //	     caller includes the Agent in agent_hub.agent_names.
 //	R10  no Agent references an OLAP-only layer.
+//	R11  a SemanticLayer that no Agent binds is either recorded as OLAP-only or
+//	     reported, so that "deliberately unbound" and "somebody forgot" stop
+//	     looking identical. A warning, because both are legitimate mid-onboarding.
 //	R12  prompt.task and prompt.format are byte-identical across every Agent in
 //	     one render. An Agent CR has no include mechanism, so a shared section
 //	     can only be copied; keeping the copies identical is what lets a later
@@ -51,6 +56,10 @@ func AgentSplit(docs []Doc, opts Options) Result {
 	var problems []string
 	errf := func(format string, args ...any) {
 		problems = append(problems, fmt.Sprintf(format, args...))
+	}
+	var warnings []string
+	warnf := func(format string, args ...any) {
+		warnings = append(warnings, fmt.Sprintf(format, args...))
 	}
 
 	boundBy := map[string]string{} // layer -> the first Agent that bound it
@@ -130,12 +139,87 @@ func AgentSplit(docs []Doc, opts Options) Result {
 		}
 	}
 
+	// R11. A layer nobody binds is either a Data Insight store, which is
+	// correct and permanent, or a read path somebody has not finished wiring,
+	// which is temporary - and the rendered chart cannot tell them apart. The
+	// danger is not the layer sitting there: it is the later reader who binds it
+	// to an Agent as a tidy-up, and so gives an agent restricted to an API a
+	// second path straight into the database. R10 catches that only for layers
+	// already recorded as OLAP-only, so the recording has to happen while
+	// somebody still knows which kind it is.
+	//
+	// A warning, not a failure: a layer added before its Agent is the normal
+	// order of work, and failing here would make the gate red for doing the
+	// steps in the order the stages ask for.
+	for _, d := range ix.of("SemanticLayer") {
+		if boundBy[d.Name] != "" || olapOnly[d.Name] || mentionedElsewhere(docs, d) {
+			continue
+		}
+		warnf("R11 %s has no consumer: no Agent binds it and nothing else in the render mentions it. If that is deliberate - a Data Insight OLAP store, read through Mimir rather than by an agent - record it with `asgard-cli verify --olap-only-layer %s`, which writes it to %s and makes R10 refuse any later attempt to bind it to an Agent. If it is not deliberate, its read path is unfinished. Record it either way while you still know which it is: the render cannot tell them apart, and the reader who finds it later is the one who binds it as a tidy-up",
+			d.Name, d.Name, config.FileName)
+	}
+
 	sort.Strings(problems)
+	sort.Strings(warnings)
 	sort.Strings(allLayers)
 
 	summary := fmt.Sprintf("%d agent(s) (%d published)", len(agents), published)
 	if len(allLayers) > 0 {
 		summary += ", layers: " + strings.Join(allLayers, ", ")
 	}
-	return Result{Problems: problems, Summary: summary}
+	return Result{Problems: problems, Warnings: warnings, Summary: summary}
+}
+
+// mentionedElsewhere reports whether any document other than the layer itself
+// names it.
+//
+// An Agent binds a layer in a structured field, but a Flow Agent project has no
+// Agent CR at all: its layer is mounted on an LLM processor, and a processor
+// config's value is a string. In the charts that value is an expression holding
+// a JSON array - `[{"name": "sl-x", "allowQuery": true, ...}]` - so there is no
+// field to dig for, and asking "which field references a layer" gets a
+// different answer for every processor.
+//
+// So the test is textual and deliberately broad: a layer that no other document
+// mentions anywhere is one nothing can be using. Broad in the safe direction -
+// it can only suppress the warning, never raise a false one, and a name that
+// appears in an unrelated comment is a name somebody chose to write down.
+func mentionedElsewhere(docs []Doc, layer Doc) bool {
+	for _, d := range docs {
+		if d.Kind == layer.Kind && d.Name == layer.Name {
+			continue
+		}
+		if mentions(d.Spec, layer.Name) {
+			return true
+		}
+		for _, m := range []map[string]string{d.Labels, d.Annotations} {
+			for _, v := range m {
+				if strings.Contains(v, layer.Name) {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+// mentions walks a decoded document looking for the name in any string.
+func mentions(v any, name string) bool {
+	switch t := v.(type) {
+	case string:
+		return strings.Contains(t, name)
+	case map[string]any:
+		for _, e := range t {
+			if mentions(e, name) {
+				return true
+			}
+		}
+	case []any:
+		for _, e := range t {
+			if mentions(e, name) {
+				return true
+			}
+		}
+	}
+	return false
 }

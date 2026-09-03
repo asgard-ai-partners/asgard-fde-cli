@@ -29,6 +29,10 @@ spec:
     aliasName: <<.Name>>
     description: |-
       TODO: when to delegate here.
+    # Every field below is 繁體中文 the end user feels, because the agent answers
+    # in the register its prompt is written in. Write them to
+    # .agents/skills/plain-chinese/ - an agent whose prompt says 賦能 and
+    # 至關重要 produces answers that say them too, all day, to customers.
     prompt:
       persona: |-
         TODO: who this agent is. Per agent.
@@ -38,6 +42,10 @@ spec:
         TODO: what it can reach. Per agent.
       format: |-
         TODO: byte-identical across every agent in this chart.
+    # Shown to the end user in Sindri, so they are 繁體中文 and the customer
+    # reads them before anything else this agent says. Write real questions
+    # somebody would actually type, to .agents/skills/plain-chinese/ - not
+    # 「如何提升營運效率?」, which nobody asks and which the agent cannot answer.
     sampleQuestions:
       - TODO
       - TODO

@@ -12,10 +12,23 @@ This order cannot be reversed:
 
 Declaring the env first means the next tag fails at helm upgrade.
 
-**And every deployed project needs at least one Syncer.** CD triggers each
-project's Syncers after helm upgrade and waits; it polls for CronJobs labelled
-syncer-name and **exits 1 after 180 seconds if it finds none** - even when the
-upgrade itself succeeded.
+**Whether a project needs at least one Syncer depends on its own CD, so read
+the workflow rather than assuming.** After helm upgrade, CD triggers each
+project's Syncers and waits, polling for CronJobs labelled syncer-name; it exits
+1 after 180 seconds if none appear, even though the upgrade itself succeeded.
+
+The difference between the reference repositories is one `if`. One of them
+checks how many Syncers the chart declares and **skips the whole step when that
+is zero**, so a project with no Syncer deploys cleanly. Another has no such
+guard and fails any project that has none. A production chart is running today
+with zero Syncers under the first kind.
+
+    grep -n 'syncer-name' -A15 .github/workflows/*.y*ml
+
+If what you find waits unconditionally, the project needs a Syncer before its
+first tag - which a SkillSet or a knowledge drive creates. If it counts first,
+it does not. **This tool warns either way**, because it cannot see your
+workflow, and the warning says which.
 
 ## After the deploy, and before saying it is live
 
@@ -55,6 +68,35 @@ and stop - do not `git init`, do not add one, and do not offer to.
   x.y.z     -> prod
 
 One tag rolls out every project that declares that env; the rest are skipped.
+
+**The prefix is the whole of the decision, and prod is the fallback.** CD tests
+whether the ref starts with `dev-` and sends everything else to the production
+cluster - so the pattern list in the workflow's `on.tags` is the only thing
+standing between a stray tag and production. A tag named for a person, a date or
+a ticket does not match the patterns and does nothing at all, which is safe; one
+that happens to look like `1.2.3` is a production deploy.
+
+**A tag deploys whatever commit it points at, not what is on the branch.** CD
+checks out the tag ref. So a `dev-` tag on an unmerged branch head is a real way
+to preview that branch on the dev cluster - and a bare-semver tag placed on the
+wrong commit ships that commit to production, with a tag name that says nothing
+about which one. Tag the commit you have just verified, and check what it points
+at before pushing it:
+
+    git tag -a dev-0.1.0 -m "dev-0.1.0" && git show --stat dev-0.1.0 | head -3
+
+**A green deploy does not mean anything reconciled.** The chart is entirely
+Asgard CRs with no Deployment or Pod, so CD runs `helm upgrade` without `--wait`
+- there is no workload for it to wait on. What it waits for instead is the
+Syncer: up to 180 seconds for the CronJob to appear, then up to 600 for one sync
+to finish. That single sync is the only thing in the pipeline that proves the
+platform accepted any of it - **so a project with no Syncer, on a CD that skips
+the step, has nothing checking it at all.** Green there means helm returned.
+
+**Values layer, and the tenant's file wins.** CD passes the shared
+`common/values-<env>.yaml` first and the project's own second, so a key set in
+both takes the project's. Putting something in the shared file and not seeing it
+means some project overrode it, rather than that it was ignored.
 
 ## Do not helm upgrade from a laptop
 

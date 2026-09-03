@@ -7,9 +7,33 @@ unchanged - and that field is **immutable after creation**.
 **Seen in:** the platform's BotProvider contract, and a deployment that decided
 against LINE and wrote down exactly what taking it on would have cost.
 
-**Checked:** 2026-09-02 against the CRD only.
+**Checked:** 2026-09-02 against the CRD, and **re-checked field by field
+2026-09-03**: all five credential blocks below match
+`asgard-kube/pkg/apis/asgard/v1alpha1/types.go` exactly - `generic` takes
+`apiKey` and `authMode` and **both are optional**, while every chat class's
+credentials are **required**. So a `generic` BotProvider with no credential
+block at all applies cleanly and is open; a `line` one missing
+`channelSecret` is refused. That asymmetry is the reason the anonymous-entry
+argument is about `generic` and not about the chat classes.
+
+Two rules the CRD enforces that are easy to discover the expensive way:
+**`ExactlyOneOf=generic;telegram;line;discord;slack`** - exactly one class block,
+so leaving the old one behind while adding a new one is refused - and
+`botProviderClass` carries `self == oldSelf`, which is where the immutability
+below comes from.
 
 **Unchecked:** EVERYTHING ELSE. **No deployment uses a chat class** - all BotProviders across every reference deployment are generic. The credential blocks and the per-class costs are read off the contract, not off anything that has run. The first customer on LINE is this page's first test.
+
+**And there is a trap in checking that for yourself.** Grepping the parent
+directory for `botProviderClass: line` returns hits - three of them, plus
+`discord`, `slack` and `telegram`. Every one is inside a scratch repository this
+tool scaffolded during a walk-through: they carry `.asgard-config.json`, the
+`projects/<slug>/chart/app/templates/` layout, and workspace slugs like `line`
+and `classes`. **They are this page's own output, not evidence for it.** Anything
+they agree with, they agree with because it was generated from the same
+templates.
+
+Re-checked 2026-09-03, and this is still the position.
 
 **Read the platform side first:** `asgard-cli wiki integration` -
 which credentials each chat platform needs, and who fills in what. This page assumes you have.

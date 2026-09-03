@@ -73,3 +73,39 @@ no grouping at all. The CR shapes below are independent of that choice.
 | [`skill-set.md`](skill-set.md) | getting skills to a deployed agent |
 | [`plugin.md`](plugin.md) | capability bundles chosen per request |
 | [`trigger.md`](trigger.md) | work on a schedule with nobody watching |
+
+**Credentials** - who the call is made as:
+
+| file | when |
+|---|---|
+| [`api-oauth.md`](api-oauth.md) | an API that will not take a static key: the two-call token chain |
+| [`per-turn-credentials.md`](per-turn-credentials.md) | the agent calls **as the person talking to it**, on a short-lived token |
+
+**More entry points and more read paths**, which did not exist when the groups
+above were written:
+
+| file | when |
+|---|---|
+| [`chat-channel.md`](chat-channel.md) | LINE, Telegram, Discord or Slack instead of a web widget. **Nothing has run this** - read its provenance line first |
+| [`knowledge-base.md`](knowledge-base.md) | documents through a `KnowledgeBase` rather than a Drive - against [`knowledge-drive.md`](knowledge-drive.md), which is the other half of the same decision |
+| [`mimir-dashboard.md`](mimir-dashboard.md) | a SemanticLayer whose consumer is Data Insight and **no Agent at all**. The shape a later reader breaks by tidying it up |
+
+**The mechanism, and the scale:**
+
+| file | when |
+|---|---|
+| [`workflow-chain.md`](workflow-chain.md) | a Workflow with more than one step: the processor types, and what crosses between them |
+| [`skill-layers.md`](skill-layers.md) | nine runtime skills over one middleware and one external platform - what the layering looks like past the first skill |
+| [`demo-generation.md`](demo-generation.md) | building something that looks like a prospect's business when you have none of their data |
+
+## Keeping this list complete
+
+Eight of these were missing from it until 2026-09-03 - a third of the extracts,
+written and never grouped. `asgard-cli usecase` listed them the whole time, so
+nothing broke; what was lost is the grouping, which is the part that answers
+"which shape is this" for somebody who does not already know the file name.
+
+**Adding an extract means adding a row here**, under the question it answers
+rather than at the end. If it does not fit a group, the group list is what is
+wrong.
+

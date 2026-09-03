@@ -302,10 +302,17 @@ func (x *xref) checkTrigger(d Doc) {
 		x.errf("Trigger/%s: workflow-set-id %q does not match its entrypoint Workflow/%s, which has %q",
 			d.Name, setID, workflow, want)
 	}
-	if d.Labels[annotationPrefix+"project-environment-id"] == "" {
-		x.errf("Trigger/%s: missing label %sproject-environment-id, so its editor opens as a blank canvas",
-			d.Name, annotationPrefix)
-	}
+	// project-environment-id is deliberately not checked here. It is empty
+	// because platformMainEnvironmentId is empty in values, and the platform
+	// does not issue that until tf-asgard has created the namespace - so it is
+	// empty through the whole middle of an onboarding, by design. Erring on it
+	// failed `verify` for every freshly scaffolded project that added a
+	// Trigger, and the message sent the reader to look at a label the template
+	// already writes.
+	//
+	// Deployability warns about the same condition, for every kind it affects
+	// rather than for Trigger alone, and names the cause and the fix. One
+	// condition, one message.
 }
 
 func (x *xref) checkSkillSet(d Doc) {

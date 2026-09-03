@@ -125,6 +125,7 @@ Use --stage to read any stage out of order, and --list to see them all.`,
 			}
 
 			fmt.Fprintf(out, "%s\n\n%s", current, prompt)
+			printSpread(out, state)
 			printQuestions(out, state)
 			printWork(out, current, state)
 			return nil
@@ -142,6 +143,34 @@ Use --stage to read any stage out of order, and --list to see them all.`,
 // reported rather than quietly falling back to stage 0.
 func unknownStage(name string) error {
 	return fmt.Errorf("unknown stage %q; list them with `asgard-cli next --list`", name)
+}
+
+// printSpread names each project's own stage when they are not all in the same
+// one.
+//
+// The stage above is the earliest gap across every project, which is the right
+// thing to do next and reads as a claim about the whole repository. A repo with
+// one project live and a second one just started was reporting the second one's
+// stage and nothing else, so the guidance said "you have no DataConnector"
+// while a DataConnector had been in production for a fortnight.
+//
+// Printing this only on a spread is deliberate: on the common repo - one
+// project, or several moving together - it would be a line of noise, and a line
+// of noise on every run is how the useful ones stop being read.
+func printSpread(out io.Writer, state stage.State) {
+	per := stage.PerProject(state)
+	if !stage.Spread(per) {
+		return
+	}
+	fmt.Fprintf(out, "\nThe projects are not in the same stage. Above is the earliest gap, which is\nwhat to do next; it is not where the repository as a whole stands:\n")
+	for _, p := range per {
+		note := ""
+		if p.Done {
+			note = "  (chart complete - the stage above is another project's)"
+		}
+		fmt.Fprintf(out, "  %-20s %s%s\n", p.Slug, p.Stage.Name, note)
+	}
+	fmt.Fprintf(out, "The names in the right column are stage names: `asgard-cli next --stage %s`\nreads that one's guidance. `asgard-cli check <project>` checks a single project.\n", per[len(per)-1].Stage.Name)
 }
 
 // printWork reports what the repository says is open, after the stage guidance.

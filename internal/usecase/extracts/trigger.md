@@ -1,5 +1,13 @@
 # Trigger
 
+**This is written from one Trigger, in one chart.** `asgard-cli wiki coverage`
+counts them: of eight rendered reference deployments, exactly one declares a
+Trigger, and it declares one. Every rule below about the cursor, the cold start
+and what a scheduled run may not do is generalised from that single instance,
+and none of it has a second arrangement to check against. Treat the reasoning as
+the transferable part and the specifics as one worked example.
+
+
 Scheduled work. A cron that starts an agent run rather than a pipeline.
 
 **Seen in:** an hourly job that notices new arrivals in one system, matches them
@@ -277,6 +285,29 @@ people were notified is the real damage a mock can do.
 **Suspending is per-env, through values.** A mocked or read-only chain in
 production still means a scheduled hit on live source systems, which is usually
 reason enough to keep it suspended there.
+
+
+## The cron pattern rejects four forms you would expect to work
+
+The CRD enforces a regex on `schedule`, and it is narrower than cron. These are
+**refused by the apiserver at apply time** - helm renders them, `helm lint`
+passes, and the failure arrives when the tag is already pushed:
+
+    0 9 * * 1-5      a range      "weekdays at nine" - the obvious one to want
+    0 9,15 * * *     a list       twice a day
+    @daily           a macro      and every other @-macro
+    00 09 * * *      zero-padded  a leading zero on any field
+
+What it accepts is a single number, `*`, or `*/n`, per field, unpadded:
+
+    0 9 * * *        every day at nine
+    0 */6 * * *      every six hours
+    30 2 1 * *       02:30 on the 1st
+
+**For weekdays, use five triggers or one daily run that returns early** - there
+is no range syntax to reach for. Checked 2026-09-03 against the pattern in
+asgard-kube; `asgard-cli verify` (C1) catches all four before a tag, and found
+one zero-padded schedule already live in a reference deployment.
 
 ## Verify
 

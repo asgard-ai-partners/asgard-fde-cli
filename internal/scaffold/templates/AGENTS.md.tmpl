@@ -198,6 +198,8 @@ from making the same choice.
 │   ├── spec-workflow/             #   turn unclear work into a reviewable spec
 │   ├── semantic-layer-modeling/   #   connect to the real DBs, introspect, model a SemanticLayer
 │   ├── proposal-deck/             #   a slide deck for the CUSTOMER, from their own material
+│   ├── plain-chinese/             #   any 繁體中文 a customer reads — the shapes that
+│   │                              #     mark it as machine-written
 │   └── asgard-cr-verification/    #   the four-step acceptance gate
 ├── docs/                          # Spec-Driven Development — the spec & decision layers
 │   ├── README.md                  #   the index + the four-layer model + the AGENTS.md boundary
@@ -205,6 +207,9 @@ from making the same choice.
 │   ├── spec/<<.SpecSlug>>/          # ★ LIVING SPEC — what the system does NOW (read this first)
 │   ├── decisions/                 #   dated, immutable decision records — why it was decided
 │   └── meeting-notes/             #   raw discussion before it converges (optional layer)
+├── plugins/asgard-fde/commands/   # slash commands over asgard-cli — /where, /asked,
+│                                  #   /filed, /gate, /propose. The CLI holds the
+│                                  #   knowledge; these hold the ORDER
 ├── requirements/ references/      # executable task specs / background material
 ├── .github/workflows/main.yaml    # tag-driven rollout across the projects that declare the env
 ├── AGENTS.md                      # ← this file, the SoT
@@ -247,7 +252,10 @@ that errors or returns nonsense actively misleads the agent that reads it.
 `sql: '{CUBE}.ProductId'`, never a re-cased alias. Measure names are aggregates
 rather than columns, so they stay descriptive.
 
-**`description` on every cube, dimension and measure, in 繁體中文.** It is what
+**`description` on every cube, dimension and measure, in 繁體中文** - written
+to the rules in `.agents/skills/plain-chinese/`, because a model reads these to
+choose what to query and an empty adjective here costs a wrong column rather
+than a bad sentence. It is what
 the agent reads to decide which column answers a question; one without a
 description is effectively invisible to the model.
 
@@ -330,6 +338,10 @@ Three conventions, and what each one breaks:
 Every CR the Platform UI lists needs an `asgard-ai.com/<kind>-name` annotation, in 繁體中文 —
 without it the CR applies cleanly and then appears **nameless** in the UI, which no amount of
 linting or dry-running reveals. `asgard-cli verify` enforces it.
+
+These are noun phrases the customer reads in their own console, so the vocabulary
+half of `.agents/skills/plain-chinese/` applies: 「訂單查詢」not「智慧化訂單查詢
+賦能模組」. The sentence-shape half does not — there is no sentence.
 
 | kind | required | also useful |
 |---|---|---|

@@ -66,7 +66,11 @@ It is the whole output of the interview, and the split falls straight out of it:
 |---|---|---|---|---|---|
 | ERP | 料件庫存、採購單 | MSSQL, ours | 內部,登入 | 現有量、在途量 | read |
 | a marketplace | 該通路的庫存與訂單 | REST API, theirs | 內部,登入 | 跨通路比較 | read + write |
-| 官網型錄 | 產品、分類、據點 | PostgreSQL, ours | 匿名訪客 | 產品查詢 | read |
+| 官網型錄 | 產品、分類、規格 | PostgreSQL, ours | 匿名訪客 | 產品查詢 | read |
+
+*Composed from several engagements rather than taken from one, deliberately.
+Nothing shipped in this tool describes a particular customer's systems, and a
+worked example is the easiest place for that rule to slip.*
 
 **"How to reach it" has a preference order, and it is not a matter of taste:**
 

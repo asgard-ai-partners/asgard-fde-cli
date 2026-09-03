@@ -36,14 +36,32 @@ spec:
       labels:
         display_name: 回答
       configs:
+        # Required, with no default. A processor without it is rejected, and the
+        # scaffold used to leave it out - the values key is the same one every
+        # SemanticLayer reads, so one change of model moves the whole project.
+        - name: completionModel
+          value: {{ .Values.defaultCompletionModelName | quote }}
         # Capabilities live one CR further out, on the blueprint. Do NOT also
         # declare toolsets here - that is a second declaration of the same
         # capability, and the two drift.
         - name: sandboxBlueprint
           value: sbp-<<.Name>>
+<<if .Layer>>        # A layer mounts here rather than on the blueprint: a Flow Agent has no
+        # Agent CR, so this processor is where the read path attaches.
+        # allowWrite: false is not optional - omitting it resolves to true.
+        - name: semanticLayers
+          expression: '[{"name": "<<.Layer>>", "allowQuery": true, "allowWrite": false}]'
+<<else>>        # A Flow Agent mounts its layer here, not on the blueprint. Pass
+        # --layer sl-<name> to have this written for you.
+        # allowWrite: false is not optional - omitting it resolves to true.
+        # - name: semanticLayers
+        #   expression: '[{"name": "sl-<name>", "allowQuery": true, "allowWrite": false}]'
+<<end>>
         - name: prompt
           value: |-
-            TODO: four sections that do not overlap.
+            TODO: four sections that do not overlap, in 繁體中文 written to
+            .agents/skills/plain-chinese/ - this agent answers in the register
+            its prompt is written in, so slop here reaches every conversation.
               identity      who this is, and that it works through tools rather
                             than from memory
               tool choice   which kind of question goes to which capability,

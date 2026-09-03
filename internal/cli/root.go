@@ -2,11 +2,14 @@
 package cli
 
 import (
+	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/config"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/stage"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/version"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/work"
 )
@@ -53,11 +56,39 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 
 	cmd.SetVersionTemplate("{{.Name}} {{.Version}}\n")
 
+	// --template-dir is persistent because a prompt is read by `next`, `find`
+	// and `audit-material` alike, and an override that applied to only one of
+	// them would make the three disagree about what the material says.
+	var templateDir string
+	cmd.PersistentFlags().StringVar(&templateDir, "template-dir", "",
+		"read stage prompts from this directory instead of the embedded copies, per file; for iterating on prompt text")
+	cmd.PersistentPreRunE = func(c *cobra.Command, _ []string) error {
+		if templateDir == "" {
+			stage.SetOverrideDir("")
+			return nil
+		}
+		info, err := os.Stat(templateDir)
+		if err != nil {
+			return fmt.Errorf("--template-dir %s: %w", templateDir, err)
+		}
+		if !info.IsDir() {
+			return fmt.Errorf("--template-dir %s is not a directory", templateDir)
+		}
+		stage.SetOverrideDir(templateDir)
+		// Say it on every run. A prompt that is not the released one is the
+		// first thing to suspect when guidance looks wrong, and an override
+		// nobody can see is worse than no override.
+		fmt.Fprintf(c.ErrOrStderr(), "reading stage prompts from %s where they exist, embedded otherwise\n", templateDir)
+		return nil
+	}
+
 	cmd.AddCommand(
 		newAddCmd(),
 		newCheckCmd(),
 		newDecisionCmd(),
+		newReferenceCmd(),
 		newDoctorCmd(),
+		newAuditCmd(),
 		newBriefCmd(),
 		newReadingCmd(),
 		newFindCmd(),

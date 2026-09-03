@@ -172,7 +172,7 @@ built, and reversed. They are obvious in the same way again each time.`,
 			{
 				"a write inside a scheduled run",
 				"omitting `allowWrite` because it is read-only anyway",
-				"**Omitting it resolves to true.** Write `allowWrite: false` out on every entry that has a layer. A run nobody is watching otherwise has a write path that the rendered chart does not show",
+				"**The definitions give `allowWrite` a default of true and `allowQuery` a default of false** - the safe field is off by default and the dangerous one is on. So configuring a processor by adding only what you want produces a write path, and the rendered chart does not show it. Write `allowWrite: false` out on every entry that has a layer, and note that `query-database` carries the same pair",
 				"asgard-cli wiki processors",
 			},
 			{

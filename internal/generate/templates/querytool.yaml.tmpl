@@ -36,8 +36,17 @@ spec:
       tooling:
         name: <<.Name>>
         description: |-
-          TODO: what it returns, how many rows, and when to reach for it.
+          TODO: 繁體中文, to .agents/skills/plain-chinese/ - the model reads
+          this to decide whether to call the tool, so an adjective here costs a
+          wrong tool choice. Say what it returns, how many rows, and when to
+          reach for it.
           Record the row count you measured, and when you measured it.
+          Then name the tool this could be confused with, and say which to
+          prefer: "for X use this, for Y use <other>". That last sentence is
+          the whole difference between a set of tools a model can choose from
+          and a set it guesses between - each description can be accurate on
+          its own and still not say which one answers the question.
+          Read them together afterwards: asgard-cli verify --tools
         allowUploadFile: false
   exits: []
   processors:
@@ -81,6 +90,9 @@ metadata:
   name: <<.Toolset>>
   annotations:
     asgard-ai.com/toolset-name: "<<.DisplayName>>"
+    # 繁體中文, read in the customer's own console. Vocabulary rules in
+    # .agents/skills/plain-chinese/ apply; the sentence-shape ones do not,
+    # because this is a phrase rather than a sentence.
     asgard-ai.com/toolset-description: "TODO"
   labels:
     {{- include "<<.Chart>>.labels" . | nindent 4 }}

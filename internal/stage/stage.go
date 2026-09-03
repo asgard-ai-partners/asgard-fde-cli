@@ -254,14 +254,7 @@ func Current(state State) Stage {
 
 	// A project reads before it answers, and answers before it is deployed, so
 	// the earliest project still missing a step decides the stage.
-	for _, s := range []struct {
-		stage Name
-		kinds []string
-	}{
-		{DataSources, []string{"DataConnector"}},
-		{ReadPath, []string{"SemanticLayer", "Toolset"}},
-		{EntryPoint, []string{"Agent", "BotProvider"}},
-	} {
+	for _, s := range projectStages {
 		for _, p := range state.Projects {
 			if !p.Has(s.kinds...) {
 				return mustFind(s.stage)
@@ -277,6 +270,72 @@ func Current(state State) Stage {
 		return mustFind(Verify)
 	}
 	return IdleStage
+}
+
+// projectStages is the per-project ladder. Current walks it across all
+// projects at once and returns the earliest gap anywhere, which is the right
+// thing to do next but the wrong thing to *say* when the projects are not in
+// the same place.
+var projectStages = []struct {
+	stage Name
+	kinds []string
+}{
+	{DataSources, []string{"DataConnector"}},
+	{ReadPath, []string{"SemanticLayer", "Toolset"}},
+	{EntryPoint, []string{"Agent", "BotProvider"}},
+}
+
+// ProjectStage is where one project has got to on its own.
+type ProjectStage struct {
+	Slug  string
+	Stage Stage
+	// Done is true when the project has every kind the ladder asks for. It is
+	// not "deployed": whether a complete chart is waiting for a tag or already
+	// live is not a fact about files.
+	Done bool
+}
+
+// PerProject reports each project's own stage.
+//
+// A repository with three projects reports one stage, because there is one
+// thing to do next. But an engagement whose read path is live for one audience
+// and whose second project has no DataConnector yet was being told
+// "data-sources", with nothing to say the first project was three stages ahead
+// - and the honest reading of that is that the whole repository is at
+// data-sources, which is wrong and demoralising in the same breath.
+//
+// This does not change which stage is current. It exists so the command can
+// show the spread when there is one, and stay quiet when there is not.
+func PerProject(state State) []ProjectStage {
+	var out []ProjectStage
+	for _, p := range state.Projects {
+		ps := ProjectStage{Slug: p.Slug, Done: true}
+		for _, s := range projectStages {
+			if !p.Has(s.kinds...) {
+				ps.Stage, ps.Done = mustFind(s.stage), false
+				break
+			}
+		}
+		if ps.Done {
+			ps.Stage = mustFind(Verify)
+		}
+		out = append(out, ps)
+	}
+	return out
+}
+
+// Spread reports whether the projects are in more than one stage, which is the
+// only case worth printing.
+func Spread(per []ProjectStage) bool {
+	if len(per) < 2 {
+		return false
+	}
+	for _, p := range per[1:] {
+		if p.Stage.Name != per[0].Stage.Name {
+			return true
+		}
+	}
+	return false
 }
 
 // hasProject reports whether slug names a project this repository has. An empty
@@ -309,9 +368,14 @@ type Data struct {
 	Projects   []ProjectState
 	Requests   []work.Request
 	References int
-	RepoName   string
-	SpecSlug   string
-	Stage      Stage
+	// Questions is how many are recorded. It is here so this stage reads the
+	// same signals `check` does: material filed with questions written against
+	// it has been read, and prompting for a record then contradicts the command
+	// that says so.
+	Questions int
+	RepoName  string
+	SpecSlug  string
+	Stage     Stage
 }
 
 // InterviewRequests are the open requests whose target project is not decided
@@ -341,8 +405,49 @@ func (d Data) RequestID() string {
 }
 
 // Prompt renders the stage's guidance.
+// overrideDir, when set, is searched for a prompt file before the embedded copy.
+//
+// Prompts ship inside the binary and are versioned with it, which is the right
+// default: an engagement gets the prompts that were released, and a fix reaches
+// every engagement in one release rather than in whichever repo remembered to
+// copy it. This exists for the case that default makes painful - iterating on
+// prompt wording against a live customer, where the loop would otherwise be
+// edit, build, install, run.
+//
+// It is per-file and not all-or-nothing. A directory holding one prompt
+// overrides that one and leaves the other eleven embedded, so an experiment
+// cannot silently freeze the rest at whatever was copied out.
+var overrideDir string
+
+// SetOverrideDir points prompt reads at a directory. An empty string restores
+// the embedded prompts.
+func SetOverrideDir(dir string) { overrideDir = dir }
+
+// OverrideDir reports what SetOverrideDir was given, so a command can say it is
+// not reading what it shipped with.
+func OverrideDir() string { return overrideDir }
+
+// readPrompt returns a prompt, preferring the override directory.
+//
+// A file that is present but unreadable is an error rather than a silent
+// fallback: someone who passed --template-dir wants that directory, and quietly
+// using the embedded copy instead is how an experiment appears to do nothing.
+func readPrompt(name string) ([]byte, error) {
+	if overrideDir != "" {
+		path := filepath.Join(overrideDir, name)
+		content, err := os.ReadFile(path)
+		if err == nil {
+			return content, nil
+		}
+		if !os.IsNotExist(err) {
+			return nil, fmt.Errorf("read %s: %w", path, err)
+		}
+	}
+	return prompts.ReadFile("prompts/" + name)
+}
+
 func (s Stage) Prompt(cfg *config.Config, state State) (string, error) {
-	content, err := prompts.ReadFile("prompts/" + s.promptF)
+	content, err := readPrompt(s.promptF)
 	if err != nil {
 		return "", fmt.Errorf("read prompt %s: %w", s.promptF, err)
 	}
@@ -358,6 +463,7 @@ func (s Stage) Prompt(cfg *config.Config, state State) (string, error) {
 		Projects:   state.Projects,
 		Requests:   work.ActiveRequests(state.Requests),
 		References: state.References,
+		Questions:  len(state.Questions),
 		RepoName:   cfg.RepoName(),
 		SpecSlug:   cfg.Workspace.Slug + "-asgard",
 		Stage:      s,
@@ -400,7 +506,7 @@ func (s Stage) NeedsTask() bool {
 // reads: the template directives are noise to a reader, but the prose around
 // them is the material, and rendering would need a repository to render against.
 func (s Stage) Raw() (string, error) {
-	content, err := prompts.ReadFile("prompts/" + s.promptF)
+	content, err := readPrompt(s.promptF)
 	if err != nil {
 		return "", fmt.Errorf("read prompt %s: %w", s.promptF, err)
 	}

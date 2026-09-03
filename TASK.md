@@ -79,235 +79,100 @@ record of what an agent did, whether approved content can change before it goes
 out, non-HTTP protocol reach (answered: yes, via the sandbox), and the cost of
 producing a web console's page map.
 
-## The worklist, 2026-09-02
+## The worklist
 
-Written down because this pass was run reactively - each gap found by walking
-into it - and the same mistake was made twice: asserting what the material
-contains without reading it. **`taiwan-channels` first said nobody had
-integrated a commerce channel. A middleware deployment integrates SHOPLINE
-across two skills, one of them an 88-page back-office map.** Searching for four
-names is not reading a repository.
+Everything completed was removed on 2026-09-03; git log is the record of what
+was done and why. What is left is open work only, and the rules the finished
+work paid for are in AGENTS.md under "Before you say it is done" rather than
+here.
 
-### Done this pass
+**Why this list exists at all.** The pass that produced it was run reactively -
+each gap found by walking into it - and the same mistake was made twice:
+asserting what the material contains without reading it. `taiwan-channels` first
+said nobody had integrated a commerce channel; a middleware deployment
+integrates SHOPLINE across two skills, one of them an 88-page back-office map.
+**Searching for four names is not reading a repository.**
 
-  - `mimir-dashboard`, `demo-generation`, `taiwan-channels`, `setup-path`,
-    `screenshots` - five new pieces of material
-  - `asgard-cli size` - what a capability is made of, before it is written
-  - the interview's 2b (which product), and 6b turned from a blocker into a
-    read-back
-  - the discovery deck, and the six rules of the proposal's that invert for it
-  - `CompletionModel` corrected in `AGENTS.md.tmpl` and `wiki settings`
-  - `find` searches the design-time skills; `scaffold` reports stale material;
-    a record can be named by its ID; a question number is not reused
+### In the order an engagement hits them
 
-### Open, in the order an engagement hits them
+  1. **71 published asgard-docs pages are not read into any wiki page.**
+     Measured 2026-09-03 against a clone: 162 pages, 79 cited, 83 uncited, of
+     which 16 are `draft: true` and unpublished - so 71 is the number that means
+     anything.
 
-  1. **83 of asgard-docs' 162 pages are not read into any wiki page**, and the
-     hole is one section rather than scattered.
+     **The whole of `developer-reference/` has been read.** What is left uncited
+     is the part deliberately excluded - the 14 message-template pages, the
+     release notes, the site's own redesign plans - plus most of
+     `help-community/` and the `superpowers/` directory, which nobody has
+     assessed.
 
-     Two wrong numbers preceded this one and both were believed rather than
-     checked. The index said 130 cited, "100% of what is in scope" - measuring
-     one source of nine. Then this entry said 93, from a comparison that was
-     case-sensitive and matched paths against pages that cite URLs, so it
-     counted every channel page as missing when `integration.md` is built from
-     all of them. **Do not quote a coverage number here without saying how it
-     was measured.** Three have been wrong in one day.
+     **What would make this worth another pass** is not the count. It is that
+     `help-community/faq/` is where a customer's own questions get answered, and
+     nothing here has checked whether its answers agree with what the material
+     tells an FDE to say.
 
-     What was missing was **the whole of `developer-reference/`**, and it has now
-     been read:
+  2. **`deleteme/` and `asgard-bussiness-plan` are the two repositories nobody
+     has assessed.** The rest of the parent directory was triaged 2026-09-03 by
+     grepping each for an Asgard CR kind, the `asgard-ai.com/` annotation prefix
+     or `apiVersion: asgard`. `just-inference`, `hugin`, `partner-finder` and
+     `ppt` have zero hits between them; `asgard-html2img`'s two are a vendored
+     skill template; `content-pipeline` yielded the four CD facts now in
+     `next --stage deploy`.
 
-     | was uncited | outcome |
-     |---|---|
-     | `processor/` - 16 pages | **`wiki processors`.** The largest single gap: a chart author had a type list and no fields |
-     | `api-doc/send-message/sse-response/` - 11 pages | the envelope, the `fact` tagged union, and `runError.location` naming the Workflow and processor that failed |
-     | `api-doc/send-message/` - 4 endpoint pages | the file path is two calls, `blob` then a send carrying `blobIds` |
-     | `asgard-builtin/` - 18 pages | **the exclusion was wrong for four of them** - the expression language every processor field is written in, including that it is ECMA5. The 14 message-template pages stay excluded |
-     | `examples/` - 4 pages | the webhook shape and its endpoint; citations on `message.template.sources`. Two are client-side recipes and carry nothing |
-     | `overview/`, `core-concepts-ecosystem` | **`wiki what-they-read`** - what a customer believes on arrival, and one correction: the quotas are per price plan |
-     | `help-community/other/compare-conversation-context` | not a retrieval comparison - `prevMessage` against `history`. One line |
+     **`deleteme/` is this tool's own scratch output** - every directory in it
+     carries a `.asgard-config.json` and the scaffold layout, and one is named
+     after a live engagement. That makes it useless as evidence and worth
+     knowing about: grepping the parent directory for `botProviderClass: line`
+     returns hits, and they are ours. `usecase chat-channel` says so.
 
-     **What is left uncited is the part deliberately excluded** - the 14
-     message-template pages, the release notes, the site's own redesign plans -
-     plus `developer-reference/sdk/`, `asgard-sdk` and `others/channel-log`,
-     which are the front-end path. `api.md` covers that from the platform side
-     and nothing has checked whether the SDK pages disagree with it.
+     `asgard-bussiness-plan` is partially read - the whitepaper's architecture
+     section corroborated `X-API-KEY`. Nobody has read the rest.
 
-     **`examples/` and the file path next.** Four worked examples - webhook
-     integration, knowledge-base query, streaming response - and the `blob`
-     upload endpoint, which is the only part of the API contract `api.md` still
-     describes without having read.
+  3. **The kami checkers and the deck skill disagree, and the checkers win
+     arguments they should lose.**
 
-     **And a habit to keep**: three inherited judgements were checked today and
-     three were wrong - the coverage percentage, the `asgard-builtin` exclusion,
-     and this repo's own claim that there is no `CompletionModel` CR. An
-     exclusion or a summary statistic is somebody's conclusion, not a fact, and
-     the ones that exclude a whole directory are where nobody has looked.
-
-  2. ~~**Heimdall has one documentation page and it is a link to a marketing
-     site.**~~ See 2b below.
-
-     ~~The original note:~~ The deployment behind it - a content pipeline with 28 Plugins, the
-     only `KnowledgeBase` in any chart, and a scheduled web crawl - is here and
-     mined for two extracts. So the product an engagement might be asked about
-     has no material, while its deployment is one of the best-documented. Decide
-     whether Heimdall is in scope for an FDE at all, and write that down either
-     way.
-
-  3. ~~**`size` does not count ConfigMaps.**~~ **Done 2026-09-02** - one per
-     Workflow, labelled in the output as what it is, since a reader who has
-     never seen one will otherwise assume the estimate is wrong.
-
-  4. **The per-processor config definitions in `asgard-core` are still not
-     carried, and one attempt was discarded.** `ProcessorDefinitions` holds
-     name, type, `IsRequired` and `DefaultValue` for every config key - the only
-     place the defaults exist, since the documentation pages give none.
-
-     A pattern-based extraction on 2026-09-02 misaligned, attributing one
-     processor's fields to the next, and was thrown away rather than published.
-     Two were then read individually and are in `wiki processors`:
-     `retrieve-knowledge.sampleK` is required and defaults to **20**, and
-     `validate-payload.path` defaults to `"$"`.
-
-     **Do it with a real parse** - `go/ast` over the file, or a small Go program
-     importing the package - not with a regex. A wrong table here is worse than
-     none, because a default is exactly the kind of fact nobody re-checks.
-
-  5. ~~**Fehu and the Management Console have no extract.**~~ **Closed 2026-09-02
-     as not a gap.** Raised from a template - "every product should have one" -
-     rather than from a need. An extract describes how a shape is assembled from
-     CRs, and neither product produces any; both wiki pages already say so, which
-     is the convention. `wiki console` turned out to be complete on rereading,
-     including the three things that matter: Agent Hub is the only product with
-     no Roles at all, Data Insight is the only one where the action is
-     **purchasing** a named user rather than inviting, and both authorise a
-     single resource rather than a Project, so a grant is repeated per resource
-     and never inherits.
-
-     **The purchase step is worth carrying into a handover plan**: a Mimir
-     handover has a procurement step in it, not only an admin one, and that can
-     wait on somebody who was not in the room.
-
-  2b. ~~**Heimdall has no material.**~~ **Closed 2026-09-02 as out of scope**,
-     and recording the decision so it is not re-raised. Its documentation is one
-     page linking to a marketing site, and `wiki product-suite` already says
-     Heimdall and Fehu rarely appear in an onboarding unless the customer came
-     for them. This tool onboards customers onto the platform; Heimdall is a
-     product they buy.
-
-     What remains true is that its deployment - the content pipeline with 28
-     Plugins and the only KnowledgeBase in any chart - **is** in scope as a
-     reference chart, and it has been mined twice for exactly that. If a
-     customer does come for Heimdall, that is a conversation for whoever sells
-     it, and this tool's honest answer is that it has nothing.
-
-  6. ~~**Three reference charts have been counted and not read.**~~ **Their
-     AGENTS.md files are read, 2026-09-02.** Five things came out that nothing
-     here had, all now written up: the platform sends no mail at all; a
-     brand-new channel's first message may never be answered; a join can render
-     fine and match zero rows; `joins[].relationship` has no `many_to_many` and
-     forcing one inflated sums 18.2x; and the sandbox's own CLI tools cannot be
-     disabled by any CRD field. Also that `Toolset.spec.instruction` is gone
-     from the live CRD.
-
-     **What is still unread in those three is the charts themselves** - the
-     AGENTS.md files say what each deployment learned, and the templates say
-     what it actually emits. Most of the older extracts came from these repos,
-     and nothing has checked whether those extracts still match what is there.
-
-  6b. **And the repository set was scoped from memory and was wrong.** Every
-     count of "the seven reference deployments" in this file and in the material
-     excluded the platform's own code. Under `projects/asgard/` there are also
-     `asgard-freyr-api` (873 Go files - the application behind the Freyr
-     skills), `asgard-router` (154), `content-pipeline` (1674 Python files),
-     `deleteme` (130 CRs, 1131 Python files, despite the name), plus
-     `asgard-bussiness-plan`, `partner-finder`, `ppt`, `hugin`,
-     `just-inference` and `asgard-html2img`. **None has been opened.**
-
-     `asgard-kube/pkg/apis/` was in the same blind spot until today and produced
-     `wiki crd-rules` in one pass, so the expected yield from the rest is not
-     low.
-
-     **`asgard-freyr-api` read 2026-09-02, and the yield was one thing.** It is
-     a conventional Go service - Gin, fx, GORM, layered handlers/services/
-     repositories - and carries almost no platform knowledge, so nobody should
-     re-read it hoping. What it does carry is the shape for **a credential the
-     customer's own users supply**: AES-256-GCM sealed in a column, key from the
-     environment, masked for display, the boundary isolated behind one package
-     the build stops other layers importing. That is now in the interview at 3b,
-     because it is the point where an engagement stops being a chart and needs
-     somewhere to run code, and it should be said early rather than discovered.
-
-     **`asgard-router` read 2026-09-02**, and it answered a question the wiki
-     had been treating as opaque. `settings` said the builtin tiers are
-     "semantic aliases rather than specific model names" and stopped there. The
-     router is what resolves one: a logical model backed by several
-     provider-model pairs, with weighted-random, round-robin or ordered-fallback
-     selection, and **automatic failover on a 5xx or a timeout**. So a builtin
-     tier is a pool, and choosing a custom `CompletionModel` gives that up for
-     one provider and one point of failure - which is the trade to state when a
-     customer asks for a named model. Now in `wiki settings` and in
-     `brief customer-meeting`.
-
-     **`deleteme/` is this tool's own test scaffolds**, not deployments -
-     `coldstart`, `coldstart2`, `coldstart3`, `final`, `final2`, `classes`,
-     `classes2`, `precommit`, plus one named for a customer engagement. It
-     carries no platform knowledge and should not be read as a reference chart;
-     its 130 CRs inflated every count in this file until today.
-
-     It is worth one thing: **somebody ran a cold start three times.** The three
-     attempts differ in which projects they ended with - `erp`, then `erp` and
-     `site`, then `site` alone - which reads as the project split being redone
-     rather than a command failing. That is the decision stage 2 exists to make,
-     and it suggests the split was being discovered by trying it. Not
-     actionable on its own; worth remembering if the same shape appears again.
-
-     Still unopened: `content-pipeline` (1674 Python files),
-     `asgard-bussiness-plan`, `partner-finder`, `ppt`, `hugin`,
-     `just-inference`, `asgard-html2img`.
-
-  7. ~~**The kami formatting report is unactioned.**~~ **Written into step 6 of
-     the deck skill, 2026-09-02.** Kept below because the first item is a rule
-     about checkers in general, not about this one.
-
-     ~~The substance:~~ An FDE built the deck and
-     reported back; nothing has been written from it yet. The substance, so it
-     is not lost if the message is:
-
-     - **`--check-content` induced a content regression.** Its CJK matching
+     - **`--check-content` once induced a content regression.** Its CJK matching
        collapses whitespace, so a cover date running into an eyebrow made the
        eyebrow unfindable. To turn it green the FDE removed the sub-numbering
-       from every eyebrow - and every sub-topic slide then claimed the wrong
+       from every eyebrow, and every sub-topic slide then claimed the wrong
        level. **A check drove a change it could not itself see.** The rule that
-       follows: never edit what is on a slide to satisfy a checker.
-     - `--check-content` never goes fully green on slides: `audience` and
-       per-slide `layout` are schema fields and are not printed. Read the list;
-       do not chase it to zero.
-     - Fixed-height slides with `break-after`: anything added to normal flow
-       silently turned 14 pages into 18. Footers and links must be absolutely
-       positioned, and page count re-checked after every edit.
-     - `.co` at 12mm and `.footer-mark` at 10mm always overlap, and the
-       template's own example page uses both.
-     - `<b>` does nothing: the CJK faces embed 400 and 500 only, so bold
-       silently falls back. Use `font-weight:500`.
-     - Write `content.json` first and generate the HTML from it. Editing HTML
-       and back-filling the IR loses things.
-     - **The content rules did not fight the template - they fight the
-       checkers.** `--check-density` reads a discovery deck's question pages as
-       sparse and `--check-rhythm` reads its alternation as monotonous, and in
-       both cases the deck is right. So the skill asks for a document its own
-       checks will fail, which is a smaller problem than one the typesetting
-       cannot produce, but it is unstated.
+       follows is in the deck skill: never edit what is on a slide to satisfy a
+       checker.
+     - **It never goes fully green on slides**: `audience` and per-slide
+       `layout` are schema fields and are not printed. Read the list; do not
+       chase it to zero.
+     - **`--check-density` and `--check-rhythm` are wrong about a discovery
+       deck.** They read its question pages as sparse and its alternation as
+       monotonous, and in both cases the deck is right. So the skill asks for a
+       document its own checks will fail. That is smaller than a document the
+       typesetting cannot produce, but it is unstated, and an agent that trusts
+       the checker will flatten the deck.
 
-  8. **Issues are for other agents to file, not for me.** `asgard-cli
-     issue-report` is the channel and #9 is the worked example. The five things
-     drafted as issues are maintainer work and stay in this file: `next`
-     reporting one state for a repo whose capabilities are in several states;
-     `verify` and `deploy` disagreeing on an empty `platformMainEnvironmentId`;
-     question numbers colliding across branches; the approval gate having no
-     product documentation page; LINE having no current screenshot. The last two
-     are asks for asgard-docs rather than for this repository.
+     The typesetting traps below are recorded because each one cost a rebuild:
+     fixed-height slides with `break-after` silently turn 14 pages into 18 when
+     anything joins normal flow, so footers and links must be absolutely
+     positioned and the page count re-checked after every edit; `.co` at 12mm
+     and `.footer-mark` at 10mm always overlap, and the template's own example
+     page uses both; `<b>` does nothing, because the CJK faces embed 400 and 500
+     only, so use `font-weight:500`; and `content.json` must be written first
+     with the HTML generated from it, because editing HTML and back-filling the
+     IR loses things.
 
-  8b. **The first measured reading baseline, from before the log existed.** One
+  4. **Two asks for asgard-docs, not for this repository.** `asgard-cli
+     issue-report` is the channel other agents use to file against this repo;
+     these two are the reverse direction and nobody has raised them.
+
+     - **The approval gate has no product documentation page.** Every screenshot
+       of it is Sindri's dialog, which is where authenticated staff work.
+       `usecase write-path` says a prompt-level "shall I go ahead?" is not a real
+       gate and cannot say what one is on an anonymous channel. `wiki
+       platform-unknowns` P8.
+     - **The Asgard side of LINE has no current screenshot.** The integration
+       dialog in `integration/LINE` is the 2024 console. The LINE Developers
+       Console image on the same page is usable and current, so the ask is
+       narrower than it was: one screen, not the whole flow.
+
+  5. **The first measured reading baseline, from before the log existed.** One
      engagement read about 15 of ~36 pages, and the rule was: the stage it was
      told it was in, plus whatever that stage pointed at. Never opened, and
      needed: `wiki operations` - in the index the whole time under the title
@@ -317,77 +182,11 @@ names is not reading a repository.
      baseline to beat**, and the thing to watch is not the ratio but which
      pages sit in the never-opened column while being relevant.
 
-  9. ~~**No engagement has been walked end to end with the current material.**~~
-     **Walked 2026-09-02**, in a throwaway repository, through every state this
-     session changed: init, scaffold, material filed with nothing recorded
-     (warns), read into a question (silent), `next` reporting who the answers
-     are with, a request opened after the interview, a project, a target, three
-     CR kinds, `check`, `render`, `verify`, and all twelve stage prompts
-     rendered. Nothing broke and the stage progression tracked the repository
-     state correctly.
-
-     **What it did not exercise**: a real deployment (there is no cluster in
-     this loop), `--force` against a repository with local edits beyond the one
-     copy tested earlier, and the multi-capability case - one repository with
-     three capabilities in three different states, which is item 8's `next`
-     problem and cannot be tested without building one.
-
-     **And what it confirmed is narrower than it sounds.** It shows the commands
-     work together. It does not show the material is right - every finding this
-     session came from somebody using it against a real customer, not from a
-     walk-through, and no synthetic walk would have produced any of them.
-
 ## What is not done
 
-Ordered by what an engagement would hit first. Everything here is known, not
-discovered - a line being here means somebody decided it could wait, and the
-reason is next to it.
-
-### Reference material still missing
-
-- **auto-post's 28 `Plugin` CRs have no extract.** `plugin` covers one; nothing
-  covers the shape at that scale, or what governs which plugin an agent may
-  reach.
-- **`router` at scale.** `workflow-chain` gives the mechanism and a two-branch
-  example. auto-post's content pipeline has nine branches across several
-  workflows, and the question that shape answers - when a branch belongs in the
-  graph rather than in the prompt - is exactly the one an FDE gets wrong.
-- ~~**The `execute-script`, `validate-payload`, `generate-embedding` and
-  `retrieve-knowledge` processors** appear in the platform's contract and in no
-  chart that has been read.~~ **Answered 2026-09-02** against `asgard-core`'s
-  `internal/constants.go`, which is the source of truth the CRD is generated
-  from: all four are real, defined in `ProcessorDefinitions` with full static
-  config definitions. So the answer is the second one - the sample of
-  deployments was too small - and the wiki's list of 13 processor types matches
-  the source exactly, with no extras and none missing.
-- **Which deployments have been mined has never been written down, and the
-  suspicion above turned out to be right.** A finance deployment sitting in the
-  same parent directory the whole time carries a shape nothing here covered - a
-  SemanticLayer deliberately bound to no Agent, whose consumer is Mimir - and it
-  was found by a customer asking for it, not by anyone looking. `mimir-dashboard`
-  now covers it. What is still missing is the audit: the six reference charts
-  between them declare `Toolset`, `Trigger`, `KnowledgeBase`, `Loader`, `Source`,
-  `Plugin` and `CompletionModel`, and nobody has checked those uses against the
-  extracts that claim to describe them.
-
-  **Do this before writing another extract.** One pass over the charts, listing
-  which shapes each one actually uses, turns "we think the sample is too small"
-  into a list. Every extract written without it is written from whichever
-  deployment somebody happened to remember.
-
-  **That pass has now been run once**, over the seven reference charts, counting
-  declared kinds. What it found, beyond the Mimir shape:
-
-  | | what nothing here covers |
-  |---|---|
-  | the demo generator | 123 SkillSets, 80 Workflows, 64 SemanticLayers and 64 Agents from one parameterised source. Generating a deployment per industry is a shape in itself, and it is the largest body of Asgard chart material in existence |
-  | Heimdall (auto-post) | 28 `Plugin` + 28 `SkillSet` one-to-one, and the only `KnowledgeBase` + `Loader` + `Source` in any chart - the older knowledge path the wiki says is still live |
-  | Freyr | 5 Agents over 5 SkillSets with **no SemanticLayer at all** - capability entirely from skills and one Toolset |
-  | `ConfigMap` | 80 in the demo generator, 2 in Freyr. Not an Asgard CR; no material says what one is doing in these charts or when to reach for it |
-  | `CompletionModel` | corrected below, but no extract - the shape is a customer bringing their own model |
-
-  The counts are declared kinds, not shapes. Turning each row into an extract
-  still needs the chart read rather than counted.
+Everything here is known, not discovered - a line being here means somebody
+decided it could wait, or could not be done from here, and the reason is next to
+it.
 
 ### A statement that shipped and was wrong
 
@@ -470,125 +269,64 @@ Worth one question to the platform team, and cheap to answer.
 
 ### Gates that could be stronger
 
-- **Two gates disagree about an empty `platformMainEnvironmentId`.**
-  `gate/deploy.go` treats it as a warning and says why - the platform issues the
-  id after the namespace exists, so it is empty through the whole middle of an
-  onboarding. `gate/xref.go` errs on the same condition for a `Trigger`, with a
-  message that names neither the cause nor the fix. So a freshly scaffolded
-  project that adds a Trigger fails `verify` and is told to look at a label the
-  template already writes. Reported, not fixed.
-- **Nothing knows that a SemanticLayer may have no consumer on purpose.** That
-  is the whole of `mimir-dashboard`, and the deployment it came from says
-  plainly that its own cross-reference check does not protect it: the danger is
-  a later reader binding the layer to an Agent as a tidy-up, which silently
-  gives agents restricted to an API a second path into the database. A gate
-  cannot tell that apart from a genuine omission without being told which it is,
-  and no CR field says. Worth a marker the chart can carry.
+- **`project add`'s terraform prerequisite stays a notice, not a gate.**
+  Settled 2026-09-03 rather than left open. The demo generator refuses without
+  the namespace and both `platformMainEnvironmentId` values because it runs
+  where it can see them; this CLI is offline by design, and at `project add`
+  time the id **does not exist yet** - tf-asgard has not run. Refusing would
+  block the first step of every engagement on something that is correct to be
+  missing. The condition is checkable after rendering and `verify` checks it.
 
-- **`project add`'s terraform prerequisite is a notice, not a gate.** The demo
-  generator's equivalent command *refuses* to continue without the namespace and
-  both `platformMainEnvironmentId` values. Theirs is stronger. Doing the same here
-  needs the CLI to be able to check the condition, which today it cannot -
-  it is offline by design.
-- **Nothing checks that a `tooling.description` names the tool it could be
-  confused with.** It is the single field where a wrong value makes a model pick
-  the wrong tool, three extracts say so, and it is unenforceable by anything but
-  a person reading it.
-- **No gate compares a generated CR against the platform's CRD schema.** The
-  first such pass found five violations and two extracts teaching the wrong
-  thing, so the class is real and nothing here catches it. Making it a test means
-  vendoring the released `asgard.crds.yaml` and validating the rendered output of
-  every kind against it - required fields, unknown fields, enums, patterns, CEL.
-  What that costs is a pinned copy of a contract that moves: a stale schema fails
-  the build for the wrong reason, and pinning it to a platform version this repo
-  does not otherwise depend on is a new thing to keep current. Worth doing anyway,
-  because the alternative is finding out during someone's CD.
-- **Nothing links a retired platform field to every file that mentions it.**
-  Vocabulary lives in templates, extracts and stage prompts; a rename caught in
-  one leaves the other two teaching a field that no longer exists.
-- **Nothing checks the embedded material against itself.** A stage prompt can
-  send a reader to a page that does not exist, and a generator kind can name an
-  extract that was renamed, without anything noticing until somebody follows the
-  pointer. The checks that did this were in the test suite, removed on
-  2026-09-02; **the gate is now `go build`, `go vet`, `gofmt -l` and running the
-  CLI by hand against a scratch repository.**
-- **`internal/usecase` and `internal/wiki` are 190 lines each of the same four
-  functions.** Same `parse`, `List`, `Read`, `Search`, over two corpora that now
-  share a provenance format and a linking rule. One `internal/kb` with a shelf
-  per corpus is the right shape; it was deferred rather than done before a
-  release, because both packages are correct today and a refactor is not.
+- **The 79 CEL rules are not checked, and 40 of them cannot be.**
+  `gate.Enums` (E1) and `gate.Constraints` (C1) cover the CRD's enums, patterns,
+  lengths and bounds. What is left is `XValidation`, and **40 of the 79 are
+  `self == oldSelf`** - they compare a proposed object against the one already on
+  the cluster, and a render is one object with no history. `botProviderClass` is
+  the one that bites; `usecase chat-channel` documents it instead.
 
-### Material that is thinner than it looks
+  The remaining ~39 are checkable and are not checked. The tractable ones are
+  the conditional shapes - `toolsetClass != 'mcp-server' || has(mcpServerConfig)`,
+  `documentClass != 'video' || video != null` - which are a field implying
+  another field's presence. That is a real class and nothing catches it.
 
-- **`wiki screenshots` describes about a hundred images and five were opened**,
-  and two of those five turned out to need cropping before a customer could see
-  them - one of which this page had recommended as the single most useful image
-  it carries. So the marked ones are not the only ones; they are the ones
-  somebody happened to download.
-  The rest carry the documentation's own alt text, which describes the file
-  honestly but does not say whether the product still looks like that, and
-  **nothing anywhere records when any of them was captured**. Alt text also
-  cannot see what this pass learned to look for: our own implementation nouns
-  inside the picture. Only opening one finds those.
+### Blocked on access nobody in this loop has
+
+- **The wiki is checked less deeply than the extracts, and that is structural.**
+  An extract has a chart to hold it against; the wiki's source is product
+  documentation describing a UI, much of which is in no chart at all. Every page
+  says how far it got on its `**Unchecked:**` line, and `wiki --unverified`
+  lists them.
+
+  Two mechanical passes have been run and found nothing: every enumerated set
+  against the CRD enums, and every completeness claim ("the thirteen processor
+  types", "the CRD supports ten", "`agentClass` has one value"). A third was
+  written and thrown away for calling correct material wrong - see the third
+  question under "Before you say it is done" in AGENTS.md.
+
+  **The fix is a login and an afternoon.** `console`, `sindri`, `mimir`, `fehu`
+  and `settings` all describe a UI; one person with access could settle all
+  five, and nothing short of that will.
+
 - **`wiki setup-path` states an order no source states.** Every step comes from
-  the page that owns it, but the sequence is assembled, and only its first fork
-  - that an HTTP API's credential has no home under Settings - was held against
-  a real console screen.
+  the page that owns it and no source puts them in a sequence, which is why the
+  page exists. **One fork is verified** - that an HTTP API's credential has no
+  home under Settings - and the rest is a reading of what each step needs from
+  the one before. Its Sources say so and ask whoever reaches a live console to
+  report what is wrong. It is the page most likely to be confidently wrong.
 
-- **The wiki is checked less deeply than the extracts, by nature.** An extract has
-  a chart to hold it against; the wiki's source is product documentation
-  describing a UI, much of which is in no chart at all. Every page says so on its
-  `**Unchecked:**` line, and `wiki --unverified` lists them - but the fix is to
-  hold each page against a deployment the way the extracts were, and that has not
-  been done.
 - **`chat-channel` has never run anywhere.** Every BotProvider across every
-  reference deployment is `generic`; the credential blocks and the per-class costs
-  are read off the contract. The first customer on LINE is that page's first test.
-- **The systems-inventory example in `02-projects.md` is modelled on one real
-  customer** - their ERP's database, their catalogue's three dimensions. It names
-  nobody, but somebody who knows that engagement would recognise it, and this repo
-  states elsewhere that nothing shipped names another customer. A real example is
-  more persuasive than an invented one, so whether to replace it is a judgement
-  nobody has made.
+  reference deployment is `generic`. The credential blocks were checked field by
+  field against the CRD on 2026-09-03 and match, and the CRD's `ExactlyOneOf`
+  and immutability rules are recorded - but nothing here has been *run*, and the
+  first customer on LINE is that page's first test.
 
-### Deliberately deferred
+  **There is a trap in checking this yourself.** Grepping the parent directory
+  for `botProviderClass: line` returns hits, plus `discord`, `slack` and
+  `telegram`. Every one is inside a scratch repository this tool scaffolded.
+  They are the page's own output, and the extract says so.
 
-- **`asgard-cli reference add <file>`.** Filing a customer's document into
-  `references/` is a step every engagement takes and none does the same way: the
-  agent invents a provenance table each time, and `references/customer-source/`
-  is a convention one engagement made up. A command would make provenance
-  mechanical. Not built because the shape of the record is a decision, not a
-  detail - what it must carry is the argument, and nobody has had it yet.
-- **Nothing enforces that a project split follows a recorded requirement.**
-  `next` states the rule and `11-requirements.md` explains it; `project add`
-  accepts a split with no request on file. The interview check added to `check`
-  catches the common case - material filed, nothing recorded - but not this one.
-- **The order in `wiki/pages/setup-path.md` is unverified against a live
-  console.** Every step is documented and every claim comes from its own page,
-  but no source states the sequence, and three screenshots were opened out of
-  the hundred-odd the screenshot index names. The claim worth testing first is
-  that an HTTP API's credential has no home under Settings.
-- **Open-question numbers still collide across branches.** Fixed within one
-  file - an answered question keeps its number now - but two branches each
-  number one past what their own copy shows, and the merge produces two rows
-  with the same number and no conflict marker, because they are different lines.
-  A number derived from a count cannot survive that; the raised date is already
-  in the row and is the obvious material, and changing the format breaks every
-  existing reference, which is why it was not done inside a bug fix.
-- **`decision add` still needs an ASCII `--slug`.** A request and a task fall
-  back to their ID when the title is Chinese; a decision has no ID, because its
-  file name is the date plus the topic and `check` requires that shape. The
-  error says so. Giving it a numbered fallback would produce
-  `2026-09-02-decision-2.md`, which defeats the naming convention.
-- **A Claude Code plugin in the customer repo.**
-  `.claude-plugin/marketplace.json` + `plugins/asgard-fde/{commands,skills}`, as
-  the demo generator does it. The `asgard-fde-onboarding` design-time skill does
-  the routing part today, which was most of the value; the rest waits until the
-  plugin format is worth committing to.
-- **`--template-dir` to override embedded prompt text.** Prompts are embedded and
-  versioned with the binary, which is the right default. This is for when
-  iterating on prompt text against a live engagement turns out to be painful, and
-  it has not yet.
+### Deferred by the FDE, needs a decision rather than work
+
 - **Homebrew tap and Scoop bucket.** The config is written and guarded by its
   token; enabling either is creating a repository and adding a secret. The FDE
   deferred this deliberately.

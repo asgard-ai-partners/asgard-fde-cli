@@ -142,9 +142,16 @@ reminder, not a gate - nothing rendered from this repository reads it.`,
 Before the first deploy of each environment:
   1. tf-asgard must create the namespace and its app-secret first. Declaring an
      environment before they exist makes the next tag fail at helm upgrade.
-  2. the project needs at least one Syncer. CD waits for a CronJob labelled
-     asgard-ai.com/syncer-name and exits 1 after 180s if it finds none, even
-     when helm upgrade succeeded.
+     platformMainEnvironmentId is written empty in chart/values-<env>.yaml and
+     the platform only issues it once that namespace exists, so an empty one is
+     correct today and fatal at the first tag. "asgard-cli verify" warns until
+     it is filled in; that warning is the reminder, not this line.
+  2. the project may need at least one Syncer, and whether it does is one "if"
+     in your own CD - some workflows count what the chart declares and skip the
+     step at zero, some wait 180s for a CronJob labelled
+     asgard-ai.com/syncer-name and exit 1. A production chart runs today with
+     none. Check before the first tag:
+       grep -n syncer-name -A15 .github/workflows/*.y*ml
 
 A new project means a new audience, which is a thing to have asked rather than
 assumed - along with which systems it reads and how each one is reached:

@@ -1,5 +1,12 @@
 # Knowledge drive
 
+**The `KnowledgeBase`, `Loader` and `Source` shapes here come from one
+deployment** - auto-post, the platform's own - which is the only one of eight
+that declares any of them (`asgard-cli wiki coverage`). That cuts both ways: it
+was written by the people who built the CRs, and it is not a customer's
+constraints.
+
+
 Unstructured knowledge - documents, FAQs, web pages - as a mounted `SourceSet`
 with a knowledge graph over it.
 

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -65,6 +66,19 @@ that changed it keeps its version.`,
 
 			if slug == "" {
 				slug = work.Slugify(topic)
+			}
+			if slug == "" && module != "" {
+				// A topic written wholly in Chinese slugifies to nothing, and a
+				// decision has no ID to fall back on. The module it changes is
+				// ASCII by construction and says something true about the
+				// record - better than a number, which would name nothing.
+				// Most topics never reach here: a real one usually carries a CR
+				// name or a product term, and "官網改用 fixed query tools"
+				// already slugifies to fixed-query-tools.
+				slug = work.Slugify(strings.TrimSuffix(module, ".md"))
+				if slug != "" {
+					fmt.Fprintf(cmd.OutOrStdout(), "Named it after the module it changes, %s, because the topic is not in ASCII.\nPass --slug to choose a better name; the heading keeps the topic as written.\n\n", slug)
+				}
 			}
 
 			specSlug := cfg.Workspace.Slug + "-asgard"

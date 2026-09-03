@@ -187,8 +187,10 @@ Connectivity and vocabulary produce no CRs, so there is no extract for them.
   [LLM Completion troubleshooting](https://docs.asgard-ai.com/docs/help-community/other/troubleshooting-llm-completion),
   [DeepSeek](https://docs.asgard-ai.com/docs/help-community/faq/deepseek),
   [channel log](https://docs.asgard-ai.com/docs/help-community/faq/how-to-show-channel-log)
+  - **`draft: true`, so that link 404s on the published site.** Read it in a
+  checkout of asgard-docs; the file is there
   - asgard-docs `f00e0ee`
-- [Environment](https://docs.asgard-ai.com/docs/overview/asgard-environment)
+- [Environment](https://docs.asgard-ai.com/docs/overview/asgard-environment) - **also `draft: true` and 404s; read it in a checkout**
   - asgard-docs `f00e0ee`, marked `draft`
 - [Glossary](https://docs.asgard-ai.com/docs/help-community/glossary)
   - asgard-docs `f00e0ee`. Its Processor entry lists an older set of nodes and

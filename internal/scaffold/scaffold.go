@@ -445,3 +445,23 @@ func mergeManaged(path string, rendered []byte) ([]byte, bool, error) {
 	}
 	return merged, true, nil
 }
+
+// TemplateBodies returns every embedded scaffold template, keyed by its path
+// under templates/. See generate.TemplateBodies for why: a sweep for a renamed
+// field has to reach the files a repository is built from, not only the prose
+// that describes them.
+func TemplateBodies() (map[string]string, error) {
+	out := map[string]string{}
+	err := fs.WalkDir(templates, "templates", func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() {
+			return err
+		}
+		raw, err := templates.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		out[strings.TrimPrefix(path, "templates/")] = string(raw)
+		return nil
+	})
+	return out, err
+}

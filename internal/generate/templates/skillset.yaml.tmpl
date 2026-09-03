@@ -70,6 +70,9 @@ metadata:
   name: <<.CRName>>
   annotations:
     asgard-ai.com/skill-set-name: "<<.DisplayName>>"
+    # 繁體中文, read in the customer's own console. Vocabulary rules in
+    # .agents/skills/plain-chinese/ apply; the sentence-shape ones do not,
+    # because this is a phrase rather than a sentence.
     asgard-ai.com/skill-set-description: "TODO"
   labels:
     {{- include "<<.Chart>>.labels" . | nindent 4 }}

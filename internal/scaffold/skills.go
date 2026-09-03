@@ -55,6 +55,10 @@ func Skills() ([]Skill, error) {
 	return out, nil
 }
 
+// Body returns one skill's SKILL.md as it ships. Exported so the audit command
+// can walk the same bytes an engagement reads.
+func Body(name string) (string, error) { return skillBody(name) }
+
 // skillBody reads one skill's SKILL.md, rendered or not. The templated ones are
 // searched as written, placeholders and all: a search hits prose, and the only
 // placeholder in them is the workspace name.

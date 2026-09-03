@@ -175,6 +175,15 @@ The shapes it passes through are `asgard-cli usecase agent-hub`,
   [Connection](https://docs.asgard-ai.com/docs/product-suite/odin/features/settings/connection)
   - asgard-docs `f00e0ee`
 - Screenshot paths read off that same checkout's `static/img/docs/`, 2026-09-02
+- **The sequence itself is assembled and only its first fork is verified.** Each
+  step comes from the page that owns it; no source puts them in an order, which
+  is why this page exists. The one part held against a real console screen is
+  that an HTTP API's credential has no home under Settings - the fork that sends
+  you to a Workflow instead. The rest is a reading of what each step needs from
+  the one before, and the charts corroborate the dependency direction without
+  saying anything about the console flow. If you work through it against a live
+  console and it is wrong anywhere, that is worth telling the maintainer: it is
+  the page most likely to be confidently wrong
 - Checked 2026-09-02 against asgard-kube `15ded0f`, head at the time: the CR column names only
   kinds the CRDs define. `HttpTool`, `KnowledgeDrive` and `FlowAgent` are not
   among them, which an earlier draft of this table asserted

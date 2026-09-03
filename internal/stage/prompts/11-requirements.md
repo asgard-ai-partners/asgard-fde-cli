@@ -59,11 +59,18 @@ after.
 
 <<range .>>  <<.ID>>  <<printf "%-8s" (printf "%s" .Status)>>  <<.Title>>
 <<end>>
-<<else>><<if .References>>**<<.References>> file(s) of customer material are filed in `references/`, and no
-request records any of it.** The interview has started and the repository has
-no record of it. Write the request before going further - `asgard-cli check`
-reports this state until one exists.
-<<else>>Nothing is recorded yet, so start with `asgard-cli request add`.
+<<else>><<if and .References (not .Questions)>>**<<.References>> file(s) of customer material are filed in `references/`, and nothing records that it was read.** Material
+arriving before the meeting is the normal order here - their internal approval
+comes before they will book one - so the material being early is not the
+problem. Nothing having been read out of it is.
+
+**Read it into questions, not into a request.** Six of a request's seven
+sections are what the interview decides, so one written now is a copied section
+and six TODOs; an empty `requirements/requests/` before the interview is the
+correct state.
+
+    asgard-cli question add "<what blocks it>" --ask "<who can answer>"
+<<else>>Nothing is recorded yet. After the interview, `asgard-cli request add`.
 <<end>><<end>>
 ## Read the later stages before this meeting, not after
 
@@ -79,13 +86,13 @@ of what you will say out loud is settled there**. So read them first - at least
 `data-sources`, `read-path`, `entry-point` and `knowledge`. An hour before the
 meeting is cheaper than a correction after it.
 
-### The five that get said wrong
+### Run `asgard-cli brief customer-meeting` before the meeting
 
-They live in `asgard-cli brief customer-meeting`, not here, because meetings
-happen at every stage and a briefing reachable only from this page is
-unreachable to an engagement at stage 5 with a meeting tomorrow.
-
-**Run it before the meeting.** The short version of why: four of the five fail
+Not reading - running. It lists the five things that reach a customer wrong, and
+it lives there rather than here because meetings happen at every stage: a
+briefing reachable only from this page is unreachable to an engagement at stage 5
+with a meeting tomorrow.
+ The short version of why: four of the five fail
 in the same direction - the intuitive answer undersells the platform or
 overstates a limit - so when a customer asks whether something is possible and
 the honest-sounding answer is "no" or "not yet", that is the moment to check
@@ -108,6 +115,19 @@ that number rather than guessing one." Written once, never revised in twenty
 rounds, because failure behaviour has one right answer where a capability has
 twenty phrasings. Cheapest line on the page and the most persuasive.
 
+**Two sentence shapes are banned outright, in Chinese**, because they mark the
+page as machine-written before anyone reads what it says: `不僅……更是……`, and
+any page that ends by announcing its own importance (`為……奠定基礎`,
+`具有重要意義`). Test the second by deleting the sentence - if the page loses no
+information, it never had any.
+
+**`.agents/skills/plain-chinese/` has the rest**, applies to every 繁體中文 thing
+this engagement sends a customer rather than only to the deck, and carries the
+one rule that would **damage** a deck if applied whole - an essay's ban on bullet
+lists does not transfer to slides. These two are repeated here on purpose, for
+the reason at the top of this section: this text is printed and a skill file is
+not. They are the only two that earn it.
+
 **One page per sub-heading of theirs, and the page list is not yours to design** -
 their document already decided it. Two columns on that page: the question on the
 left, what it produces on the right. Not two slides; splitting them removes the
@@ -122,6 +142,11 @@ A capability's context page contains **nothing you wrote** - their heading, thei
 description, their list. Those pages went through twenty rounds without a single
 correction, and that is the measurement worth remembering: **the number of
 revisions tracks how much of the page was ours.**
+
+**And when their document is thin, the page is thin - leave it.** The next move
+is always to fill the space, and the only material to fill it with is ours. The
+emptiness is true: it says they have not worked that capability out either, and
+the meeting can start there.
 
 **Ask, and stop.** The consequence is theirs to state, and supplying it invents
 branches that do not exist. The shape it takes:
@@ -797,10 +822,26 @@ is who reads them:
     requirements/          the implementation source of truth
     common/skills/         what the RUNNING agent needs, synced to the platform
 
-So: paste the material into `references/`, and have the request **cite** it. A
+So: file the material into `references/`, and have the request **cite** it. A
 request that inlines forty pages of API documentation stops being readable as a
 request, and the section that matters - what the customer asked for and who is
 on the other end - disappears into an appendix.
+
+    asgard-cli reference add <file> --what "<what it is, in your words>" \
+      --from "<who supplied it>" --dated <the document's own date>
+
+**Do not invent a provenance table.** Every engagement before this command
+invented its own, and one invented a directory name that then read like a
+convention. The command copies the document byte-identical - so a second version
+can be diffed against the filed one - and puts the provenance in
+`references/_index.md` instead of a header pasted into the customer's file.
+
+**`--dated` is the document's own date, not today.** It is the one that decides
+whether the material is stale, and a document carrying no date is worth
+recording as carrying none. Fill all three in at the moment of filing: whoever
+handed it over is the only person who knows, and they stop being available at
+about the point somebody needs to know. `asgard-cli check` warns about the rows
+that are short.
 
 The rule the repo already enforces: convert reference material into
 `requirements/` before implementing, and if the two conflict, `requirements/`

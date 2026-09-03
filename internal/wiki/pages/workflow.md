@@ -39,9 +39,18 @@ enforces exactly one.
 | Expression (`expression`) | **JavaScript** | computation and logic |
 | Template (`template`) | **Handlebars** | rendering |
 
-Expression is JavaScript, not CEL. Arrow functions, `const`, `||`, `??`,
-`String()` and `encodeURIComponent` all work, as do built-in helpers such as
-`history(0, -1)` and `urlEncode(...)`.
+Expression is JavaScript, not CEL, and it is **not** restricted to ECMA5 -
+that limit is `execute-script`'s Engine field and applies to a script body, not
+to these. One shipped tenant chart evaluates
+`prevBlobs.map(b => b.blobId).join(',')`, which is the evidence; `asgard-cli
+wiki processors` carries the count behind it, and said the opposite of this
+page until 2026-09-03. `||`, `??`, `String()` and `encodeURIComponent` work, as
+do built-in helpers such as `history(0, -1)` and `urlEncode(...)`.
+
+**`const` and `let` are a different question and the answer is don't.** No
+chart uses either, because an Expression field holds one expression rather than
+statements - a declaration has nowhere to go. If you need statements, that is
+`execute-script`, and there you are back inside ECMA5.
 
 This was once recorded as CEL, and anything written as CEL neither works nor
 explains why. The current documentation and the charts agree.

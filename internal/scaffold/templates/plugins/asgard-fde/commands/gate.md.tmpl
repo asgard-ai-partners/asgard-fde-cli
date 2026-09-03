@@ -1,0 +1,42 @@
+---
+description: The acceptance gate, in order. Run before every tag.
+---
+
+Four steps, and the order matters - each one is cheap and rules out a class the
+next one cannot see.
+
+```bash
+asgard-cli check              # 1. structure: does the repository hold together
+asgard-cli verify             # 2 and 3: render every project, then the
+                              #    invariants a render cannot see
+```
+
+Step 4 needs a cluster and is not in this repo - `asgard-cli next --stage verify`
+says what it is.
+
+**Read the warnings, do not just check the exit code.** A warning here is a
+condition that is correct now and fatal once somebody tags, which is exactly the
+shape that gets skimmed past:
+
+- **no Syncer** - whether that fails your CD is one `if` in your own workflow.
+  Some count what the chart declares and skip at zero, some wait 180s and exit 1.
+  A production chart runs today with none. Check with
+  `grep -n syncer-name -A15 .github/workflows/*.y*ml`
+- **an empty `platformMainEnvironmentId`** - correct until tf-asgard has created
+  the namespace, and after that it means the CR works on the cluster while its
+  editor opens as a blank canvas
+- **R11, a layer with no consumer** - record which kind it is while you still
+  know. The reader who finds it later is the one who binds it as a tidy-up
+- **C1 on a `schedule`** - the CRD's cron pattern is narrower than cron. No
+  ranges, no lists, no `@daily`, no zero-padding. The apiserver refuses those at
+  apply time, after the tag is pushed
+
+Then the review no rule can do:
+
+```bash
+asgard-cli verify --tools
+```
+
+Read every tool description together, the way the model gets them - one list, no
+other context, deciding which answers the question. The failure this catches is
+two descriptions that are each accurate and do not say which to prefer.

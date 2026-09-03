@@ -2,6 +2,10 @@
 
 <<.Workspace.Name>> 的 `<<.Project.Slug>>` project(<<.Project.Name>>)所需的 Asgard CR。
 
+> 這份文件的中文寫法見
+> [`.agents/skills/plain-chinese/`](../../../.agents/skills/plain-chinese/)。
+> 它是接手的人第一個打開的檔案。
+
 部署目標見 [`../deploy.yaml`](../deploy.yaml):
 <<range .Project.Environments>>
 - `<<.>>` → `asgard-<<$.Workspace.Slug>>-<<$.Project.Slug>>-<<.>>`

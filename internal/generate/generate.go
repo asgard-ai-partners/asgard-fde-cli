@@ -99,7 +99,10 @@ defaultSemanticLayerEffort: "medium"
 		Wiki:    "agents",
 		After: []string{
 			"a project heading for a deploy needs at least one Syncer, and a SkillSet",
-			"  brings one - CD fails a deployed project that has no Syncer at all:",
+			"  brings one. Whether CD actually fails a project with no Syncer",
+			"  depends on one `if` in your own workflow - some skip the step at",
+			"  zero, some wait 180s and exit 1 - so check before the first tag:",
+			"    grep -n syncer-name -A15 .github/workflows/*.y*ml",
 			"    asgard-cli add skillset base --repo <git url>",
 			"  Then reference it from skillSetNames. Nothing is referenced by default,",
 			"  because a name that does not exist is a dangling reference.",
@@ -156,14 +159,22 @@ defaultSemanticLayerEffort: "medium"
 		AlsoRead: []string{"workflow-chain"},
 		After: []string{
 			"platformMainEnvironmentId must be a real value in chart/values-<env>.yaml.",
-			"  A Trigger without it fails the gate, and on a cluster it fires correctly",
-			"  while its editor opens as a blank canvas. The id only exists after",
-			"  tf-asgard has created the namespace and the platform has reconciled it.",
+			"  `asgard-cli verify` warns about this rather than failing - it is",
+			"  correct during an onboarding and fatal once someone tags, so it stays",
+			"  a warning you have to clear yourself. The id only exists after",
+			"  tf-asgard has created the namespace and the platform has reconciled",
+			"  it. Until then the Trigger renders with no project-environment-id",
+			"  label: on a cluster it fires correctly while its editor opens as a",
+			"  blank canvas, which is the worst failure shape there is - working,",
+			"  and uneditable.",
 		},
 		Values: `
 # <<.DisplayName>>
 triggers:
   <<.ValuesKey>>:
+    # The CRD's pattern is narrower than cron: no ranges (1-5), no lists
+    # (9,15), no @macros, no zero-padding (00 09). One number, * or */n per
+    # field. The apiserver refuses the rest at apply time, not helm.
     schedule: "0 9 * * *"
     timeZone: "Asia/Taipei"
     # Suspended until the run has been exercised once by hand.
@@ -190,6 +201,9 @@ triggers:
 <<.ValuesKey>>:
   timeZone: "Asia/Taipei"
   dbSync:
+    # The CRD's pattern is narrower than cron: no ranges (1-5), no lists
+    # (9,15), no @macros, no zero-padding (00 09). One number, * or */n per
+    # field. The apiserver refuses the rest at apply time, not helm.
     schedule: "0 9 * * *"
     suspend: "false"
     batchSize: 1000
@@ -224,7 +238,10 @@ triggers:
 		AlsoRead: []string{"workflow-chain", "chat-channel", "per-turn-credentials"},
 		After: []string{
 			"a project heading for a deploy needs at least one Syncer, and a SkillSet",
-			"  brings one - CD fails a deployed project that has no Syncer at all:",
+			"  brings one. Whether CD actually fails a project with no Syncer",
+			"  depends on one `if` in your own workflow - some skip the step at",
+			"  zero, some wait 180s and exit 1 - so check before the first tag:",
+			"    grep -n syncer-name -A15 .github/workflows/*.y*ml",
 			"    asgard-cli add skillset base --repo <git url>",
 			"  Then reference it from skillSetNames. Nothing is referenced by default,",
 			"  because a name that does not exist is a dangling reference.",
@@ -655,4 +672,43 @@ func mustRel(root, path string) string {
 		return path
 	}
 	return rel
+}
+
+// TemplateBodies returns every embedded CR template, keyed by file name.
+//
+// It exists for `asgard-cli audit-material`, which has to be able to see the
+// templates as well as the prose: a platform field that gets renamed is taught
+// in three places - a template that writes it, an extract that explains it and
+// a stage prompt that mentions it - and a sweep that reads only the prose finds
+// two of the three.
+func TemplateBodies() (map[string]string, error) {
+	entries, err := templates.ReadDir("templates")
+	if err != nil {
+		return nil, err
+	}
+	out := make(map[string]string, len(entries))
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		raw, err := templates.ReadFile("templates/" + e.Name())
+		if err != nil {
+			return nil, err
+		}
+		out[e.Name()] = string(raw)
+	}
+	return out, nil
+}
+
+// ValuesBlocks returns each kind's values snippet, which is template text that
+// lives in this file rather than in templates/ and would otherwise be invisible
+// to the same sweep.
+func ValuesBlocks() map[string]string {
+	out := make(map[string]string, len(Kinds))
+	for _, k := range Kinds {
+		if strings.TrimSpace(k.Values) != "" {
+			out[k.Name+" (values)"] = k.Values
+		}
+	}
+	return out
 }

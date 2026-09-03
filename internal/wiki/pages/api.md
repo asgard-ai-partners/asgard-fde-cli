@@ -13,6 +13,31 @@ POST {base_url}/generic/ns/{namespace}/bot-provider/{bot_provider_name}/message/
 Header: X-API-KEY
 ```
 
+**Two shapes of this URL are in circulation and they differ by one segment.**
+The API reference gives the path above, with `/generic/`. The SDK overview and a
+production tenant's own chart README both give it **without**:
+
+    https://api.asgard-ai.com/ns/<namespace>/bot-provider/<name>/message/sse
+
+The second is not a documentation slip - it is what a live relay sends to, and
+the SDK derives its SSE URL by appending `/message/sse` to whatever
+`botProviderEndpoint` you hand it, adding nothing. Which of the two the platform
+actually routes has not been established here, and it is a 404 either way if you
+guess wrong in front of a front-end team.
+
+**So do not hand anyone a URL from this page. Get it from the deployment**: the
+BotProvider's name and its namespace are in the chart, and the tenant charts
+that already have a front end put the exact working URL in
+`projects/<project>/chart/README.md`. Confirm it with one request before it goes
+in a document. `asgard-cli wiki platform-unknowns` P9 tracks the question.
+
+**The header is `X-API-KEY`** - that part is consistent across the API
+reference, the authentication page and the platform's own architecture. If a
+customer's existing relay uses something else, that is the relay's own
+convention and not the platform's; one deployment authenticates its relay with a
+webhook-token header of its own. Do not generalise from a customer's front end
+to what the platform expects.
+
 They differ by the `action` field:
 
 | action | `action` | `text` |
@@ -31,6 +56,22 @@ Request parameters:
 
 `customChannelId` is the only thing tying a conversation together. A front end
 that generates a fresh id per message makes every message a new conversation.
+
+**`RESET_CHANNEL` is not "open the chat" - it is "throw the history away".**
+The two actions above are the whole of what this page used to offer, so the
+obvious front end sends `RESET_CHANNEL` when the widget mounts, and every page
+reload then destroys the conversation the customer was having. That is a bug
+nobody reports as one: it looks like the agent forgetting.
+
+Rejoining an existing channel is a different path. The SDK's `Channel.restore`
+asks `GET /channel/metadata` whether the channel exists and, if it does,
+replays the server's transcript rather than resetting - a cold-start rejoin is a
+`GET .../message/sse` carrying the channel id and no message. `Channel.reset` is
+for a conversation the user has deliberately started over.
+
+So the question to ask a front-end team is not "how do you open a channel" but
+**"what happens on reload"** - and if they are not using the SDK, they need the
+rejoin call as well as the send.
 
 ## SSE events
 
@@ -68,9 +109,9 @@ is attached to a conversation nobody is having.
 
 Inside the workflow the files arrive as `prevBlobs`, an array of Blob with
 `blobId`, `fileType`, `fileName`, `size` and `mime` - see
-[`processors.md`](processors.md), including that ECMA5 has no optional chaining,
-so every access to it is written defensively or throws on the turn somebody sends
-no file.
+[`processors.md`](processors.md). **Every one of those variables can be absent**,
+so each access is written defensively or throws on the turn somebody sends no
+file.
 
 ## What an event actually looks like
 
@@ -191,7 +232,11 @@ token chain, and `workflow-chain` what passes between processors.
   and [append file and send](https://docs.asgard-ai.com/docs/developer-reference/api-doc/send-message/append-file-and-send-message-api)
   - asgard-docs `f00e0ee`, read 2026-09-02
 - The event envelope, the `fact` union and `runError.location`: the eleven pages
-  under [send-message/sse-response](https://docs.asgard-ai.com/docs/developer-reference/api-doc/send-message/sse-response),
+  under `developer-reference/api-doc/send-message/sse-response/` - one page per
+  event, starting at
+  [run-init](https://docs.asgard-ai.com/docs/developer-reference/api-doc/send-message/sse-response/run-init).
+  **The directory itself has no landing page and 404s**; this citation pointed
+  at it until 2026-09-03,
   read 2026-09-02. They had not been read into this material before then - this
   page had the event list and not the payloads
 

@@ -52,10 +52,17 @@ spec:
         # snake_case: this is the name the model sees, not the CR name.
         name: <<.Name>>
         description: |-
-          TODO: what it does and what it returns.
+          TODO: 繁體中文, to .agents/skills/plain-chinese/ - the model reads
+          this to decide whether to call the tool. Say what it does and what it
+          returns.
           Say explicitly that the agent must call this rather than answer from
           memory, and say what an empty result means - otherwise it will treat
           "nothing found" as a failed lookup and try another way.
+          Then name the tool this could be confused with, and say which to
+          prefer: "for X use this, for Y use <other>". Two descriptions can
+          each be accurate and still not say which answers the question, and
+          that is the failure nothing can check for you.
+          Read them together afterwards: asgard-cli verify --tools
         allowUploadFile: false
   exits: []
   processors:
@@ -113,6 +120,9 @@ metadata:
   name: <<.Toolset>>
   annotations:
     asgard-ai.com/toolset-name: "<<.DisplayName>>"
+    # 繁體中文, read in the customer's own console. Vocabulary rules in
+    # .agents/skills/plain-chinese/ apply; the sentence-shape ones do not,
+    # because this is a phrase rather than a sentence.
     asgard-ai.com/toolset-description: "TODO"
   labels:
     {{- include "<<.Chart>>.labels" . | nindent 4 }}

@@ -251,6 +251,9 @@ spec:
 
 ### Conventions that are easy to get wrong
 
+- Write every description to `.agents/skills/plain-chinese/` - a model reads
+  them to choose a column, so 至關重要 there costs a wrong answer, not a clumsy
+  sentence.
 - **`description` on every cube / dimension / measure, in 繁體中文.** This is not decoration — it
   is what the agent reads to decide which column answers a question. A dimension with no
   description is effectively invisible to the model.

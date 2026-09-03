@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -19,6 +21,7 @@ func newVerifyCmd() *cobra.Command {
 	var (
 		rendered string
 		layers   []string
+		tools    bool
 	)
 
 	cmd := &cobra.Command{
@@ -32,7 +35,12 @@ server-side dry run all pass:
   - every reference between CRs resolves, both halves of it: an entrypoint is
     (workflow, entry), and a wrong entry is as dead as a wrong workflow
   - a Workflow has its full set of workflow-set labels, and each set has exactly
-    one main; a Trigger carries its own two labels, or its editor opens blank
+    one main; a Trigger's workflow-set-id matches its entrypoint Workflow's, or
+    its editor opens blank. The other label an editor needs,
+    project-environment-id, is a warning rather than a failure - it comes from
+    platformMainEnvironmentId, which does not exist until tf-asgard has created
+    the namespace, so it is legitimately empty through the middle of an
+    onboarding
   - a Syncer's paths obey the CRD's relative-path rules
   - the agent split: at most one semantic layer per Agent, no layer bound twice,
     no allowedCubes, sampleQuestions on anything published, and prompt.task and
@@ -55,6 +63,15 @@ and no temporary file:
     asgard-cli verify
     asgard-cli verify erp
     asgard-cli verify --rendered .out/rendered.yaml
+    asgard-cli verify --tools               every tool description, side by side
+
+**--tools prints and checks nothing.** ` + "`tooling.description`" + ` is the single
+field where a wrong value makes a model call the wrong tool, and what makes one wrong
+is that it does not distinguish itself from the tool beside it - a property of
+the set, not of any entry, and so not something a rule can read. A person
+reading all of them at once can, and there was nowhere that put them together.
+Read them as the model does: in one list, with no other context, deciding which
+one answers the question.
 
 This is steps 2 and 3 of the acceptance gate, and it needs only helm on PATH.
 Step 1 is "asgard-cli check", and step 4 needs a cluster - see
@@ -76,6 +93,10 @@ Step 1 is "asgard-cli check", and step 4 needs a cluster - see
 				if _, cfg, err := loadRepo(); err == nil {
 					olap = olapLayers(cfg, layers)
 				}
+				if tools {
+					printTools(out, rendered, docs)
+					return nil
+				}
 				if !runGates(out, rendered, docs, gate.Options{OLAPOnlyLayers: olap}) {
 					return fmt.Errorf("verification failed")
 				}
@@ -92,6 +113,9 @@ Step 1 is "asgard-cli check", and step 4 needs a cluster - see
 				return err
 			}
 			olap := olapLayers(cfg, layers)
+			if err := recordOLAPLayers(root, cfg, layers, out); err != nil {
+				return err
+			}
 
 			ok := true
 			checked := 0
@@ -121,6 +145,11 @@ Step 1 is "asgard-cli check", and step 4 needs a cluster - see
 					}
 
 					checked++
+					if tools {
+						printTools(out, fmt.Sprintf("%s/%s", project, env), docs)
+						checked++
+						continue
+					}
 					if !runGates(out, fmt.Sprintf("%s/%s", project, env), docs,
 						gate.Options{Project: project, OLAPOnlyLayers: olap}) {
 						ok = false
@@ -139,10 +168,55 @@ Step 1 is "asgard-cli check", and step 4 needs a cluster - see
 		},
 	}
 
+	cmd.Flags().BoolVar(&tools, "tools", false, "print every tool name and description instead of checking; the one review a rule cannot do")
 	cmd.Flags().StringVar(&rendered, "rendered", "", "check a file of already-rendered manifests, or - for stdin (defaults to rendering each project)")
 	cmd.Flags().StringSliceVar(&layers, "olap-only-layer", nil, "semantic layer deliberately bound to no Agent because it feeds Data Insight, repeatable; adds to olapOnlyLayers in "+config.FileName+" (defaults to whatever that records)")
 
 	return cmd
+}
+
+// recordOLAPLayers writes what --olap-only-layer named into the config, so the
+// rule holds on every later run rather than only on the run that passed the
+// flag.
+//
+// The flag's help has always said it does this and it never did, which mattered
+// little while the only way to learn about the list was to read that help.
+// R11 now tells a reader to run this exact command to record a layer as
+// deliberately unbound - and an instruction that silences one run and forgets is
+// worse than no instruction, because the reader believes the fact is recorded.
+func recordOLAPLayers(root string, cfg *config.Config, layers []string, out io.Writer) error {
+	have := map[string]bool{}
+	for _, name := range cfg.OLAPOnlyLayers {
+		have[name] = true
+	}
+	var added []string
+	for _, name := range layers {
+		if name == "" || have[name] {
+			continue
+		}
+		have[name] = true
+		added = append(added, name)
+	}
+	if len(added) == 0 {
+		return nil
+	}
+
+	cfg.OLAPOnlyLayers = append(cfg.OLAPOnlyLayers, added...)
+	sort.Strings(cfg.OLAPOnlyLayers)
+	if err := config.Save(filepath.Join(root, config.FileName), cfg); err != nil {
+		return err
+	}
+	fmt.Fprintf(out, "Recorded %s in %s as bound to no Agent on purpose. R10 refuses any later attempt to bind %s to one.\n\n",
+		strings.Join(added, ", "), config.FileName, pluralThem(added))
+	return nil
+}
+
+// pluralThem keeps the sentence above readable for one layer and for several.
+func pluralThem(names []string) string {
+	if len(names) == 1 {
+		return "it"
+	}
+	return "them"
 }
 
 // olapLayers combines what the config records with what the flag added, into a
@@ -214,6 +288,9 @@ func runGates(out io.Writer, label string, docs []gate.Doc, opts gate.Options) b
 	for _, r := range []gate.Result{
 		gate.Xref(docs, opts),
 		gate.AgentSplit(docs, opts),
+		gate.Processors(docs, opts),
+		gate.Enums(docs, opts),
+		gate.Constraints(docs, opts),
 		gate.Deployability(docs, opts),
 	} {
 		for _, p := range r.Problems {
@@ -239,4 +316,30 @@ func runGates(out io.Writer, label string, docs []gate.Doc, opts gate.Options) b
 		}
 	}
 	return ok
+}
+
+// printTools lists every tool a render exposes, with its whole description.
+//
+// It is deliberately not a check. What makes a tooling.description wrong is
+// that it does not separate itself from the tool beside it, which is a fact
+// about the set - so the useful thing a program can do is put the set in front
+// of somebody, in the order and with the context the model gets, and stop
+// there. Truncating would defeat it: the sentence that disambiguates two tools
+// is usually not the first one.
+func printTools(out io.Writer, label string, docs []gate.Doc) {
+	tools := gate.Tools(docs)
+	fmt.Fprintf(out, "%s\n", label)
+	if len(tools) == 0 {
+		fmt.Fprintf(out, "  no entry in this render is exposed as a tool.\n\n")
+		return
+	}
+	for _, t := range tools {
+		fmt.Fprintf(out, "\n  %s  (%s, entry %s)\n", t.Name, t.Workflow, t.Entry)
+		for _, line := range strings.Split(strings.TrimRight(t.Description, "\n"), "\n") {
+			fmt.Fprintf(out, "      %s\n", line)
+		}
+	}
+	fmt.Fprintf(out, "\n  %d tool(s). Read them together, as the model does - one list, no other\n"+
+		"  context, deciding which answers the question. The failure this catches is\n"+
+		"  two descriptions that are each accurate and do not say which to prefer.\n\n", len(tools))
 }

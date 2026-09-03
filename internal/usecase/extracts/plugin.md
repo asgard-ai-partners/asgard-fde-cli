@@ -8,7 +8,7 @@ knowledge (`pg-med-*`, `pg-biz-*`, `pg-pr-*`) and writing style (`pg-style-*`).
 
 **Checked:** 2026-09-02 against a deployment carrying 28 Plugins, all sharing one skill store, and the CRD.
 
-**Unchecked:** how to divide capability into bundles. The naming IS the taxonomy, and no deployment's taxonomy has been reviewed here.
+**Unchecked:** how to divide capability into bundles. The naming IS the taxonomy, and no deployment's taxonomy has been reviewed here. That deployment is also the only one of eight that declares a `Plugin` at all (`asgard-cli wiki coverage`), so there is no second arrangement to tell the shape from its choices.
 
 **Read the platform side first:** `asgard-cli wiki tools` -
 how MCP Server, Skillset and Plugin differ. This page assumes you have.
@@ -121,6 +121,48 @@ every `*Names` field on a blueprint.
 
 This is what makes 28 bundles tractable. Without it, either every agent carries
 every skill, or there is one agent per combination.
+
+### Which means the caller chooses the agent's capabilities
+
+**Ask who can set that payload field before you use this shape.** The chart pins
+a floor - `pg-writing-base` here - and everything above the floor arrives in the
+request. Whoever can call the BotProvider decides which bundles load, which is
+correct when the caller is your own front end deciding "this article is health,
+in this outlet's voice", and is a capability-selection primitive handed to a
+stranger when the entry point is anonymous.
+
+The same deployment does it twice over: `sourceSetMounts` is also an expression,
+and it mounts `ss-article-workspace` at a `subPath` taken straight from
+`prevPayload.article_id`, **`readOnly: false`**. So the payload chooses both what
+the agent can do and which writable directory it does it in.
+
+Neither is wrong - it is how the shape works. What is wrong is arriving at it
+without noticing, which is easy, because the expression reads as chart
+configuration and is a public parameter. Two questions settle it: is this
+BotProvider's `authMode` `none`, and does anything validate the names before
+they are joined?
+
+In this deployment the first answer is no - `authMode: api-key`, with the key in
+`app-secret` - so every caller is one the operator issued a key to, and handing
+that caller its own bundle selection is a reasonable thing to do. **The second
+answer is that nothing validates them**: the names go from the payload into
+`join(",")` untouched. That is safe here because the caller is authenticated and
+because an unknown name loads nothing rather than something else. It stops being
+safe the moment the same expression sits behind an anonymous entry point, and
+the expression will not have changed - only the BotProvider beside it.
+
+### A Plugin does not have to carry a skill set
+
+`pg-public-opinion` in the same chart is `skillSets: []` with one toolset, and
+that is not a mistake or a stub. A Plugin is a named bundle of **capabilities**,
+and a bundle of one toolset is a legitimate bundle: it exists so that the tool
+can be selected per request by name, which a toolset on the blueprint cannot be.
+Of the 28, twenty-six wrap exactly one skill set, one wraps two plus a toolset -
+the base - and one wraps a toolset alone.
+
+So the question when reaching for a Plugin is not "do I have skills to bundle"
+but **"does this need to be selectable per request"**. If it does, wrap it, even
+if the bundle has one member.
 
 ## Designing the bundles - the part the generator leaves TODO
 

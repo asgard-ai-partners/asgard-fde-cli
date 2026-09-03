@@ -37,6 +37,10 @@ TODO in the customer's own words, before it is translated into platform terms.
 The translation is section 2's job, and keeping the original is what lets the
 next reader check that the translation was right.
 
+Everything you write here is 繁體中文 somebody reads months from now to work out
+what was agreed - see ` + "`.agents/skills/plain-chinese/`" + `. Their words stay exactly as
+they said them; yours are the ones the rules apply to.
+
 ## 2) Who is on the other end
 
 TODO. This is the question that decides everything downstream, because the
@@ -177,6 +181,12 @@ const taskTemplate = `# {{.ID}} - {{.Title}}
 - Owner: {{if .Owner}}{{.Owner}}{{else}}TODO{{end}}
 - Spec mode: spec
 - Living spec module: docs/spec/{{.SpecSlug}}/TODO.md
+
+## Writing this
+
+繁體中文, to ` + "`.agents/skills/plain-chinese/`" + `. A task spec is read by whoever picks
+this up, which is often not you, and 不僅……更是…… costs them the same second it
+costs a customer.
 
 ## 1) Requirements
 

@@ -29,6 +29,7 @@
 | [`api`](api.md) | the endpoint and its actions, the SSE sequence, four patterns, the SDK |
 | [`crd-rules`](crd-rules.md) | the validations helm lint does not run, and the one the schema cannot express |
 | [`platform-unknowns`](platform-unknowns.md) | what no source answers, and who to ask |
+| [`coverage`](coverage.md) | how many deployments each CR shape was read from - which extracts rest on a sample of one |
 
 ## In practice
 
@@ -82,8 +83,9 @@ The sources this material is actually built from:
 **Deployment coverage cannot be measured from this material, by design.** An
 extract names no customer and no deployment - it says "seen in a deployment
 whose..." - so nothing here can be counted against the charts it came from. The
-inventory has to be run separately, over the charts, and its result lives in
-`TASK.md` rather than in a number here.
+inventory has to be run separately, over the charts, and its result is
+[`coverage`](coverage.md) - how many deployments each CR shape was actually read
+from - rather than a number here.
 
 **Do not add a percentage back to this section** unless it names its denominator
 in the same sentence. The one that was here did not, and it is the reason this
@@ -93,7 +95,9 @@ pass found four bodies of material nobody had opened.
 
 **One row of this table was wrong.** `asgard-builtin/` was excluded whole as
 lookup material; four of its pages are the expression language every processor
-field is written in, including the ECMA5 limit and the six variables in scope.
+field is written in, including where the ECMA5 limit actually applies - to
+`execute-script`'s engine, not to every Expression - and the variables in scope,
+one of which the documentation never mentions at all.
 They are now in [`processors`](processors.md). The message-template pages remain
 excluded, and that part of the judgement holds.
 
@@ -106,6 +110,20 @@ exclusion nobody has looked inside.
 | `developer-reference/asgard-builtin/message-template-*` | 14 | Message template shapes - button, carousel, image, video, location. Genuinely lookup material, and per-channel. Read the source when writing one |
 | `help-community/release-notes/` | 10 | historical, and does not describe the present |
 | `superpowers/` | 5 | the documentation site's own redesign plans, not an Asgard feature |
+
+## Keeping this index complete
+
+Every page under `pages/` has a row above except `log`, which is deliberate: it
+is the provenance layer - what was read, when, and what it corrected - and an
+FDE looking for an answer should never land there. Reach it with
+`asgard-cli wiki log` when you want to know why a page says what it says.
+
+**Adding a page means adding a row**, under the question it answers rather than
+at the end. The extracts index went a third out of date this way -
+eight of twenty-two written and never grouped - and nothing broke, because
+`asgard-cli usecase` listed them regardless. What was lost is the only thing an
+index is for: telling somebody which page answers their question when they do
+not already know its name.
 
 ## Outside this wiki
 

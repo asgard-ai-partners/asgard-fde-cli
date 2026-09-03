@@ -96,7 +96,10 @@ space the split was meant to shrink.
 
   - Every cube, dimension and measure needs a description in 繁體中文. It is what
     the agent reads to decide which column answers a question; one without a
-    description is invisible to the model.
+    description is invisible to the model. **This is the place plain Chinese
+    matters twice** - `.agents/skills/plain-chinese/` - because 至關重要 in a
+    description is not just noise, it is noise the agent has to guess past every
+    time it chooses a column.
   - A dimension's name is the column its sql selects, never a re-cased alias.
   - Common analysis views go in top-level sampleQueries, never as a cube-level
     sql: virtual cube. **Run every one against the live database before

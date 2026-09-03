@@ -13,6 +13,9 @@ metadata:
   name: <<.CRName>>
   annotations:
     asgard-ai.com/source-set-name: "<<.DisplayName>>"
+    # 繁體中文, read in the customer's own console. Vocabulary rules in
+    # .agents/skills/plain-chinese/ apply; the sentence-shape ones do not,
+    # because this is a phrase rather than a sentence.
     asgard-ai.com/source-set-description: "TODO: what knowledge this holds"
   labels:
     # To pause indexing, set this label. Do NOT remove the contextIndex field -
@@ -35,7 +38,8 @@ spec:
       schedule: {{ .Values.<<.ValuesKey>>.contextIndex.schedule | quote }}
       timeZone: {{ .Values.<<.ValuesKey>>.timeZone | quote }}
     prompt: |-
-      TODO: domain knowledge only - this is appended to the platform's own
+      TODO: domain knowledge only, in 繁體中文 written to
+      .agents/skills/plain-chinese/ - this is appended to the platform's own
       indexing instructions. Three things earn their place:
         - what each folder holds, one line each
         - the key, and which copy wins. With incremental sync the same record

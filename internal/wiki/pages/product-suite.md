@@ -82,7 +82,7 @@ page.
 - Odin's feature list: the filenames under
   `docs/product-suite/odin/features/` at asgard-docs `f00e0ee`
 - Model providers and integration outlets also appear in
-  [Asgard features](https://docs.asgard-ai.com/docs/overview/asgard-features),
+  [Asgard features](https://docs.asgard-ai.com/docs/overview/asgard-features) - **`draft: true`, 404s on the published site**,
   which is marked `draft` and links to paths removed in the 2026-08-31 rebuild -
   only the two lists corroborated elsewhere were taken from it
 
