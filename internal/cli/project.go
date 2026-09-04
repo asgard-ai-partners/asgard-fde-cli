@@ -139,7 +139,6 @@ func printProjects(out io.Writer, state stage.State) {
 func newProjectAddCmd() *cobra.Command {
 	var (
 		name  string
-		envs  []string
 		shape string
 	)
 
@@ -183,12 +182,7 @@ reminder, not a gate - nothing rendered from this repository reads it.`,
 				return fmt.Errorf("project %q already exists in %s", slug, config.FileName)
 			}
 
-			project := config.Project{
-				Slug:         slug,
-				Name:         name,
-				Environments: parseEnvs(envs),
-				Shape:        shape,
-			}
+			project := config.Project{Slug: slug, Name: name, Shape: shape}
 			if project.Name == "" {
 				project.Name = slug
 			}
@@ -203,13 +197,10 @@ reminder, not a gate - nothing rendered from this repository reads it.`,
 
 			out := cmd.OutOrStdout()
 			fmt.Fprintf(out, "Added project %q to %s\n", slug, path)
-			for _, env := range project.Environments {
-				fmt.Fprintf(out, "  %-5s %s\n", env, cfg.Namespace(slug, env))
-			}
 
 			// Write the project's chart skeleton now rather than leaving the
 			// repo in a state where the config declares a project that has no
-			// deploy.yaml. Adding a project used to require remembering to run
+			// chart at all. Adding a project used to require remembering to run
 			// scaffold again, and forgetting produced a repo where `check`
 			// passed and `render` failed. Existing files are left alone, so
 			// this is safe on a repo that already has the project.
@@ -225,39 +216,29 @@ reminder, not a gate - nothing rendered from this repository reads it.`,
 						created++
 					}
 				}
-				fmt.Fprintf(out, "\nWrote %d file(s) for it, including projects/%s/deploy.yaml.\n", created, slug)
+				fmt.Fprintf(out, "\nWrote %d file(s) for it, under projects/%s/chart.\n", created, slug)
 			} else {
 				fmt.Fprintf(out, "\nThe repository skeleton is not written yet, so this project has no chart:\n"+
 					"    asgard-cli scaffold\n")
 			}
 
-			// A project is the first point where the workspace id stops being a
-			// formality: it names the workspace the platform will deploy this
-			// into. Still not a blocker - nothing rendered reads it - but this
-			// is the moment to go and get it.
-			if !cfg.Workspace.HasID() {
-				fmt.Fprintf(out, "\nworkspace.id is still unset in %s. Nothing here needs it - the\n"+
-					"namespaces above come from the slug - but a project is what the platform\n"+
-					"deploys, so this is the point to ask for it:\n\n"+
-					"    asgard-cli init --workspace-id ws_xxxxxxxx\n", config.FileName)
-			}
-
-			// Both of these are ordering traps rather than things to look up
-			// later: getting either wrong fails in CD, not here.
+			// The ordering trap that remains: a chart is not deployable until
+			// the platform side of it exists, and that failure lands at the
+			// first tag rather than here.
 			fmt.Fprintf(out, `
-Before the first deploy of each environment:
-  1. tf-asgard must create the namespace and its app-secret first. Declaring an
-     environment before they exist makes the next tag fail at helm upgrade.
-     platformMainEnvironmentId is written empty in chart/values-<env>.yaml and
-     the platform only issues it once that namespace exists, so an empty one is
-     correct today and fatal at the first tag. "asgard-cli verify" warns until
-     it is filled in; that warning is the reminder, not this line.
-  2. the project may need at least one Syncer, and whether it does is one "if"
-     in your own CD - some workflows count what the chart declares and skip the
-     step at zero, some wait 180s for a CronJob labelled
-     asgard-ai.com/syncer-name and exit 1. A production chart runs today with
-     none. Check before the first tag:
-       grep -n syncer-name -A15 .github/workflows/*.y*ml
+Before the first deploy:
+  1. declare a release for this chart in .asgard-pipeline.yaml - name, trigger
+     and chart path - and create it on the platform, bound to the project whose
+     namespace it deploys into:
+
+       asgard-cli pipeline release create <name> --project <id>
+
+     A tag matching a release nobody created produces no run at all; the
+     pipeline's deliveries say so, and nothing else will.
+  2. fill in the values the declaration names. A required key with no value
+     fails the plan with vars/required-missing:
+
+       asgard-cli pipeline variables list --release <name>
 
 A new project means a new audience, which is a thing to have asked rather than
 assumed - along with which systems it reads and how each one is reached:
@@ -265,7 +246,7 @@ assumed - along with which systems it reads and how each one is reached:
     asgard-cli guide requirements
 
 Connection coordinates belong in the request record and in
-chart/values-<env>.yaml. Passwords belong in .env, which is gitignored, and in
+the platform's variables. Passwords belong in .env, which is gitignored, and in
 app-secret, which infra provisions. Never in a file this repo commits.
 `)
 			return nil
@@ -273,8 +254,6 @@ app-secret, which infra provisions. Never in a file this repo commits.
 	}
 
 	cmd.Flags().StringVar(&name, "name", "", "display name for the project (defaults to the slug)")
-	cmd.Flags().StringSliceVar(&envs, "env", []string{string(config.EnvDev)}, "environment this project deploys to, repeatable")
-	// No back-quotes in this usage string: pflag reads a back-quoted word as the
 	// flag's argument placeholder, so one here rendered the flag as
 	// "--shape asgard-cli project shape".
 	cmd.Flags().StringVar(&shape, "shape", "",

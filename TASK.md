@@ -213,12 +213,15 @@ the next engagement is the fix in the next release.
   that can only be reached by having reached the one before it is a defect.
   Onboardings are not linear - three of the decisions in the engagement this was
   built from were made, built, and reversed.
-- **Anything to do with git.** Not `git init`, not adding a remote, not
-  authenticating to one: Asgard is growing its own mechanism for provisioning a
-  customer repository. This needed saying **in the prompts**, not just here - the
-  CLI never printed a word about git, but an agent that finds the directory is not
-  a repository and reads a tag-driven CD workflow offers to set one up on its own
-  every time. Stages 1 and 8 tell it not to, and why.
+- **Provisioning git.** Not `git init`, not adding a remote, not authenticating
+  to one: Asgard is growing its own mechanism for provisioning a customer
+  repository. This needed saying **in the prompts**, not just here - an agent
+  that finds the directory is not a repository, and reads that a push is what
+  deploys, offers to set one up on its own every time. Stages 1 and 8 tell it
+  not to, and why.
+
+  Reading a checkout is a different thing and is done: the origin remote is how
+  a pipeline is matched without writing a platform id into the repository.
 - **helm and kubectl as packaged dependencies.** Nothing about how this is
   distributed can install them: a tar.gz, a zip, a dmg and `go install` carry no
   dependency metadata and never can, and a Homebrew or Scoop dependency would only

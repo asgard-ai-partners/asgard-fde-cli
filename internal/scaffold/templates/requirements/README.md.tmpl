@@ -96,7 +96,7 @@ Status values: `draft`, `ready`, `in-progress`, `done` (never `in_progress`).
 > This repo deploys Kubernetes custom resources via Helm, one chart per project under
 > `projects/<project>/chart/app`. "Design" and "Implementation Tasks" describe CR/Helm/agent
 > changes (e.g. `Agent`, `SemanticLayer`, `DataConnector`, `SkillSet`, `SourceSet`, `Syncer`,
-> values files, `deploy.yaml`, CI), not UI or application source code.
+> `.asgard-pipeline.yaml`, platform variables), not UI or application source code.
 >
 > The databases are **real** and the current architecture is **read-only** — a spec that adds a
 > `SemanticLayer`/`DataConnector`, widens which cubes an agent may query, or re-introduces a

@@ -1,7 +1,7 @@
 ---
 name: asgard-cr-verification
-description: Use before committing any change under projects/*/chart or common/ — runs this repo's acceptance gate (repo consistency, helm lint, render + CR cross-reference + Agent-split invariants) plus, against a live cluster, a server-side dry-run AND a CRD-fidelity check that finds fields the CRDs would silently prune. Also the reference for first-time environment setup.
-version: 1.2.0
+description: Use before pushing any change under projects/*/chart or .asgard-pipeline.yaml — runs this repo's local gate (repo consistency, helm lint, render + CR cross-reference + Agent-split invariants), then reads back the platform's plan, which is where every CR is checked against the real cluster's CRDs. Also the reference for first-time environment setup.
+version: 2.0.0
 alwaysApply: false
 ---
 
@@ -11,7 +11,7 @@ There is no application to run in this repo — every artifact is a declarative 
 resource under `asgard-ai.com/v1alpha1`. Verification therefore means **rendering the charts and
 checking the resources reference each other correctly**.
 
-Run the gate before committing any change under `projects/*/chart/`, `common/`, or a `deploy.yaml`.
+Run the gate before pushing any change under `projects/*/chart/` or `.asgard-pipeline.yaml`.
 **Any red step stops the work** — report the specific error, do not push past it.
 
 > **Design time.** This is for the coding agent working in this repo. Runtime skills for the
@@ -21,15 +21,16 @@ Run the gate before committing any change under `projects/*/chart/`, `common/`, 
 
 ```bash
 python3 -m venv .venv
-.venv/bin/pip install -r scripts/db/requirements.txt   # only step 4 (check_crd_fidelity.py) needs this
+.venv/bin/pip install -r scripts/db/requirements.txt   # only the scripts/db tooling needs this
 ```
 
-Also required on PATH: **`helm`** (steps 2 and 3) and **`kubectl`** (step 4).
-Nothing else — no `yq`, no bash, and steps 1 to 3 need no Python at all, so the
-gate runs unchanged on Windows. Run **`asgard-cli doctor`** to see what is
-installed and how to install what is not; it works out the command for the
-machine you are on.
-`kubectl` only for the optional dry-run step.
+Also required on PATH: **`helm`** (steps 2 and 3). Nothing else — no `yq`, no
+bash, no `kubectl`, and no Python for the gate itself, so it runs unchanged on
+Windows. Run **`asgard-cli doctor`** to see what is installed and how to install
+what is not; it works out the command for the machine you are on.
+
+**No step here needs a cluster, because no cluster credential is issued to a
+client.** The checks that need one run on the platform, in step 4.
 
 If a step fails on a missing tool, say which tool and the install command; do not silently skip it.
 
@@ -43,8 +44,8 @@ asgard-cli check <project>  # one project
 ```
 
 Expect `✓ repo consistency OK`. Checks the structural invariants a chart render cannot see:
-the root README project table matches `projects/`, every project has a well-formed `deploy.yaml`
-whose declared values files exist, `common/skills/*/SKILL.md` carry `name` + `description`
+the root README project table matches `projects/`, `.asgard-pipeline.yaml` names a chart that
+exists for every release it declares, `common/skills/*/SKILL.md` carry `name` + `description`
 frontmatter, the `requirements/` indexes are present, and the **`docs/` spec layer** is intact —
 required files, the living spec's module index matching the actual module files,
 `YYYY-MM-DD-<topic>.md` filenames under `decisions/` and `meeting-notes/`, and every relative
@@ -53,11 +54,10 @@ markdown link inside `docs/` resolving.
 ### 2. Chart static validation
 
 ```bash
-helm lint projects/<project>/chart/app                                            # bare values.yaml
-helm lint projects/<project>/chart/app -f projects/<project>/chart/values-dev.yaml
+helm lint projects/<project>/chart/app     # bare values.yaml
 ```
 
-Expect exit 0 from both. **Run the bare one too** — it is the only step that proves
+Expect exit 0. **The bare form is the point** — it is the only step that proves
 `values.yaml` declares a default for every `.Values.*` a template reads. With an env file
 overlaid a missing default is masked, so a template referencing an undeclared value renders fine
 in the gate and then nil-pointers for anyone who runs plain `helm template`.
@@ -109,14 +109,16 @@ needs only `agent-name` — its description comes from `spec.managed.description
   include mechanism, so shared prompt text is duplicated; verbatim equality is what makes a change
   a single global replace. **Editing one Agent's `task`/`format` and not the others fails here.**
 
-Always use `asgard-cli render`, not a bare `helm template`. It takes the namespace and values
-files from `deploy.yaml` and applies the same overlay order, `--namespace` and release name as CI,
-so what you check is exactly what CD deploys.
+Use `asgard-cli render <release>`, not a bare `helm template`: it takes the chart from the
+release's entry in `.asgard-pipeline.yaml` and supplies the reserved `.Values.asgard.*` block, so a
+chart that reads those renders instead of failing on a missing key.
 
-### Run step 3 for every project x env combination
+**What it renders is not what deploys.** The values are placeholders and nothing is checked against
+a cluster. That is step 4's job, and step 4 is not optional.
 
-`asgard-cli render` refuses an env a project has not declared in its `deploy.yaml`. That
-refusal is by design and is never "fixed" by inventing a namespace.
+### Run step 3 for every release
+
+`asgard-cli verify` with no argument does every release the declaration names.
 
 Projects legitimately have **different shapes**, and neither is incomplete:
 
@@ -130,69 +132,64 @@ Which shape a project takes follows from its audience, not from preference. An
 anonymous visitor cannot reach the agent hub, and a semantic layer mounted
 without `allowedCubes` is arbitrary SQL over every cube in it.
 
-## Optional: validate against the real CRDs
+## Reading the CRDs directly
 
-`asgard-ai-platform/asgard-kube` holds the actual `openAPIV3Schema` for every kind. Validating the
-rendered output against it catches field typos and enum violations that `asgard-cli verify`
-cannot see, and needs no cluster:
+`asgard-ai-platform/asgard-kube` holds the actual `openAPIV3Schema` for every kind, and is the
+authority when you need to know whether a field exists — prefer it over inferring shape from a CR
+dump:
 
 ```bash
 git clone --depth 1 https://github.com/asgard-ai-platform/asgard-kube.git /tmp/asgard-kube
-# then validate each rendered doc against /tmp/asgard-kube/crd/*.yaml (openAPIV3Schema per kind)
 ```
 
-That repo is also the authority when you need to know whether a field exists — prefer it over
-inferring shape from a CR dump. Note what it *cannot* tell you: `Workflow.processors[].configs[].name`
-is a free-form string, so the set of valid config names for a processor type is not discoverable
-there. Do not guess one — a wrong config name lints clean, passes CRD validation, and then does
-nothing at runtime.
+Note what it *cannot* tell you: `Workflow.processors[].configs[].name` is a free-form string, so
+the set of valid config names for a processor type is not discoverable there. Do not guess one — a
+wrong config name lints clean, passes CRD validation, and then does nothing at runtime.
 
-## 4. Against a live cluster — TWO checks, and they catch different things
+## 4. The platform's plan — the step that cannot be run here, and cannot be skipped
 
-Both need a cluster with the Asgard CRDs installed and are read-only. Run both whenever a CRD-shape
-change is in play (a field added or **removed** upstream in `asgard-kube`).
-
-### 4a. Server-side dry-run — does the apiserver accept it?
+Push, then read the plan back:
 
 ```bash
-asgard-cli render <project> dev | kubectl apply --dry-run=server -n <any-ns> -f -
+git push origin <tag>
+asgard-cli pipeline runs watch --release <name> --commit $(git rev-parse HEAD)
 ```
 
-Catches pattern violations (the `Trigger` cron regex), CEL rules (`exactly one of value/expression/
-template`), and `Required value`. Nothing is persisted.
+The plan renders the chart with the release's **real** values and real ids, then sends **every CR
+to the apiserver with a server-side dry run**. That is where these are caught, and nowhere else:
 
-### 4b. CRD fidelity — is anything being silently dropped?
+- **pattern violations** (the `Trigger` cron regex), **CEL rules** (`exactly one of
+  value/expression/template`), and `Required value` — reported as `crd/dry-run-rejected`.
+- **a field the CRD does not declare** — reported as `crd/unknown-field`. This one is worth
+  understanding: CRDs prune unknown fields by default, so a plain `kubectl apply
+  --dry-run=server` reports `created` while the field is quietly discarded. A deprecated
+  `Toolset.spec.instruction` passed 25 of 25 dry-runs and then failed the real deploy, because
+  helm's server-side apply builds a typed patch and refuses:
+
+      .spec.instruction: field not declared in schema
+
+  "Will it be accepted" and "will it be kept" are different questions. The plan asks both.
+
+It also reports `chart/kind-not-allowed` for anything rendered that is not an `asgard-ai.com`
+resource, `chart/hook-not-allowed`, remote chart dependencies, and `vars/required-missing` for a
+declared key with no value on the platform.
+
+A run stops at review unless the release has auto-apply on:
 
 ```bash
-asgard-cli render <project> dev | python3 scripts/check_crd_fidelity.py - --context <ctx>
+asgard-cli pipeline runs approve <run-id>
 ```
 
-> **Step 4a does NOT catch a field the CRD does not declare.** CRDs prune unknown fields by
-> default, so dry-run reports `created` while the field is quietly discarded. A deprecated
-> `Toolset.spec.instruction` passed 25/25 dry-runs and then failed the real deploy, because
-> **helm's server-side apply builds a typed patch and refuses**:
->
-> ```
-> .spec.instruction: field not declared in schema
-> ```
->
-> 4a answers "will it be accepted", 4b answers "will it be kept". A CD failure is the only other
-> place this surfaces — which is far too late.
-
-**Point it at the cluster you deploy to, not a local kind.** The two can disagree, and the one that
-matters is the deploy target:
-
-```bash
-asgard-cli render internal dev | python3 scripts/check_crd_fidelity.py - \
-  --context arn:aws:eks:ap-northeast-1:698306514474:cluster/asgard-ai-eks
-```
-
-If no cluster is reachable, this step is **not run** — that is not the same as passing. Say so.
+**If the run was never created, the push matched nothing** — either no release's pattern matched
+the ref, or the one it matched was never created on the platform. `asgard-cli pipeline deliveries`
+says which; nothing else will.
 
 ## Reporting
 
-Summarize PASS/FAIL per step. Declare success only when every step is green. On failure, name the
-project and the step, and quote the actual error output rather than paraphrasing it.
+Summarize PASS/FAIL per step. Declare success only when every step is green, **including step 4**.
+Steps 1 to 3 passing is not the gate passing: they check what a dry run passes and runtime still
+fails, which is the half a client can check. On failure, name the release and the step, and quote
+the actual error output rather than paraphrasing it — a plan report names the rule that fired.
 
 **Checked:** 2026-09-04 against asgard-kube `15ded0f` and against the gate that
 runs these checks. Every field path named resolves in the CRDs, and the

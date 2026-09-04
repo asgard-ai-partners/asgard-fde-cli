@@ -12,8 +12,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/config"
-	"github.com/asgard-ai-partners/asgard-fde-cli/internal/deploy"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/gate"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/pipelineconfig"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/render"
 )
 
@@ -38,10 +38,9 @@ server-side dry run all pass:
   - a Workflow has its full set of workflow-set labels, and each set has exactly
     one main; a Trigger's workflow-set-id matches its entrypoint Workflow's, or
     its editor opens blank. The other label an editor needs,
-    project-environment-id, is a warning rather than a failure - it comes from
-    platformMainEnvironmentId, which does not exist until tf-asgard has created
-    the namespace, so it is legitimately empty through the middle of an
-    onboarding
+    project-environment-id, is a warning rather than a failure - the platform
+    injects that value on every run, so a CR without the label is a template
+    that does not read it
   - a Syncer's paths obey the CRD's relative-path rules
   - the CRDs' conditional CEL rules that a render can be held against: exactly
     one of a set of sibling fields (a credential that is neither a literal nor a
@@ -52,22 +51,21 @@ server-side dry run all pass:
     no allowedCubes, sampleQuestions on anything published, and prompt.task and
     prompt.format identical across every Agent in one render
 
-It also warns about what CD requires and the apiserver does not: a project with
-no Syncer at all is refused by CD after 180 seconds even when helm upgrade
-succeeded, and an empty platformMainEnvironmentId renders CRs with no
-project-environment-id label. Both are correct during an onboarding and fatal
-once someone tags, so they are warnings and do not fail the gate.
+These are the checks a server-side dry run passes and runtime still fails: a
+reference to a CR that does not exist, an entry name nothing declares, a
+Workflow with no set labels, a missing display annotation. Each applies cleanly
+and then breaks at run time or renders a blank page in the platform UI, which is
+why they need a gate of their own rather than being left to the plan.
 
 A layer that feeds Data Insight rather than a chat agent belongs in the
 olapOnlyLayers list of .asgard-config.json, so the rule applies on every run
 instead of only when somebody remembers the flag.
 
-With no arguments it does every project in the config, once per environment that
-project's deploy.yaml declares. It renders in process, so there is no pipeline
-and no temporary file:
+With no arguments it does every release the declaration names. It renders in
+process, so there is no pipeline and no temporary file:
 
     asgard-cli verify
-    asgard-cli verify erp
+    asgard-cli verify internal-dev
     asgard-cli verify --rendered .out/rendered.yaml
     asgard-cli verify --tools               every tool description, side by side
 
@@ -149,7 +147,7 @@ one of them is fatal.`,
 				return err
 			}
 
-			projects, err := projectsToVerify(cfg, args)
+			releases, err := releasesToVerify(root, args)
 			if err != nil {
 				return err
 			}
@@ -160,41 +158,29 @@ one of them is fatal.`,
 
 			ok := true
 			checked := 0
-			for _, project := range projects {
-				file, err := deploy.Load(root, project)
-				if err != nil {
+			for _, release := range releases {
+				var buf bytes.Buffer
+				if _, err := render.Run(cmd.Context(), render.Options{
+					Root: root, Release: release,
+				}, &buf, cmd.ErrOrStderr()); err != nil {
 					return err
 				}
-				// Only the declared environments: not declaring one is a
-				// deliberate decision not to deploy there, so there is nothing
-				// to verify.
-				for _, env := range config.Envs {
-					if _, declared := file.Environments[string(env)]; !declared {
-						continue
-					}
 
-					var buf bytes.Buffer
-					if _, err := render.Run(cmd.Context(), render.Options{
-						Root: root, Project: project, Env: string(env),
-					}, &buf, cmd.ErrOrStderr()); err != nil {
-						return err
-					}
+				docs, err := gate.Read(&buf)
+				if err != nil {
+					return fmt.Errorf("%s: %w", release, err)
+				}
 
-					docs, err := gate.Read(&buf)
-					if err != nil {
-						return fmt.Errorf("%s/%s: %w", project, env, err)
-					}
-
-					checked++
-					if tools {
-						printTools(out, fmt.Sprintf("%s/%s", project, env), docs)
-						checked++
-						continue
-					}
-					if !record(fmt.Sprintf("%s/%s", project, env), docs,
-						gate.Options{Project: project, OLAPOnlyLayers: olap}) {
-						ok = false
-					}
+				checked++
+				if tools {
+					printTools(out, release, docs)
+					continue
+				}
+				// The gate fills a remedy command with this, and those name a
+				// project rather than a release, so it has to be the project -
+				// a command printed with the wrong one cannot be run as printed.
+				if !record(release, docs, gate.Options{Project: projectOfRelease(root, release), OLAPOnlyLayers: olap}) {
+					ok = false
 				}
 			}
 
@@ -284,19 +270,19 @@ func readRendered(cmd *cobra.Command, path string) ([]gate.Doc, error) {
 	return gate.Read(r)
 }
 
-// projectsToVerify resolves the arguments against the config, so a typo is
+// releasesToVerify resolves the arguments against the declaration, so a typo is
 // reported rather than silently verifying nothing.
-func projectsToVerify(cfg *config.Config, args []string) ([]string, error) {
+func releasesToVerify(root string, args []string) ([]string, error) {
+	cfg, err := pipelineconfig.LoadFromRepo(root, "")
+	if err != nil {
+		return nil, err
+	}
 	if len(args) == 0 {
-		names := make([]string, 0, len(cfg.Projects))
-		for _, p := range cfg.Projects {
-			names = append(names, p.Slug)
-		}
-		return names, nil
+		return cfg.Names(), nil
 	}
 	for _, name := range args {
-		if _, ok := cfg.Project(name); !ok {
-			return nil, fmt.Errorf("no project %q in %s", name, config.FileName)
+		if _, ok := cfg.Release(name); !ok {
+			return nil, fmt.Errorf("%s declares no release %q; it declares %v", cfg.Path, name, cfg.Names())
 		}
 	}
 	return args, nil
@@ -435,4 +421,25 @@ func printTools(out io.Writer, label string, docs []gate.Doc) {
 	fmt.Fprintf(out, "\n  %d tool(s). Read them together, as the model does - one list, no other\n"+
 		"  context, deciding which answers the question. The failure this catches is\n"+
 		"  two descriptions that are each accurate and do not say which to prefer.\n\n", len(tools))
+}
+
+// projectOfRelease recovers the project slug from the chart a release names.
+//
+// A chart lives at projects/<slug>/chart/app, so the slug is the second segment
+// - and it is the project's, not the release's. They differ as soon as one chart
+// has a dev and a prod release, which is the normal case.
+func projectOfRelease(root, release string) string {
+	cfg, err := pipelineconfig.LoadFromRepo(root, "")
+	if err != nil {
+		return ""
+	}
+	decl, ok := cfg.Release(release)
+	if !ok {
+		return ""
+	}
+	parts := strings.Split(filepath.ToSlash(decl.Chart), "/")
+	if len(parts) >= 2 && parts[0] == "projects" {
+		return parts[1]
+	}
+	return ""
 }

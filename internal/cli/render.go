@@ -2,63 +2,89 @@ package cli
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 
-	"github.com/asgard-ai-partners/asgard-fde-cli/internal/config"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/binding"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/pipelineconfig"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/render"
 )
 
 func newRenderCmd() *cobra.Command {
-	var quiet bool
+	var (
+		quiet     bool
+		values    []string
+		namespace string
+	)
 
 	cmd := &cobra.Command{
-		Use:   "render <project> <dev|prod>",
-		Short: "Render a project's chart the way CD will",
-		Long: `Render a project's chart to stdout, the way CD will.
+		Use:   "render <release>",
+		Short: "Render a release's chart locally, with placeholder platform values",
+		Long: `Render a release's chart to stdout, using the native helm binary.
 
-The namespace, the release name, the values files and the order they overlay in
-all come from projects/<project>/deploy.yaml - the same declaration CI reads - so
-what this prints is what a tag would apply. A project that does not declare the
-environment is refused rather than rendered, because not declaring it is a
-deliberate decision not to deploy there.
+The chart comes from the release's entry in ` + "`.asgard-pipeline.yaml`" + `, and the
+reserved ` + "`.Values.asgard.*`" + ` block is supplied with placeholders so a chart that
+reads it renders rather than failing on a missing key.
 
-Everything except the manifests goes to stderr, so it pipes:
+    asgard-cli render internal-dev
+    asgard-cli render internal-dev > .out/rendered.yaml
+    asgard-cli render internal-dev | asgard-cli check xref -
 
-    asgard-cli render internal dev
-    asgard-cli render internal dev > .out/rendered.yaml
-    asgard-cli verify internal
+**WHAT THIS RENDERS IS NOT WHAT WILL DEPLOY.** A run renders on the platform,
+with the release's real values and real ids, and then checks every resulting CR
+against the cluster's own CRDs with a server-side dry run. This renders with
+placeholders and checks nothing at all. It is for the loop that is too fast to
+involve a push - does the template compile, does it produce the objects I meant
+- and the authoritative answer is always the plan report:
 
-It needs helm on PATH, and nothing else. This replaces common/render.sh, which
-was bash and called yq, so neither ran on Windows without WSL - while helm
-itself has a native Windows build. Everything here is one binary and one helm.
+    asgard-cli pipeline runs watch --release <name> --commit $(git rev-parse HEAD)
 
-**It renders only, and there is no install path.** Deployment is CD-only: a
-Syncer pins its revision to the chart's appVersion, and only CI stamps the
-release tag in. A local helm upgrade writes the placeholder version as a git ref
-that does not exist, and the Syncer then fails to clone on every single run.`,
-		Args: cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			project, env := args[0], args[1]
+The values a run would take from the platform are not fetched. Coercing a stored
+string to the type its declaration gives it is the platform's rule, and a second
+copy of that rule here would disagree with it the first time either changed. Use
+-f to supply them by hand when a template needs them to render at all.
 
-			if !config.Env(env).Valid() {
-				return fmt.Errorf("env must be dev or prod, not %q", env)
+Everything except the manifests goes to stderr, so it pipes.
+
+It needs helm on PATH and nothing else; ` + "`asgard-cli doctor`" + ` says whether it is
+there.
+
+**It renders only, and there is no install path.** A Syncer pins its revision to
+the chart's appVersion and only a run stamps a real ref in, so a local helm
+upgrade would write the placeholder as a git ref that does not exist and the
+Syncer would fail to clone on every run afterwards.`,
+		// `render <project> <env>` was the old form. It is gone with the
+		// per-environment values files, and cobra's own arity message would say
+		// only "accepts 1 arg(s)" - which does not tell somebody typing the old
+		// form what replaced it.
+		Args: func(_ *cobra.Command, args []string) error {
+			switch {
+			case len(args) == 2 && (args[1] == "dev" || args[1] == "prod"):
+				return fmt.Errorf(
+					"render takes a release, not a project and an environment: `asgard-cli render <release>`.\n"+
+						"Where a chart deploys is a release in %s now, and one chart can have several.\n"+
+						"`asgard-cli pipeline releases` lists the ones the platform has.", pipelineconfig.FileName)
+			case len(args) != 1:
+				return fmt.Errorf("render takes exactly one release name")
 			}
+			return nil
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			release := args[0]
 
-			root, cfg, err := loadRepo()
+			root, err := repoRoot()
 			if err != nil {
 				return err
-			}
-			if _, ok := cfg.Project(project); !ok {
-				return fmt.Errorf("no project %q in %s; add it with `asgard-cli project add %s`",
-					project, config.FileName, project)
 			}
 
 			errOut := cmd.ErrOrStderr()
 			res, err := render.Run(cmd.Context(), render.Options{
-				Root:    root,
-				Project: project,
-				Env:     env,
+				Root:        root,
+				Release:     release,
+				ValuesFiles: values,
+				Namespace:   namespace,
 			}, cmd.OutOrStdout(), errOut)
 			if err != nil {
 				return err
@@ -67,14 +93,41 @@ that does not exist, and the Syncer then fails to clone on every single run.`,
 			// The summary goes to stderr so that stdout stays exactly the
 			// manifests, which is what makes the pipe forms above work.
 			if !quiet {
-				fmt.Fprintf(errOut, "rendered %s (%s) -> namespace %s, release %s\n",
-					project, env, res.Namespace, res.Release)
+				fmt.Fprintf(errOut, "rendered %s as helm release %s in namespace %s\n",
+					release, res.Release, res.Namespace)
+				fmt.Fprintf(errOut, "the asgard values are placeholders; the plan report is what deploys\n")
 			}
 			return nil
 		},
 	}
 
-	cmd.Flags().BoolVar(&quiet, "quiet", false, "do not print the summary line to stderr (defaults to printing it)")
+	cmd.Flags().BoolVarP(&quiet, "quiet", "q", false, "do not write the summary line to stderr")
+	cmd.Flags().StringArrayVarP(&values, "values", "f", nil,
+		"an extra values file, repeatable and applied in order; the reserved asgard block still wins")
+	cmd.Flags().StringVar(&namespace, "namespace", "",
+		"namespace to render against; defaults to a placeholder, since the real one comes from the release's project")
 
 	return cmd
+}
+
+// repoRoot is the directory the declaration lives in, which is what a local
+// render resolves chart paths against.
+//
+// It is the working directory rather than a configured root: the declaration's
+// chart paths are relative to the repository, and finding the declaration is
+// how the repository is found.
+func repoRoot() (string, error) {
+	dir, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	declPath, _, err := binding.Locate(dir)
+	if err != nil {
+		return "", err
+	}
+	if declPath == "" {
+		return "", fmt.Errorf("no %s at or above %s, so there is no declaration to render from",
+			pipelineconfig.FileName, dir)
+	}
+	return filepath.Dir(declPath), nil
 }

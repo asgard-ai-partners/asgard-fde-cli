@@ -165,7 +165,7 @@ them, and asgard-cli check is green.
 **Checked:** 2026-09-04 - the shapes it names are real (`asgard-cli size` counts
 them off production, `asgard-cli usecase` assembles each), and the namespace
 pattern `asgard-<workspace>-<project>-<env>` is what this tool derives and what
-tf-asgard consumes. **No CRD claim is made here**, deliberately: which CRs a
+the platform consumes. **No CRD claim is made here**, deliberately: which CRs a
 project ends up with belongs to `read-path`, `entry-point` and the extracts.
 
 **Unchecked:** the split rule itself - that a project follows the **audience**

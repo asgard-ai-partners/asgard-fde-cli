@@ -204,20 +204,18 @@ from making the same choice.
 
 ```
 <<.RepoName>>/
+├── .asgard-pipeline.yaml          # ★ THE DEPLOYMENT DECLARATION — which releases exist,
+│                                  #   what triggers each, which keys each takes. NO VALUES.
+├── .asgard-cli.yaml               # which workspace/pipeline this checkout acts in.
+│                                  #   CLIENT-SIDE ONLY — the platform never reads it
 ├── common/                        # cross-project shared plumbing
-│   ├── values-dev.yaml            # env-level values shared by ALL projects (an -f overlay point)
-│   ├── values-prod.yaml
 │   ├── skills/<skill>/SKILL.md    # RUNTIME skills, synced into the platform
-│   └── README.md                  # what the overlay points are
-│                                  # (rendering is `asgard-cli render <project> <env>`, not a file here)
+│   └── README.md                  # what is shared and what is not
 ├── projects/<project>/
-│   ├── deploy.yaml                # which envs this project deploys to + namespace + values per env
 │   └── chart/
 │       ├── app/templates/<kind>/  # one directory per CR kind, one file per CR
-│       ├── values-dev.yaml        # per-project per-env (platformMainEnvironmentId, DB host …)
-│       └── values-prod.yaml
+│       └── app/values.yaml        # DEFAULTS ONLY. Real values live on the platform
 ├── scripts/                       # what needs a cluster or a database — the rest is asgard-cli
-│   ├── check_crd_fidelity.py      # fields the CRDs would silently prune (needs kubectl)
 │   └── db/                        # query + introspection helpers (add as databases are wired up)
 ├── .agents/skills/                # DESIGN-TIME skills — for the coding agent working in this repo
 │   ├── spec-workflow/             #   turn unclear work into a reviewable spec
@@ -236,15 +234,24 @@ from making the same choice.
 │                                  #   /filed, /gate, /propose. The CLI holds the
 │                                  #   knowledge; these hold the ORDER
 ├── requirements/ references/      # executable task specs / background material
-├── .github/workflows/main.yaml    # tag-driven rollout across the projects that declare the env
 ├── AGENTS.md                      # ← this file, the SoT
 └── CLAUDE.md                      # one line: @AGENTS.md
 ```
 
-Adding a project = add `projects/<project>/chart` **and** a `projects/<project>/deploy.yaml`
-listing only the envs you want deployed. Valid env symbols are exactly `dev` and `prod`; the two
-may be **asymmetric**. Also add it to the root `README.md` project table —
-`asgard-cli check` cross-checks that table against the actual folders.
+**There is no CD workflow in this repository, and no per-environment values files.** The
+platform runs the rollout: a tag matching a release's rule produces a run that renders the
+chart, checks every CR against the cluster's own CRDs, waits for review and applies. What this
+repository holds is the chart and the one declaration.
+
+Adding a project = add `projects/<project>/chart`, declare a release for it in
+`.asgard-pipeline.yaml`, and create that release on the platform bound to the project whose
+namespace it deploys into:
+
+    asgard-cli pipeline release create <name> --project <id>
+
+A tag matching a release nobody created produces no run at all — `asgard-cli pipeline
+deliveries` says so, and nothing else will. Also add the project to the root `README.md`
+table; `asgard-cli check` cross-checks it against the actual folders.
 
 ## Entry point shapes — the field-level difference
 
@@ -420,16 +427,30 @@ a Trigger it creates itself; **a hand-written CR has nobody to copy them for it.
 **Write only Workflow + Trigger.** The `Trigger` reconciler provisions the BotProvider, its
 API-key Secret, and the CronJob itself. Hand-writing a BotProvider for a Trigger is wrong.
 
-## `platformMainEnvironmentId`
+## The values the platform injects: `.Values.asgard.*`
 
-Each project's K8s Namespace maps to a Platform Project whose main environment has an ID. It is
-**per-project per-env** → set it in each project's `values-<env>.yaml` (default `""` in
-`values.yaml`, never hardcoded in templates). It surfaces as the label
-`asgard-ai.com/project-environment-id`, carried by **`Workflow`, `CompletionModel` and `Trigger`**
-only.
+**Never write a namespace, a Secret name, an environment id or a version number into a chart.**
+The platform layers a reserved block over your values on every run, and the chart reads it:
 
-**You cannot get this ID until the namespace exists** and the platform has reconciled it into a
-Project — which is why Terraform comes first (see Deploy / CI).
+| key | what it is |
+|---|---|
+| `.Values.asgard.release` | the helm release name, `iac-<name>` |
+| `.Values.asgard.releaseName` | the name as the declaration spells it |
+| `.Values.asgard.namespace` | the namespace this release deploys into |
+| `.Values.asgard.projectId` | the platform Project id |
+| `.Values.asgard.projectEnvironmentId` | that project's main environment id |
+| `.Values.asgard.appSecretName` | this release's own Secret |
+| `.Values.asgard.appConfigMapName` | this release's own ConfigMap |
+| `.Values.asgard.ref` | the tag or branch that triggered the run |
+| `.Values.asgard.commitSha` | the full commit SHA |
+
+The chart's `appVersion` is set to the ref for you. A `values.yaml` that defines its own `asgard`
+key gets a lint warning and is overridden.
+
+`projectEnvironmentId` surfaces as the label `asgard-ai.com/project-environment-id`, carried by
+**`Workflow`, `CompletionModel` and `Trigger`** only. It used to be a value somebody had to fetch
+after the namespace existed and paste into a per-environment values file; it is injected now, and
+that whole ordering problem is gone.
 
 ## When the tool is wrong
 
@@ -486,67 +507,82 @@ All secrets are read from the Kubernetes secret `app-secret` (configurable via `
 
 Charts **only ever write `secretKeyRef`**; credential values never enter values files or git.
 
-## Deploy / CI
+## Deploy
 
-CI/CD is tag-driven via `.github/workflows/main.yaml`. A single tag rolls out every project **that
-declares this env** in its `deploy.yaml`; projects without that env are skipped. A `setup` job
-resolves env/cluster from the tag and scans every `projects/*/deploy.yaml` into a matrix; a
-`deploy` job runs **one parallel job per matched project**, does `helm upgrade`, then **triggers
-that project's Syncers once and waits for them to complete**.
+**The platform runs the rollout. There is no CD workflow in this repository and no cluster
+credential on any developer's machine.**
 
-| Tag | Env |
-|---|---|
-| `dev-x.y.z` | dev |
-| `x.y.z` | prod |
+A tag matching a release's rule in `.asgard-pipeline.yaml` produces a **run**, which walks six
+steps: Checkout, Lint, Variables, Render & Dry-run, Review, Apply. The dry run sends every
+rendered CR to the apiserver, so the CRDs' own CEL rules, patterns and required fields are checked
+against the real cluster before anything is written. Apply then writes this release's Secret and
+ConfigMap, does `helm upgrade --install`, and triggers the Syncers marked
+`asgard-ai.com/auto-fire-on-rollout: "true"`.
 
-Namespaces follow `asgard-<<.Workspace.Slug>>-<project>-<env>`. The project slug is deliberately
-short so that names derived from the namespace stay short.
+    git push origin dev-0.1.0
+    asgard-cli pipeline runs watch --release <name> --commit $(git rev-parse HEAD)
 
-> **Two ordering traps, both of which fail in CD rather than locally:**
+`watch` waits for the run the push created, follows the steps and prints the plan report or the
+reason it failed. A run stops at review unless the release has auto-apply on:
+
+    asgard-cli pipeline runs approve <run-id>
+
+**Apply uses the chart and values captured when the plan ran**, not the repository as it is now,
+so a tag moved or a file edited since then changes nothing about a run waiting for review.
+
+> **The ordering trap that remains:** a tag matching a release **nobody created on the platform**
+> produces no run at all. `asgard-cli pipeline deliveries` says so, and nothing else will.
+> Create it once, bound to the project whose namespace it deploys into:
 >
-> 1. **Terraform first.** Enabling an env for a project means: create that env's namespace and
->    `app-secret` in tf-asgard **first**, then add `environments.<env>` to its `deploy.yaml` and the
->    matching `chart/values-<env>.yaml`. In the other order the next tag just fails.
-> 2. **CD requires at least one `Syncer` per deployed project.** The "trigger and wait" step polls
->    for CronJobs labelled `asgard-ai.com/syncer-name` and **exits 1 after 180s if it finds none**,
->    even when `helm upgrade` succeeded.
+>     asgard-cli pipeline release create <name> --project <id>
 
 > [!IMPORTANT]
-> **Deployment is CD-only — do not `helm upgrade` from a laptop.** A Syncer that pins
-> `revision: {{ .Chart.AppVersion }}` needs the release tag CI stamps into `appVersion`; a local
-> install renders the placeholder version as a git ref that does not exist, and the Syncer fails to
-> clone every run. `asgard-cli render` therefore renders only; it has no install path.
-
-Required repo secrets: `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_REGION`.
+> **Do not `helm upgrade` from a laptop**, and there is nothing to upgrade with — no cluster
+> credential is issued to a client. A Syncer that pins `revision: {{ .Chart.AppVersion }}` needs
+> the ref the platform stamps into `appVersion`; a local install would render a placeholder as a
+> git ref that does not exist and the Syncer would fail to clone every run. `asgard-cli render`
+> renders only, with placeholder values, and has no install path.
 
 ## Helm Commands
 
 ```bash
-# Lint a project chart
-helm lint ./projects/<project>/chart/app -f ./projects/<project>/chart/values-dev.yaml
+# Lint a chart on its own defaults — this is what catches a .Values.* with no default
+helm lint ./projects/<project>/chart/app
 
-# Render locally — prefer the helper: it takes namespace/values from deploy.yaml, so the
-# output is exactly what CD deploys (same overlay order, --namespace and release name)
-asgard-cli render <project> dev
+# Render a release locally. The chart comes from its entry in .asgard-pipeline.yaml and the
+# reserved .Values.asgard.* block is filled with placeholders.
+asgard-cli render <release>
 ```
 
-Release name is the project name, in both CI and locally. `asgard-cli render` needs only `helm`.
+**What renders here is not what deploys.** The platform renders with the release's real values and
+real ids and then checks every CR against the cluster's CRDs; this renders with placeholders and
+checks nothing. It is for the loop that is too fast to involve a push — does the template compile,
+does it produce the objects I meant. The authoritative answer is the plan report.
+
+`asgard-cli render` needs only `helm` on PATH.
 
 ## Acceptance Gate
 
-Load the **`asgard-cr-verification`** skill (`.agents/skills/`) and run its gate; project omitted =
-whole repo. **Any red step stops the work.**
+Load the **`asgard-cr-verification`** skill (`.agents/skills/`) and run its gate; release omitted =
+every release. **Any red step stops the work.**
 
-1. `asgard-cli check [project]` — structural invariants
-2. `helm lint projects/<project>/chart/app` (bare — proves `values.yaml` defaults every
-   `.Values.*`) and again with `-f projects/<project>/chart/values-dev.yaml`
-3. `asgard-cli verify [project]` — renders, then checks CR cross-reference completeness
-   **and** the one-system-one-Agent invariants. One command, both sets.
-4. **Against the cluster you deploy to** (read-only, needs `kubectl`):
-   `kubectl apply --dry-run=server` **and** `python3 scripts/check_crd_fidelity.py - --context <ctx>`
+Locally, before pushing:
 
-Step 4 is two checks because they catch different things: dry-run answers "will it be accepted",
-fidelity answers "**will it be kept**". See the pruning gotcha below.
+1. `asgard-cli check` — structural invariants of the repository
+2. `helm lint projects/<project>/chart/app` — bare, which proves `values.yaml` defaults every
+   `.Values.*`
+3. `asgard-cli verify [release]` — renders, then checks CR cross-reference completeness **and**
+   the one-system-one-Agent invariants. One command, both sets.
+
+Then push, because the rest cannot be done here:
+
+4. `asgard-cli pipeline runs watch --release <name> --commit $(git rev-parse HEAD)`
+
+**Step 4 is not a formality and it is not skippable.** It is where every rendered CR is sent to
+the apiserver with a server-side dry run, so the CRDs' CEL rules, patterns, required fields and
+unknown-field pruning are checked against the real cluster. Nothing local can do that: no cluster
+credential is issued to a client, which is the whole reason steps 1–3 are the shape they are —
+they check what a dry run passes and runtime still fails.
 
 ## Spec-Driven Development
 
@@ -578,12 +614,14 @@ each decision that got settled.
 ## Helm / Platform Gotchas
 
 - All resources use `apiVersion: asgard-ai.com/v1alpha1`.
-- Keep dev/prod differences in `projects/<project>/chart/values-*.yaml` and `common/values-*.yaml`
-  only.
-- **A field the CRD does not declare is silently pruned, and `kubectl apply --dry-run=server` calls
-  that success.** Helm's server-side apply does not — it builds a typed patch and fails with
-  `field not declared in schema`, so the first sign is a red CD run.
-  `scripts/check_crd_fidelity.py` exists for exactly this.
+- **Differences between releases are values, and values live on the platform.** Two releases of one
+  chart differ by what `asgard-cli pipeline variables set` put on each; the chart has one
+  `values.yaml`, and it holds defaults.
+- **A field the CRD does not declare is silently pruned, and a plain `kubectl apply
+  --dry-run=server` calls that success.** Helm's server-side apply does not — it builds a typed
+  patch and fails with `field not declared in schema`. The platform's plan checks for this and
+  reports it as `crd/unknown-field` before anything is applied, which is why the plan report is
+  the step that cannot be skipped.
 - **Read CRD shapes from the cluster you deploy to**, not from a local checkout of the CRD repo —
   the two can disagree, and a deprecated field is easy to find in an older checkout.
 - **`Workflow.spec.processors[].configs[].name` is a free-form string.** A wrong config name lints

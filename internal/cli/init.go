@@ -80,23 +80,7 @@ instead.`,
 					if err := existing.Validate(); err != nil {
 						return fmt.Errorf("%s is incomplete, pass --force to reinitialise:\n%w", config.FileName, err)
 					}
-					// Filling in a workspace id that was left empty is not a
-					// rebind, so it does not need --force. Replacing one that is
-					// already there is, because that names a different
-					// workspace.
-					switch {
-					case workspaceID == "" || workspaceID == existing.Workspace.ID:
-						fmt.Fprintf(out, "%s already exists\n", config.FileName)
-					case existing.Workspace.HasID():
-						return fmt.Errorf("%s already records workspace.id %q; pass --force to rebind this repository to %q",
-							config.FileName, existing.Workspace.ID, workspaceID)
-					default:
-						existing.Workspace.ID = workspaceID
-						if err := config.Save(path, existing); err != nil {
-							return err
-						}
-						fmt.Fprintf(out, "Set workspace.id in %s\n", path)
-					}
+					fmt.Fprintf(out, "%s already exists\n", config.FileName)
 					printConfig(out, existing)
 					return nil
 				case !errors.Is(err, config.ErrNotFound):
@@ -115,7 +99,6 @@ instead.`,
 
 			cfg := &config.Config{
 				Workspace: config.Workspace{
-					ID:   workspaceID,
 					Slug: workspaceSlug,
 					Name: workspaceName,
 				},
@@ -133,11 +116,7 @@ instead.`,
 				}
 			}
 			for _, slug := range projects {
-				cfg.Projects = append(cfg.Projects, config.Project{
-					Slug:         slug,
-					Name:         slug,
-					Environments: []config.Env{config.EnvDev},
-				})
+				cfg.Projects = append(cfg.Projects, config.Project{Slug: slug, Name: slug})
 			}
 
 			if err := cfg.Validate(); err != nil {
@@ -169,34 +148,25 @@ func defaultSlug(dir string) string {
 	return strings.TrimSuffix(filepath.Base(dir), config.RepoSuffix)
 }
 
-// printConfig reports what a command just wrote or found, including the two
-// derived names, which are the facts the FDE needs next.
+// printConfig reports what a command just wrote or found.
 func printConfig(out io.Writer, cfg *config.Config) {
-	if cfg.Workspace.HasID() {
-		fmt.Fprintf(out, "  workspace.id    %s\n", cfg.Workspace.ID)
-	} else {
-		fmt.Fprintf(out, "  workspace.id    (not set yet)\n")
-	}
 	fmt.Fprintf(out, "  workspace.slug  %s\n", cfg.Workspace.Slug)
 	fmt.Fprintf(out, "  workspace.name  %s\n", cfg.Workspace.Name)
 	fmt.Fprintf(out, "  repository      %s\n", cfg.RepoName())
-
-	if !cfg.Workspace.HasID() {
-		fmt.Fprintf(out, "\nThe workspace id is what the platform knows this customer by. Nothing here\n"+
-			"needs it yet - namespaces come from the slug - so it can wait until the\n"+
-			"platform has issued one:\n\n    asgard-cli init --workspace-id ws_xxxxxxxx\n")
-	}
 
 	if len(cfg.Projects) == 0 {
 		fmt.Fprintf(out, "\nNo projects yet. Add one with `asgard-cli project add <slug>`.\n")
 		return
 	}
 
-	fmt.Fprintf(out, "\n%d project(s):\n", len(cfg.Projects))
-	for _, p := range cfg.Projects {
-		fmt.Fprintf(out, "  %s\n", p.Slug)
-		for _, env := range p.Environments {
-			fmt.Fprintf(out, "    %-5s %s\n", env, cfg.Namespace(p.Slug, env))
+	fmt.Fprintf(out, "\n%d project(s): ", len(cfg.Projects))
+	for i, p := range cfg.Projects {
+		if i > 0 {
+			fmt.Fprint(out, ", ")
 		}
+		fmt.Fprint(out, p.Slug)
 	}
+	fmt.Fprintf(out, "\n\nWhere they deploy is not here. A release in .asgard-pipeline.yaml binds a\n"+
+		"chart to a platform project, and `asgard-cli workspace use` records which\n"+
+		"workspace this checkout acts in.\n")
 }

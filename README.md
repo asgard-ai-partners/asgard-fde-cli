@@ -29,8 +29,9 @@ internal/size/      the deployment shapes, counted off production
 internal/brief/     what one activity gets wrong, addressed by intent not by stage
 internal/check/     repository structure: indexes, dated names, links, orphan pages
 internal/gate/      the invariant checks on a rendered chart (xref, agent split, enums)
-internal/deploy/    reads projects/<project>/deploy.yaml, the deployment SoT
-internal/render/    renders a chart via helm, the way CD does
+internal/render/    renders a release's chart via helm, with placeholder asgard values
+internal/binding/   reads and writes .asgard-cli.yaml, the checkout's platform binding
+internal/pipelineconfig/ reads .asgard-pipeline.yaml, the deployment declaration
 internal/chart/     reads a project's unrendered templates for (kind, name)
 internal/tool/      resolves helm/kubectl/python3, and how to install one
 internal/version/   build information (injected by GoReleaser via ldflags)
@@ -142,12 +143,11 @@ It writes the part of a customer repo that is the same for every engagement:
 | `AGENTS.md` | the platform contract, with the customer-specific sections marked TODO |
 | `docs/` | the four-layer model (meeting-notes / decisions / living spec) and the SDD rules |
 | `requirements/` | the task and request indexes |
-| `scripts/check_*.py` | the four acceptance gates |
 | `scripts/db/` | the query and introspection tool-chain, with an empty target registry |
 | `.agents/skills/` | the six design-time skills |
-| `common/` | `asgard-cli render`, the per-env overlay points, the runtime-skill directory |
-| `.github/workflows/main.yaml` | tag-driven CD |
-| `projects/<slug>/` | one chart skeleton per project, with `values-<env>.yaml` only for the environments that project declares |
+| `common/` | the runtime-skill directory |
+| `.asgard-pipeline.yaml` | the deployment declaration, with one release per project to fill in |
+| `projects/<slug>/` | one chart skeleton per project |
 
 What it does **not** write is the customer's own knowledge: which systems exist,
 how the projects split, what the CRs look like. That is what the onboarding
@@ -565,8 +565,8 @@ ok  structure is consistent (1 project(s): [erp])
 ```
 
 - the root README's project table matches the directories under `projects/`
-- every project has a `deploy.yaml`, its envs are `dev` or `prod`, and the values
-  files it names exist, along with the shared `common/values-<env>.yaml`
+- `.asgard-pipeline.yaml` parses, names no release twice, and every release it
+  declares points at a chart directory that has a `Chart.yaml`
 - runtime skills under `common/skills/` carry `name` and `description`
   frontmatter, with the name matching the directory
 - the SDD entry points under `requirements/` are present
@@ -616,7 +616,7 @@ account of it on another stream is a second source for one fact.
 its `check_chart_xref.py` and `check_agent_split.py`. The old chain was:
 
 ```
-bash render.sh  ->  yq (read deploy.yaml)  ->  helm template  ->  python3 + PyYAML
+bash render.sh  ->  yq  ->  helm template  ->  python3 + PyYAML
 ```
 
 Four external dependencies, of which **three do not work on Windows without WSL

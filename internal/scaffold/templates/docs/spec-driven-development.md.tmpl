@@ -2,7 +2,7 @@
 
 This repository uses Spec-Driven Development (SDD) for medium-to-large changes. The goal is to make work executable by agents without losing product intent, resource contracts, data/secret dependencies, or verification requirements.
 
-This is a Helm chart repository that deploys Kubernetes custom resources (`asgard-ai.com/v1alpha1`). "Implementation" here means changes to CRs, Helm templates, agents/skills, values files, `deploy.yaml`, and CI — not application source code.
+This is a Helm chart repository that deploys Kubernetes custom resources (`asgard-ai.com/v1alpha1`) through the platform's pipeline. "Implementation" here means changes to CRs, Helm templates, agents/skills and `.asgard-pipeline.yaml` — not application source code.
 
 Two things about this repo shape the specs you write:
 
@@ -76,7 +76,7 @@ Use SDD before changing a chart when the work involves any of the following:
 - **Re-introducing a write path** (`Toolset` → `Workflow` → `query-database`), which also means deciding the `requestConsent` gate.
 - New or changed external API contract, request/response shape, error handling, or auth/secret usage.
 - Model selection or prompt change that affects agent behavior.
-- Deployment, GitHub Actions workflow, namespace/cluster, or `deploy.yaml` change.
+- A release, its trigger, its chart or its declared keys changing in `.asgard-pipeline.yaml`.
 - Adding a new project under `projects/`.
 - Ambiguous acceptance criteria or unresolved product decisions.
 
@@ -132,25 +132,25 @@ implement against a spec that no longer describes the system.
 This repo has a **four-step** acceptance gate; run all of it (the `asgard-cr-verification` skill under `.agents/skills/` documents it in full):
 
 ```bash
-# 1. structural repo consistency (README registry, deploy.yaml, common/skills,
+# 1. structural repo consistency (README registry, .asgard-pipeline.yaml, common/skills,
 #    requirements indexes, and the docs/ spec structure)
 asgard-cli check [project]
 
 # 2. chart static validation
 helm lint projects/<project>/chart/app          # bare: values.yaml must default every .Values.*
-helm lint projects/<project>/chart/app -f projects/<project>/chart/values-dev.yaml
+helm lint projects/<project>/chart/app
 
 # 3. render + CR cross-reference completeness, then the agent-split invariants
 asgard-cli verify <project>
 
 # 4. against the cluster you deploy to (read-only, needs kubectl)
 asgard-cli render <project> dev | kubectl apply --dry-run=server -n <ns> -f -
-asgard-cli render <project> dev | python3 scripts/check_crd_fidelity.py - --context <ctx>
+asgard-cli pipeline runs watch --release <name> --commit $(git rev-parse HEAD)
 ```
 
 Step 3 catches what `helm lint` cannot: an `Agent` referencing a `SemanticLayer`/`Toolset` that does not exist, a `Toolset` pointing at a missing `Workflow`, a `SemanticLayer` pointing at a missing `DataConnector`, a wrong `entry` name on any entrypoint, and the Platform UI metadata whose absence is invisible to every other check.
 
-Step 4's two commands answer different questions: `--dry-run=server` answers "will it be accepted", `check_crd_fidelity.py` answers "will it be kept". A CRD silently prunes undeclared fields and dry-run still reports success — see `docs/decisions/2026-08-24-crd-fidelity-becomes-a-gate.md`.
+Step 4 runs on the platform and cannot be run here: no cluster credential is issued to a client. Its dry run answers both questions that used to need two commands — `crd/dry-run-rejected` is "will it be accepted", `crd/unknown-field` is "will it be kept". A CRD silently prunes undeclared fields and a plain dry-run still reports success — see `docs/decisions/2026-08-24-crd-fidelity-becomes-a-gate.md`.
 
 Step 1 also checks the `docs/` layer: required files, the living spec module index matching the actual module files, dated record filenames, and every relative markdown link inside `docs/` resolving.
 

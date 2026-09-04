@@ -158,15 +158,13 @@ defaultSemanticLayerEffort: "medium"
 		Wiki:     "automation",
 		AlsoRead: []string{"workflow-chain"},
 		After: []string{
-			"platformMainEnvironmentId must be a real value in chart/values-<env>.yaml.",
-			"  `asgard-cli verify` warns about this rather than failing - it is",
-			"  correct during an onboarding and fatal once someone tags, so it stays",
-			"  a warning you have to clear yourself. The id only exists after",
-			"  tf-asgard has created the namespace and the platform has reconciled",
-			"  it. Until then the Trigger renders with no project-environment-id",
-			"  label: on a cluster it fires correctly while its editor opens as a",
-			"  blank canvas, which is the worst failure shape there is - working,",
-			"  and uneditable.",
+			"The Trigger must read .Values.asgard.projectEnvironmentId for its",
+			"  project-environment-id label. The platform injects that value on every",
+			"  run, so this is a line in the template rather than a value to fetch -",
+			"  and the skeleton already has it. `asgard-cli verify` warns if it goes",
+			"  missing rather than failing: a Trigger with no label fires correctly on",
+			"  a cluster while its editor opens as a blank canvas, which is the worst",
+			"  failure shape there is - working, and uneditable.",
 		},
 		Values: `
 # <<.DisplayName>>

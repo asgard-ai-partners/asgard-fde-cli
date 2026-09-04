@@ -36,12 +36,18 @@ endpoint、一條網路路徑、一個測試環境、某個人的核准佇列。
 
 ## 3. 能夠實作 IaC,charts 的部分
 
-Asgard CR 的 Helm chart:`projects/<slug>/chart你/`,一個 project 一份 chart,
-一個環境一個 namespace。
+Asgard CR 的 Helm chart:`projects/<slug>/chart/`,一個 project 一份 chart。
+部署到哪裡不在 chart 裡:repo 根目錄一份 `.asgard-pipeline.yaml` 宣告有哪些
+Release,一個 Release 綁一份 chart 到一個 Platform Project(= 一個 namespace),
+由一條 tag 或 branch 規則觸發。
 
-**namespace 本身和 `platformMainEnvironmentId` 不在範圍內。** 那是 tf-asgard
-的,而且在 `asgard-cli project add` 的時候那個 id 還不存在——平台要先把
-namespace 調和成一個 Project 才會發。
+**namespace 與 environment id 不在範圍內,而且是刻意的。** 它們由 Platform 在每次
+Run 注入成 `.Values.asgard.*`,chart 讀就好 —— 這比它們以前的樣子(要等
+namespace 建好、去把 id 抄進一個 per-env 的 values 檔)少了一整條會出錯的順序。
+
+**能不能部署也不在範圍內。** Platform 會用真值渲染、把每個 CR 送進 apiserver
+做 dry run,那是本機做不到的:client 從頭到尾不會拿到叢集憑證。這個工具做的是
+另外那一半 —— 過得了 dry run、runtime 才炸的那一類檢查,以及把 Plan 的結果讀回來。
 
 ## 4. 查不到需要的知識時,Agent 從 asgard-cli 的輸出就知道去哪裡發 issue
 

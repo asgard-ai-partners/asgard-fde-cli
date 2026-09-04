@@ -1,7 +1,7 @@
 # <<.DisplayName>>
 #
-# Connection coordinates live in chart/values-<env>.yaml, one group per
-# connector. The password is only ever a secretKeyRef into app-secret, which
+# Connection coordinates live in the platform's variables, declared as chartValues, one group per
+# connector. The password is only ever a secretKeyRef into the release's own Secret, which
 # infra provisions - never a value, never in git.
 apiVersion: asgard-ai.com/v1alpha1
 kind: DataConnector

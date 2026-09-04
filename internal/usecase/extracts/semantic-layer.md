@@ -140,7 +140,8 @@ spec:
         select ...
 ```
 
-Connection coordinates go in `chart/values-<env>.yaml`, one group per connector.
+Connection coordinates are `chartValues` declared in `.asgard-pipeline.yaml` and set on the
+platform, one group per connector.
 The password is only ever a `secretKeyRef`.
 
 ## Fields that are not obvious

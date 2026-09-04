@@ -483,7 +483,7 @@ reaches a commit is not fixed by deleting the line - the history keeps it. It is
 fixed by rotating the credential, which means going back to the customer to ask
 for a new one, having just told them we leaked the last one.
 
-    coordinates  -> the request record, and chart/values-<env>.yaml
+    coordinates  -> the request record, and the platform's variables
     passwords    -> .env locally (gitignored), app-secret in the cluster
 
 Write the *name* of the key in the record - `<TARGET>_DB_PASSWORD` locally,

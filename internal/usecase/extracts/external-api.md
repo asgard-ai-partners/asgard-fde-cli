@@ -175,7 +175,7 @@ spec:
             })()
 ```
 
-Endpoints and non-secret settings go in `values-<env>.yaml`; a token is a
+Endpoints and non-secret settings are `chartValues` set on the platform; a token is a
 `secretKeyRef` into `app-secret`, never a value.
 
 ## Several systems of the same kind

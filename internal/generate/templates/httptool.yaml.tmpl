@@ -11,7 +11,7 @@
 <<else>># A read tool. requestConsent: false because it changes nothing.
 <<end>>#
 # TODO before this is usable:
-#   1. The endpoint, in chart/values-<env>.yaml.
+#   1. The endpoint, declared as a chartValue and set on the platform.
 #   2. The request body - measure it against the real API, do not infer it from
 #      the field names on our side.
 #   3. Auth: add the header as a config, reading a secretKeyRef. Do NOT declare
@@ -26,7 +26,7 @@ metadata:
     {{- include "<<.Chart>>.workflowSetAnnotations" (dict "name" "<<.CRName>>" "displayName" "<<.DisplayName>>") | nindent 4 }}
   labels:
     {{- include "<<.Chart>>.workflowSetLabels" (dict "name" "<<.CRName>>" "type" "automation_tool") | nindent 4 }}
-    {{- with .Values.platformMainEnvironmentId }}
+    {{- with .Values.asgard.projectEnvironmentId }}
     asgard-ai.com/project-environment-id: {{ . | quote }}
     {{- end }}
     {{- include "<<.Chart>>.labels" . | nindent 4 }}

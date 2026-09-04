@@ -6,10 +6,12 @@
 > [`.agents/skills/plain-chinese/`](../../../.agents/skills/plain-chinese/)。
 > 它是接手的人第一個打開的檔案。
 
-部署目標見 [`../deploy.yaml`](../deploy.yaml):
-<<range .Project.Environments>>
-- `<<.>>` → `asgard-<<$.Workspace.Slug>>-<<$.Project.Slug>>-<<.>>`
-<<end>>
+部署目標見 repo 根目錄的 [`.asgard-pipeline.yaml`](../../../.asgard-pipeline.yaml):
+一份 chart 可以被好幾個 Release 用,每個 Release 對到一個 Platform Project(= 一個
+namespace)、由一條 tag 或 branch 規則觸發。namespace 由那個 Project 決定,不寫在這裡
+也不寫在 chart 裡 —— chart 用 `.Values.asgard.namespace`。
+
+現況用 `asgard-cli pipeline releases` 看。
 
 ## 資產清單
 
@@ -19,10 +21,14 @@
 | Kind | 名稱 | 用途 |
 |---|---|---|
 
-## `app-secret` 需要哪些 key
+## 專屬 Secret 需要哪些 key
 
-> **TODO** —— 這個 project 的 CR 用到哪些憑證,逐一列出。`app-secret` 由 tf-asgard 建立,
-> 不是這個 repo;少一把 key 的症狀是 CR apply 成功但呼叫時失敗。
+> **TODO** —— 這個 chart 的 CR 用到哪些憑證,逐一列出。每個 Release 有自己專屬的
+> Secret,由 Platform 建立與維護,名字注入 `.Values.asgard.appSecretName`;chart 只寫
+> `secretKeyRef` 指過去,**不得自己宣告那個 Secret**。key 名要與
+> `.asgard-pipeline.yaml` 的 `appSecret` 清單逐字一致,值用
+> `asgard-cli pipeline variables set --kind secret` 填。
+> 少一把 key 的症狀是 CR apply 成功但呼叫時失敗。
 
 | key | 誰在用 |
 |---|---|
@@ -33,7 +39,7 @@
 ```bash
 asgard-cli check <<.Project.Slug>>
 helm lint projects/<<.Project.Slug>>/chart/app
-helm lint projects/<<.Project.Slug>>/chart/app -f projects/<<.Project.Slug>>/chart/values-dev.yaml
+helm lint projects/<<.Project.Slug>>/chart/app
 asgard-cli verify <<.Project.Slug>>
 ```
 

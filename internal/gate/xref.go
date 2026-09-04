@@ -322,8 +322,8 @@ func (x *xref) checkTrigger(d Doc) {
 			d.Name, setID, workflow, want)
 	}
 	// project-environment-id is deliberately not checked here. It is empty
-	// because platformMainEnvironmentId is empty in values, and the platform
-	// does not issue that until tf-asgard has created the namespace - so it is
+	// because the template does not read .Values.asgard.projectEnvironmentId,
+	// which the platform injects on every run - so it is
 	// empty through the whole middle of an onboarding, by design. Erring on it
 	// failed `verify` for every freshly scaffolded project that added a
 	// Trigger, and the message sent the reader to look at a label the template

@@ -110,7 +110,7 @@ industry you touched.
 
 **One namespace per industry**, `asgard-demo-<industry>`, created by Terraform
 along with `app-secret` before anything is deployed - the same order every
-engagement follows, and the same `platformMainEnvironmentId` that cannot be
+engagement follows, and the same project environment id that cannot be
 known until it exists.
 
 **helm has no `--app-version`.** Setting one means packaging first and upgrading
@@ -118,7 +118,6 @@ from the package:
 
     pkg=$(helm package <industry>/chart/app --app-version dev-0.1.0 -d /tmp | sed 's/.*: //')
     helm upgrade <name> "$pkg" --install -n asgard-demo-<industry> \
-      -f common/values-dev.yaml -f <industry>/chart/values-dev.yaml
 
 **Each industry declares its own `CompletionModel`.** Twenty-four of them across
 the generator - see `asgard-cli wiki settings` for the class enum and the two

@@ -1,17 +1,20 @@
 # projects
 
-每個 project 一個目錄:一份 Helm chart,部署到一個 namespace。
+每個 project 一個目錄:一份 Helm chart。
 
 ```
 projects/<slug>/
-  deploy.yaml                    # 哪些 env 要部署 + 每個 env 的 namespace 與 values
   chart/
     app/templates/<kind>/        # 每個 CR 種類一個目錄,一個 CR 一個檔
-    values-dev.yaml
-    values-prod.yaml
+    app/values.yaml              # 只放預設值。實際的值在 Platform 上
 ```
 
-用 `asgard-cli project add <slug> --env dev` 登記,再跑 `asgard-cli scaffold`
+**這裡沒有部署目標。** 一份 chart 部署到哪裡,是根目錄 `.asgard-pipeline.yaml` 裡的
+Release 決定的:一個 Release 綁一個 Platform Project(= 一個 namespace),由一條 tag 或
+branch 規則觸發,一份 chart 可以有好幾個 Release。namespace 從 `.Values.asgard.namespace`
+來,不寫在 chart 裡。
+
+用 `asgard-cli project add <slug>` 登記,再跑 `asgard-cli scaffold`
 產生上面的骨架。**不要手動建目錄** —— 根 README 的 project 表由 scaffold 依
 `.asgard-config.json` 維護,而 `asgard-cli check` 會比對那張表與這裡實際的
 資料夾,兩邊對不上就是紅的。

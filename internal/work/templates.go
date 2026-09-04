@@ -87,8 +87,8 @@ history and the next person asks the customer the same questions again.
 > back to the customer to ask for a new one. Write the *name* of the key and
 > where it lives; never its value.
 
-    coordinates  -> here, and in projects/<project>/chart/values-<env>.yaml
-    passwords    -> .env locally (gitignored), app-secret in the cluster
+    coordinates  -> here, and as chartValues in .asgard-pipeline.yaml
+    passwords    -> .env locally (gitignored), an appSecret key on the platform
 
 ### <system name>
 
@@ -115,7 +115,7 @@ to end - ` + "`.env.example`" + ` at the repo root lists them:
 
     .env                             the real values, locally, never committed
     scripts/db/pgenv.py DB_TARGETS   so the introspection tooling can reach it
-    chart/values-<env>.yaml          the non-secret coordinates the CR reads
+    .asgard-pipeline.yaml            declares the coordinate keys; values go on the platform
 
 and create the CR with ` + "`asgard-cli add dataconnector <name> --db-class <class>`" + `.
 
@@ -257,7 +257,6 @@ TODO, or none.
 
     asgard-cli check {{if .Project}}{{.Project}}{{else}}<project>{{end}}
     helm lint projects/{{if .Project}}{{.Project}}{{else}}<project>{{end}}/chart/app
-    helm lint projects/{{if .Project}}{{.Project}}{{else}}<project>{{end}}/chart/app -f projects/{{if .Project}}{{.Project}}{{else}}<project>{{end}}/chart/values-dev.yaml
     asgard-cli verify {{if .Project}}{{.Project}}{{else}}<project>{{end}}
 
 ## 3) Implementation Tasks

@@ -37,11 +37,9 @@ const (
 	rightDelim = ">>"
 
 	// These path segments are placeholders expanded at render time. A path
-	// containing projectDir is written once per project, and one containing
-	// envDir once per environment that project declares.
+	// containing projectDir is written once per project.
 	specSlugDir = "__SPEC_SLUG__"
 	projectDir  = "__PROJECT__"
-	envDir      = "__ENV__"
 
 	// specSuffix turns the workspace slug into the living spec's slug.
 	specSuffix = "-asgard"
@@ -52,17 +50,8 @@ type Project struct {
 	config.Project
 }
 
-// EnvList renders the declared environments the way the README table shows them.
-func (p Project) EnvList() string {
-	names := make([]string, len(p.Environments))
-	for i, e := range p.Environments {
-		names[i] = string(e)
-	}
-	return strings.Join(names, " + ")
-}
-
-// Data is what every template is rendered with. Project and Env are set only
-// while rendering a file that lives under a __PROJECT__ or __ENV__ path.
+// Data is what every template is rendered with. Project is set only while
+// rendering a file that lives under a __PROJECT__ path.
 type Data struct {
 	Workspace config.Workspace
 	Projects  []Project
@@ -70,16 +59,6 @@ type Data struct {
 	SpecSlug  string
 
 	Project *Project
-	Env     config.Env
-}
-
-// Namespace is the namespace the current project and environment deploy to.
-// Only meaningful while rendering a per-project-per-env file.
-func (d Data) Namespace() string {
-	if d.Project == nil || d.Env == "" {
-		return ""
-	}
-	return fmt.Sprintf("asgard-%s-%s-%s", d.Workspace.Slug, d.Project.Slug, d.Env)
 }
 
 // NewData derives the render data from a config.
@@ -288,9 +267,12 @@ func accumulator(target string) bool {
 }
 
 // plan walks the embedded tree and expands the placeholder path segments. A
-// template under __PROJECT__ produces one file per project, and one that also
-// carries __ENV__ produces one per environment that project declares - so a
-// project with dev only never gets a values-prod.yaml it would have to explain.
+// template under __PROJECT__ produces one file per project.
+//
+// There is no per-environment expansion any more. Where a chart deploys is a
+// release binding it to a platform project, declared in .asgard-pipeline.yaml
+// and resolved by the platform, so there is nothing here that varies by
+// environment to write a file for.
 func plan(data Data) ([]job, error) {
 	var jobs []job
 
@@ -318,17 +300,7 @@ func plan(data Data) ([]job, error) {
 			projectData.Project = &project
 			projectRel := strings.ReplaceAll(rel, projectDir, project.Slug)
 
-			if !strings.Contains(projectRel, envDir) {
-				jobs = append(jobs, job{source: path, target: trimSuffix(projectRel), data: projectData})
-				continue
-			}
-
-			for _, env := range project.Environments {
-				envData := projectData
-				envData.Env = env
-				envRel := strings.ReplaceAll(projectRel, envDir, string(env))
-				jobs = append(jobs, job{source: path, target: trimSuffix(envRel), data: envData})
-			}
+			jobs = append(jobs, job{source: path, target: trimSuffix(projectRel), data: projectData})
 		}
 		return nil
 	})

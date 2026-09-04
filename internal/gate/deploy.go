@@ -15,11 +15,10 @@ import (
 // tag.
 //
 // Everything here is a **warning**, and that is the whole design: each condition
-// is correct during an onboarding and fatal once someone tags. A project has no
-// Syncer until skills are added, and platformMainEnvironmentId does not exist
-// until tf-asgard has created the namespace. Failing on either would leave the
-// gate red through the entire middle of the work, which trains people to ignore
-// it - and saying nothing means finding out from CD.
+// is correct during an onboarding and a problem once someone tags. A project has
+// no Syncer until skills are added. Failing on that would leave the gate red
+// through the entire middle of the work, which trains people to ignore it - and
+// saying nothing means finding out from a run.
 func Deployability(docs []Doc, opts Options) Result {
 	if len(docs) == 0 {
 		return Result{Summary: "nothing rendered yet"}
@@ -40,22 +39,23 @@ func Deployability(docs []Doc, opts Options) Result {
 	//
 	// A Syncer comes from a SkillSet (the skill set, its own SourceSet and the
 	// Syncer that feeds it are generated together) or from a knowledge drive. So
-	// this is not obscure: a project with a read path, an entry point and no
-	// skills is exactly the shape a fresh chart has, and the one shape CD
-	// refuses.
+	// this is not obscure: a chart with a read path, an entry point and no
+	// skills is exactly the shape a fresh one has.
 	if syncers == 0 {
-		warnf("no Syncer. Whether that fails your CD depends on one `if` in its workflow: some poll for CronJobs labelled syncer-name and exit 1 after 180s when none appear, even after a successful helm upgrade, and some count what the chart declares first and skip the step at zero. A production chart runs today with no Syncer under the second kind. "+
-			"Check with `grep -n syncer-name -A15 .github/workflows/*.y*ml` before the first tag. If it waits unconditionally, "+
+		warnf("no Syncer. The rollout's apply step fires the Syncers this release deploys that carry "+
+			"asgard-ai.com/auto-fire-on-rollout and waits for them, so with none there is nothing after "+
+			"the dry run that proves the platform accepted any of it - a succeeded run means helm returned. "+
 			"`asgard-cli add skillset base --project %s --repo <git url>` creates one, as does "+
-			"`asgard-cli add knowledgedrive <name> --project %s`. "+
-			"If it skips, nothing in the pipeline is checking this project at all - green means helm returned",
+			"`asgard-cli add knowledgedrive <name> --project %s`",
 			opts.ProjectOr(), opts.ProjectOr())
 	}
 
-	// platformMainEnvironmentId is per project per environment and the platform
-	// only issues it after tf-asgard creates the namespace. When it is empty the
-	// chart deliberately renders no label at all, which is why this is invisible
-	// to every other check.
+	// The project environment id is injected as .Values.asgard.projectEnvironmentId
+	// on every run, so a CR without the label is a chart that does not read it
+	// rather than a value nobody has fetched. When the value is absent the chart
+	// deliberately renders no label at all, which is why this is invisible to
+	// every other check - and a local render supplies a placeholder, so what this
+	// catches is a template that never mentions it.
 	var unlabelled []string
 	for _, d := range docs {
 		switch d.Kind {
@@ -67,10 +67,11 @@ func Deployability(docs []Doc, opts Options) Result {
 	}
 	if len(unlabelled) > 0 {
 		sort.Strings(unlabelled)
-		warnf("platformMainEnvironmentId is empty, so %s render without a project-environment-id label. "+
+		warnf("%s render without a project-environment-id label. "+
 			"On a cluster they work - a Trigger fires on schedule - while their editors open as a blank canvas, which is why this is worth clearing before anyone looks. "+
-			"The platform issues the id after tf-asgard creates the namespace; put it in projects/%s/chart/values-<env>.yaml before tagging",
-			strings.Join(unlabelled, ", "), opts.ProjectOr())
+			"The platform injects the id as .Values.asgard.projectEnvironmentId on every run, so the fix is in the template rather than in a value: "+
+			"read it there the way the other CRs of this kind do",
+			strings.Join(unlabelled, ", "))
 	}
 
 	summary := fmt.Sprintf("%d syncer(s)", syncers)
