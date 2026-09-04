@@ -37,6 +37,16 @@ written**, including the sections of this file marked TODO.
 Read `docs/spec/<<.SpecSlug>>/` first. If its module index is empty, no behaviour
 has been settled yet and the first job is the three decisions below.
 
+**Before any conversation with the customer, run the briefing for it:**
+
+    asgard-cli brief customer-meeting
+
+**The riskiest thing in this engagement leaves no trace in this repository.**
+Talking to a customer changes no file, so nothing here and nothing derived from
+here prepares anybody for it. Every entry in `asgard-cli brief` is there because
+somebody actually got it wrong - `write-chart` before touching a chart,
+`handover` before telling anyone it is live.
+
 **Read what this repository records before deciding anything.** Each of these
 reads one file back, and each takes `--format json`:
 
@@ -75,6 +85,7 @@ answer that looks obvious and is wrong.
 
 | command | when |
 |---|---|
+| `asgard-cli brief <what>` | **before a meeting, a chart change or a handover.** The activity you are about to do, and how it has been got wrong |
 | `asgard-cli question` | what nobody has answered yet, and who each is waiting on. **Read this before designing anything** |
 | `asgard-cli request`, `asgard-cli task` | what the customer asked for, and the task specs open against it |
 | `asgard-cli project` | what each chart declares, and what its declared shape still lacks. It reports no step, because there is none |

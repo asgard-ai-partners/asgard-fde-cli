@@ -536,3 +536,10 @@ time, and editing removes exactly that.
   rather than sitting in a command table. Zero on a freshly scaffolded
   repository, and flags neither `asgard-cli --help`, nor the `<command>`
   placeholder, nor a subcommand after a real command
+- `fix` 2026-09-04 `brief` is named where an FDE passes. It was in no first
+  screen at all: not in root help, not in the scaffolded `AGENTS.md`, not in the
+  onboarding skill - the three things read before any work starts. An engagement
+  cold-running the tool was never guided to it and said so. It is the command
+  that exists for the riskiest activity in an engagement, and the reason it
+  needs pointing at is the reason it exists: **talking to a customer changes no
+  file**, so nothing derived from what the repository contains can raise it

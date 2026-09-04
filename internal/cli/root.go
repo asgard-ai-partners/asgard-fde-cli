@@ -21,9 +21,22 @@ func NewRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "asgard-cli",
 		Short: "Command line tool for Asgard FDE",
-		Long: `asgard-cli is what an agent asks about integrating with Asgard.
+		Long: `asgard-cli is what an agent asks about integrating with Asgard, so that
+an FDE can walk into a customer's room with it.
 
-It does two things, and they are reached differently.
+BEFORE A MEETING, run the one for what you are about to do:
+
+    asgard-cli brief customer-meeting    the five things said wrong to a customer
+    asgard-cli brief write-chart         before touching a chart
+    asgard-cli brief handover            before telling anyone it is live
+    asgard-cli guide requirements        the interview, and what to ask for
+
+**The riskiest thing in an engagement leaves no trace in a repository.** Talking
+to a customer changes no file, so nothing derived from what the repo contains can
+prepare anybody for it - and every entry in "brief" is there because somebody
+has actually got it wrong, not because it is important.
+
+It does two things after that, and they are reached differently.
 
 ASKING - what the platform has, which CR a UI name maps to, how one shape is
 assembled field by field, and where each has been got wrong before:
