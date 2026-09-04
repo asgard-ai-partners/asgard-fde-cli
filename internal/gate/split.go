@@ -1,6 +1,7 @@
 package gate
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
@@ -47,9 +48,41 @@ const (
 // a Workflow and its capability in a SandboxBlueprint, so its chart has no Agent
 // CR at all. The summary says "0 agent(s)" so that a project that lost its
 // Agents by accident is visible to a reviewer.
+// blueprintAgents names every Agent a SandboxBlueprint mounts as a subagent.
+//
+// `spec.agents` is a JSON string holding the array - that is how the CRD defines
+// it - so a name is only visible after parsing the string. A parse failure
+// yields nothing rather than an error: `gate.Xref` already reports invalid JSON
+// there, and reporting it twice from two checks reads as two defects.
+func blueprintAgents(docs []Doc) map[string]bool {
+	out := map[string]bool{}
+	for _, d := range docs {
+		if d.Kind != "SandboxBlueprint" {
+			continue
+		}
+		raw := digStr(d.Spec, "agents", "value")
+		if raw == "" {
+			continue
+		}
+		var agents []struct {
+			BaseAgentName string `json:"baseAgentName"`
+		}
+		if json.Unmarshal([]byte(raw), &agents) != nil {
+			continue
+		}
+		for _, a := range agents {
+			if a.BaseAgentName != "" {
+				out[a.BaseAgentName] = true
+			}
+		}
+	}
+	return out
+}
+
 func AgentSplit(docs []Doc, opts Options) Result {
 	ix := newIndex(docs)
 	agents := ix.of("Agent")
+	subagents := blueprintAgents(docs)
 
 	olapOnly := map[string]bool{}
 	for _, name := range opts.OLAPOnlyLayers {
@@ -130,10 +163,25 @@ func AgentSplit(docs []Doc, opts Options) Result {
 	}
 
 	// R12 is checked across all Agents at once, since it is about them agreeing.
-	if len(agents) > 1 {
+	// R12 is an agent-hub rule and applies to agent-hub Agents. A subagent of a
+	// flow-agent supervisor is excluded, measured rather than reasoned: across
+	// every reference deployment the five agent-hub Agents share **one**
+	// prompt.task, and the seventeen blueprint subagents have thirteen distinct
+	// ones - six of them empty, because their prompt lives on the Workflow's
+	// processor instead. Three supervisor deployments out of three, so it is the
+	// convention and not a mistake three engagements made. A subagent's task is
+	// what makes it a specialist; requiring them all to match cancels the split
+	// the shape exists for.
+	hub := make([]Doc, 0, len(agents))
+	for _, a := range agents {
+		if !subagents[a.Name] {
+			hub = append(hub, a)
+		}
+	}
+	if len(hub) > 1 {
 		for _, field := range []string{"task", "format"} {
 			byValue := map[string][]string{}
-			for _, a := range agents {
+			for _, a := range hub {
 				value := digStr(mapOf(a.Spec["managed"]), "prompt", field)
 				byValue[value] = append(byValue[value], a.Name)
 			}

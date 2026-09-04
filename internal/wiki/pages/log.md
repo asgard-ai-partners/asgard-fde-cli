@@ -575,3 +575,18 @@ time, and editing removes exactly that.
 - `fix` 2026-09-04 that script's first glob was `*-asgard-kube`, which silently
   missed `asgard-freyr-kube` - one of ours is named `asgard-<name>-kube` - and
   with it 15 findings. A glob makes that kind of miss without saying anything
+- `fix` 2026-09-04 R12 was an agent-hub rule firing on flow-agent subagents, and
+  it is scoped now. Measured across every reference deployment: the five
+  agent-hub Agents share **one** `prompt.task`; the seventeen blueprint
+  subagents have **thirteen** distinct ones, six of them empty because their
+  prompt lives on the Workflow's processor. Three supervisor deployments out of
+  three, so it is the convention rather than a mistake three engagements made -
+  and a subagent's task is what makes it a specialist. Verified as scoping and
+  not disabling: an agent-hub Agent with a deliberately altered task still fails
+- `lint` 2026-09-04 **R7 was suspected of the same error and is not wrong.** The
+  evidence went the other way: freyr's six subagents carry no `agent-published`
+  label at all, finance-ai's three carry it and have exactly two sample
+  questions each, and xxentria's nine carry it with one question in seven of
+  them. So the label is meaningful on a subagent rather than boilerplate, and
+  seven Agents in a running chart are published with one question. Either the
+  questions or the label is wrong there, and both are that chart's to decide
