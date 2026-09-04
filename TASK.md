@@ -232,7 +232,22 @@ the next engagement is the fix in the next release.
 - **Reading or writing `platformMainEnvironmentId`.** Per project per env, and it
   only exists after tf-asgard has created the namespace, so it belongs to the
   generated repo's values files.
-- **Any command that talks to a cluster or the platform.** The CLI stays offline.
+- **Any command that talks to a cluster.** No cluster credential is ever issued to
+  a client, which is also why the checking a pipeline does cannot be done here:
+  the apiserver's own CEL, pattern and required validation of a rendered CR needs
+  the apiserver.
+- **Reimplementing what the platform checks.** `pipeline` is a wrapper over the
+  platform's API and holds no rules of its own. A second copy of a lint rule is a
+  copy that disagrees with the server the first time either changes, and the
+  local half of the loop is the native tools - `helm lint`, `helm template` - plus
+  `verify`, which checks what a dry run passes and runtime still fails.
+
+**The offline rule now has a boundary rather than being absolute.** `wiki`,
+`usecase`, `find`, `brief`, `size` and `guide` answer with no network, no
+repository and no login, and that has to stay true: the question they answer is
+asked in a meeting, before there is an engagement to log in to. `login` and
+`pipeline` are the exception, and they are an exception the first half must never
+acquire.
 
 ## Open questions
 

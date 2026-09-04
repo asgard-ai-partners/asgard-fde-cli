@@ -1,0 +1,316 @@
+package cli
+
+import (
+	"errors"
+	"fmt"
+	"io"
+
+	"github.com/spf13/cobra"
+
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/auth"
+)
+
+// profileFlag is the name of the flag that selects a platform environment.
+const profileFlag = "profile"
+
+// addProfileFlag registers --profile on a command that talks to the platform.
+//
+// It is deliberately not a persistent flag on the root: the knowledge commands
+// work with no network and no session, and a flag in their help implies a
+// choice that changes nothing about what they answer.
+func addProfileFlag(cmd *cobra.Command, target *string) {
+	cmd.Flags().StringVar(target, profileFlag, "",
+		fmt.Sprintf("platform environment: one of %s; defaults to %s or the profile `login --set-default` recorded",
+			joinNames(auth.BuiltinProfileNames()), auth.EnvProfile))
+}
+
+func joinNames(names []string) string {
+	out := ""
+	for i, n := range names {
+		if i > 0 {
+			out += ", "
+		}
+		out += n
+	}
+	return out
+}
+
+func newLoginCmd() *cobra.Command {
+	var (
+		profile    string
+		noBrowser  bool
+		setDefault bool
+		format     string
+	)
+
+	cmd := &cobra.Command{
+		Use:   "login",
+		Short: "Sign in to the Asgard platform",
+		Long: `Sign in to the Asgard platform, so that the pipeline commands can act as you.
+
+It opens a browser at the platform's sign-in page, waits for it to come back on a
+loopback port, and stores the session under this user account - never inside a
+customer repository. The flow is OAuth 2.0 authorization code with PKCE and the
+CLI ships no client secret, so nothing in a release is worth lifting out of it.
+
+The session lasts 24 hours and renews itself for 30 days without asking again;
+after that, or once it is revoked, the next command says to run this one.
+
+    asgard-cli login                     sign in to dev
+    asgard-cli login --profile prod      sign in to prod
+    asgard-cli login --no-browser        print the URL instead of opening one
+
+Two profiles exist, dev and prod, and each is a different platform with different
+workspaces. Signing in to one leaves the other alone, so both can be held at once
+and --profile picks between them per command; --set-default records which one is
+meant when nothing says.
+
+WITH NO BROWSER - CI, a container, an agent sandbox - do not use this command.
+Set ASGARD_TOKEN to an access token instead: it bypasses the store completely,
+reading nothing from disk and writing nothing to it. Over SSH, --no-browser plus
+an "ssh -L" forward of the printed port works, because the browser has to reach
+the loopback address this process is listening on.
+
+It fails when the browser never comes back (five minutes), when the redirect does
+not carry the state value this run generated - which means it was not this run's
+- and when the platform refuses the sign-in, which it reports in full.`,
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			if err := checkFormat(format); err != nil {
+				return err
+			}
+			p, err := auth.ResolveProfile(profile)
+			if err != nil {
+				return err
+			}
+
+			// Progress goes to stderr so that a --format json run's stdout is
+			// the answer and nothing else.
+			cred, info, err := auth.Login(cmd.Context(), auth.LoginOptions{
+				Profile:   p,
+				NoBrowser: noBrowser,
+				Out:       cmd.ErrOrStderr(),
+			})
+			if err != nil {
+				return err
+			}
+			if err := auth.SaveCredential(p, cred); err != nil {
+				return err
+			}
+			if setDefault {
+				settings, err := auth.LoadSettings()
+				if err != nil {
+					return err
+				}
+				settings.DefaultProfile = p.Name
+				if err := auth.SaveSettings(settings); err != nil {
+					return err
+				}
+			}
+
+			out := cmd.OutOrStdout()
+			if format == formatJSON {
+				return writeJSON(out, map[string]any{
+					"profile":   p.Name,
+					"issuer":    p.Issuer,
+					"api":       p.API,
+					"subject":   info.Sub,
+					"email":     info.Email,
+					"name":      info.Who(),
+					"expiresAt": cred.ExpiresAt,
+				})
+			}
+
+			fmt.Fprintf(out, "Signed in to %s as %s", p.Name, info.Who())
+			if info.Email != "" && info.Email != info.Who() {
+				fmt.Fprintf(out, " <%s>", info.Email)
+			}
+			fmt.Fprintf(out, ".\nThe session expires %s and renews itself until then.\n",
+				cred.ExpiresAt.Local().Format("2006-01-02 15:04"))
+			if setDefault {
+				fmt.Fprintf(out, "%s is now the default profile.\n", p.Name)
+			}
+			return nil
+		},
+	}
+
+	addProfileFlag(cmd, &profile)
+	cmd.Flags().BoolVar(&noBrowser, "no-browser", false,
+		"print the sign-in URL instead of opening a browser; the loopback port still has to be reachable from wherever it is opened")
+	cmd.Flags().BoolVar(&setDefault, "set-default", false,
+		"record this profile as the one used when --profile and "+auth.EnvProfile+" say nothing")
+	cmd.Flags().StringVar(&format, formatFlag, formatText, formatUsage)
+
+	return cmd
+}
+
+func newLogoutCmd() *cobra.Command {
+	var (
+		profile string
+		all     bool
+	)
+
+	cmd := &cobra.Command{
+		Use:   "logout",
+		Short: "Forget the stored session",
+		Long: `Forget the stored session for a profile.
+
+It deletes this machine's copy of the tokens and nothing else: the session is not
+revoked at the platform, and any other machine holding one keeps it. Signing out
+of a profile that has no session is not an error - running this twice reports the
+same thing both times.
+
+    asgard-cli logout                    forget the dev session
+    asgard-cli logout --profile prod     forget the prod session
+    asgard-cli logout --all              forget every profile's
+
+--all does not take --profile, because it means every one of them.`,
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			out := cmd.OutOrStdout()
+
+			if all {
+				if profile != "" {
+					return errors.New("--all forgets every profile, so it cannot be combined with --" + profileFlag)
+				}
+				n, err := auth.DeleteAllCredentials()
+				if err != nil {
+					return err
+				}
+				if n == 0 {
+					fmt.Fprintln(out, "No stored sessions.")
+					return nil
+				}
+				fmt.Fprintf(out, "Forgot %d stored session(s).\n", n)
+				return nil
+			}
+
+			p, err := auth.ResolveProfile(profile)
+			if err != nil {
+				return err
+			}
+			had, err := auth.DeleteCredential(p.Name)
+			if err != nil {
+				return err
+			}
+			if !had {
+				fmt.Fprintf(out, "No stored session for %s.\n", p.Name)
+				return nil
+			}
+			fmt.Fprintf(out, "Forgot the %s session. It is not revoked at the platform.\n", p.Name)
+			return nil
+		},
+	}
+
+	addProfileFlag(cmd, &profile)
+	cmd.Flags().BoolVar(&all, "all", false, "forget every profile's session, not just one")
+
+	return cmd
+}
+
+func newWhoamiCmd() *cobra.Command {
+	var (
+		profile string
+		format  string
+		local   bool
+	)
+
+	cmd := &cobra.Command{
+		Use:   "whoami",
+		Short: "Report who the stored session belongs to",
+		Long: `Report who the stored session belongs to, and against which platform.
+
+By default it asks the platform rather than reading the file: the same endpoint
+the platform's own IAM calls to verify a bearer token, so what it reports is the
+session the API would see. A token that has been revoked reads as signed in on
+disk and is rejected by every call, and this is what tells those two apart.
+
+    asgard-cli whoami                    ask the dev platform
+    asgard-cli whoami --profile prod     ask prod
+    asgard-cli whoami --local            report what is stored, without a call
+
+--local answers offline, from what was recorded at sign-in. It says whether the
+access token has expired, which is not the same question as whether the session
+is still good.
+
+With ASGARD_TOKEN set, that token is the session: nothing is read from the store,
+and --local has nothing recorded to report, so it says only which profile and
+where the token came from.
+
+It exits non-zero when there is no session, when it has expired past renewing,
+and when the platform rejects it.`,
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			if err := checkFormat(format); err != nil {
+				return err
+			}
+			session, err := auth.Resolve(cmd.Context(), profile)
+			if err != nil {
+				return err
+			}
+			out := cmd.OutOrStdout()
+
+			if local {
+				return reportWhoami(out, format, session, auth.Userinfo{
+					Sub:         session.Subject,
+					Email:       session.Email,
+					DisplayName: session.Name,
+				}, false)
+			}
+
+			info, err := auth.FetchUserinfo(cmd.Context(), session.Profile, session.Token)
+			if err != nil {
+				return fmt.Errorf("the %s platform did not accept the session: %w; run `asgard-cli login%s`",
+					session.Profile.Name, err, profileArg(session.Profile.Name))
+			}
+			return reportWhoami(out, format, session, info, true)
+		},
+	}
+
+	addProfileFlag(cmd, &profile)
+	cmd.Flags().StringVar(&format, formatFlag, formatText, formatUsage)
+	cmd.Flags().BoolVar(&local, "local", false,
+		"report what is stored without calling the platform; says whether the token has expired, not whether it still works")
+
+	return cmd
+}
+
+// profileArg renders the --profile argument to suggest, empty for the default
+// so the advice reads as the command somebody would actually type.
+func profileArg(name string) string {
+	if name == auth.DefaultProfileName {
+		return ""
+	}
+	return " --profile " + name
+}
+
+func reportWhoami(out io.Writer, format string, s *auth.Session, info auth.Userinfo, checked bool) error {
+	who := info.Who()
+
+	if format == formatJSON {
+		return writeJSON(out, map[string]any{
+			"profile":   s.Profile.Name,
+			"issuer":    s.Profile.Issuer,
+			"api":       s.Profile.API,
+			"source":    string(s.Source),
+			"subject":   info.Sub,
+			"email":     info.Email,
+			"name":      who,
+			"confirmed": checked,
+		})
+	}
+
+	fmt.Fprintf(out, "%-9s %s\n", "profile", s.Profile.Name)
+	fmt.Fprintf(out, "%-9s %s\n", "api", s.Profile.API)
+	fmt.Fprintf(out, "%-9s %s\n", "user", who)
+	if info.Email != "" && info.Email != who {
+		fmt.Fprintf(out, "%-9s %s\n", "email", info.Email)
+	}
+	if s.Source == auth.SourceEnv {
+		fmt.Fprintf(out, "%-9s %s\n", "token", "from "+auth.EnvToken+", not the credential store")
+	}
+	if !checked {
+		fmt.Fprintf(out, "\nRead from the credential store; the platform was not asked. Drop --local to\nconfirm the session is still accepted.\n")
+	}
+	return nil
+}

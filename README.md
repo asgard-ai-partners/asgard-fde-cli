@@ -713,6 +713,86 @@ Read and write it through `internal/config` (`config.Load` / `config.Save` /
 up from the current directory, so a command still resolves the project root when
 run from a subdirectory.
 
+### `login`, `logout`, `whoami`
+
+Sign in to the Asgard platform, so that the `pipeline` commands can act as you.
+
+```bash
+asgard-cli login                     # sign in to prod
+asgard-cli login --profile dev       # sign in to dev
+asgard-cli login --no-browser        # print the URL instead of opening one
+asgard-cli whoami                    # ask the platform who the session is
+asgard-cli logout --all              # forget every stored session
+```
+
+OAuth 2.0 authorization code with PKCE over a loopback redirect, which is what
+RFC 8252 asks for on a machine that has a browser. The binary ships no client
+secret. The session is stored under this user account - never inside a customer
+repository - at `os.UserConfigDir()/asgard-cli/`, 0600.
+
+Two profiles exist: `prod` (the default) and `dev`. `--profile` picks per
+command, `ASGARD_PROFILE` sets it for a shell, and `login --set-default` records
+one. `ASGARD_API`, `ASGARD_ISSUER` and `ASGARD_CLIENT_ID` override a profile's
+fields one at a time, for a platform running somewhere else.
+
+With no browser - CI, a container, an agent sandbox - set `ASGARD_TOKEN` to an
+access token instead. It bypasses the store completely, reading nothing from
+disk and writing nothing to it.
+
+### `workspace`
+
+Choose which workspace the platform commands act in.
+
+```bash
+asgard-cli workspace list            # what this account can reach
+asgard-cli workspace use <id>        # bind this repository to one
+asgard-cli workspace show            # which one applies here, and why
+```
+
+The binding is kept beside the credentials, keyed by profile and by the
+repository's origin remote - not in the repository, because the declaration
+contract for a customer repository is a chart and one `.asgard-pipeline.yaml`,
+and not on the platform, which does not know which directory holds its
+repository. A repository scaffolded with a `workspace.id` in
+`.asgard-config.json` is read from there first.
+
+`workspace show` reports *why* that workspace, which is the useful half: acting
+in the wrong one is the failure the resolution order exists to prevent.
+
+### `pipeline`
+
+Deploy the repository through the platform's IaC pipeline.
+
+```bash
+asgard-cli pipeline connect                     # connect GitHub to this workspace
+asgard-cli pipeline connections                 # the installations connected
+asgard-cli pipeline repos                       # what one can reach
+asgard-cli pipeline create --name <name>        # bind this repository
+asgard-cli pipeline show                        # the pipeline bound to this checkout
+asgard-cli pipeline projects                    # projects a release can deploy into
+asgard-cli pipeline release create <name> --project <id>
+asgard-cli pipeline releases                    # created releases, and the ghost rows
+asgard-cli pipeline variables list --release <name>
+asgard-cli pipeline variables set --release <name> --kind secret <key> --from-file <path>
+asgard-cli pipeline runs watch --release <name> --commit $(git rev-parse HEAD)
+asgard-cli pipeline runs approve <run-id>
+```
+
+**These hold no rules of their own.** Whether a change is deployable is the
+platform's answer: it renders the chart, checks every rendered CR against the
+cluster's own CRDs with a server-side dry run, and reports back. That is not
+reproducible here - no cluster credential is ever issued to a client - so the
+loop is: change the chart, check what can be checked locally with `helm lint`
+and `asgard-cli verify`, push, and read the plan back with `runs watch`.
+
+Which pipeline a command acts on comes from the checkout's origin remote, and
+which release from the name the declaration uses, so no platform identifier is
+written into the repository.
+
+A secret's value can only be given with `--from-file` (or `--from-file -` for
+standard input): a value typed as an argument is in the shell history and in the
+process list. Files are read verbatim, so a PEM keeps its newlines.
+
 ## Releasing
 
 Releases are driven by [GoReleaser](https://goreleaser.com). Pushing a tag triggers
