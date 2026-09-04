@@ -95,6 +95,7 @@ answer that looks obvious and is wrong.
 | `asgard-cli check` | the first gate: structural invariants a chart render cannot see |
 | `asgard-cli project add <slug> --env dev` | the engagement discovers a new project |
 | `asgard-cli scaffold` | after adding a project, to write its chart skeleton. Safe to re-run - it never overwrites a file that already exists, so edits to this file survive |
+| `asgard-cli skill update` | **when the platform says the reference material here is behind.** It writes what the Asgard server this repository deploys to actually enforces - the processor catalogue and its config keys - into `.agents/skills/`. Commit what it writes; the diff is the changelog |
 
 The stage is derived from what is on disk - which files exist, which CR kinds
 each chart declares - not from a counter. It stays right when someone does a step

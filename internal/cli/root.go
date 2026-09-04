@@ -125,6 +125,18 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 		return nil
 	}
 
+	// Said at the end of whatever was run, because it is the only moment an
+	// agent is looking. Its reference material going stale has no symptom - the
+	// CR it writes is wrong in a way that reads fine - so the report has to
+	// ride on something already being run rather than wait to be asked for.
+	//
+	// PersistentPostRun rather than a call in each command: every command that
+	// reaches the platform is a chance to say it, and one that has to be added
+	// per command is one that gets forgotten on the command somebody adds next.
+	cmd.PersistentPostRun = func(c *cobra.Command, _ []string) {
+		warnIfBehind(c)
+	}
+
 	cmd.AddCommand(
 		newAddCmd(),
 		newCheckCmd(),
@@ -147,6 +159,7 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 		newRenderCmd(),
 		newRequestCmd(),
 		newScaffoldCmd(),
+		newSkillCmd(),
 		newTaskCmd(),
 		newUsecaseCmd(),
 		newVerifyCmd(),
