@@ -31,6 +31,11 @@ repo up:
   - the docs/ spec layer is intact: required files, the living spec's module
     index matching the files on disk, dated filenames, and every relative link
     inside docs/ resolving
+  - every "asgard-cli <command>" this repository's own documents name is a
+    command this build has. "scaffold" never overwrites a file it has already
+    written, which is right - an FDE edits them - so a command renamed in the
+    tool leaves every repository already scaffolded pointing at the old name,
+    and nothing else notices
 
 Naming projects limits the project-scoped checks to those; the repo-wide checks
 always run. Exits non-zero when anything fails.

@@ -144,6 +144,9 @@ func Run(root string, only ...string) (Report, error) {
 	if err := c.checkOrphans(); err != nil {
 		return Report{}, err
 	}
+	if err := c.checkCommands(); err != nil {
+		return Report{}, err
+	}
 
 	return Report{Scope: scope, Findings: c.findings}, nil
 }

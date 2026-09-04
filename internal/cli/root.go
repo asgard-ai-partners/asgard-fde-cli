@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/check"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/config"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/stage"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/version"
@@ -137,7 +138,29 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 		newWikiCmd(),
 	)
 
+	// What this build answers to, handed to `check` so it can report a command
+	// name in a customer repository that no longer exists. The list has to come
+	// from the tree rather than from a constant: a constant is a second copy
+	// that goes stale exactly when a command is renamed, which is the failure
+	// this exists to catch.
+	check.SetKnownCommands(commandNames(cmd))
+
 	return cmd
+}
+
+// commandNames returns every name and alias in the tree, one level deep.
+//
+// One level is deliberate. `asgard-cli request add` names the command
+// `request`, and whether `add` is one of its subcommands is a different
+// question - a wrong subcommand is a typo, a wrong command is a rename nobody
+// was told about.
+func commandNames(root *cobra.Command) []string {
+	var out []string
+	for _, c := range root.Commands() {
+		out = append(out, c.Name())
+		out = append(out, c.Aliases...)
+	}
+	return out
 }
 
 // recallHere notes a page as opened, when the command was run inside an

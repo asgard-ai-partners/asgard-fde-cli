@@ -521,3 +521,18 @@ time, and editing removes exactly that.
   downloaded screenshots, two cropped, none used: filling every page with the
   customer's own words leaves no room, and one kind of evidence per page then
   excludes the picture
+- `ingest` 2026-09-04 `check` reports a command name in a customer repository
+  that this build does not have. **Renaming a command silently breaks every
+  repository already scaffolded**, and nothing detected it: `scaffold` writes
+  AGENTS.md, the design-time skills and four READMEs and then never overwrites
+  them - which is right, because an FDE edits them - so the old name stays until
+  somebody types it and gets `unknown command`, then guesses. Found by an
+  engagement doing exactly that. The command list comes from the cobra tree
+  rather than a constant, because a constant is a second copy that goes stale at
+  the moment of a rename
+- `lint` 2026-09-04 the new check ran against a live engagement with a known
+  answer: **12 of 12, exact match** with a list assembled by hand, including one
+  buried in prose as the citation for a correction (`docs/open-questions.md:637`)
+  rather than sitting in a command table. Zero on a freshly scaffolded
+  repository, and flags neither `asgard-cli --help`, nor the `<command>`
+  placeholder, nor a subcommand after a real command
