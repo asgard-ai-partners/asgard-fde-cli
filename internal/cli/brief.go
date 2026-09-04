@@ -15,15 +15,15 @@ func newBriefCmd() *cobra.Command {
 		Short: "What you are about to do, and where it goes wrong",
 		Long: `The known ways to get one activity wrong, before doing it.
 
-` + "`asgard-cli next`" + ` answers "where am I", from the repository. This answers
-"the thing I am about to do - where will I get it wrong", which is a different
-question with more expensive answers:
+` + "`asgard-cli question`" + ` and its three neighbours answer "what does this
+repository record", from files. This answers "the thing I am about to do - where
+will I get it wrong", which is a different question with more expensive answers:
 
   - **the riskiest activity leaves no trace.** Talking to a customer changes no
     file, so nothing derived from repository state can prepare anybody for it
   - **meetings happen at every stage.** A briefing reachable only from the
-    interview stage is unreachable to an engagement at stage 5 with a meeting
-    tomorrow
+    interview guidance is unreachable to an engagement halfway through a
+    chart with a meeting tomorrow
   - **what you need to know precedes where it is filed.** The material is
     arranged for reading at the point of use, which is right, and the interview
     is where that breaks: half of what gets said out loud is settled in stages

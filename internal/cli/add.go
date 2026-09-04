@@ -34,6 +34,12 @@ What is generated is a skeleton: the structure and the traps are right, and the
 content is marked TODO. Read the matching shape first - "asgard-cli add" names
 it for each kind - because the decision comes before the YAML.
 
+The rules every generated CR already follows - naming, the display annotations,
+what goes in values and what stays in the template - are "asgard-cli usecase
+conventions". Read it before writing a CR by hand, or before changing one this
+wrote: what it generates is those conventions applied, and an edit that departs
+from them is the half a rendered chart still passes.
+
 The name is written without the kind's prefix: "asgard-cli add dataconnector erp"
 creates dc-erp. Passing the prefixed form is accepted and means the same thing,
 so dc-erp never becomes dc-dc-erp.

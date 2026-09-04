@@ -100,7 +100,7 @@ because the interview is what turns a document into a requirement.`,
 Filing is not reading. What turns this into a requirement is the interview:
 
     asgard-cli question add "<what it left open>" --ask "<who>"
-    asgard-cli next --stage requirements
+    asgard-cli guide requirements
 `)
 			return nil
 		},

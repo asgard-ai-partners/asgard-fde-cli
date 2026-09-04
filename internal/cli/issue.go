@@ -2,16 +2,22 @@ package cli
 
 import (
 	"fmt"
+	"io"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/config"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/version"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/work"
 )
 
 const issueRepo = "asgard-ai-partners/asgard-fde-cli"
 
 func newIssueCmd() *cobra.Command {
-	return &cobra.Command{
+	var draft bool
+
+	cmd := &cobra.Command{
 		Use:   "issue-report",
 		Short: "How to report a gap in this tool, from wherever you found it",
 		Long: `How to file what this tool got wrong, or did not know.
@@ -45,11 +51,11 @@ memory of today.
 
   2. The state I was in            REQUIRED, and it is what makes it a bug
                                    report rather than a complaint
-     Somebody has to be able to stand where you stood. Which stage, what the
-     repo held, what the customer situation was in shape. The fastest way to
-     give most of it is to paste "asgard-cli next" and "asgard-cli check" from
-     that moment - they describe the state better than a sentence, and they are
-     what a reader runs to reproduce it.
+     Somebody has to be able to stand where you stood. What the repo held, and
+     what the customer situation was in shape. The fastest way to give most of
+     it is to paste "asgard-cli project", "asgard-cli question" and
+     "asgard-cli check" from that moment - they describe the state better than a
+     sentence, and they are what a reader runs to reproduce it.
 
   3. What I ran, and what came back
      In order, with the real output pasted. Then what you expected instead. The
@@ -77,18 +83,115 @@ DO NOT FILE
 
   - a fix you already made. That is a pull request and it is better
   - "the documentation should be better". Name the sentence that misled you
-  - a report with no state in it. Nobody can act on "find did not work"`,
+  - a report with no state in it. Nobody can act on "find did not work"
+
+--new WRITES THE REPORT
+
+Three of the five sections above are things this tool already knows, and asking
+for them by hand is why they arrive missing. --new emits the body with those
+filled in and the rest marked TODO:
+
+    asgard-cli issue-report --new > report.md
+    asgard-cli issue-report --new | gh issue create --repo asgard-ai-partners/asgard-fde-cli --body-file -
+
+**Section 2 and the search evidence are collected, not narrated.** A report is
+otherwise entirely somebody's account of what happened, and the account is the
+part that can be wrong - a search someone remembers running, phrased differently
+from the one they ran. What --new puts in is the tool's own record: the version,
+what the charts declare, what is open, and every query that came back empty.
+
+**Read what it produced before filing it.** The misses are queries as they were
+typed, so they can carry the customer's words; the rule above about never
+pasting their content applies to what this generated exactly as much as to what
+you write.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			out := cmd.OutOrStdout()
+			if draft {
+				return writeReport(out)
+			}
 			fmt.Fprintf(out, "File it at:\n\n  https://github.com/%s/issues/new\n\n", issueRepo)
 			fmt.Fprintf(out, "Or, with `gh` authenticated:\n\n"+
 				"  gh issue create --repo %s\n\n", issueRepo)
 			fmt.Fprintf(out, "Paste this line so nobody has to ask:\n\n  asgard-cli %s\n\n",
 				version.Get().String())
+			fmt.Fprintf(out, "Or have the body written for you, with the state and the search\nevidence already in it:\n\n  asgard-cli issue-report --new\n\n")
 			fmt.Fprintf(out, "What to put in it: `asgard-cli issue-report --help`.\n"+
 				"A worked example: https://github.com/%s/issues/9\n", issueRepo)
 			return nil
 		},
 	}
+
+	cmd.Flags().BoolVar(&draft, "new", false, "write the report body, with the state and the search evidence filled in")
+
+	return cmd
+}
+
+// writeReport emits the issue body.
+//
+// The sections are the five in this command's help, in that order, because a
+// reader of the repository's issues should not have to learn two shapes. What
+// differs is who fills each one: the tool fills what it can observe and marks
+// the rest TODO, rather than describing all five and hoping.
+//
+// It works outside a repository. Half this tool's job is answering a question
+// asked before there is a directory, and a gap found there is worth the same
+// report - it just has no repository state to carry.
+func writeReport(out io.Writer) error {
+	fmt.Fprintf(out, "## 1) What I was trying to do\n\n"+
+		"TODO - the real task in a sentence, not \"using the tool\". Describe the\n"+
+		"shape of the customer\u0027s situation, never their systems or their people.\n\n")
+
+	fmt.Fprintf(out, "## 2) The state I was in\n\n```\nasgard-cli %s\n```\n\n", version.Get().String())
+
+	state, err := loadState()
+	if err != nil {
+		fmt.Fprintf(out, "Run outside a customer repository, so there is no repository state.\n"+
+			"That is a normal place to hit a gap: the question gets asked in a meeting.\n\n")
+	} else {
+		fmt.Fprintf(out, "```\n")
+		printProjects(out, state)
+		fmt.Fprintf(out, "```\n\n")
+		fmt.Fprintf(out, "%d open question(s), %d open request(s), %d open task spec(s).\n\n",
+			len(state.Questions), len(work.ActiveRequests(state.Requests)), len(work.ActiveTasks(state.Tasks)))
+	}
+
+	fmt.Fprintf(out, "## 3) What I ran, and what came back\n\n")
+	writeMisses(out)
+	fmt.Fprintf(out, "TODO - the rest, in order, with the real output pasted, then what you\nexpected instead. The gap between those two is usually the whole report.\n\n")
+
+	fmt.Fprintf(out, "## 4) Where the answer actually was\n\n"+
+		"TODO - and this is the one that gets left out. A missing page and an\n"+
+		"unfindable page need different fixes, and only this sentence tells them\n"+
+		"apart. If you never found it, say that; it is also an answer.\n\n")
+
+	fmt.Fprintf(out, "## 5) What it cost\n\n"+
+		"TODO - twenty minutes, a wrong sentence to a customer, or nothing yet\nbecause you caught it. This decides what gets fixed first.\n\n")
+
+	fmt.Fprintf(out, "---\n\nWritten by `asgard-cli issue-report --new`. Section 2 and the search\n"+
+		"evidence in 3 are collected; the TODOs are not.\n")
+	return nil
+}
+
+// writeMisses puts the recorded empty searches into the report.
+//
+// This is the only part of a defect report that is not somebody's account of
+// what happened. A search that came back empty was witnessed by the tool, so it
+// is evidence rather than recollection - and it is the half of section 4 that
+// separates a missing page from an unfindable one.
+func writeMisses(out io.Writer) {
+	path, err := config.Find(".")
+	if err != nil {
+		return
+	}
+	misses, err := work.Misses(filepath.Dir(path))
+	if err != nil || len(misses) == 0 {
+		return
+	}
+	fmt.Fprintf(out, "Searches this engagement ran that the material did not answer, recorded by\n"+
+		"`asgard-cli find` at the time:\n\n```\n")
+	for _, m := range misses {
+		fmt.Fprintf(out, "%s  %-9s %s\n", m.Date, m.Kind, m.Query)
+	}
+	fmt.Fprintf(out, "```\n\n**Check these before filing** - a query carries whatever words were typed.\n\n")
 }

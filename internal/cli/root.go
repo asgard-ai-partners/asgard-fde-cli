@@ -20,25 +20,54 @@ func NewRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "asgard-cli",
 		Short: "Command line tool for Asgard FDE",
-		Long: `asgard-cli drives the onboarding of a customer onto the Asgard platform.
+		Long: `asgard-cli is what an agent asks about integrating with Asgard.
 
-START WITH:
+It does two things, and they are reached differently.
 
-    asgard-cli next
+ASKING - what the platform has, which CR a UI name maps to, how one shape is
+assembled field by field, and where each has been got wrong before:
 
-It reports which stage the onboarding is at and what that stage requires,
-working it out from the repository itself rather than from anything remembered.
-Run it again after each step instead of guessing which command comes next - it
-answers even in an empty directory, where the answer is how to begin.
+    asgard-cli find <terms>
+
+That searches all four parts of the material at once - the platform wiki, the
+deployment extracts, the guidance for each decision, and the skills the agent in
+a customer repo loads - and hands over the counterpart of whatever it finds. Ask
+in Chinese if that is the language the question was asked in; the glossary
+carries the translation. **This works with no repository**, which is the point:
+the question gets asked in a meeting, before there is a directory.
+
+    asgard-cli wiki <page>     the platform
+    asgard-cli usecase <name>  one deployment shape, field by field
+    asgard-cli guide <name>    one decision, and how it has been got wrong
+    asgard-cli brief <what>    the thing you are about to do
+
+BUILDING - a chart of Asgard custom resources per project, each deployed to its
+own namespace:
+
+    asgard-cli project       every chart: its shape, what it declares, what it lacks
+    asgard-cli question      what nobody has answered yet, and who each is with
+    asgard-cli request       what the customer asked for and is not done
+    asgard-cli task          the task specs that are open
+    asgard-cli add <kind>    a CR skeleton, wired to what the chart declares
+    asgard-cli check         the structure; "verify" is the rendered chart
+
+Each of those four reads a file in the customer's repository back to you, and
+each takes ` + "`--format json`" + `. **None of them says where the engagement is.** There
+is no such command and there was: it derived one position from the earliest
+missing CR kind, and an onboarding is not linear - three of the most expensive
+decisions in the engagement this was built from were made, built and reversed.
+What replaced it is the records themselves, and guidance reached by subject
+through "find" or by name through "guide", without arriving anywhere to be
+handed it.
 
 Work arrives as a request: one thing the customer wants that the agent cannot do
 today. "asgard-cli request add" opens one, and every status the engagement keeps
 lives in the customer's repository, never in this tool, so the agent that opens
 that repo next can read where the work stands.
 
-An onboarding produces one repository per customer: a Helm chart of Asgard
-custom resources per project, each deployed to its own namespace. The repository
-root is the workspace, and every project lives inside it.
+With no repository yet, "asgard-cli guide init" says how one begins and
+"asgard-cli init" writes the config. The repository root is the workspace - one
+customer, one repository - and every project lives inside it.
 
 Run "asgard-cli <command> --help" for details on an individual command.`,
 		Version: version.Get().String(),
@@ -56,7 +85,7 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 
 	cmd.SetVersionTemplate("{{.Name}} {{.Version}}\n")
 
-	// --template-dir is persistent because a prompt is read by `next`, `find`
+	// --template-dir is persistent because a prompt is read by `guide`, `find`
 	// and `audit-material` alike, and an override that applied to only one of
 	// them would make the three disagree about what the material says.
 	var templateDir string
@@ -95,7 +124,7 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 		newIssueCmd(),
 		newSizeCmd(),
 		newInitCmd(),
-		newNextCmd(),
+		newGuideCmd(),
 		newProjectCmd(),
 		newQuestionCmd(),
 		newRenderCmd(),

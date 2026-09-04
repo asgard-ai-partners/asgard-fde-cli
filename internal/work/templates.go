@@ -153,8 +153,8 @@ as well, one row each, with what it blocks and who can answer it:
     asgard-cli question add "<question>" --blocks {{.ID}} --ask "<who>"
 
 It goes there rather than only here because a question buried in a spec
-disappears when that spec reaches ` + "`done`" + `, and ` + "`asgard-cli next`" + ` reads that
-file on every run.
+disappears when that spec reaches ` + "`done`" + `, and ` + "`asgard-cli question`" + ` reads
+that file.
 
 ## 7) Task specs
 

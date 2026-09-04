@@ -2,33 +2,51 @@ package cli
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/spf13/cobra"
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/config"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/stage"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/work"
 )
 
 func newRequestCmd() *cobra.Command {
+	var format string
+
 	cmd := &cobra.Command{
 		Use:   "request",
-		Short: "Record what the customer asked for, and move its status",
-		Long: `Record what the customer asked for, and move its status.
+		Short: "List what the customer asked for, and move a request's status",
+		Long: `List what the customer asked for, and move a request's status.
+
+With no subcommand it prints every request that is not done, from
+` + "`" + work.RequestIndex + "`" + `.
 
 A request is the unit of work an engagement actually receives: one thing the
-customer wants that the agent cannot do today. It is what ` + "`asgard-cli next`" + `
-walks - an onboarding is the first request, and everything after it arrives the
-same way.
+customer wants that the agent cannot do today. An onboarding is the first
+request, and everything after it arrives the same way.
 
 The record is a file in the customer repository, ` + "`" + work.RequestDir + `/REQ-xxx-<name>.md` + "`" + `,
 registered in ` + "`" + work.RequestIndex + "`" + `. Nothing is stored in this CLI: the repo is
 where the next agent looks, so the repo is where the state lives.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return cmd.Help()
+			if err := checkFormat(format); err != nil {
+				return err
+			}
+			state, err := loadState()
+			if err != nil {
+				return err
+			}
+			if format == formatJSON {
+				return writeJSON(cmd.OutOrStdout(), requestReport(state))
+			}
+			printRequests(cmd.OutOrStdout(), state)
+			return nil
 		},
 	}
 
+	cmd.Flags().StringVar(&format, formatFlag, formatText, formatUsage)
 	cmd.AddCommand(
 		newRequestAddCmd(),
 		newRequestTargetCmd(),
@@ -39,6 +57,40 @@ where the next agent looks, so the repo is where the state lives.`,
 	)
 
 	return cmd
+}
+
+// requestJSON is one open request, as a record rather than as a column.
+type requestJSON struct {
+	ID      string `json:"id"`
+	Status  string `json:"status"`
+	Project string `json:"project,omitempty"`
+	Title   string `json:"title"`
+}
+
+func requestReport(state stage.State) []requestJSON {
+	out := []requestJSON{}
+	for _, r := range work.ActiveRequests(state.Requests) {
+		out = append(out, requestJSON{ID: r.ID, Status: string(r.Status), Project: r.Project, Title: r.Title})
+	}
+	return out
+}
+
+func printRequests(out io.Writer, state stage.State) {
+	requests := work.ActiveRequests(state.Requests)
+	if len(requests) == 0 {
+		fmt.Fprintf(out, "No open requests in %s.\n\nOpen one with `asgard-cli request add \"<what the customer asked for>\"`.\n", work.RequestIndex)
+		return
+	}
+
+	fmt.Fprintf(out, "Open requests, from %s:\n", work.RequestIndex)
+	for _, r := range requests {
+		target := r.Project
+		if target == "" {
+			target = "no project yet"
+		}
+		fmt.Fprintf(out, "  %-9s %-10s %-16s %s\n", r.ID, r.Status, target, r.Title)
+	}
+	fmt.Fprintf(out, "\nA request with no project named has not had its audience decided:\n`asgard-cli request target <request-id> <project>`.\n")
 }
 
 func newRequestAddCmd() *cobra.Command {
@@ -71,7 +123,8 @@ number.
 
 --project is optional and usually unknown at this point: it is decided by who is
 on the other end, which is section 2 of the spec. Until it is set,
-` + "`asgard-cli next`" + ` treats the request as the interview it is.`,
+` + "`asgard-cli request`" + ` shows it with no project named, which is what an
+interview that has not finished looks like.`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			title := args[0]
@@ -121,7 +174,7 @@ Fill in sections 2 and 3 of that file - who is on the other end, and which
 systems it has to read. Those two answers decide the project, the read path and
 the entry point, and nothing downstream can be designed without them.
 
-    asgard-cli next     walks this request from here
+    asgard-cli guide requirements     how the interview goes, and what it filters out
 `)
 			return nil
 		},
@@ -175,12 +228,12 @@ func newRequestTargetCmd() *cobra.Command {
 		Long: `Record which project a request lands in.
 
 This is the answer the interview produces, and it is what moves the onboarding
-on: until a request names a project this repository has, ` + "`asgard-cli next`" + ` reads
-it as an interview that has not finished.
+on: until a request names a project this repository has, ` + "`asgard-cli request`" + `
+lists it with no project, which is what an unfinished interview looks like.
 
 The project follows the audience, not the data. Same audience as an existing
-project means it goes in that project; a new audience means a new project, which
-walks its own way through the remaining stages. Putting a public capability into
+project means it goes in that project; a new audience means a new project, with
+its own read path and its own way in. Putting a public capability into
 an internal project because the data happens to be nearby is how a semantic layer
 becomes reachable from a public endpoint.
 

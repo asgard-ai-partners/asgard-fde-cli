@@ -2,17 +2,24 @@ package cli
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/spf13/cobra"
 
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/stage"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/work"
 )
 
 func newTaskCmd() *cobra.Command {
+	var format string
+
 	cmd := &cobra.Command{
 		Use:   "task",
-		Short: "Write and track the executable task specs",
-		Long: `Write and track the executable task specs.
+		Short: "List the open task specs, and write or move one",
+		Long: `List the open task specs, and write or move one.
+
+With no subcommand it prints every task that is not done, from
+` + "`" + work.TaskIndex + "`" + `.
 
 A request says what the customer wants; a task spec says how one chart change is
 made and how it is verified. Work that touches a ` + "`SemanticLayer`" + ` or a
@@ -25,10 +32,22 @@ registered in ` + "`" + work.TaskIndex + "`" + `. Task IDs are global across pro
 branches numbering from their own project is how a collision happens.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return cmd.Help()
+			if err := checkFormat(format); err != nil {
+				return err
+			}
+			state, err := loadState()
+			if err != nil {
+				return err
+			}
+			if format == formatJSON {
+				return writeJSON(cmd.OutOrStdout(), taskReport(state))
+			}
+			printTasks(cmd.OutOrStdout(), state)
+			return nil
 		},
 	}
 
+	cmd.Flags().StringVar(&format, formatFlag, formatText, formatUsage)
 	cmd.AddCommand(
 		newTaskAddCmd(),
 		newTaskStatusCmd("ready", work.Ready,
@@ -40,6 +59,43 @@ branches numbering from their own project is how a collision happens.`,
 	)
 
 	return cmd
+}
+
+// taskJSON is one open task spec, as a record rather than as a column.
+type taskJSON struct {
+	ID     string `json:"id"`
+	Status string `json:"status"`
+	Title  string `json:"title"`
+}
+
+func taskReport(state stage.State) []taskJSON {
+	out := []taskJSON{}
+	for _, t := range work.ActiveTasks(state.Tasks) {
+		out = append(out, taskJSON{ID: t.ID, Status: string(t.Status), Title: t.Title})
+	}
+	return out
+}
+
+func printTasks(out io.Writer, state stage.State) {
+	tasks := work.ActiveTasks(state.Tasks)
+	if len(tasks) == 0 {
+		fmt.Fprintf(out, "No open task specs in %s.\n", work.TaskIndex)
+		// A request with no task is work nobody has written down the shape of.
+		// It is worth saying here rather than on `request`, because the thing
+		// that is missing is a task.
+		if requests := work.ActiveRequests(state.Requests); len(requests) > 0 {
+			fmt.Fprintf(out, "\nAnything touching a chart wants one first:\n\n    asgard-cli task add \"<title>\" --request %s --project <project>\n", requests[0].ID)
+		}
+		return
+	}
+
+	fmt.Fprintf(out, "Open task specs, from %s:\n", work.TaskIndex)
+	for _, t := range tasks {
+		fmt.Fprintf(out, "  %-9s %-11s %s\n", t.ID, t.Status, t.Title)
+	}
+	fmt.Fprintf(out, "\nFinish or park these before opening another. Move a status with\n"+
+		"`asgard-cli task ready|start|done <id>`, which changes the index, the\n"+
+		"spec's Meta and the spec's log together - by hand it is three places.\n")
 }
 
 func newTaskAddCmd() *cobra.Command {

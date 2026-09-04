@@ -13,6 +13,7 @@ func newWikiCmd() *cobra.Command {
 		search      string
 		conventions bool
 		unverified  bool
+		aliases     bool
 	)
 
 	cmd := &cobra.Command{
@@ -41,10 +42,24 @@ extracts together and names the counterpart of whatever it finds. --search here
 is the narrow form, for when you already know the answer is on the platform side.
 
 --conventions prints how the wiki is maintained: where its sources are, what a
-page has to carry, and how it is kept from going stale as the platform moves.`,
+page has to carry, and how it is kept from going stale as the platform moves.
+
+--aliases prints the index: what a customer says, and what to search for. It is
+what "asgard-cli find" applies to a query before searching, and it is not a page
+- an index inside the corpus competes with what it points at, so it lives beside
+the pages the way index.md and log.md do.`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			out := cmd.OutOrStdout()
+
+			if aliases {
+				body, err := wiki.Index()
+				if err != nil {
+					return err
+				}
+				fmt.Fprint(out, body)
+				return nil
+			}
 
 			if unverified {
 				pages, err := wiki.List()
@@ -131,6 +146,7 @@ For how the wiki is maintained, "asgard-cli wiki --conventions".
 
 	cmd.Flags().StringVar(&search, "search", "", "search this half only; `asgard-cli find` searches both")
 	cmd.Flags().BoolVar(&conventions, "conventions", false, "print how the wiki is maintained and where its sources are")
+	cmd.Flags().BoolVar(&aliases, "aliases", false, "print the index: what a customer says, and what to search for")
 	cmd.Flags().BoolVar(&unverified, "unverified", false,
 		"list what each page has NOT been held against a real deployment")
 

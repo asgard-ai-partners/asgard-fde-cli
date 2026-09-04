@@ -125,7 +125,7 @@ a deployment on one, see "asgard-cli usecase --unverified" - some of these are
 read off the platform contract and have never run anywhere.
 
 Which entry point and which read path are not preferences: both follow from
-whether the caller can authenticate. See "asgard-cli next --stage read-path".
+whether the caller can authenticate. See "asgard-cli guide read-path".
 
 For what the platform is and who each piece is for, "asgard-cli wiki".
 `)

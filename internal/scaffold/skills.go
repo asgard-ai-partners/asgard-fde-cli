@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/fs"
 	"regexp"
-	"sort"
 	"strings"
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/kb"
@@ -21,6 +20,11 @@ type Skill struct {
 	Name        string
 	Description string
 	Path        string
+
+	// Links is what this skill points a reader at, read when it was parsed.
+	// A skill sends a reader into the wiki and the extracts like anything
+	// else here, so it is part of the same graph.
+	Links []kb.Link
 }
 
 const skillRoot = "templates/.agents/skills"
@@ -29,29 +33,14 @@ var frontmatterField = regexp.MustCompile(`(?m)^(name|description):\s*(.*)$`)
 
 // Skills lists the design-time skills, sorted by name.
 func Skills() ([]Skill, error) {
-	entries, err := fs.ReadDir(templates, skillRoot)
+	docs, err := corpus.List()
 	if err != nil {
-		return nil, fmt.Errorf("read %s: %w", skillRoot, err)
+		return nil, err
 	}
-
-	var out []Skill
-	for _, e := range entries {
-		if !e.IsDir() {
-			continue
-		}
-		body, err := skillBody(e.Name())
-		if err != nil {
-			return nil, err
-		}
-		s := Skill{Name: e.Name(), Path: ".agents/skills/" + e.Name() + "/SKILL.md"}
-		for _, m := range frontmatterField.FindAllStringSubmatch(body, -1) {
-			if m[1] == "description" {
-				s.Description = strings.TrimSpace(m[2])
-			}
-		}
-		out = append(out, s)
+	out := make([]Skill, 0, len(docs))
+	for _, d := range docs {
+		out = append(out, Skill{Name: d.Name, Description: d.Summary, Path: Path(d.Name), Links: d.Links})
 	}
-	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
 	return out, nil
 }
 
@@ -62,91 +51,89 @@ func Body(name string) (string, error) { return skillBody(name) }
 // skillBody reads one skill's SKILL.md, rendered or not. The templated ones are
 // searched as written, placeholders and all: a search hits prose, and the only
 // placeholder in them is the workspace name.
-func skillBody(name string) (string, error) {
-	for _, suffix := range []string{"/SKILL.md.tmpl", "/SKILL.md"} {
-		data, err := templates.ReadFile(skillRoot + "/" + name + suffix)
-		if err == nil {
-			return string(data), nil
+func skillBody(name string) (string, error) { return corpus.Read(name) }
+
+// corpus is the skills as a body of material, on the same terms as the wiki and
+// the extracts.
+//
+// Two things differ and both are supplied rather than worked around. A skill is
+// `<name>/SKILL.md`, not `<name>.md`, so Docs resolves the names. And its
+// metadata is YAML frontmatter - `name` and `description` - which is the Agent
+// Skills contract the runtime discovers it by, and is not this repo's to
+// change, so ParseDoc reads that instead of a "# " heading. What comes out is a
+// kb.Doc like any other.
+var corpus = kb.Corpus{
+	FS:       templates,
+	Dir:      skillRoot,
+	Docs:     skillRefs,
+	ParseDoc: parseSkill,
+	// The whole file is searched - the frontmatter's description is what a
+	// query often lands on - while quoted lines come from the body only, and
+	// never from a line still carrying an unrendered `<<...>>` placeholder,
+	// which reads as broken text in a result.
+	Scan: func(body string) kb.Scanner {
+		return kb.Scanner{
+			Quotable: skipFrontmatter(body),
+			Keep:     func(line string) bool { return !strings.Contains(line, "<<") },
 		}
-	}
-	return "", fmt.Errorf("%s has no SKILL.md", name)
+	},
+	Noun:    "skill",
+	Command: "asgard-cli find",
 }
 
-// SkillMatch is one skill covering the search.
-type SkillMatch struct {
-	Skill
-	Lines []string
-	Score int
-	Terms []string
-}
-
-// SearchSkills finds skills covering the given terms, on the same two-pass rule
-// as the other bodies: all of them, then any of them.
-func SearchSkills(query string) ([]SkillMatch, error) {
-	terms := kb.Terms(query)
-	if len(terms) == 0 {
-		return nil, fmt.Errorf("search needs at least one term")
-	}
-
-	all, err := Skills()
+// skillRefs lists each skill directory and the SKILL.md inside it. The
+// templated ones are searched as written, placeholders and all: a search hits
+// prose, and the only placeholder in them is the workspace name.
+func skillRefs() ([]kb.Ref, error) {
+	entries, err := fs.ReadDir(templates, skillRoot)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("read %s: %w", skillRoot, err)
 	}
 
-	var matches []SkillMatch
-	for _, s := range all {
-		body, err := skillBody(s.Name)
-		if err != nil {
-			return nil, err
-		}
-		lower := strings.ToLower(body)
-
-		m := SkillMatch{Skill: s}
-		for _, term := range terms {
-			if kb.Covers(lower, term) {
-				m.Terms = append(m.Terms, term)
-			}
-		}
-		if len(m.Terms) == 0 {
+	var out []kb.Ref
+	for _, e := range entries {
+		if !e.IsDir() {
 			continue
 		}
-
-		for _, line := range strings.Split(skipFrontmatter(body), "\n") {
-			lowerLine := strings.ToLower(line)
-			for _, term := range m.Terms {
-				if !kb.Covers(lowerLine, term) {
-					continue
-				}
-				m.Score++
-				// The description is printed above from the frontmatter, and a
-				// line still carrying `<<...>>` is a template placeholder that
-				// reads as broken text in a result.
-				trimmed := strings.TrimSpace(line)
-				if len(m.Lines) < 3 && len(trimmed) > 20 && !strings.Contains(trimmed, "<<") {
-					m.Lines = append(m.Lines, trimmed)
-				}
+		for _, suffix := range []string{"/SKILL.md.tmpl", "/SKILL.md"} {
+			path := skillRoot + "/" + e.Name() + suffix
+			if _, err := fs.Stat(templates, path); err == nil {
+				out = append(out, kb.Ref{Name: e.Name(), Path: path})
 				break
 			}
 		}
-		matches = append(matches, m)
 	}
-
-	sort.Slice(matches, func(i, j int) bool {
-		if len(matches[i].Terms) != len(matches[j].Terms) {
-			return len(matches[i].Terms) > len(matches[j].Terms)
-		}
-		return matches[i].Score > matches[j].Score
-	})
-
-	if len(matches) > 0 && len(matches[0].Terms) == len(terms) {
-		for i, m := range matches {
-			if len(m.Terms) < len(terms) {
-				return matches[:i], nil
-			}
-		}
-	}
-	return matches, nil
+	return out, nil
 }
+
+// parseSkill takes the title and summary from the frontmatter rather than from
+// a heading. The heading exists but carries the workspace name as an unrendered
+// placeholder, so it reads as broken text in a listing.
+func parseSkill(name string, data []byte) kb.Doc {
+	d := kb.Parse(name, data)
+	d.Title = ""
+	d.Summary = ""
+	for _, m := range frontmatterField.FindAllStringSubmatch(string(data), -1) {
+		if m[1] == "description" {
+			d.Summary = strings.TrimSpace(m[2])
+		}
+	}
+	// The frontmatter description is the title line as well as the summary: a
+	// skill has no separate one-line name, and the "# " heading below the
+	// frontmatter says what the file is with the customer's name interpolated
+	// into it, which reads as broken text unrendered.
+	d.Title = d.Summary
+	return d
+}
+
+// Path is where one skill lands in a customer repository.
+func Path(name string) string { return ".agents/skills/" + name + "/SKILL.md" }
+
+// List returns every skill, sorted by name.
+func List() ([]kb.Doc, error) { return corpus.List() }
+
+// Search finds skills covering the given terms.
+func Search(query string) ([]kb.Match, error) { return corpus.Search(query) }
 
 // skipFrontmatter drops the leading --- block, so a search quotes the skill's
 // prose rather than the description it is already being shown beside.

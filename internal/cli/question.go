@@ -2,17 +2,25 @@ package cli
 
 import (
 	"fmt"
+	"io"
+	"sort"
 
 	"github.com/spf13/cobra"
 
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/stage"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/work"
 )
 
 func newQuestionCmd() *cobra.Command {
+	var format string
+
 	cmd := &cobra.Command{
 		Use:   "question",
-		Short: "Record what nobody has answered yet, and what the answer turned out to be",
-		Long: `Record what nobody has answered yet, and what the answer turned out to be.
+		Short: "List what nobody has answered yet, and record answers",
+		Long: `List what nobody has answered yet, and record what the answer turned out to be.
+
+With no subcommand it prints every open question in ` + "`" + work.QuestionFile + "`" + `, who each
+is waiting on, and when it was raised.
 
 An unanswered question has nowhere else to live. A decision record is for
 something settled. A task spec's open questions vanish when that task reaches
@@ -20,17 +28,133 @@ done. The living spec describes what is, not what nobody knows. So without
 ` + "`" + work.QuestionFile + "`" + ` the question is rediscovered by the next person, usually by
 making the wrong assumption first.
 
-` + "`asgard-cli next`" + ` prints everything still open, on every run, before anything
-else it has to say.`,
+**Read this before designing anything.** The fastest way to do damage in a
+repository somebody else started is to design past a question they already knew
+was open.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return cmd.Help()
+			if err := checkFormat(format); err != nil {
+				return err
+			}
+			state, err := loadState()
+			if err != nil {
+				return err
+			}
+			if format == formatJSON {
+				return writeJSON(cmd.OutOrStdout(), questionReport(state))
+			}
+			printQuestions(cmd.OutOrStdout(), state)
+			return nil
 		},
 	}
 
+	cmd.Flags().StringVar(&format, formatFlag, formatText, formatUsage)
 	cmd.AddCommand(newQuestionAddCmd(), newQuestionAnsweredCmd())
 
 	return cmd
+}
+
+// questionJSON is one open question, as a record rather than as a column.
+type questionJSON struct {
+	Number string `json:"number"`
+	Text   string `json:"text"`
+	Blocks string `json:"blocks,omitempty"`
+	Owner  string `json:"owner,omitempty"`
+	Raised string `json:"raised,omitempty"`
+}
+
+func questionReport(state stage.State) []questionJSON {
+	// An empty slice rather than nil: a caller that iterates should not have to
+	// tell "nothing is open" apart from "the field is missing".
+	out := []questionJSON{}
+	for _, q := range state.Questions {
+		out = append(out, questionJSON{Number: q.Number, Text: q.Text, Blocks: q.Blocks, Owner: q.Owner, Raised: q.Raised})
+	}
+	return out
+}
+
+// printQuestions reports what is still unanswered.
+func printQuestions(out io.Writer, state stage.State) {
+	if len(state.Questions) == 0 {
+		fmt.Fprintf(out, "No open questions in %s.\n\nOpen one with `asgard-cli question add \"<question>\" --ask <who>`.\n", work.QuestionFile)
+		return
+	}
+
+	fmt.Fprintf(out, "%d open question(s), from %s:\n", len(state.Questions), work.QuestionFile)
+	for _, q := range state.Questions {
+		fmt.Fprintf(out, "  %s. %s\n", q.Number, q.Text)
+		if q.Blocks != "" {
+			fmt.Fprintf(out, "       blocks: %s\n", q.Blocks)
+		}
+		if q.Owner != "" {
+			fmt.Fprintf(out, "       ask:    %s\n", q.Owner)
+		}
+		if q.Raised != "" && q.Raised != "-" {
+			fmt.Fprintf(out, "       raised: %s\n", q.Raised)
+		}
+	}
+	fmt.Fprintf(out, "\nDo not design past one of these. Either get the answer, or record the\n"+
+		"assumption you are proceeding on and which branch it commits you to.\n")
+
+	printWaiting(out, state)
+}
+
+// printWaiting reports who the open questions are with.
+//
+// A tool that reports what is missing implies the next move is ours, and for
+// long stretches it is not: an engagement waits on a meeting, on an account, on
+// a document, on somebody's internal approval. Told only that no request is
+// open, an FDE in that state reads the tool as saying they are behind - and the
+// information to say otherwise was already in the file, in the column that
+// names who can answer.
+//
+// Waiting is a state the work is in, not a gap in it.
+func printWaiting(out io.Writer, state stage.State) {
+	if state.InFlight() {
+		return
+	}
+
+	byOwner := map[string]int{}
+	var unowned int
+	for _, q := range state.Questions {
+		if q.Owner == "" || q.Owner == "-" {
+			unowned++
+			continue
+		}
+		byOwner[q.Owner]++
+	}
+	if len(byOwner) == 0 && unowned == 0 {
+		return
+	}
+
+	owners := make([]string, 0, len(byOwner))
+	for o := range byOwner {
+		owners = append(owners, o)
+	}
+	sort.Slice(owners, func(i, j int) bool {
+		if byOwner[owners[i]] != byOwner[owners[j]] {
+			return byOwner[owners[i]] > byOwner[owners[j]]
+		}
+		return owners[i] < owners[j]
+	})
+
+	fmt.Fprintf(out, "\nWAITING - nothing is in flight because the answers are with somebody else:\n\n")
+	for _, o := range owners {
+		fmt.Fprintf(out, "  %-3d %s\n", byOwner[o], o)
+	}
+	if unowned > 0 {
+		fmt.Fprintf(out, "  %-3d **nobody named** - a question with no owner is not tracked,\n"+
+			"      it is just written down\n", unowned)
+	}
+
+	fmt.Fprintf(out, "\nThat is a normal state and not a gap. What is worth checking while it\nlasts:\n\n"+
+		"  - the questions that are **ours** rather than theirs - anything for the\n"+
+		"    platform team gets asked before the next meeting, not during it.\n"+
+		"    `asgard-cli wiki platform-unknowns`\n"+
+		"  - whether the meeting has something to take into it - the\n"+
+		"    `proposal-deck` skill in `.agents/skills/`\n"+
+		"  - whether each question names a person or a role. The ones that do not\n"+
+		"    are the ones that come back unanswered\n")
 }
 
 func newQuestionAddCmd() *cobra.Command {

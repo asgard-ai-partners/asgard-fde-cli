@@ -15,6 +15,7 @@ import (
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/brief"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/generate"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/kb"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/scaffold"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/stage"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/usecase"
@@ -60,6 +61,11 @@ type source struct {
 	label string
 	name  string
 	body  string
+
+	// links is every document this one points at, read when it was parsed.
+	// The pointer graph is a fact about the material, so it is not rebuilt
+	// here from the prose - see kb.Link.
+	links []kb.Link
 }
 
 // everything is material() plus the files a repository is actually built from.
@@ -80,10 +86,10 @@ func everything() ([]source, error) {
 		return nil, err
 	}
 	for name, body := range crs {
-		out = append(out, source{"template", name, body})
+		out = append(out, source{label: "template", name: name, body: body})
 	}
 	for name, body := range generate.ValuesBlocks() {
-		out = append(out, source{"template", name, body})
+		out = append(out, source{label: "template", name: name, body: body})
 	}
 	files, err := scaffold.TemplateBodies()
 	if err != nil {
@@ -95,7 +101,7 @@ func everything() ([]source, error) {
 		if strings.HasPrefix(name, ".agents/skills/") {
 			continue
 		}
-		out = append(out, source{"scaffold", name, body})
+		out = append(out, source{label: "scaffold", name: name, body: body})
 	}
 	sort.Slice(out, func(i, j int) bool {
 		if out[i].label != out[j].label {
@@ -157,7 +163,7 @@ func material() ([]source, error) {
 		if err != nil {
 			return nil, err
 		}
-		out = append(out, source{"wiki", p.Name, body})
+		out = append(out, source{label: "wiki", name: p.Name, body: body, links: p.Links})
 	}
 	extracts, err := usecase.List()
 	if err != nil {
@@ -168,14 +174,22 @@ func material() ([]source, error) {
 		if err != nil {
 			return nil, err
 		}
-		out = append(out, source{"usecase", e.Name, body})
+		out = append(out, source{label: "usecase", name: e.Name, body: body, links: e.Links})
+	}
+	guides, err := stage.Docs()
+	if err != nil {
+		return nil, err
+	}
+	links := map[string][]kb.Link{}
+	for _, g := range guides {
+		links[g.Name] = g.Links
 	}
 	for _, s := range stage.List() {
 		body, err := s.Raw()
 		if err != nil {
 			return nil, err
 		}
-		out = append(out, source{"stage", string(s.Name), body})
+		out = append(out, source{label: "stage", name: string(s.Name), body: body, links: links[string(s.Name)]})
 	}
 	skills, err := scaffold.Skills()
 	if err != nil {
@@ -186,13 +200,76 @@ func material() ([]source, error) {
 		if err != nil {
 			return nil, err
 		}
-		out = append(out, source{"skill", sk.Name, body})
+		out = append(out, source{label: "skill", name: sk.Name, body: body, links: sk.Links})
 	}
 	return out, nil
 }
 
+// bookkeeping is the corpus's own navigation - the index of pages, the alias
+// index and the log. None of it is material about the platform.
+//
+// It is separated from material() rather than left out, because the two checks
+// want opposite things from it. **--links has to read it**: its rows carry
+// pointers, and while the alias table lived on the glossary page those pointers
+// were checked, so moving the index out without this would have quietly stopped
+// checking eight of them - and `index.md` itself had never been checked at all,
+// because it is Unlisted and so was never a source. **--orphans must not count
+// it**: a list that names every page makes every page reachable, and the whole
+// finding is that a document reachable only from a list is not reached.
+func bookkeeping() []source {
+	var out []source
+	add := func(label, name, body string) {
+		links, _ := kb.Links(body)
+		out = append(out, source{label: label, name: name, body: body, links: links})
+	}
+	if body, err := wiki.Index(); err == nil {
+		add("index", "aliases", body)
+	}
+	for _, name := range []string{"index", "log"} {
+		if body, err := wiki.Read(name); err == nil {
+			add("index", "wiki "+name, body)
+		}
+	}
+	if body, err := usecase.Read("index"); err == nil {
+		add("index", "usecase index", body)
+	}
+	return out
+}
+
+// helpText is every command's own help, as a link source.
+//
+// **It is a fifth body of material and it had never been checked.** Sixty-odd
+// pointers into the corpus live in Long and Short strings - `find` alone writes
+// sixteen - and a page renamed out from under one of them goes dead exactly the
+// way a page's own pointer does, with nothing to notice. It is also where an
+// agent is sent from before it has read anything, so a document reached only
+// from here is reached, which the orphan count was getting wrong.
+//
+// It is not part of material(): the instruction audits count sentences somebody
+// wrote as guidance, and a usage string is not one.
+func helpText(cmd *cobra.Command) []source {
+	var out []source
+	var walk func(c *cobra.Command, path string)
+	walk = func(c *cobra.Command, path string) {
+		if c.Hidden && c.Name() != "audit-material" {
+			return
+		}
+		name := strings.TrimSpace(path + " " + c.Name())
+		body := c.Short + "\n" + c.Long
+		links, _ := kb.Links(body)
+		if len(links) > 0 {
+			out = append(out, source{label: "help", name: name, body: body, links: links})
+		}
+		for _, sub := range c.Commands() {
+			walk(sub, name)
+		}
+	}
+	walk(cmd, "")
+	return out
+}
+
 func newAuditCmd() *cobra.Command {
-	var onlyAsk, onlyUnmarked, cross, links, urls bool
+	var onlyAsk, onlyUnmarked, cross, links, orphans, urls bool
 	var term string
 
 	cmd := &cobra.Command{
@@ -218,6 +295,8 @@ a customer deck.
                                            command says
     asgard-cli audit-material --links      resolve every pointer, and exit 1 on
                                            one that goes nowhere
+    asgard-cli audit-material --orphans    documents nothing points at. The
+                                           index does not count as a pointer
     asgard-cli audit-material --term <s>   every line mentioning <s>, in the
                                            templates as well as the prose
     asgard-cli audit-material --urls       fetch every docs link; exits 1 on a
@@ -228,11 +307,19 @@ short enough for one sitting.
 
 **--links is the only part that fails.** Everything else here is for a person to
 read; this one resolves every ` + "`asgard-cli wiki <page>`" + `, ` + "`usecase <extract>`" + `,
-` + "`brief <activity>`" + ` and ` + "`next --stage <name>`" + ` the material writes, and exits 1
+` + "`brief <activity>`" + ` and ` + "`guide <name>`" + ` the material writes, and exits 1
 on one that resolves to nothing. A renamed page leaves the pointers to it
 behind, and nobody finds out until a reader follows one - which is the same
 failure as a stale instruction, except that it can be checked mechanically. Run
 it before a release.
+
+**--orphans is the other half of --links.** A pointer that goes nowhere is
+caught by --links; a document nothing points at is not caught by anything, and
+costs more - material nobody links to is not read, and the writer never finds
+out, because the file is there. The index is deliberately not counted: one
+engagement had ` + "`wiki operations`" + ` sitting in it under the title Connectivity while
+an FDE spent a day on connectivity and never opened it. It does not fail the
+build, because search answers for some of them.
 
 **--urls is the one that needs the network**, which is why it is not in --links.
 Six of the 82 documentation links in this material were 404s when this was first
@@ -279,7 +366,15 @@ maintainer can see.`,
 				return sweep(out, all, term)
 			}
 			if links {
-				return checkLinks(out, sources)
+				all := append(sources, bookkeeping()...)
+				return checkLinks(out, append(all, helpText(cmd.Root())...))
+			}
+			if orphans {
+				// Help counts as a pointer and the index does not. A command's
+				// help is read at the moment somebody is deciding what to run;
+				// a catalogue is read by somebody who already suspects the
+				// document exists.
+				return checkOrphans(out, append(sources, helpText(cmd.Root())...))
 			}
 			if cross {
 				return crossref(out, sources)
@@ -326,6 +421,7 @@ maintainer can see.`,
 	f.BoolVar(&onlyUnmarked, "unmarked", false, "only those with no reader or destination stated")
 	f.BoolVar(&cross, "crossref", false, "only sentences claiming what another command says")
 	f.BoolVar(&links, "links", false, "resolve every pointer in the material; exits 1 on a dead one")
+	f.BoolVar(&orphans, "orphans", false, "documents nothing else points at; the index does not count as a pointer")
 	f.StringVar(&term, "term", "", "every line mentioning this word, templates included - for a rename")
 	f.BoolVar(&urls, "urls", false, "fetch every docs.asgard-ai.com link in the material; exits 1 on a 404. Needs the network")
 	return cmd
@@ -361,10 +457,6 @@ func crossref(out io.Writer, sources []source) error {
 	return nil
 }
 
-// pointer matches the ways this material sends a reader somewhere else. Each
-// captures the target in group 2, after a keyword in group 1.
-var pointer = regexp.MustCompile(`asgard-cli (wiki|usecase|brief) ([a-z0-9][a-z0-9-]*)|asgard-cli next --stage ([a-z0-9][a-z0-9-]*)`)
-
 // checkLinks resolves every pointer the material writes and fails on one that
 // goes nowhere.
 //
@@ -374,23 +466,24 @@ var pointer = regexp.MustCompile(`asgard-cli (wiki|usecase|brief) ([a-z0-9][a-z0
 // to tell a dead pointer from a page they failed to find. The checks that did
 // this lived in a test suite that no longer exists, which is why it is a flag on
 // a command that ships rather than a test on the maintainer's machine.
-func checkLinks(out io.Writer, sources []source) error {
+// targets is every document a pointer can legitimately resolve to, by kind.
+func targets() (map[string]map[string]bool, error) {
 	known := map[string]map[string]bool{
 		"wiki":    {},
 		"usecase": {},
 		"brief":   {},
-		"stage":   {},
+		"guide":   {},
 	}
 	pages, err := wiki.List()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	for _, p := range pages {
 		known["wiki"][p.Name] = true
 	}
 	extracts, err := usecase.List()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	for _, e := range extracts {
 		known["usecase"][e.Name] = true
@@ -399,13 +492,98 @@ func checkLinks(out io.Writer, sources []source) error {
 		known["brief"][n] = true
 	}
 	for _, st := range stage.List() {
-		known["stage"][string(st.Name)] = true
+		known["guide"][string(st.Name)] = true
+	}
+	return known, nil
+}
+
+// checkOrphans reports the documents nothing else points at.
+//
+// **The index does not count as a pointer, and that is the whole check.** In
+// one engagement `wiki operations` sat in `index.md` under the title
+// Connectivity while an FDE spent a day on connectivity and never opened it -
+// discovery is by pointer at the moment of need, not by browsing a list, and a
+// document reachable only from the index is reachable only by somebody who
+// already suspects it exists. So the index and the log are excluded as sources
+// here: counting them would mark every page reachable and report nothing.
+//
+// It does not fail. An orphan is not a defect the way a dead pointer is - a
+// document can be answered for by search alone - it is a reading list, and the
+// judgement about each one is a person's.
+func checkOrphans(out io.Writer, sources []source) error {
+	known, err := targets()
+	if err != nil {
+		return err
+	}
+
+	pointedAt := map[string]bool{}
+	for _, s := range sources {
+		for _, l := range s.links {
+			// A document pointing at itself is not somebody else finding it.
+			if l.Kind == s.label || (l.Kind == "guide" && s.label == "stage") {
+				if l.Name == s.name {
+					continue
+				}
+			}
+			pointedAt[l.Kind+"/"+l.Name] = true
+		}
+	}
+	for _, k := range generate.Kinds {
+		if k.Wiki != "" {
+			pointedAt["wiki/"+k.Wiki] = true
+		}
+		if k.Extract != "" {
+			pointedAt["usecase/"+k.Extract] = true
+		}
+		for _, n := range k.AlsoRead {
+			pointedAt["usecase/"+n] = true
+		}
+	}
+
+	fmt.Fprintf(out, "Documents nothing else points at.\n\n"+
+		"**The index does not count.** `wiki operations` sat in it under the title\n"+
+		"Connectivity while an FDE spent a day on connectivity and never opened it:\n"+
+		"discovery is by pointer at the moment it is needed, and a document reachable\n"+
+		"only from a list is reachable only by somebody who already suspects it.\n\n"+
+		"Not a defect list. Search answers for some of these, and for some the right\n"+
+		"fix is a sentence in the document that should have sent a reader here.\n")
+
+	var total, orphaned int
+	for _, kind := range []string{"wiki", "usecase", "guide", "brief"} {
+		names := make([]string, 0, len(known[kind]))
+		for n := range known[kind] {
+			names = append(names, n)
+		}
+		sort.Strings(names)
+
+		var bare []string
+		for _, n := range names {
+			total++
+			if !pointedAt[kind+"/"+n] {
+				bare = append(bare, n)
+				orphaned++
+			}
+		}
+		fmt.Fprintf(out, "\n%s\n  %d of %d\n", strings.ToUpper(kind), len(bare), len(names))
+		for _, n := range bare {
+			fmt.Fprintf(out, "    %s\n", n)
+		}
+	}
+	fmt.Fprintf(out, "\n%d of %d documents are reached by no pointer.\n", orphaned, total)
+	return nil
+}
+
+func checkLinks(out io.Writer, sources []source) error {
+	known, err := targets()
+	if err != nil {
+		return err
 	}
 
 	// Sub-pages a command takes that are not corpus entries. `wiki index` and
 	// the searches are real invocations and would otherwise read as dead.
 	for _, extra := range []struct{ kind, name string }{
 		{"wiki", "index"},
+		{"wiki", "log"},
 		{"wiki", "README"},
 		{"usecase", "index"},
 	} {
@@ -443,29 +621,21 @@ func checkLinks(out io.Writer, sources []source) error {
 	}
 	for _, s := range sources {
 		seen := map[string]bool{}
-		for _, m := range pointer.FindAllStringSubmatch(s.body, -1) {
-			kind, name := m[1], m[2]
-			if kind == "" {
-				kind, name = "stage", m[3]
-			}
-			key := kind + "/" + name
+		for _, l := range s.links {
+			key := l.Kind + "/" + l.Name
 			if seen[key] {
 				continue
 			}
 			seen[key] = true
 			checked++
-			if !known[kind][name] {
-				found = append(found, dead{s.label + " " + s.name, kind, name})
+			if !known[l.Kind][l.Name] {
+				found = append(found, dead{s.label + " " + s.name, l.Kind, l.Name})
 			}
 		}
 	}
 
 	for _, d := range found {
-		target := "asgard-cli " + d.kind + " " + d.name
-		if d.kind == "stage" {
-			target = "asgard-cli next --stage " + d.name
-		}
-		fmt.Fprintf(out, "dead  %s -> `%s`\n", d.where, target)
+		fmt.Fprintf(out, "dead  %s -> `asgard-cli %s %s`\n", d.where, d.kind, d.name)
 	}
 	fmt.Fprintf(out, "\n%d pointer(s) resolved, %d dead.\n", checked, len(found))
 	if len(found) > 0 {

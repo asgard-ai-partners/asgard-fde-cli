@@ -20,6 +20,11 @@ func main() {
 		if errors.Is(err, context.Canceled) {
 			os.Exit(130)
 		}
+		// A command that has already printed its whole answer as JSON fails
+		// without a second, unparseable account of it on stderr.
+		if errors.Is(err, cli.ErrSilent) {
+			os.Exit(1)
+		}
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}

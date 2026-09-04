@@ -93,3 +93,85 @@ func Readings(root string) ([]Read, error) {
 	})
 	return out, nil
 }
+
+// MissLog is where a search that landed nowhere is recorded, relative to the
+// repository root.
+//
+// **It is a different file from ReadingLog because it has the opposite
+// contract.** The reading log names pages of this tool and nothing else, so it
+// is committed. A miss is the query as it was typed, which is whatever words
+// the customer used - their system names, their people, their vocabulary - so
+// it is written where nothing publishes it, and the scaffold's .gitignore keeps
+// it out of the repository.
+//
+// It is written at all because the query that found nothing is the one piece of
+// a defect report nobody has to be believed about. Everything else in a report
+// is somebody's account of what happened; this is the tool's own record that a
+// search was run and the corpus had no answer. `asgard-cli reading --misses`
+// reads it back, and `asgard-cli issue-report --new` puts it in the report.
+var MissLog = filepath.Join("docs", ".find-misses")
+
+const missHeader = `# Searches this engagement ran that the material did not answer.
+#
+# NOT COMMITTED. These are queries as they were typed, which may carry the
+# customer's own words. The scaffold's .gitignore excludes this file.
+#
+# date	kind	query
+#   miss      nothing in the four bodies carried any term
+#   unplaced  results came back, but these terms appeared in none of them
+#
+# Each line is a candidate row for the index: asgard-cli wiki --aliases
+`
+
+// Miss notes a search the material did not answer. Failures are ignored: a log
+// that cannot be written must never break a search.
+func Miss(root, kind, query string) {
+	if root == "" || strings.TrimSpace(query) == "" {
+		return
+	}
+	path := filepath.Join(root, MissLog)
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return
+	}
+	_, statErr := os.Stat(path)
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+	if os.IsNotExist(statErr) {
+		_, _ = f.WriteString(missHeader)
+	}
+	_, _ = f.WriteString(fmt.Sprintf("%s\t%s\t%s\n",
+		time.Now().UTC().Format("2006-01-02"), kind, strings.ReplaceAll(query, "\t", " ")))
+}
+
+// AMiss is one recorded search the material did not answer.
+type AMiss struct {
+	Date  string
+	Kind  string
+	Query string
+}
+
+// Misses returns what this engagement searched for and did not find, newest
+// last, in the order they happened. Order is the point: a run of misses on one
+// afternoon is one subject somebody could not reach, and collapsing them by
+// count would hide that.
+func Misses(root string) ([]AMiss, error) {
+	data, err := readOptional(filepath.Join(root, MissLog))
+	if err != nil || data == "" {
+		return nil, err
+	}
+	var out []AMiss
+	for _, line := range strings.Split(data, "\n") {
+		if strings.HasPrefix(line, "#") {
+			continue
+		}
+		parts := strings.Split(line, "\t")
+		if len(parts) != 3 {
+			continue
+		}
+		out = append(out, AMiss{Date: parts[0], Kind: parts[1], Query: parts[2]})
+	}
+	return out, nil
+}

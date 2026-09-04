@@ -50,7 +50,7 @@ them.`,
 					fmt.Fprintf(out, "  %-24s seen in %s\n\n", "", s.SeenIn)
 				}
 				fmt.Fprintf(out, "One of them: `asgard-cli size <shape> --databases N --queries N ...`\n"+
-					"The audience decides which - `asgard-cli next --stage requirements`, question 2.\n")
+					"The audience decides which - `asgard-cli guide requirements`, question 2.\n")
 				return nil
 			}
 
@@ -107,7 +107,7 @@ them.`,
 			}
 
 			fmt.Fprintf(out, "A number stated where an open question could double it is a guess with a\n"+
-				"decimal point. `asgard-cli next` prints what is still open.\n")
+				"decimal point. `asgard-cli question` prints what is still unanswered.\n")
 			return nil
 		},
 	}

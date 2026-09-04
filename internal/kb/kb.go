@@ -14,6 +14,7 @@ package kb
 import (
 	"fmt"
 	"io/fs"
+	"regexp"
 	"sort"
 	"strings"
 )
@@ -34,6 +35,58 @@ type Doc struct {
 	// default, and Verified reports it as such.
 	Checked   string
 	Unchecked string
+
+	// Links is every document this one points a reader at, in the order they
+	// appear. See Link.
+	Links []Link
+
+	// NamesCounterparts is true when the document carries the section where it
+	// states its counterparts on purpose. A document that has one is answered
+	// by it **including when the answer is none** - `glossary` says
+	// "Corresponding extracts: None. This is about the material rather than
+	// about a deployment", and reading on into its prose turned that into a
+	// confident link to whichever extract a paragraph happened to mention.
+	NamesCounterparts bool
+}
+
+// Link is one document pointing a reader at another.
+//
+// It is recovered when the document is parsed, not when a result is printed.
+// That was two regular expressions at two points of use - one in `find` to name
+// a hit's counterpart, one in `audit-material --links` to check the same
+// pointer resolved - which could disagree about what a document pointed at, and
+// left the corpus with no link graph at all. Without one, the lint the pattern
+// asks for cannot be written: **material nothing points at is not read, and the
+// writer never finds out, because the file is there.**
+type Link struct {
+	Kind string // wiki, usecase, guide, brief
+	Name string
+
+	// Deliberate marks a link inside the section where the document names its
+	// counterpart on purpose, as against one mentioned in passing. Taking the
+	// first pointer anywhere sent a reader to whichever reference happened to
+	// appear earliest, which on the knowledge page was a CD note pointing at
+	// `skill-set` rather than the page's own `knowledge-drive`.
+	Deliberate bool
+}
+
+// Counterpart returns the document of this kind that d names as its
+// counterpart, or "" when it names none.
+func (d Doc) Counterpart(kind string) string {
+	for _, l := range d.Links {
+		if l.Kind == kind && l.Deliberate {
+			return l.Name
+		}
+	}
+	if d.NamesCounterparts {
+		return ""
+	}
+	for _, l := range d.Links {
+		if l.Kind == kind {
+			return l.Name
+		}
+	}
+	return ""
 }
 
 // Verified reports whether this document records having been held against a
@@ -58,11 +111,39 @@ type Match struct {
 	Terms []string
 }
 
+// Ref is one document's name and the file holding it. A corpus whose files are
+// not one `<name>.md` under Dir supplies these itself.
+type Ref struct {
+	Name string
+	Path string
+}
+
 // Corpus is one body of material: where the files are, and which of them are
 // readable by name without appearing in a listing.
+//
+// Two fields are optional and exist because the four bodies do not agree at the
+// byte level and should not be forced to. A stage prompt is
+// `prompts/04-read-path.md` and is called `read-path`; a skill is
+// `<name>/SKILL.md` and carries YAML frontmatter, which is the Agent Skills
+// contract the runtime discovers it by and is not ours to change. What they are
+// made to agree on is Doc - a name, a title, a summary, and what the document
+// has and has not been held against - because that is what a reader and a
+// search need, and it is the only part any of them can share.
 type Corpus struct {
 	FS  fs.FS
 	Dir string
+
+	// Docs lists the corpus's documents when they are not one `<name>.md`
+	// directly under Dir. Optional.
+	Docs func() ([]Ref, error)
+
+	// Parse reads a document's metadata when it does not open with a "# "
+	// title and a paragraph. Optional; Parse is the default.
+	ParseDoc func(name string, data []byte) Doc
+
+	// Scan builds the scanner for one document's body, when what is searched
+	// and what is quotable are not the same text. Optional.
+	Scan func(body string) Scanner
 
 	// Unlisted are files that belong to the corpus's own bookkeeping rather
 	// than being material about the subject - an index, a log, a README.
@@ -74,6 +155,51 @@ type Corpus struct {
 	Command string // "asgard-cli usecase", "asgard-cli wiki"
 }
 
+// linkRe matches the ways this material sends a reader to another document.
+// Every one of them is an invocation of this tool naming a document by name,
+// which is the only form a pointer takes here - a bare page name in prose is
+// not a pointer, because a reader cannot act on it without knowing which
+// command opens it.
+// A pointer may wrap. This material is hard wrapped at about 78 columns, so one
+// near the right margin is split across two lines, and a pattern expecting a
+// single space did not see it - six real pointers in the corpus were invisible
+// to both `find`'s counterpart and `--links`, reading perfectly to a person the
+// whole time.
+// **Exactly one space, or a line break.** Not "any run of whitespace": a help
+// screen aligns its columns with spaces, so `asgard-cli guide` followed by
+// padding and the words "all of it" resolves to a document called "all". One
+// space or one wrap is what prose actually writes.
+var linkRe = regexp.MustCompile(`asgard-cli(?: |[ \t]*\n[ \t]*)(wiki|usecase|brief|guide)(?: |[ \t]*\n[ \t]*)([a-z0-9][a-z0-9-]*)`)
+
+// counterpartSection is where a document states its counterparts on purpose.
+var counterpartSection = regexp.MustCompile(
+	`(?s)##+ (?:Before writing the chart|Corresponding extracts|Read the platform side first)[^` + "\n" + `]*` + "\n" + `(.*?)(?:` + "\n" + `##|\z)`)
+
+// Links returns every document this body points at, deduplicated, in the order
+// they first appear, with the ones inside the counterpart section marked.
+func Links(body string) ([]Link, bool) {
+	deliberate := map[string]bool{}
+	named := false
+	if sec := counterpartSection.FindStringSubmatch(body); sec != nil {
+		named = true
+		for _, m := range linkRe.FindAllStringSubmatch(sec[1], -1) {
+			deliberate[m[1]+"/"+m[2]] = true
+		}
+	}
+
+	var out []Link
+	seen := map[string]bool{}
+	for _, m := range linkRe.FindAllStringSubmatch(body, -1) {
+		key := m[1] + "/" + m[2]
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		out = append(out, Link{Kind: m[1], Name: m[2], Deliberate: deliberate[key]})
+	}
+	return out, named
+}
+
 // marker matches a provenance or attribution line - the bold-prefixed labels a
 // document carries below its opening paragraph. They end the summary, and two
 // of them are read as fields.
@@ -81,11 +207,12 @@ func marker(line string) bool {
 	return strings.HasPrefix(line, "**") && strings.Contains(line, ":**")
 }
 
-// parse reads a document's opening - the "# " title and the paragraph under it -
+// Parse reads a document's opening - the "# " title and the paragraph under it -
 // and its provenance markers. Every file opens that way, which is what makes a
 // listing possible without a separate registry to keep in step.
-func parse(name string, data []byte) Doc {
+func Parse(name string, data []byte) Doc {
 	d := Doc{Name: name}
+	d.Links, d.NamesCounterparts = Links(string(data))
 	lines := strings.Split(string(data), "\n")
 
 	// The markers sit below the opening paragraph, by which point the summary
@@ -130,24 +257,66 @@ func parse(name string, data []byte) Doc {
 	return done()
 }
 
-// List returns every document in the corpus, sorted by name.
-func (c Corpus) List() ([]Doc, error) {
+// refs returns the corpus's documents and the files holding them.
+func (c Corpus) refs() ([]Ref, error) {
+	if c.Docs != nil {
+		return c.Docs()
+	}
 	entries, err := fs.ReadDir(c.FS, c.Dir)
 	if err != nil {
 		return nil, fmt.Errorf("read %s: %w", c.Dir, err)
 	}
-
-	var out []Doc
-	for _, entry := range entries {
-		name := strings.TrimSuffix(entry.Name(), ".md")
-		if c.Unlisted[name] {
+	var out []Ref
+	for _, e := range entries {
+		if e.IsDir() || !strings.HasSuffix(e.Name(), ".md") {
 			continue
 		}
-		data, err := fs.ReadFile(c.FS, c.Dir+"/"+entry.Name())
-		if err != nil {
-			return nil, fmt.Errorf("read %s: %w", entry.Name(), err)
+		out = append(out, Ref{
+			Name: strings.TrimSuffix(e.Name(), ".md"),
+			Path: c.Dir + "/" + e.Name(),
+		})
+	}
+	return out, nil
+}
+
+// path resolves one document name to its file.
+func (c Corpus) path(name string) (string, error) {
+	refs, err := c.refs()
+	if err != nil {
+		return "", err
+	}
+	for _, r := range refs {
+		if r.Name == name {
+			return r.Path, nil
 		}
-		out = append(out, parse(name, data))
+	}
+	return "", fmt.Errorf("no %s named %q; list them with `%s`", c.Noun, name, c.Command)
+}
+
+func (c Corpus) parse(name string, data []byte) Doc {
+	if c.ParseDoc != nil {
+		return c.ParseDoc(name, data)
+	}
+	return Parse(name, data)
+}
+
+// List returns every document in the corpus, sorted by name.
+func (c Corpus) List() ([]Doc, error) {
+	refs, err := c.refs()
+	if err != nil {
+		return nil, err
+	}
+
+	var out []Doc
+	for _, r := range refs {
+		if c.Unlisted[r.Name] {
+			continue
+		}
+		data, err := fs.ReadFile(c.FS, r.Path)
+		if err != nil {
+			return nil, fmt.Errorf("read %s: %w", r.Path, err)
+		}
+		out = append(out, c.parse(r.Name, data))
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
 	return out, nil
@@ -155,7 +324,11 @@ func (c Corpus) List() ([]Doc, error) {
 
 // Read returns one document in full.
 func (c Corpus) Read(name string) (string, error) {
-	data, err := fs.ReadFile(c.FS, c.Dir+"/"+name+".md")
+	path, err := c.path(name)
+	if err != nil {
+		return "", err
+	}
+	data, err := fs.ReadFile(c.FS, path)
 	if err != nil {
 		return "", fmt.Errorf("no %s named %q; list them with `%s`", c.Noun, name, c.Command)
 	}
@@ -200,45 +373,21 @@ func (c Corpus) Search(query string) ([]Match, error) {
 		if err != nil {
 			return nil, err
 		}
-		lower := strings.ToLower(body)
-
-		m := Match{Doc: d}
-		for _, term := range terms {
-			if Covers(lower, term) {
-				m.Terms = append(m.Terms, term)
-			}
+		sc := Scanner{}
+		if c.Scan != nil {
+			sc = c.Scan(body)
 		}
-		if len(m.Terms) == 0 {
+		h := sc.Scan(body, terms)
+		if !h.Found() {
 			continue
 		}
-
-		for _, line := range strings.Split(body, "\n") {
-			lowerLine := strings.ToLower(line)
-			for _, term := range m.Terms {
-				if !Covers(lowerLine, term) {
-					continue
-				}
-				m.Score++
-				// Show at most three lines, and skip the very short ones - a
-				// bare field name quotes badly and says less than a sentence.
-				if trimmed := strings.TrimSpace(line); len(m.Lines) < 3 && len(trimmed) > 20 {
-					m.Lines = append(m.Lines, trimmed)
-				}
-				break
-			}
-		}
-		matches = append(matches, m)
+		matches = append(matches, Match{Doc: d, Lines: h.Lines, Score: h.Score, Terms: h.Terms})
 	}
 
 	// A document carrying every term outranks one carrying more mentions of
 	// fewer, so the exact hit stays on top and the fallback only ever appears
 	// underneath it - or alone, when there was no exact hit at all.
-	sort.Slice(matches, func(i, j int) bool {
-		if len(matches[i].Terms) != len(matches[j].Terms) {
-			return len(matches[i].Terms) > len(matches[j].Terms)
-		}
-		return matches[i].Score > matches[j].Score
-	})
+	Rank(matches, func(m Match) Hit { return Hit{Terms: m.Terms, Score: m.Score} })
 
 	// Once something matches every term, the partial matches are noise: they
 	// are what the fallback is for, and the fallback is not needed.
@@ -288,4 +437,93 @@ func wordByte(s string, i int) bool {
 	c := s[i]
 	return c == '_' || c >= 0x80 ||
 		(c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
+}
+
+// Hit is what one document's body gave a query: which terms it carries, a few
+// of the lines that carry them, and how often.
+type Hit struct {
+	Terms []string
+	Lines []string
+	Score int
+}
+
+// Found reports whether the body carried any term at all.
+func (h Hit) Found() bool { return len(h.Terms) > 0 }
+
+// Scan is the one implementation of "what did this document give the query".
+//
+// It exists because there were three. Corpus.Search had it, and so did
+// internal/stage and internal/scaffold, which hold material that is not a
+// Corpus - a stage has a number and a prompt template, a skill is a directory
+// with frontmatter - and so could not share the rest of this file. What they
+// share is the scoring, and three copies of it is the drift this package was
+// written to prevent, one level down from where it was prevented.
+//
+// Line selection is part of the contract, not a detail: at most three, and
+// nothing under 20 characters, because a bare field name quotes badly and says
+// less than a sentence.
+func Scan(body string, terms []string) Hit { return Scanner{}.Scan(body, terms) }
+
+// Scanner is Scan with the two things one corpus needs differently.
+//
+// A skill's SKILL.md is searched whole - its frontmatter carries the
+// description somebody queries on - but quoting a line out of that frontmatter,
+// or out of an unrendered `<< >>` placeholder, puts broken text in a result. So
+// what is matched and what is quotable are not always the same text.
+type Scanner struct {
+	// Quotable is the text shown lines are taken from, when it is not the
+	// whole body. Empty means the body itself.
+	Quotable string
+
+	// Keep drops a candidate line before it is shown. Nil keeps everything the
+	// length rule already allows.
+	Keep func(line string) bool
+}
+
+// Scan reports what body gave the query under this scanner's rules.
+func (sc Scanner) Scan(body string, terms []string) Hit {
+	var h Hit
+	lower := strings.ToLower(body)
+	for _, term := range terms {
+		if Covers(lower, term) {
+			h.Terms = append(h.Terms, term)
+		}
+	}
+	if len(h.Terms) == 0 {
+		return h
+	}
+
+	quotable := sc.Quotable
+	if quotable == "" {
+		quotable = body
+	}
+	for _, line := range strings.Split(quotable, "\n") {
+		lowerLine := strings.ToLower(line)
+		for _, term := range h.Terms {
+			if !Covers(lowerLine, term) {
+				continue
+			}
+			h.Score++
+			trimmed := strings.TrimSpace(line)
+			if len(h.Lines) < 3 && len(trimmed) > 20 && (sc.Keep == nil || sc.Keep(trimmed)) {
+				h.Lines = append(h.Lines, trimmed)
+			}
+			break
+		}
+	}
+	return h
+}
+
+// Rank orders matches the way every part of the corpus orders them: a document
+// carrying more of the query outranks one carrying more mentions of fewer, so
+// an exact hit stays above a partial one rather than being buried by a document
+// that repeats a single word.
+func Rank[T any](items []T, hit func(T) Hit) {
+	sort.SliceStable(items, func(i, j int) bool {
+		a, b := hit(items[i]), hit(items[j])
+		if len(a.Terms) != len(b.Terms) {
+			return len(a.Terms) > len(b.Terms)
+		}
+		return a.Score > b.Score
+	})
 }

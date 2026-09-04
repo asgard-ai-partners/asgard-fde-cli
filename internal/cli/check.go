@@ -13,6 +13,8 @@ import (
 )
 
 func newCheckCmd() *cobra.Command {
+	var format string
+
 	cmd := &cobra.Command{
 		Use:   "check [project ...]",
 		Short: "Verify the repository's structural invariants",
@@ -34,8 +36,16 @@ Naming projects limits the project-scoped checks to those; the repo-wide checks
 always run. Exits non-zero when anything fails.
 
 This is the first step of the acceptance gate. The remaining steps work on a
-rendered chart and still need helm: see "asgard-cli next --stage verify".`,
+rendered chart and still need helm: see "asgard-cli guide verify".
+
+--format json emits the findings as records. This is the gate an agent is
+trying to turn green, so it is the one place where recovering a problem from
+aligned columns is most likely: a warning and an error are the same shape in
+text and differ only in a word at the left margin, and only one of them fails.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := checkFormat(format); err != nil {
+				return err
+			}
 			dir, err := os.Getwd()
 			if err != nil {
 				return fmt.Errorf("get current directory: %w", err)
@@ -55,6 +65,17 @@ rendered chart and still need helm: see "asgard-cli next --stage verify".`,
 			}
 
 			out := cmd.OutOrStdout()
+			if format == formatJSON {
+				if err := writeJSON(out, checkReport(report)); err != nil {
+					return err
+				}
+				if !report.OK() {
+					// Silently, because the report is the output and a second
+					// copy of it on stderr is not machine-readable either.
+					return ErrSilent
+				}
+				return nil
+			}
 			for _, f := range report.Warnings() {
 				fmt.Fprintf(out, "warn   %s\n", f.Message)
 			}
@@ -75,5 +96,38 @@ rendered chart and still need helm: see "asgard-cli next --stage verify".`,
 		},
 	}
 
+	cmd.Flags().StringVar(&format, formatFlag, formatText, formatUsage)
+
 	return cmd
+}
+
+// checkJSON is what `check --format json` emits.
+//
+// Errors and warnings are separate arrays rather than one list with a level
+// field, because only one of them fails the gate and a caller that has to read
+// a string to find out which will eventually read it wrong.
+type checkJSON struct {
+	OK       bool     `json:"ok"`
+	Scope    []string `json:"scope"`
+	Errors   []string `json:"errors"`
+	Warnings []string `json:"warnings"`
+}
+
+func checkReport(r check.Report) checkJSON {
+	out := checkJSON{
+		OK:       r.OK(),
+		Scope:    r.Scope,
+		Errors:   []string{},
+		Warnings: []string{},
+	}
+	if out.Scope == nil {
+		out.Scope = []string{}
+	}
+	for _, f := range r.Errors() {
+		out.Errors = append(out.Errors, f.Message)
+	}
+	for _, f := range r.Warnings() {
+		out.Warnings = append(out.Warnings, f.Message)
+	}
+	return out
 }

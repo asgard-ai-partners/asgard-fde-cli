@@ -22,6 +22,7 @@ func newVerifyCmd() *cobra.Command {
 		rendered string
 		layers   []string
 		tools    bool
+		format   string
 	)
 
 	cmd := &cobra.Command{
@@ -42,6 +43,11 @@ server-side dry run all pass:
     the namespace, so it is legitimately empty through the middle of an
     onboarding
   - a Syncer's paths obey the CRD's relative-path rules
+  - the CRDs' conditional CEL rules that a render can be held against: exactly
+    one of a set of sibling fields (a credential that is neither a literal nor a
+    reference, or both; a class block missing or doubled), and a discriminator
+    that implies its block. Forty of the 79 rules are self == oldSelf and cannot
+    be seen in a render; these are the rest
   - the agent split: at most one semantic layer per Agent, no layer bound twice,
     no allowedCubes, sampleQuestions on anything published, and prompt.task and
     prompt.format identical across every Agent in one render
@@ -75,9 +81,47 @@ one answers the question.
 
 This is steps 2 and 3 of the acceptance gate, and it needs only helm on PATH.
 Step 1 is "asgard-cli check", and step 4 needs a cluster - see
-"asgard-cli next --stage verify". Exits non-zero on any problem.`,
+"asgard-cli guide verify". Exits non-zero on any problem.
+
+--format json emits one record per render, with each check named and its
+problems and warnings separate. This is the gate an agent works against, and in
+text a warning and a failure differ by one word at the left margin while only
+one of them is fatal.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			out := cmd.OutOrStdout()
+			if err := checkFormat(format); err != nil {
+				return err
+			}
+			if format == formatJSON && tools {
+				return fmt.Errorf("--tools prints tool names for a person to read; it has no --%s json form", formatFlag)
+			}
+			report := verifyJSON{OK: true, Targets: []verifyTarget{}}
+			record := func(label string, docs []gate.Doc, opts gate.Options) bool {
+				if format == formatJSON {
+					t := target(label, docs, opts)
+					report.Targets = append(report.Targets, t)
+					if !t.OK {
+						report.OK = false
+					}
+					return t.OK
+				}
+				return runGates(out, label, docs, opts)
+			}
+			finish := func(ok bool) error {
+				if format != formatJSON {
+					if !ok {
+						return fmt.Errorf("verification failed")
+					}
+					return nil
+				}
+				if err := writeJSON(out, report); err != nil {
+					return err
+				}
+				if !ok {
+					return ErrSilent
+				}
+				return nil
+			}
 
 			if rendered != "" {
 				if len(args) > 0 {
@@ -97,10 +141,7 @@ Step 1 is "asgard-cli check", and step 4 needs a cluster - see
 					printTools(out, rendered, docs)
 					return nil
 				}
-				if !runGates(out, rendered, docs, gate.Options{OLAPOnlyLayers: olap}) {
-					return fmt.Errorf("verification failed")
-				}
-				return nil
+				return finish(record(rendered, docs, gate.Options{OLAPOnlyLayers: olap}))
 			}
 
 			root, cfg, err := loadRepo()
@@ -150,7 +191,7 @@ Step 1 is "asgard-cli check", and step 4 needs a cluster - see
 						checked++
 						continue
 					}
-					if !runGates(out, fmt.Sprintf("%s/%s", project, env), docs,
+					if !record(fmt.Sprintf("%s/%s", project, env), docs,
 						gate.Options{Project: project, OLAPOnlyLayers: olap}) {
 						ok = false
 					}
@@ -158,18 +199,19 @@ Step 1 is "asgard-cli check", and step 4 needs a cluster - see
 			}
 
 			if checked == 0 {
+				if format == formatJSON {
+					return writeJSON(out, report)
+				}
 				fmt.Fprintf(out, "Nothing to verify: no project declares an environment yet.\n")
 				return nil
 			}
-			if !ok {
-				return fmt.Errorf("verification failed")
-			}
-			return nil
+			return finish(ok)
 		},
 	}
 
 	cmd.Flags().BoolVar(&tools, "tools", false, "print every tool name and description instead of checking; the one review a rule cannot do")
 	cmd.Flags().StringVar(&rendered, "rendered", "", "check a file of already-rendered manifests, or - for stdin (defaults to rendering each project)")
+	cmd.Flags().StringVar(&format, formatFlag, formatText, formatUsage)
 	cmd.Flags().StringSliceVar(&layers, "olap-only-layer", nil, "semantic layer deliberately bound to no Agent because it feeds Data Insight, repeatable; adds to olapOnlyLayers in "+config.FileName+" (defaults to whatever that records)")
 
 	return cmd
@@ -262,37 +304,88 @@ func projectsToVerify(cfg *config.Config, args []string) ([]string, error) {
 
 // wrap indents a continuation line under the label it belongs to, so a long
 // message with a command in it stays readable in a terminal.
-func wrap(s string) string {
-	const width = 72
-	var out strings.Builder
-	col := 0
-	for _, word := range strings.Fields(s) {
-		if col > 0 && col+1+len(word) > width {
-			out.WriteString("\n       ")
-			col = 0
-		} else if col > 0 {
-			out.WriteString(" ")
-			col++
-		}
-		out.WriteString(word)
-		col += len(word)
-	}
-	return out.String()
-}
+func wrap(s string) string { return wrapAt(s, 72, 7) }
 
 // runGates runs every check over one render and reports them under one heading.
+// gates runs every check on one render, in the order they are reported.
+//
+// It is a list rather than six calls in a loop body so that the text output and
+// `--format json` cannot disagree about which checks ran: the pair an agent
+// acts on hardest is this one and `check`, and a gate that reports a different
+// set of checks depending on how it was asked is the worst kind of wrong.
+func gates(docs []gate.Doc, opts gate.Options) []verifyCheck {
+	named := []struct {
+		name string
+		r    gate.Result
+	}{
+		{"xref", gate.Xref(docs, opts)},
+		{"agent-split", gate.AgentSplit(docs, opts)},
+		{"processors", gate.Processors(docs, opts)},
+		{"enums", gate.Enums(docs, opts)},
+		{"constraints", gate.Constraints(docs, opts)},
+		{"shapes", gate.Shapes(docs, opts)},
+		{"deployability", gate.Deployability(docs, opts)},
+	}
+	out := make([]verifyCheck, 0, len(named))
+	for _, n := range named {
+		c := verifyCheck{
+			Name:     n.name,
+			OK:       n.r.OK(),
+			Summary:  n.r.Summary,
+			Problems: n.r.Problems,
+			Warnings: n.r.Warnings,
+		}
+		if c.Problems == nil {
+			c.Problems = []string{}
+		}
+		if c.Warnings == nil {
+			c.Warnings = []string{}
+		}
+		out = append(out, c)
+	}
+	return out
+}
+
+// verifyJSON is what `verify --format json` emits, one entry per render.
+//
+// Problems and warnings are separate arrays for the same reason they are in
+// `check`: only one of them fails the gate, and a caller that has to read a
+// string to find out which will eventually read it wrong.
+type verifyJSON struct {
+	OK      bool           `json:"ok"`
+	Targets []verifyTarget `json:"targets"`
+}
+
+type verifyTarget struct {
+	Target string        `json:"target"`
+	OK     bool          `json:"ok"`
+	Checks []verifyCheck `json:"checks"`
+}
+
+type verifyCheck struct {
+	Name     string   `json:"name"`
+	OK       bool     `json:"ok"`
+	Summary  string   `json:"summary"`
+	Problems []string `json:"problems"`
+	Warnings []string `json:"warnings"`
+}
+
+// target runs the gates on one render and records the result.
+func target(label string, docs []gate.Doc, opts gate.Options) verifyTarget {
+	t := verifyTarget{Target: label, OK: true, Checks: gates(docs, opts)}
+	for _, c := range t.Checks {
+		if !c.OK {
+			t.OK = false
+		}
+	}
+	return t
+}
+
 func runGates(out io.Writer, label string, docs []gate.Doc, opts gate.Options) bool {
 	fmt.Fprintf(out, "%s\n", label)
 
 	ok := true
-	for _, r := range []gate.Result{
-		gate.Xref(docs, opts),
-		gate.AgentSplit(docs, opts),
-		gate.Processors(docs, opts),
-		gate.Enums(docs, opts),
-		gate.Constraints(docs, opts),
-		gate.Deployability(docs, opts),
-	} {
+	for _, r := range gates(docs, opts) {
 		for _, p := range r.Problems {
 			fmt.Fprintf(out, "  FAIL %s\n", wrap(p))
 		}
@@ -303,7 +396,7 @@ func runGates(out io.Writer, label string, docs []gate.Doc, opts gate.Options) b
 			fmt.Fprintf(out, "  warn %s\n", wrap(w))
 		}
 		switch {
-		case !r.OK():
+		case !r.OK:
 			fmt.Fprintf(out, "  %d problem(s) - %s\n", len(r.Problems), r.Summary)
 			ok = false
 		case len(r.Warnings) > 0:

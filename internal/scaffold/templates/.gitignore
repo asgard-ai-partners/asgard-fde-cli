@@ -8,3 +8,9 @@ __pycache__/
 # docs/.reading-log is committed on purpose - it records which pages of
 # asgard-cli's own material this engagement opened, and nothing about the
 # customer. Six months on it says what the person before you knew.
+
+# docs/.find-misses is NOT committed. It records the searches of asgard-cli's
+# material that came back empty, and a search is whatever words the customer
+# used, so unlike the reading log it can carry their vocabulary. Read it with
+# `asgard-cli reading --misses` and file what it shows.
+docs/.find-misses

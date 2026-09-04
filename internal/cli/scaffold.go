@@ -126,8 +126,8 @@ Verify the skeleton before writing any CRs:
 
   asgard-cli check
 
-Then "asgard-cli next" for what this stage requires, and AGENTS.md for how to
-change the repo.
+Then "asgard-cli project" for what each chart declares and still lacks, and
+AGENTS.md for how to change the repo.
 `)
 			}
 			return nil

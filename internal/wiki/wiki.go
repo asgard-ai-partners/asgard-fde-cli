@@ -16,11 +16,13 @@ package wiki
 
 import (
 	"embed"
+	"sort"
+	"strings"
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/kb"
 )
 
-//go:embed pages README.md
+//go:embed pages README.md aliases.md
 var content embed.FS
 
 // Page is one wiki page. It is kb.Doc under a name that reads at the call site.
@@ -51,3 +53,160 @@ func Conventions() (string, error) { return corpus.File("README.md") }
 
 // Search finds pages mentioning all of the given terms.
 func Search(query string) ([]Match, error) { return corpus.Search(query) }
+
+// The two tables in aliases.md. Matched on the heading rather than on position,
+// so the file can be reordered.
+const (
+	aliasFile      = "aliases.md"
+	aliasHeading   = "## What a customer says, in the words this material uses"
+	coveredHeading = "## Names the material covers"
+	routedHeading  = "## Names it only routes"
+)
+
+// Entity is a name a customer will say - a product, a marketplace, a payment
+// gateway - and the terms that reach the material about it.
+type Entity struct {
+	Word   string
+	Search string
+
+	// Covered is true when somebody searched the reference deployments for
+	// this name and recorded what came back, so the row routes to a page that
+	// answers it. False means the row routes to the **shape** the thing
+	// belongs to and nothing here names the thing itself.
+	//
+	// **The distinction is the whole reason there are two tables.** A row that
+	// routes reads exactly like a row that answers, and a reader who cannot
+	// tell them apart takes results about a shape as results about a product -
+	// which is the same failure as taking the wrong sense of a word, arriving
+	// by a different door.
+	Covered bool
+}
+
+// EntityRows returns every name a customer will say, from both tables.
+//
+// These are **added** to a query rather than replacing it: the name may be
+// written verbatim in a page - SHOPLINE is, in two skills - and replacing it
+// with its category would throw away the best answer there is.
+func EntityRows() []Entity {
+	var out []Entity
+	for word, search := range table(coveredHeading) {
+		out = append(out, Entity{Word: word, Search: search, Covered: true})
+	}
+	for word, search := range table(routedHeading) {
+		out = append(out, Entity{Word: word, Search: search})
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].Word < out[j].Word })
+	return out
+}
+
+// Sense is a word that means one thing in this material, and what the other
+// sense is called instead.
+type Sense struct {
+	Word  string
+	Means string
+	Not   string
+}
+
+// Senses returns the words with one meaning here, from the glossary's first
+// table.
+//
+// **This is applied to a query, not only read by a person.** The table existed
+// for two years as prose on a page that nothing pointed at, and the failure it
+// describes went on happening: `find payment` returns Fehu, which is billing
+// between Asgard and the customer, to somebody asking about the customer's own
+// payment gateway. Nothing was wrong with the result and nothing was recorded -
+// a search that lands is not a miss - so the one mechanism that could have
+// caught it, the miss log, is blind to exactly this case.
+//
+// A missing or renamed table returns nothing rather than an error, for the same
+// reason Aliases does: this decorates a search, it does not gate one.
+func Senses() []Sense {
+	body, err := Read("glossary")
+	if err != nil {
+		return nil
+	}
+	// The first table only: what follows the next heading is prose about two
+	// words, and the customer-vocabulary index has moved out entirely.
+	if next := strings.Index(body, "\n## "); next >= 0 {
+		body = body[:next]
+	}
+
+	var out []Sense
+	for _, line := range strings.Split(body, "\n") {
+		line = strings.TrimSpace(line)
+		if !strings.HasPrefix(line, "|") {
+			continue
+		}
+		cols := strings.Split(strings.Trim(line, "|"), "|")
+		if len(cols) != 3 {
+			continue
+		}
+		word := strings.Trim(strings.TrimSpace(cols[0]), "*")
+		means := strings.TrimSpace(cols[1])
+		not := strings.TrimSpace(cols[2])
+		if word == "" || word == "word" || strings.HasPrefix(word, "-") {
+			continue
+		}
+		out = append(out, Sense{Word: word, Means: means, Not: not})
+	}
+	return out
+}
+
+// Index returns the alias index in full, for a reader.
+func Index() (string, error) { return corpus.File(aliasFile) }
+
+// Aliases maps a word a customer used to the words this material uses. These
+// **replace** the word in a query: a Chinese term appears nowhere in an English
+// corpus, so keeping it would only add a term that lands nowhere.
+//
+// The tables live in a file rather than in Go, because a term's other name is
+// knowledge rather than configuration: it has to be readable by somebody who
+// never runs the search, and `audit-material --links` resolves the pointers the
+// rows carry, which it could not do inside a string constant.
+//
+// They live **beside** `pages/` rather than in it - the same place `index.md`
+// and `log.md` sit - because an index inside the searched corpus competes with
+// what it indexes. It lists every alias, so it was unusually likely to be the
+// one document carrying every term of a translated query, and `find 電商`
+// returned the word list rather than `taiwan-channels`.
+func Aliases() map[string]string { return table(aliasHeading) }
+
+// table reads one two-column table out of the index file.
+//
+// A missing or renamed section returns nothing rather than an error. This
+// decorates a search; it does not gate one, and a search that fails because a
+// heading moved would be worse than one that gives no hint.
+func table(heading string) map[string]string {
+	body, err := corpus.File(aliasFile)
+	if err != nil {
+		return nil
+	}
+	_, rest, found := strings.Cut(body, heading)
+	if !found {
+		return nil
+	}
+	if next := strings.Index(rest, "\n## "); next >= 0 {
+		rest = rest[:next]
+	}
+
+	out := map[string]string{}
+	for _, line := range strings.Split(rest, "\n") {
+		line = strings.TrimSpace(line)
+		if !strings.HasPrefix(line, "|") {
+			continue
+		}
+		cols := strings.Split(strings.Trim(line, "|"), "|")
+		if len(cols) != 2 {
+			continue
+		}
+		word := strings.TrimSpace(cols[0])
+		means := strings.TrimSpace(cols[1])
+		// Skips the header row and the |---|---| separator without having to
+		// count lines: neither has a word in the first column that is a word.
+		if word == "" || means == "" || word == "they said" || strings.HasPrefix(word, "-") {
+			continue
+		}
+		out[word] = means
+	}
+	return out
+}
