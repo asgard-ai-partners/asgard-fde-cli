@@ -1,3 +1,5 @@
+# Write the repository skeleton
+
 The repository skeleton has not been written yet.
 
 **Read ahead before the interview, though.** The rest of this walk is written to
@@ -38,5 +40,16 @@ provisioning a customer repository and authenticating to it, so do not run
 now is one that has to be unpicked when that mechanism lands.
 
 The scaffolded CD workflow is tag-driven, so it looks like something is missing
-until a remote exists. Nothing is: stages 2 to 7 are all local work, and none of
+until a remote exists. Nothing is: everything up to the gate is local work, and none of
 them needs one.
+
+**Checked:** 2026-09-04 - **no platform claims to check.** Everything here
+describes what `asgard-cli scaffold` writes and what it deliberately leaves out,
+and the tool is its own source: run it in an empty directory and compare.
+
+**Unchecked:** that the skeleton contains the right things. Which files a
+customer repository needs on day one is this engagement's answer, and the parts
+it leaves as TODO are the parts it decided cannot be guessed. Read the list as
+one repository's shape rather than a standard, and the note about git as a
+statement of scope - see the non-goals in TASK.md for why nothing here touches
+a remote.

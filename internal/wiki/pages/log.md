@@ -297,7 +297,7 @@ time, and editing removes exactly that.
   one commit after the rule against duplication. It is a pointer now, keeping
   only what is genuinely deck-specific, which turned out to be **when** to run
   the pass rather than any rule. The copy in `11-requirements` stays and now
-  says why at the point of the copy: that text is printed by `asgard-cli next`
+  says why at the point of the copy: that text is printed by `asgard-cli status`
   and a skill file is only read if somebody opens it
 - `lint` 2026-09-03 verified the routing both directions rather than asserting
   it again. Every reference to the skill resolves as a relative path from the
@@ -340,3 +340,147 @@ time, and editing removes exactly that.
   `hack/check-tables.py` makes the comparison repeatable. It found both in its
   first run, which is the argument for it existing
 
+- `fix` 2026-09-03 recounted asgard-docs against a clone at `f00e0ee` and against
+  the live site, because `index` and `TASK.md` disagreed and neither closed
+  arithmetically. **162 files, 81 cited, 81 uncited, 12 of those drafts, so 69
+  published and unread**; 4 cited files are drafts, which is exactly the "4 dead
+  and disclosed" that `audit-material --urls` reports against docs.asgard-ai.com.
+  Two counts by different routes agreeing is what the earlier figures lacked
+- `fix` 2026-09-03 `index` claimed 130 of 162 cited. 130 was the **in-scope
+  denominator** from the 2026-09-02 count - "130/130, complete for what is in
+  scope" - restated as a count of citations. The 2026-09-03 recount is two lines
+  above this one and the index was never updated against it, so for a day the
+  section that exists to warn about a wrong coverage number carried one
+- `fix` 2026-09-03 `index` said 32 files were deliberately excluded while its own
+  table listed 29. Four `asgard-builtin` pages were pulled back into `processors`
+  and the subtraction was made in the table and not in the prose
+- `fix` 2026-09-03 `asgard-core` was cited by name in six places - this index,
+  `processors`, `platform-unknowns` P10 and `internal/gate/processors.go`, whose
+  contract is extracted from its `ProcessorDefinitions` - and by URL in none.
+  `AGENTS.md` said "Ten repositories" and listed ten without it. Verified as
+  `asgard-ai-platform/asgard-core` (private) and added; the count is eleven
+- `fix` 2026-09-04 `asgard-cli status` was removed, and the `next` alias with it.
+  The pointer on the `11-requirements` copy above named it; what prints the open
+  questions now is `asgard-cli question`. The four record commands - `question`,
+  `request`, `task`, `project` - each read one file back, and none of them says
+  where an engagement is
+- `fix` 2026-09-04 the alias table moved off `glossary` into `aliases.md`, beside
+  the pages rather than among them. It is an index, and while it was inside the
+  searched corpus it competed with what it points at: it lists every alias, so it
+  was reliably the one document carrying every term of a translated query, and a
+  search for a commerce subject returned the word list instead of
+  `asgard-cli wiki taiwan-channels`. Verified before and after against that query
+- `ingest` 2026-09-04 `aliases.md` gained a second table, for names a customer
+  will say. These are **added** to a query rather than replacing it, because the
+  name may be written verbatim in a page - SHOPLINE is - and replacing it would
+  throw away the best answer there is. Only the six the material has actually
+  been searched against are in it: the four on `taiwan-channels` that seven
+  reference deployments were checked for, plus SHOPLINE and Shopee
+- `lint` 2026-09-04 `audit-material --orphans` ran for the first time: **11 of 61
+  documents are reached by no pointer**, `glossary`, `crd-rules` and
+  `case-studies` among them. Nothing could report this before, because the
+  pointers were recovered by regular expression at print time rather than held as
+  a field; they are `kb.Doc.Links` now. `index.md` had also never been link
+  checked at all - it is Unlisted, so it was never a source - and the first run
+  including it found a pointer at `wiki log` that the checker did not know was a
+  real invocation
+- `fix` 2026-09-04 the one-meaning-here table is applied to a query now, not only
+  read by a person. It had been prose on a page nothing pointed at while the
+  failure it describes went on happening: `find payment` returns `fehu`, which is
+  billing between Asgard and the customer, to somebody asking about the
+  customer's own payment gateway. **Nothing was wrong with the result and nothing
+  was recorded** - a search that lands is not a miss - so the miss log is blind
+  to exactly the dangerous case. `payment` is now a row on `glossary`, and `find`
+  prints the two senses above the results
+- `ingest` 2026-09-04 a search naming a system this material never had now ends
+  in a question rather than a phrasing hint. What decides the work is not which
+  product it is but which of the four shapes on `taiwan-channels` it presents, and
+  that is the customer's answer - so the dead end points there and offers
+  `asgard-cli question add`. The catalogue still prints, last: an agent that
+  searches twice and gets nothing twice falls back on what it already believed
+- `ingest` 2026-09-04 the entity index split into two tables: names the material
+  **covers**, and names it only **routes**. The first are the six somebody
+  searched the reference deployments for. The second reach the shape the thing
+  belongs to and nothing more, and `find` says so - **a row that routes reads
+  exactly like a row that answers**, and a reader who cannot tell them apart
+  takes results about a shape as results about a product. Payment gateways are
+  the first five routed rows, added because a search for one was recorded and
+  that is the test this index states
+- `lint` 2026-09-04 the glossary page was being returned twice for one query -
+  once as the sense block above the results and once as a search hit - now that
+  its one-meaning table is applied at query time. Dropped from the results when
+  the sense block has already printed the row: one finding shown twice reads as
+  two
+- `fix` 2026-09-04 command help is a link source now. Sixty-odd pointers into the
+  corpus live in Long and Short strings and had never been resolved by anything -
+  a page renamed out from under one would have gone dead silently. It also counts
+  as a pointer for `--orphans`, because it is read at the moment somebody is
+  deciding what to run, which is what discovery means here; the index still does
+  not. Four of the eleven orphans were reachable from help all along
+- `fix` 2026-09-04 **a pointer that wrapped across a line was invisible to
+  everything.** This material is hard wrapped at about 78 columns, so one near the
+  right margin is split in two, and both `find`'s counterpart and
+  `audit-material --links` were matching a single space. Six real pointers in the
+  corpus had never resolved, reading perfectly to a person the whole time. The
+  pattern takes one space **or one wrap** - not any run of whitespace, which made
+  a help screen's column padding resolve `asgard-cli guide` + "all of it" to a
+  document called `all`
+- `fix` 2026-09-04 the seven real orphans were closed with a sentence in the
+  document whose reader needs the target, not with a link added to clear a list:
+  `wiki knowledge`'s Knowledge Base half now points at its extract the way the
+  Drive half already did; `guide verify` step 4 points at `crd-rules`, which is
+  what that step catches; `guide deploy` names the state between two pieces of
+  work; `guide init` names the guidance for the step it tells you to run;
+  `proposal-deck` points at `case-studies` for a worked scenario and at
+  `demo-generation` for what to promise when we have none of their systems;
+  `add` points at `conventions`, which is what it generates applied. **0 of 61**
+- `fix` 2026-09-04 `guide init` still said `asgard-cli project` "works out where
+  the onboarding is" - a position claim left behind when `status` was removed
+- `lint` 2026-09-04 the provenance pass ran over the nineteen documents that
+  carried no `**Checked:**` or `**Unchecked:**` line - the twelve pieces of
+  guidance and the seven skills - against asgard-kube `15ded0f`, the six
+  reference repositories and the gate itself. **0 of 25, 0 of 21, 0 of 12,
+  0 of 7.** It was done as a checking task and not a writing one, and four
+  statements were wrong:
+- `fix` 2026-09-04 `06-knowledge` said the Syncer member keys "was retired".
+  `destinationMemberKey` and `stateMemberKey` are **deprecated and still
+  accepted**, kept so pre-rename objects stay readable, so a chart that sets them
+  passes lint, dry-run and the gate while being wrong
+- `fix` 2026-09-04 `08-deploy` described the CD Syncer guard from a sample of
+  two. Six reference repositories run that step and **three guard on the count
+  while three do not** - an even split, which is why the instruction is "read
+  your workflow" and not a rule
+- `fix` 2026-09-04 `asgard-cr-verification` listed six reference kinds the gate
+  resolves; it resolves seven. `SandboxBlueprint.pluginNames[]` to a `Plugin` was
+  missing
+- `fix` 2026-09-04 three documents stated **our** rules as the platform's: the
+  two-`sampleQuestions` minimum, the byte-identical prompt text, and the refusal
+  of `allowedCubes`. The CRD permits all three; the gate refuses them. A reader
+  who cannot tell which will stop them cannot tell whether the fix is a chart
+  edit or an argument with us
+- `ingest` 2026-09-04 the CRDs' conditional CEL rules are checked. Of the 79,
+  forty are `self == oldSelf` and cannot be seen in a render; the rest are two
+  families - exactly one of a set of sibling fields, and a discriminator that
+  implies its block - and nothing checked either. A credential setting both
+  `value` and `valueFrom`, a `DataConnector` declaring two engine blocks, a
+  `Syncer` declaring none, a `toolsetClass: mcp-server` with no
+  `mcpServerConfig`: **every one of those renders, lints and passes a
+  server-side dry-run, and is refused at apply.** `gate.Shapes` is X1/X2/X3
+- `lint` 2026-09-04 the new check ran over the six reference deployments - 107
+  CRs across unitech-e, buy123, finance-ai, xxentria, netbridge and freyr - and
+  reported nothing, which is what a rule the platform already enforces should do
+  against charts that are deployed. It was also run against a chart broken on
+  purpose in all four ways and caught each
+- `ingest` 2026-09-04 P12: `ImageGenerationModel`, `TranscriptionModel` and
+  `SourceSetEditorServer` are CRDs in the contract with full schemas and appear
+  in no documentation page and no material here. Recorded as an unknown because
+  which of the two it is - the platform ahead of its documentation, or three
+  kinds not meant to be reached for - changes the answer, and nobody has asked
+- `fix` 2026-09-04 two findings that were living in TASK.md moved to the
+  documents whose readers need them, and TASK.md's worklist is gone with them.
+  **The interview is agent-shaped and so is whoever runs it** - every question
+  after 2b assumes the deliverable is something you talk to, which cost one
+  proposal - now sits at question 2b in `asgard-cli guide requirements`. **A rule
+  that produces a good artefact of one kind silently produces a bad one of
+  another** - six `proposal-deck` defects passed the skill's own checks - is a
+  question in AGENTS.md's "Before you say it is done"

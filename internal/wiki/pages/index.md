@@ -62,21 +62,45 @@ Each is written on the page it affects:
 **The number this section used to report was 100%, and it was measuring one
 source out of nine.**
 
-asgard-docs holds 162 files under `docs/`, of which 130 are cited by some page's
-source block; the 32 excluded below are the difference. That is a true statement
-about the product documentation and it was being read as a statement about the
-material, which is how a wiki with nothing about SHOPLINE, nothing about Mimir as
-a deliverable, and nothing about the largest chart repository in existence could
-report itself complete.
+**And the number that replaced it was also wrong.** It said 130 of 162 cited.
+130 was the *in-scope denominator* from a count taken on 2026-09-02 - "130 of
+130, complete for what is in scope" - restated a paragraph later as a count of
+citations. A recount the next day found 79 and went into `log.md`; this section
+was never updated, so the wiki reported half again as much coverage as it had
+for a day, in the section that exists to warn about exactly that.
+
+Counted 2026-09-03 against a clone at `f00e0ee`, the commit this wiki records,
+by deriving each file's published URL (`slug:` where one is declared) and
+matching it against every page's source block:
+
+| | count | how |
+|---|---|---|
+| files under `docs/` | 162 | `find docs -name '*.md*'` |
+| `draft: true`, so not published | 16 | frontmatter |
+| cited by some page's source block | 81 | URL match, per file |
+| uncited | 81 | the remainder |
+| - of those, drafts | 12 | |
+| - **published and uncited** | **69** | **the number that means anything** |
+| cited but draft | 4 | the four `audit-material --urls` reports as dead and disclosed |
+
+The last row is the check on the rest: `audit-material --urls` fetches all 81
+cited links against the live site and gets 4 404s, all of them drafts the site
+does not publish, all disclosed in their own citations. Two independent counts
+agreeing is what the earlier figures never had.
+
+That is a statement about the product documentation, and it was being read as a
+statement about the material - which is how a wiki with nothing about SHOPLINE,
+nothing about Mimir as a deliverable, and nothing about the largest chart
+repository in existence could report itself complete.
 
 The sources this material is actually built from:
 
 | source | what it holds | state |
 |---|---|---|
-| asgard-docs | the product documentation | 130 / 162 cited, 32 deliberately excluded below |
+| asgard-docs | the product documentation | 81 / 162 cited; 69 published and unread; 29 deliberately excluded below |
 | asgard-kube `crd/` | the contract | read per page, per field, and dated on the page |
 | **asgard-kube `pkg/apis/`** | **the Go types the CRDs are generated from, with the reasoning as comments** | read once, 2026-09-02, for the validation rules - `crd-rules`. 134KB of declarations; what has been taken is the behavioural comments, not the field list |
-| **asgard-core** `internal/constants.go` | **the processor definitions the CRD is generated from** | read once, 2026-09-02, for the type list. Its per-processor config definitions are not carried anywhere |
+| **[asgard-core](https://github.com/asgard-ai-platform/asgard-core)** `internal/constants.go` | **the processor definitions the CRD is generated from** | read once, 2026-09-02, for the type list. Its per-processor config definitions are not carried anywhere |
 | **asgard-freyr-skills** | **nine runtime skills, incl. the SHOPLINE pair** | one page - `usecase skill-layers` |
 | **seven deployment charts** | **every shape the extracts describe** | see below |
 
@@ -104,6 +128,9 @@ excluded, and that part of the judgement holds.
 **An exclusion is a judgement someone made once.** Recheck one before relying on
 it, particularly if it excludes a whole directory - that is the shape of an
 exclusion nobody has looked inside.
+
+**29 files, not the 32 this page used to claim.** Four `asgard-builtin` pages
+came back into `processors` and the subtraction was only done in one place.
 
 | excluded | count | why |
 |---|---|---|

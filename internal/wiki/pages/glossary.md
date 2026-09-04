@@ -22,6 +22,7 @@ something else.**
 | **request** | a record under `requirements/requests/` | an HTTP request, and not one run of an agent. For the platform's per-request limits, say **per run** |
 | **source** | a `Source` CR under a KnowledgeBase | source code, and not a documentation source. For the material's provenance say **source block**; for code say **source code** |
 | **check** | `asgard-cli check`, the structural gate | a layout or content checker in a typesetting skill - say which one |
+| **payment** | billing between Asgard and this customer - see `asgard-cli wiki fehu` | **the customer's own payment gateway**, which is an external system with side effects: `asgard-cli usecase write-path` and the ladder on `asgard-cli wiki taiwan-channels`. Say **payment gateway** for theirs |
 
 ## Two more that collide with the customer's vocabulary
 
@@ -35,6 +36,24 @@ charts and namespaces. Ask which they mean rather than answering.
 many agents do we need" is a question about capability, and the honest answer
 starts by saying the count of `Agent` CRs is not the same number - see
 `asgard-cli size`.
+
+## What a customer says
+
+That table is not on this page any more. It is an **index**, not knowledge about
+the platform, and while it lived here it competed with the pages it points at.
+A table that lists every alias carries every word any translated query is
+rewritten into, so it was reliably the one document matching a whole query, and
+a reader asking about a subject was handed the word list instead of the page.
+
+It is now beside the pages rather than among them, which is where `index.md`
+and `log.md` already live:
+
+    asgard-cli wiki --aliases
+
+`asgard-cli find` applies it to a query before searching, so a question asked in
+the customer's own words reaches material written in English. **Add a row when a
+search of yours came back empty and the subject turned out to exist under
+another name** - that is the only test, and the rules are on that page.
 
 ## How a word gets onto this page
 

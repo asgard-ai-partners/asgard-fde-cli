@@ -1,3 +1,5 @@
+# Decide each project's read path
+
 Data connectors exist but nothing reads through them yet. **This is the first of
 the three decisions that get answered wrong.**
 
@@ -27,6 +29,12 @@ point or BotProvider is written at all.
     watch the same numbers    a layer, and the chart stops there
     both, different people    both - two deliveries over one model
 
+When the chart stops there, record it, or the next stage will keep asking this
+project for an entry point it is not supposed to have:
+
+    asgard-cli project shape <project> mimir-dashboard, which is the claim that
+    nobody asks this a question - not a way to silence the stage
+
 `asgard-cli usecase mimir-dashboard` is the shape, including the trap: a later
 reader finds a SemanticLayer nothing references, assumes it is a missed
 connection, and binds it to an Agent - which hands agents deliberately restricted
@@ -34,17 +42,24 @@ to an API a second path into the database. **Nothing in the gate catches that**,
 because cross-reference checking validates references that exist, never one that
 should not. Say so in the chart, next to the layer.
 
-`asgard-cli next --stage requirements` asks this as question 2b, so the answer
+`asgard-cli guide requirements` asks this as question 2b, so the answer
 should already be in the request. If it is not, it was not asked - and the
 expensive version of this mistake is not choosing wrong, it is building the agent
 and finding out at the demo that they wanted a page that was already open.
 
 ## Why a semantic layer is wrong for a public audience
 
-Mounted without allowedCubes it lets the agent compose arbitrary SQL over every
-cube in it - and **the exposed surface grows by itself every time a cube is
-added**. Nobody goes back to narrow it. Excluding the sensitive tables is not the
-fix, because the shape itself is the risk.
+A bound layer lets the agent compose arbitrary SQL over every cube in it, and
+**the exposed surface grows by itself every time a cube is added**. Nobody goes
+back to narrow it.
+
+**Narrowing it is not an option that gets overlooked - it is refused.**
+`allowedCubes` exists on the Agent's mount, and `asgard-cli verify` rejects any
+Agent that sets it (R4), on the standing decision that a bound layer is
+queryable in full. That is ours rather than the platform's: the CRD allows the
+field. The reason to refuse it is that a per-agent allowlist makes the exposed
+surface look bounded while the layer underneath keeps growing, so excluding the
+sensitive tables is not the fix - the shape itself is the risk.
 
 With fixed tools, what can be asked is decided by a few statements in version
 control, no user input reaches SQL so the injection surface is zero, and widening
@@ -120,4 +135,18 @@ Toolset.spec.instruction does not exist any more - adding it back passes
 dry-run and then fails the real deploy.
 
 Done when: every project reads through one shape or the other, and
-asgard-cli verify plus asgard-cli verify are green.
+asgard-cli check plus asgard-cli verify are green.
+
+**Checked:** 2026-09-04 against asgard-kube `15ded0f`. `Toolset` declares no
+`instruction` field, so the note about adding it back is current;
+`SemanticLayer.spec` carries `cubes` and top-level `sampleQueries`; `allowedCubes`
+is on the **Agent's** semanticLayers mount rather than on the layer, and the CRD
+permits it - refusing it is `gate` R4 and now says so.
+
+**Unchecked:** the decision itself. Which audience gets a layer and which gets
+fixed tools, that a description in 繁體中文 is what the model matches on, and that
+a sampleQuery which errors actively misleads - all of that comes from the
+engagement this was written in, where the public-site fork was answered wrong
+once and reversed. **Nothing here has a source to be held against**, and the
+instruction to run every sampleQuery against the live database before committing
+it is the one line that has to survive a reader who trusts the rest.

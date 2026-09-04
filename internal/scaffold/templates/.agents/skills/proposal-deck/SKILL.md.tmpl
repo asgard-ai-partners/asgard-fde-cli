@@ -68,9 +68,9 @@ went back because nothing said it should.
 reconcile at the end; after twenty rounds the two had diverged far enough that
 the reconciliation kept being deferred.
 
-**Why this one matters more than ordinary staleness:** `asgard-cli next` prints
-the open questions before anything else, so whoever picks the repository up next
-reads that file first. A stale one sends them into a meeting with questions
+**Why this one matters more than ordinary staleness:** `asgard-cli question`
+prints this file back, and it is the first thing whoever picks the repository up
+next is told to read. A stale one sends them into a meeting with questions
 already abandoned - and worse, it preserves a judgement that has since been
 overturned, still argued convincingly. In that engagement a security reasoning
 the deck had corrected was sitting in the file, written well.
@@ -103,7 +103,7 @@ the step most often skipped, because the material from step 1 reads like it
 already contains an answer. It does not: it contains a problem.
 
 These rules are the interview's, restated here because a deck gets built weeks
-after the interview and often by somebody else. `asgard-cli next --stage
+after the interview and often by somebody else. `asgard-cli guide
 requirements` is where they live in full, with the worked examples.
 
 **The shape follows the audience, not the capability.**
@@ -121,6 +121,17 @@ from deployments in production, and each says what it costs to assemble. A
 proposal built on one of them can be estimated, because somebody has already
 paid for it. A proposal built on a shape nobody has assembled is an estimate of
 a guess.
+
+**For what one looks like end to end, take a worked one rather than inventing a
+scenario.** `asgard-cli wiki case-studies` has one event described from three
+angles, which is where the division of work between the three products stops
+being abstract - and a scenario written from it is one somebody has already
+checked, rather than one this deck is the first test of.
+
+**If they ask to see it working and we have none of their systems**, that is a
+shape too, and it has been built: `asgard-cli usecase demo-generation` - no
+data, no credentials, and still a real deployment rather than a slide. Decide
+whether the deck is promising one before writing a slide that implies it.
 
 **First, is it an agent at all?** The whole vocabulary below is agent-shaped, and
 so is most of what this tool carries, which is exactly why this question gets
@@ -169,7 +180,7 @@ counter-intuitive:
 It goes to `common/skills/<name>/SKILL.md` and is synced to the platform. In
 `references/` it is invisible to the running agent, and the failure then looks
 like a model ignoring instructions rather than a file in the wrong place -
-`asgard-cli next --stage requirements` has the full rule.
+`asgard-cli guide requirements` has the full rule.
 
 An integration across several channels that proposes only the connections has
 proposed half of it.
@@ -359,7 +370,7 @@ The browser-operation row is the one to say plainly rather than smooth over. It
 is the most expensive answer on the list and the customer is the only person who
 can change it, by finding an API.
 
-The allowlist row has a rule of its own: **ask for the allowlist, not for "a VPN
+The allowlist row has a rule of its own: **ask their network team for the allowlist, not for "a VPN
 or an allowlist or a jump host".** Asgard is hosted and the agent runs in a
 sandbox in that cloud, so there is nothing of ours to place on their network and
 the other two options do not apply. A slide offering three invites their network
@@ -759,7 +770,7 @@ this habit by whether the count comes down, not by whether the error stops.
     is there an existing binding?  ...if not, they can give us an order number
     is there a controller?         ...if not, this costs weeks more
 
-**Ask, and stop.** The consequence is theirs to state. Supplying it rehearses
+**Ask the customer, in the meeting, and stop talking.** The consequence is theirs to state. Supplying it rehearses
 their answer, and every one of those additions invented a branch that does not
 exist - "no test environment" does not mean no integration.
 
@@ -822,7 +833,7 @@ it as a clean scope cut.
 anybody enumerate other people's cases, and it is not authentication. **Any
 self-service query on an anonymous channel has to say what identifies the
 person.** If the answer is "a number they type", that is not an answer -
-`asgard-cli next --stage read-path` has what a real one looks like, and it
+`asgard-cli guide read-path` has what a real one looks like, and it
 carries the failure mode: a query that forgets to filter on the injected
 identity fails only on the anonymous path, which is the path nobody tests.
 
@@ -1195,3 +1206,19 @@ Then file it: write `README.md` beside the deck saying who it was for, what
 material it came from, and what happened in the room. A deck without that label
 is unusable six months later, because nobody can tell whether it is what was
 proposed or what was agreed.
+
+**Checked:** 2026-09-04. The CR vocabulary in the translation table is real at
+asgard-kube `15ded0f` - `SkillSet`, `SourceSet` + `Syncer` + `contextIndex`,
+`BotProvider` -> `Workflow` -> `SandboxBlueprint`, an `Agent` mounting a
+`SemanticLayer`, and `requestConsent` on a gated tool all exist and mean what
+the right-hand column says. Every shape it tells a deck to take is one
+`asgard-cli usecase` assembles from a deployment in production, which is what
+makes an estimate on it an estimate rather than a guess.
+
+**Unchecked:** the whole argument about what persuades. The order a proposal
+argues in, what must never be shown, and which questions are worth a customer's
+time come from **one deck, for one customer, in one industry**. Three of that
+deck's six worst questions were copied out of this material rather than reasoned
+into existence, which is the evidence this page exists on - and it is evidence
+of a failure, not of a method that works. Read the prohibitions as earned and
+the positive advice as untested.

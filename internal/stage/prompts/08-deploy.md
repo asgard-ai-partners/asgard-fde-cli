@@ -1,3 +1,5 @@
+# Deploy
+
 The gate is green. Deployment is **CD-only**.
 
 ## Before the first deploy of an environment
@@ -17,11 +19,15 @@ the workflow rather than assuming.** After helm upgrade, CD triggers each
 project's Syncers and waits, polling for CronJobs labelled syncer-name; it exits
 1 after 180 seconds if none appear, even though the upgrade itself succeeded.
 
-The difference between the reference repositories is one `if`. One of them
-checks how many Syncers the chart declares and **skips the whole step when that
-is zero**, so a project with no Syncer deploys cleanly. Another has no such
-guard and fails any project that has none. A production chart is running today
-with zero Syncers under the first kind.
+The difference between the reference repositories is one `if`, and **it is an
+even split**: of the six that run this step, three check how many Syncers the
+chart declares and skip it when that is zero, and three wait unconditionally and
+fail any project that has none. Counted 2026-09-04. A production chart is
+running today with zero Syncers under the first kind.
+
+An even split is why this is written as "read your workflow" rather than as a
+rule. There is no majority to assume, and the two behaviours are one line apart
+in a file nobody opens after the repository is created.
 
     grep -n 'syncer-name' -A15 .github/workflows/*.y*ml
 
@@ -129,7 +135,27 @@ that is enhancement**, and it has its own loop - which project a new capability
 belongs to, whether it needs a spec first, and the closing step that gets
 skipped:
 
-    asgard-cli next --stage enhance
+    asgard-cli guide enhance
 
 A new capability for a **new audience** is a new project, and it walks stages
 3-8 again on its own.
+
+**Between two pieces of work there is a state, and it is not a gap.** No request
+open, no task open, nothing missing from any chart: what moves the work on then
+is the customer, and the only question left to ask is what they want next.
+`asgard-cli guide idle` is that state, and being in it is not being behind.
+
+**Checked:** 2026-09-04 against the six reference repositories that run the
+Syncer step, read directly rather than from memory: three guard on the Syncer
+count and three do not, which corrects a statement written from a sample of two.
+The label the step polls for is `asgard-ai.com/syncer-name` in all six. The
+ordering above - namespace, then platformMainEnvironmentId, then values, then
+deploy.yaml - is what tf-asgard and this tool each require, and declaring the
+environment first is what makes the next tag fail at helm upgrade.
+
+**Unchecked:** anything about a cluster. Nothing here has been run against one
+from this repository, and the 180-second timeout, the reconcile into a Project
+and the CronJob the platform creates are all read off the workflows and the
+values files rather than observed. **The first deploy of a new environment is
+this document's first real test**, and if the order is wrong the symptom is a
+failed helm upgrade rather than anything subtle.

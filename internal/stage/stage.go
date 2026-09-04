@@ -1,9 +1,11 @@
-// Package stage works out how far an onboarding has got and what to do next.
+// Package stage holds the guidance for the decisions an onboarding makes, and
+// reads the repository the guidance is rendered against.
 //
-// The stage is derived from the repository itself - which files exist, which
-// CR kinds are present - rather than stored in the config. A stored counter
-// would be a second source of truth, and it would go stale the moment someone
-// does a step by hand.
+// It reports no position. What it once did - derive one stage from the earliest
+// missing CR kind and call that where the onboarding stood - is gone, and so is
+// the mechanism that replaced it, which raised the same rungs from conditions
+// instead of from a counter. Guidance is reached by name or by subject; what a
+// chart still lacks is arithmetic against its declared shape, and Gaps is that.
 package stage
 
 import (
@@ -18,6 +20,7 @@ import (
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/chart"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/config"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/kb"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/size"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/work"
 )
 
@@ -43,51 +46,82 @@ const (
 	Requirements Name = "requirements"
 )
 
-// Stage is one step, in the order they have to happen.
+// Stage is one piece of guidance, reached by name.
+//
+// It carried a Number until the walk was removed. Nothing read it once "stage 4
+// of 9" stopped being printed, and a field nobody reads is a position waiting
+// to be reintroduced - the order below is the order they are listed in, and
+// that is the whole of it.
+//
+// Title is filled in from the document's own "# " heading at startup, not
+// written here. It was written here, in a table beside the filename, which made
+// the Go source a second home for a fact the document should carry - and the
+// two could disagree with nothing to notice.
 type Stage struct {
 	Name    Name
-	Number  int
 	Title   string
 	promptF string
 }
 
-// Stages lists every stage in order.
-var Stages = []Stage{
-	{Init, 0, "Start the onboarding", "00-init.md"},
-	{Scaffold, 1, "Write the repository skeleton", "01-scaffold.md"},
-	{Projects, 2, "Decide how the work splits into projects", "02-projects.md"},
-	{DataSources, 3, "Wire up the customer's databases", "03-data-sources.md"},
-	{ReadPath, 4, "Decide each project's read path", "04-read-path.md"},
-	{EntryPoint, 5, "Decide each project's entry point", "05-entry-point.md"},
-	{Knowledge, 6, "Decide where unstructured knowledge lives", "06-knowledge.md"},
-	{Verify, 7, "Run the acceptance gate", "07-verify.md"},
-	{Deploy, 8, "Deploy", "08-deploy.md"},
-	// Enhance is not part of the linear walk: Current never returns it, because
-	// "the onboarding is finished" is not something the repo can tell you - a
-	// deployed repo and one waiting for its first tag look the same on disk.
-	// Reach it with --stage enhance once the repo is live.
-	{Enhance, 9, "Add a capability to a repo that is already live", "09-enhance.md"},
+// init reads each document's title out of the document.
+//
+// Panicking is right: the prompts are embedded, so a missing heading is a
+// build-time mistake that would otherwise ship as an empty column in every
+// listing.
+func init() {
+	for i := range Stages {
+		Stages[i].Title = titleOf(Stages[i].promptF)
+	}
+	IdleStage.Title = titleOf(IdleStage.promptF)
+	RequirementsStage.Title = titleOf(RequirementsStage.promptF)
+	Readable = append(append([]Stage{}, Stages...), RequirementsStage, IdleStage)
 }
 
-// IdleStage is what Current returns when nothing is in flight: no request, no
-// task, and no project waiting for a step. It sits outside the numbered walk on
-// purpose, because it is not a step of an onboarding - it is the state between
-// two of them, and the only question it can ask is what the customer wants next.
-var IdleStage = Stage{Idle, -1, "Nothing in flight", "10-idle.md"}
+func titleOf(file string) string {
+	data, err := prompts.ReadFile("prompts/" + file)
+	if err != nil {
+		panic("read prompt " + file + ": " + err.Error())
+	}
+	d := kb.Parse(strings.TrimSuffix(file, ".md"), data)
+	if d.Title == "" {
+		panic("prompt " + file + " has no `# ` heading; it is where the title lives")
+	}
+	return d.Title
+}
+
+// Stages lists every stage in order.
+var Stages = []Stage{
+	{Name: Init, promptF: "00-init.md"},
+	{Name: Scaffold, promptF: "01-scaffold.md"},
+	{Name: Projects, promptF: "02-projects.md"},
+	{Name: DataSources, promptF: "03-data-sources.md"},
+	{Name: ReadPath, promptF: "04-read-path.md"},
+	{Name: EntryPoint, promptF: "05-entry-point.md"},
+	{Name: Knowledge, promptF: "06-knowledge.md"},
+	{Name: Verify, promptF: "07-verify.md"},
+	{Name: Deploy, promptF: "08-deploy.md"},
+	// Enhance is the one nothing can raise from the files: "the onboarding is
+	// finished" is not something the repo can tell you - a deployed repo and one
+	// waiting for its first tag look the same on disk. Read it with
+	// `asgard-cli guide enhance` once the repo is live.
+	{Name: Enhance, promptF: "09-enhance.md"},
+}
+
+// IdleStage covers the state between two pieces of work: no request, no task,
+// and no chart still missing what its shape asks for. It is not a step of an
+// onboarding, and nothing puts a reader here - the only question it can ask is
+// what the customer wants next.
+var IdleStage = Stage{Name: Idle, promptF: "10-idle.md"}
 
 // RequirementsStage is the interview that turns what a customer said into a
-// request. It is outside the numbered walk for the same reason IdleStage is,
-// but the opposite way round: not a state between two steps, but the one an FDE
-// is in before the repository can show anything at all. Current never returns
-// it, because a conversation leaves no trace on disk until it is written down -
-// so it is read deliberately, with `next --stage requirements`, and it is worth
+// request. A conversation leaves no trace on disk until somebody writes it
+// down, so no state of the files can tell a reader they need it. It is worth
 // reading again at every later request rather than only the first.
-var RequirementsStage = Stage{Requirements, -1, "Turn what the customer said into a request", "11-requirements.md"}
+var RequirementsStage = Stage{Name: Requirements, promptF: "11-requirements.md"}
 
-// Readable is every stage a person can ask for by name, which is more than the
-// walk: the two outside it are reached only with `next --stage`, and anything
-// iterating stages (rendering, --list, tests) has to see them too.
-var Readable = append(append([]Stage{}, Stages...), RequirementsStage, IdleStage)
+// Readable is every piece of guidance a reader can ask for by name. Filled in
+// by init, after the titles are read.
+var Readable []Stage
 
 // Find returns the stage with the given name.
 func Find(name string) (Stage, bool) {
@@ -136,6 +170,18 @@ func (p ProjectState) Has(kinds ...string) bool {
 		}
 	}
 	return false
+}
+
+// NeedsEntryPoint reports whether this project is still missing the thing that
+// reaches it.
+//
+// It exists so a prompt and the ladder cannot disagree. The entry-point prompt
+// lists the projects needing one, and it used to ask `.Has "Agent"
+// "BotProvider"` directly - which is the ladder's question minus the shape, so
+// a finished mimir-dashboard project would be listed as needing an entry point
+// on any run where some other project put the repository at that stage.
+func (p ProjectState) NeedsEntryPoint() bool {
+	return wants(p, true) && !p.Has("Agent", "BotProvider")
 }
 
 // summaryOrder is the order CR kinds are reported in. It is fixed so that the
@@ -231,135 +277,94 @@ func Inspect(root string, cfg *config.Config) (State, error) {
 	return state, nil
 }
 
-// Current returns the first stage that is not finished yet. The stages are
-// ordered by dependency, so the first unfinished one is what to do next.
-func Current(state State) Stage {
-	// Look stages up by name rather than by index: the list has an entry for
-	// "not started yet" at the front, and indices would silently shift again
-	// the next time one is inserted.
-	if !state.Scaffolded {
-		return mustFind(Scaffold)
-	}
-
-	// A request whose target project is not decided yet is the split interview,
-	// whatever else the repo already contains. The interview belongs to a
-	// request rather than to the repository, which is why it is not reached by
-	// "there are no projects": a repo with no projects and no request in flight
-	// is not waiting to be interviewed, it is waiting for a requirement.
-	for _, r := range work.ActiveRequests(state.Requests) {
-		if !state.hasProject(r.Project) {
-			return mustFind(Projects)
-		}
-	}
-
-	// A project reads before it answers, and answers before it is deployed, so
-	// the earliest project still missing a step decides the stage.
-	for _, s := range projectStages {
-		for _, p := range state.Projects {
-			if !p.Has(s.kinds...) {
-				return mustFind(s.stage)
-			}
-		}
-	}
-
-	// Every chart is complete. Whether that is "gate it" or "there is nothing
-	// to do" is not a fact about the files - a deployed repo and one waiting for
-	// its first tag look identical on disk - so the answer comes from whether
-	// the repo records any work still open.
-	if state.InFlight() {
-		return mustFind(Verify)
-	}
-	return IdleStage
-}
-
-// projectStages is the per-project ladder. Current walks it across all
-// projects at once and returns the earliest gap anywhere, which is the right
-// thing to do next but the wrong thing to *say* when the projects are not in
-// the same place.
+// projectStages is what a chart needs before it is finished, and which piece of
+// guidance covers each.
+//
+// It used to be a ladder: one walk across every project at once, returning the
+// earliest gap as "the stage you are at". That was the wrong shape twice over -
+// it made a position out of what is really a set of conditions, and it could
+// only ever report one of them. The entries are unordered as far as anything
+// here is concerned; a chart needs all of them that its shape asks for, and the
+// order they get built in is the engagement's business.
 var projectStages = []struct {
 	stage Name
 	kinds []string
+
+	// entryPoint marks the rung that asks what reaches the chart. It is the one
+	// rung a shape can be complete without, which is why it is flagged rather
+	// than assumed to be last - see wants.
+	entryPoint bool
 }{
-	{DataSources, []string{"DataConnector"}},
-	{ReadPath, []string{"SemanticLayer", "Toolset"}},
-	{EntryPoint, []string{"Agent", "BotProvider"}},
+	{DataSources, []string{"DataConnector"}, false},
+	{ReadPath, []string{"SemanticLayer", "Toolset"}, false},
+	{EntryPoint, []string{"Agent", "BotProvider"}, true},
 }
 
-// ProjectStage is where one project has got to on its own.
-type ProjectStage struct {
-	Slug  string
-	Stage Stage
-	// Done is true when the project has every kind the ladder asks for. It is
-	// not "deployed": whether a complete chart is waiting for a tag or already
-	// live is not a fact about files.
+// wants reports whether a rung applies to this project.
+//
+// Only the entry-point rung is ever skipped, and only for a shape that declares
+// it has none. A mimir-dashboard chart is a SemanticLayer and nothing else: the
+// customer reaches it through Data Insight, so no Agent, Toolset, BotProvider
+// or entry point is written at all, and `guide read-path` spends a
+// section saying so and naming what goes wrong when somebody adds one anyway -
+// it hands agents deliberately restricted to an API a second path into the
+// database, and no gate catches it.
+//
+// Before this, the ladder asked every project for an Agent or a BotProvider.
+// A finished mimir-dashboard chart could not satisfy that and never can, so
+// `next` reported entry-point forever and asked the reader to build the CR the
+// material forbids. An undeclared shape keeps the old behaviour: every
+// repository written before this field existed has none, and the common shape
+// does have an entry point.
+func wants(p ProjectState, entryPoint bool) bool {
+	if !entryPoint {
+		return true
+	}
+	shape, ok := size.Find(p.Shape)
+	return !ok || shape.HasEntryPoint()
+}
+
+// Gap is what one project's chart still lacks for the shape it is being built
+// to, in the CR kinds a reader can go and add.
+type Gap struct {
+	Slug    string
+	Missing []string
+
+	// Done is true when the chart has everything its shape asks for. It is not
+	// "deployed": whether a complete chart is waiting for a tag or already live
+	// is not a fact about files.
 	Done bool
 }
 
-// PerProject reports each project's own stage.
+// Gaps reports what each project is missing.
 //
-// A repository with three projects reports one stage, because there is one
-// thing to do next. But an engagement whose read path is live for one audience
-// and whose second project has no DataConnector yet was being told
-// "data-sources", with nothing to say the first project was three stages ahead
-// - and the honest reading of that is that the whole repository is at
-// data-sources, which is wrong and demoralising in the same breath.
+// It names CR kinds rather than a stage, which is the same information without
+// the claim that they happen in an order. A repository with three projects used
+// to report one stage for all of them, and an engagement whose first project
+// was live and whose second had just started was told the whole repository was
+// at the second one's step.
 //
-// This does not change which stage is current. It exists so the command can
-// show the spread when there is one, and stay quiet when there is not.
-func PerProject(state State) []ProjectStage {
-	var out []ProjectStage
+// **A project with no declared shape is skipped**, and that is the difference
+// between arithmetic and a guess. Against a declared shape, "this shape asks for
+// X and X is absent" is subtraction. With no shape there is nothing to subtract
+// from, and answering anyway means picking a set of kinds every chart is assumed
+// to want - which is the ladder, rebuilt out of a default.
+func Gaps(state State) []Gap {
+	var out []Gap
 	for _, p := range state.Projects {
-		ps := ProjectStage{Slug: p.Slug, Done: true}
+		if p.Shape == "" {
+			continue
+		}
+		g := Gap{Slug: p.Slug, Done: true}
 		for _, s := range projectStages {
-			if !p.Has(s.kinds...) {
-				ps.Stage, ps.Done = mustFind(s.stage), false
-				break
+			if wants(p, s.entryPoint) && !p.Has(s.kinds...) {
+				g.Missing = append(g.Missing, strings.Join(s.kinds, " or "))
+				g.Done = false
 			}
 		}
-		if ps.Done {
-			ps.Stage = mustFind(Verify)
-		}
-		out = append(out, ps)
+		out = append(out, g)
 	}
 	return out
-}
-
-// Spread reports whether the projects are in more than one stage, which is the
-// only case worth printing.
-func Spread(per []ProjectStage) bool {
-	if len(per) < 2 {
-		return false
-	}
-	for _, p := range per[1:] {
-		if p.Stage.Name != per[0].Stage.Name {
-			return true
-		}
-	}
-	return false
-}
-
-// hasProject reports whether slug names a project this repository has. An empty
-// slug never does: it is what a request carries before its audience is decided.
-func (s State) hasProject(slug string) bool {
-	if slug == "" {
-		return false
-	}
-	for _, p := range s.Projects {
-		if p.Slug == slug {
-			return true
-		}
-	}
-	return false
-}
-
-// mustFind panics on an unknown stage, which can only be a programming error:
-// the names come from constants in this file.
-func mustFind(name Name) Stage {
-	s, ok := Find(string(name))
-	if !ok {
-		panic("stage: unknown stage " + name)
-	}
-	return s
 }
 
 // Data is what a stage prompt is rendered with.
@@ -379,7 +384,8 @@ type Data struct {
 }
 
 // InterviewRequests are the open requests whose target project is not decided
-// yet. They are what stage 2 is about, and a prompt read out of order has none.
+// yet. They are what `--stage projects` is about, and a prompt read out of
+// order has none.
 func (d Data) InterviewRequests() []work.Request {
 	var out []work.Request
 	for _, r := range d.Requests {
@@ -475,31 +481,20 @@ func (s Stage) Prompt(cfg *config.Config, state State) (string, error) {
 }
 
 func (s Stage) String() string {
-	// Switch on the name, not the number: the stages outside the walk share the
-	// number -1, so matching on it labelled the requirements interview "nothing
-	// in flight" - the opposite of what a reader is being told at that point.
+	// Switch on the name, not the number: the stages outside the sequence shared the
+	// number -1, so matching on that labelled the requirements interview
+	// "nothing in flight" - the opposite of what a reader is being told at
+	// that point. The numbers are gone; matching on the name is why it stayed
+	// correct when they went.
 	switch s.Name {
 	case Idle:
 		return "nothing in flight"
 	case Requirements:
-		return "before the walk: the interview"
+		return "the interview"
 	case Init:
 		return "not started yet"
 	}
-	return fmt.Sprintf("stage %d of %d: %s", s.Number, len(Stages)-1, s.Title)
-}
-
-// NeedsTask reports whether work at this stage should be written up as a task
-// spec first. The stages that change a chart are the ones the SDD rules cover:
-// a new SemanticLayer or DataConnector, widening what an agent may query, or
-// introducing a write path.
-func (s Stage) NeedsTask() bool {
-	switch s.Name {
-	case DataSources, ReadPath, EntryPoint, Knowledge, Enhance:
-		return true
-	default:
-		return false
-	}
+	return fmt.Sprintf("%s: %s", s.Name, s.Title)
 }
 
 // Raw returns a stage's prompt as written, before rendering. It is what search
@@ -513,82 +508,40 @@ func (s Stage) Raw() (string, error) {
 	return string(content), nil
 }
 
-// Match is one stage whose prompt covers the search.
-type Match struct {
-	Stage
-	Lines []string
-	Score int
-
-	// Terms are the query terms this prompt actually contains, as in kb.Match.
-	// The three bodies are searched together and reported together, so they
-	// have to agree on what a partial match is.
-	Terms []string
-}
-
-// List names every readable stage, for a caller handing over the contents.
+// List returns every piece of guidance a reader can ask for by name. Callers
+// that want the parsed documents rather than the Stage values want Docs.
 func List() []Stage { return Readable }
 
-// Search finds stages by subject rather than by position in the walk.
+// corpus is the guidance as a body of material, on the same terms as the wiki
+// and the extracts.
 //
-// The walk is how an onboarding usually goes, not how it has to go: three of
-// this engagement's most expensive decisions were reversed after contact with
-// reality, so an agent that reads the repository and forms its own view of where
-// things stand is doing the right thing. What it then needs is the guidance for
-// the subject at hand - "how is the read path decided" - reachable without
-// having arrived at stage 4 to be told.
-func Search(query string) ([]Match, error) {
-	terms := kb.Terms(query)
-	if len(terms) == 0 {
-		return nil, fmt.Errorf("search needs at least one term")
-	}
-
-	var matches []Match
-	for _, s := range Readable {
-		body, err := s.Raw()
-		if err != nil {
-			return nil, err
-		}
-		lower := strings.ToLower(body)
-
-		m := Match{Stage: s}
-		for _, term := range terms {
-			if kb.Covers(lower, term) {
-				m.Terms = append(m.Terms, term)
-			}
-		}
-		if len(m.Terms) == 0 {
-			continue
-		}
-
-		for _, line := range strings.Split(body, "\n") {
-			lowerLine := strings.ToLower(line)
-			for _, term := range m.Terms {
-				if !kb.Covers(lowerLine, term) {
-					continue
-				}
-				m.Score++
-				if trimmed := strings.TrimSpace(line); len(m.Lines) < 3 && len(trimmed) > 20 {
-					m.Lines = append(m.Lines, trimmed)
-				}
-				break
-			}
-		}
-		matches = append(matches, m)
-	}
-
-	sort.Slice(matches, func(i, j int) bool {
-		if len(matches[i].Terms) != len(matches[j].Terms) {
-			return len(matches[i].Terms) > len(matches[j].Terms)
-		}
-		return matches[i].Score > matches[j].Score
-	})
-
-	if len(matches) > 0 && len(matches[0].Terms) == len(terms) {
-		for i, m := range matches {
-			if len(m.Terms) < len(terms) {
-				return matches[:i], nil
-			}
-		}
-	}
-	return matches, nil
+// The files are `prompts/04-read-path.md` and the document is called
+// `read-path`, so Docs resolves the names; everything else is the default,
+// because each prompt now opens with its own "# " heading and paragraph.
+var corpus = kb.Corpus{
+	FS:      prompts,
+	Dir:     "prompts",
+	Docs:    promptRefs,
+	Noun:    "stage",
+	Command: "asgard-cli guide",
 }
+
+func promptRefs() ([]kb.Ref, error) {
+	out := make([]kb.Ref, 0, len(Readable))
+	for _, s := range Readable {
+		out = append(out, kb.Ref{Name: string(s.Name), Path: "prompts/" + s.promptF})
+	}
+	return out, nil
+}
+
+// Docs returns every piece of guidance as a kb.Doc, so a caller listing the
+// whole corpus does not have to special-case this part of it.
+func Docs() ([]kb.Doc, error) { return corpus.List() }
+
+// Search finds guidance by subject, which is the way in. `asgard-cli guide
+// <name>` is the other, for a reader who already knows the name.
+//
+// It used to be a copy of kb.Corpus.Search, because a stage is not a file named
+// after itself and could not be a Corpus. Resolving the names is all that was
+// actually in the way.
+func Search(query string) ([]kb.Match, error) { return corpus.Search(query) }

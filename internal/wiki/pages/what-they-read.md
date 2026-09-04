@@ -37,7 +37,7 @@ The overview page is also one the index already flags as possibly stale.
 
 So when a customer says "we will just start from a Template", they are using a
 word from a page rather than from the product as it is described anywhere else.
-**Ask what they saw.** Do not adopt the word, and do not contradict it either
+**Ask them, in the meeting, which page they saw it on.** Do not adopt the word, and do not contradict it either
 until you know whether that surface still exists.
 
 ## Mimir "simulates the future"

@@ -80,6 +80,7 @@ see because to Helm these are opaque CRs:
 - **every `(workflow, entry)` entrypoint** — `Toolset.tools[]`, `Workflow.exits[].handlingWorkflow`,
   `BotProvider.entrypoint`. A wrong **entry** name is as fatal as a wrong workflow name and apply
   catches neither, so both halves are resolved.
+- `SandboxBlueprint.skillSetNames[]` → a real `SkillSet`; `SandboxBlueprint.pluginNames[]` → a real `Plugin`
 - **the Flow Agent chain** — a processor's `sandboxBlueprint` config → a real `SandboxBlueprint`,
   and `SandboxBlueprint.spec.agents[].baseAgentName` → a real `Agent` (parsed out of the JSON
   string the CRD stores it in). This is how a public widget reaches its subagent; a typo here
@@ -192,3 +193,18 @@ If no cluster is reachable, this step is **not run** — that is not the same as
 
 Summarize PASS/FAIL per step. Declare success only when every step is green. On failure, name the
 project and the step, and quote the actual error output rather than paraphrasing it.
+
+**Checked:** 2026-09-04 against asgard-kube `15ded0f` and against the gate that
+runs these checks. Every field path named resolves in the CRDs, and the
+reference list was one short: the gate also resolves
+`SandboxBlueprint.pluginNames[]` to a `Plugin`, which this page did not mention
+and now does. The `≥2 sampleQuestions` and byte-identical prompt rules are the
+**gate's**, not the platform's - the CRD sets no minimum and no equality
+constraint - and a reader needs that difference to know whether a failure is
+fixed in the chart or argued with us.
+
+**Unchecked:** the live-cluster half. The server-side dry-run and the CRD
+fidelity check are described from the scripts the scaffold writes and from what
+the CRDs declare about pruning; **nothing here has been run against a cluster
+from this repository**. That is the half that catches a field the apiserver
+silently drops, and it is also the half that cannot be exercised offline.

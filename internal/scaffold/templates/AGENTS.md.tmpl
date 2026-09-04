@@ -37,24 +37,34 @@ written**, including the sections of this file marked TODO.
 Read `docs/spec/<<.SpecSlug>>/` first. If its module index is empty, no behaviour
 has been settled yet and the first job is the three decisions below.
 
-**Ask the CLI what to do next.** It works the stage out from the repository
-itself and prints that stage's guidance:
+**Read what this repository records before deciding anything.** Each of these
+reads one file back, and each takes `--format json`:
 
-    asgard-cli next
+    asgard-cli question      what nobody has answered yet, and who each is with
+    asgard-cli request       what the customer asked for and is not done
+    asgard-cli task          the task specs that are open
+    asgard-cli project       what each chart declares, and what its shape lacks
 
-The eight stages, for orientation - `next` gives you the detail for whichever one
-you are on, so this table does not repeat it:
+**No command says where this engagement is, and none will.** There is no step
+you are on - one that already has every requirement is at no step at all. What
+the work is made of, below, is a map and not an order. `asgard-cli guide <name>`
+reads one piece of guidance at any time, and `asgard-cli find` reaches them by
+subject.
 
-| # | step | produces |
+| name | the work | produces |
 |---|---|---|
-| 1 | inventory the customer's systems, and who talks to each one | `docs/meeting-notes/`, then a `docs/decisions/` record |
-| 2 | decide how the work splits into projects | `projects/<slug>/` via `asgard-cli project add` |
-| 3 | wire up the databases | `.env`, `DB_TARGETS` in `scripts/db/pgenv.py`, `DataConnector` CRs |
-| 4 | **decide each project's read path** | `SemanticLayer`, or a fixed-query `Toolset` |
-| 5 | **decide each project's entry point** | the agent hub, or `BotProvider` -> `Workflow` |
-| 6 | **decide where unstructured knowledge lives**, if there is any | a `SourceSet` Drive |
-| 7 | run the gate | see Acceptance Gate |
-| 8 | deploy | see Deploy / CI |
+| `requirements` | inventory the customer's systems, and who talks to each one | `docs/meeting-notes/`, then a `docs/decisions/` record |
+| `projects` | decide how the work splits into projects | `projects/<slug>/` via `asgard-cli project add` |
+| `data-sources` | wire up the databases | `.env`, `DB_TARGETS` in `scripts/db/pgenv.py`, `DataConnector` CRs |
+| `read-path` | **decide each project's read path** | `SemanticLayer`, or a fixed-query `Toolset` |
+| `entry-point` | **decide each project's entry point** | the agent hub, or `BotProvider` -> `Workflow` - or nothing, if the shape has none |
+| `knowledge` | **decide where unstructured knowledge lives**, if there is any | a `SourceSet` Drive |
+| `verify` | run the gate | see Acceptance Gate |
+| `deploy` | deploy | see Deploy / CI |
+
+Not every chart ends with an entry point. Which CR kinds finish one depends on
+the project's shape, which the files cannot say - declare it with
+`asgard-cli project shape <slug> <shape>` and see `asgard-cli size`.
 
 Steps 4, 5 and 6 are the three decisions in the next section. Each one has an
 answer that looks obvious and is wrong.
@@ -65,7 +75,11 @@ answer that looks obvious and is wrong.
 
 | command | when |
 |---|---|
-| `asgard-cli next` | **start here.** Reports which stage this repo is at and what to do. `--stage <name>` reads any stage out of order, `--list` shows them all |
+| `asgard-cli question` | what nobody has answered yet, and who each is waiting on. **Read this before designing anything** |
+| `asgard-cli request`, `asgard-cli task` | what the customer asked for, and the task specs open against it |
+| `asgard-cli project` | what each chart declares, and what its declared shape still lacks. It reports no step, because there is none |
+| `asgard-cli guide <name>` | the guidance for one decision; `asgard-cli guide` lists it |
+| `asgard-cli find <terms>` | **start here for a question.** Searches the wiki, the shapes, the guidance and the skills together; ask in Chinese if that is the language it was asked in |
 | `asgard-cli usecase` | **before authoring any CR.** How each shape is built, taken from deployments already in production: when to use it, the skeleton, the fields that are not obvious, and what the mistake cost someone. `--search <terms>` finds a shape from what the customer asked for |
 | `asgard-cli check` | the first gate: structural invariants a chart render cannot see |
 | `asgard-cli project add <slug> --env dev` | the engagement discovers a new project |

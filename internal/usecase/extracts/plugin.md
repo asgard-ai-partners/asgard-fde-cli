@@ -124,7 +124,7 @@ every skill, or there is one agent per combination.
 
 ### Which means the caller chooses the agent's capabilities
 
-**Ask who can set that payload field before you use this shape.** The chart pins
+**Before writing this shape, settle who can set that payload field - it is a question about our own deployment, not one for the customer.** The chart pins
 a floor - `pg-writing-base` here - and everything above the floor arrives in the
 request. Whoever can call the BotProvider decides which bundles load, which is
 correct when the caller is your own front end deciding "this article is health,

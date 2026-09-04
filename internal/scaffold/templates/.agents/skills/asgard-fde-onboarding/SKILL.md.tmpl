@@ -17,32 +17,37 @@ namespace. There is no application source code.
 ## Start here, every session
 
 ```bash
-asgard-cli next
+asgard-cli question      what nobody has answered yet, and who each is with
+asgard-cli request       what the customer asked for and is not done
+asgard-cli task          the task specs that are open
+asgard-cli project       what each chart declares, and what its shape lacks
 ```
 
-It works out where the onboarding is **from the repository itself** - which files
-exist, which CR kinds each chart declares - and prints that stage's guidance. It
-stays right when a step was done by hand, and it answers in an empty directory,
-where there is nothing yet to read.
+Each reads one file the repository keeps, or the CR kinds a chart declares,
+**from the repository itself** - so all four stay right when something was done
+by hand. Each takes `--format json`.
 
-**But it is an opinion, not an instruction.** It derives a stage from a fixed set
-of signals; you can read more than that - `AGENTS.md`, the living spec, the open
-questions, what the charts actually declare, and what the person in front of you
-just asked. **Where you disagree with it, you are probably right**: an onboarding
-is not linear, and three of this engagement's most expensive decisions were made
-once, built, and reversed after contact with reality. A tool that walks you into
-the same first answer is the failure mode, not the goal.
+**Read the questions first**, and do not design past one of them.
+
+**No command here says where the onboarding is.** There used to be one, and it
+was wrong in a way that cost this engagement: it derived a position from the
+earliest missing CR kind, and an onboarding is not linear - three of the most
+expensive decisions were made once, built, and reversed after contact with
+reality. A tool that walks you into the same first answer is the failure mode,
+not the goal.
 
 So form your own view of where things stand, and reach for the guidance by
-subject rather than by position:
+subject:
 
 ```bash
 asgard-cli find "<what you are actually deciding>"
 ```
 
-That searches the platform wiki, the deployment shapes and the stage guidance
-together, so "how is the read path decided" reaches stage 4's material without
-having to have arrived at stage 4.
+That searches the platform wiki, the deployment shapes, the decision guidance and
+the skills together, so "how is the read path decided" reaches the material that
+covers it without having to have arrived anywhere first. **None of it is a step**
+- `asgard-cli guide` lists every piece of it, and any one can be read at any
+time, as many times as it is useful.
 
 **Do not reproduce what any of it says.** Run it and read it: the guidance is
 versioned with the tool, while a copy pasted into a transcript goes stale.
@@ -53,8 +58,8 @@ Not a sequence to follow - a map of what answers what.
 
 | what you are doing | where to look |
 |---|---|
-| anything, first | `asgard-cli next` |
-| **the customer said something and you have to turn it into work** | `asgard-cli next --stage requirements` - the interview, then `asgard-cli request add "<their words>"` |
+| anything, first | `asgard-cli question`, then `request`, `task` and `project` |
+| **the customer said something and you have to turn it into work** | `asgard-cli guide requirements` - the interview, then `asgard-cli request add "<their words>"` |
 | **looking something up** | `asgard-cli find "<the customer's words>"` - searches both bodies of reference material and hands you the other half |
 | **about to write a CR** | `asgard-cli usecase <shape>` - the skeleton and its traps |
 | what a thing on the platform even is | `asgard-cli wiki <page>` - read this before the extract, which assumes it |
@@ -80,8 +85,10 @@ follow from one question:
 An internal audience and a public one need different shapes, and that is not a
 preference: it follows from what the platform can and cannot do. Each of the
 three has an obvious answer that has already been proven wrong in production.
-`asgard-cli next` states the reversal when you reach that stage; `AGENTS.md` has
-the same three under "The three decisions that get answered wrong".
+`asgard-cli guide read-path`, `entry-point` and `knowledge` each state
+the reversal, and `next` raises them when this repository meets their condition;
+`AGENTS.md` has the same three under "The three decisions that get answered
+wrong".
 
 **Establish the audience before designing anything.**
 
@@ -99,3 +106,17 @@ the same three under "The three decisions that get answered wrong".
 - **A behaviour change is not done** until the delta reaches
   `docs/spec/<<.SpecSlug>>/`. A task spec stops being read once it is done; the
   living spec is what the next person reads.
+
+**Checked:** 2026-09-04 - every command this page routes to exists and answers
+what is claimed, checked by running each. The one platform statement it makes is
+the distinction between a runtime skill under `common/skills/` bound by a
+`SkillSet` CR and a design-time skill under `.agents/skills/` that only the
+coding agent reads; `SkillSet` is in the contract at asgard-kube `15ded0f` and
+the two mechanisms are separate, which is why the warning is at the top.
+
+**Unchecked:** the routing itself - which question should reach which command.
+That is one engagement's map of its own material, and its failure mode is
+silent: a reader sent to the wrong page reads a correct document and answers a
+different question. `asgard-cli reading` measures the half of that which is
+measurable, and `asgard-cli reading --misses` records the searches this material
+did not answer.

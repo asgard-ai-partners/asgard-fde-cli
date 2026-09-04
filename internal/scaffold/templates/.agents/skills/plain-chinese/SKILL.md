@@ -167,3 +167,13 @@ supposed to prevent, arriving by a different route.
 both wrong if nobody has checked whether the agent can reach the ledger. Plain
 language makes a false claim easier to catch, which is a reason to prefer it and
 not a substitute for checking.
+
+**Checked:** 2026-09-04 - **no platform claims to check.** Every rule here is
+about 繁體中文 prose, and the sentence shapes it bans are checkable by reading
+what they produce.
+
+**Unchecked:** that these are the shapes that mark a document as machine-written
+to **this** audience. They were collected from what a customer read and reacted
+to in one engagement, in one industry, in Taiwan. Nothing corroborates them and
+nothing makes them a style guide; a reader whose customer speaks differently
+should treat the list as evidence rather than as rules.

@@ -297,3 +297,19 @@ SQL against the live schema — that is what your introspection queries are for.
 > `transaction.createdfrom` does not exist, that a missing `isinventoryaffecting = 'T'` filter makes
 > quantities sum to **zero**, and that 54% of Item Receipts are transfer orders rather than
 > purchases. None of that is visible in column names. Run the query.
+
+**Checked:** 2026-09-04 against asgard-kube `15ded0f`. `SemanticLayer.spec`
+requires `completionModelName` and `cubes`, and the Agent CRD has no
+`completionModelName` at all - so the asymmetry this page warns about is real
+and a layer written from an Agent's shape fails on a required field. A
+dimension or measure requires `description`, `name`, `sql`, `title` and `type`,
+which makes the description a **contract requirement** rather than only a
+convention here; that it is written in 繁體中文 is ours.
+
+**Unchecked:** everything about the modelling itself. That a cube per business
+entity beats a cube per table, which joins are worth declaring, and what makes a
+`sampleQuery` useful rather than misleading - all of that is this engagement's
+practice against its customers' schemas, and **no source states any of it**. The
+one instruction here that must survive a reader who discounts the rest is to run
+every `sampleQuery` against the live database before committing it: a query that
+errors is worse than an absent one, because the agent treats it as an example.

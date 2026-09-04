@@ -1,9 +1,34 @@
+# Decide each project's entry point
+
 There is a read path but no way to reach it. **This is the second decision that
 gets answered wrong.**
 
 Needing an entry point:
-<<range .Projects>><<if not (.Has "Agent" "BotProvider")>>  - <<.Slug>>
+<<range .Projects>><<if .NeedsEntryPoint>>  - <<.Slug>>
 <<end>><<end>>
+## First: does this project need one at all?
+
+**A chart can be finished at the read path.** If what the customer wants is to
+watch the same numbers each morning, the consumer is Data Insight (Mimir): they
+explore the model by conversation and save Views and Dashboards in the product,
+and no Agent, Toolset, entry point or BotProvider is written at all.
+
+Nothing on disk can tell that apart from an agent nobody has written yet, so it
+has to be said:
+
+    asgard-cli project shape <project> mimir-dashboard
+
+**That is a claim about what the customer gets, not a way to stop this stage
+asking.** Declare it only when the answer to "who asks it a question" is nobody,
+and then say so in the chart next to the layer - a later reader who finds a
+SemanticLayer that nothing references will read it as a missed connection and
+bind an Agent to it, which hands agents deliberately restricted to an API a
+second path into the database. **No gate catches that**: cross-reference
+checking validates references that exist, never one that should not.
+
+    asgard-cli guide read-path
+    asgard-cli usecase mimir-dashboard
+
 ## The decision
 
 | audience | answer |
@@ -13,13 +38,17 @@ Needing an entry point:
 
 ## Why the agent hub cannot serve a public widget
 
-An Agent CR is reachable **only** through preset-agent-hub, and that endpoint
-requires an authenticated caller. BotProvider.entrypoint accepts a Workflow,
-**never an Agent**. So a public audience forces the second shape, no matter how
-it is configured.
+The constraint is a field on the CRD and it is not this page's to state:
+`asgard-cli wiki agents` has what `BotProvider.entrypoint` takes, and
+`asgard-cli usecase agent-hub` has what that means for the shape. **The reason
+it is a decision at all is that it cannot be configured around** - a public
+audience forces the second row of the table above, and no amount of
+configuration moves it.
 
 > Answered wrong once: a public widget was specced onto the agent hub, then
-> re-decided as a self-hosted chain after the constraint surfaced.
+> re-decided as a self-hosted chain after the constraint surfaced. **That is
+> what this page is for** - the constraint was always readable, and reading it
+> is not the same as being asked the question before committing to an answer.
 
 Read the shape before writing it:
 
@@ -41,13 +70,18 @@ sees when deciding whether to delegate, so put the business nouns in it, and
 where two agents look similar, say in each which side of the line it is on.
 
 Publishing is the on/off switch: callers build agent_names[] from the *published*
-agents, so the agent-published label decides whether an agent gets work. A
-published agent needs at least two sampleQuestions.
+agents, so the agent-published label decides whether an agent gets work.
+
+**A published agent needs at least two sampleQuestions, and that is our rule
+rather than the platform's** - the CRD's `sampleQuestions` has no minimum, so
+nothing on the cluster refuses one without them and `asgard-cli verify` does
+(R7). Knowing which of the two will stop you decides whether the fix is a chart
+edit or a conversation. `asgard-cli usecase agent-hub` has why two.
 
 prompt.task and prompt.format must be **byte-identical** across the agents in one
 chart. Agent CRs have no include mechanism, so shared text can only be
 duplicated; verbatim equality is what makes a change a single global replace, and
-the gate diff-checks it.
+the gate diff-checks it. **Also ours, not the platform's.**
 
 ## If it is a self-hosted chain
 
@@ -74,3 +108,21 @@ Trigger needs two labels of its own or its editor opens as a blank canvas. See
 AGENTS.md, "Workflow sets".
 
 Done when: asgard-cli verify resolves the whole chain including the entry names.
+
+**Checked:** 2026-09-04 against asgard-kube `15ded0f`. `BotProvider.spec.entrypoint`
+is `{entry, workflow}`, both required, with no agent field; the Agent CRD's own
+description reads "The Agent CR is a pure 'subagent config' resource ... it no
+longer produces its own deployment"; `agentClass` carries `self == oldSelf`; the
+capability fields (`agents`, `skillSetNames`, `pluginNames`, `sourceSetMounts`,
+`credentialMounts`, `hooks`) are on `SandboxBlueprint.spec` and not on
+`Workflow`. Two claims that read as platform rules are **ours** and now say so:
+the two-sampleQuestions minimum (the CRD sets none - `gate` R7 does) and the
+byte-identical prompt text.
+
+**Unchecked:** everything that makes this a decision rather than a lookup - which
+audience forces which shape, that a single public agent needs no subagent, and
+that the protection of an unauthenticated endpoint is on the capability side.
+Those come from the engagement this was written in, where the first was answered
+wrong once and reversed. **They have no source to be held against**, and a
+reader should weigh them as one engagement's experience rather than as a
+platform contract.

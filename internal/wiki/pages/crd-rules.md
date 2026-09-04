@@ -60,6 +60,27 @@ That is the reason to prefer a builtin tier when the customer has no view: it is
 one less credential in the engagement, and a concrete model name is one more
 thing to come back and fix when that model is retired.
 
+## Which of them a render can be held against
+
+The CRDs carry 79 CEL rules. **Forty are `self == oldSelf`** - they compare a
+proposed object against the one already on the cluster, so a render, which is
+one object with no history, cannot see them. `botProviderClass` is the one that
+bites; `asgard-cli usecase chat-channel` says why.
+
+The rest are two families, and `asgard-cli verify` checks both as of
+2026-09-04:
+
+    exactly one of [...]        a credential that is neither a literal nor a
+                                reference, or both; a class block that is
+                                missing or doubled
+    class implies its block     `toolsetClass: mcp-server` without
+                                `mcpServerConfig`; a `documentClass` without
+                                the block named after it
+
+Every one of those renders, lints and passes a server-side dry-run, and is
+refused at apply. Run over the six reference deployments - 107 CRs - the check
+reports nothing, which is what a rule the platform already enforces should do.
+
 ## The one the schema cannot enforce
 
 **A `SandboxBlueprint`'s subagent must set exactly one of `baseAgentName` or

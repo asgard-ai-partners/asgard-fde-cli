@@ -1,3 +1,5 @@
+# Start the onboarding
+
 No .asgard-config.json here, so this directory is not an onboarding yet.
 
 ## The shape, before anything else
@@ -55,12 +57,13 @@ and so is the point at which it is worth chasing.
 
 When you do get it: it is a long decimal number (around 19 digits), **not** a
 UUID - if what you have looks like `7ab7f523-3cd9-...`, it is the wrong value.
-Ask for it, or read it off the platform. **Do not copy one from another
-customer's repository or from an example**: it is a live production identifier,
+Ask the platform team for it, or read it off the platform. **Do not copy a
+workspace id from another customer's repository or from an example**: it is a live production identifier,
 and a wrong one binds this repository to somebody else's workspace.
 
-**Do not ask about projects yet.** How the work splits is decided by interviewing
-the customer, which is stage 2. Starting with none is the normal case.
+**Do not ask the customer about projects yet.** How the work splits is decided by interviewing
+the customer - `asgard-cli guide projects`. Starting with none is the
+normal case.
 
 ## Start
 
@@ -90,10 +93,16 @@ before you build anything on top.
 
 ## Then
 
-    asgard-cli next
+    asgard-cli scaffold
 
-Ask it after every step. It works out where the onboarding is from the
-repository itself, so it stays right no matter who did what.
+`asgard-cli guide scaffold` is what that step is deciding - what the skeleton
+contains, what it deliberately does not, and the one thing to read ahead of
+rather than on arrival.
+
+    asgard-cli project
+
+That reads what each chart declares off the repository itself, so it stays right
+no matter who did what. **It reports no step**, because there is none.
 
 ## If you picked the slug wrong
 
@@ -101,3 +110,16 @@ Before any namespace exists, it is cheap: `asgard-cli init --force
 --workspace-slug <new>` then `asgard-cli scaffold --force`, and rename the
 directory. **After tf-asgard has created namespaces from it, it is not** - the
 namespaces carry the slug, so settle it before that step.
+
+**Checked:** 2026-09-04 - nothing here to check against a source. This document
+makes **no claim about the platform**: it is the repository shape this tool
+writes and the one irreversible thing about it, that namespaces carry the
+workspace slug. That is a fact about tf-asgard rather than about a CRD, and the
+tool's own behaviour is the only thing that could contradict it.
+
+**Unchecked:** that one workspace is one repository, and that the tenant-per-
+directory shape one production repository uses is right for a platform's
+customers and wrong here. That is a judgement about **which engagements this
+tool is for**, taken from the one it was built in. Nothing enforces it, and a
+reader who is onboarding several tenants of one product should read the section
+above rather than the rule.

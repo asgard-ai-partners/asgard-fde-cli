@@ -1,3 +1,5 @@
+# Add a capability to a repo that is already live
+
 The onboarding is done: every project reads through a shape, is reachable, and
 has been deployed. **From here the repo is not "finished", it is live** - and
 the work changes character. New capability arrives as a request, not as a stage.
@@ -8,7 +10,7 @@ it - the same numbers every morning, without asking. That is Mimir, it needs no
 new CR beyond the model that already exists, and it is the cheapest thing this
 walk ever delivers. Check before designing an agent for it:
 `asgard-cli usecase mimir-dashboard`, and question 2b of
-`asgard-cli next --stage requirements`.
+`asgard-cli guide requirements`.
 
 This is the loop for adding one.
 
@@ -17,7 +19,7 @@ This is the loop for adding one.
     asgard-cli request add "<what they asked for, in their words>"
 
 Everything below is that request's own sections. Opening it first is what gives
-the work an ID, a date and a status, so `asgard-cli next` walks it and the next
+the work an ID, a date and a status, so `asgard-cli request` reports it and the next
 agent to open the repo can see it without being told.
 
 ## 1. Which project does it belong to?
@@ -27,7 +29,7 @@ end?**
 
   - Same audience as an existing project -> it goes in that project.
   - A new audience -> it is a **new project**: `asgard-cli project add <slug>`,
-    then `asgard-cli scaffold`, and it walks its own way through stages 3-8.
+    then `asgard-cli scaffold`, and it finds its own way from there.
 
 Do not put a public capability into an internal project because the data happens
 to be nearby. The entry point and the read path follow the audience, and mixing
@@ -73,12 +75,15 @@ Prefer an existing `DataConnector`, `SkillSet`, `SourceSet` over a new one. A
 second CR that does the same job as an existing one is the thing reviewers catch
 late and it is expensive to unpick.
 
-If it is a new system rather than a new question about an old one, that is
-stage 3 again: introspect the real database, do not guess the schema.
+If it is a new system rather than a new question about an old one, wiring it up
+is the same work as the first time: introspect the real database, do not guess
+the schema.
+
+    asgard-cli guide data-sources
 
 ## 5. Gate, then deploy
 
-Run the full acceptance gate (`asgard-cli next --stage verify`). Then tag.
+Run the full acceptance gate (`asgard-cli guide verify`). Then tag.
 
 ## 6. Close the loop - this is the step that gets skipped
 
@@ -93,3 +98,16 @@ A task that changed behaviour **is not done** until:
 A task spec stops being read once it reaches `done`. The living spec is what the
 next person reads, and if the delta never reaches it, the next engagement starts
 from a description of a system that no longer exists.
+
+**Checked:** 2026-09-04 - the CR kinds it names are in the contract at
+asgard-kube `15ded0f`, and the loop it describes is the one the commands
+implement: a request, then a task spec, then the chart change, then the living
+spec. `asgard-cli request` and `asgard-cli task` are what move each status, and
+each writes the three places by hand editing would miss.
+
+**Unchecked:** which change needs a spec first and which does not. The rule -
+anything touching a `SemanticLayer` or `DataConnector`, widening which cubes an
+agent may query, or introducing a write path - is this engagement's line, drawn
+where a change points at the customer's live systems. **No source states it**,
+and it is deliberately conservative: the cost of a spec nobody needed is an hour,
+and the cost of the other mistake was paid once.

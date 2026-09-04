@@ -97,3 +97,16 @@ Use status flow `draft` -> `ready` -> `in-progress` -> `done`. Do not use `in_pr
 
 `asgard-cli check` 驗這層的**結構**(必備檔案、模組索引與檔案一致、
 dated 檔名、`docs/` 裡的相對連結都指得到)。它驗不了內容是不是最新的 —— 那是第 3 步的責任。
+
+**Checked:** 2026-09-04 against the commands that implement it. Every status
+transition this page describes is what `asgard-cli request` and
+`asgard-cli task` actually write, and each moves the index row, the spec's Meta
+and the spec's log together - which is the reason they are commands rather than
+instructions to edit a file.
+
+**Unchecked:** the workflow itself. That a request precedes a task spec, that a
+task spec precedes an implementation, and which changes need one at all are this
+engagement's discipline. **No source states them**, and the specific line - that
+anything touching a `SemanticLayer` or `DataConnector`, widening which cubes an
+agent may query, or introducing a write path needs a spec first - is deliberately
+conservative because those three point at the customer's live systems.

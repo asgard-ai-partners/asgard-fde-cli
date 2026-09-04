@@ -1,3 +1,8 @@
+# Decide how the work splits into projects
+
+How the work splits into projects is decided by interviewing the customer,
+not by looking at their systems. The output is a decision, not code.
+
 <<with .InterviewRequests>><<range .>>  <<.ID>>  <<.Title>>
 <<end>>
 That request has no target project yet, and deciding it is this stage. The output
@@ -5,7 +10,7 @@ is a decision, not code.<<else>>No request is open, so this page is being read o
 interview that decides how the work splits into projects, and it starts from
 something a customer asked for: `asgard-cli request add "<what they asked for>"`.
 
-The interview that produces one is `asgard-cli next --stage requirements`.<<end>>
+The interview that produces one is `asgard-cli guide requirements`.<<end>>
 
 A **project** is one Helm chart deployed to one namespace, and it always lives
 under this workspace at `projects/<slug>/` - `asgard-cli project add` puts it
@@ -33,7 +38,7 @@ is built by the customer in the product rather than by us in a chart.
 
 It still lives under `projects/<slug>/` and still deploys to a namespace, so it
 is a project mechanically. What it is not is a project shaped like the rest of
-this walk: stages 5 and 6 have nothing to say about it, and `asgard-cli verify`
+this: `entry-point` and `knowledge` have nothing to say about it, and `asgard-cli verify`
 will report an Agent with no capability only because there is no Agent.
 `asgard-cli usecase mimir-dashboard` is the shape.
 
@@ -113,7 +118,7 @@ Then, in this order:
 
      Do it the moment a question blocks a decision. Not in your head, and not
      buried in a task spec - a task's open questions disappear when it reaches
-     `done`, while `asgard-cli next` prints this file on every run.
+     `done`, while `asgard-cli question` prints this file.
 
   2. **The split, as a decision record:**
 
@@ -144,7 +149,7 @@ Then, in this order:
     asgard-cli scaffold
 
 Then point the request at it. That is what moves this stage on: until the request
-names a project this repository has, `asgard-cli next` reads it as an interview
+names a project this repository has, `asgard-cli request` shows it with no project
 that has not finished.
 
     asgard-cli request target <<.RequestID>> <slug>
@@ -156,3 +161,17 @@ inherit its length.
 
 Done when: projects/ has a directory per project, the root README table lists
 them, and asgard-cli check is green.
+
+**Checked:** 2026-09-04 - the shapes it names are real (`asgard-cli size` counts
+them off production, `asgard-cli usecase` assembles each), and the namespace
+pattern `asgard-<workspace>-<project>-<env>` is what this tool derives and what
+tf-asgard consumes. **No CRD claim is made here**, deliberately: which CRs a
+project ends up with belongs to `read-path`, `entry-point` and the extracts.
+
+**Unchecked:** the split rule itself - that a project follows the **audience**
+rather than the data or the system. That is the most consequential judgement in
+this document and **no source states it**. It comes from the engagement this was
+written in, where splitting on systems produced a chart that two audiences
+shared and one of them had to be taken back out. A reader whose customer has one
+audience and six systems should get one project, and if that reads wrong here,
+the rule is what to argue with.

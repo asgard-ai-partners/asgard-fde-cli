@@ -10,7 +10,7 @@ task reaches `done`. The living spec describes what *is*, not what nobody knows
 yet. Without this file, the question is rediscovered by the next person, usually
 by making the wrong assumption first.
 
-`asgard-cli next` reads this file and reports anything still open.
+`asgard-cli question` reads this file and reports anything still open.
 
 ## How to use it
 
@@ -28,7 +28,7 @@ by making the wrong assumption first.
   and the cost of that overtakes the cost of a gap almost immediately.
 - **A deck edits this file.** Reworking questions with somebody rewrites them,
   and whatever is reworded, retired or discovered while building one belongs
-  back in these rows in the same edit. `asgard-cli next` prints this file before
+  back in these rows in the same edit. `asgard-cli question` prints this file before
   anything else, so a stale row is what the next person reads first - and it
   does not merely lag, it keeps a judgement that has been overturned, still
   reading as though it were considered.
@@ -69,7 +69,7 @@ What is left after both filters is usually three or four rows - what blocks the
 minimum itself, anything the customer must do before we can proceed, and anywhere
 two of their answers contradict each other.
 
-`asgard-cli next --stage requirements` carries both filters in full, with a
+`asgard-cli guide requirements` carries both filters in full, with a
 worked example.
 
 ## Open

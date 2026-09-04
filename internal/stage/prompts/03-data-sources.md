@@ -1,3 +1,5 @@
+# Wire up the customer's databases
+
 Projects exist but no DataConnector does, so nothing can be read yet.
 
 Missing a connector:
@@ -15,7 +17,7 @@ status codes are read rather than extracted from somebody by questioning, and
 what arrives here is a design decision rather than a guess.
 
 If you are at this stage with no documentation, that is worth going back for
-before writing a connector. `asgard-cli next --stage requirements` has the full
+before writing a connector. `asgard-cli guide requirements` has the full
 ladder and why source code sits above a spec.
 
 ## Take the most capable route each system offers
@@ -82,3 +84,18 @@ Read-only throughout. SELECT and introspection only.
 
 Done when: every project that reads something has its DataConnector, and
 asgard-cli verify resolves it.
+
+**Checked:** 2026-09-04 against asgard-kube `15ded0f`. `dataConnectorClass` is
+one of postgres, mysql, mssql, oracle, salesforce, hana, netsuite, trino, athena,
+and is immutable after creation - so "a database we can read" covers ten engines
+and picking the wrong one is a replacement rather than an edit. Every credential
+block takes a `secretKeyRef`, with the CRD enforcing exactly one of
+[secretKeyRef configMapKeyRef] and exactly one of [value valueFrom], so the
+instruction to keep the password out of values and git is supported by the
+contract rather than only by convention.
+
+**Unchecked:** the ladder. That source code beats a spec, a database beats an
+API and an API beats a screen is this engagement's ordering of what to reach
+for, and **no source states it** - the pages it points at describe each shape
+without ranking them. Read it as the order that has paid off here, and the last
+rung as the one to raise as a question rather than design around.

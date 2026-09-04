@@ -268,7 +268,7 @@ infra has provisioned the key.
 
 ## A mock is a fallback, not the default
 
-**Ask whether there is a test environment first.** If there is, write into it -
+**Ask the customer whether there is a test environment before you design a mock, and record the answer in `docs/open-questions.md` if it does not come back in the meeting.** If there is, write into it -
 the whole path is then genuinely proved, including the fields, the validation
 rules and the status codes, and none of that is proved by a mock. Reaching for
 a mock before asking loses the strongest version of the first delivery, and

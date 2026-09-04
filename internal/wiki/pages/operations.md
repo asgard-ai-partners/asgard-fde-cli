@@ -92,7 +92,7 @@ long their process takes.
     theirs   who signs, which queue, how long
 
 **Asking who approves it fails this material's own filter**, and it has been
-asked on a slide: `asgard-cli next --stage requirements` filter 0 tests whether
+asked on a slide: `asgard-cli guide requirements` filter 0 tests whether
 an answer changes what we build, and an approver's name does not. Worse, filter
 0 names this exact case - turning an operational precondition into a design
 question - and asking it in front of a customer reads as managing their internal

@@ -95,6 +95,10 @@ takes both.** See `asgard-cli usecase skill-set` for the CD side.
 
 ## Knowledge Base
 
+`asgard-cli usecase knowledge-base` has the `KnowledgeBase` + `Loader` +
+`Indexer` + `Source` shape field by field, the way `knowledge-drive` has the
+Drive one. Reading a chart that uses it is the case it exists for.
+
 For recognising older charts only. Creating one needs a Name and an Alias Name
 (lowercase letter first, then letters, digits and underscores).
 

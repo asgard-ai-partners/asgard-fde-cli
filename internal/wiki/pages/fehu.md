@@ -24,7 +24,7 @@ swapped there**.
 
 So "we will use our own Claude account" is answerable with yes or no depending on
 which product the capability lands in - and that is decided at
-`asgard-cli next --stage requirements` question 2b, before anyone has thought
+`asgard-cli guide requirements` question 2b, before anyone has thought
 about billing. A customer with a model contract, or a compliance rule about
 where inference happens, needs to hear this while the shape is still open.
 

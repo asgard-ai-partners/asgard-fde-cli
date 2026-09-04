@@ -1,3 +1,5 @@
+# Decide where unstructured knowledge lives
+
 Optional stage. Do this only if the customer has knowledge that is **not rows in
 a database** - product documents, FAQs, pages on a website.
 
@@ -48,10 +50,17 @@ graph points at - tell it that in the prompt, or it will crawl the whole Drive.
 
   - destinationPath must end with / for database and web Syncers, and statePath
     must not. Both are immutable once set, so a typo is a new Syncer rather than
-    an edit. (The member registry these used to name - members on the SourceSet,
-    destinationMemberKey and stateMemberKey on the Syncer - was retired: the
-    paths a Syncer writes to are now the whole truth about what is in a Drive.)
-  - On a database Syncer, isMaxValueColumn and isIdentifier sit on a column, not
+    an edit. The CRD enforces both, plus that neither is absolute and neither
+    contains `//` or `../`.
+  - The member registry these used to name is retired **as the mechanism, not as
+    a field**: `members` is gone from the SourceSet, but `destinationMemberKey`
+    and `stateMemberKey` are still on the Syncer, marked deprecated and kept so
+    pre-rename objects stay readable. **A chart that still sets them lints clean
+    and dry-runs clean**, which is why this is written down rather than left to
+    be discovered. The paths a Syncer writes to are now the whole truth about
+    what is in a Drive.
+  - **Exactly one column may carry isMaxValueColumn**, and the CRD refuses a
+    second. On a database Syncer, isMaxValueColumn and isIdentifier sit on a column, not
     on the database block, and both query and batchSize are required. A flag
     written one level up is an unknown field the apiserver drops in silence,
     leaving a Syncer that re-reads the whole table every run.
@@ -61,3 +70,17 @@ graph points at - tell it that in the prompt, or it will crawl the whole Drive.
 
 Done when: the Drive syncs, or you have decided the customer has no unstructured
 knowledge and recorded that.
+
+**Checked:** 2026-09-04 against asgard-kube `15ded0f`. `SourceSet.spec` carries
+`contextIndex` and no `members`; `Syncer` enforces destinationPath ending in `/`,
+statePath not ending in one, both immutable, neither absolute and neither
+containing `//` or `../`; one column at most may set `isMaxValueColumn`;
+`KnowledgeBase` is still a CRD in the contract, so "still live" is current. One
+statement was too strong and is corrected: the member keys are **deprecated and
+still accepted**, not removed, so a stale chart passes every mechanical check.
+
+**Unchecked:** that a Drive plus a Context Index is the right answer and
+KnowledgeBase is not, and that a graph the prompt does not point at gets crawled
+whole. Both come from the engagement this was written in - the first was built
+the other way and rebuilt (TASK-013). **Neither has a source**, and the console's
+own behaviour is what would settle the second.

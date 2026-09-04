@@ -1,3 +1,5 @@
+# Turn what the customer said into a request
+
 This is the interview, and it produces a **request** - not a design, not a task,
 not a chart. Read it before the working session with the customer, and keep it
 open during one.
@@ -40,7 +42,7 @@ a gap.** `asgard-cli check` treats it as one.
 The way this stage fails is not a bad analysis. It is a good one that stays in
 the conversation: the material gets read, the questions get filtered well, the
 answer is delivered to whoever asked, and the repository ends the day looking
-exactly as it did before. The next run of `asgard-cli next` then says nothing is
+exactly as it did before. The next run of `asgard-cli request` then says nothing is
 in flight, and it is right. Anything worth telling someone is worth `request
 add` first - **the message is the summary of the record, not a substitute for
 it.**
@@ -78,10 +80,11 @@ Every other page here is written to be read when you arrive at it, and that is
 the right arrangement for them. **It is wrong for this one**, for a reason that
 is about the output rather than the content:
 
-    stage 3 to 9 produce files      a wrong one is edited, re-rendered, reverted
-    this stage produces speech      a wrong one is in the customer's notes
+    everything else produces files  a wrong one is edited, re-rendered, reverted
+    this produces speech            a wrong one is in the customer's notes
 
-You get one interview. At that point you have not read stages 3 to 6, and **half
+You get one interview. At that point you have read none of the build guidance,
+and **half
 of what you will say out loud is settled there**. So read them first - at least
 `data-sources`, `read-path`, `entry-point` and `knowledge`. An hour before the
 meeting is cheaper than a correction after it.
@@ -89,9 +92,9 @@ meeting is cheaper than a correction after it.
 ### Run `asgard-cli brief customer-meeting` before the meeting
 
 Not reading - running. It lists the five things that reach a customer wrong, and
-it lives there rather than here because meetings happen at every stage: a
-briefing reachable only from this page is unreachable to an engagement at stage 5
-with a meeting tomorrow.
+it lives there rather than here because meetings happen at any point: a briefing
+reachable only from this page is unreachable to an engagement halfway through a
+chart with a meeting tomorrow.
  The short version of why: four of the five fail
 in the same direction - the intuitive answer undersells the platform or
 overstates a limit - so when a customer asks whether something is possible and
@@ -148,7 +151,7 @@ is always to fill the space, and the only material to fill it with is ours. The
 emptiness is true: it says they have not worked that capability out either, and
 the meeting can start there.
 
-**Ask, and stop.** The consequence is theirs to state, and supplying it invents
+**Ask the customer, in the meeting, and stop talking.** The consequence is theirs to state, and supplying it invents
 branches that do not exist. The shape it takes:
 
     有沒有測試環境?
@@ -217,7 +220,7 @@ Rewording a question, dropping one, finding one - each belongs in the row now.
 
 One engagement deferred it and after twenty rounds the two had diverged too far
 to reconcile. What survived in the file was a security judgement the deck had
-already corrected, **still argued convincingly**. `asgard-cli next` prints that
+already corrected, **still argued convincingly**. `asgard-cli question` prints that
 file before anything else, so the next person reads the superseded version
 first. `asgard-cli check` warns when the deck is newer.
 
@@ -287,6 +290,21 @@ anonymous to the platform.
 Ask it in the same breath as question 2, because it decides **which product this
 is**, and everything from question 3 down assumes the answer.
 
+**This question exists because the rest of this interview is agent-shaped, and
+so is whoever is running it.** Every question after it - who is on the other
+end, which systems hold the data, what it may write - assumes the deliverable is
+something you talk to. An agent asked what to propose therefore proposes an
+agent, fluently, which is what makes it hard to notice. **It has cost one
+proposal**: a customer's cross-channel inventory question, which is exactly what
+Mimir is for and is the subject of the product documentation's own case study,
+came back as an agent over a semantic layer. Nothing had asked what they do with
+the answer.
+
+Four products still have no shape to propose instead - Heimdall, Fehu, the
+Management Console as work in its own right, and Knowledge Base as distinct from
+a Drive - so if 2b lands on one of those, `asgard-cli wiki product-suite` is
+what to reason from and there is no extract to lean on.
+
     look one thing up, in the moment     an agent
     watch the same numbers every day     a Dashboard - this is Mimir
     both, for different people           both, and they are separate deliveries
@@ -336,13 +354,14 @@ changes the design more than anything else on this page.
 
 **3a. Each answer names a shape, and you can say so in the room.**
 
-The mapping is mechanical, and **the walk is where it lives** - one decision per
-stage, each with the case that got it wrong:
+The mapping is mechanical, and each half of it has a page of its own, with the
+case that got it wrong. Read whichever the answer reaches; they are not steps
+and there is no order to arrive in:
 
-    the systems and how each is reached      asgard-cli next --stage data-sources
-    the read surface, per audience           asgard-cli next --stage read-path
-    the entry point, per audience            asgard-cli next --stage entry-point
-    where unstructured knowledge goes        asgard-cli next --stage knowledge
+    the systems and how each is reached      asgard-cli guide data-sources
+    the read surface, per audience           asgard-cli guide read-path
+    the entry point, per audience            asgard-cli guide entry-point
+    where unstructured knowledge goes        asgard-cli guide knowledge
 
 Read them **before** the meeting rather than when you arrive at the stage. They
 are written as build-time decisions, but every one of them is settled by an
@@ -370,7 +389,7 @@ integration from days into weeks by being discovered late:
     There is nothing of ours to put on their network. So the ask has one shape:
     **they add Asgard's four outbound addresses to their allowlist.**
 
-    **Ask for that, not for "a VPN, an allowlist or a jump host".** Offering
+    **Ask their network team for exactly that, not for "a VPN, an allowlist or a jump host".** Offering
     options invites their network team to choose one that does not apply, and
     the week it takes to find that out is the week you were trying to save.
     If their policy needs a VPN, that is their side's business about how the
@@ -379,14 +398,17 @@ integration from days into weeks by being discovered late:
     Ask whether it can be done and roughly when - a date changes our plan. **This
     is the single most expensive thing to discover in week three, and it costs
     one sentence to ask in week one.** **Do
-    not ask who approves it**: a name does not change what we build, and filter 0
+    not ask the customer who approves it, and do not put an approver's name on a
+    slide**: a name does not change what we build, and filter 0
     below names this exact case. It is a ticket, an approval and a window in most
     companies rather than something done that afternoon, and that is their queue
     to manage, not ours to chase.
 
-    **Ask for the person; do not hand out the addresses.** They go to whoever
-    makes the change, once, read fresh from `asgard-cli wiki operations` - not
-    into this repository, not onto a slide, not into a thread that gets
+    **Ask the customer for the person's name, for the row in
+    `docs/open-questions.md`; do not put the addresses in your answer.** They go
+    to whoever makes the change, once, read fresh from `asgard-cli wiki
+    operations` - not into this repository, not onto a slide, not into a thread
+    that gets
     forwarded. They can change and a copy will not, and a stale allowlist is the
     customer's connection dropping. Coordinates in a committed record are the
     thing section 4 already refuses; ours are the same class as theirs.
@@ -429,7 +451,8 @@ port and read-only do not describe creating a record. Ask instead:
 
 **Their side of that record is not ours to design.** Whether the token is a
 service account or sits under a named person, whether their system routes or
-counts SLA by creator, how they notify - **do not ask**. It changes nothing we
+counts SLA by creator, how they notify - **do not ask the customer any of it,
+in the meeting or in a follow-up**. It changes nothing we
 build, and asking it in front of a customer is designing their permissions for
 them. Filter 0 below is the test; this is the case it catches most often,
 because a write makes the questions feel responsible.
@@ -496,7 +519,8 @@ to live alongside.
 Question 2 decides whether the entry point is the platform's hub or one of your
 own. This is the separate question of **which channel**, and it is worth asking
 in the same breath because `botProviderClass` is **immutable once created** -
-changing it later means a new BotProvider, not an edit.
+changing it later means a new BotProvider, not an edit. The CRD enforces both
+that and exactly one of the five class blocks being present.
 
     LINE / Telegram          the platform posts a webhook; one CR
     Slack / Discord          a connector pod holds a socket; infra provisions it
@@ -712,8 +736,8 @@ Usage, Processor Usage, Seat), in units of Units-Days, GB-Days and Times.
 Two things worth knowing before answering:
 
   - **the Workspace is the billing unit.** So how the work splits into projects
-    and workspaces has a cost consequence, and the split is decided at stage 2 -
-    before anybody has asked this question. Ask it now
+    and workspaces has a cost consequence, and the split is decided in
+    `guide projects` - before anybody has asked this question. Ask it now
   - **a seat is a line item.** "Everyone in the company can use it" is a
     sentence with a price, and the customer usually has not connected the two
   - **only Odin lets them bring their own model.** Sindri and Mimir use the
@@ -887,8 +911,8 @@ hypothetical.
 
 | the obvious answer | what it turned out to be | why the obvious one failed |
 |---|---|---|
-| a public website should read through a **SemanticLayer**, like everything else | **five zero-parameter query tools** | a layer without `allowedCubes` is arbitrary SQL over every cube, and the exposed surface grows by itself every time a table is added. Nobody widens it on purpose |
-| a public website is reached through **the platform's agent hub**, like everything else | its **own BotProvider -> Workflow -> SandboxBlueprint** | an anonymous visitor cannot authenticate to the agent hub. `BotProvider.entrypoint` takes a Workflow, never an Agent |
+| a public website should read through a **SemanticLayer**, like everything else | **five zero-parameter query tools** | a bound layer is arbitrary SQL over every cube, and the exposed surface grows by itself every time a table is added - `asgard-cli guide read-path` has why narrowing it is refused rather than forgotten |
+| a public website is reached through **the platform's agent hub**, like everything else | its **own BotProvider -> Workflow -> SandboxBlueprint** | an anonymous visitor cannot authenticate to the agent hub, and the field that would let them does not exist - `asgard-cli wiki agents` |
 | unstructured knowledge is a **KnowledgeBase** with Loaders and a retrieval workflow | a **SourceSet Drive with `contextIndex`** | the Loader-and-retrieval-workflow path was harder to keep correct than a Context Index over files. `KnowledgeBase` is still live and still shipping, so this one is experience rather than a platform rule |
 
 The pattern in all three: **"like everything else" is the wrong reason**, because
@@ -908,7 +932,8 @@ for.
 
 ### Filter 0 - is this ours to answer at all?
 
-**Ask first, because it removes the most rows.** We are delivering an agent. We
+**Run this filter over your question list before the meeting, because it
+removes the most rows.** We are delivering an agent. We
 are not designing the customer's support operation, and an interview that drifts
 into how their own systems and teams fit together has stopped being a
 requirements interview.
@@ -978,7 +1003,8 @@ it. File a row only if you asked and got nothing.
 
 ### Filter 1 - the minimum that proves it works (MVP)
 
-**Ask: what is the smallest thing that proves what THEY said they are testing?**
+**Ask yourself, before the meeting: what is the smallest thing that proves
+what THEY said they are testing?**
 
 Not the smallest thing that is easy to build. A customer who hands over a test
 plan has already written down what counts as success, and a first delivery that
@@ -1022,7 +1048,7 @@ first delivery and there is nothing to defer.
 
 Getting this backwards costs more than a deferred feature: it is telling a
 customer their channel cannot recognise their own customers, on a slide, when it
-can. `asgard-cli next --stage read-path` has the mechanism and
+can. `asgard-cli guide read-path` has the mechanism and
 `asgard-cli usecase per-turn-credentials` has the shape - read one of them before
 promising anything of the form 「查我的⋯」.
 
@@ -1080,7 +1106,7 @@ Fill them in the file; the TODOs are the questions above.
 
 **Open questions go to `docs/open-questions.md` as well**, one row each, with
 what they block and who can answer. Not only into the request: a question buried
-in a spec disappears when that spec reaches `done`, and `asgard-cli next` reads
+in a spec disappears when that spec reaches `done`, and `asgard-cli question` reads
 the open-questions file on every run and prints it before anything else.
 
 **Ask who can answer, for the row's ask column** - by name or by role, in the
@@ -1109,7 +1135,7 @@ meeting. A question with no owner is not tracked, it is just written down.
   - nothing that blocks the work is missing an owner
 
 Not ready is a normal state to be in. A `draft` that names its open questions is
-more useful than a `ready` that guessed at them, and `asgard-cli next` will keep
+more useful than a `ready` that guessed at them, and `asgard-cli question` will keep
 the request in front of you either way.
 
 What usually comes before the task specs is saying it back to them: what we
@@ -1122,3 +1148,21 @@ memory afterwards.
 Then split it into task specs:
 
     asgard-cli task add "<title>" --request <<.RequestID>> --project <project> --complexity M
+
+**Checked:** 2026-09-04 against asgard-kube `15ded0f` for the platform claims it
+carries, which are few by design - it is an interview, and the shapes belong to
+the pages it points at. `botProviderClass` is immutable (`self == oldSelf`) and
+exactly one of [generic telegram line discord slack] must be present, so asking
+which channel in the same breath is a contract requirement rather than a
+courtesy. Two rows of the "obvious answer" table restated constraints the wiki
+and `read-path` own, and now point at them instead.
+
+**Unchecked:** filter 0, and everything downstream of it. "Does the answer change
+what we build" is this material's own test for whether a question is worth a
+customer's time; **no source states it**, and it is the rule most of this
+document exists to apply. It was arrived at from a deck whose six worst
+questions failed it, three of them copied out of this material rather than
+reasoned into existence. Read it as the filter that has paid off here, and the
+question ladder as one engagement's ordering - both are arguable, and a reader
+who finds a question that fails filter 0 and still mattered should file it:
+`asgard-cli issue-report --new`.

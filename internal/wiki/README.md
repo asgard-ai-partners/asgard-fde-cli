@@ -45,11 +45,17 @@ rules to the CRD; point at them instead.
 
 The llm-wiki split. What separates the layers is which one may be rewritten.
 
+**These are the corpus's layers, not this wiki's alone.** The extracts, the
+stage guidance and the design-time skills are the same middle layer read for a
+different question, and `AGENTS.md` states the four rules that apply to all of
+them. This file is the longer version, and the part below about a page's source
+block is the wiki's own.
+
 | layer | contents | may be edited |
 |---|---|---|
 | raw sources | asgard-docs and asgard-kube (URLs below) | read-only. Never copied in; only the commit is recorded |
-| the wiki | `pages/` | rewritten continuously, and only ever describes the present |
-| the schema | this file | changed deliberately, by a person |
+| the corpus | `pages/`, and the other three parts | rewritten continuously, and only ever describes the present |
+| the schema | `AGENTS.md`, and this file for what a page must carry | changed deliberately, by a person |
 
 Raw sources are not vendored, and the reason is not size. A copy stops tracking
 upstream, and a stale copy is indistinguishable from a current one by looking at
@@ -65,6 +71,7 @@ wherever; what goes into a page is the repository and the commit.
 |---|---|---|
 | product documentation | https://github.com/asgard-ai-platform/asgard-docs | `f00e0ee` (2026-08-31) |
 | CRD definitions | https://github.com/asgard-ai-platform/asgard-kube | `15ded0f` |
+| processor definitions | https://github.com/asgard-ai-platform/asgard-core (private) | HEAD, 2026-09-03 - no commit was recorded, which is the thing this table exists to stop |
 
 Neither lives in this repository. `git pull` before writing against them.
 
@@ -86,6 +93,21 @@ Search `pages/` first. If an answer needs three pages assembled on the spot, tha
 assembly is new knowledge: write it into a page, or the next reader repeats it.
 
 ### lint - the audit
+
+Two of these are mechanical and ship as flags:
+
+    asgard-cli audit-material --links     every pointer resolves
+    asgard-cli audit-material --orphans   what nothing points at
+
+**They are two halves of one thing.** A pointer that goes nowhere is loud - the
+reader follows it and finds nothing. A document nothing points at is silent, and
+costs more: it is there, it is correct, and it is never read. The index does not
+count as a pointer in the second check, because `wiki operations` sat in
+`index.md` under the title Connectivity while an FDE spent a day on connectivity
+and never opened it.
+
+Both read the link graph, which is a field on every document rather than a
+regular expression over prose - see `kb.Link`.
 
 The three kinds of rot in `.agents/skills/knowledge-base/` apply here too. There
 is a fourth that only happens here:
@@ -141,7 +163,7 @@ Four more:
   produces the failure nobody can see, because nothing contradicts anything and
   the reader simply takes the wrong one.
 - **Anything telling a reader to ask a customer something has to pass filter 0.**
-  `asgard-cli next --stage requirements` carries it: does the answer change what
+  `asgard-cli guide requirements` carries it: does the answer change what
   we build? Two pages have told an FDE to ask a question that filter rejects, and
   both times they followed the page in front of them rather than the rule.
 - **Say which layer a statement comes from.** Product documentation describes
@@ -150,10 +172,49 @@ Four more:
   table.
 - **Mark what is uncertain.** "The documentation does not say" is a useful entry;
   a guess is not.
-- **English.** The sources are zh-TW and the pages are not; an agent asked in
-  Chinese queries in English, so the corpus does not have to carry both. Product
+- **English.** The sources are zh-TW and the pages are not. The corpus carries
+  one language because **the mapping lives somewhere else** - the alias table on
+  `pages/glossary.md`, which `asgard-cli find` applies to a query before
+  searching, printing what it actually searched for. It is not because the
+  reader translates first: `asgard-cli find` asks to be given the customer's own
+  words, and translating only after a search came back empty was measurably
+  worse - the glossary carries the table, so a Chinese term matched the row
+  about itself and the reader got the word list instead of the answer. Product
   labels keep their own names - Managed Agent, Drive, Context Index are what the
   UI says.
+
+## The index
+
+Two files here are not pages and are not searched:
+
+| file | holds |
+|---|---|
+| `index.md` | the catalogue of pages, by subject, and what is not written yet |
+| `aliases.md` | what a customer says, and what to search for - `asgard-cli wiki --aliases` |
+
+**An index inside the corpus competes with what it points at.** The alias table
+was a section of `pages/glossary.md`, and because it lists every alias it was
+reliably the one document carrying every term of a translated query: a search
+for a subject returned the word list rather than the page. It is beside the
+pages now, where `index.md` and `log.md` already were.
+
+`asgard-cli find` applies `aliases.md` to a query before searching and prints
+what it searched for. Rows come from searches that came back empty -
+`asgard-cli reading --misses` in an engagement is the list - and that file
+carries the rule.
+
+**A row that routes is not a row that answers**, and the index says which it is.
+A name under "names the material covers" was searched for against the reference
+deployments and the answer written down; one under "names it only routes"
+reaches the shape the thing belongs to and nothing more. `find` prints the
+difference, because a set of results about a shape reads exactly like a set of
+results about the product that was asked for. **Moving a row up means somebody
+did the search.**
+
+The `glossary` page's one-meaning-here table is applied the same way. It sat as
+prose for a long time while the failure it describes went on happening: a search
+for `payment` returns Fehu, which is billing between Asgard and the customer,
+and nothing anywhere is red. `find` prints both senses above the results.
 
 ## Coverage
 
