@@ -238,6 +238,21 @@ from making the same choice.
 └── CLAUDE.md                      # one line: @AGENTS.md
 ```
 
+### `.asgard-cli.yaml` — which platform objects this checkout acts on
+
+`asgard-cli` needs to know which workspace, and for a repository carrying more than one
+declaration which pipeline, before it can do anything. Neither is derivable from the repository, so
+both are recorded in `.asgard-cli.yaml` beside the declaration, and that file is committed: a fresh
+clone and a fresh agent both inherit it.
+
+    asgard-cli workspace show     which one is in effect, and why that one
+
+**The platform never reads it.** A run reads the declaration at the pipeline's config path and the
+chart it names, and nothing else, so nothing in this file can make a deployment succeed or fail.
+`--workspace` and `ASGARD_WORKSPACE` outrank it, which is the safe direction: acting on a test
+workspace when the customer's was meant costs a confusing error, and the reverse deploys to a
+customer.
+
 **There is no CD workflow in this repository, and no per-environment values files.** The
 platform runs the rollout: a tag matching a release's rule produces a run that renders the
 chart, checks every CR against the cluster's own CRDs, waits for review and applies. What this

@@ -24,6 +24,23 @@ import (
 // The tree is embedded with all: so that dot-prefixed paths (.agents, .github,
 // .gitignore, .env.example) are included; the default pattern skips them.
 //
+// THE SKILLS UNDER .agents/skills/ ARE NOT MEANT TO STAY HERE, and the reason is
+// not tidiness. Asgard is a SaaS platform today and an on-prem product next: a
+// customer's server can be several versions behind ours, or ahead of it, and a
+// skill that says what a CRD field is called is only true of one of them. A
+// skill compiled into this binary is pinned to whatever release the customer
+// happened to install the CLI from, which is unrelated to the server they
+// deploy against - so it would be wrong for every on-prem installation that is
+// not on our version, and there would be no way to fix it without shipping them
+// a binary.
+//
+// So the platform serves them, from an endpoint that renders what THAT server
+// knows, and this embed keeps only the parts that are true of any Asgard: the
+// repository skeleton, the docs layers, the declaration template. See
+// asgard-odin-pm tracking/studio/tasks, the Asgard CR Skill pipeline plan,
+// phase C. **Moving the skills back in here would look like a simplification
+// and would break every customer whose server is not on our version.**
+//
 //go:embed all:templates
 var templates embed.FS
 
