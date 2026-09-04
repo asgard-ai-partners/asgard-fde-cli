@@ -48,6 +48,7 @@ workspace is ` + "`asgard-cli workspace`" + `.`,
 	cmd.AddCommand(
 		newPipelineConnectCmd(),
 		newPipelineConnectionsCmd(),
+		newPipelineDeliveriesCmd(),
 		newPipelineReposCmd(),
 		newPipelineCreateCmd(),
 		newPipelineListCmd(),
@@ -694,4 +695,75 @@ func recordPipeline(pc *platformContext, pipelineID string) (string, error) {
 		}
 	}
 	return bindPath, nil
+}
+
+func newPipelineDeliveriesCmd() *cobra.Command {
+	var (
+		f     pipelineFlags
+		limit int
+	)
+
+	cmd := &cobra.Command{
+		Use:   "deliveries",
+		Short: "Why a push did or did not produce a run",
+		Long: `List the events this pipeline received and what came of each.
+
+**This is the only place a push that produced nothing explains itself.** A run
+that was never created leaves no record of its own, so when a tag appears to
+have been ignored the reason is here and nowhere else:
+
+    release "x" not created      the pattern matched, but nobody created it
+    no release matches tag "x"   no pattern in the declaration matched the ref
+    config unreadable / invalid  the declaration at that commit could not be used
+    repository no longer bound   the pipeline was pointed at another repository
+    connection revoked           the installation was removed on the provider
+
+A delivery that did create runs names them, so this is also how one push that
+matched several releases is seen as one event rather than as several unrelated
+runs.
+
+The same event reaches every pipeline bound to the repository, each reading its
+own config path, so a monorepo's two pipelines each keep their own history of
+it.`,
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			pc, err := f.context(cmd)
+			if err != nil {
+				return err
+			}
+			p, err := resolvePipeline(cmd.Context(), pc, f.pipeline)
+			if err != nil {
+				return err
+			}
+			deliveries, err := pc.Client.ListDeliveries(cmd.Context(), p.PipelineId, limit)
+			if err != nil {
+				return err
+			}
+
+			out := cmd.OutOrStdout()
+			if f.format == formatJSON {
+				return writeJSON(out, deliveries)
+			}
+			if len(deliveries) == 0 {
+				fmt.Fprintf(out, "No deliveries yet for %s. A push to %s is what produces one.\n",
+					p.Name, p.RepoFullName)
+				return nil
+			}
+			for _, d := range deliveries {
+				when := ""
+				if d.ReceivedAt != nil {
+					when = d.ReceivedAt.Local().Format("01-02 15:04")
+				}
+				ref := d.Ref
+				if ref == "" {
+					ref = "-"
+				}
+				fmt.Fprintf(out, "%-12s %-10s %-28s %s\n", when, d.Event, ref, d.Outcome)
+			}
+			return nil
+		},
+	}
+	f.register(cmd, true)
+	cmd.Flags().IntVar(&limit, "limit", 20, "how many events to fetch")
+	return cmd
 }

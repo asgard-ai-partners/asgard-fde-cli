@@ -74,13 +74,14 @@ see because to Helm these are opaque CRs:
 - `Agent.managed.toolsetNames[]` → a real `Toolset`
 - `Agent.managed.skillSetNames[]` → a real `SkillSet`
 - `Agent.managed.semanticLayers[].name` → a real `SemanticLayer`
-- `SemanticLayer.dataConnectorName` → a real `DataConnector`
-- `SkillSet`/`Syncer`.`sourceSetName` → a real `SourceSet`
+- `SemanticLayer.dataConnectorName` → a real `DataConnector`; `SemanticLayer.toolsetNames[]` → a real `Toolset`
+- `SkillSet`/`Syncer`.`sourceSetName` → a real `SourceSet`; `Syncer.database.dataConnectorName` → a real `DataConnector`
 - `Loader.knowledgeBaseName` → a real `KnowledgeBase`; `Loader.database.dataConnectorName` → a real `DataConnector`
 - **every `(workflow, entry)` entrypoint** — `Toolset.tools[]`, `Workflow.exits[].handlingWorkflow`,
   `BotProvider.entrypoint`. A wrong **entry** name is as fatal as a wrong workflow name and apply
   catches neither, so both halves are resolved.
-- `SandboxBlueprint.skillSetNames[]` → a real `SkillSet`; `SandboxBlueprint.pluginNames[]` → a real `Plugin`
+- `SandboxBlueprint.skillSetNames[]` → a `SkillSet`, `.toolsetNames[]` → a `Toolset`,
+  `.pluginNames[]` → a `Plugin`, `.sourceSetMounts[].sourceSetName` → a `SourceSet`
 - **the Flow Agent chain** — a processor's `sandboxBlueprint` config → a real `SandboxBlueprint`,
   and `SandboxBlueprint.spec.agents[].baseAgentName` → a real `Agent` (parsed out of the JSON
   string the CRD stores it in). This is how a public widget reaches its subagent; a typo here
@@ -191,17 +192,39 @@ Steps 1 to 3 passing is not the gate passing: they check what a dry run passes a
 fails, which is the half a client can check. On failure, name the release and the step, and quote
 the actual error output rather than paraphrasing it — a plan report names the rule that fired.
 
-**Checked:** 2026-09-04 against asgard-kube `15ded0f` and against the gate that
-runs these checks. Every field path named resolves in the CRDs, and the
-reference list was one short: the gate also resolves
-`SandboxBlueprint.pluginNames[]` to a `Plugin`, which this page did not mention
-and now does. The `≥2 sampleQuestions` and byte-identical prompt rules are the
-**gate's**, not the platform's - the CRD sets no minimum and no equality
-constraint - and a reader needs that difference to know whether a failure is
-fixed in the chart or argued with us.
+**Checked:** 2026-09-04, twice, and the second pass found more than the first.
 
-**Unchecked:** the live-cluster half. The server-side dry-run and the CRD
-fidelity check are described from the scripts the scaffold writes and from what
-the CRDs declare about pruning; **nothing here has been run against a cluster
-from this repository**. That is the half that catches a field the apiserver
-silently drops, and it is also the half that cannot be exercised offline.
+Every `asgard-cli` command this page names was run against the built binary:
+`check`, `verify`, `render` and `doctor` resolve; `pipeline runs` and its
+subcommands resolve; **`pipeline deliveries` did not exist** and has been added.
+That one mattered more than the others - this page names it as the only place a
+push that produced no run explains itself, which was true of the platform and
+not of the tool.
+
+Every lint rule code quoted in step 4 resolves in `asgard-iac`'s `pkg/lint`:
+`config/schema`, `config/release-missing`, `config/chart-missing`,
+`vars/required-missing`, `chart/kind-not-allowed`, `chart/hook-not-allowed`,
+`crd/dry-run-rejected`, `crd/unknown-field`.
+
+The reference list was held against the references the gate actually resolves,
+read out of its own source rather than from this page, and **was four short**:
+`SemanticLayer.toolsetNames[]`, `Syncer.database.dataConnectorName`,
+`SandboxBlueprint.toolsetNames[]` and `SandboxBlueprint.sourceSetMounts[]` are
+all resolved and none was mentioned. They are now.
+
+The `≥2 sampleQuestions` and byte-identical prompt rules are the **gate's**, not
+the platform's - the CRD sets no minimum and no equality constraint - and a
+reader needs that difference to know whether a failure is fixed in the chart or
+argued with us.
+
+**Unchecked:** the field paths themselves, against the CRDs. The previous pass
+held them against asgard-kube `15ded0f`; this one did not re-fetch, so what is
+current is that the **gate** resolves them, not that each still exists in the
+contract. The four added above are named the way the gate names them, which is
+the same thing the gate would fail on.
+
+Also unchecked: step 4 end to end from a repository this skill was scaffolded
+into. It has been run - a real push produced a plan of 29 CRs, was approved, and
+applied - but from the fixture repository rather than from a scaffolded one, so
+what is proven is the platform's behaviour rather than this page's instructions
+for reaching it.
