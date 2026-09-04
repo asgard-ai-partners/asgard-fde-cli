@@ -23,9 +23,12 @@ const (
 //
 //	R1   at most one semantic layer per Agent, and no layer bound twice. At
 //	     most, not exactly: zero is legal, and its search space cannot grow.
-//	R1b  but an Agent cannot have no capability at all - a layer or a Toolset,
-//	     at least one - so that deleting a layer by accident does not pass
-//	     quietly.
+//	R1b  but an Agent cannot have no capability at all - a layer, a Toolset or a
+//	     SkillSet, at least one - so that deleting one by accident does not pass
+//	     quietly. **SkillSet was missing from that list and the rule was wrong
+//	     about a running deployment**: every subagent of a flow-agent supervisor
+//	     mounts skills and nothing else, and nine of them were told they had no
+//	     capability at all.
 //	R4   no Agent sets allowedCubes, which keeps the standing decision that a
 //	     bound layer is queryable in full.
 //	R7   a published Agent has at least two sampleQuestions. Published is the
@@ -79,8 +82,16 @@ func AgentSplit(docs []Doc, opts Options) Result {
 				a.Name, len(layers), strings.Join(names, ", "))
 		}
 
-		if len(layers) == 0 && len(strList(managed["toolsetNames"])) == 0 {
-			errf("R1b %s: has neither semanticLayers nor toolsetNames, so this Agent has no source of capability at all", a.Name)
+		// A SkillSet is a capability source too, and leaving it out made this
+		// rule wrong about nine Agents in a deployment that is running: every
+		// subagent of a flow-agent supervisor mounts skills and nothing else,
+		// and the message said it had "no source of capability at all" while it
+		// had one. Found by running the gate over the reference deployments
+		// rather than over a chart this tool generated.
+		if len(layers) == 0 &&
+			len(strList(managed["toolsetNames"])) == 0 &&
+			len(strList(managed["skillSetNames"])) == 0 {
+			errf("R1b %s: has no semanticLayers, no toolsetNames and no skillSetNames, so this Agent has no source of capability at all", a.Name)
 		}
 
 		for _, item := range layers {

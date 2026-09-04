@@ -29,6 +29,33 @@ being audited is what somebody actually read.
 Hidden from `--help`, because its reader edits this material and the help output
 belongs to whoever is onboarding a customer.
 
+## Running the gate over the deployments its rules came from
+
+    hack/verify-references.sh [parent-dir]        default: ..
+    ASGARD_CLI=.out/asgard-cli hack/verify-references.sh ~/projects/asgard
+
+**The gate had never been run over the charts its rules were written from.** It
+was run over charts this tool generates, which pass by construction, and over a
+scratch repository. The first time somebody rendered the six reference
+deployments through it, `gate` R1b was wrong about nine Agents in a running
+deployment: it counted a semantic layer and a Toolset as capability sources and
+not a `SkillSet`, so every subagent of a flow-agent supervisor was told it had
+"no source of capability at all" while it had one.
+
+**A count is not a pass.** Read what each finding says, because three kinds turn
+up and they need opposite responses:
+
+    a rule that is wrong             fix the rule - R1b was this
+    a chart that is wrong            tell whoever owns it
+    a rule right for one shape,      the expensive kind. See R1b, and the
+    applied to another               `exits` mistake in `asgard-cli wiki log`
+
+And `--rendered` loses the owning repository's configuration - `olapOnlyLayers`
+and any sampleQuestions exemption are in its `.asgard-config.json` and its
+scripts - so R7, R10 and R11 can report something that repo has already
+answered. **That is a reason to read a finding, not to discount one.** It was
+used to discount R1b once, and R1b was a bug.
+
 ## Checking a change against the CRDs
 
 Pull asgard-kube first. Validating against a clone from three weeks ago proves

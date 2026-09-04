@@ -557,3 +557,21 @@ time, and editing removes exactly that.
   that does not clear itself - standing until somebody records that the questions
   were worked - and that needs `check` to write state, which it does not do. The
   limitation is in the code beside the check rather than left to be rediscovered
+- `lint` 2026-09-04 the gate ran over the deployments its rules came from, for
+  the first time. It had only ever run over charts this tool generates - which
+  pass by construction - and over a scratch repository. **R1b was wrong about
+  nine Agents in a running deployment**: it counted a semantic layer and a
+  Toolset as capability sources and not a `SkillSet`, so every subagent of a
+  flow-agent supervisor was told it had "no source of capability at all" while
+  it had one. Fixed
+- `lint` 2026-09-04 what the same run leaves standing, unadjudicated: 12
+  `SourceSet` and 10 `Syncer` findings about the `managed-by=skill-set` label and
+  a SourceSet shared by two SkillSets, 3 missing display annotations, 7 × R7
+  (a published Agent with one sampleQuestion, where the label does say published),
+  2 × R12 and one each on a Toolset and a BotProvider. **These are not noise and
+  they are not mine to close** - each is either a chart to tell somebody about or
+  a rule right for one shape applied to another, and telling those apart needs
+  whoever built the chart. `hack/verify-references.sh` is how to see them again
+- `fix` 2026-09-04 that script's first glob was `*-asgard-kube`, which silently
+  missed `asgard-freyr-kube` - one of ours is named `asgard-<name>-kube` - and
+  with it 15 findings. A glob makes that kind of miss without saying anything
