@@ -196,7 +196,12 @@ docs/spec/__SPEC_SLUG__/README.md.tmpl
 
 A `.tmpl` suffix means the file is rendered; anything else is copied verbatim.
 `.agents/skills/` under it holds the six design-time skills the coding agent in
-the customer repo loads.
+the customer repo loads. **Only five, and the line is authority.** A skill that
+states what a particular Asgard server accepts or calls things - the CRD shapes,
+the processor catalogue, `asgard-cr-verification` - is served from the platform
+and written by `asgard-cli skill update`, because a customer's server can be
+several versions from whichever release they installed this from. See the embed
+comment in `scaffold/scaffold.go`.
 
 Those six are **searchable**, and `scaffold/skills.go` is what makes them so.
 They are material like the wiki is material, and leaving them out of `find` meant

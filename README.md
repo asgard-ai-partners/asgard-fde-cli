@@ -144,7 +144,7 @@ It writes the part of a customer repo that is the same for every engagement:
 | `docs/` | the four-layer model (meeting-notes / decisions / living spec) and the SDD rules |
 | `requirements/` | the task and request indexes |
 | `scripts/db/` | the query and introspection tool-chain, with an empty target registry |
-| `.agents/skills/` | the six design-time skills |
+| `.agents/skills/` | the six design-time skills that hold for any Asgard; the ones describing a particular server come from `asgard-cli skill update` |
 | `common/` | the runtime-skill directory |
 | `.asgard-pipeline.yaml` | the deployment declaration, with one release per project to fill in |
 | `projects/<slug>/` | one chart skeleton per project |

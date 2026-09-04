@@ -21,11 +21,16 @@ func newScaffoldCmd() *cobra.Command {
 		Long: `Write the repository skeleton next to ` + config.FileName + `.
 
 This is the part of a customer repo that is the same for every engagement: the
-four-layer docs model, the SDD rules, the four acceptance gate scripts, the three
-design-time skills, the CD workflow, and an AGENTS.md carrying the platform
-contract. What it does not write is the customer's own knowledge - which systems
-exist, how the projects split, what the CRs look like. That is what the
-onboarding produces.
+four-layer docs model, the SDD rules, the six design-time skills that hold for
+any Asgard, and an AGENTS.md carrying the platform contract. What it does not write
+is the customer's own knowledge - which systems exist, how the projects split,
+what the CRs look like. That is what the onboarding produces.
+
+**It also does not write anything that describes a particular Asgard server.**
+The CR shapes, the processor catalogue and the verification skill come from
+` + "`asgard-cli skill update`" + `, which asks the platform. A customer's server can be
+several versions from this binary, and a file saying what a field is called is
+only true of one of them.
 
 Running it again is safe: existing files are left alone and reported as skipped,
 so it can be re-run after adding a project or when a file was deleted by hand.
@@ -125,6 +130,13 @@ so it can be re-run after adding a project or when a file was deleted by hand.
 Verify the skeleton before writing any CRs:
 
   asgard-cli check
+
+Then fetch the material that describes the server this repository deploys to -
+the CR shapes, the processor catalogue and the verification skill. It is not in
+this binary, because what a field is called is a fact about a server and not
+about a CLI release:
+
+  asgard-cli skill update
 
 Then "asgard-cli project" for what each chart declares and still lacks, and
 AGENTS.md for how to change the repo.

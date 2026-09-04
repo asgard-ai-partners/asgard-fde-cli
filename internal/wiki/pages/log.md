@@ -608,3 +608,13 @@ time, and editing removes exactly that.
   a Toolset - which is the exact defect `add` exists to prevent, "applies cleanly
   and appears with no name in the UI" - and one Toolset. Every one of those is a
   chart's to fix, not a rule's to stop asking
+- `fix` 2026-09-05 `asgard-cr-verification` left this binary. It described
+  `deploy.yaml`, per-environment values files, a python CRD-fidelity script and
+  cloning asgard-kube to find out whether a field exists - **a month after the
+  Pipeline cut-over removed all four** - and nothing was ever going to correct
+  it: `scaffold` does not overwrite a file that exists, and no version number
+  covered it. It is now served from the platform's `/v1/docs/skills` alongside
+  the extracted CR shapes and processor catalogue, and rewritten on every
+  `asgard-cli skill update`. The line for what stays here is **authority, not
+  subject**: how to run a local gate is true of any Asgard, what a server
+  accepts is not

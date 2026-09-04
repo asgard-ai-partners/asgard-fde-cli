@@ -4,7 +4,9 @@ Every project has a read path and an entry point. Run the gate before committing
 anything, and **stop at the first red step** - do not push past it.
 
 Load the `asgard-cr-verification` skill under .agents/skills/ for the full
-procedure. The four steps:
+procedure. It comes from the platform - `asgard-cli skill update` writes it -
+so it states what the server this repository deploys to actually checks, rather
+than what some version of it did when this tool was built. The four steps:
 
   1. asgard-cli check
 

@@ -37,7 +37,7 @@ Before writing specs, inspect the repo source of truth:
 - `requirements/requests/_index.md` and `requirements/tasks/_index.md`.
 - `projects/<project>/chart/app/templates/` for existing resource patterns (e.g. `projects/internal/chart/app/templates/`).
 - `.asgard-pipeline.yaml` for the releases of record (trigger + chart + declared keys); the namespace comes from the platform project each release binds.
-- `.agents/skills/` for the design-time skills available to YOU — notably `semantic-layer-modeling` (connect to the real databases, model a SemanticLayer) and `asgard-cr-verification` (the acceptance gate).
+- `.agents/skills/` for the design-time skills available to YOU — notably `semantic-layer-modeling` (connect to the real databases, model a SemanticLayer) and `asgard-cr-verification` (the acceptance gate, fetched from the platform by `asgard-cli skill update`).
 - `common/skills/` for the RUNTIME skills the deployed agent gets via a `SkillSet` CR — a different mechanism; do not confuse the two.
 - `references/` only for background context; do not implement directly from references.
 
