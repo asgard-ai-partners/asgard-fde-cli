@@ -512,3 +512,12 @@ time, and editing removes exactly that.
   platform has the shape, and the counterpart page is where the links live - so
   `usecase --sources` says that and names the three commands that get there,
   rather than printing "none" and dead-ending
+- `fix` 2026-09-04 two deck decisions moved to where the reader actually passes.
+  `guide requirements` now says, before it points at the skill: **which of the
+  three decks is it**, and **does it take images at all**. Both were in the skill
+  and both were read too late. The engagement that measured it walked
+  requirements first and the skill only after being corrected - so a rule inside
+  the skill cannot be read before the work starts. It cost that engagement four
+  downloaded screenshots, two cropped, none used: filling every page with the
+  customer's own words leaves no room, and one kind of evidence per page then
+  excludes the picture

@@ -57,6 +57,25 @@ the `proposal-deck` skill in `.agents/skills/` owns it, including the one to
 build while the questions are still open. Read it before writing slides, not
 after.
 
+**Decide two things here, before opening that skill**, because both cost work
+that gets thrown away otherwise:
+
+  - **Which of the three decks is it** - discovery, proposal, or handover. They
+    are built from different things and several of the proposal's rules invert
+    for a discovery deck. An engagement built a discovery deck under the
+    proposal's rules and had to take the titles back out: at interview stage
+    nobody has earned a conclusion, so the titles are the customer's own
+    section names rather than assertions.
+  - **Does it take images at all.** An interview deck usually does not. One
+    engagement downloaded four screenshots, cropped two and used none - filling
+    every page with the customer's own words leaves no room, and one kind of
+    evidence per page then excludes the picture. That is knowable before any of
+    it is done, and this is where to know it.
+
+Both of those are recorded here rather than only in the skill because the skill
+is read **after** the first correction, not before the work. Whoever measured
+that walked this page, then the skill, in that order.
+
 <<with .Requests>>Open requests:
 
 <<range .>>  <<.ID>>  <<printf "%-8s" (printf "%s" .Status)>>  <<.Title>>
