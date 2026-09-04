@@ -74,13 +74,20 @@ func Xref(docs []Doc, opts Options) Result {
 	x.checkOneMainPerSet()
 
 	sort.Strings(x.problems)
-	return Result{Problems: x.problems, Summary: ix.summary()}
+	sort.Strings(x.warnings)
+	return Result{Problems: x.problems, Warnings: x.warnings, Summary: ix.summary()}
 }
 
 type xref struct {
 	*index
 	opts     Options
 	problems []string
+
+	// warnings are for a shape the platform accepts and that costs something
+	// else - UI presentation, a name the console cannot show. A problem is what
+	// the apiserver refuses or what breaks when used, and the two were the same
+	// list until four running deployments turned up in it.
+	warnings []string
 
 	// entriesByWorkflow is what makes a two-part reference checkable: an
 	// entrypoint is (workflow, entry), and a wrong entry is as fatal as a wrong
@@ -98,6 +105,12 @@ type xref struct {
 	// leaves the UI unable to show either one's git configuration.
 	skillSetsBySourceSet map[string][]string
 
+	// searchPathsBySkillSet tells the shared-monorepo shape from an accident.
+	// Every SkillSet sharing a store slices it with its own searchPaths in the
+	// four deployments that do this; one sharing it and slicing nothing is the
+	// mistake the rule was written for.
+	searchPathsBySkillSet map[string][]string
+
 	// bundledSkillSets are the SkillSets a Plugin carries. They are exempt from
 	// the one-SourceSet-each rule: a chart of bundles shares one skill store on
 	// purpose, because the skills live in one repository and a store per bundle
@@ -112,12 +125,17 @@ func (x *xref) errf(format string, args ...any) {
 	x.problems = append(x.problems, fmt.Sprintf(format, args...))
 }
 
+func (x *xref) warnf(format string, args ...any) {
+	x.warnings = append(x.warnings, fmt.Sprintf(format, args...))
+}
+
 func (x *xref) buildLookups() {
 	x.entriesByWorkflow = map[string]map[string]bool{}
 	x.labelsByWorkflow = map[string]map[string]string{}
 	x.labelsBySourceSet = map[string]map[string]string{}
 	x.syncerDestsBySourceSet = map[string]map[string]bool{}
 	x.skillSetsBySourceSet = map[string][]string{}
+	x.searchPathsBySkillSet = map[string][]string{}
 	x.bundledSkillSets = map[string]bool{}
 
 	for _, d := range x.docs {
@@ -149,6 +167,7 @@ func (x *xref) buildLookups() {
 			if ref := digStr(d.Spec, "sourceSetName"); ref != "" {
 				x.skillSetsBySourceSet[ref] = append(x.skillSetsBySourceSet[ref], d.Name)
 			}
+			x.searchPathsBySkillSet[d.Name] = strList(d.Spec["searchPaths"])
 
 		case "Plugin":
 			for _, e := range digList(d.Spec, "skillSets") {
@@ -367,19 +386,59 @@ func (x *xref) checkSkillSet(d Doc) {
 			owners = append(owners, o)
 		}
 	}
+	// **A shared store sliced by searchPaths is a shape four deployments use,
+	// and the platform accepts it.** The exemption above is keyed on a Plugin
+	// bundling the SkillSet, which is where the shape was first seen - and none
+	// of the four has a Plugin at all. What the shape actually costs is UI
+	// presentation, not acceptance: the apiserver takes it, nothing breaks at
+	// runtime, and the UI cannot find a given skill set's git configuration.
+	//
+	// So it warns rather than fails. `errf` here means the platform refuses it
+	// or it breaks when used; this is neither. The 1:1:1 case with a missing
+	// label still fails, because there the label is simply absent rather than
+	// deliberately so - `ss-sk-base` and `ss-sk-internal` both carry it.
+	shared := len(owners) > 1
+	if shared {
+		for _, o := range owners {
+			if len(x.searchPathsBySkillSet[o]) == 0 {
+				shared = false // one sharer slices nothing: an accident, not the shape
+				break
+			}
+		}
+	}
+
 	if len(owners) > 1 {
-		sorted := append([]string(nil), owners...)
-		sort.Strings(sorted)
+		sortedOwners := append([]string(nil), owners...)
+		sort.Strings(sortedOwners)
 		// Reported by the first owner only, or the same problem is reported
 		// once per owner.
-		if d.Name == sorted[0] {
-			x.errf("SourceSet/%s is used by %d SkillSets (%s); each SkillSet needs its own, or the Platform UI cannot find its git configuration",
-				ref, len(owners), strings.Join(sorted, ", "))
+		if d.Name == sortedOwners[0] {
+			if shared {
+				x.warnf("SourceSet/%s is sliced by %d SkillSets (%s), each with its own searchPaths. That is the shared-skills-monorepo shape and the platform accepts it - "+
+					"what it costs is the UI, which cannot find a given skill set's git configuration, and `asgard-ai.com/skill-set-name` with it. "+
+					"Four reference deployments run this way and none has a Plugin, which is the only exemption `asgard-cli usecase skill-set` records. "+
+					"If that cost was not decided on purpose, each SkillSet wants its own SourceSet",
+					ref, len(owners), strings.Join(sortedOwners, ", "))
+			} else {
+				x.errf("SourceSet/%s is used by %d SkillSets (%s) and at least one declares no searchPaths, so it is not the monorepo shape; each SkillSet needs its own, or the Platform UI cannot find its git configuration",
+					ref, len(owners), strings.Join(sortedOwners, ", "))
+			}
 		}
 	}
 	if x.labelsBySourceSet[ref][managedByKey] != managedBySkillSet {
-		x.errf("SourceSet/%s is SkillSet/%s's own source, so it needs label %s=%s (the front end uses it to recognise the pairing)",
-			ref, d.Name, managedByKey, managedBySkillSet)
+		if shared {
+			// Said once, by the first owner: the label is on the SourceSet, so
+			// every sharer would otherwise report the same missing label.
+			sortedOwners := append([]string(nil), owners...)
+			sort.Strings(sortedOwners)
+			if d.Name == sortedOwners[0] {
+				x.warnf("SourceSet/%s carries no %s=%s, which follows from being shared: the platform is not meant to present a sliced store as one skill set's own. Deliberate in this shape, and worth knowing rather than fixing",
+					ref, managedByKey, managedBySkillSet)
+			}
+		} else {
+			x.errf("SourceSet/%s is SkillSet/%s's own source, so it needs label %s=%s (the front end uses it to recognise the pairing)",
+				ref, d.Name, managedByKey, managedBySkillSet)
+		}
 	}
 }
 
@@ -390,16 +449,37 @@ func (x *xref) checkSyncer(d Doc) {
 	// destinationPath and statePath are relative paths inside the volume, and
 	// these are the CRD's own CEL rules. Catching them here reads better than
 	// having the apiserver reject the upgrade.
+	// The pre-rename spelling is `destinationMemberKey`, and the CRD still
+	// accepts it - "kept only so pre-rename Syncer objects stay readable during
+	// the transition". Three Syncers in the reference deployments are on it,
+	// and calling that "missing destinationPath" was wrong twice over: the
+	// field is not missing, and the object is not refused. It is a migration to
+	// name, and the same path rules apply to whichever spelling is in use.
 	dest := digStr(d.Spec, "destinationPath")
 	if dest == "" {
-		x.errf("Syncer/%s: missing destinationPath", d.Name)
+		if old := digStr(d.Spec, "destinationMemberKey"); old != "" {
+			dest = old
+			x.warnf("Syncer/%s sets destinationMemberKey=%q, the pre-rename spelling. The CRD still accepts it - kept so pre-rename objects stay readable - and new objects should set destinationPath. Both are immutable once set, so this is a new Syncer rather than an edit",
+				d.Name, old)
+		}
+	}
+	if dest == "" {
+		x.errf("Syncer/%s: sets neither destinationPath nor the deprecated destinationMemberKey, and the CRD requires one of them", d.Name)
 	} else if why := badRelPath(dest); why != "" {
 		x.errf("Syncer/%s.destinationPath=%q: %s", d.Name, dest, why)
 	} else if !strings.HasSuffix(dest, "/") {
 		x.errf("Syncer/%s.destinationPath=%q: the destination is a directory and must end in /", d.Name, dest)
 	}
 
-	if state := digStr(d.Spec, "statePath"); state != "" {
+	state := digStr(d.Spec, "statePath")
+	if state == "" {
+		if old := digStr(d.Spec, "stateMemberKey"); old != "" {
+			state = old
+			x.warnf("Syncer/%s sets stateMemberKey=%q, the pre-rename spelling of statePath, which the CRD still accepts. New objects should set statePath",
+				d.Name, old)
+		}
+	}
+	if state != "" {
 		if why := badRelPath(state); why != "" {
 			x.errf("Syncer/%s.statePath=%q: %s", d.Name, state, why)
 		} else if strings.HasSuffix(state, "/") {
@@ -415,6 +495,25 @@ func (x *xref) checkSyncer(d Doc) {
 	// without it, it appears in the general Syncer list although it belongs to
 	// that SkillSet.
 	if owners, ok := x.skillSetsBySourceSet[sourceSet]; ok {
+		// A store sliced by several SkillSets is not any one of their own, so
+		// its Syncers do not carry that SkillSet's label either - the same
+		// shape as on the SourceSet itself, and the same four deployments.
+		shared := len(owners) > 1
+		for _, o := range owners {
+			if len(x.searchPathsBySkillSet[o]) == 0 {
+				shared = false
+				break
+			}
+		}
+		if shared {
+			if d.Labels[managedByKey] != managedBySkillSet {
+				sortedOwners := append([]string(nil), owners...)
+				sort.Strings(sortedOwners)
+				x.warnf("Syncer/%s feeds SourceSet/%s, which %d SkillSets slice (%s), so it carries no %s=%s and shows up in the general Syncer list. That follows from the shared-monorepo shape rather than being an omission - `asgard-cli usecase skill-set` has what the shape costs",
+					d.Name, sourceSet, len(owners), strings.Join(sortedOwners, ", "), managedByKey, managedBySkillSet)
+			}
+			return
+		}
 		if d.Labels[managedByKey] != managedBySkillSet {
 			sortedOwners := append([]string(nil), owners...)
 			sort.Strings(sortedOwners)

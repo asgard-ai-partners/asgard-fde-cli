@@ -590,3 +590,21 @@ time, and editing removes exactly that.
   them. So the label is meaningful on a subagent rather than boilerplate, and
   seven Agents in a running chart are published with one question. Either the
   questions or the label is wrong there, and both are that chart's to decide
+- `fix` 2026-09-04 three more rules were right for one shape and firing on
+  another, all found by running the gate over the reference deployments:
+  **the SkillSet pairing rules** demanded `managed-by=skill-set` and one
+  SourceSet per SkillSet, exempting only a SkillSet a Plugin bundles - and none
+  of the four deployments using the shared shape has a Plugin at all. What the
+  shape costs is UI presentation, not acceptance, so it warns; the 1:1:1 case
+  with a genuinely absent label still fails, verified by removing one on purpose.
+  **The Syncer path rule** reported "missing destinationPath" on three Syncers
+  that set `destinationMemberKey`, the pre-rename spelling the CRD still accepts
+  - the field was not missing and the object was not refused, so it is a
+  migration to name. Same for `stateMemberKey`
+- `lint` 2026-09-04 the run over six deployments went 36 findings to 12, and the
+  12 are read rather than counted: **7 x R7** (a published subagent with one
+  sample question, and the label is meaningful because one deployment omits it),
+  **4 missing display annotations** on a BotProvider, three SandboxBlueprints and
+  a Toolset - which is the exact defect `add` exists to prevent, "applies cleanly
+  and appears with no name in the UI" - and one Toolset. Every one of those is a
+  chart's to fix, not a rule's to stop asking
