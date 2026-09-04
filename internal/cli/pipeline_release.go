@@ -294,3 +294,119 @@ func printRelease(out interface{ Write([]byte) (int, error) }, r *platform.Relea
 		fmt.Fprintf(out, "\nThe platform holds values the cluster does not have yet. A run is what sends them.\n")
 	}
 }
+
+func newPipelineManifestCmd() *cobra.Command {
+	var (
+		f                    pipelineFlags
+		release              string
+		includeManagedFields bool
+		summary              bool
+	)
+
+	cmd := &cobra.Command{
+		Use:   "manifest",
+		Short: "Read back what a release has on the cluster right now",
+		Long: `Read back the objects a release's last helm revision deployed, as the cluster
+holds them right now.
+
+    asgard-cli pipeline manifest --release internal-dev --summary
+    asgard-cli pipeline manifest --release internal-dev --format json
+
+THIS IS LIVE STATE, NOT A COMPARISON. The platform has no diff endpoint on
+purpose: comparing the cluster with the IaC source needs the source, and the
+source is here. So this hands back the objects and the comparing is yours -
+render the chart locally with helm and compare, and the three-way answer is
+worth more than the two-way one:
+
+    live vs the render of the deployed commit   -> somebody changed the cluster
+    the render of HEAD vs the deployed commit   -> the repository is ahead
+
+The object list comes from the helm release record's stored manifest, not a
+label selector, because helm records ownership in an annotation that cannot be
+selected on - and because a selector silently omits an object somebody deleted,
+while the manifest reports it with found=false. Being deleted out of band is as
+important as being edited.
+
+managedFields is stripped unless --include-managed-fields. It is large and
+mostly noise, and it is also the only record of which field manager owns which
+field, which is what separates "the pipeline set this" from "somebody changed it
+in the UI".
+
+A release that has never deployed has no manifest, and says so.`,
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			if release == "" {
+				return fmt.Errorf("--release is required")
+			}
+			pc, err := f.context(cmd)
+			if err != nil {
+				return err
+			}
+			p, err := resolvePipeline(cmd.Context(), pc, f.pipeline)
+			if err != nil {
+				return err
+			}
+			rel, err := resolveRelease(cmd.Context(), pc, p, release)
+			if err != nil {
+				return err
+			}
+			live, err := pc.Client.GetLiveManifest(cmd.Context(), rel.ReleaseId, includeManagedFields)
+			if err != nil {
+				if platform.NotFound(err) {
+					return fmt.Errorf("release %s has never deployed, so it has nothing on the cluster yet", rel.Name)
+				}
+				return err
+			}
+
+			out := cmd.OutOrStdout()
+			if f.format == formatJSON {
+				return writeJSON(out, live)
+			}
+
+			fmt.Fprintf(out, "helm revision %d, %s", live.HelmRevision, live.HelmStatus)
+			if live.DeployedAt != nil {
+				fmt.Fprintf(out, ", deployed %s", live.DeployedAt.Local().Format("2006-01-02 15:04"))
+			}
+			fmt.Fprintf(out, "\n\n")
+
+			var missing, failed int
+			for _, o := range live.Objects {
+				switch {
+				case o.Error != "":
+					failed++
+				case !o.Found:
+					missing++
+				}
+			}
+			for _, o := range live.Objects {
+				state := "ok"
+				switch {
+				case o.Error != "":
+					state = "READ FAILED: " + o.Error
+				case !o.Found:
+					state = "DELETED OUT OF BAND"
+				}
+				fmt.Fprintf(out, "%-24s %-40s %s\n", o.Kind, o.Name, state)
+			}
+			fmt.Fprintf(out, "\n%d object(s)", len(live.Objects))
+			if missing > 0 {
+				fmt.Fprintf(out, ", %d deleted out of band", missing)
+			}
+			if failed > 0 {
+				fmt.Fprintf(out, ", %d unreadable", failed)
+			}
+			fmt.Fprintln(out)
+			if summary {
+				return nil
+			}
+			fmt.Fprintf(out, "\nFull objects are in --format json; each carries the live YAML verbatim.\n")
+			return nil
+		},
+	}
+	f.register(cmd, true)
+	cmd.Flags().StringVar(&release, "release", "", "release whose deployed objects to read back (required)")
+	cmd.Flags().BoolVar(&includeManagedFields, "include-managed-fields", false,
+		"keep metadata.managedFields, which says which field manager owns which field")
+	cmd.Flags().BoolVar(&summary, "summary", false, "list the objects without the closing note")
+	return cmd
+}

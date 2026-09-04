@@ -248,14 +248,14 @@ Saving changes only the platform's copy. A run is what sends it to the cluster.`
 			if cmd.Flags().Changed("description") {
 				write.Description = &description
 			}
-			list, err := pc.Client.PutVariables(cmd.Context(), rel.ReleaseId, []platform.VariableWrite{write})
+			rows, err := pc.Client.PutVariables(cmd.Context(), rel.ReleaseId, []platform.VariableWrite{write})
 			if err != nil {
 				return err
 			}
 
 			out := cmd.OutOrStdout()
 			if v.format == formatJSON {
-				return writeJSON(out, list)
+				return writeJSON(out, rows)
 			}
 			// Never echo what was set: for a secret it would defeat the reason
 			// it came from a file, and for the others the list command shows it.
@@ -379,15 +379,15 @@ marked Orphan.`,
 			if err != nil {
 				return err
 			}
-			list, err := pc.Client.AddDeclaredKeys(cmd.Context(), rel.ReleaseId)
+			rows, err := pc.Client.AddDeclaredKeys(cmd.Context(), rel.ReleaseId)
 			if err != nil {
 				return err
 			}
 			out := cmd.OutOrStdout()
 			if v.format == formatJSON {
-				return writeJSON(out, list)
+				return writeJSON(out, rows)
 			}
-			added := len(list.Variables) - len(before.Variables)
+			added := len(rows) - len(before.Variables)
 			if added <= 0 {
 				fmt.Fprintf(out, "Every declared key already has a row.\n")
 				return nil

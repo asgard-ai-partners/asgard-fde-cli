@@ -434,15 +434,17 @@ type VariableWrite struct {
 //
 // It writes to the platform only. Nothing reaches the cluster until a run
 // applies it, which is why the release then reports pending_deploy.
-func (c *Client) PutVariables(ctx context.Context, releaseID string, writes []VariableWrite) (*VariableList, error) {
-	var out VariableList
+// It answers with the release's rows after the write, not with a VariableList:
+// the declared-key half is a read concern and is not recomputed here.
+func (c *Client) PutVariables(ctx context.Context, releaseID string, writes []VariableWrite) ([]*Variable, error) {
+	var out []*Variable
 	err := c.do(ctx, request{
 		method: http.MethodPut,
 		path:   "/v1/iac/releases/" + url.PathEscape(releaseID) + "/variables",
 		body:   map[string]any{"variables": writes},
 		out:    &out,
 	})
-	return &out, err
+	return out, err
 }
 
 // DeleteVariable removes one stored value.
@@ -456,14 +458,14 @@ func (c *Client) DeleteVariable(ctx context.Context, releaseID, kind, key string
 
 // AddDeclaredKeys creates an empty row for every declared key that has none,
 // which is the UI's "Add declared keys".
-func (c *Client) AddDeclaredKeys(ctx context.Context, releaseID string) (*VariableList, error) {
-	var out VariableList
+func (c *Client) AddDeclaredKeys(ctx context.Context, releaseID string) ([]*Variable, error) {
+	var out []*Variable
 	err := c.do(ctx, request{
 		method: http.MethodPost,
 		path:   "/v1/iac/releases/" + url.PathEscape(releaseID) + "/variables/add-declared",
 		out:    &out,
 	})
-	return &out, err
+	return out, err
 }
 
 // ── runs ─────────────────────────────────────────────────────────────────
