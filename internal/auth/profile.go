@@ -124,12 +124,8 @@ type Settings struct {
 	// built-in replaces it, which is how a platform that has moved can be
 	// pointed at without a new release.
 	Profiles map[string]Profile `json:"profiles,omitempty"`
-	// Workspaces records which workspace a repository's pipeline commands act
-	// in: profile, then the repository's "owner/name". See workspace.go for
-	// why it is held here rather than in the repository or on the platform.
-	Workspaces map[string]RepoWorkspaces `json:"workspaces,omitempty"`
-	// DefaultWorkspaces is the per-profile fallback for commands run outside a
-	// repository.
+	// DefaultWorkspaces is the per-profile workspace for commands run outside a
+	// checkout. A checkout's own is in its `.asgard-cli.yaml`.
 	DefaultWorkspaces map[string]string `json:"defaultWorkspaces,omitempty"`
 }
 
