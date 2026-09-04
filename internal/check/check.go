@@ -492,7 +492,7 @@ func (c *checker) checkReferenceProvenance() error {
 //
 // The split is supposed to follow the audience: a project exists because
 // somebody on the other end needs something, and that somebody is written down
-// as a request. `next` states the rule and stage 2 explains it at length, and
+// as a request. `next` states the rule and `--stage projects` explains it at length, and
 // `project add` has always accepted a split with nothing on file - so the rule
 // was advice, and the repository could not tell a considered split from a
 // project somebody made because the chart was getting long.
@@ -684,7 +684,7 @@ func (c *checker) checkQuestionsFollowTheDeck() error {
 	sort.Strings(newer)
 	c.warnf("%s was edited after %s - %d file(s), the newest being %s. **Working a deck "+
 		"rewrites the questions**, so if any was reworded, retired or discovered while "+
-		"building it, that belongs back in the row. `asgard-cli next` prints those "+
+		"building it, that belongs back in the row. `asgard-cli question` prints those "+
 		"questions before anything else, and a stale one does not merely lag: it keeps "+
 		"a judgement that has been overturned, argued well",
 		filepath.ToSlash(filepath.Join("docs", "meeting-notes")),

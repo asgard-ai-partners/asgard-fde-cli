@@ -12,6 +12,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/size"
 )
 
 // FileName is the fixed name of the config file in the project root.
@@ -87,6 +89,19 @@ type Project struct {
 	Slug         string `json:"slug"`
 	Name         string `json:"name"`
 	Environments []Env  `json:"environments"`
+
+	// Shape is the deployment shape this chart is being built to, named after
+	// one of `asgard-cli size`. It decides which CR kinds finish the chart, and
+	// it is recorded rather than derived because the files cannot say it: a
+	// chart with a SemanticLayer and no consumer is either a Mimir deliverable
+	// that is finished or an agent nobody has written yet, and those look
+	// identical on disk.
+	//
+	// Empty means undeclared, which is not an error - most projects are the
+	// common shape and every repository written before this field existed has
+	// none. `internal/stage` says what it assumes when it is empty, and says it
+	// out loud rather than silently.
+	Shape string `json:"shape,omitempty"`
 }
 
 // Config is the full contents of .asgard-config.json.
@@ -162,6 +177,16 @@ func (c *Config) Validate() error {
 			errs = append(errs, fmt.Errorf("%s.name must not be empty", where))
 		}
 		errs = append(errs, validateEnvironments(where, p.Environments)...)
+
+		// A shape decides when the chart is finished, so a typo in one is not
+		// cosmetic: it would fall back to the default ladder and the project
+		// would be told to build a CR its shape does not have.
+		if p.Shape != "" {
+			if _, ok := size.Find(p.Shape); !ok {
+				errs = append(errs, fmt.Errorf("%s.shape %q is not a shape; one of %s",
+					where, p.Shape, strings.Join(size.Names(), ", ")))
+			}
+		}
 
 		// Namespaces are derived, so an over-long one is only visible here. The
 		// alternative is finding out during helm upgrade in CD.

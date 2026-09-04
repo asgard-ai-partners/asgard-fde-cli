@@ -88,8 +88,23 @@ var Shapes = []Shape{
 	},
 }
 
+// HasEntryPoint reports whether a chart of this shape is reached by something
+// the chart itself declares.
+//
+// It is read off Base rather than stored, because Base was counted off a
+// deployment and a second field would be a second place to be wrong. Three of
+// the four shapes carry a BotProvider; mimir-dashboard carries nothing at all,
+// because the customer reaches it through the product.
+//
+// `internal/stage` uses this to decide whether a project is still missing an
+// entry point or has already finished. Before it did, the ladder asked every
+// project for an Agent or a BotProvider, so a mimir-dashboard project could
+// never be complete - and the guidance told the reader to build the CR that
+// `guide read-path` spends a section explaining they must not build.
+func (s Shape) HasEntryPoint() bool { return s.Base["BotProvider"] > 0 }
+
 // Authenticated reports whether this shape's callers can authenticate, which is
-// what decides the read surface. `asgard-cli next --stage requirements` asks it
+// what decides the read surface. `asgard-cli guide requirements` asks it
 // as question 2 and calls it the decision the whole interview exists to reach.
 func (s Shape) Authenticated() bool {
 	return !strings.HasPrefix(s.Audience, "public")
