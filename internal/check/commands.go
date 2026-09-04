@@ -15,6 +15,19 @@ import (
 // set it must not report every command in the repository as unknown.
 var knownCommands map[string]bool
 
+// replaced maps a command this tool no longer has to what to type instead, set
+// by the command tree alongside SetKnownCommands.
+var replaced map[string]string
+
+// SetReplacements records what a removed command became.
+//
+// **This exists so the tool answers the question instead of its maintainer.**
+// The first repository this check ran against had twelve references to a
+// removed command, and the agent that found them had to ask what to replace
+// them with - which meant the mapping lived in a conversation rather than in
+// the binary, and the next engagement would have had to ask again.
+func SetReplacements(m map[string]string) { replaced = m }
+
 // SetKnownCommands records the commands this binary has, including aliases.
 //
 // It is a package variable for the same reason `stage.SetOverrideDir` is: the
@@ -130,11 +143,14 @@ func (c *checker) checkCommands() error {
 	for _, n := range names {
 		where := byName[n]
 		sort.Strings(where)
+		instead := "`asgard-cli --help` lists what this build answers to"
+		if r, ok := replaced[n]; ok {
+			instead = r
+		}
 		c.warnf("this repository's documents name `asgard-cli %s` %d time(s) and this build has no such command - %s. "+
-			"It is usually a rename: `scaffold` never overwrites a file it has already written, so a command renamed in the tool "+
-			"leaves every repository already scaffolded pointing at the old name, and nothing else notices. "+
-			"`asgard-cli --help` lists what this build answers to",
-			n, len(where), strings.Join(where, ", "))
+			"%s. `scaffold` never overwrites a file it has already written, which is right - you edit them - so a command "+
+			"renamed in the tool leaves this repository pointing at the old name and nothing else notices",
+			n, len(where), strings.Join(where, ", "), instead)
 	}
 	return nil
 }

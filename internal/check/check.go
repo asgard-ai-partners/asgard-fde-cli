@@ -642,9 +642,32 @@ func (c *checker) checkQuestionNumbersUnique() error {
 // glance.
 func (c *checker) checkQuestionsFollowTheDeck() error {
 	questions := filepath.Join(c.root, work.QuestionFile)
-	qi, err := os.Stat(questions)
-	if err != nil {
+	if _, err := os.Stat(questions); err != nil {
 		return nil
+	}
+
+	// The newest date the questions themselves record - a row's raised date, or
+	// the date an answer was written next to it.
+	//
+	// **Not the file's modification time.** That was the first version, and any
+	// edit to the file silenced this: the one that did was a command rename in
+	// the prose, made for an unrelated reason, and a meeting's answers were
+	// never written back while the gate said ok. A date inside a row moves only
+	// when somebody works the questions.
+	body, err := os.ReadFile(questions)
+	if err != nil {
+		return err
+	}
+	worked := ""
+	for _, line := range strings.Split(string(body), "\n") {
+		if !strings.HasPrefix(strings.TrimSpace(line), "|") {
+			continue
+		}
+		for _, d := range dateIn.FindAllString(line, -1) {
+			if d > worked {
+				worked = d
+			}
+		}
 	}
 
 	dir := filepath.Join(c.root, "docs", "meeting-notes")
@@ -667,12 +690,18 @@ func (c *checker) checkQuestionsFollowTheDeck() error {
 		if d.Name() == "README.md" || strings.HasPrefix(d.Name(), "_") {
 			return nil
 		}
-		info, err := d.Info()
-		if err != nil {
-			return err
+
+		// A meeting's date is in its directory name, which is what the layout
+		// asks for; a file dropped straight into meeting-notes/ falls back to
+		// its own name, and then to when it was written.
+		rel, _ := filepath.Rel(c.root, path)
+		when := ""
+		if m := dateIn.FindString(filepath.ToSlash(rel)); m != "" {
+			when = m
+		} else if info, err := d.Info(); err == nil {
+			when = info.ModTime().Format("2006-01-02")
 		}
-		if info.ModTime().After(qi.ModTime()) {
-			rel, _ := filepath.Rel(c.root, path)
+		if when != "" && when > worked {
 			newer = append(newer, filepath.ToSlash(rel))
 		}
 		return nil
@@ -685,20 +714,35 @@ func (c *checker) checkQuestionsFollowTheDeck() error {
 	}
 
 	sort.Strings(newer)
-	c.warnf("%s was edited after %s - %d file(s), the newest being %s. **Working a deck "+
-		"rewrites the questions**, so if any was reworded, retired or discovered while "+
-		"building it, that belongs back in the row. `asgard-cli question` prints those "+
-		"questions before anything else, and a stale one does not merely lag: it keeps "+
-		"a judgement that has been overturned, argued well",
-		filepath.ToSlash(filepath.Join("docs", "meeting-notes")),
-		filepath.ToSlash(work.QuestionFile), len(newer), newer[len(newer)-1])
+	since := worked
+	if since == "" {
+		since = "no date at all"
+	}
+	c.warnf("%d meeting file(s) are dated after anything in %s, the newest being %s, and that file's most recent "+
+		"row is %s. **Working a deck rewrites the questions**, so if any was answered, reworded, retired or discovered "+
+		"while building it, that belongs back in the rows. `asgard-cli question` prints them, and "+
+		"`asgard-cli question answered <n> \"<answer>\"` moves one with the date. This compares the dates **inside** the "+
+		"rows rather than the file's timestamp: an edit to the prose used to silence it, and the edit that did was a "+
+		"command rename nobody connected to a warning",
+		len(newer), filepath.ToSlash(work.QuestionFile), newer[len(newer)-1], since)
 	return nil
 }
 
-// meetingScheduled reports whether a meeting has been filed under
-// docs/meeting-notes/. A directory or a dated file there means the material has
-// not only been read but turned into an agenda, which is the whole of what the
-// warning above is asking for.
+// **What this still does not catch, measured rather than assumed: a meeting on
+// the same day as the newest row.** Dates tie and nothing orders them, which is
+// exactly the case that produced this fix - a discovery deck dated 2026-09-03
+// with a question raised 2026-09-03 and an answer from that meeting never
+// written back. A timestamp of any granularity has the same hole.
+//
+// The shape that would catch it is a warning that does not clear itself: it
+// stands until somebody records that the questions were worked, rather than
+// until a comparison happens to pass. That needs `check` to write state, and
+// `check` writes nothing today - which is a contract worth more than this
+// check. Recorded rather than papered over.
+//
+// dateIn finds an ISO date, in a table row or in a path.
+var dateIn = regexp.MustCompile(`\d{4}-\d{2}-\d{2}`)
+
 func meetingScheduled(root string) (bool, error) {
 	dir := filepath.Join(root, "docs", "meeting-notes")
 	entries, err := os.ReadDir(dir)

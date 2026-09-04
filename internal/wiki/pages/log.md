@@ -543,3 +543,17 @@ time, and editing removes exactly that.
   that exists for the riskiest activity in an engagement, and the reason it
   needs pointing at is the reason it exists: **talking to a customer changes no
   file**, so nothing derived from what the repository contains can raise it
+- `fix` 2026-09-04 the deck-versus-questions warning compared modification
+  times, so **any** edit to `docs/open-questions.md` silenced it. The edit that
+  did was a command rename in the prose, made for an unrelated reason by an agent
+  with no idea a warning was being switched off, and a meeting's answers were
+  never written back while the gate said ok. It now compares the dates **inside**
+  the rows against the meeting's own date, so prose cannot silence it - verified
+  both ways in a scratch repository
+- `lint` 2026-09-04 **and it still does not catch the case that produced it.** A
+  meeting dated the same day as the newest row ties, and nothing orders a tie: a
+  deck dated 2026-09-03 beside a question raised 2026-09-03 passes. A timestamp
+  of any granularity has that hole. The shape that would catch it is a warning
+  that does not clear itself - standing until somebody records that the questions
+  were worked - and that needs `check` to write state, which it does not do. The
+  limitation is in the code beside the check rather than left to be rediscovered

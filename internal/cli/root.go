@@ -157,8 +157,26 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 	// that goes stale exactly when a command is renamed, which is the failure
 	// this exists to catch.
 	check.SetKnownCommands(commandNames(cmd))
+	check.SetReplacements(replacements)
 
 	return cmd
+}
+
+// replacements says what to type instead of a command this tool removed.
+//
+// **Add a row here when you rename or remove one.** Every repository already
+// scaffolded carries the old name in files `scaffold` will never overwrite, and
+// `asgard-cli check` reports them - but a reader told only that a command is
+// gone has to find out what replaced it, and the first one to hit this had to
+// ask a maintainer. That is the answer living in a conversation instead of in
+// the binary.
+var replacements = map[string]string{
+	"next": "It derived a position from the earliest missing CR kind and there is no replacement for that, deliberately - an onboarding is not linear. " +
+		"Where it meant \"what is still open\", `asgard-cli question`; where it meant \"what does each chart declare\", `asgard-cli project`; " +
+		"`next --stage <name>` is `asgard-cli guide <name>`, and `next --list` is `asgard-cli guide` with no argument",
+	"status": "Where it meant \"what is still open\", `asgard-cli question`, `asgard-cli request` and `asgard-cli task`; " +
+		"where it meant \"what does each chart declare and still lack\", `asgard-cli project`. It also named the guidance the " +
+		"repository's shape made relevant, and nothing replaces that: read one with `asgard-cli guide <name>` or reach it by subject with `asgard-cli find`",
 }
 
 // commandNames returns every name and alias in the tree, one level deep.

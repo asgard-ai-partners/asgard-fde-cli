@@ -236,6 +236,30 @@ func ReadTasks(root string) ([]Task, error) {
 	return out, nil
 }
 
+// QuestionState is the questions themselves, with everything around them
+// dropped: the prose, the instructions, and the command names inside them.
+//
+// **It exists because a timestamp was not it.** The check that warns when a
+// deck is newer than the questions compared modification times, so **any** edit
+// to the file silenced it - and the edit that did was a command rename in the
+// prose, made for an unrelated reason, by an agent that had no idea a warning
+// was being switched off. A meeting's answers were never written back and the
+// gate said ok.
+//
+// Rewording a row still counts as touching the questions, which is the right
+// side to err on: if you edited a question's text you did read it.
+func QuestionState(root string) (string, error) {
+	all, err := AllQuestions(root)
+	if err != nil {
+		return "", err
+	}
+	rows := make([]string, 0, len(all))
+	for _, q := range all {
+		rows = append(rows, fmt.Sprintf("%s\x1f%v\x1f%s", q.Number, q.Answered, q.Text))
+	}
+	return strings.Join(rows, "\x1e"), nil
+}
+
 // ReadQuestions parses the open half of docs/open-questions.md.
 func ReadQuestions(root string) ([]Question, error) {
 	text, err := readOptional(filepath.Join(root, QuestionFile))
