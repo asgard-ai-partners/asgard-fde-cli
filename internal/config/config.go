@@ -22,11 +22,6 @@ const FileName = ".asgard-config.json"
 // RepoSuffix is appended to the workspace slug to form the repository name.
 const RepoSuffix = "-asgard-kube"
 
-// MaxNamespaceLength is the Kubernetes limit for a namespace name. Names derived
-// from a namespace inherit its length, which is why the target repo keeps slugs
-// deliberately short.
-const MaxNamespaceLength = 63
-
 // ErrNotFound reports that no config file exists at the given location or above it.
 var ErrNotFound = errors.New("no " + FileName + " found")
 
@@ -67,28 +62,23 @@ func ValidateSlug(field, s string) error {
 	return nil
 }
 
-// Workspace is the customer this repository serves. The slug is what repository
-// and namespace names are built from; the id is issued by the Asgard platform.
+// Workspace is the customer this repository serves. The slug is what the
+// repository is named from.
 //
-// The id may be empty. Nothing this CLI generates reads it - namespaces come
-// from the slug, and the charts never mention it - so requiring it at init only
-// blocked work that had not reached the platform yet. It is recorded because the
-// repository should say which workspace it belongs to, and the moment that
-// starts to matter is the first project.
+// It carries no platform workspace id. Which workspace a checkout deploys into
+// is in `.asgard-cli.yaml`, beside the declaration it belongs to - one fact,
+// one home, and a repository with two declarations needs two answers rather
+// than one field here.
 type Workspace struct {
-	ID   string `json:"id"`
 	Slug string `json:"slug"`
 	Name string `json:"name"`
 }
 
-// HasID reports whether the platform's workspace id has been filled in.
-func (w Workspace) HasID() bool { return w.ID != "" }
-
-// Project is one Helm chart deployed to one namespace per environment.
+// Project is one chart. Where it deploys is not here: a release binds a chart to
+// a platform project, and the declaration is what names them.
 type Project struct {
-	Slug         string `json:"slug"`
-	Name         string `json:"name"`
-	Environments []Env  `json:"environments"`
+	Slug string `json:"slug"`
+	Name string `json:"name"`
 
 	// Shape is the deployment shape this chart is being built to, named after
 	// one of `asgard-cli size`. It decides which CR kinds finish the chart, and
@@ -124,12 +114,6 @@ type Config struct {
 // stored so it cannot drift from the slug.
 func (c *Config) RepoName() string {
 	return c.Workspace.Slug + RepoSuffix
-}
-
-// Namespace is where projectSlug deploys in env, following the convention
-// asgard-<workspace>-<project>-<env>.
-func (c *Config) Namespace(projectSlug string, env Env) string {
-	return fmt.Sprintf("asgard-%s-%s-%s", c.Workspace.Slug, projectSlug, env)
 }
 
 // Project returns the project with the given slug.
@@ -176,7 +160,6 @@ func (c *Config) Validate() error {
 		if p.Name == "" {
 			errs = append(errs, fmt.Errorf("%s.name must not be empty", where))
 		}
-		errs = append(errs, validateEnvironments(where, p.Environments)...)
 
 		// A shape decides when the chart is finished, so a typo in one is not
 		// cosmetic: it would fall back to the default ladder and the project
@@ -188,48 +171,9 @@ func (c *Config) Validate() error {
 			}
 		}
 
-		// Namespaces are derived, so an over-long one is only visible here. The
-		// alternative is finding out during helm upgrade in CD.
-		if c.Workspace.Slug != "" && p.Slug != "" {
-			for _, env := range p.Environments {
-				ns := c.Namespace(p.Slug, env)
-				if len(ns) > MaxNamespaceLength {
-					errs = append(errs, fmt.Errorf("%s: namespace %q is %d characters, over the %d limit; shorten the workspace or project slug",
-						where, ns, len(ns), MaxNamespaceLength))
-				}
-			}
-		}
 	}
 
 	return errors.Join(errs...)
-}
-
-func validateEnvironments(where string, envs []Env) []error {
-	if len(envs) == 0 {
-		return []error{fmt.Errorf("%s.environments must declare at least one of %s", where, envList())}
-	}
-
-	var errs []error
-	seen := make(map[Env]bool, len(envs))
-	for _, env := range envs {
-		switch {
-		case !env.Valid():
-			errs = append(errs, fmt.Errorf("%s.environments has %q, want one of %s", where, env, envList()))
-		case seen[env]:
-			errs = append(errs, fmt.Errorf("%s.environments lists %q twice", where, env))
-		default:
-			seen[env] = true
-		}
-	}
-	return errs
-}
-
-func envList() string {
-	names := make([]string, len(Envs))
-	for i, e := range Envs {
-		names[i] = string(e)
-	}
-	return strings.Join(names, ", ")
 }
 
 // Load reads the config file at path. When the file is missing, the returned

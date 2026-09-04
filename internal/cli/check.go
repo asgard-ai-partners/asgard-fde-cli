@@ -23,8 +23,8 @@ see, and that otherwise surface at deploy time or when the next person picks the
 repo up:
 
   - the root README's project table matches the directories under projects/
-  - every project has a deploy.yaml, its envs are dev or prod, and the values
-    files it names exist, along with the shared common/values-<env>.yaml
+  - .asgard-pipeline.yaml parses, names no release twice, and every release it
+    declares points at a chart directory that has a Chart.yaml
   - runtime skills under common/skills/ carry name and description frontmatter,
     with the name matching the directory
   - the SDD entry points under requirements/ are present

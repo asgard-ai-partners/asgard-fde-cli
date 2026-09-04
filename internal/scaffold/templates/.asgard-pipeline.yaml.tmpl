@@ -1,0 +1,45 @@
+# .asgard-pipeline.yaml —— 本 repo 在 Platform Pipeline 上的部署宣告。**唯一的一份。**
+#
+# 它回答兩個問題:
+#   1. 有哪些 Release(一份 chart 部署到一個 Project/namespace,由一條 tag 或 branch 規則觸發)
+#   2. 每個 Release 吃哪些 Variables —— **只宣告 key,不放值**
+#
+# 值一律在 Platform 上填,用 CLI 或 UI:
+#
+#   asgard-cli pipeline variables list --release <name>
+#   asgard-cli pipeline variables set  --release <name> <key> <value>
+#   asgard-cli pipeline variables set  --release <name> --kind secret <key> --from-file <path>
+#
+# 這裡是「有哪些 key」的事實來源,Platform 是「值是什麼」的事實來源。
+#
+# 沒有的東西,以及它們去了哪裡:
+#   - namespace            → Release 建立時選 Project,namespace 由 Project 決定
+#   - environment id       → Platform 注入 .Values.asgard.projectEnvironmentId
+#   - Secret / ConfigMap 名 → Platform 每個 Release 配一組,名字注入 .Values.asgard.*
+#   - appVersion / 版本號   → Platform 把觸發的 ref 蓋進 chart 的 appVersion
+#   - 哪個 workspace        → .asgard-cli.yaml,那是 client 端的事,Platform 不讀
+#
+# 規則:
+#   - name:小寫字母、數字、-,1~40 字,Pipeline 內唯一;Platform 上的 Release 必須同名
+#   - on.type:tag | branch;on.pattern:RE2 regex,比對整個 tag / branch 名(隱含錨定)
+#   - chart:chart **目錄**(含 Chart.yaml),相對 repo 根目錄
+#   - chartValues[].key:helm dotted path;type 預設 auto(型別推斷)| string | json
+#   - required 預設 true;false = 沒設值就沿用 chart values.yaml 的預設
+
+version: 1
+
+releases:
+<<- range .Projects >>
+  # <<.Slug>> 的 dev。prod 就再加一個 name 不同、pattern 不同、chart 相同的 Release。
+  - name: <<.Slug>>-dev
+    on:
+      type: tag
+      pattern: '^dev-[0-9]+\.[0-9]+\.[0-9]+$'
+    chart: projects/<<.Slug>>/chart/app
+    # chart 裡每個要由 Platform 提供值的 .Values.* 都在這裡列一次。
+    chartValues: []
+    # CR 用 secretKeyRef 指向 .Values.asgard.appSecretName 時,key 名要與這裡逐字一致。
+    appSecret: []
+    # 同上,對應 .Values.asgard.appConfigMapName。
+    appConfigMap: []
+<<- end >>

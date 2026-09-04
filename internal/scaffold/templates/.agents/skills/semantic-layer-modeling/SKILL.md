@@ -33,7 +33,7 @@ into a `SemanticLayer` CR that matches this repo's conventions.
 ## When To Skip
 
 - Pure chart plumbing that does not touch a `SemanticLayer` or `DataConnector`.
-- Prompt / skill / `deploy.yaml` / CI changes.
+- Prompt / skill / `.asgard-pipeline.yaml` changes.
 
 ## Prerequisites (one-time)
 
@@ -44,7 +44,7 @@ cp .env.example .env                                   # then fill in the values
 ```
 
 `.env` is gitignored and holds one connection group per database, mirroring the `DataConnector`
-values in that project's `chart/values-dev.yaml` (one group per connector). Copy the non-password
+values as `chartValues` on the platform (one group per connector). Copy the non-password
 fields from there; passwords come from the cluster secret:
 
 ```bash
@@ -69,7 +69,7 @@ Named targets are registered in `scripts/db/pgenv.py` -> `DB_TARGETS`:
 
 Adding a database = register it in `DB_TARGETS`, add its `.env` group to
 `.env.example`, and add the matching `DataConnector` CR. The non-password fields
-belong in that project's own `chart/values-dev.yaml`.
+belong in that release's platform variables, declared as `chartValues`.
 
 > **A schema name containing a hyphen must be double-quoted in SQL.**
 > `select ... from "db-something_site".products`. Without the quotes PostgreSQL
@@ -87,7 +87,7 @@ of modules and its own `.env` group:
 `scripts/db/nsenv.py` (config + OAuth) and `scripts/db/nsquery.py` (CLI) mirror
 `pgenv.py` / `query.py`. Five `.env` keys: `NS_HOST`, `NS_CONSUMER_KEY`,
 `NS_CERTIFICATE_ID`, `NS_PRIVATE_KEY_PEM`, `NS_SIGNATURE_ALGORITHM`.
-Host/cert/algorithm can be copied from the project's `chart/values-dev.yaml` ->
+Host/cert/algorithm can be copied from the release's platform variables ->
 `netsuite.*`; the consumer key and private key are secrets (`app-secret` ->
 `netsuite_consumer_key` / `netsuite_private_key_pem`). The private key is a
 PKCS#8 PEM and may be written on one line with literal `\n`.
@@ -284,7 +284,7 @@ After editing a `SemanticLayer`, run the repo's gate (see the `asgard-cr-verific
 
 ```bash
 asgard-cli check
-helm lint projects/<project>/chart/app -f projects/<project>/chart/values-dev.yaml
+helm lint projects/<project>/chart/app
 asgard-cli verify <project>
 ```
 

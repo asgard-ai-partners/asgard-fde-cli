@@ -9,16 +9,15 @@ procedure. The four steps:
   1. asgard-cli check
 
      The repository's structure: the README project table against the folders on
-     disk, deploy.yaml against the values files it names, the docs/ layers, the
-     requirements indexes.
+     disk, .asgard-pipeline.yaml against the charts it names, the docs/ layers,
+     the requirements indexes.
 
   2. helm lint projects/<project>/chart/app
-     helm lint projects/<project>/chart/app -f projects/<project>/chart/values-dev.yaml
 
-     **Run the bare one too.** It is the only step that proves values.yaml
-     declares a default for every .Values.* a template reads. With an env file
-     overlaid a missing default is masked, and then it nil-pointers for anyone
-     running plain helm template.
+     **Bare, with no -f.** It is the only step that proves values.yaml declares
+     a default for every .Values.* a template reads. Overlay a file and a
+     missing default is masked, and then it nil-pointers for anyone running
+     plain helm template.
 
   3. asgard-cli verify
 
@@ -27,22 +26,30 @@ procedure. The four steps:
      labels, the agent split. A wrong **entry** name is as fatal as a wrong
      workflow name, and apply catches neither.
 
-     With no arguments it does every project once per environment its deploy.yaml
-     declares, rendering each one itself. Name a project to narrow it.
+     With no arguments it does every release the declaration names, rendering
+     each one itself. Name a release to narrow it.
 
-  4. Against the cluster you deploy to, read-only:
+  4. The platform's plan. Push, then read it back:
 
-         asgard-cli render <project> <env> | kubectl apply --dry-run=server -n <ns> -f -
-         asgard-cli render <project> <env> | python3 scripts/check_crd_fidelity.py - --context <ctx>
+         asgard-cli pipeline runs watch --release <name> --commit $(git rev-parse HEAD)
 
-     **Both, because they answer different questions.** Dry-run answers "will it
-     be accepted"; fidelity answers "**will it be kept**". CRDs silently prune
-     fields they do not declare, so dry-run reports success while the field is
-     discarded - and then helm's server-side apply fails in CD, which is far too
-     late. A deprecated field once passed 25 of 25 dry-runs and broke the deploy.
+     **This is the step that cannot be run here, and it is not optional.** The
+     plan renders with the release's real values and sends every CR to the
+     apiserver with a server-side dry run, so CEL rules, patterns, required
+     fields and unknown-field pruning are checked against the real cluster.
+     Nothing local can do that: no cluster credential is issued to a client,
+     which is exactly why steps 1 to 3 check a different class of thing - what
+     a dry run passes and runtime still fails.
 
-     If no cluster is reachable, this step is **not run**. That is not the same
-     as passing. Say so.
+     It answers two questions the old local pair used to answer separately:
+     `crd/dry-run-rejected` is "will it be accepted", `crd/unknown-field` is
+     "**will it be kept**". A deprecated field once passed 25 of 25 plain
+     dry-runs and broke the deploy, because CRDs prune what they do not declare
+     while helm's server-side apply refuses it.
+
+     If the run was never created, the push matched nothing - no pattern
+     matched, or the release was never created on the platform.
+     `asgard-cli pipeline deliveries` says which.
 
      **What this step is catching is written down.** `asgard-cli wiki crd-rules`
      lists the CEL validations the apiserver evaluates, which `helm lint` does
@@ -50,9 +57,9 @@ procedure. The four steps:
      schema cannot express at all. Read it before deciding a red deploy is a
      mystery.
 
-Steps 1 to 3 need only `helm` on PATH; step 4 also needs `kubectl` and python3.
-`asgard-cli doctor` says which of those are installed, and how to install one
-that is not.
+Steps 1 to 3 need only `helm` on PATH. Step 4 needs a remote and a signed-in
+session, and no cluster access at all. `asgard-cli doctor` says whether helm is
+installed and how to install it.
 
 Done when: every step is green, and you have said which ones could not be run.
 

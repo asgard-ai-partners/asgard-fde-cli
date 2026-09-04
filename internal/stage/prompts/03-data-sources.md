@@ -77,7 +77,8 @@ None of that is visible in column names.
 
   5. Write one DataConnector CR per database, under
      projects/<project>/chart/app/templates/data_connector/dc-<system>.yaml.
-     Connection coordinates go in that project's chart/values-<env>.yaml; the
+     Connection coordinates are declared as chartValues in .asgard-pipeline.yaml
+     and their values set on the platform per release; the
      password is a secretKeyRef into app-secret and never enters values or git.
 
 Read-only throughout. SELECT and introspection only.

@@ -86,7 +86,7 @@ Trino, Athena.
 The form takes Name, Provider, Host, Port, Database, User and Password. Test
 Connection can be run before Save. The form marks nothing as required.
 
-In a chart, the non-secret coordinates go in `chart/values-<env>.yaml` and the
+In a chart, the non-secret coordinates are declared as `chartValues` and set on the platform, and the
 password is always a secretKeyRef into `app-secret`.
 
 **An HTTP API does not go here.** Data Source is these nine database providers
@@ -120,7 +120,7 @@ removed and only cron is left. See [`automation.md`](automation.md).
 ## Before writing the chart
 
 `asgard-cli usecase semantic-layer` has the DataConnector fields - coordinates in
-`values-<env>.yaml`, password always a secretKeyRef. Connection has no extract of
+a platform variable, password always a secretKeyRef. Connection has no extract of
 its own, because OAuth authorisation happens in the UI rather than being declared
 in a chart.
 

@@ -13,22 +13,27 @@
 <!-- asgard-cli:managed:start -->
 <!-- 這張表由 `asgard-cli scaffold` 依 .asgard-config.json 維護,兩個標記之間的內容
      每次 scaffold 都會重寫。說明欄要填的話,填在標記外面的段落。
-     asgard-cli check 會比對這張表與 projects/ 底下實際的資料夾。 -->
+     asgard-cli check 會比對這張表與 projects/ 底下實際的資料夾。
 
-| Project | 目錄 | 部署 | 說明 |
-|---|---|---|---|
-<<range .Projects>>| <<.Name>> | `projects/<<.Slug>>/` | <<.EnvList>> | TODO |
+     這裡不列部署目標:一份 chart 部署到哪裡是 .asgard-pipeline.yaml 裡的 Release
+     決定的,一份 chart 可以有好幾個。`asgard-cli pipeline releases` 是現況。 -->
+
+| Project | 目錄 | 說明 |
+|---|---|---|
+<<range .Projects>>| <<.Name>> | `projects/<<.Slug>>/` | TODO |
 <<end>><<if not .Projects>>
 > 還沒有 project。用 `asgard-cli project add <slug>` 新增,再跑一次 `asgard-cli scaffold`。
 <<end>>
 <!-- asgard-cli:managed:end -->
-**部署目標寫在 `projects/<project>/deploy.yaml`** —— 每個 env 一組 namespace + values 檔。
-CI 與本地 `asgard-cli render` 讀同一份宣告,所以兩邊一致。namespace 慣例為
-`asgard-<<.Workspace.Slug>>-<slug>-<env>`,`<slug>` 刻意留短以免衍生物件名太長。
+**部署宣告只有一份:根目錄的 [`.asgard-pipeline.yaml`](.asgard-pipeline.yaml)。** 它列出有哪些
+Release(一份 chart 部署到一個 Platform Project、由一條 tag 或 branch 規則觸發)以及每個
+Release 吃哪些 key ——**只宣告 key,不放值**。值填在 Platform 上,namespace 由 Release 綁的
+Project 決定。
 
-> **要為某個 project 啟用一個 env,順序不能反**:先在 tf-asgard 建好該 env 的 namespace 與
-> `app-secret`,再補 `environments.<env>` 與對應的 `chart/values-<env>.yaml`。反過來的話,
-> 下一個 tag 會在 `helm upgrade` 這一步失敗。
+> **順序不能反**:推 tag 之前,那個 Release 必須先在 Platform 上建好。命中一個沒建過的
+> Release 不會產生任何 Run,只有 `asgard-cli pipeline deliveries` 說得出為什麼。
+>
+>     asgard-cli pipeline release create <name> --project <id>
 
 全部細節見 [`AGENTS.md`](AGENTS.md)。
 
@@ -45,21 +50,20 @@ docs/
 requirements/                # 實作事實來源(requests / tasks + _index)
 references/                  # 背景資料(不可直接照著實作)
 .agents/skills/              # design-time 技能(給在這個 repo 工作的 coding agent)
-.github/workflows/main.yaml  # CD:tag 觸發,依各 project 的 deploy.yaml 展開部署 matrix
+.asgard-pipeline.yaml        # ★ 部署宣告:有哪些 Release、各自的觸發規則與 key。不放值
+.asgard-cli.yaml             # 這個 checkout 對到哪個 workspace / pipeline。**Platform 不讀**
 common/
-  values-{dev,prod}.yaml     # 跨 project 共用的每-env 值
   skills/<skill>/SKILL.md    # runtime 技能來源(由各 SkillSet 挑選,同步進平台)
-  asgard-cli render                  # 本地渲染 helper(讀 deploy.yaml,與 CI 同一事實來源);只渲染、不部署
 scripts/
-  asgard-cli check  # 結構不變量(README registry / deploy.yaml / skills / 索引 / docs 規格層)
-  asgard-cli verify        # 渲染後的 CR 交叉引用完整性
-  asgard-cli verify       # 一系統一 Agent 的不變量
-  check_crd_fidelity.py      # 對目標叢集的 CRD 保真度(欄位會不會被靜默丟棄)
   db/                        # 對客戶資料庫做查詢與 schema 探勘(隨接上的系統增加)
 projects/<project>/
-  deploy.yaml                # 部署宣告:每個 env 的 namespace + values 檔
-  chart/{app/templates,values-{dev,prod}.yaml}
+  chart/app/{templates,values.yaml}   # values.yaml 只放預設值
 ```
+
+本地能跑的檢核是 `asgard-cli check`(結構不變量)、`helm lint`(每個 `.Values.*` 有沒有預設值)
+與 `asgard-cli verify`(渲染後的 CR 交叉引用與一系統一 Agent 的不變量)。**能不能部署是
+Platform 的答案** —— 它會把每個 CR 送進 apiserver 做 dry run,那是本機做不到的,因為 client
+從頭到尾不會拿到叢集憑證。
 
 ### 技能放哪裡 —— 兩種技能,不可混用
 
@@ -99,52 +103,67 @@ cp .env.example .env                                   # 再填入各資料庫�
 brew install helm                                      # 只需要 helm;asgard-cli doctor 會告訴你缺什麼
 ```
 
-`.env` 的非密碼欄位可從各 project 的 `chart/values-dev.yaml` 對照填;密碼從 cluster secret 取:
+`.env` 的非密碼欄位可從 Platform 上該 Release 的 Variables 對照填:
 
 ```bash
-kubectl get secret app-secret -n <namespace> -o jsonpath='{.data.<key>}' | base64 -d
+asgard-cli pipeline variables list --release <name>
 ```
 
-### `.env` 與 `app-secret` 是兩套東西,不要混
+密碼看不到 —— secret 存進 Platform 之後就讀不回來了,只回報有沒有設、幾行。
 
-|  | `.env` | `app-secret`(K8s Secret) |
+### `.env` 與 Release 專屬 Secret 是兩套東西,不要混
+
+|  | `.env` | Release 專屬 Secret(K8s Secret) |
 |---|---|---|
 | 誰讀 | **你的筆電**上的 `scripts/db/*` 工具鏈 | **叢集裡**的 Asgard CR |
-| 誰建 | 你自己 `cp .env.example .env` | **tf-asgard**(Terraform),不是這個 repo |
-| 放什麼 | 只有 DB 連線 | 所有 CR 用到的憑證 |
+| 誰建 | 你自己 `cp .env.example .env` | **Platform**,每個 Release 一組,名字注入 `.Values.asgard.appSecretName` |
+| 放什麼 | 只有 DB 連線 | 所有 CR 用到的憑證,由 `.asgard-pipeline.yaml` 的 `appSecret` 宣告 key |
 | 會進叢集嗎 | **不會**,完全不參與部署 | 會,CR 以 `secretKeyRef` 取用 |
 
-chart 裡**永遠只寫 `secretKeyRef`**,憑證值不進 values、不進 git。
+chart 裡**永遠只寫 `secretKeyRef`**,憑證值不進 values、不進 git,而且 chart **不可以自己
+宣告那個 Secret** —— 渲染出任何非 `asgard-ai.com` 的資源會被 Plan 擋下。
 
 ## 驗收閘門
 
-四關(project 可省略=全 repo);完整程序見 `.agents/skills/asgard-cr-verification/`:
+本機三關(release 可省略=全部);完整程序見 `.agents/skills/asgard-cr-verification/`:
 
 ```bash
-asgard-cli check [project]
-helm lint projects/<project>/chart/app -f projects/<project>/chart/values-dev.yaml
-asgard-cli verify <project>
+asgard-cli check
+helm lint projects/<project>/chart/app
+asgard-cli verify [release]
 ```
 
-第四關要對部署目標叢集跑(唯讀,需要 `kubectl`):`kubectl apply --dry-run=server` 與
-`check_crd_fidelity.py`。兩者抓的東西不同 —— dry-run 答「會不會被接受」,fidelity 答
-「會不會被留下」。任何一步紅就停。
+**第四關在 Platform 上,而且跳不掉**:推上去之後,Plan 會把每個渲染出來的 CR 送進 apiserver
+做 server-side dry run,CRD 的 CEL、pattern、必填欄位與「欄位會不會被靜默丟棄」都在那裡被檢查。
+本機做不到 —— client 從頭到尾不會拿到叢集憑證,這也正是前三關長成這個樣子的原因:它們檢查的
+是**過得了 dry run、但 runtime 才炸**的那一類。
+
+```bash
+asgard-cli pipeline runs watch --release <name> --commit $(git rev-parse HEAD)
+```
+
+任何一步紅就停。
 
 ## 部署
 
-推 tag 觸發 `.github/workflows/main.yaml`,部署所有「在自己的 `deploy.yaml` 宣告了該 env」
-的 project:
+推 tag 觸發 Platform 上的 Pipeline。哪個 tag 對到哪個 Release,由 `.asgard-pipeline.yaml` 每個
+Release 的 `on.pattern` 決定;同一個 tag 可以同時命中多個 Release,各自產生一個 Run。
 
-| tag | env |
-|---|---|
-| `dev-X.Y.Z` | dev |
-| `X.Y.Z` | prod |
+```bash
+git push origin dev-0.1.0
+asgard-cli pipeline runs watch --release <name> --commit $(git rev-parse HEAD)
+asgard-cli pipeline runs approve <run-id>     # Run 停在 Review,除非該 Release 開了 auto apply
+```
+
+**Apply 用的是 Plan 當下抓下來的 chart 與值**,不是 repo 現在的樣子 —— 所以 tag 被移動、檔案被
+改,都不影響一個等待審核中的 Run。
 
 > [!IMPORTANT]
-> **部署一律走 CD,不要從本機 `helm upgrade`。** 理由見 [`AGENTS.md`](AGENTS.md) 的 Deploy / CI。
+> **不要從本機 `helm upgrade`**,而且也沒有東西可以 upgrade:client 拿不到叢集憑證。
+> 理由見 [`AGENTS.md`](AGENTS.md) 的 Deploy。
 
 ## 目前狀態
 
-- [x] repo 骨架(docs 四層、requirements、scripts 驗收工具、design-time 技能、CD)
+- [x] repo 骨架(docs 四層、requirements、design-time 技能、部署宣告)
 <<range .Projects>>- [ ] `<<.Slug>>` 的 CR
 <<end>>

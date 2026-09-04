@@ -22,7 +22,7 @@ shape that gets skimmed past:
   Some count what the chart declares and skip at zero, some wait 180s and exit 1.
   A production chart runs today with none. Check with
   `grep -n syncer-name -A15 .github/workflows/*.y*ml`
-- **an empty `platformMainEnvironmentId`** - correct until tf-asgard has created
+- **a declared key with no value on the platform** - correct until somebody has set
   the namespace, and after that it means the CR works on the cluster while its
   editor opens as a blank canvas
 - **R11, a layer with no consumer** - record which kind it is while you still

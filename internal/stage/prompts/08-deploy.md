@@ -1,28 +1,35 @@
 # Deploy
 
-The gate is green. Deployment is **CD-only**.
+The local gate is green. **The platform runs the rollout**, and it is the half
+that decides whether the change is deployable at all.
 
-## Before the first deploy of an environment
+## Before the first deploy of a release
 
-This order cannot be reversed:
+Two things have to exist on the platform, and neither is in the repository:
 
-  1. tf-asgard creates the namespace and its app-secret for that env.
-  2. The platform reconciles the namespace into a Project, which produces the
-     platformMainEnvironmentId.
-  3. You put that ID in projects/<project>/chart/values-<env>.yaml.
-  4. Only then does deploy.yaml declare environments.<env>.
+  1. **The release**, bound to the project whose namespace it deploys into:
 
-Declaring the env first means the next tag fails at helm upgrade.
+         asgard-cli pipeline release create <name> --project <id>
 
-**Whether a project needs at least one Syncer depends on its own CD, so read
-the workflow rather than assuming.** After helm upgrade, CD triggers each
-project's Syncers and waits, polling for CronJobs labelled syncer-name; it exits
-1 after 180 seconds if none appear, even though the upgrade itself succeeded.
+     Creating it provisions that release's own Secret and ConfigMap, its deploy
+     identity and its RBAC. A tag matching a release nobody created produces **no
+     run at all** - `asgard-cli pipeline deliveries` says so, and nothing else
+     will.
 
-The difference between the reference repositories is one `if`, and **it is an
-even split**: of the six that run this step, three check how many Syncers the
-chart declares and skip it when that is zero, and three wait unconditionally and
-fail any project that has none. Counted 2026-09-04. A production chart is
+  2. **The values the declaration names.** A required key with no value fails the
+     plan with `vars/required-missing`:
+
+         asgard-cli pipeline variables list --release <name>
+
+The ordering trap that used to live here - namespace first, then the environment
+id, then the values file, then the declaration - is gone. The namespace comes
+from the project the release binds, and the environment id is injected as
+`.Values.asgard.projectEnvironmentId`; neither is a value anybody fetches and
+pastes any more.
+
+**Whether the rollout waits on a Syncer is a property of the chart.** Apply
+triggers the Syncers this release deployed that carry
+`asgard-ai.com/auto-fire-on-rollout: "true"`, and waits for them. A chart is
 running today with zero Syncers under the first kind.
 
 An even split is why this is written as "read your workflow" rather than as a
@@ -69,47 +76,53 @@ and stop - do not `git init`, do not add one, and do not offer to.
 
     git tag -a dev-0.1.0 -m "dev-0.1.0"
     git push origin dev-0.1.0
+    asgard-cli pipeline runs watch --release <name> --commit $(git rev-parse HEAD)
 
-  dev-x.y.z -> dev
-  x.y.z     -> prod
+**Which tag reaches which release is in `.asgard-pipeline.yaml`, one RE2 pattern
+per release.** There is no global convention any more and no fallback: a tag that
+matches nothing produces nothing, and the patterns are readable in the file
+rather than in a workflow's `on.tags`. One tag can match several releases and
+produce a run for each.
 
-One tag rolls out every project that declares that env; the rest are skipped.
+**Read the patterns before tagging.** A release whose pattern is a bare semver
+deploys to whatever project that release binds, and the tag name says nothing
+about which. `asgard-cli pipeline show` lists every release with its trigger.
 
-**The prefix is the whole of the decision, and prod is the fallback.** CD tests
-whether the ref starts with `dev-` and sends everything else to the production
-cluster - so the pattern list in the workflow's `on.tags` is the only thing
-standing between a stray tag and production. A tag named for a person, a date or
-a ticket does not match the patterns and does nothing at all, which is safe; one
-that happens to look like `1.2.3` is a production deploy.
-
-**A tag deploys whatever commit it points at, not what is on the branch.** CD
-checks out the tag ref. So a `dev-` tag on an unmerged branch head is a real way
-to preview that branch on the dev cluster - and a bare-semver tag placed on the
-wrong commit ships that commit to production, with a tag name that says nothing
-about which one. Tag the commit you have just verified, and check what it points
-at before pushing it:
+**A tag deploys whatever commit it points at, not what is on the branch**, and
+the run reads its declaration from that commit too. So a tag on an unmerged
+branch head is a real way to preview that branch - and a tag placed on the wrong
+commit ships that commit. Tag the commit you have just verified, and check what
+it points at before pushing it:
 
     git tag -a dev-0.1.0 -m "dev-0.1.0" && git show --stat dev-0.1.0 | head -3
 
-**A green deploy does not mean anything reconciled.** The chart is entirely
-Asgard CRs with no Deployment or Pod, so CD runs `helm upgrade` without `--wait`
-- there is no workload for it to wait on. What it waits for instead is the
-Syncer: up to 180 seconds for the CronJob to appear, then up to 600 for one sync
-to finish. That single sync is the only thing in the pipeline that proves the
-platform accepted any of it - **so a project with no Syncer, on a CD that skips
-the step, has nothing checking it at all.** Green there means helm returned.
+**A succeeded run does not mean anything reconciled.** The chart is entirely
+Asgard CRs with no Deployment or Pod, so there is no workload to wait on. What
+Apply waits for instead is the Syncers marked `auto-fire-on-rollout`: it fires
+them all first and then waits on one shared budget rather than restarting the
+clock per job, so N stuck syncers cost one budget and not N. A release with none
+has nothing checking it beyond the dry run, and green there means helm returned.
 
-**Values layer, and the tenant's file wins.** CD passes the shared
-`common/values-<env>.yaml` first and the project's own second, so a key set in
-both takes the project's. Putting something in the shared file and not seeing it
-means some project overrode it, rather than that it was ignored.
+**The plan is where a change is actually judged.** It reports the resource diff
+per CR, the variable changes, and the server-side dry run's verdict on every one
+of them. Reading it is not a formality after the fact - a run stops at review
+precisely so it can be read before anything is written.
+
+**Values are on the platform, not in the repository.** Two releases of one chart
+differ by what was set on each. A value that is not taking effect is either not
+declared (an orphan, which is never injected and shows in the plan as a warning)
+or was set on a different release.
 
 ## Do not helm upgrade from a laptop
 
-A Syncer that pins revision to the chart's appVersion needs the release tag CI
-stamps in. A local install renders the placeholder version as a git ref that does
-not exist, and the Syncer then fails to clone every single run. asgard-cli render renders
-only, and has no install path, for this reason.
+A Syncer that pins revision to the chart's appVersion needs the ref the platform
+stamps in. A local install renders the placeholder as a git ref that does not
+exist, and the Syncer then fails to clone every single run. `asgard-cli render`
+renders only, with placeholder values, and has no install path, for this reason.
+
+There is also nothing to install with: **no cluster credential is ever issued to
+a client.** That is the same reason the plan's dry run cannot be reproduced
+locally, and why the local gate checks a different class of thing.
 
 ## After deploying
 
@@ -145,13 +158,14 @@ open, no task open, nothing missing from any chart: what moves the work on then
 is the customer, and the only question left to ask is what they want next.
 `asgard-cli guide idle` is that state, and being in it is not being behind.
 
-**Checked:** 2026-09-04 against the six reference repositories that run the
-Syncer step, read directly rather than from memory: three guard on the Syncer
-count and three do not, which corrects a statement written from a sample of two.
-The label the step polls for is `asgard-ai.com/syncer-name` in all six. The
-ordering above - namespace, then platformMainEnvironmentId, then values, then
-deploy.yaml - is what tf-asgard and this tool each require, and declaring the
-environment first is what makes the next tag fail at helm upgrade.
+**Checked:** 2026-09-04 against the platform's own behaviour spec and against a
+real rollout on dev: a tag pushed to a bound repository produced a run within
+seconds, the plan reported 29 CRs to create and stopped at review, and Apply
+wrote them and then failed at the Syncer step with the reason named. The
+auto-fire label is `asgard-ai.com/auto-fire-on-rollout` and is read only by the
+runner. The ordering trap that this page used to describe - namespace, then
+environment id, then values, then declaration - no longer exists: both halves are
+injected.
 
 **Unchecked:** anything about a cluster. Nothing here has been run against one
 from this repository, and the 180-second timeout, the reconcile into a Project

@@ -1,34 +1,28 @@
 # common — 跨 project 的共用資產
 
-每個 project 是一份獨立的 Helm chart。這個資料夾放**跨 project 共用**的東西:
-每-env 的環境值、以及自定義技能來源。
+每個 project 是一份獨立的 Helm chart。這個資料夾放**跨 project 共用**的東西:目前只有
+自定義技能來源。
 
-project 結構、部署宣告(`deploy.yaml`)、CD rollout 請看根目錄的 `README.md` 與 `AGENTS.md`
-(後者是 coding agent 的 SoT;`CLAUDE.md` 只是 `@AGENTS.md` 指標)。
+project 結構、部署宣告(`.asgard-pipeline.yaml`)、rollout 請看根目錄的 `README.md` 與
+`AGENTS.md`(後者是 coding agent 的 SoT;`CLAUDE.md` 只是 `@AGENTS.md` 指標)。
 
 ## 內容
 
 ```
 common/
-  values-dev.yaml           # 跨 project 共用的 dev 環境值(目前空,保留為疊加點)
-  values-prod.yaml          # prod
   skills/<skill>/SKILL.md   # 跨 project 共用的「自定義技能」來源
 ```
 
-本地渲染由 `asgard-cli render` 負責,不再是這個資料夾裡的腳本 —— 見下。
-
-## values 疊加規則(-f 順序:共用在前、project 在後)
+**這裡不再有 values 檔。** 值不在 repo 裡:`.asgard-pipeline.yaml` 宣告有哪些 key,值填在
+Platform 上,Run 的時候才注入。
 
 ```bash
-helm template internal \
-  projects/internal/chart/app \
-  -f common/values-dev.yaml \
-  -f projects/internal/chart/values-dev.yaml
+asgard-cli pipeline variables list --release <name>
+asgard-cli pipeline variables set  --release <name> <key> <value>
 ```
 
-後面的 `-f` 覆蓋前面的。DB 座標是 per-project 的事實,放在各
-`projects/<project>/chart/values-<env>.yaml`(每個 DataConnector 一組);
-`common/` 只放真正跨 project 相同的值。
+跨 project 共用的疊加點也跟著消失了 —— 兩個 Release 之間的差異就是各自填的值,不是兩個
+檔案的疊加順序。本地渲染是 `asgard-cli render <release>`,用佔位值,只渲染不部署。
 
 ## `skills/` — 自定義技能的單一來源
 
@@ -78,7 +72,7 @@ asgard-cli render internal dev > .out/rendered.yaml
 asgard-cli verify internal                # 渲染 + 驗收不變量,一步到底
 ```
 
-namespace 與 values 檔一律從 `projects/<project>/deploy.yaml` 讀,和 CI 用同一份宣告,
+chart 從 `.asgard-pipeline.yaml` 裡該 Release 的宣告讀,
 所以本地渲染出來的就是 CD 會部署的東西;疊加順序、`--namespace`、release 名也都一致。
 未宣告該 env 的 project 會被明確拒絕,而不是猜一個 namespace。
 
@@ -93,9 +87,9 @@ namespace 與 values 檔一律從 `projects/<project>/deploy.yaml` 讀,和 CI �
 
 ## 不放這裡的東西
 
-- **`platformMainEnvironmentId`**:per-project per-env → 放各 project 的 `chart/values-<env>.yaml`。
+- **project environment id**:Platform 注入 `.Values.asgard.projectEnvironmentId`,不用填也不能填。
 - **namespace / 要部署哪些 env / 用哪個 values 檔**:per-project → 放
-  `projects/<project>/deploy.yaml`。
+  `.asgard-pipeline.yaml`。
 - **密鑰**:走 cluster Secret(`appSecretName`,預設 `app-secret`),不進 values。
 
 ## 這個資料夾的定位

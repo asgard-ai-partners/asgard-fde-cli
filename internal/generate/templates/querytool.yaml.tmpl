@@ -17,7 +17,7 @@ metadata:
     {{- include "<<.Chart>>.workflowSetAnnotations" (dict "name" "<<.CRName>>" "displayName" "<<.DisplayName>>") | nindent 4 }}
   labels:
     {{- include "<<.Chart>>.workflowSetLabels" (dict "name" "<<.CRName>>" "type" "automation_tool") | nindent 4 }}
-    {{- with .Values.platformMainEnvironmentId }}
+    {{- with .Values.asgard.projectEnvironmentId }}
     asgard-ai.com/project-environment-id: {{ . | quote }}
     {{- end }}
     {{- include "<<.Chart>>.labels" . | nindent 4 }}

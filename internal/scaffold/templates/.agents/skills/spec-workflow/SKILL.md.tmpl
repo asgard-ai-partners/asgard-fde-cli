@@ -9,14 +9,14 @@ alwaysApply: false
 
 Use this skill to turn unclear work into implementable, reviewable specs before changes.
 
-In this repo, "implementation" means Helm chart, Kubernetes custom resource (`asgard-ai.com/v1alpha1`), agent/skill, values, `deploy.yaml`, or CI changes — not application source code.
+In this repo, "implementation" means Helm chart, Kubernetes custom resource (`asgard-ai.com/v1alpha1`), agent/skill, or `.asgard-pipeline.yaml` changes — not application source code.
 
 ## When To Use
 
 - New agent, new custom resource, cross-resource change, external integration, or migration.
 - **A new `SemanticLayer` / `DataConnector`, or widening which cubes an agent may query** — the databases here are real.
 - **Re-introducing a write path** (`Toolset` → `Workflow`), which also means deciding the `requestConsent` gate. The current architecture is read-only.
-- Adding a project under `projects/`, or changing an existing `deploy.yaml`.
+- Adding a project under `projects/`, or changing a release in `.asgard-pipeline.yaml`.
 - Acceptance criteria, resource behavior, external API contracts, auth/secret usage, or rollout expectations are unclear.
 - The user asks to define, review, confirm, or refine requirements before implementation.
 
@@ -36,7 +36,7 @@ Before writing specs, inspect the repo source of truth:
 - `AGENTS.md` (`CLAUDE.md` only points here), `docs/spec-driven-development.md`, `requirements/_index.md`, `requirements/README.md`.
 - `requirements/requests/_index.md` and `requirements/tasks/_index.md`.
 - `projects/<project>/chart/app/templates/` for existing resource patterns (e.g. `projects/internal/chart/app/templates/`).
-- `projects/<project>/deploy.yaml` for the deployment target of record (namespace + values per env).
+- `.asgard-pipeline.yaml` for the releases of record (trigger + chart + declared keys); the namespace comes from the platform project each release binds.
 - `.agents/skills/` for the design-time skills available to YOU — notably `semantic-layer-modeling` (connect to the real databases, model a SemanticLayer) and `asgard-cr-verification` (the acceptance gate).
 - `common/skills/` for the RUNTIME skills the deployed agent gets via a `SkillSet` CR — a different mechanism; do not confuse the two.
 - `references/` only for background context; do not implement directly from references.
@@ -60,13 +60,13 @@ Use status flow `draft` -> `ready` -> `in-progress` -> `done`. Do not use `in_pr
 - Acceptance criteria are satisfied.
 - All four verification gates are run (or explicitly documented as not runnable):
   1. `asgard-cli check [project]`
-  2. `helm lint projects/<project>/chart/app -f projects/<project>/chart/values-dev.yaml`
+  2. `helm lint projects/<project>/chart/app`
   `asgard-cli verify <project>`
   4. `asgard-cli render <project> dev | kubectl apply --dry-run=server -n <ns> -f -` and
-     `| python3 scripts/check_crd_fidelity.py - --context <ctx>`
+     then push and read the plan: `asgard-cli pipeline runs watch --release <name> --commit $(git rev-parse HEAD)`
 - **The living spec carries the behaviour change**, and a settled decision gets its own record —
   see the converge loop below. A behaviour change that never reached `docs/spec/` is not done.
-- Generated/config/deployment artifacts are updated when required (including `deploy.yaml` and the root README project table, which `asgard-cli check` cross-checks).
+- Generated/config/deployment artifacts are updated when required (including `.asgard-pipeline.yaml` and the root README project table, which `asgard-cli check` cross-checks).
 - No unapproved spec deviations remain.
 - `requirements/tasks/_index.md` and the task spec `Meta` status are synchronized when task status changes.
 - Self-review confirms conformance to the task spec before marking it done.

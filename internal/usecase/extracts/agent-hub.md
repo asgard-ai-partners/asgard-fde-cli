@@ -212,7 +212,7 @@ Editing one agent's `task` and not the others fails the gate. That is the point.
 ```bash
 asgard-cli check
 helm lint projects/<project>/chart/app
-helm lint projects/<project>/chart/app -f projects/<project>/chart/values-dev.yaml
+helm lint projects/<project>/chart/app
 asgard-cli verify <project>
 ```
 

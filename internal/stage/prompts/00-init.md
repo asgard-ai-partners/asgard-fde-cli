@@ -15,10 +15,10 @@ project lives inside it:
 
 **One production deployment does it differently, and knowing why matters.** A
 commerce middleware repository serves several **tenants** from one repo -
-`tenants/<tenant>/chart/`, each with its own namespace and its own
-`deploy.yaml`, and the CI matrix is built by scanning those files, so a tenant
-can be prod-only and dev/prod are fully asymmetric. Namespaces are declared
-there rather than derived from folder names.
+`tenants/<tenant>/chart/` - so a tenant can be prod-only and the environments
+are fully asymmetric. That shape is a set of releases now: one declaration lists
+them all, each binding a chart to the platform project whose namespace it
+deploys into, and nothing derives a namespace from a folder name.
 
 That shape is right when the tenants are **instances of one product** - the same
 chart, the same skills, different customers of a platform we built. It is wrong
@@ -106,16 +106,16 @@ no matter who did what. **It reports no step**, because there is none.
 
 ## If you picked the slug wrong
 
-Before any namespace exists, it is cheap: `asgard-cli init --force
---workspace-slug <new>` then `asgard-cli scaffold --force`, and rename the
-directory. **After tf-asgard has created namespaces from it, it is not** - the
-namespaces carry the slug, so settle it before that step.
+It is cheap: `asgard-cli init --force --workspace-slug <new>` then
+`asgard-cli scaffold --force`, and rename the directory. The slug names the
+repository and nothing else - namespaces come from the platform projects a
+release binds, so renaming does not strand a deployment.
 
 **Checked:** 2026-09-04 - nothing here to check against a source. This document
 makes **no claim about the platform**: it is the repository shape this tool
-writes and the one irreversible thing about it, that namespaces carry the
-workspace slug. That is a fact about tf-asgard rather than about a CRD, and the
-tool's own behaviour is the only thing that could contradict it.
+writes. The claim it used to make, that namespaces carry the workspace slug and
+so the slug is irreversible, is retired: a namespace comes from the platform
+project a release binds to, and the slug names the repository only.
 
 **Unchecked:** that one workspace is one repository, and that the tenant-per-
 directory shape one production repository uses is right for a platform's

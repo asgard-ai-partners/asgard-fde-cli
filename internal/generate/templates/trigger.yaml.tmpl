@@ -21,7 +21,7 @@ metadata:
     # Both of these live on the Trigger itself. Without them the schedule fires
     # correctly and the editor opens as a blank canvas.
     asgard-ai.com/workflow-set-id: wf-<<.Name>>
-    asgard-ai.com/project-environment-id: {{ .Values.platformMainEnvironmentId | quote }}
+    asgard-ai.com/project-environment-id: {{ .Values.asgard.projectEnvironmentId | quote }}
     {{- include "<<.Chart>>.labels" . | nindent 4 }}
 spec:
   triggerClass: cron
@@ -50,7 +50,7 @@ metadata:
     {{- include "<<.Chart>>.workflowSetAnnotations" (dict "name" "wf-<<.Name>>" "displayName" "<<.DisplayName>>") | nindent 4 }}
   labels:
     {{- include "<<.Chart>>.workflowSetLabels" (dict "name" "wf-<<.Name>>" "type" "trigger") | nindent 4 }}
-    asgard-ai.com/project-environment-id: {{ .Values.platformMainEnvironmentId | quote }}
+    asgard-ai.com/project-environment-id: {{ .Values.asgard.projectEnvironmentId | quote }}
     {{- include "<<.Chart>>.labels" . | nindent 4 }}
 spec:
   variables: []

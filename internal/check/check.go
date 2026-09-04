@@ -8,6 +8,7 @@
 package check
 
 import (
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -16,9 +17,8 @@ import (
 	"sort"
 	"strings"
 
-	"gopkg.in/yaml.v3"
-
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/config"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/pipelineconfig"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/work"
 )
 
@@ -111,10 +111,10 @@ func Run(root string, only ...string) (Report, error) {
 		}
 	}
 
-	for _, name := range scope {
-		if err := c.checkDeploy(name); err != nil {
-			return Report{}, err
-		}
+	// The declaration is repository-wide rather than per project: one file
+	// names every release, and a release is what binds a chart to a place.
+	if err := c.checkDeclaration(); err != nil {
+		return Report{}, err
 	}
 	if err := c.checkRegistry(projects); err != nil {
 		return Report{}, err
@@ -207,79 +207,61 @@ func (c *checker) discoverProjects() ([]string, error) {
 			}
 		}
 
-		// A warning and not an error: nothing rendered from this repository
-		// reads the id, so a repo without one is not broken. It is worth saying
-		// once a project exists, because that is what the platform deploys and
-		// an id nobody ever fetched is easy to carry all the way to a handover.
-		if !cfg.Workspace.HasID() && len(cfg.Projects) > 0 {
-			c.warnf("%s has no workspace.id, and %d project(s) are declared; set it with "+
-				"`asgard-cli init --workspace-id ws_xxxxxxxx`", config.FileName, len(cfg.Projects))
-		}
 	}
 	return projects, nil
 }
 
-// deployFile is the subset of deploy.yaml this checks.
-type deployFile struct {
-	Environments map[string]struct {
-		Namespace string `yaml:"namespace"`
-		Values    string `yaml:"values"`
-	} `yaml:"environments"`
-}
-
-// checkDeploy verifies the deployment declaration: CI builds its matrix from
-// these files, so a values path that does not exist is a failed deploy rather
-// than a lint error.
-func (c *checker) checkDeploy(project string) error {
-	dir := filepath.Join(c.root, "projects", project)
-	path := filepath.Join(dir, "deploy.yaml")
-
-	data, err := os.ReadFile(path)
-	if os.IsNotExist(err) {
-		c.errf("%s: missing projects/%s/deploy.yaml; it is the single source of truth for deployment targets, and is required even when no env is declared", project, project)
+// checkDeclaration verifies `.asgard-pipeline.yaml`, which replaced the
+// per-project deploy.yaml, the per-environment values files and the tag-driven
+// workflow all at once.
+//
+// It checks the shape this CLI needs to do its own work - a release with a
+// chart directory that exists - and nothing else. Whether the declaration is
+// valid is the platform's answer: the same parse that decides a run computes
+// required-missing and matches trigger patterns, and a second opinion here
+// would disagree with it the first time either changed.
+func (c *checker) checkDeclaration() error {
+	path := filepath.Join(c.root, pipelineconfig.FileName)
+	cfg, err := pipelineconfig.Load(path)
+	if errors.Is(err, pipelineconfig.ErrNotFound) {
+		c.errf("no %s; it declares what this repository deploys and the platform reads it on every run", pipelineconfig.FileName)
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("read %s: %w", path, err)
-	}
-
-	var parsed deployFile
-	if err := yaml.Unmarshal(data, &parsed); err != nil {
-		c.errf("%s: projects/%s/deploy.yaml is not valid YAML: %v", project, project, err)
+		c.errf("%v", err)
 		return nil
 	}
 
-	if len(parsed.Environments) == 0 {
-		c.warnf("%s: deploy.yaml declares no environment, so CI and asgard-cli render both skip this project", project)
+	if len(cfg.Releases) == 0 {
+		c.warnf("%s declares no releases, so no tag or branch deploys anything from here", pipelineconfig.FileName)
 		return nil
 	}
 
-	envs := make([]string, 0, len(parsed.Environments))
-	for env := range parsed.Environments {
-		envs = append(envs, env)
-	}
-	sort.Strings(envs)
-
-	for _, env := range envs {
-		spec := parsed.Environments[env]
-
-		if !config.Env(env).Valid() {
-			c.errf("%s: deploy.yaml declares env %q; only dev and prod are valid", project, env)
+	seen := map[string]bool{}
+	for _, r := range cfg.Releases {
+		switch {
+		case r.Name == "":
+			c.errf("%s declares a release with no name", pipelineconfig.FileName)
+			continue
+		case seen[r.Name]:
+			c.errf("%s declares release %q twice", pipelineconfig.FileName, r.Name)
 			continue
 		}
-		if spec.Namespace == "" {
-			c.errf("%s: deploy.yaml %s has no namespace", project, env)
-		}
-		if spec.Values == "" {
-			c.errf("%s: deploy.yaml %s has no values file", project, env)
+		seen[r.Name] = true
+
+		if r.Chart == "" {
+			c.errf("%s: release %q names no chart", pipelineconfig.FileName, r.Name)
 			continue
 		}
-		if _, err := os.Stat(filepath.Join(dir, spec.Values)); err != nil {
-			c.errf("%s: deploy.yaml %s points at projects/%s/%s, which does not exist", project, env, project, spec.Values)
+		chart := filepath.Join(c.root, filepath.FromSlash(r.Chart))
+		if _, err := os.Stat(filepath.Join(chart, "Chart.yaml")); err != nil {
+			c.errf("%s: release %q names chart %s, which has no Chart.yaml", pipelineconfig.FileName, r.Name, r.Chart)
 		}
-		shared := filepath.Join(c.root, "common", fmt.Sprintf("values-%s.yaml", env))
-		if _, err := os.Stat(shared); err != nil {
-			c.errf("%s: %s is missing the shared common/values-%s.yaml, which CI overlays first", project, env, env)
+		// A release with no trigger can still be run by hand, so this is a
+		// warning: it is a repository nobody can deploy by pushing, which is
+		// usually a mistake and occasionally the point.
+		if r.On == nil || r.On.Pattern == "" {
+			c.warnf("%s: release %q declares no trigger, so only a manual run deploys it", pipelineconfig.FileName, r.Name)
 		}
 	}
 	return nil

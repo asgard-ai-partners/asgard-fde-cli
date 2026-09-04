@@ -4,7 +4,7 @@
 - SPEC_DIR: `docs/spec/<<.SpecSlug>>/` (living spec — 開工前先讀,收工後套回 delta)
 - DECISIONS: `docs/decisions/YYYY-MM-DD-<topic>.md` (dated、不可變)
 - CHART_DIR: `projects/<project>/chart/app`
-- VALUES: `common/values-<env>.yaml` (cross-project overlay point) + `projects/<project>/chart/values-<env>.yaml` (per-project; holds the DB coordinates); env + namespace declared in `projects/<project>/deploy.yaml`
+- VALUES: declared as keys in `.asgard-pipeline.yaml`, set on the platform per release (`asgard-cli pipeline variables set`); the namespace comes from the platform project the release binds
 `asgard-cli verify <project>`
 - Mode: spec
 

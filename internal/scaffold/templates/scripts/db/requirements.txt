@@ -2,5 +2,4 @@
 # Install: python3 -m venv .venv && .venv/bin/pip install -r scripts/db/requirements.txt
 psycopg[binary]>=3  # PostgreSQL targets
 pymssql>=2.3        # MSSQL targets
-pyyaml>=6           # scripts/check_crd_fidelity.py needs it
 pyjwt[crypto]>=2.8  # NetSuite target (nsenv.py JWT client assertion, needs ES256)
