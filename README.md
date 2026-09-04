@@ -785,9 +785,19 @@ reproducible here - no cluster credential is ever issued to a client - so the
 loop is: change the chart, check what can be checked locally with `helm lint`
 and `asgard-cli verify`, push, and read the plan back with `runs watch`.
 
-Which pipeline a command acts on comes from the checkout's origin remote, and
-which release from the name the declaration uses, so no platform identifier is
-written into the repository.
+Which release a command acts on comes from the name the declaration uses. Which
+workspace, and which pipeline when a repository carries more than one, come from
+`.asgard-cli.yaml` beside the declaration - written by `workspace use` and
+`pipeline create`, and committed, so a clone and an agent both inherit it.
+
+**The platform never reads that file.** A run reads the declaration at the
+pipeline's config path and the chart it names, and nothing else, so nothing in
+`.asgard-cli.yaml` can make a deployment succeed or fail. It exists so the
+commands need no `--workspace`, and so an agent landing in a fresh clone can see
+what the checkout is pointed at without a call. `--workspace` and
+`ASGARD_WORKSPACE` outrank it, which is the safe direction: acting on a test
+workspace when the customer's was meant costs a confusing error, and the reverse
+deploys to a customer.
 
 A secret's value can only be given with `--from-file` (or `--from-file -` for
 standard input): a value typed as an argument is in the shell history and in the

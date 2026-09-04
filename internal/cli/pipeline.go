@@ -3,10 +3,13 @@ package cli
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
 
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/binding"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/platform"
 )
 
@@ -112,6 +115,10 @@ func resolvePipeline(ctx context.Context, pc *platformContext, nameOrID string) 
 		return nil, fmt.Errorf("no pipeline %q in workspace %s; `asgard-cli pipeline list` shows what is there", nameOrID, pc.Workspace)
 	}
 
+	if pc.Binding != nil && pc.Binding.Pipeline != "" {
+		return pipelineFromBinding(pc, pipelines)
+	}
+
 	if pc.RepoFullName == "" {
 		return nil, fmt.Errorf("not in a git checkout with a recognisable origin remote, so there is no repository to match a pipeline against; name one with --pipeline")
 	}
@@ -130,13 +137,43 @@ func resolvePipeline(ctx context.Context, pc *platformContext, nameOrID string) 
 	}
 
 	// A monorepo binding the same repository at two config paths is legitimate,
-	// and the config path is what tells them apart.
+	// and the config path is what tells them apart. Recording one in the
+	// checkout's binding is how that is answered once rather than every time.
 	var b strings.Builder
-	fmt.Fprintf(&b, "%d pipelines bind %s, so --pipeline has to say which:\n", len(matches), pc.RepoFullName)
+	fmt.Fprintf(&b, "%d pipelines bind %s, so which one has to be said:\n", len(matches), pc.RepoFullName)
 	for _, p := range matches {
 		fmt.Fprintf(&b, "  %-22s %-20s %s\n", p.PipelineId, p.Name, p.ConfigPath)
 	}
+	fmt.Fprintf(&b, "\nPass --pipeline, or record the right one in %s beside its declaration.\n", binding.FileName)
 	return nil, fmt.Errorf("%s", b.String())
+}
+
+// pipelineFromBinding uses the pipeline the checkout's `.asgard-cli.yaml`
+// records, after checking that it is still this repository's.
+//
+// The check is the point. A binding file is committed, so the way it goes wrong
+// is by being copied into another repository along with everything else - and a
+// pipeline id that still resolves, against a repository it no longer describes,
+// would deploy the wrong chart to a real namespace without a word.
+func pipelineFromBinding(pc *platformContext, pipelines []*platform.Pipeline) (*platform.Pipeline, error) {
+	want := pc.Binding.Pipeline
+	for _, p := range pipelines {
+		if p.PipelineId != want {
+			continue
+		}
+		if pc.RepoFullName != "" && p.RepoFullName != pc.RepoFullName {
+			return nil, fmt.Errorf(
+				"%s records pipeline %s, but that pipeline is bound to %s and this checkout is %s.\n"+
+					"The file was most likely copied from another repository. Fix it, or pass --pipeline.",
+				pc.Binding.Path, want, p.RepoFullName, pc.RepoFullName)
+		}
+		return p, nil
+	}
+	return nil, fmt.Errorf(
+		"%s records pipeline %s, which does not exist in workspace %s.\n"+
+			"Either the wrong workspace is in effect (`asgard-cli workspace show` says which and why),\n"+
+			"or the pipeline was deleted. `asgard-cli pipeline list` shows what is there.",
+		pc.Binding.Path, want, pc.Workspace)
 }
 
 func newPipelineConnectionsCmd() *cobra.Command {
@@ -333,6 +370,15 @@ recovers it.`,
 			}
 			fmt.Fprintf(out, "Created pipeline %s (%s) binding %s.\n", created.Name, created.PipelineId, repoName)
 			printPipelineConfigState(out, created)
+
+			// Record it beside the declaration, so the commands that follow do
+			// not have to be told which pipeline - and so a repository that
+			// later grows a second one does not become ambiguous.
+			if path, err := recordPipeline(pc, created.PipelineId); err != nil {
+				fmt.Fprintf(cmd.ErrOrStderr(), "\nCould not record the pipeline in %s: %v\n", binding.FileName, err)
+			} else if path != "" {
+				fmt.Fprintf(out, "\nRecorded it in %s. Commit that.\n", path)
+			}
 
 			// A ref that was asked for and did not come back means the gateway
 			// dropped it, which is silent otherwise - the pipeline then reads
@@ -581,7 +627,7 @@ is what makes the repository's declaration take effect.`,
 				}
 				pending := ""
 				if r.PendingDeploy {
-					pending = "  (variables saved, not deployed)"
+					pending = "  (the platform holds values the cluster does not)"
 				}
 				fmt.Fprintf(out, "%-22s %-20s %-28s %-16s %s%s%s\n",
 					r.ReleaseId, r.Name, r.Namespace, r.State, last, declared, pending)
@@ -615,4 +661,37 @@ func resolveRelease(ctx context.Context, pc *platformContext, p *platform.Pipeli
 		known = append(known, r.Name)
 	}
 	return nil, &platform.ErrNoSuchRelease{Name: name, Pipeline: p.Name, Known: known}
+}
+
+// recordPipeline writes the pipeline id into the checkout's binding, keeping
+// whatever else it holds. It reports the path written, or an empty one when
+// there is no declaration to write beside - which is not a failure: a pipeline
+// can legitimately be created from outside its repository.
+func recordPipeline(pc *platformContext, pipelineID string) (string, error) {
+	dir, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	declPath, bindPath, err := binding.Locate(dir)
+	if err != nil || declPath == "" {
+		return "", err
+	}
+
+	f := &binding.File{Version: 1, Workspace: pc.Workspace}
+	if existing, err := binding.Load(bindPath); err == nil {
+		f = existing
+	}
+	if f.Workspace == "" {
+		f.Workspace = pc.Workspace
+	}
+	f.Pipeline = pipelineID
+	if err := binding.Save(bindPath, f); err != nil {
+		return "", err
+	}
+	if pc.RepoRoot != "" {
+		if rel, err := filepath.Rel(pc.RepoRoot, bindPath); err == nil {
+			return rel, nil
+		}
+	}
+	return bindPath, nil
 }

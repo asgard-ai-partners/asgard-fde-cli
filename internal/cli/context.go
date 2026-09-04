@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/auth"
-	"github.com/asgard-ai-partners/asgard-fde-cli/internal/config"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/binding"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/gitrepo"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/platform"
 )
@@ -20,17 +20,16 @@ const workspaceFlag = "workspace"
 
 // WorkspaceSource says where a resolved workspace id came from, so that a
 // command can print it. It is not decoration: a command that acted in the wrong
-// workspace is the failure this whole resolution order exists to make visible,
-// and "which workspace, and why that one" is one line.
+// workspace is the failure this resolution order exists to make visible, and
+// "which workspace, and why that one" is one line.
 type WorkspaceSource string
 
 const (
-	fromFlag       WorkspaceSource = "--workspace"
-	fromEnv        WorkspaceSource = auth.EnvWorkspace
-	fromRepoConfig WorkspaceSource = config.FileName
-	fromBinding    WorkspaceSource = "recorded for this repository"
-	fromFallback   WorkspaceSource = "recorded as the default"
-	fromOnlyOne    WorkspaceSource = "the only workspace you can reach"
+	fromFlag     WorkspaceSource = "--workspace"
+	fromEnv      WorkspaceSource = auth.EnvWorkspace
+	fromBinding  WorkspaceSource = binding.FileName
+	fromFallback WorkspaceSource = "recorded as this machine's default"
+	fromOnlyOne  WorkspaceSource = "the only workspace you can reach"
 )
 
 // platformContext is what every command that talks to the platform needs: a
@@ -47,6 +46,8 @@ type platformContext struct {
 	RepoFullName string
 	// RepoRoot is the checkout's top level; empty outside one.
 	RepoRoot string
+	// Binding is `.asgard-cli.yaml` if this checkout has one, nil otherwise.
+	Binding *binding.File
 }
 
 // contextOptions are the per-command overrides of the resolution.
@@ -65,14 +66,17 @@ type contextOptions struct {
 //
 //  1. --workspace
 //  2. ASGARD_WORKSPACE
-//  3. .asgard-config.json's workspace.id, when the command is inside a
-//     scaffolded repository - it is committed, so a teammate inherits it
-//  4. what `workspace use` recorded for this repository under this profile
-//  5. what `workspace use --default` recorded for this profile
-//  6. the only workspace the session can reach, when there is exactly one
+//  3. the checkout's `.asgard-cli.yaml`
+//  4. the default `workspace use --default` recorded on this machine, which
+//     only applies outside a checkout
+//  5. the only workspace the session can reach, when there is exactly one
 //
-// Six is deliberately last and deliberately present: a customer with one
-// workspace should never have to name it, and anybody with two must.
+// The order puts the two explicit forms above the committed file on purpose.
+// A file that says a customer's workspace and a flag that says a test one
+// disagree in only one safe direction: acting on the test workspace when the
+// customer's was meant costs a confusing error, and the reverse deploys to a
+// customer. Five is deliberately last and deliberately present - somebody with
+// one workspace should never have to name it, and anybody with two must.
 func resolveContext(cmd *cobra.Command, opts contextOptions) (*platformContext, error) {
 	ctx := cmd.Context()
 
@@ -83,13 +87,14 @@ func resolveContext(cmd *cobra.Command, opts contextOptions) (*platformContext, 
 
 	pc := &platformContext{Session: session}
 	pc.RepoRoot, pc.RepoFullName = locateRepo(ctx)
+	pc.Binding = loadBinding()
 
 	if !opts.NeedWorkspace {
 		pc.Client = platform.New(session, "")
 		return pc, nil
 	}
 
-	ws, source, err := resolveWorkspace(ctx, session, pc.RepoFullName, pc.RepoRoot, opts.Workspace)
+	ws, source, err := resolveWorkspace(ctx, session, pc, opts.Workspace)
 	if err != nil {
 		return nil, err
 	}
@@ -117,10 +122,29 @@ func locateRepo(ctx context.Context) (root, fullName string) {
 	return root, fullName
 }
 
+// loadBinding reads `.asgard-cli.yaml` for the working directory, or nil.
+//
+// A missing one is the normal state of a repository nobody has bound yet, and a
+// malformed one must not stop a command that was given --workspace anyway, so
+// neither is an error here. A malformed one is reported when it is the thing
+// being relied on.
+func loadBinding() *binding.File {
+	dir, err := os.Getwd()
+	if err != nil {
+		return nil
+	}
+	f, err := binding.LoadFrom(dir)
+	if err != nil {
+		return nil
+	}
+	return f
+}
+
 func resolveWorkspace(
 	ctx context.Context,
 	session *auth.Session,
-	repoFullName, repoRoot, flag string,
+	pc *platformContext,
+	flag string,
 ) (string, WorkspaceSource, error) {
 	if flag != "" {
 		return flag, fromFlag, nil
@@ -128,21 +152,13 @@ func resolveWorkspace(
 	if env := os.Getenv(auth.EnvWorkspace); env != "" {
 		return env, fromEnv, nil
 	}
-
-	if repoRoot != "" {
-		if id, ok := workspaceFromRepoConfig(repoRoot); ok {
-			return id, fromRepoConfig, nil
-		}
+	if pc.Binding != nil && pc.Binding.Workspace != "" {
+		return pc.Binding.Workspace, fromBinding, nil
 	}
 
 	settings, err := auth.LoadSettings()
 	if err != nil {
 		return "", "", err
-	}
-	if repoFullName != "" {
-		if id, ok := settings.WorkspaceFor(session.Profile.Name, repoFullName); ok {
-			return id, fromBinding, nil
-		}
 	}
 	if id, ok := settings.FallbackWorkspace(session.Profile.Name); ok {
 		return id, fromFallback, nil
@@ -160,27 +176,18 @@ func resolveWorkspace(
 	case 1:
 		return workspaces[0].ID, fromOnlyOne, nil
 	}
-	return "", "", &needWorkspaceError{Profile: session.Profile.Name, Repo: repoFullName, Workspaces: workspaces}
-}
-
-// workspaceFromRepoConfig reads a scaffolded repository's recorded workspace.
-func workspaceFromRepoConfig(root string) (string, bool) {
-	path, err := config.Find(root)
-	if err != nil {
-		return "", false
+	return "", "", &needWorkspaceError{
+		Profile:    session.Profile.Name,
+		InRepo:     pc.RepoRoot != "",
+		Workspaces: workspaces,
 	}
-	cfg, err := config.Load(path)
-	if err != nil || !cfg.Workspace.HasID() {
-		return "", false
-	}
-	return cfg.Workspace.ID, true
 }
 
 // needWorkspaceError is the "which of these?" that a first run in a second
 // workspace produces.
 type needWorkspaceError struct {
 	Profile    string
-	Repo       string
+	InRepo     bool
 	Workspaces []platform.Workspace
 }
 
@@ -190,12 +197,12 @@ func (e *needWorkspaceError) Error() string {
 	for _, w := range e.Workspaces {
 		fmt.Fprintf(&b, "  %-22s %s\n", w.ID, w.Name)
 	}
-	b.WriteString("\nRecord one and every later command in this repository uses it:\n\n")
-	if e.Repo != "" {
+	if e.InRepo {
+		fmt.Fprintf(&b, "\nRecord one in %s, which is committed so nobody has to choose again:\n\n", binding.FileName)
 		fmt.Fprintf(&b, "    asgard-cli workspace use <id>%s\n", profileArgFor(e.Profile))
 	} else {
+		fmt.Fprintf(&b, "\nThis is not a checkout with a declaration, so there is nothing to write a\nbinding beside. Record one for this machine instead:\n\n")
 		fmt.Fprintf(&b, "    asgard-cli workspace use <id> --default%s\n", profileArgFor(e.Profile))
-		b.WriteString("\n(--default because this is not a git repository, so there is nothing to bind it to.)\n")
 	}
 	return b.String()
 }
@@ -208,8 +215,8 @@ func profileArgFor(name string) string {
 	return " --profile " + name
 }
 
-// errNoRepoToBind is what `workspace use` reports outside a checkout, where
-// there is no repository to attach a binding to.
-var errNoRepoToBind = errors.New(
-	"not in a git repository with an origin remote, so there is nothing to bind a workspace to; " +
-		"pass --default to record it for every command run outside a repository instead")
+// errNoDeclarationToBind is what `workspace use` reports where there is no
+// declaration to write a binding beside.
+var errNoDeclarationToBind = errors.New(
+	"no .asgard-pipeline.yaml at or above this directory, so there is nothing for a binding to " +
+		"belong to; pass --default to record this workspace for the machine instead")

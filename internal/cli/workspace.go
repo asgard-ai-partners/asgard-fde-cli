@@ -2,10 +2,13 @@ package cli
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/auth"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/binding"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/platform"
 )
 
@@ -16,24 +19,26 @@ func newWorkspaceCmd() *cobra.Command {
 		Long: `Choose which workspace the platform commands act in.
 
 A workspace is the customer. Everything under "pipeline" is scoped to one, and
-the choice is remembered per repository so that it is made once rather than
-typed on every command.
+the choice is recorded so that it is made once rather than typed on every
+command.
 
     asgard-cli workspace list          what this account can reach
-    asgard-cli workspace use <id>      bind this repository to one
+    asgard-cli workspace use <id>      record it for this checkout
     asgard-cli workspace show          which one applies here, and why
 
-Where the choice is kept is deliberate. It is not written into the repository:
-the declaration contract for a customer repository is a chart and one
-.asgard-pipeline.yaml, and a platform identifier would be a third file it does
-not have. It is not on the platform either - a workspace does not know which of
-your directories holds its repository. So it lives beside the credentials, keyed
-by profile and by the repository's origin remote, and a repository legitimately
-bound in both dev and prod keeps one binding for each.
+It is recorded in .asgard-cli.yaml, beside the declaration it belongs to, and
+that file is committed: whoever clones the repository, and whatever agent works
+in it, then needs no --workspace. The platform never reads it - a run reads the
+declaration and the chart, and nothing else - so nothing there can make a
+deployment succeed or fail.
 
-A repository scaffolded by "asgard-cli init" that already records workspace.id
-is read from there first, because that file is committed and a teammate cloning
-it should not have to choose again.`,
+Which workspace is the one thing neither the repository nor the platform can
+answer alone. The pipeline follows from the origin remote, and the releases,
+their keys and their triggers are all in the declaration.
+
+Overriding is --workspace or ASGARD_WORKSPACE, both of which outrank the file.
+That direction is the safe one: acting on a test workspace when the customer's
+was meant costs a confusing error, and the reverse deploys to a customer.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error { return cmd.Help() },
 	}
@@ -76,7 +81,7 @@ without running anything that would act on it.`,
 			// fail this command: not having chosen yet is exactly when somebody
 			// runs this.
 			current := ""
-			if id, _, err := resolveWorkspace(cmd.Context(), pc.Session, pc.RepoFullName, pc.RepoRoot, ""); err == nil {
+			if id, _, err := resolveWorkspace(cmd.Context(), pc.Session, pc, ""); err == nil {
 				current = id
 			}
 
@@ -101,7 +106,7 @@ without running anything that would act on it.`,
 				fmt.Fprintf(out, "%s%-22s %s\n", mark, w.ID, w.Name)
 			}
 			if current == "" {
-				fmt.Fprintf(out, "\nNone chosen yet. `asgard-cli workspace use <id>` binds one to this repository.\n")
+				fmt.Fprintf(out, "\nNone chosen yet. `asgard-cli workspace use <id>` records one for this checkout.\n")
 			}
 			return nil
 		},
@@ -120,21 +125,25 @@ func newWorkspaceUseCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "use <workspace-id>",
-		Short: "Record which workspace this repository's commands act in",
-		Long: `Record which workspace this repository's commands act in.
+		Short: "Record which workspace this checkout's commands act in",
+		Long: `Record which workspace this checkout's commands act in.
 
-The binding is keyed by the repository's origin remote and by the profile, so
-the same repository bound in dev and in prod keeps both, and a command meant for
-one never reaches the other.
+It writes .asgard-cli.yaml beside the nearest .asgard-pipeline.yaml, and that
+file is meant to be committed. Beside the declaration rather than at the
+repository root because a repository may carry several: a monorepo with one
+declaration per team has one pipeline per team, and a single file at the root
+could name only one of them.
 
     asgard-cli workspace use 1862431170889781248
-    asgard-cli workspace use 1862431170889781248 --profile dev
     asgard-cli workspace use 1862431170889781248 --default
 
---default records it for commands run outside a repository instead of binding it
-to one, and is the only form available when there is no origin remote to key on.
+--default records it for this machine instead, for commands run where there is
+no declaration to write beside. It is per profile.
 
-The id is not checked against the platform here. "workspace list" is where an id
+Anything already in the file is kept, so recording a workspace never drops a
+pipeline id.
+
+The id is not checked against the platform here. "workspace list" is where one
 comes from, and a check would put a network call in the middle of recording a
 choice - the first command that acts on it reports a bad one anyway.`,
 		Args: cobra.ExactArgs(1),
@@ -160,22 +169,47 @@ choice - the first command that acts on it reports a bad one anyway.`,
 				return nil
 			}
 
-			_, repoFullName := locateRepo(cmd.Context())
-			if repoFullName == "" {
-				return errNoRepoToBind
-			}
-			settings.BindWorkspace(p.Name, repoFullName, workspaceID)
-			if err := auth.SaveSettings(settings); err != nil {
+			// The binding belongs beside the declaration it is for, so a
+			// repository with two declarations gets two bindings rather than
+			// one that can only name half of it.
+			dir, err := os.Getwd()
+			if err != nil {
 				return err
 			}
-			fmt.Fprintf(out, "Bound %s to workspace %s on %s.\n", repoFullName, workspaceID, p.Name)
+			declPath, bindPath, err := binding.Locate(dir)
+			if err != nil {
+				return err
+			}
+			if declPath == "" {
+				return errNoDeclarationToBind
+			}
+
+			// Anything already recorded is kept: writing a workspace must not
+			// silently drop a pipeline id somebody relied on.
+			f := &binding.File{Version: 1}
+			if existing, err := binding.Load(bindPath); err == nil {
+				f = existing
+			}
+			f.Workspace = workspaceID
+			if err := binding.Save(bindPath, f); err != nil {
+				return err
+			}
+
+			rel := bindPath
+			if root, _ := locateRepo(cmd.Context()); root != "" {
+				if r, relErr := filepath.Rel(root, bindPath); relErr == nil {
+					rel = r
+				}
+			}
+			fmt.Fprintf(out, "Recorded workspace %s in %s.\n", workspaceID, rel)
+			fmt.Fprintf(out, "\nCommit it: whoever clones this repository, and whatever agent works in it,\nthen needs no --workspace.\n")
 			return nil
 		},
 	}
 
 	addProfileFlag(cmd, &profile)
 	cmd.Flags().BoolVar(&asGlobal, "default", false,
-		"record it for commands run outside a repository, rather than binding it to this one")
+		"record it for this machine, for commands run where there is no declaration to write beside")
 	return cmd
 }
 
@@ -191,11 +225,10 @@ func newWorkspaceShowCmd() *cobra.Command {
 		Long: `Report which workspace applies here, and why that one.
 
 The reason is the useful half. A command that acted in the wrong workspace is
-the failure the resolution order exists to prevent, and the order has six steps:
---workspace, then ASGARD_WORKSPACE, then a scaffolded repository's own
-workspace.id, then what "workspace use" recorded for this repository, then the
-recorded default, and finally the only workspace the account can reach when
-there is exactly one.
+the failure the resolution order exists to prevent, and the order is:
+--workspace, then ASGARD_WORKSPACE, then the checkout's .asgard-cli.yaml, then
+the default recorded on this machine, and finally the only workspace the account
+can reach when there is exactly one.
 
 It names the workspace without acting on it, so it is safe to run first when a
 command is about to do something that matters.`,
