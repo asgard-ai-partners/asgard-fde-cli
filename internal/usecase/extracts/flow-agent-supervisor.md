@@ -5,7 +5,7 @@ A public entry point that delegates to several specialist agents.
 **Seen in:** three deployments - a commerce back-office with five
 specialists, a manufacturing one with nine, and a finance one with three.
 
-**Checked:** 2026-09-02 against three supervisor deployments and the CRD. The agents field was documented as a YAML list and is a stringified JSON array; corrected.
+**Checked:** 2026-09-02 against three supervisor deployments and the CRD. The agents field was documented as a YAML list and is a stringified JSON array; corrected. Extended 2026-09-04: the conversation loop's graph read off every reference deployment at its prod values - four processors and five relationships, edge for edge identical in three of them and one edge different in a fourth, with the counts and the variant recorded below.
 
 **Unchecked:** how to split responsibilities between subagents, and the routing prose. Judgement, taken from deployments that have not been re-examined.
 
@@ -38,6 +38,47 @@ available to an anonymous caller, and `BotProvider.entrypoint` takes a
              skillSetNames          capabilities of the supervisor itself
              agents[]               -> Agent CRs, the subagents
              hooks                  optional, see below
+
+### What "the conversation loop" is
+
+It is four processors and five relationships, and **three deployments have it
+edge for edge identical** - a finance supervisor, a manufacturing one and a
+commerce back-office one, read at their prod values on 2026-09-04:
+
+    entry  ->  update-context
+
+    update-context                  --success-->  stream-llm-completion-message
+    stream-llm-completion-message   --success-->  listen-message
+    stream-llm-completion-message   --failure-->  push-message
+    listen-message                  --success-->  stream-llm-completion-message
+    push-message                    --success-->  listen-message
+
+**It is a loop and it has no exit.** `exits: []`, and that is not an omission -
+14 of the 17 Workflows across every reference deployment declare none. A run ends
+when its terminal processor finishes; only a Trigger-driven Workflow, which has
+somewhere to report to, tends to declare one.
+
+Read the loop as: prime the context once, answer, then wait for the next turn.
+`listen-message` is what makes it a conversation rather than a request - it
+returns to the completion processor, and the completion processor returns to it.
+
+**The failure branch says something and stays in the loop.** `failure` goes to
+`push-message`, which goes back to `listen-message`, so a turn that failed does
+not end the conversation. A branch that failed and one that answered must not
+look the same to the caller, which is why it is a separate processor rather than
+the same one.
+
+**One deployment differs by a single edge**: a shopping guide sends
+`update-context --success--> listen-message`, waiting before it answers rather
+than answering first. Both are deployed. Which one is right depends on whether
+the agent opens the conversation.
+
+**The two-processor query tool is a different shape and worth not confusing with
+this one.** Two deployments have `update-context --success--> http-request`, with
+the request's `success` **and** `failure` both going to `push-message`: one turn,
+no waiting, and the failure path says so rather than being silent.
+`asgard-cli wiki processors` says which relations each type emits, and a
+`relationName` a type never emits is a branch never taken.
 
 Files group as one directory per supervisor:
 

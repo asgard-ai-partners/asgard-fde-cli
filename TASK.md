@@ -15,15 +15,32 @@ the page, a row on `asgard-cli wiki platform-unknowns`, a rule in AGENTS.md.
 ## Goal
 
 **`asgard-cli` is what an FDE's agent asks about integrating with Asgard.** That
-is the positioning, and the two things it does follow from it:
+is the positioning, and four things follow from it - `Goal.md` is the short
+version and this is the same list with what each one costs:
 
-  1. **Answer questions about Asgard integration.** What the platform has, which
-     CR a UI name maps to, how one shape of deployment is assembled field by
-     field, and where each of those has been got wrong before.
+  1. **Give an agent the knowledge of the Asgard ecosystem.** What the platform
+     has, which CR a UI name maps to, how one shape of deployment is assembled
+     field by field, and where each of those has been got wrong before.
 
-  2. **Assist in developing a project's chart.** Skeletons for the CR kinds, the
+  2. **Be useful in a meeting**, which means naming the dependencies an
+     integration scenario needs before somebody promises it. A credential, an
+     endpoint, a network path, a test environment, an approver's queue - the
+     interview in `asgard-cli guide requirements` and the briefings in
+     `asgard-cli brief` are this, and the riskiest activity in an engagement is
+     the one that leaves no trace in a repository.
+
+  3. **Implement the IaC - the charts.** Skeletons for the CR kinds, the
      invariants a rendered chart has to hold, and the judgement that goes with
-     both.
+     both. **This is the least finished of the four**: a production chart uses
+     168 spec keys and `add` never mentions 52 of them, so what it writes is a
+     correct starting point and not a chart.
+
+  4. **When the knowledge is not here, say where to file it.** A search that
+     came back empty is recorded, `asgard-cli reading --misses` reads it back,
+     and `asgard-cli issue-report --new` writes the report with that evidence
+     already in it. The corpus is compiled into the binary, so an engagement
+     cannot write what it learns where it will be read - the issue is the only
+     path back, and it has to be two sentences rather than an essay.
 
 **The asking is the spine and the chart work hangs off it.** An FDE does not
 reach for this to be told what step they are on; they reach for it mid-sentence,

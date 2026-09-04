@@ -484,3 +484,19 @@ time, and editing removes exactly that.
   that produces a good artefact of one kind silently produces a bad one of
   another** - six `proposal-deck` defects passed the skill's own checks - is a
   question in AGENTS.md's "Before you say it is done"
+- `ingest` 2026-09-04 the conversation loop is written down. `flow-agent-supervisor`
+  said "Workflow wf-<name> — the conversation loop" and never said what the loop
+  is; it is four processors and five relationships, **edge for edge identical in
+  three deployments** and one edge different in a fourth, read off every
+  reference deployment at its prod values. The two-processor query tool is a
+  separate shape and is named as one so the two stop being confused
+- `lint` 2026-09-04 **a rule was invented and shipped, then reverted.** Reading
+  one production Workflow that declared an exit, the generator's template was
+  given `exits` plus a relationship graph, with a comment asserting that a
+  processor reaching no exit "leaves the run with nowhere to finish", and a gate
+  check was added for it. **14 of the 17 Workflows across every reference
+  deployment declare `exits: []`**, and two single-processor ones declare no
+  relationships either - the template was already right. Both changes are
+  reverted. The failure is the one this material records twice: asserting from a
+  sample without checking the rest, and this time the assertion was on its way
+  into every customer repository
