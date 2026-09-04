@@ -14,16 +14,25 @@ Layout:
 ```
 cmd/asgard-cli/     main; signal handling and exit codes only
 internal/cli/       cobra command tree, one file per subcommand
-internal/config/    reads and writes .asgard-config.json
+internal/config/    reads and writes .asgard-config.json, including each project's shape
 internal/work/      reads and writes the customer repo's own records of its work
                     (requests, task specs, open questions, decision records)
+internal/kb/        one implementation of listing, reading, scoring and provenance,
+                    shared by every part of the material
+internal/wiki/      the platform wiki, and the glossary's customer-vocabulary table
+internal/usecase/   the deployment-shape extracts
+internal/stage/     which stage a repo is at, derived and never stored, plus which
+                    guidance the repo's own state makes relevant
+internal/scaffold/  writes the non-customer-specific tree, and serves the skills in it
+internal/generate/  CR skeletons, wired to what the chart already declares
+internal/size/      the deployment shapes, counted off production
+internal/brief/     what one activity gets wrong, addressed by intent not by stage
+internal/check/     repository structure: indexes, dated names, links, orphan pages
+internal/gate/      the invariant checks on a rendered chart (xref, agent split, enums)
 internal/deploy/    reads projects/<project>/deploy.yaml, the deployment SoT
 internal/render/    renders a chart via helm, the way CD does
-internal/gate/      the invariant checks on a rendered chart (xref, agent split)
+internal/chart/     reads a project's unrendered templates for (kind, name)
 internal/tool/      resolves helm/kubectl/python3, and how to install one
-internal/wiki/      the platform wiki: what Asgard is made of and who each piece is for
-internal/brief/     what one activity gets wrong, addressed by intent not by stage
-internal/size/      what a capability is made of, before it is written
 internal/version/   build information (injected by GoReleaser via ldflags)
 ```
 
@@ -155,50 +164,99 @@ asgard-cli check                              # structure is consistent
 helm lint projects/<slug>/chart/app           # 0 charts failed
 ```
 
-### `next`
+### `guide`
 
-**The command to run after every step.** It reports which stage the onboarding is
-at and what that stage needs, worked out from the repository itself - which files
-exist, which CR kinds each chart declares - not from a counter in the config. So
-it stays right when somebody does a step by hand, and it answers in an empty
-directory too, where the answer is how to begin.
+**`guide` reads one decision.** There is no command that says where the
+engagement is, and that is deliberate - the two that did are gone. `next`
+reported a position on a walk. `status` replaced it, reported the repository,
+and then named the guidance the shape of it raised: the same rungs, in the same
+order, with the numbers taken off. What the second one printed from files is now
+read by `project`, `question`, `request` and `task`, each from its own file.
 
 ```bash
-asgard-cli next                          # where am I, what now
-asgard-cli next --list                   # every stage
-asgard-cli next --stage requirements     # read one out of order
+asgard-cli guide                   # all the guidance
+asgard-cli guide requirements      # one piece of it, any time
+asgard-cli find "<terms>"          # reach any of it by subject
 ```
 
 ```
-  0  init           Start the onboarding
-  1  scaffold       Write the repository skeleton
-  -  requirements   Turn what the customer said into a request
-  2  projects       Decide how the work splits into projects
-  3  data-sources   Wire up the customer's databases
-  4  read-path      Decide each project's read path
-  5  entry-point    Decide each project's entry point
-  6  knowledge      Decide where unstructured knowledge lives
-  7  verify         Run the acceptance gate
-  8  deploy         Deploy
-  9  enhance        Add a capability to a repo that is already live
-  -  idle           Nothing in flight
+  init           Start the onboarding
+  scaffold       Write the repository skeleton
+  requirements   Turn what the customer said into a request
+  projects       Decide how the work splits into projects
+  data-sources   Wire up the customer's databases
+  read-path      Decide each project's read path
+  entry-point    Decide each project's entry point
+  knowledge      Decide where unstructured knowledge lives
+  verify         Run the acceptance gate
+  deploy         Deploy
+  enhance        Add a capability to a repo that is already live
+  idle           Nothing in flight
 ```
 
-Three of these sit outside the numbered walk. `requirements` is the customer
-interview - it produces the request that stage 2 consumes, and it is read
-deliberately because a conversation leaves no trace on disk until somebody writes
-it down. `enhance` is the loop for a repo already live. `idle` is what an FDE sees
-most often once a repo is running: nothing open, so the only question left is what
-the customer wants next.
+**None of these is a step you arrive at.** They were numbered once, and `next`
+derived "stage 4 of 9" from the earliest missing CR kind. That was wrong in both
+directions: it could name only one thing, so three of them were unreachable
+unless you already knew their names, and a position cannot be argued with, so an
+engagement working in a different order was told it was behind. An engagement
+that has already gathered every requirement has no stage at all, and the tool
+used to insist otherwise.
 
-**Stages 4, 5 and 6 print the wrong answer next to the right one.** Those are the
-three decisions this engagement got wrong once and reversed, and in each case the
-wrong answer is the one that looks obvious.
+Removing the numbers was not enough. `status` raised the same rungs from
+conditions instead - `!p.Has("DataConnector")` in a `switch`, so a chart missing
+two things was told about the first - which is a position with the arithmetic
+hidden. Nothing raises guidance now. It is reached by name with `guide` and by
+subject with `find`.
 
-Open questions print first, on every run, before anything else the command has to
-say.
+**`read-path`, `entry-point` and `knowledge` print the wrong answer next to the
+right one.** Those are the three decisions this engagement got wrong once and
+reversed, and in each case the wrong answer is the one that looks obvious.
 
-### `request`, `task`, `question`, `decision`
+**A chart does not always end with an entry point.** Which CR kinds finish one
+depends on the project's shape, and the shape is the thing the files cannot say
+- a SemanticLayer with nothing mounted on it is either a finished Mimir
+deliverable or an agent nobody has written yet. Declare it and `project` stops
+reporting what that shape does not have as missing:
+
+```bash
+asgard-cli project shape insight mimir-dashboard
+asgard-cli project shape insight          # the current one, and the choices
+```
+
+### `project`, `request`, `task`, `question`
+
+**Four commands read the repository back to you**, one file each, each with
+`--format json`. None of them infers anything from the others.
+
+```bash
+asgard-cli question    # what nobody has answered yet, and who each is with
+asgard-cli request     # what the customer asked for and is not done
+asgard-cli task        # the task specs that are open
+asgard-cli project     # what each chart declares, and what its shape lacks
+```
+
+**Read `question` first.** The fastest way to do damage in a repository somebody
+else started is to design past a question they already knew was open.
+
+```
+Projects:
+
+  insight              mimir-dashboard
+                       DataConnector, SemanticLayer
+                       complete for its shape - which is not the same as deployed
+
+  helpdesk             shape not declared
+                       chart is empty
+                       no shape declared, so nothing is claimed about what it lacks
+                       `asgard-cli project shape helpdesk <shape>`, or `asgard-cli size` for the list
+```
+
+**A chart with no declared shape gets no verdict.** Against a declared shape,
+"this shape asks for X and X is absent" is subtraction. With no shape there is
+nothing to subtract from, and answering anyway means assuming a set of kinds
+every chart wants - which is the ladder, rebuilt out of a default.
+
+### `request`, `task`, `question`, `decision` - writing the records
 
 Work arrives as a **request**: one thing the customer wants that the agent cannot
 do today. Everything else hangs off it.
@@ -237,8 +295,8 @@ means three or four edits, and a repository where two of them disagree gives the
 next reader no way to tell which is current. Every command here moves all of
 them, and stamps the date rather than asking for it.
 
-`asgard-cli next` reads all four back. Open questions print first, on every run,
-before anything else it has to say.
+`asgard-cli question`, `request`, `task` and `project` read them back, each with
+`--format json`.
 
 ### `add`
 
@@ -318,12 +376,16 @@ is kept from going stale as the platform moves - are in `asgard-cli wiki
 
 ### `find`
 
-Search both bodies of reference material at once, when it is not obvious which
-holds the answer.
+**The way in.** It searches all four parts of the material at once - the wiki,
+the extracts, the stage guidance and the design-time skills - because which of
+them holds an answer is usually not obvious before searching. It needs no
+repository.
 
 ```bash
 asgard-cli find schedule
 asgard-cli find anonymous visitor
+asgard-cli find 儀表板                    # translated before the search runs
+asgard-cli find schedule --format json   # each hit with the command that reads it
 ```
 
 ```
@@ -341,9 +403,149 @@ SHAPES - how it is assembled (asgard-cli usecase <name>)
 Read the platform side first; an extract assumes you have.
 ```
 
-It follows the link between the two, so a hit in either half hands over the
-other - in the order they should be read. Every term has to appear, so an extra
-word narrows rather than widens.
+It follows the link between the halves, so a hit in either hands over the other -
+in the order they should be read. Every term has to appear, so an extra word
+narrows rather than widens; when nothing carries them all the search widens and
+says which terms it could not place.
+
+**Ask in the language the question was asked in.** The material is English and a
+customer conversation is not, so the index is applied before the search runs and
+the rewrite is printed:
+
+```
+$ asgard-cli find 電商
+This material is in English. "電商" was read as:
+
+    commerce marketplace channel
+
+PLATFORM - what the thing is (asgard-cli wiki <page>)
+
+  taiwan-channels    The commerce channels a customer will name, and what we have
+```
+
+The index is `asgard-cli wiki --aliases`, and it is **not a page**. It sits
+beside the pages, with `index.md` and `log.md`, because an index inside a
+searched corpus competes with what it points at: the table lists every alias, so
+it reliably carried every term of a translated query and the reader got the word
+list rather than the page.
+
+It has three tables. An **alias** replaces the word - 電商 appears nowhere in an
+English corpus, so keeping it only adds a term that lands nowhere. An **entity**
+is *added* to the query, because the name may be written verbatim in a page and
+replacing it would throw away the best answer there is.
+
+The entities are split, and the split is the point:
+
+| table | means |
+|---|---|
+| names the material **covers** | somebody searched the deployments and recorded the answer. SHOPLINE, Shopee, momo, PChome, 蝦皮, Coupang |
+| names it only **routes** | nothing here names it. The row reaches the *shape* it belongs to, which is what the material has |
+
+**A row that routes reads exactly like a row that answers**, so `find` says
+which it was:
+
+```
+$ asgard-cli find 綠界
+**Nothing here names 綠界.** What follows is the shape it belongs to, which
+is what this material has - not material about the product. Nobody has
+searched the reference deployments for it, and until somebody does, the
+answer to "do we already integrate it" is not in this tool.
+
+  asgard-cli wiki taiwan-channels   the four, and what each one costs
+  asgard-cli question add "which of the four shapes does 綠界 give us" \
+      --ask "<who at the customer>"
+```
+
+and then returns `usecase external-api`, `usecase write-path`, `browser-operation`
+and the unknown that blocks a payment gateway on a public site - `wiki
+platform-unknowns` P8, who presses approve on an anonymous channel. **Moving a
+row from the second table to the first means somebody did the search**, and
+nothing else.
+
+**A word this material has taken is flagged before the results, not after.** A
+search that finds nothing is recorded and the reader is told so; a search that
+finds the *wrong sense* of a word looks exactly like an answer, and nothing is
+red anywhere:
+
+```
+$ asgard-cli find payment
+These results use a word that means one thing here, and it may not be
+the one that was asked about:
+
+  payment      is     billing between Asgard and this customer - see
+                      `asgard-cli wiki fehu`
+               is not **the customer's own payment gateway**, which is an
+                      external system with side effects: `asgard-cli usecase
+                      write-path` ...
+```
+
+That table is `asgard-cli wiki glossary`, and it is applied to a query rather
+than only read by a person. It existed as prose for a long time while the
+failure it describes went on happening.
+
+**A dead end asks a question instead of guessing.** When a query names a system
+this material has never had, the useful answer is not a phrasing hint - it is
+that the work is decided by which of four shapes the system presents, and that
+nobody here can answer it:
+
+```
+**That is a question for the customer, and not one this tool can answer.**
+
+  asgard-cli question add "which of the four shapes does <it> give us" \
+      --ask "<who at the customer>"
+```
+
+**A search that finds nothing is recorded**, in an engagement, to a file that is
+not committed - a query carries whatever words the customer used.
+
+```bash
+asgard-cli reading --misses      # what this engagement searched for and did not find
+asgard-cli issue-report --new    # the report, with that evidence already in it
+```
+
+That is the one part of a defect report nobody has to be believed about: the
+tool witnessed it. Each line is either a missing index row or a missing page,
+and the two need different fixes. A row is added when a search came back empty
+and the subject turned out to exist under another name; a row nobody has needed
+is a guess.
+
+### `brief`, `size`, `reading`, `issue-report`
+
+Four ways in, none of them a position. None needs a
+repository except `reading`.
+
+**`brief`** answers "the thing I am about to do - where will I get it wrong",
+which no repository report can: the riskiest activity leaves no trace in one,
+because talking to a customer changes no file, and meetings happen at every
+stage.
+
+```bash
+asgard-cli brief                     # the activities
+asgard-cli brief customer-meeting    # before any customer conversation
+asgard-cli brief write-chart         # before authoring CRs
+```
+
+**`size`** is what one capability is made of before it is written - the first
+question a proposal is asked, and the basis of a quote. The counts come from
+deployments in production rather than from reasoning, which matters most where
+the intuitive answer is wrong: **the flow-agent shapes contain no `Agent` CR at
+all.** The same shapes are what a project declares with `project shape`.
+
+```bash
+asgard-cli size                      # the shapes, and what each costs empty
+asgard-cli size flow-agent-single --databases 2 --queries 4
+```
+
+**`reading`** reports which pages this engagement opened and which it never did.
+Every read of `wiki`, `usecase` and `guide` inside an engagement appends
+a line to `docs/.reading-log`. It records page names and nothing about the
+customer, so it is safe to commit - and worth committing, because six months
+later it says what the person before you knew. **The pages that cost the most
+are the right ones nobody opened.**
+
+**`issue-report`** is how a gap in this tool gets filed. The gap does not belong
+in the customer repository: a note in one engagement is a note one engagement
+has, and the next one starts over.
 
 ### `check`
 
@@ -352,8 +554,9 @@ tool. It verifies the invariants a chart render cannot see - the ones that
 otherwise surface at deploy time, or when the next person picks the repo up:
 
 ```bash
-asgard-cli check              # whole repo
-asgard-cli check erp          # project-scoped checks limited to erp
+asgard-cli check                    # whole repo
+asgard-cli check erp                # project-scoped checks limited to erp
+asgard-cli check --format json      # errors and warnings as separate arrays
 ```
 
 ```
@@ -375,6 +578,13 @@ ok  structure is consistent (1 project(s): [erp])
   because the file is still there. A warning rather than an error: a decision
   recorded today and not yet applied is an orphan for as long as that takes.
 
+`asgard-cli verify` adds the invariants a render carries, including the CRDs'
+conditional CEL rules: a credential that sets neither a literal nor a reference
+or both, a class block missing or doubled, a `toolsetClass` without the block it
+requires. **Every one of those renders, lints and passes a server-side dry-run**,
+and is refused at apply. Forty of the 79 rules are `self == oldSelf` and cannot
+be seen offline at all.
+
 Naming projects limits the project-scoped checks to those; the repo-wide checks
 always run. It exits non-zero when anything fails, and warnings do not fail it.
 
@@ -391,8 +601,16 @@ These three are why the acceptance gate now runs on Windows.
 asgard-cli render erp dev              # manifests to stdout, summary to stderr
 asgard-cli verify                      # render every declared env, check invariants
 asgard-cli verify --rendered file.yaml # check a stream that is already rendered
+asgard-cli verify --format json        # one record per render, each check named
 asgard-cli doctor                      # which external tools are here, and how to get them
 ```
+
+**`check` and `verify` are the pair an agent works hardest**, because they are
+the gate it is trying to turn green - so both take `--format json`. In text a
+warning and a failure differ by one word at the left margin and only one of them
+is fatal; in JSON they are separate arrays. A failing JSON run exits 1 and
+prints nothing to stderr: the report already says it failed, and a second
+account of it on another stream is a second source for one fact.
 
 `render` replaces the generated repo's `common/render.sh`, and `verify` replaces
 its `check_chart_xref.py` and `check_agent_split.py`. The old chain was:
@@ -450,7 +668,7 @@ distribution - neither kubectl nor helm is in the Debian or Ubuntu default
 repositories, so the honest answer there is not an `apt install`. It exits
 non-zero when a required tool is missing, so it works as a CI preflight.
 
-`init`, `scaffold`, `next`, `project`, `request`, `task`, `question`, `decision`
+`init`, `scaffold`, `project`, `request`, `task`, `question`, `decision`
 and `check` need none of these tools. `render` and `verify` need helm; step 4 of
 the gate needs kubectl.
 

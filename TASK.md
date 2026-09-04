@@ -1,23 +1,201 @@
 # TASK.md
 
-What this repo is for, and what is not finished. Nothing else - how it is built is
-[STRUCTURE.md](STRUCTURE.md), how to change it is [AGENTS.md](AGENTS.md), what the
-commands do is [README.md](README.md), and the defects it has produced and why
-nothing caught them are in `source/FINDINGS.md`.
+What this repo is for, and what needs something a checkout does not have.
+Nothing else - how it is built is [STRUCTURE.md](STRUCTURE.md), how to change it
+is [AGENTS.md](AGENTS.md), what the commands do is [README.md](README.md), and
+the defects it has produced and why nothing caught them are in
+`source/FINDINGS.md`.
+
+**There is no worklist here any more.** What could be done from a checkout has
+been, and git log is the record of it; what is left is under "What is not done"
+and every line of it names the thing it is waiting for. A finding that a reader
+needs lives on the document it concerns rather than here - `**Unchecked:**` on
+the page, a row on `asgard-cli wiki platform-unknowns`, a rule in AGENTS.md.
 
 ## Goal
 
-When an FDE onboards a customer, the coding agent working in that customer's repo
-needs enough context to do the work. The end state is a repo shaped like
-[`unitech-e-asgard-kube`](https://github.com/asgard-ai-platform/unitech-e-asgard-kube).
+**`asgard-cli` is what an FDE's agent asks about integrating with Asgard.** That
+is the positioning, and the two things it does follow from it:
 
-**That repo is the output. The CLI's job is to emit the prompts that drive an
-agent to produce it, plus the parts identical for every customer.** It does not
-write the customer's Kubernetes resources, because roughly 90% of that repo's
-916-line `AGENTS.md` is knowledge only the engagement can earn.
+  1. **Answer questions about Asgard integration.** What the platform has, which
+     CR a UI name maps to, how one shape of deployment is assembled field by
+     field, and where each of those has been got wrong before.
+
+  2. **Assist in developing a project's chart.** Skeletons for the CR kinds, the
+     invariants a rendered chart has to hold, and the judgement that goes with
+     both.
+
+**The asking is the spine and the chart work hangs off it.** An FDE does not
+reach for this to be told what step they are on; they reach for it mid-sentence,
+in a meeting or halfway through a chart, because their agent needs a fact about
+the platform that only this tool has. So the first one has to work **with no
+repository at all** - the question asked in a first meeting is the same question
+asked halfway through a chart, and an FDE who must be inside an engagement to
+ask it will not ask it.
+
+### Which is why the knowledge base is the product
+
+The value here is not the command surface. It is 68 documents and 87,000 words
+that exist nowhere else, and **the whole of the engineering problem is making
+them searchable by an agent.**
+
+That is a different requirement from making them readable. An agent finds a
+document by following a pointer or by matching a term, reads what it is given,
+and acts - it does not browse an index, does not notice that the page it needed
+was one directory away, and cannot tell that the answer it got is the wrong
+sense of the word it asked about.
+
+**The four rules below are that requirement, and each is a way an agent silently
+gets the wrong answer rather than a matter of hygiene.** Each has a command that
+says whether it still holds, so a rule that stops holding shows up in a run
+rather than in a list somebody maintains.
+
+### The form: llm-wiki
+
+The target shape is the [llm-wiki
+pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f), and
+it is chosen for a reason rather than adopted: **synthesis happens once, into a
+document, instead of on every query.** An answer that needed three documents
+assembled on the spot is new knowledge and goes into a document, or the next
+reader assembles it again. No embeddings and no vector index - a retrieval layer
+over un-synthesised material is the thing the pattern replaces.
+
+What that costs and what it does not buy is the next section.
+
+### What this tool does not do
+
+It does not write the customer's Kubernetes resources. The end state of an
+engagement is still a repository shaped like
+[`unitech-e-asgard-kube`](https://github.com/asgard-ai-platform/unitech-e-asgard-kube),
+and roughly 90% of that repo's 916-line `AGENTS.md` is knowledge only the
+engagement can earn.
+
+**And it reports no position.** No command says where an engagement is. Guidance
+is reached by subject through `find` or by name through `guide`; the records are
+read by `project`, `question`, `request` and `task`, one file each.
+
+## The design of record: one corpus, four parts
+
+The target shape is the [llm-wiki
+pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f).
+`internal/wiki/` already implements it, deliberately and with the pattern named
+in its own `README.md`. **The work is to bring the other three bodies of
+material under the same schema, not to invent one.**
+
+### Three layers
+
+What separates them is which one may be rewritten.
+
+| layer | contents | may be edited |
+|---|---|---|
+| raw sources | asgard-docs, asgard-kube, the eight reference deployments | read-only, never vendored in; only the commit is recorded |
+| the corpus | `wiki/pages/`, `usecase/extracts/`, `stage/prompts/`, the scaffolded skills | rewritten continuously, and only ever describes the present |
+| the schema | `AGENTS.md`, and each corpus's own `README.md` | changed deliberately, by a person |
+
+### Three operations
+
+**ingest** a source: read it, confirm the reading, write or rewrite the pages it
+touches, update the index, append to the log. Step "the pages it touches",
+plural, is the one that gets skipped.
+
+**query**: search the corpus first. An answer that needed three documents
+assembled on the spot is new knowledge - it goes into a document, or the next
+reader assembles it again.
+
+**lint**: contradictions, stale claims, orphans, dead pointers, and the fourth
+kind that only happens here - upstream moved and the corpus did not. Nothing
+inside the corpus can detect that one; only going back to the source can, which
+is why every document carries its sources.
+
+### Four rules, and where each one stands
+
+These are the acceptance criteria for the work in the worklist below. Each is
+stated in AGENTS.md as a rule; what follows is how far the code holds it.
+
+  - **One schema.** Held. Every document in all four bodies opens with a title
+    and a summary and carries `**Checked:**` and `**Unchecked:**` -
+    **0 of 25, 0 of 21, 0 of 12, 0 of 7** unverified. `kb.Scan` and `kb.Rank`
+    are the one scoring implementation and `kb.Ref` lets a corpus address files
+    that are not `dir/name.md`, which is how a prompt is reachable as
+    `read-path` and a skill as `<name>/SKILL.md`.
+
+    **It was closed by checking, not by writing the lines**, which is the whole
+    of the distinction: the guidance and the skills were held against
+    asgard-kube `15ded0f`, against the six reference repositories, and against
+    the gate that enforces the rules they describe. What that pass produced is
+    in "The provenance pass" below - four corrections, not four provenance
+    lines.
+
+  - **Links are data.** Held. Every document carries `kb.Doc.Links`, read when
+    it is parsed, with the ones inside its counterpart section marked
+    deliberate. `find` names a hit's counterpart off that field and
+    `audit-material --links` resolves the same field, so the two can no longer
+    disagree about what a document points at - which they could, being two
+    regular expressions at two points of use. The lint that was impossible is
+    now `audit-material --orphans`, and its first run said **11 of 61 documents
+    are reached by no pointer**. The index deliberately does not count as one.
+
+  - **Retrieval is by subject, never by position.** Held, and the rule is
+    narrower than it was: it used to say "by subject or by condition", and the
+    condition half was the ladder with the numbers off. Gone with it are
+    `stage.Current`, `stage.Relevant`, the numbering and "stage 4 of 9".
+    `stage.Gaps` remains and is arithmetic: it subtracts what a chart declares
+    from what its **declared shape** asks for, and says nothing at all where no
+    shape is declared. Nothing raises a document for a reader; `guide` names
+    them and `find` reaches them by subject.
+
+  - **Everything an agent reads has a parseable form.** Held. `find`,
+    `project`, `question`, `request`, `task`, `check` and `verify` take
+    `--format json`, and the last two are the pair that mattered most: they are
+    the gate an agent is trying to turn green, and in text a warning and a
+    failure differ by one word at the left margin while only one is fatal. A
+    JSON run that fails exits 1 and prints nothing to stderr, because the report
+    already says it failed and a second account of it is a second source for one
+    fact. `wiki` and `usecase` stay prose - they are whole documents.
+
+### What the pattern does not buy, and what is unsolved
+
+**No embeddings, no vector index.** The point of the pattern is that synthesis
+happens once, into a document, instead of on every query. A retrieval layer over
+un-synthesised material is the thing it replaces. Substring and term matching in
+`internal/kb` is sufficient and stays.
+
+**The write-back path runs through a person, and the person is at the far end.**
+In the original, a good answer becomes a new page. Here the corpus is compiled
+into the binary - correctly, so that a stale document is fixed once for every
+engagement rather than rotting inside one - so an engagement that learns
+something cannot write it where it will be read. The loop that exists instead:
+
+    a search comes back empty   ->  `find` records it, in docs/.find-misses
+    the agent files it          ->  `issue-report --new`, with that evidence in
+    somebody ingests it here    ->  a page, or a row in the alias index
+    the next release            ->  every engagement has it
+
+**The slow step is the right one.** ingest's first instruction is "read it, and
+confirm the reading with the person before writing", and the only human in this
+loop stands exactly where a claim enters material that ships to everybody.
+
+What changed to make it work is that **the report stopped being prose to be
+filled in from memory.** The reader and the writer here are both agents, so
+every narrated field is somebody's account of what happened and can be wrong -
+a search remembered as run, phrased differently from the one that was run. The
+recorded miss is the one part nobody has to be believed about: the tool
+witnessed it. `--new` puts that, the version and the repository state in; the
+four narrated fields are marked TODO.
+
+**The miss file is not committed.** A query is whatever words the customer used,
+so unlike `docs/.reading-log` - which carries page names of this tool and
+nothing else - it stays out of the repository, and the scaffold's `.gitignore`
+says so. It only has to live long enough for the issue to be filed; what reaches
+the next engagement is the fix in the next release.
 
 ## Non-goals
 
+- **Not a workflow engine.** The tool reports what the repository contains and
+  what is relevant to that; it does not sequence an engagement, and a command
+  that can only be reached by having reached the one before it is a defect.
+  Onboardings are not linear - three of the decisions in the engagement this was
+  built from were made, built, and reversed.
 - **Anything to do with git.** Not `git init`, not adding a remote, not
   authenticating to one: Asgard is growing its own mechanism for provisioning a
   customer repository. This needed saying **in the prompts**, not just here - the
@@ -41,301 +219,60 @@ write the customer's Kubernetes resources, because roughly 90% of that repo's
 
 ## Open questions
 
-### Are the EKS cluster names customer-specific?
+They are not carried here. Each lives where the person who can answer it will be
+standing:
 
-`.github/workflows/main.yaml` hardcodes `asgard-ai-eks` (dev) and
-`asgard-ai-eks-prod` (prod), and `asgard-cr-verification/SKILL.md` carries the
-full ARN including Asgard's AWS account id, which ships into every customer repo.
-
-These read as **Asgard's own clusters, shared by every customer**, with customers
-separated by namespace rather than cluster, which would make the CD workflow
-portable verbatim. That is inferred from the tag-to-cluster table in `AGENTS.md`,
-not verified. If it is wrong the cluster name becomes a fourth thing the scaffold
-must parameterise - and the account id becomes something to parameterise either
-way. The account id appears once in the embedded material, in the EKS ARN in
-`.agents/skills/asgard-cr-verification/SKILL.md`; the scaffolded CD workflow takes
-AWS credentials from repository secrets instead. It used to be allowlisted in
-`internal/scaffold/secrets_test.go`, which failed the build on any run of 12+
-digits in an embedded file - that test is gone, so **nothing now stops a customer
-identifier being embedded in a template by accident.**
-
-### Should the helm major version be pinned?
-
-Homebrew and Scoop both ship **Helm 4** now (4.2.4 as of 2026-09-01), while the
-generated repo was written for 3. `template` and `lint` are what the CLI uses and
-both still exist, so `asgard-cli doctor` prints a note rather than failing. CI
-picks its own helm version independently, so the two can differ silently.
-
-### Browser operation, before it can be an extract
-
-Whether the page and operation maps were produced with tooling or by hand, and how
-long one takes. Both decide whether an extract is advice or a commitment.
-
-### Platform unknowns
-
-Five are carried in the scaffolded `docs/open-questions.md` (P1-P5) rather than
-here, because every engagement hits them: per-user resource scoping, an audit
-record of what an agent did, whether approved content can change before it goes
-out, non-HTTP protocol reach (answered: yes, via the sandbox), and the cost of
-producing a web console's page map.
-
-## The worklist
-
-Everything completed was removed on 2026-09-03; git log is the record of what
-was done and why. What is left is open work only, and the rules the finished
-work paid for are in AGENTS.md under "Before you say it is done" rather than
-here.
-
-**Why this list exists at all.** The pass that produced it was run reactively -
-each gap found by walking into it - and the same mistake was made twice:
-asserting what the material contains without reading it. `taiwan-channels` first
-said nobody had integrated a commerce channel; a middleware deployment
-integrates SHOPLINE across two skills, one of them an 88-page back-office map.
-**Searching for four names is not reading a repository.**
-
-### In the order an engagement hits them
-
-  1. **71 published asgard-docs pages are not read into any wiki page.**
-     Measured 2026-09-03 against a clone: 162 pages, 79 cited, 83 uncited, of
-     which 16 are `draft: true` and unpublished - so 71 is the number that means
-     anything.
-
-     **The whole of `developer-reference/` has been read.** What is left uncited
-     is the part deliberately excluded - the 14 message-template pages, the
-     release notes, the site's own redesign plans - plus most of
-     `help-community/` and the `superpowers/` directory, which nobody has
-     assessed.
-
-     **What would make this worth another pass** is not the count. It is that
-     `help-community/faq/` is where a customer's own questions get answered, and
-     nothing here has checked whether its answers agree with what the material
-     tells an FDE to say.
-
-  2. **`deleteme/` and `asgard-bussiness-plan` are the two repositories nobody
-     has assessed.** The rest of the parent directory was triaged 2026-09-03 by
-     grepping each for an Asgard CR kind, the `asgard-ai.com/` annotation prefix
-     or `apiVersion: asgard`. `just-inference`, `hugin`, `partner-finder` and
-     `ppt` have zero hits between them; `asgard-html2img`'s two are a vendored
-     skill template; `content-pipeline` yielded the four CD facts now in
-     `next --stage deploy`.
-
-     **`deleteme/` is this tool's own scratch output** - every directory in it
-     carries a `.asgard-config.json` and the scaffold layout, and one is named
-     after a live engagement. That makes it useless as evidence and worth
-     knowing about: grepping the parent directory for `botProviderClass: line`
-     returns hits, and they are ours. `usecase chat-channel` says so.
-
-     `asgard-bussiness-plan` is partially read - the whitepaper's architecture
-     section corroborated `X-API-KEY`. Nobody has read the rest.
-
-  3. **The kami checkers and the deck skill disagree, and the checkers win
-     arguments they should lose.**
-
-     - **`--check-content` once induced a content regression.** Its CJK matching
-       collapses whitespace, so a cover date running into an eyebrow made the
-       eyebrow unfindable. To turn it green the FDE removed the sub-numbering
-       from every eyebrow, and every sub-topic slide then claimed the wrong
-       level. **A check drove a change it could not itself see.** The rule that
-       follows is in the deck skill: never edit what is on a slide to satisfy a
-       checker.
-     - **It never goes fully green on slides**: `audience` and per-slide
-       `layout` are schema fields and are not printed. Read the list; do not
-       chase it to zero.
-     - **`--check-density` and `--check-rhythm` are wrong about a discovery
-       deck.** They read its question pages as sparse and its alternation as
-       monotonous, and in both cases the deck is right. So the skill asks for a
-       document its own checks will fail. That is smaller than a document the
-       typesetting cannot produce, but it is unstated, and an agent that trusts
-       the checker will flatten the deck.
-
-     The typesetting traps below are recorded because each one cost a rebuild:
-     fixed-height slides with `break-after` silently turn 14 pages into 18 when
-     anything joins normal flow, so footers and links must be absolutely
-     positioned and the page count re-checked after every edit; `.co` at 12mm
-     and `.footer-mark` at 10mm always overlap, and the template's own example
-     page uses both; `<b>` does nothing, because the CJK faces embed 400 and 500
-     only, so use `font-weight:500`; and `content.json` must be written first
-     with the HTML generated from it, because editing HTML and back-filling the
-     IR loses things.
-
-  4. **Two asks for asgard-docs, not for this repository.** `asgard-cli
-     issue-report` is the channel other agents use to file against this repo;
-     these two are the reverse direction and nobody has raised them.
-
-     - **The approval gate has no product documentation page.** Every screenshot
-       of it is Sindri's dialog, which is where authenticated staff work.
-       `usecase write-path` says a prompt-level "shall I go ahead?" is not a real
-       gate and cannot say what one is on an anonymous channel. `wiki
-       platform-unknowns` P8.
-     - **The Asgard side of LINE has no current screenshot.** The integration
-       dialog in `integration/LINE` is the 2024 console. The LINE Developers
-       Console image on the same page is usable and current, so the ask is
-       narrower than it was: one screen, not the whole flow.
-
-  5. **The first measured reading baseline, from before the log existed.** One
-     engagement read about 15 of ~36 pages, and the rule was: the stage it was
-     told it was in, plus whatever that stage pointed at. Never opened, and
-     needed: `wiki operations` - in the index the whole time under the title
-     Connectivity, while that engagement spent a day on connectivity.
-
-     `asgard-cli reading` records this from now on. **That number is the
-     baseline to beat**, and the thing to watch is not the ratio but which
-     pages sit in the never-opened column while being relevant.
+  - **The platform's**, with who to ask and what each blocks -
+    `asgard-cli wiki platform-unknowns`. Five of them are also written into
+    every scaffolded `docs/open-questions.md`, because every engagement hits
+    them.
+  - **This engagement's** - `asgard-cli question`, which reads
+    `docs/open-questions.md` back and reports who each is waiting on.
+  - **The FDE's**, listed under "What is not done" below: they need a decision
+    rather than work.
 
 ## What is not done
 
-Everything here is known, not discovered - a line being here means somebody
-decided it could wait, or could not be done from here, and the reason is next to
-it.
+Everything here needs something this repository does not have. A line is here
+because it cannot be done from a checkout, not because nobody got to it - what
+could be done from one has been, and git log is the record.
 
-### A statement that shipped and was wrong
+**A console login and an afternoon.** `console`, `sindri`, `mimir`, `fehu` and
+`settings` describe a UI, so their source is product documentation rather than a
+chart, and they are checked less deeply than the extracts by nature. Each says
+how far it got on its own `**Unchecked:**` line and `asgard-cli wiki --unverified`
+lists them. Two mechanical passes found nothing and a third was written and
+thrown away for calling correct material wrong. One person with access could
+settle all five.
 
-The scaffolded `AGENTS.md` told every engagement that **there is no
-`CompletionModel` CR and therefore no model API key in `app-secret`**. There is
-one, the CRD defines it with six classes, and three of seven reference
-deployments declare their own with the provider's key as a secretKeyRef. The
-same file listed `CompletionModel` among the CRs carrying
-`project-environment-id`, eleven lines above - so it contradicted itself and
-nobody read the two together.
+**A cluster.** Forty of the CRDs' 79 CEL rules are `self == oldSelf`, comparing a
+proposal against the object already on it. A render is one object with no
+history, so nothing offline can see them - `botProviderClass` is the one that
+bites, and `asgard-cli usecase chat-channel` documents it instead. The same
+applies to `asgard-cli guide verify` step 4: a step that cannot be run is not a
+step that passed.
 
-What it was describing is the `builtin` class, generalised into the absence of
-the CR. Corrected in `AGENTS.md.tmpl` and in `wiki settings`, with the two things
-the CRD enforces that helm does not: the class is immutable, and exactly one
-provider block may be present.
+**A customer on a chat platform.** Every `BotProvider` across every reference
+deployment is `generic`. `chat-channel`'s credential blocks were checked field by
+field against the CRD and match, but nothing there has run, and its
+`**Unchecked:**` line says so. The first customer on LINE is that page's first
+test.
 
-**The lesson is about the sample, not the sentence.** This survived because the
-material was written from deployments that all use builtins. Every remaining
-`AGENTS.md` claim about what does not exist deserves the same check against the
-seven charts, and that has not been done.
+**A clone of asgard-docs.** 69 published pages are cited by no wiki page. Two
+slices are worth reading and the rest is release notes and site plans:
+`developer-reference/processor`, because `wiki processors` was written from
+asgard-core's definitions and P10 says that list is demonstrably incomplete; and
+`help-community/faq`, because nothing has checked whether the answers a customer
+gets there agree with what this material tells an FDE to say.
 
-### What automated checks cannot see
+**An answer from the platform team.** The unknowns are on
+`asgard-cli wiki platform-unknowns`, with who to ask and what each blocks. P12 is
+the cheapest: three CRDs - `ImageGenerationModel`, `TranscriptionModel`,
+`SourceSetEditorServer` - exist in the contract and appear in no documentation
+and no material here, and nobody has asked whether they are meant to be reached
+for.
 
-Six defects in `proposal-deck` were found by an engagement building a real deck,
-and **every one passed the layout skill's own checks** - density, rhythm and
-content all green. They shared a cause: the skill carried the proposal's rules
-and applied them to a discovery deck, where several of them invert.
-
-Titles as assertions become conclusions stated before the questions that would
-support them. The three-to-five item bound compresses a customer's document into
-something only its author can read. `cap` fills with narration. Two recommended
-screenshots carry `ts-` prefixes and the build console's own navigation, which
-the same skill's first rule forbids.
-
-All six are fixed. **The pattern is worth keeping**: the rules that produce a
-good artefact of one kind silently produce a bad one of another, and a checker
-that validates shape cannot tell them apart. Any recipe added here should say
-which kind of artefact it is for, and what inverts for the others.
-
-The counterpart is also worth recording: **`demo-generation` is now an extract**,
-and the demo generator remains the largest body of Asgard chart material there
-is. What it has that nothing else does is an orphan check in both directions -
-every asset must be used by a story, not only every reference resolved.
-
-### The solution vocabulary is agent-shaped
-
-Not a missing extract - a missing **kind** of extract, and it is the one that
-changes what gets proposed to a customer.
-
-Every shape here assembles an agent. So does the interview, until 2b was added:
-its ordered questions go from what they cannot do today, to who is on the other
-end, to which systems hold the data, and every one of them assumes the
-deliverable is something you talk to. An agent asked what to propose therefore
-proposes an agent, and does it fluently, which is what makes this hard to notice.
-
-It has already cost one proposal. A customer's cross-channel inventory question
-- exactly the thing Mimir is for, and the subject of one of the product
-documentation's own case studies - came back as an agent over a semantic layer,
-because nothing in the interview asks what they do with the answer and no shape
-existed to propose instead.
-
-`mimir-dashboard` and the interview's 2b close the Mimir case. **Four products
-are still unrepresented**: Heimdall, Fehu, the Management Console as work in its
-own right, and Knowledge Base as distinct from a Drive. `wiki product-suite`
-describes all six in a table; nothing turns any of them into something an
-engagement can propose. The next one to hit this will be a customer whose
-question is about permissions or about cost.
-
-### Three CRDs nothing covers
-
-`ImageGenerationModel`, `TranscriptionModel` and `SourceSetEditorServer` exist in
-the platform contract and appear in **no** product documentation page and **no**
-material here. An engagement whose customer needs image generation or
-transcription would find the CRD and nothing else - no shape, no traps, no
-statement that they are not meant to be used yet.
-
-Which of the two it is matters and is not known: the platform may simply be ahead
-of its documentation, or these may not be meant for an engagement to reach for.
-Worth one question to the platform team, and cheap to answer.
-
-### Gates that could be stronger
-
-- **`project add`'s terraform prerequisite stays a notice, not a gate.**
-  Settled 2026-09-03 rather than left open. The demo generator refuses without
-  the namespace and both `platformMainEnvironmentId` values because it runs
-  where it can see them; this CLI is offline by design, and at `project add`
-  time the id **does not exist yet** - tf-asgard has not run. Refusing would
-  block the first step of every engagement on something that is correct to be
-  missing. The condition is checkable after rendering and `verify` checks it.
-
-- **The 79 CEL rules are not checked, and 40 of them cannot be.**
-  `gate.Enums` (E1) and `gate.Constraints` (C1) cover the CRD's enums, patterns,
-  lengths and bounds. What is left is `XValidation`, and **40 of the 79 are
-  `self == oldSelf`** - they compare a proposed object against the one already on
-  the cluster, and a render is one object with no history. `botProviderClass` is
-  the one that bites; `usecase chat-channel` documents it instead.
-
-  The remaining ~39 are checkable and are not checked. The tractable ones are
-  the conditional shapes - `toolsetClass != 'mcp-server' || has(mcpServerConfig)`,
-  `documentClass != 'video' || video != null` - which are a field implying
-  another field's presence. That is a real class and nothing catches it.
-
-### Blocked on access nobody in this loop has
-
-- **The wiki is checked less deeply than the extracts, and that is structural.**
-  An extract has a chart to hold it against; the wiki's source is product
-  documentation describing a UI, much of which is in no chart at all. Every page
-  says how far it got on its `**Unchecked:**` line, and `wiki --unverified`
-  lists them.
-
-  Two mechanical passes have been run and found nothing: every enumerated set
-  against the CRD enums, and every completeness claim ("the thirteen processor
-  types", "the CRD supports ten", "`agentClass` has one value"). A third was
-  written and thrown away for calling correct material wrong - see the third
-  question under "Before you say it is done" in AGENTS.md.
-
-  **The fix is a login and an afternoon.** `console`, `sindri`, `mimir`, `fehu`
-  and `settings` all describe a UI; one person with access could settle all
-  five, and nothing short of that will.
-
-- **`wiki setup-path` states an order no source states.** Every step comes from
-  the page that owns it and no source puts them in a sequence, which is why the
-  page exists. **One fork is verified** - that an HTTP API's credential has no
-  home under Settings - and the rest is a reading of what each step needs from
-  the one before. Its Sources say so and ask whoever reaches a live console to
-  report what is wrong. It is the page most likely to be confidently wrong.
-
-- **`chat-channel` has never run anywhere.** Every BotProvider across every
-  reference deployment is `generic`. The credential blocks were checked field by
-  field against the CRD on 2026-09-03 and match, and the CRD's `ExactlyOneOf`
-  and immutability rules are recorded - but nothing here has been *run*, and the
-  first customer on LINE is that page's first test.
-
-  **There is a trap in checking this yourself.** Grepping the parent directory
-  for `botProviderClass: line` returns hits, plus `discord`, `slack` and
-  `telegram`. Every one is inside a scratch repository this tool scaffolded.
-  They are the page's own output, and the extract says so.
-
-### Deferred by the FDE, needs a decision rather than work
-
-- **Homebrew tap and Scoop bucket.** The config is written and guarded by its
-  token; enabling either is creating a repository and adding a secret. The FDE
-  deferred this deliberately.
-- **Linux packaging beyond what nfpm does by default.** Deferred by the FDE.
-
-### Questions that block nothing yet
-
-Listed in full under "Open questions": whether the EKS cluster names are
-customer-specific, whether the helm major version should be pinned, and what
-producing a web console's page map actually costs. The five platform unknowns
-live in the scaffolded `docs/open-questions.md`, because every engagement hits
-them and the answers belong where the engagement is.
+**A decision from the FDE**, deferred deliberately: the Homebrew tap and Scoop
+bucket, which are a repository and a secret away; Linux packaging beyond nfpm's
+defaults; whether the helm major version should be pinned; and whether the EKS
+cluster names are customer-specific.

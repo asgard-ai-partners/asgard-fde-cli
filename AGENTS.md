@@ -4,21 +4,30 @@ Rules for AI agents working in this repo. Human contributors follow the same one
 
 ## What this repo is
 
-A single Go binary, `asgard-cli`, that drives the onboarding of one customer onto
-the Asgard platform. It writes files into a *customer's* repository and never
-holds state of its own.
+A single Go binary, `asgard-cli`, that does two things for an FDE:
 
-Most of the value is not code. It is four bodies of embedded material, and the
-first question when adding anything is which one it belongs to:
+  1. **Answers an agent's questions about integrating with Asgard** - what the
+     platform has, which CR a UI name maps to, how one shape is assembled field
+     by field, and where each has been got wrong before. This works with no
+     repository present, and has to keep working that way.
+  2. **Helps assemble a project's chart** - CR skeletons, the invariants a
+     rendered chart has to hold, and the judgement that goes with both.
 
-[STRUCTURE.md](STRUCTURE.md) walks every directory. The short version:
+It writes files into a *customer's* repository and never holds state of its own.
+[TASK.md](TASK.md) states the goal in full and why it changed; this file is how
+to change the code and the material without breaking it.
 
-| material | answers | lives in |
+**Most of the value is not code.** It is one corpus in four parts, and the first
+question when adding anything is which part it belongs to:
+
+| part | answers | lives in |
 |---|---|---|
-| stage prompts | what to do at this point in an onboarding | `internal/stage/prompts/` |
 | wiki pages | what the platform is, and who each piece is for | `internal/wiki/pages/` |
 | usecase extracts | how one shape of deployment is assembled, field by field | `internal/usecase/extracts/` |
-| scaffold templates | the part of a customer repo that is the same every time | `internal/scaffold/templates/` |
+| stage prompts | what to weigh at one point in the work | `internal/stage/prompts/` |
+| scaffold templates | the part of a customer repo that is the same every time, including the skills the customer's agent loads | `internal/scaffold/templates/` |
+
+[STRUCTURE.md](STRUCTURE.md) walks every directory.
 
 **One fact, one home; everywhere else links.** A trap that belongs to a CR
 template does not also get explained in a wiki page. When you are about to repeat
@@ -27,6 +36,46 @@ current.
 
 The reading order is wiki, then extract: an extract assumes you already know the
 platform has that shape. `asgard-cli add <kind>` prints both, in that order.
+
+## The corpus is a wiki, and these are its rules
+
+The shape is the [llm-wiki
+pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) -
+raw sources that are never vendored in, a corpus that is rewritten continuously,
+and a schema a person changes deliberately. `internal/wiki/README.md` states it
+for the wiki and is the longer version; these four rules apply to all four
+parts. All four hold as of 2026-09-04, and each has a command that says so -
+`find --unverified`, `audit-material --links`, `audit-material --orphans`. A
+rule that stops holding shows up there rather than in a list somebody has to
+maintain.
+
+**One schema.** A document opens with a `# ` title and a summary paragraph, and
+carries `**Checked:**` / `**Unchecked:**` - what it has been held against, and
+what it has not. `internal/kb` parses that and nothing else; a part of the corpus
+that needs its own reader, its own search and its own match type is a fifth thing
+that will drift. Do not add one. If new material does not fit `kb.Corpus`, that
+is a reason to change `kb`, not to write a second one.
+
+**A pointer is data, not prose.** Write a cross-reference in the canonical form -
+`asgard-cli wiki <page>`, `asgard-cli usecase <name>`, `asgard-cli guide
+<name>`, `asgard-cli brief <activity>` - because `audit-material --links`
+resolves exactly those and fails on one that goes nowhere. A pointer written any
+other way is invisible to the gate, and a dead pointer reads correctly right up
+to the moment somebody follows it.
+
+**Guidance is retrieved by subject or by condition, never by position.** "You are
+at step 4" is a claim about a walk that no engagement actually performs. What a
+reader can act on is a claim about the repository in front of them, or about the
+thing they are about to do. `asgard-cli brief` was added for exactly this reason
+and its package comment is the argument; `asgard-cli find` searches all four
+parts by subject for the same one. **Anything reachable only by having arrived
+somewhere is unreachable**, and the measured version of that is in TASK.md: an
+engagement read the stage it was told it was in and what that stage pointed at,
+and never opened the page it spent a day needing.
+
+**What an agent reads has to be parseable.** Column-aligned output is for the
+FDE, and it is not an interface. A command an agent acts on owes it a form that
+does not have to be recovered from `%-9s`.
 
 ## Language
 
@@ -43,11 +92,27 @@ return fmt.Errorf("write %s: %w", path, err)
 `internal/scaffold/templates/`, because the generated repository is read by the
 customer's own engagement, in their language.
 
-`internal/wiki/` used to be the second. It is English now: the sources are zh-TW,
-but an agent asked in Chinese queries in English, so the corpus does not need to
-carry both - and one language removes the split where a Chinese question reached
-only the wiki and an English one only the extracts. Product labels keep their own
-names (Managed Agent, Drive, Context Index are what the UI says).
+`internal/wiki/` used to be the second. It is English now, and one language
+removes the split where a Chinese question reached only the wiki and an English
+one only the extracts.
+
+**The corpus carries one language because the mapping lives somewhere else, not
+because the reader translates.** `asgard-cli wiki --aliases` is the mapping,
+`asgard-cli find` applies it to a query before searching, and the rewrite is
+printed so a reader can see what was searched. So the instruction to an agent is
+the opposite of what this paragraph used to imply: **give `find` the customer's
+own words.** Translating only after a search came back empty was tried and was
+worse: the table matched the row about the word itself. Product labels keep
+their own names (Managed Agent, Drive, Context Index are what the UI says).
+
+**An index is not a page and does not live among them.** That table was a
+section of `pages/glossary.md` until it was measured: because it lists every
+alias, it was reliably the one document carrying every term of a translated
+query, so a search for a subject returned the word list rather than the page.
+It sits beside `pages/` now, with `index.md` and `log.md`. Anything that
+catalogues the corpus goes there, and `audit-material --links` still reads it -
+`--orphans` deliberately does not, because a list that names every page makes
+every page look reached.
 
 Do not "fix" the scaffold templates into English. Do not start a second exception
 without saying why it earns one.
@@ -108,7 +173,7 @@ online is one that fails on a plane. A citation that already says the link 404s
 and does not fail, so disclosing one is how you keep it.
 
 `--links` resolves every `asgard-cli wiki <page>`, `usecase <extract>`,
-`brief <activity>` and `next --stage <name>` the material writes - in prose and
+`brief <activity>` and `guide <name>` the material writes - in prose and
 in the generator's own `Wiki:`, `Extract:` and `AlsoRead:` fields - and exits 1
 on one that goes nowhere. **Run it after renaming or removing a page**, which is
 the only way to leave a dead pointer behind; it reads correctly and resolves to
@@ -158,6 +223,25 @@ project the config declared and the disk did not - `check` passed, `render`
 failed - and that survived a long review of the material because nobody had run
 `init`, `scaffold`, `project add`, `add` and `render` in sequence. Do that, in a
 throwaway directory, for anything that touches a command.
+
+**Does it still work with no repository?**
+Half the job is answering a question, and that question gets asked in a meeting,
+before the engagement has a directory. `wiki`, `usecase`, `find`, `brief`, `size`
+and `guide` all answer outside one - reference material that requires an
+engagement is unavailable exactly when somebody is deciding whether to have one,
+and `guide init` is how somebody with no directory finds out what to do first. A new command that calls `config.Find` before it can say anything
+has quietly left that half. Run it in an empty directory.
+
+**Which kind of artefact is this recipe for, and what inverts for the others?**
+A rule that produces a good artefact of one kind silently produces a bad one of
+another, and a checker that validates shape cannot tell them apart. Six defects
+in the `proposal-deck` skill were found by an engagement building a real deck
+and **every one passed the skill's own checks** - density, rhythm and content
+all green - because the skill carried the proposal's rules and applied them to a
+discovery deck, where several of them invert. Titles as assertions became
+conclusions stated before the questions that would support them; the
+three-to-five item bound compressed a customer's document into something only
+its author could read. Say which kind a recipe is for.
 
 **What else claimed the thing you just changed?**
 A trap lives in a template, an extract, a stage prompt and a wiki page, and only
@@ -340,7 +424,7 @@ channel decided by assumption is a new BotProvider rather than an edit.
 grep -A3 'botProviderClass' ~/asgard-kube/crd/asgard-ai.com_botproviders.yaml | grep enum
 
 # whether the interview asks about each route
-asgard-cli next --stage requirements | grep -in 'chat\|channel\|LINE\|other end\|API\|console'
+asgard-cli guide requirements | grep -in 'chat\|channel\|LINE\|other end\|API\|console'
 ```
 
 The interview asked who was on the other end - the question deciding hub against
@@ -369,7 +453,7 @@ nobody noticed. `TASK.md` carries it.
 
 ## Reference material lives outside this repo
 
-Ten repositories, read-only, never vendored in. **The URL is the source of
+Eleven repositories, read-only, never vendored in. **The URL is the source of
 truth; where you happen to clone it is not** - a local path is true on one
 machine and wrong on every other:
 
@@ -379,6 +463,20 @@ machine and wrong on every other:
 |---|---|
 | CRD definitions, the platform contract | https://github.com/asgard-ai-platform/asgard-kube |
 | product documentation | https://github.com/asgard-ai-platform/asgard-docs |
+| the processor definitions the CRD is generated from | https://github.com/asgard-ai-platform/asgard-core (private) |
+
+`asgard-kube` is read at two depths and they answer differently: `crd/` is the
+contract, and `pkg/apis/` is the Go types it is generated from, where the
+reasoning survives as comments. `wiki crd-rules` was written from the second.
+
+**`asgard-core` was cited by name six times and by URL nowhere**, including in
+`internal/gate/processors.go`, whose processor contract is extracted from its
+`ProcessorDefinitions`. That makes it a pinned copy of the platform's contract,
+so the rule below about which way a pinned copy can go stale applies to it - and
+`wiki platform-unknowns` P10 records that the list is **demonstrably
+incomplete**: `await` and `temperature` are set in five production deployments
+and appear in neither it nor the CRD. A gate rule built on treating it as
+complete called five of five correct charts wrong, and was deleted.
 
 **The reference deployments** - every extract under `internal/usecase/extracts/`
 was taken from one of these, and a claim about how a shape is built should be

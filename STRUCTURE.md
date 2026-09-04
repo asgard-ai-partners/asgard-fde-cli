@@ -6,9 +6,14 @@ what is unfinished. This file is the map.
 
 ## The shape in one line
 
-A single Go binary that writes files into **somebody else's** repository. It holds
-no state: everything an engagement knows ends up in the customer's repo, because
-that repo is what the next agent opens.
+A single Go binary that answers questions about integrating with Asgard, and
+writes chart skeletons into **somebody else's** repository. It holds no state:
+everything an engagement knows ends up in the customer's repo, because that repo
+is what the next agent opens.
+
+The first half works with no repository at all, and has to keep doing so - the
+question gets asked in a meeting, before there is a directory. `TASK.md` states
+the goal; this file is the map.
 
 ```
 cmd/asgard-cli/       main; signal handling and exit codes only
@@ -21,26 +26,36 @@ hack/                 this repo's own tooling: the CRD contract check
 
 ## `internal/` - the code
 
-Two halves. The first five packages are the command surface and the records it
-keeps; the rest are the checks and the plumbing.
+Ordered by size. The top of the table is the command surface and the records it
+keeps; below it are the checks, the material servers and the plumbing.
 
 | package | go | what it holds |
 |---|---|---|
-| `cli` | 2313 | the cobra command tree, one file per subcommand, plus `root.go`, `repo.go` and `find.go` (which spans two packages rather than serving one) |
-| `work` | 1173 | the customer repo's own records: requests, task specs, open questions, decisions |
-| `gate` | 1051 | the invariant checks on a rendered chart - xref, agent split, deployability |
-| `generate` | 642 | CR skeletons for ten kinds, wired to what the chart already declares |
-| `check` | 616 | repository structure: indexes, dated names, links, orphan pages |
-| `stage` | 381 | which stage an onboarding is at, derived from the repo and never stored |
-| `scaffold` | 360 | writes the non-customer-specific tree |
+| `cli` | 5259 | the cobra command tree, one file per subcommand, plus `root.go`, `repo.go`, `format.go` and `find.go` (which spans every corpus rather than serving one) |
+| `gate` | 1835 | the invariant checks on a rendered chart - xref, agent split, deployability, enums, constraints, conditional CEL shapes |
+| `work` | 1655 | the customer repo's own records: requests, task specs, open questions, decisions, and the two reading logs |
+| `check` | 995 | repository structure: indexes, dated names, links, orphan pages |
+| `generate` | 714 | CR skeletons for ten kinds, wired to what the chart already declares |
+| `stage` | 680 | which stage an onboarding is at, derived from the repo and never stored, plus which guidance the repo's own state makes relevant |
+| `scaffold` | 606 | writes the non-customer-specific tree, and serves the design-time skills inside it |
+| `size` | 380 | the deployment shapes, counted off production, and what one costs before anything is added |
+| `kb` | 520 | one implementation of listing, reading, scoring, provenance and the link graph, shared by every corpus |
 | `tool` | 324 | resolves helm/kubectl/python3 and says how to install one |
-| `config` | 278 | `.asgard-config.json`: the workspace and its projects |
-| `wiki` | 171 | serves the platform wiki |
-| `usecase` | 162 | serves the deployment-shape extracts |
+| `config` | 311 | `.asgard-config.json`: the workspace, its projects and each project's shape |
+| `brief` | 282 | what one activity gets wrong, addressed by intent rather than by position |
 | `chart` | 117 | reads a project's **unrendered** templates for (kind, name) |
+| `wiki` | 127 | serves the platform wiki, and the two index tables beside it |
 | `render` | 104 | renders via `helm template`, the way CD does |
 | `deploy` | 81 | `projects/<p>/deploy.yaml`, the source of truth for deploy targets |
 | `version` | 73 | build information, injected by GoReleaser via ldflags |
+| `usecase` | 46 | serves the deployment-shape extracts |
+
+**Why `size` decides when a chart is finished.** A shape is the one thing the
+files cannot say: a SemanticLayer with nothing mounted on it is either a
+finished Mimir deliverable or an agent nobody has written yet, and those are
+identical on disk. `size` counted the shapes off deployments in production, so
+`stage` reads "does this shape have an entry point" from there rather than
+keeping a second list that could disagree with it.
 
 **To add a subcommand**: write `newXxxCmd()` in `internal/cli/`, register it in the
 `cmd.AddCommand(...)` call in `root.go`.
@@ -54,17 +69,23 @@ templates as text rather than rendering them.
 
 ## `internal/` - the embedded material
 
-Most of this repo's value is not code. Five bodies of material are compiled into
-the binary, and the first question when adding anything is which one it belongs
-to.
+Most of this repo's value is not code. It is compiled into the binary, and the
+first question when adding anything is which part it belongs to.
 
-| where | files | answers | language |
-|---|---|---|---|
-| `stage/prompts/` | 12 | what to do at this point in an onboarding | English |
-| `wiki/pages/` | 21 | what the platform is, and who each piece is for | English |
-| `usecase/extracts/` | 18 | how one shape of deployment is assembled, field by field | English |
-| `generate/templates/` | 12 | the CR skeletons `asgard-cli add` writes | English |
-| `scaffold/templates/` | 45 | the part of a customer repo that is the same every time | mixed |
+**Four of these are one corpus** - `asgard-cli find` searches them together and
+they share one schema: a `# ` title, a summary, and `**Checked:**` /
+`**Unchecked:**`. `asgard-cli find --unverified` is the check, and it is 0 of 25,
+0 of 21, 0 of 12, 0 of 7. The fifth, `generate/templates/`, is not searched: it
+is what `add` writes, not something anybody reads to decide.
+
+| where | files | answers | language | searched |
+|---|---|---|---|---|
+| `wiki/pages/` | 27 | what the platform is, and who each piece is for | English | yes |
+| `usecase/extracts/` | 18 | how one shape of deployment is assembled, field by field | English | yes |
+| `stage/prompts/` | 12 | what to weigh at one point in the work | English | yes |
+| `scaffold/templates/.agents/skills/` | 6 | what the agent in a customer repo loads to do one kind of work | mixed | yes |
+| `scaffold/templates/` | 45 | the part of a customer repo that is the same every time | mixed | the skills only |
+| `generate/templates/` | 12 | the CR skeletons `asgard-cli add` writes | English | no |
 
 They are embedded rather than written into a customer repo because a copy in one
 engagement goes stale where nobody is looking, while a stale one here is fixed for
@@ -82,23 +103,77 @@ where the judgement is, and inverts for assets.
 
 ### `stage/prompts/`
 
-One file per stage, numbered in the order they happen. Ten are the numbered walk;
-`11-requirements.md` (the customer interview) and `10-idle.md` sit outside it and
-are reached with `next --stage`.
+One file per piece of guidance. **The filenames are numbered and nothing else
+is** - the numbers are the order they are usually reached in, kept because they
+sort, and they are not a position anybody is at.
+
+There was a walk: `stage.Current` derived one stage from the earliest missing CR
+kind and reported it as where the onboarding stood. It went, and `stage.Relevant`
+replaced it - guidance raised from conditions the repository meets, printed with
+the condition beside each. That was the same ladder: its three per-project cases
+were the old rungs in a `switch`, so a chart missing two things heard about the
+first. It is gone too. **Nothing raises guidance now.** `stage.Gaps` says what a
+chart lacks against its **declared shape** and nothing where no shape is
+declared, and `find` reaches any document by subject. A document reachable only
+by arriving at it is unreachable, and the measured version of that is in
+TASK.md.
 
 The prompts are Go templates with `<< >>` delimiters, rendered against the
 repository's state, so a prompt can name the actual projects and requests rather
 than placeholders.
+
+### The index, and why it is not a page
+
+`wiki/index.md`, `wiki/log.md` and `wiki/aliases.md` are the corpus's own
+bookkeeping. The first two were always unlisted; the third used to be a section
+of `pages/glossary.md` and was moved for a measured reason.
+
+**An index inside a searched corpus competes with what it points at.** The alias
+table lists every alias, so it carried every term of any translated query and
+was reliably the one document matching all of them: `find 電商` returned the word
+list rather than `taiwan-channels`. It is beside the pages now.
+
+`asgard-cli find` applies it to a query before searching, so the question can be
+asked in the customer's own words. Two tables, and they behave differently on
+purpose: an **alias** replaces the word, because a Chinese term appears nowhere
+in an English corpus and keeping it only adds a term that lands nowhere; an
+**entity** - a marketplace, a product - is added to the query, because the name
+may be written verbatim in a page and replacing it would throw away the best
+answer there is.
+
+Rows come from searches that came back empty. `find` records those in an
+engagement, `asgard-cli reading --misses` reads them back, and
+`issue-report --new` puts them in a report. A row nobody has needed is a guess.
+
+### The link graph
+
+Every document carries `kb.Doc.Links`, read when it is parsed. `find` names a
+hit's counterpart off that field, and `audit-material --links` resolves the same
+field - it was two regular expressions at two points of use, which could
+disagree about what a document pointed at.
+
+Holding it as data is what makes `--orphans` possible: **what does nothing point
+at.** A dead pointer is loud, and a document nothing points at is silent and
+costs more. The index does not count as a pointer there, because `wiki
+operations` sat in it under the title Connectivity while an FDE spent a day on
+connectivity and never opened it.
 
 ### `wiki/pages/` and `usecase/extracts/`
 
 Both are reference material and they answer different questions. The reading order
 is wiki first: an extract assumes you already know the platform has that shape.
 
-`wiki/README.md` is the wiki's own schema - its three layers, what a page must
-carry, and how it is kept from going stale. `wiki/pages/index.md` and `log.md` are
-its bookkeeping rather than pages about the platform, so they are readable by name
+`wiki/README.md` is the schema - the three layers, what a page must carry, and
+how it is kept from going stale. `wiki/pages/index.md` and `log.md` are its
+bookkeeping rather than pages about the platform, so they are readable by name
 but not listed.
+
+`wiki/pages/glossary.md` carries one table the code reads: the words a customer
+uses against the words this material uses. `find` translates a query through it
+before searching, because the corpus is English and the conversation it came
+from was not. It lives on the page rather than in Go so that somebody reading
+the glossary can see it and extend it, and so `audit-material --links` resolves
+the pointers its rows carry.
 
 Every wiki page ends with two things: a source block linking the rendered page on
 docs.asgard-ai.com plus the commit it was read at, and an `**Unchecked:**` line
@@ -163,6 +238,7 @@ is not.**
 |---|---|
 | CRD definitions, the platform contract | https://github.com/asgard-ai-platform/asgard-kube |
 | product documentation | https://github.com/asgard-ai-platform/asgard-docs |
+| the processor definitions the CRD is generated from | https://github.com/asgard-ai-platform/asgard-core (private) |
 | the eight reference deployments | listed with their shapes in `AGENTS.md` |
 
 A copy taken into this repo stops tracking upstream and then reads exactly like a
