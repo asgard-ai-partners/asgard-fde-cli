@@ -269,7 +269,7 @@ func helpText(cmd *cobra.Command) []source {
 }
 
 func newAuditCmd() *cobra.Command {
-	var onlyAsk, onlyUnmarked, cross, links, orphans, urls bool
+	var onlyAsk, onlyUnmarked, cross, links, commands, orphans, urls bool
 	var term string
 
 	cmd := &cobra.Command{
@@ -295,6 +295,9 @@ a customer deck.
                                            command says
     asgard-cli audit-material --links      resolve every pointer, and exit 1 on
                                            one that goes nowhere
+    asgard-cli audit-material --commands   resolve every command this material
+                                           names, and exit 1 on one that does
+                                           not exist
     asgard-cli audit-material --orphans    documents nothing points at. The
                                            index does not count as a pointer
     asgard-cli audit-material --term <s>   every line mentioning <s>, in the
@@ -312,6 +315,16 @@ on one that resolves to nothing. A renamed page leaves the pointers to it
 behind, and nobody finds out until a reader follows one - which is the same
 failure as a stale instruction, except that it can be checked mechanically. Run
 it before a release.
+
+**--commands is --links for the tool itself.** --links resolves the documents
+this material points at; this resolves the COMMANDS it tells somebody to run,
+against the tree this binary actually answers to. It shipped without one:
+` + "`asgard-cli pipeline deliveries`" + ` was named in six documents as the one place a
+push that produced no run explains itself, and no such command had ever been
+built - found by a person re-reading a provenance line, weeks later, which is a
+terrible mechanism for a claim a program can resolve instantly. It reads the
+scaffold templates too, because a scaffolded README is where a customer meets
+these names first.
 
 **--orphans is the other half of --links.** A pointer that goes nowhere is
 caught by --links; a document nothing points at is not caught by anything, and
@@ -369,6 +382,18 @@ maintainer can see.`,
 				all := append(sources, bookkeeping()...)
 				return checkLinks(out, append(all, helpText(cmd.Root())...))
 			}
+			if commands {
+				// everything(), not material(): a scaffolded README is where
+				// half of these are written, and it is the half a customer
+				// reads first. The log is deliberately not here - it is
+				// bookkeeping(), and naming a command that was removed is the
+				// one job it has.
+				all, err := everything()
+				if err != nil {
+					return err
+				}
+				return checkCommands(out, cmd.Root(), append(all, helpText(cmd.Root())...))
+			}
 			if orphans {
 				// Help counts as a pointer and the index does not. A command's
 				// help is read at the moment somebody is deciding what to run;
@@ -421,6 +446,7 @@ maintainer can see.`,
 	f.BoolVar(&onlyUnmarked, "unmarked", false, "only those with no reader or destination stated")
 	f.BoolVar(&cross, "crossref", false, "only sentences claiming what another command says")
 	f.BoolVar(&links, "links", false, "resolve every pointer in the material; exits 1 on a dead one")
+	f.BoolVar(&commands, "commands", false, "resolve every `asgard-cli <command>` this material names, against the command tree; exits 1 on one that does not exist")
 	f.BoolVar(&orphans, "orphans", false, "documents nothing else points at; the index does not count as a pointer")
 	f.StringVar(&term, "term", "", "every line mentioning this word, templates included - for a rename")
 	f.BoolVar(&urls, "urls", false, "fetch every docs.asgard-ai.com link in the material; exits 1 on a 404. Needs the network")
@@ -640,6 +666,147 @@ func checkLinks(out io.Writer, sources []source) error {
 	fmt.Fprintf(out, "\n%d pointer(s) resolved, %d dead.\n", checked, len(found))
 	if len(found) > 0 {
 		return fmt.Errorf("%d pointer(s) go nowhere", len(found))
+	}
+	return nil
+}
+
+// checkCommands resolves every command reference in this material against the
+// command tree, and fails on one that names something this build does not
+// answer to.
+//
+// **The failure it exists for shipped.** `asgard-cli pipeline deliveries` was
+// named in six documents - the verification skill, a scaffolded AGENTS.md and
+// README, two stage prompts - as the one place a push that produced no run
+// explains itself, and no such command had ever been built. It was caught by a
+// person re-reading a provenance line, weeks later. Nothing mechanical was
+// looking, even though the tree is already enumerated at startup for `check`.
+//
+// So this is the same enumeration turned inward. `check` asks whether a
+// CUSTOMER'S repository names a command this build no longer has; this asks
+// whether OUR OWN material does, which is the half that writes the customer's
+// repository in the first place.
+//
+// It reads the templates as well as the prose, for the reason the term sweep
+// does: a scaffolded README is the half a prose-only search misses and the half
+// every new engagement is built from.
+func checkCommands(out io.Writer, root *cobra.Command, sources []source) error {
+	type dead struct{ where, at, word string }
+	var found []dead
+	checked := 0
+
+	for _, s := range sources {
+		seen := map[string]bool{}
+		report := func(line int, at, word string) {
+			key := at + "/" + word
+			if seen[key] {
+				return
+			}
+			seen[key] = true
+			found = append(found, dead{fmt.Sprintf("%s %s:%d", s.label, s.name, line), at, word})
+		}
+		for _, inv := range kb.Invocations(s.body) {
+			if len(inv.Words) == 0 {
+				continue
+			}
+			node, at, word, ok := resolveInvocation(root, inv.Words)
+			checked++
+			if !ok {
+				report(inv.Line, at, word)
+				continue
+			}
+			for _, f := range inv.Flags {
+				checked++
+				if hasFlag(node, f) {
+					continue
+				}
+				report(inv.Line, strings.Join(inv.Words[:min(len(inv.Words), depthOf(node))], " "), "--"+f)
+			}
+		}
+	}
+
+	sort.Slice(found, func(i, j int) bool { return found[i].where < found[j].where })
+	for _, d := range found {
+		where := strings.TrimSpace("asgard-cli " + d.at)
+		fmt.Fprintf(out, "dead  %s -> `%s %s`", d.where, where, d.word)
+		if r, ok := replacements[d.word]; ok && d.at == "" {
+			fmt.Fprintf(out, "  (removed: %s)", truncate(r, 90))
+		}
+		fmt.Fprintln(out)
+	}
+	fmt.Fprintf(out, "\n%d command reference(s) resolved, %d dead.\n", checked, len(found))
+	if len(found) > 0 {
+		return fmt.Errorf("%d command reference(s) name something this build does not answer to", len(found))
+	}
+	// A checker that finds nothing to check passes everything. There is no
+	// test suite here - it was removed deliberately - so the only thing
+	// standing between a narrowed parser and a gate that silently stops
+	// looking is this line.
+	if checked == 0 {
+		return fmt.Errorf("no command reference resolved at all, so this checked nothing: kb.Invocations stopped matching")
+	}
+	return nil
+}
+
+// resolveInvocation walks the words of one reference down the command tree.
+//
+// It stops being a command name the moment the current node has no child by
+// that name. Whether that is a defect depends on where it stopped: a node with
+// subcommands was expecting one, so an unknown word there is a dead reference;
+// a leaf command was expecting an argument, so `asgard-cli guide onboarding`
+// and `asgard-cli render internal-dev` resolve and stop.
+//
+// That distinction is the whole rule, and it is exactly the shape of the one
+// that shipped - `pipeline` has subcommands and `deliveries` was not among
+// them - while `asgard-cli add <kind>` and `asgard-cli check xref` are not.
+//
+// Hidden commands count: `audit-material` is hidden and the material names it.
+func resolveInvocation(root *cobra.Command, words []string) (node *cobra.Command, at, word string, ok bool) {
+	node = root
+	var path []string
+	for _, w := range words {
+		if child := findChild(node, w); child != nil {
+			node = child
+			path = append(path, w)
+			continue
+		}
+		if len(node.Commands()) > 0 {
+			return node, strings.Join(path, " "), w, false
+		}
+		return node, "", "", true
+	}
+	return node, "", "", true
+}
+
+// depthOf is how many words it took to reach this command, so a report can
+// name the command a flag was written against rather than the whole line.
+func depthOf(node *cobra.Command) int {
+	n := 0
+	for c := node; c != nil && c.HasParent(); c = c.Parent() {
+		n++
+	}
+	return n
+}
+
+// hasFlag asks whether this command accepts a long flag by that name, its own
+// or one inherited from a parent.
+//
+// --help and --version are cobra's, added at execution rather than at
+// construction, so they are not in either set when this walks the tree.
+func hasFlag(node *cobra.Command, name string) bool {
+	if name == "help" || name == "version" {
+		return true
+	}
+	if node.Flags().Lookup(name) != nil {
+		return true
+	}
+	return node.InheritedFlags().Lookup(name) != nil
+}
+
+func findChild(node *cobra.Command, name string) *cobra.Command {
+	for _, c := range node.Commands() {
+		if c.Name() == name || slices.Contains(c.Aliases, name) {
+			return c
+		}
 	}
 	return nil
 }
