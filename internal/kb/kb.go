@@ -40,6 +40,13 @@ type Doc struct {
 	// appear. See Link.
 	Links []Link
 
+	// Sources are the documentation URLs this document cites, in the order they
+	// appear, deduplicated. They live in the Sources block at the foot of a
+	// page and were only reachable by reading it: an engagement building a
+	// customer deck copied nine of them out by hand, one page at a time, and
+	// then checked each one itself.
+	Sources []string
+
 	// NamesCounterparts is true when the document carries the section where it
 	// states its counterparts on purpose. A document that has one is answered
 	// by it **including when the answer is none** - `glossary` says
@@ -175,6 +182,26 @@ var linkRe = regexp.MustCompile(`asgard-cli(?: |[ \t]*\n[ \t]*)(wiki|usecase|bri
 var counterpartSection = regexp.MustCompile(
 	`(?s)##+ (?:Before writing the chart|Corresponding extracts|Read the platform side first)[^` + "\n" + `]*` + "\n" + `(.*?)(?:` + "\n" + `##|\z)`)
 
+// docsURL matches the documentation links this material cites. Only this host:
+// a link anywhere else is somebody else's, and a page's Sources block is where
+// the platform's own documentation is named.
+var docsURL = regexp.MustCompile(`https://docs\.asgard-ai\.com/[A-Za-z0-9/_.-]*[A-Za-z0-9/_-]`)
+
+// SourceURLs returns the documentation links this body cites, deduplicated, in
+// the order they appear.
+func SourceURLs(body string) []string {
+	var out []string
+	seen := map[string]bool{}
+	for _, u := range docsURL.FindAllString(body, -1) {
+		if seen[u] {
+			continue
+		}
+		seen[u] = true
+		out = append(out, u)
+	}
+	return out
+}
+
 // Links returns every document this body points at, deduplicated, in the order
 // they first appear, with the ones inside the counterpart section marked.
 func Links(body string) ([]Link, bool) {
@@ -213,6 +240,7 @@ func marker(line string) bool {
 func Parse(name string, data []byte) Doc {
 	d := Doc{Name: name}
 	d.Links, d.NamesCounterparts = Links(string(data))
+	d.Sources = SourceURLs(string(data))
 	lines := strings.Split(string(data), "\n")
 
 	// The markers sit below the opening paragraph, by which point the summary

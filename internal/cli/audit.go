@@ -644,10 +644,11 @@ func checkLinks(out io.Writer, sources []source) error {
 	return nil
 }
 
-// docsURL matches the documentation links the material cites. Only this host:
-// a link to anywhere else is somebody else's uptime, and a checker that fails
-// the build because a third-party blog moved is a checker people turn off.
-var docsURL = regexp.MustCompile(`https://docs\.asgard-ai\.com/[A-Za-z0-9/_.-]*[A-Za-z0-9/_-]`)
+// docsURL is kb's: a document's outbound documentation links are a fact about
+// the document, read where every other one is. Only this host - a link to
+// anywhere else is somebody else's uptime, and a checker that fails the build
+// because a third-party blog moved is a checker people turn off.
+var docsURL = kb.SourceURLs
 
 // checkURLs fetches every documentation link and reports the ones that are not
 // there.
@@ -667,7 +668,7 @@ func checkURLs(ctx context.Context, out io.Writer, sources []source) error {
 	for _, s := range sources {
 		lines := strings.Split(s.body, "\n")
 		for i, line := range lines {
-			for _, u := range docsURL.FindAllString(line, -1) {
+			for _, u := range docsURL(line) {
 				u = strings.TrimSuffix(u, ".")
 				// A URL ending in / is a prose template - the pages write
 				// `https://docs.asgard-ai.com/img/docs/<path>` to say how a

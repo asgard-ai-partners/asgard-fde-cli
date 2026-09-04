@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/kb"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/wiki"
 )
 
@@ -14,6 +15,7 @@ func newWikiCmd() *cobra.Command {
 		conventions bool
 		unverified  bool
 		aliases     bool
+		sources     bool
 	)
 
 	cmd := &cobra.Command{
@@ -44,6 +46,10 @@ is the narrow form, for when you already know the answer is on the platform side
 --conventions prints how the wiki is maintained: where its sources are, what a
 page has to carry, and how it is kept from going stale as the platform moves.
 
+--sources prints the documentation links a page cites - one page, or every page
+with no argument. An engagement building a customer deck copied nine of them out
+of the Sources blocks by hand, one page at a time; this is that step.
+
 --aliases prints the index: what a customer says, and what to search for. It is
 what "asgard-cli find" applies to a query before searching, and it is not a page
 - an index inside the corpus competes with what it points at, so it lives beside
@@ -51,6 +57,23 @@ the pages the way index.md and log.md do.`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			out := cmd.OutOrStdout()
+
+			if sources {
+				pages, err := wiki.List()
+				if err != nil {
+					return err
+				}
+				if len(args) == 1 {
+					page, err := wiki.Read(args[0])
+					if err != nil {
+						return err
+					}
+					pages = []wiki.Page{{Name: args[0], Sources: kb.SourceURLs(page)}}
+				}
+				printSources(out, pages, func(n string) string { return "asgard-cli wiki " + n },
+					"No documentation link cited. A page with no product documentation behind\nit says so in its Sources block rather than leaving a blank - `console`,\n`fehu`, `operations` and `product-suite` are the ones where that is a\ndecision rather than an omission.\n")
+				return nil
+			}
 
 			if aliases {
 				body, err := wiki.Index()
@@ -147,6 +170,7 @@ For how the wiki is maintained, "asgard-cli wiki --conventions".
 	cmd.Flags().StringVar(&search, "search", "", "search this half only; `asgard-cli find` searches both")
 	cmd.Flags().BoolVar(&conventions, "conventions", false, "print how the wiki is maintained and where its sources are")
 	cmd.Flags().BoolVar(&aliases, "aliases", false, "print the index: what a customer says, and what to search for")
+	cmd.Flags().BoolVar(&sources, "sources", false, "print the documentation links a page cites; every page with no argument")
 	cmd.Flags().BoolVar(&unverified, "unverified", false,
 		"list what each page has NOT been held against a real deployment")
 

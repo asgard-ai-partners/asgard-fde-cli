@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/kb"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/usecase"
 )
 
@@ -13,6 +14,7 @@ func newUsecaseCmd() *cobra.Command {
 	var (
 		search     string
 		unverified bool
+		sources    bool
 	)
 
 	cmd := &cobra.Command{
@@ -47,6 +49,23 @@ here is the narrow form, for when you already know it is a deployment shape.`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			out := cmd.OutOrStdout()
+
+			if sources {
+				list, err := usecase.List()
+				if err != nil {
+					return err
+				}
+				if len(args) == 1 {
+					body, err := usecase.Read(args[0])
+					if err != nil {
+						return err
+					}
+					list = []usecase.Extract{{Name: args[0], Sources: kb.SourceURLs(body)}}
+				}
+				printSources(out, list, func(n string) string { return "asgard-cli usecase " + n },
+					"**An extract cites no documentation link, and none of the 22 does.** That\nis the convention rather than a gap: an extract assumes the reader already\nknows the platform has this shape, and the page that assumption comes from\nis where the links live. Every extract names its counterpart.\n\n    asgard-cli usecase <name>          the counterpart is in its header\n    asgard-cli wiki --sources <page>   the links that page was written from\n    asgard-cli wiki --sources          every link in the wiki, for a deck\n")
+				return nil
+			}
 
 			if unverified {
 				list, err := usecase.List()
@@ -134,6 +153,7 @@ For what the platform is and who each piece is for, "asgard-cli wiki".
 	}
 
 	cmd.Flags().StringVar(&search, "search", "", "search this half only; `asgard-cli find` searches both")
+	cmd.Flags().BoolVar(&sources, "sources", false, "print the documentation links an extract cites; every extract with no argument")
 	cmd.Flags().BoolVar(&unverified, "unverified", false,
 		"list only what has NOT been held against a real deployment, and what about each is unchecked")
 

@@ -500,3 +500,15 @@ time, and editing removes exactly that.
   reverted. The failure is the one this material records twice: asserting from a
   sample without checking the rest, and this time the assertion was on its way
   into every customer repository
+- `ingest` 2026-09-04 `wiki --sources` and `usecase --sources`, from an
+  engagement that did it by hand: building a customer deck it opened each page it
+  had used, read the Sources block at the foot, copied nine URLs out and checked
+  each one itself. Every part of that except the checking was already known. A
+  document's outbound documentation links are `kb.Doc.Sources` now, read at parse
+  time beside its pointers, and `audit-material --urls` uses the same extractor
+  instead of a second copy of the pattern
+- `lint` 2026-09-04 **no extract cites a documentation link, and none of the 22
+  does.** That is the convention - an extract assumes the reader knows the
+  platform has the shape, and the counterpart page is where the links live - so
+  `usecase --sources` says that and names the three commands that get there,
+  rather than printing "none" and dead-ending

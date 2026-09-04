@@ -418,8 +418,14 @@ func reportRouted(out io.Writer, query string) {
 		"and that changes what gets built:\n\n"+
 		"  asgard-cli wiki taiwan-channels   the four, and what each one costs\n"+
 		"  asgard-cli question add \"which of the four shapes does %s give us\" \\\n"+
-		"      --ask \"<who at the customer>\"\n\n",
-		strings.Join(routed, ", "), routed[0])
+		"      --ask \"<who at the customer>\"\n\n"+
+		"**And this is a gap worth filing**, because the next engagement asks the\n"+
+		"same thing and gets the same answer. What to write is\n"+
+		"`asgard-cli issue-report --help`; `asgard-cli issue-report --new` writes it\n"+
+		"with this search already in it:\n\n"+
+		"  https://github.com/%s/issues/new\n"+
+		"  gh issue create --repo %s\n\n",
+		strings.Join(routed, ", "), routed[0], issueRepo, issueRepo)
 }
 
 // reportSenses warns when a query used a word this material has taken.
