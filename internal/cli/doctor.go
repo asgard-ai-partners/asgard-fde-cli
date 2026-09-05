@@ -31,7 +31,11 @@ Exits non-zero when a required tool is missing, so it works as a CI preflight.
 
 It reports; it does not install. Nothing about how asgard-cli is distributed can
 install these for you - a tar.gz, a zip and "go install" carry no dependency
-metadata and never can - so this prints the command and you run it.`,
+metadata and never can - so this prints the command and you run it.
+
+` + "`asgard-cli gate`" + ` checks helm as its ` + "`tools`" + ` step and stops there, because
+that is the only tool a check needs. This lists every tool, optional ones
+included, and says how to install what is missing on the machine you are on.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			out := cmd.OutOrStdout()

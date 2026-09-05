@@ -54,7 +54,11 @@ there.
 **It renders only, and there is no install path.** A Syncer pins its revision to
 the chart's appVersion and only a run stamps a real ref in, so a local helm
 upgrade would write the placeholder as a git ref that does not exist and the
-Syncer would fail to clone on every run afterwards.`,
+Syncer would fail to clone on every run afterwards.
+
+**This is the ` + "`render`" + ` step of ` + "`asgard-cli gate`" + `**, which renders every release
+and then checks what came out. Run this one alone when you want the manifests
+themselves rather than a verdict on them.`,
 		// `render <project> <env>` was the old form. It is gone with the
 		// per-environment values files, and cobra's own arity message would say
 		// only "accepts 1 arg(s)" - which does not tell somebody typing the old

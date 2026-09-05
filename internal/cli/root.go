@@ -137,37 +137,69 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 		warnIfBehind(c)
 	}
 
-	cmd.AddCommand(
+	// The command tree, grouped. **The grouping is the source, not a rendering
+	// of it**: a command is added by naming the group it belongs to, so adding
+	// one without deciding where it goes does not compile. A flat list of
+	// thirty commands is what this help used to be, and it is what made four
+	// commands that compose look like four commands that compete.
+	// Insertion order, not alphabetical. Within a group the first entry is
+	// where somebody starts - `gate` before the three checks it composes,
+	// `login` before what needs a session - and alphabetical ordering put
+	// `check` and `doctor` in front of `gate`, which is the opposite of what
+	// the grouping was for.
+	cobra.EnableCommandSorting = false
+
+	cmd.AddGroup(
+		&cobra.Group{ID: groupAsk, Title: "Ask - what the platform is, and how a shape is built:"},
+		&cobra.Group{ID: groupBuild, Title: "Build - write the repository and the CRs in it:"},
+		&cobra.Group{ID: groupCheck, Title: "Check - everything this machine can check:"},
+		&cobra.Group{ID: groupDeploy, Title: "Deploy - the platform, and what it knows:"},
+	)
+
+	addTo(cmd, groupAsk,
+		newFindCmd(),
+		newWikiCmd(),
+		newUsecaseCmd(),
+		newBriefCmd(),
+		newGuideCmd(),
+		newSizeCmd(),
+		newReadingCmd(),
+		newIssueCmd(),
+	)
+	addTo(cmd, groupBuild,
+		newInitCmd(),
+		newScaffoldCmd(),
+		newProjectCmd(),
 		newAddCmd(),
-		newCheckCmd(),
+		newQuestionCmd(),
+		newRequestCmd(),
+		newTaskCmd(),
 		newDecisionCmd(),
 		newReferenceCmd(),
-		newDoctorCmd(),
-		newAuditCmd(),
-		newBriefCmd(),
-		newReadingCmd(),
-		newFindCmd(),
+	)
+	addTo(cmd, groupCheck,
 		newGateCmd(),
-		newIssueCmd(),
-		newSizeCmd(),
-		newInitCmd(),
-		newGuideCmd(),
+		newCheckCmd(),
+		newRenderCmd(),
+		newVerifyCmd(),
+		newDoctorCmd(),
+	)
+	addTo(cmd, groupDeploy,
 		newLoginCmd(),
 		newLogoutCmd(),
-		newPipelineCmd(),
-		newProjectCmd(),
-		newQuestionCmd(),
-		newRenderCmd(),
-		newRequestCmd(),
-		newScaffoldCmd(),
-		newSkillCmd(),
-		newTaskCmd(),
-		newUsecaseCmd(),
-		newVerifyCmd(),
-		newVersionCmd(),
 		newWhoamiCmd(),
-		newWikiCmd(),
 		newWorkspaceCmd(),
+		newPipelineCmd(),
+		newSkillCmd(),
+	)
+
+	// Ungrouped, and they belong there. `version` answers a question about the
+	// binary rather than about an engagement, and `audit-material` is hidden -
+	// its reader edits this material, and the help belongs to whoever is
+	// onboarding a customer.
+	cmd.AddCommand(
+		newVersionCmd(),
+		newAuditCmd(),
 	)
 
 	// What this build answers to, handed to `check` so it can report a command
@@ -179,6 +211,32 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 	check.SetReplacements(replacements)
 
 	return cmd
+}
+
+// The four groups the top-level help is organised into.
+//
+// They are the four questions somebody arrives with, in the order they arrive:
+// what is this platform, how do I write the repository, is what I wrote sound,
+// and get it deployed. A command that fits none of them is a command whose
+// place in the tool has not been decided.
+const (
+	groupAsk    = "ask"
+	groupBuild  = "build"
+	groupCheck  = "check"
+	groupDeploy = "deploy"
+)
+
+// addTo registers commands into a group.
+//
+// It exists so the grouping cannot be forgotten: cobra panics on a GroupID
+// naming a group the parent does not have, and a command added through
+// AddCommand instead of this lands in "Additional Commands" where the next
+// reader will see it and ask why.
+func addTo(parent *cobra.Command, group string, children ...*cobra.Command) {
+	for _, c := range children {
+		c.GroupID = group
+		parent.AddCommand(c)
+	}
 }
 
 // replacements says what to type instead of a command this tool removed.

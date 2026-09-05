@@ -77,14 +77,22 @@ reading all of them at once can, and there was nowhere that put them together.
 Read them as the model does: in one list, with no other context, deciding which
 one answers the question.
 
-This is steps 2 and 3 of the acceptance gate, and it needs only helm on PATH.
-Step 1 is "asgard-cli check", and step 4 needs a cluster - see
-"asgard-cli guide verify". Exits non-zero on any problem.
+**This is the ` + "`verify`" + ` step of ` + "`asgard-cli gate`" + `**, which renders first and
+then runs these. It needs only helm on PATH.
+Exits non-zero on any problem.
+
+What this cannot see needs an apiserver, and no client is given one: whether
+the CRDs accept each object, and whether a field they do not declare is being
+silently dropped. That is the platform's plan, and it is the authority.
 
 --format json emits one record per render, with each check named and its
 problems and warnings separate. This is the gate an agent works against, and in
 text a warning and a failure differ by one word at the left margin while only
-one of them is fatal.`,
+one of them is fatal.
+
+Run ` + "`gate`" + ` after changing anything; run this one alone while you are
+fixing a single finding and do not want the four steps in front of it each
+time.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			out := cmd.OutOrStdout()
 			if err := checkFormat(format); err != nil {

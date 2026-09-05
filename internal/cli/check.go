@@ -40,8 +40,10 @@ repo up:
 Naming projects limits the project-scoped checks to those; the repo-wide checks
 always run. Exits non-zero when anything fails.
 
-This is the first step of the acceptance gate. The remaining steps work on a
-rendered chart and still need helm: see "asgard-cli guide verify".
+**This is the ` + "`repo`" + ` step of ` + "`asgard-cli gate`" + `**, and the one step that needs
+no helm. Run ` + "`gate`" + ` after changing anything - it runs this and the rest in
+order, and reports a step it could not run as skipped rather than passed. Run
+this one alone while you are fixing what it found.
 
 --format json emits the findings as records. This is the gate an agent is
 trying to turn green, so it is the one place where recovering a problem from
