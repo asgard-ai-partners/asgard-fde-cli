@@ -99,13 +99,16 @@ answer that looks obvious and is wrong.
 | `asgard-cli scaffold` | after adding a project, to write its chart skeleton. Safe to re-run - it never overwrites a file that already exists, so edits to this file survive |
 | `asgard-cli skill update` | **when the platform says the reference material here is behind.** It writes what the Asgard server this repository deploys to actually enforces - the processor catalogue and its config keys - into `.agents/skills/`. Commit what it writes; the diff is the changelog |
 
-The stage is derived from what is on disk - which files exist, which CR kinds
-each chart declares - not from a counter. It stays right when someone does a step
-by hand, and it cannot claim work is finished that is not.
+What each chart declares is read from what is on disk - which files exist, which
+CR kinds each chart declares - not from a counter and not from a stored list. It
+stays right when someone does a step by hand, and it cannot claim work is
+finished that is not.
 
-`.asgard-config.json` holds the workspace slug and the project list. The
-repository name and every namespace are **derived** from that slug rather than
-stored, so edit it through the CLI rather than by hand.
+**This repository stores no list of its own projects.** They are the chart paths
+`.asgard-pipeline.yaml` names, union the directories under `projects/`. Every
+namespace comes from the platform project a release binds to, and the
+repository's own name is read by nothing. The only file recording anything about
+the platform is `.asgard-cli.yaml`, and it records two ids.
 
 ## The three decisions that get answered wrong
 

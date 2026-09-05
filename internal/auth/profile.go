@@ -20,11 +20,9 @@ package auth
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 )
 
@@ -77,6 +75,12 @@ var builtinProfiles = map[string]Profile{
 }
 
 // BuiltinProfileNames lists the built-in profiles, the default first.
+//
+// It is the whole list. A settings file used to be able to add profiles and
+// override a built-in by name; that went with the file, and the three field
+// overrides below do the same job for the case it was for - pointing at a
+// platform that has moved, or at a local stack - without anything on disk that
+// a later release has to keep understanding.
 func BuiltinProfileNames() []string { return []string{"prod", "dev"} }
 
 // Environment variables that override a profile's fields, one field each.
@@ -111,26 +115,17 @@ func (e *ErrUnknownProfile) Error() string {
 	return fmt.Sprintf("unknown profile %q; one of %s", e.Name, strings.Join(e.Known, ", "))
 }
 
-// Settings is the CLI's own configuration, held outside any customer
-// repository.
+// Home is the directory this CLI keeps its own state in: **the credential
+// store, and nothing else.**
 //
-// It is deliberately not `.asgard-config.json`: that file describes a customer
-// and is committed, and a default profile is a property of the person running
-// the tool. Two FDEs sharing a repository do not share a session.
-type Settings struct {
-	// DefaultProfile is used when neither --profile nor ASGARD_PROFILE says.
-	DefaultProfile string `json:"defaultProfile,omitempty"`
-	// Profiles are additional environments, by name. A name that matches a
-	// built-in replaces it, which is how a platform that has moved can be
-	// pointed at without a new release.
-	Profiles map[string]Profile `json:"profiles,omitempty"`
-	// DefaultWorkspaces is the per-profile workspace for commands run outside a
-	// checkout. A checkout's own is in its `.asgard-cli.yaml`.
-	DefaultWorkspaces map[string]string `json:"defaultWorkspaces,omitempty"`
-}
-
-// Home is the directory this CLI keeps its own state in: the settings file and
-// the credential store, and nothing else.
+// It held a settings file too, and that file is gone. Every field it carried
+// was a preference that an environment variable or a flag already expressed,
+// and each one was a thing this binary had to keep understanding across
+// upgrades - a breaking change waiting on a file nobody remembers writing. A
+// credential is the one thing that genuinely has to live here: it is a secret,
+// it is per-person rather than per-repository, and it cannot be re-derived.
+//
+// See asgard-odin-pm docs/decisions/2026-09-05-asgard-cli-config-surface.md.
 //
 // os.UserConfigDir is used rather than a hand-rolled ~/.asgard so that the
 // Windows build lands in %AppData% instead of a dot-directory in the user's
@@ -146,85 +141,129 @@ func Home() (string, error) {
 	return filepath.Join(base, "asgard-cli"), nil
 }
 
-// settingsPath is the settings file inside Home.
-func settingsPath() (string, error) {
+// retiredSettingsName is the file this package used to keep beside the
+// credentials, and no longer reads.
+const retiredSettingsName = "config.json"
+
+// retiredSettings names the leftover settings file, when one is there.
+func retiredSettings() (string, bool) {
 	home, err := Home()
 	if err != nil {
-		return "", err
+		return "", false
 	}
-	return filepath.Join(home, "config.json"), nil
+	path := filepath.Join(home, retiredSettingsName)
+	if info, err := os.Stat(path); err != nil || info.IsDir() {
+		return "", false
+	}
+	return path, true
 }
 
-// LoadSettings reads the settings file. A missing file is not an error: it
-// means every default applies, which is the state a first run is in.
-func LoadSettings() (*Settings, error) {
-	path, err := settingsPath()
-	if err != nil {
-		return nil, err
+// ErrRetiredSettings reports a settings file this build does not read.
+//
+// **It is an error and not a warning, and the reason is which way it fails.**
+// The retired `defaultProfile` was most often `dev`; with the file ignored, the
+// default becomes `prod`, which is a customer's platform. A warning printed
+// after the fact is a warning printed after the command has already run there.
+// So the first command that would resolve a profile refuses, and says what to
+// type instead.
+//
+// It is reached only from ResolveProfile, so the commands that answer with no
+// network and no login - `wiki`, `find`, `brief`, `guide`, `usecase`, `size` -
+// are unaffected, as they must be.
+type ErrRetiredSettings struct {
+	Path string
+	Keys []string
+}
+
+func (e *ErrRetiredSettings) Error() string {
+	var b strings.Builder
+	fmt.Fprintf(&b, "%s is a settings file this version of asgard-cli does not read.\n\n", e.Path)
+	for _, k := range e.Keys {
+		switch k {
+		case "defaultProfile":
+			fmt.Fprintf(&b, "  defaultProfile     now %s, per command or exported once:\n", EnvProfile)
+			fmt.Fprintf(&b, "                       export %s=dev\n", EnvProfile)
+			fmt.Fprintf(&b, "                       asgard-cli <command> --profile dev\n")
+		case "defaultWorkspaces", "workspaces":
+			fmt.Fprintf(&b, "  %-18s now --workspace or %s. A checkout's own workspace\n", k, EnvWorkspace)
+			fmt.Fprintf(&b, "                       belongs in its committed .asgard-cli.yaml:\n")
+			fmt.Fprintf(&b, "                       asgard-cli workspace use <id>\n")
+		case "profiles":
+			fmt.Fprintf(&b, "  profiles           now %s, %s and %s, applied on top of\n", EnvIssuer, EnvClientID, EnvAPI)
+			fmt.Fprintf(&b, "                       dev or prod\n")
+		}
+	}
+	// Only where a profile was recorded. That is the case where ignoring the
+	// file quietly would move commands onto a customer's platform, and it is
+	// the whole reason this refuses instead of warning.
+	for _, k := range e.Keys {
+		if k == "defaultProfile" {
+			fmt.Fprintf(&b, "\n**Until one of those is said, %s applies** - which is a customer's\n", DefaultProfileName)
+			fmt.Fprintf(&b, "platform. That is why this refuses rather than warns.\n")
+			break
+		}
+	}
+	fmt.Fprintf(&b, "\nThen delete it:\n\n    rm %s\n", e.Path)
+	return b.String()
+}
+
+// checkRetiredSettings refuses to run while a settings file this build ignores
+// is still on disk.
+//
+// A file with none of the retired keys - an empty object somebody left behind -
+// is deleted quietly rather than reported: there is nothing to migrate, and an
+// error somebody cannot act on is an error that teaches them to ignore errors.
+func checkRetiredSettings() error {
+	path, ok := retiredSettings()
+	if !ok {
+		return nil
 	}
 	data, err := os.ReadFile(path)
-	if errors.Is(err, os.ErrNotExist) {
-		return &Settings{}, nil
-	}
 	if err != nil {
-		return nil, fmt.Errorf("read %s: %w", path, err)
+		return nil
 	}
-	var s Settings
-	if err := json.Unmarshal(data, &s); err != nil {
-		return nil, fmt.Errorf("parse %s: %w", path, err)
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(data, &raw); err != nil {
+		// Unreadable and unread. Nothing can be migrated out of it.
+		return os.Remove(path)
 	}
-	return &s, nil
+	var keys []string
+	for _, k := range []string{"defaultProfile", "defaultWorkspaces", "workspaces", "profiles"} {
+		if v, ok := raw[k]; ok && len(v) > 0 && string(v) != "null" && string(v) != "{}" && string(v) != `""` {
+			keys = append(keys, k)
+		}
+	}
+	if len(keys) == 0 {
+		return os.Remove(path)
+	}
+	return &ErrRetiredSettings{Path: path, Keys: keys}
 }
 
-// SaveSettings writes the settings file, creating Home when it is not there.
-func SaveSettings(s *Settings) error {
-	path, err := settingsPath()
-	if err != nil {
-		return err
-	}
-	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
-		return fmt.Errorf("create %s: %w", filepath.Dir(path), err)
-	}
-	data, err := json.MarshalIndent(s, "", "  ")
-	if err != nil {
-		return fmt.Errorf("encode settings: %w", err)
-	}
-	return writeFilePrivate(path, append(data, '\n'))
-}
-
-// ResolveProfile returns the profile named by want, or the configured default
-// when want is empty.
+// ResolveProfile returns the profile named by want, or the default when want is
+// empty.
 //
-// Precedence, highest first: the --profile argument, ASGARD_PROFILE, the
-// settings file's defaultProfile, and dev. The three field overrides are
-// applied last, on whichever profile that produced.
+// Precedence, highest first: the --profile argument, ASGARD_PROFILE, and prod.
+// **There is no fourth**, and there was: a `defaultProfile` recorded by `login
+// --set-default` in a file under the user's config directory. It was one more
+// thing an upgrade had to keep understanding, and one more way for two machines
+// running the same command to do different things. The three field overrides
+// are applied last, on whichever profile that produced.
 func ResolveProfile(want string) (Profile, error) {
-	s, err := LoadSettings()
-	if err != nil {
+	if err := checkRetiredSettings(); err != nil {
 		return Profile{}, err
 	}
-	return s.Resolve(want)
-}
 
-// Resolve is ResolveProfile against already-loaded settings.
-func (s *Settings) Resolve(want string) (Profile, error) {
 	name := want
 	if name == "" {
 		name = os.Getenv(EnvProfile)
 	}
 	if name == "" {
-		name = s.DefaultProfile
-	}
-	if name == "" {
 		name = DefaultProfileName
 	}
 
-	p, ok := s.Profiles[name]
+	p, ok := builtinProfiles[name]
 	if !ok {
-		p, ok = builtinProfiles[name]
-	}
-	if !ok {
-		return Profile{}, &ErrUnknownProfile{Name: name, Known: s.Names()}
+		return Profile{}, &ErrUnknownProfile{Name: name, Known: BuiltinProfileNames()}
 	}
 	p.Name = name
 
@@ -245,23 +284,6 @@ func (s *Settings) Resolve(want string) (Profile, error) {
 		return Profile{}, err
 	}
 	return p, nil
-}
-
-// Names lists every profile that resolves, built-in and configured, sorted.
-func (s *Settings) Names() []string {
-	seen := map[string]bool{}
-	for name := range builtinProfiles {
-		seen[name] = true
-	}
-	for name := range s.Profiles {
-		seen[name] = true
-	}
-	names := make([]string, 0, len(seen))
-	for name := range seen {
-		names = append(names, name)
-	}
-	sort.Strings(names)
-	return names
 }
 
 // validate rejects a profile that cannot be used, naming the field. A profile

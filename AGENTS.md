@@ -127,8 +127,8 @@ Chinese text is fine, `->` beats an arrow glyph.
 Mark status with words or ASCII punctuation:
 
 ```
-ok  .asgard-config.json
-- workspace.slug must not be empty
+ok  .asgard-pipeline.yaml
+- workspace must not be empty
 ```
 
 Some scaffold templates and extracts still carry decorative characters from

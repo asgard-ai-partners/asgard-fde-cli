@@ -31,34 +31,50 @@ keeps; below it are the checks, the material servers and the plumbing.
 
 | package | go | what it holds |
 |---|---|---|
-| `cli` | 5259 | the cobra command tree, one file per subcommand, plus `root.go`, `repo.go`, `format.go` and `find.go` (which spans every corpus rather than serving one) |
-| `gate` | 1835 | the invariant checks on a rendered chart - xref, agent split, deployability, enums, constraints, conditional CEL shapes |
-| `work` | 1655 | the customer repo's own records: requests, task specs, open questions, decisions, and the two reading logs |
-| `check` | 995 | repository structure: indexes, dated names, links, orphan pages |
+| `cli` | 10343 | the cobra command tree, one file per subcommand, plus `root.go`, `repo.go`, `format.go` and `find.go` (which spans every corpus rather than serving one) |
+| `gate` | 1976 | the invariant checks on a rendered chart - xref, agent split, deployability, enums, constraints, conditional CEL shapes |
+| `work` | 1678 | the customer repo's own records: requests, task specs, open questions, decisions, and the two reading logs |
+| `platform` | 1218 | the platform API client: workspaces, the whole `/v1/iac` surface, and `/v1/docs` |
+| `check` | 1179 | repository structure: indexes, dated names, links, orphan pages |
+| `auth` | 1118 | the OAuth 2.0 + PKCE sign-in and the credential store, which is the only file this CLI keeps outside a repository |
 | `generate` | 714 | CR skeletons for ten kinds, wired to what the chart already declares |
-| `stage` | 680 | which stage an onboarding is at, derived from the repo and never stored, plus which guidance the repo's own state makes relevant |
-| `scaffold` | 606 | writes the non-customer-specific tree, and serves the design-time skills inside it |
+| `kb` | 695 | one implementation of listing, reading, scoring, provenance and the link graph, shared by every corpus |
+| `scaffold` | 614 | writes the non-customer-specific tree, and serves the design-time skills inside it |
+| `stage` | 511 | the onboarding prompts, rendered against the repository's state |
 | `size` | 380 | the deployment shapes, counted off production, and what one costs before anything is added |
-| `kb` | 520 | one implementation of listing, reading, scoring, provenance and the link graph, shared by every corpus |
-| `tool` | 324 | resolves helm/kubectl/python3 and says how to install one |
-| `config` | 311 | `.asgard-config.json`: the workspace, its projects and each project's shape |
+| `tool` | 329 | resolves helm/kubectl/python3 and says how to install one |
 | `brief` | 282 | what one activity gets wrong, addressed by intent rather than by position |
+| `skills` | 268 | the platform's fetched reference material, and the record of which version is here |
+| `binding` | 224 | reads and writes `.asgard-cli.yaml`, the checkout's platform binding |
+| `wiki` | 212 | serves the platform wiki, and the two index tables beside it |
+| `render` | 206 | renders via `helm template`, with the reserved `asgard` block supplied as placeholders |
+| `repo` | 147 | what a customer repository is made of, by looking at it |
+| `pipelineconfig` | 147 | reads `.asgard-pipeline.yaml`, the deployment declaration |
+| `gitrepo` | 120 | the checkout's root and its remotes, read and never compared to anything |
 | `chart` | 117 | reads a project's **unrendered** templates for (kind, name) |
-| `wiki` | 127 | serves the platform wiki, and the two index tables beside it |
-| `render` | 104 | renders via `helm template`, the way CD does |
-| `deploy` | 81 | `projects/<p>/deploy.yaml`, the source of truth for deploy targets |
 | `version` | 73 | build information, injected by GoReleaser via ldflags |
 | `usecase` | 46 | serves the deployment-shape extracts |
+| `browser` | 39 | opens a URL, or says it could not |
 
-**Why `size` decides when a chart is finished.** A shape is the one thing the
+**Two packages this table used to list are gone.** `config` held
+`.asgard-config.json` - the workspace slug, the project list and each project's
+"shape" - and every field of it failed the same test: *a value belongs in a
+config file only when nothing on disk implies it and the platform cannot be
+asked.* `deploy` held `projects/<p>/deploy.yaml`, which the Pipeline cut-over
+replaced with the one declaration at the repository root.
+
+**Why nothing decides when a chart is finished.** A shape is the one thing the
 files cannot say: a SemanticLayer with nothing mounted on it is either a
 finished Mimir deliverable or an agent nobody has written yet, and those are
-identical on disk. `size` counted the shapes off deployments in production, so
-`stage` reads "does this shape have an entry point" from there rather than
-keeping a second list that could disagree with it.
+identical on disk. It used to be recorded per project so that `stage.Gaps` could
+subtract - and recording it meant treating somebody's note of intent as a
+specification this tool could check. Both are gone. `size` still counts the
+shapes off deployments in production, for a person to compare against.
 
-**To add a subcommand**: write `newXxxCmd()` in `internal/cli/`, register it in the
-`cmd.AddCommand(...)` call in `root.go`.
+**To add a subcommand**: write `newXxxCmd()` in `internal/cli/` and register it
+through `addTo(cmd, group..., ...)` in `root.go`. The group is required - cobra
+panics on a `GroupID` the parent does not have - so a command cannot be added
+without deciding where in the help it belongs.
 
 ### Why `chart` reads unrendered templates
 
@@ -112,11 +128,11 @@ kind and reported it as where the onboarding stood. It went, and `stage.Relevant
 replaced it - guidance raised from conditions the repository meets, printed with
 the condition beside each. That was the same ladder: its three per-project cases
 were the old rungs in a `switch`, so a chart missing two things heard about the
-first. It is gone too. **Nothing raises guidance now.** `stage.Gaps` says what a
-chart lacks against its **declared shape** and nothing where no shape is
-declared, and `find` reaches any document by subject. A document reachable only
-by arriving at it is unreachable, and the measured version of that is in
-TASK.md.
+first. It is gone too, and so is `stage.Gaps`, which subtracted what a chart
+declares from what its declared shape asked for - the shape was a note of
+intent, and there is no longer anywhere to record one. **Nothing raises guidance
+now**; `find` reaches any document by subject. A document reachable only by
+arriving at it is unreachable, and the measured version of that is in TASK.md.
 
 The prompts are Go templates with `<< >>` delimiters, rendered against the
 repository's state, so a prompt can name the actual projects and requests rather

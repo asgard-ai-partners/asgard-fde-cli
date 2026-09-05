@@ -25,10 +25,9 @@ const workspaceFlag = "workspace"
 type WorkspaceSource string
 
 const (
-	fromFlag     WorkspaceSource = "--workspace"
-	fromEnv      WorkspaceSource = auth.EnvWorkspace
-	fromBinding  WorkspaceSource = binding.FileName
-	fromFallback WorkspaceSource = "recorded as this machine's default"
+	fromFlag    WorkspaceSource = "--workspace"
+	fromEnv     WorkspaceSource = auth.EnvWorkspace
+	fromBinding WorkspaceSource = binding.FileName
 )
 
 // platformContext is what every command that talks to the platform needs: a
@@ -66,8 +65,6 @@ type contextOptions struct {
 //  1. --workspace
 //  2. ASGARD_WORKSPACE
 //  3. the checkout's `.asgard-cli.yaml`
-//  4. the default `workspace use --default` recorded on this machine, which
-//     only applies outside a checkout
 //
 // The order puts the two explicit forms above the committed file on purpose.
 // A file that says a customer's workspace and a flag that says a test one
@@ -75,12 +72,15 @@ type contextOptions struct {
 // customer's was meant costs a confusing error, and the reverse deploys to a
 // customer.
 //
-// **There is no fifth step, and there was.** When the account could reach
-// exactly one workspace, that one was used. It is the same rule everywhere else
-// in this tool now: nothing is guessed from a candidate list, even a list of
-// one. A rule that only holds while there is one candidate changes behaviour
-// silently on the day a customer opens a second workspace, and nobody is
-// watching that day.
+// **Three steps is the whole list, and it used to be five.** A per-machine
+// default recorded by `workspace use --default` sat below the file, and below
+// that, the only workspace the account could reach when there was one. Both are
+// gone, for the same reason in two forms: an answer nobody typed and nobody can
+// see. The machine default was invisible on the machine that had it and absent
+// on every other, so the same command in the same checkout did different things
+// for two people; the single candidate stopped being single the day a customer
+// opened a second workspace. Every one of the three left is either on the
+// command line or in a committed file.
 func resolveContext(cmd *cobra.Command, opts contextOptions) (*platformContext, error) {
 	ctx := cmd.Context()
 
@@ -160,14 +160,6 @@ func resolveWorkspace(
 		return pc.Binding.Workspace, fromBinding, nil
 	}
 
-	settings, err := auth.LoadSettings()
-	if err != nil {
-		return "", "", err
-	}
-	if id, ok := settings.FallbackWorkspace(session.Profile.Name); ok {
-		return id, fromFallback, nil
-	}
-
 	// Nothing recorded, so nothing is decided. The error lists what there is
 	// rather than sending somebody off to look for it - and it lists one
 	// candidate the same way it lists five.
@@ -209,8 +201,13 @@ func (e *needWorkspaceError) Error() string {
 		fmt.Fprintf(&b, "    asgard-cli workspace use <id>%s\n", profileArgFor(e.Profile))
 		fmt.Fprintf(&b, "\nNone is assumed, and that includes a list of one: which workspace a\nrepository deploys into is a decision, not a lookup.\n")
 	} else {
-		fmt.Fprintf(&b, "\nThis is not a checkout with a declaration, so there is nothing to write a\nbinding beside. Record one for this machine instead:\n\n")
-		fmt.Fprintf(&b, "    asgard-cli workspace use <id> --default%s\n", profileArgFor(e.Profile))
+		// Nothing is recorded outside a checkout. A machine-wide default
+		// existed and is gone: it was invisible where it was set and absent
+		// everywhere else, which is how two people running the same command
+		// got different answers.
+		fmt.Fprintf(&b, "\nThis is not a checkout with a declaration, so there is nothing to write a\nbinding beside. Name one for this run, or for this shell:\n\n")
+		fmt.Fprintf(&b, "    asgard-cli <command> --workspace <id>%s\n", profileArgFor(e.Profile))
+		fmt.Fprintf(&b, "    export %s=<id>\n", auth.EnvWorkspace)
 	}
 	return b.String()
 }
@@ -235,5 +232,6 @@ func profileArgFor(name string) string {
 // errNoDeclarationToBind is what `workspace use` reports where there is no
 // declaration to write a binding beside.
 var errNoDeclarationToBind = errors.New(
-	"no .asgard-pipeline.yaml at or above this directory, so there is nothing for a binding to " +
-		"belong to; pass --default to record this workspace for the machine instead")
+	"no .asgard-pipeline.yaml at or above this directory, so there is nothing for a binding to belong to.\n" +
+		"`asgard-cli scaffold` writes one. To act in a workspace without recording it, pass --workspace or " +
+		"export " + auth.EnvWorkspace)
