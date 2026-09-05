@@ -57,6 +57,7 @@ the question gets asked in a meeting, before there is a directory.
 BUILDING - a chart of Asgard custom resources per project, each deployed to its
 own namespace:
 
+    asgard-cli init          onboard a repository: skeleton, binding, material
     asgard-cli project       every chart: its shape, what it declares, what it lacks
     asgard-cli question      what nobody has answered yet, and who each is with
     asgard-cli request       what the customer asked for and is not done
@@ -79,8 +80,11 @@ lives in the customer's repository, never in this tool, so the agent that opens
 that repo next can read where the work stands.
 
 With no repository yet, "asgard-cli guide init" says how one begins and
-"asgard-cli init" writes the config. The repository root is the workspace - one
-customer, one repository - and every project lives inside it.
+"asgard-cli init" does it: the skeleton, the binding to a workspace and a
+pipeline on the platform, and the reference material describing that platform.
+Which workspace and which pipeline are the only two facts a repository cannot
+supply about itself, so they are the only two it records - and neither is ever
+guessed, not even from a list of one.
 
 Run "asgard-cli <command> --help" for details on an individual command.`,
 		Version: version.Get().String(),
@@ -166,6 +170,7 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 		newIssueCmd(),
 	)
 	addTo(cmd, groupBuild,
+		newInitCmd(),
 		newScaffoldCmd(),
 		newProjectCmd(),
 		newAddCmd(),
@@ -246,9 +251,6 @@ func addTo(parent *cobra.Command, group string, children ...*cobra.Command) {
 // ask a maintainer. That is the answer living in a conversation instead of in
 // the binary.
 var replacements = map[string]string{
-	"init": "It wrote `.asgard-config.json`, which is gone: the project list is read off the repository, the customer's name comes from the platform, " +
-		"and the deployment shape recorded an intent no tool can check. What is left of it is two commands - `asgard-cli scaffold` writes the skeleton, " +
-		"`asgard-cli workspace use <id>` records which workspace this checkout deploys into",
 	"project shape": "Gone with `.asgard-config.json`. It recorded what a chart was being built to be, which is a claim about intent that nothing can verify - " +
 		"say it in the chart, next to whatever makes the project unusual, where the next reader is already looking. `asgard-cli size` still lists the shapes",
 	"next": "It derived a position from the earliest missing CR kind and there is no replacement for that, deliberately - an onboarding is not linear. " +

@@ -167,7 +167,7 @@ For how the wiki is maintained, "asgard-cli wiki --conventions".
 		},
 	}
 
-	cmd.Flags().StringVar(&search, "search", "", "search this half only; `asgard-cli find` searches both")
+	cmd.Flags().StringVar(&search, "search", "", "search this half only; \"asgard-cli find\" searches both")
 	cmd.Flags().BoolVar(&conventions, "conventions", false, "print how the wiki is maintained and where its sources are")
 	cmd.Flags().BoolVar(&aliases, "aliases", false, "print the index: what a customer says, and what to search for")
 	cmd.Flags().BoolVar(&sources, "sources", false, "print the documentation links a page cites; every page with no argument")

@@ -245,12 +245,29 @@ from making the same choice.
 
 ### `.asgard-cli.yaml` — which platform objects this checkout acts on
 
-`asgard-cli` needs to know which workspace, and for a repository carrying more than one
-declaration which pipeline, before it can do anything. Neither is derivable from the repository, so
-both are recorded in `.asgard-cli.yaml` beside the declaration, and that file is committed: a fresh
-clone and a fresh agent both inherit it.
+`asgard-cli` needs to know which workspace and which pipeline before it can do anything. **Both are
+required and neither is derived**, so both are recorded in `.asgard-cli.yaml` beside the
+declaration, and that file is committed: a fresh clone and a fresh agent both inherit it.
 
     asgard-cli workspace show     which one is in effect, and why that one
+    asgard-cli workspace use <id> record the workspace — this CLEARS the pipeline line
+    asgard-cli pipeline use <id>  record the pipeline
+
+**Nothing is guessed, including from a list of one.** A command with nothing recorded lists the
+candidates and refuses to run. The pipeline used to be read off the `origin` remote whenever
+exactly one pipeline of the workspace bound it; that is gone, because a repository may have any
+number of remotes and which one carries that name is nobody's business but its owner's.
+
+**A pipeline belongs to one workspace, so `workspace use` clears the pipeline line.** Until
+`pipeline use` fills it back in, every `asgard-cli pipeline` command here refuses and names the
+remedy — which is the failure landing on the next command rather than on whichever later one
+happened to be destructive. Commit both lines together. `asgard-cli gate` has a `binding` step
+that goes red on the half state.
+
+**One thing this cannot catch: a copy.** Nothing here is checked against a git remote, so a
+repository copied wholesale into another repository of the *same* workspace keeps a pipeline id
+that still resolves. Run `asgard-cli pipeline use <id>` after copying a repository. Copied into a
+different workspace it fails, because the pipeline is not there.
 
 **The platform never reads it.** A run reads the declaration at the pipeline's config path and the
 chart it names, and nothing else, so nothing in this file can make a deployment succeed or fail.
