@@ -14,7 +14,9 @@ Layout:
 ```
 cmd/asgard-cli/     main; signal handling and exit codes only
 internal/cli/       cobra command tree, one file per subcommand
-internal/config/    reads and writes .asgard-config.json, including each project's shape
+internal/repo/      what a customer repository is made of, by looking at it
+internal/auth/      the OAuth flow and the credential store, which is the only file
+                    this CLI keeps outside a repository
 internal/work/      reads and writes the customer repo's own records of its work
                     (requests, task specs, open questions, decision records)
 internal/kb/        one implementation of listing, reading, scoring and provenance,
@@ -37,8 +39,10 @@ internal/tool/      resolves helm/kubectl/python3, and how to install one
 internal/version/   build information (injected by GoReleaser via ldflags)
 ```
 
-To add a subcommand, write a `newXxxCmd()` in `internal/cli/` and register it in
-the `cmd.AddCommand(...)` call in `root.go`.
+To add a subcommand, write a `newXxxCmd()` in `internal/cli/` and register it
+through `addTo(cmd, group..., ...)` in `root.go`. The group is required - cobra
+panics on a `GroupID` the parent does not have - so a command cannot be added
+without deciding where in the help it belongs.
 
 - [STRUCTURE.md](STRUCTURE.md) - what every directory is for, including the four
   bodies of embedded material and which one a change belongs to.
@@ -50,87 +54,75 @@ the `cmd.AddCommand(...)` call in `root.go`.
 
 ### `init`
 
-Create `.asgard-config.json` in the current directory, binding it to a workspace.
-The workspace is the customer:
+Onboard a repository, in one command: the skeleton, the binding, and the
+reference material describing the platform it deploys to.
 
 ```bash
-asgard-cli init
+asgard-cli workspace list
+asgard-cli pipeline list --workspace <id>
+asgard-cli init --workspace <id> --pipeline <id>
 ```
 
 ```
-Created /path/to/acme-asgard-kube/.asgard-config.json
-  workspace.id    (not set yet)
-  workspace.slug  acme
-  workspace.name  acme
-  repository      acme-asgard-kube
+workspace   1878677014576107520  (JohnWS)
+pipeline    2095845443282931712  (iac-test -> asgard-ai-platform/asgard-iac-test)
+directory   /path/to/acme-asgard-kube
 
-The workspace id is what the platform knows this customer by. Nothing here
-needs it yet - namespaces come from the slug - so it can wait until the
-platform has issued one:
-
-    asgard-cli init --workspace-id ws_xxxxxxxx
-
-No projects yet. Add one with `asgard-cli project add <slug>`.
+1/3 skeleton
+  created      .asgard-pipeline.yaml
+  ...
+2/3 binding
+  wrote        .asgard-cli.yaml
+3/3 reference material
+  ...
 ```
 
-`--workspace-id` is issued by the Asgard platform and is **optional**. Nothing
-this CLI generates reads it, so waiting for one does not block the work that
-comes before it. Its format is not validated, pending an API to verify it.
+It runs `scaffold`, writes `.asgard-cli.yaml` beside the declaration that
+scaffold produced, and runs `skill update` - in the only order that works, since
+the binding belongs beside a declaration that has to exist first. Each is still
+its own command and each can be re-run alone; they are composed here because a
+list of three steps kept in prose is a list that goes stale, and this one did.
 
-Setting it later on an already-initialised repository changes nothing else, so it
-needs no `--force`:
+**It chooses nothing.** Both ids are given or already recorded; with neither, it
+lists the candidates and stops, and it does that for a list of one exactly as
+for a list of five. On a repository that already records both, neither flag is
+needed - so re-running it after an upgrade is a safe way to bring a repository
+current.
 
-```bash
-asgard-cli init --workspace-id 1234567890123456789
-```
+**It does not create the pipeline.** That binds a repository on the provider and
+needs a VCS connection, which is a decision about the platform rather than about
+this checkout: `asgard-cli pipeline create`. `--force` overwrites the skeleton;
+`--skip-skills` leaves step 3 out and reports it as skipped, which is not a
+pass.
 
-Replacing an id that is already recorded does need `--force`, because that binds
-the repository to a different workspace. `project add` and `check` both say when
-the id is still unset - a project is what the platform deploys, so that is the
-point at which it is worth chasing.
-
-`--workspace-slug` defaults to the directory name with a trailing `-asgard-kube`
-removed, so running inside `acme-asgard-kube` yields `acme`.
-`--workspace-name` defaults to the slug. `--project` is a repeatable shortcut
-that creates projects up front, each with the `dev` environment only.
-
-Rerunning is safe: when the config exists nothing is changed and the current
-settings are printed, except that a missing workspace id is filled in. `--force`
-rebinds, and keeps the projects already recorded - their charts are on disk
-either way - unless `--project` gives a new list.
+There used to be a different `init`, which wrote `.asgard-config.json`. That
+file is gone: the project list is read off the repository, the customer's name
+is asked of the platform, and the deployment "shape" it recorded was a claim
+about intent that no tool can check.
 
 ### `project add`
 
-A project is the unit of deployment: one Helm chart, one namespace per
-environment. Projects are added as the engagement discovers them.
+Write a project's chart skeleton under `projects/<slug>/chart/app`.
 
 ```bash
-asgard-cli project add internal --env dev --env prod
+asgard-cli project add internal
 ```
 
-```
-Added project "internal" to /path/to/.asgard-config.json
-  dev   asgard-acme-internal-dev
-  prod  asgard-acme-internal-prod
+A project is one Helm chart. **Which releases deploy it, and to which platform
+project, is declared in `.asgard-pipeline.yaml`** - this writes the chart, and
+declaring a release for it is a separate step that this does not do.
 
-Before the first deploy of each environment:
-  1. tf-asgard must create the namespace and its app-secret first. Declaring an
-     environment before they exist makes the next tag fail at helm upgrade.
-  2. the project needs at least one Syncer. CD waits for a CronJob labelled
-     asgard-ai.com/syncer-name and exits 1 after 180s if it finds none, even
-     when helm upgrade succeeded.
-```
+**Nothing records the project anywhere else.** It exists because the directory
+exists and because the declaration names its chart; there is no third list to
+keep in step, and no way for one to disagree with the others. Existing files are
+left alone, so it is safe to re-run.
 
-`--env` may be repeated and defaults to `dev`; `dev` and `prod` are the only
-valid symbols and a project may declare either or both. `--name` defaults to the
-slug.
-
-Both notes in the output are ordering traps: each one fails during CD rather than
-here, which is far too late to find out.
+The slug ends up in the names the chart renders, so keep it short: Kubernetes
+caps a name at 63 characters and names derived from this inherit its length.
 
 ### `scaffold`
 
-Write the repository skeleton next to `.asgard-config.json`:
+Write the repository skeleton, including the declaration everything else hangs off:
 
 ```bash
 asgard-cli scaffold
@@ -160,9 +152,14 @@ deleted by hand. `--force` overwrites, which discards local edits.
 The generated skeleton passes its own gate on the first run:
 
 ```bash
-asgard-cli check                              # structure is consistent
-helm lint projects/<slug>/chart/app           # 0 charts failed
+asgard-cli gate                               # everything this machine can check
 ```
+
+**Do not run `helm lint` by hand.** The platform injects a reserved
+`.Values.asgard` block into every render, and a chart must not declare it in its
+own `values.yaml` - so a bare lint fails on every chart that reads
+`.Values.asgard.projectEnvironmentId`, which is every chart that labels
+anything. `gate` supplies that one file and nothing else.
 
 ### `guide`
 
@@ -212,16 +209,13 @@ subject with `find`.
 right one.** Those are the three decisions this engagement got wrong once and
 reversed, and in each case the wrong answer is the one that looks obvious.
 
-**A chart does not always end with an entry point.** Which CR kinds finish one
-depends on the project's shape, and the shape is the thing the files cannot say
-- a SemanticLayer with nothing mounted on it is either a finished Mimir
-deliverable or an agent nobody has written yet. Declare it and `project` stops
-reporting what that shape does not have as missing:
-
-```bash
-asgard-cli project shape insight mimir-dashboard
-asgard-cli project shape insight          # the current one, and the choices
-```
+**A chart does not always end with an entry point**, and no command here says
+whether one is finished. A SemanticLayer with nothing mounted on it is either a
+finished Mimir deliverable or an agent nobody has written yet, and the files
+cannot tell the two apart. `asgard-cli size <shape>` lists what a shape is made
+of, for a person to compare against; nothing records a chart's intended shape,
+because a note of what somebody meant to build is not something this tool can
+check.
 
 ### `project`, `request`, `task`, `question`
 
@@ -232,7 +226,7 @@ asgard-cli project shape insight          # the current one, and the choices
 asgard-cli question    # what nobody has answered yet, and who each is with
 asgard-cli request     # what the customer asked for and is not done
 asgard-cli task        # the task specs that are open
-asgard-cli project     # what each chart declares, and what its shape lacks
+asgard-cli project     # what each chart declares
 ```
 
 **Read `question` first.** The fastest way to do damage in a repository somebody
@@ -241,20 +235,16 @@ else started is to design past a question they already knew was open.
 ```
 Projects:
 
-  insight              mimir-dashboard
-                       DataConnector, SemanticLayer
-                       complete for its shape - which is not the same as deployed
-
-  helpdesk             shape not declared
-                       chart is empty
-                       no shape declared, so nothing is claimed about what it lacks
-                       `asgard-cli project shape helpdesk <shape>`, or `asgard-cli size` for the list
+  insight              DataConnector, SemanticLayer
+  helpdesk             chart is empty
 ```
 
-**A chart with no declared shape gets no verdict.** Against a declared shape,
-"this shape asks for X and X is absent" is subtraction. With no shape there is
-nothing to subtract from, and answering anyway means assuming a set of kinds
-every chart wants - which is the ladder, rebuilt out of a default.
+**It says what each chart HAS and nothing about what it lacks.** That used to be
+measured against a "shape" recorded per project, and reporting "this shape asks
+for X and X is absent" meant treating somebody's note of intent as a
+specification. The list itself is the repository - the chart paths the
+declaration names, and the directories under `projects/` - so there is no second
+copy of it to drift.
 
 ### `request`, `task`, `question`, `decision` - writing the records
 
@@ -529,7 +519,7 @@ asgard-cli brief write-chart         # before authoring CRs
 question a proposal is asked, and the basis of a quote. The counts come from
 deployments in production rather than from reasoning, which matters most where
 the intuitive answer is wrong: **the flow-agent shapes contain no `Agent` CR at
-all.** The same shapes are what a project declares with `project shape`.
+all.**
 
 ```bash
 asgard-cli size                      # the shapes, and what each costs empty
@@ -672,46 +662,47 @@ non-zero when a required tool is missing, so it works as a CI preflight.
 and `check` need none of these tools. `render` and `verify` need helm; step 4 of
 the gate needs kubectl.
 
-### The config file
+### The files
 
-```json
-{
-  "workspace": {
-    "id": "7ab7f523-3cd9-7e87-a873-6f1fa6028104",
-    "slug": "acme",
-    "name": "acme"
-  },
-  "projects": [
-    { "slug": "internal", "name": "internal", "environments": ["dev", "prod"] },
-    { "slug": "website",  "name": "official site", "environments": ["dev"] }
-  ]
-}
-```
+Three, and each is somebody else's answer to a different question.
 
-The slug is load bearing. Two names are **derived** from it rather than stored,
-so the config cannot drift from the layout on disk:
+| file | who writes it | who reads it | committed |
+|---|---|---|---|
+| `.asgard-pipeline.yaml` | a person | **the platform**, on every run | yes |
+| `.asgard-cli.yaml` | `asgard-cli` | `asgard-cli` only | yes |
+| `os.UserConfigDir()/asgard-cli/credentials.json` | `asgard-cli login` | `asgard-cli` | **never** |
 
-| derived | rule | example |
-|---|---|---|
-| repository | `<workspace.slug>-asgard-kube` | `acme-asgard-kube` |
-| namespace | `asgard-<workspace.slug>-<project.slug>-<env>` | `asgard-acme-internal-dev` |
+**`.asgard-pipeline.yaml` is the declaration**, and the only file a deployment
+depends on: which releases exist, which chart each deploys, what triggers it,
+which keys it takes. See `internal/pipelineconfig`.
 
-Both commands validate before writing, so an invalid config is never created:
+**`.asgard-cli.yaml` is the binding**: which workspace and which pipeline this
+checkout acts on, and nothing else. Both fields are required and neither is
+derived. See `internal/binding`, whose package comment explains why it lives
+beside the declaration rather than at the repository root.
 
-| check | why |
-|---|---|
-| slugs are DNS-1123 labels | a slug becomes part of a namespace, so anything else is rejected later by the apiserver |
-| environments are `dev` or `prod`, no duplicates | those are the only symbols the platform accepts |
-| project slugs are unique | two projects with one slug would fight over a namespace |
-| every derived namespace fits in 63 characters | names derived from a namespace inherit its length; without this the failure surfaces in `helm upgrade` during CD |
+**`credentials.json` is the only thing this CLI keeps outside a repository.**
+0600, one file for every profile, and nothing beside it. There was a
+`config.json` there too, holding a default profile, a default workspace per
+profile and a map of custom profiles; it is gone. Every field was a preference
+some flag or environment variable already expressed, and every one of them was a
+thing an upgrade had to keep understanding. A credential is the one thing that
+genuinely has to live there: it is a secret, it is per-person rather than
+per-repository, and it cannot be re-derived.
 
-Every problem is reported at once rather than one per run.
+A leftover `config.json` is **an error, not a warning**. The retired
+`defaultProfile` was usually `dev`, so ignoring the file silently would move
+every command to `prod` - a customer's platform. The first command that resolves
+a profile refuses instead, names each retired key and what replaces it, and says
+to delete the file.
 
-`.asgard-config.json` is project configuration and belongs in version control.
-Read and write it through `internal/config` (`config.Load` / `config.Save` /
-`config.Find`) rather than assembling JSON inside a command. `config.Find` walks
-up from the current directory, so a command still resolves the project root when
-run from a subdirectory.
+**What is deliberately not stored anywhere:** which projects the repository has
+(read off the declaration's chart paths and `projects/*/`), the customer's
+display name (asked of the platform when a template needs it), and what a chart
+is "meant to be" (a claim about intent no tool can check). The rule they each
+failed: *a value belongs in a config file only when nothing on disk implies it
+and the platform cannot be asked.* See
+`docs/decisions/2026-09-05-asgard-cli-config-surface.md` in `asgard-odin-pm`.
 
 ### `login`, `logout`, `whoami`
 
@@ -731,33 +722,56 @@ secret. The session is stored under this user account - never inside a customer
 repository - at `os.UserConfigDir()/asgard-cli/`, 0600.
 
 Two profiles exist: `prod` (the default) and `dev`. `--profile` picks per
-command, `ASGARD_PROFILE` sets it for a shell, and `login --set-default` records
-one. `ASGARD_API`, `ASGARD_ISSUER` and `ASGARD_CLIENT_ID` override a profile's
-fields one at a time, for a platform running somewhere else.
+command and `ASGARD_PROFILE` sets it for a shell. **Nothing records a default**,
+and `login --set-default` used to: a preference on one machine is a preference
+two people running the same command do not share, and it failed towards `prod`
+if forgotten. `ASGARD_API`, `ASGARD_ISSUER` and `ASGARD_CLIENT_ID` override a
+profile's fields one at a time, for a platform running somewhere else.
 
 With no browser - CI, a container, an agent sandbox - set `ASGARD_TOKEN` to an
 access token instead. It bypasses the store completely, reading nothing from
 disk and writing nothing to it.
 
-### `workspace`
+### `workspace`, `pipeline use`
 
-Choose which workspace the platform commands act in.
+Which workspace and which pipeline this checkout acts on - the two facts nothing
+in the repository implies and the platform cannot be asked on your behalf.
 
 ```bash
 asgard-cli workspace list            # what this account can reach
-asgard-cli workspace use <id>        # bind this repository to one
-asgard-cli workspace show            # which one applies here, and why
+asgard-cli workspace use <id>        # record the workspace for this checkout
+asgard-cli pipeline list             # what that workspace has
+asgard-cli pipeline use <id>         # record the pipeline
+asgard-cli workspace show            # which apply here, and why
 ```
 
-The binding is kept beside the credentials, keyed by profile and by the
-repository's origin remote - not in the repository, because the declaration
-contract for a customer repository is a chart and one `.asgard-pipeline.yaml`,
-and not on the platform, which does not know which directory holds its
-repository. A repository scaffolded with a `workspace.id` in
-`.asgard-config.json` is read from there first.
+Both land in `.asgard-cli.yaml`, beside the declaration they belong to, and
+**that file is committed**: whoever clones the repository, and whatever agent
+works in it, then needs no flags. The platform never reads it.
 
-`workspace show` reports *why* that workspace, which is the useful half: acting
-in the wrong one is the failure the resolution order exists to prevent.
+**Nothing is ever inferred, including from a list of one.** A command with
+nothing recorded lists the candidates and refuses. A rule that resolves while a
+list holds one entry starts resolving to something nobody chose on the day it
+holds two, and nobody is watching that day.
+
+**No git remote is read as identity.** The pipeline used to be found by matching
+the checkout's `origin` against the workspace's pipelines; a repository may have
+any number of remotes, and which one carries that name is its owner's business.
+The gap that leaves - a repository copied wholesale into another repository of
+the *same* workspace keeps a pipeline id that still resolves - is stated in
+`.asgard-cli.yaml`'s own header rather than guarded by a rule that fires on the
+wrong input. Run `pipeline use` after copying a repository.
+
+**`workspace use` clears the pipeline line** when the workspace changes, because
+a pipeline belongs to one workspace. Every pipeline command then refuses and
+names the remedy, and `asgard-cli gate`'s `binding` step goes red - which is the
+failure landing on the next command instead of on whichever later one happened
+to be destructive. Commit both lines together.
+
+Resolution order, highest first: `--workspace`, `ASGARD_WORKSPACE`, the
+checkout's `.asgard-cli.yaml`. That is the whole list. `workspace show` reports
+*why* that workspace, which is the useful half: acting in the wrong one is the
+failure the order exists to prevent.
 
 ### `pipeline`
 

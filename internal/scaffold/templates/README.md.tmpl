@@ -11,7 +11,9 @@
 每個 **project** 是一份獨立 Helm chart,放在 `projects/<project>/`:
 
 <!-- asgard-cli:managed:start -->
-<!-- 這張表由 `asgard-cli scaffold` 依 .asgard-config.json 維護,兩個標記之間的內容
+<!-- 這張表由 `asgard-cli scaffold` 維護,project 清單直接讀 repo 本身
+     (.asgard-pipeline.yaml 的 chart 路徑 ∪ projects/ 底下的資料夾),
+     不另存一份。兩個標記之間的內容
      每次 scaffold 都會重寫。說明欄要填的話,填在標記外面的段落。
      asgard-cli check 會比對這張表與 projects/ 底下實際的資料夾。
 

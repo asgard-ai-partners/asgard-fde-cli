@@ -155,11 +155,13 @@ stated in AGENTS.md as a rule; what follows is how far the code holds it.
   - **Retrieval is by subject, never by position.** Held, and the rule is
     narrower than it was: it used to say "by subject or by condition", and the
     condition half was the ladder with the numbers off. Gone with it are
-    `stage.Current`, `stage.Relevant`, the numbering and "stage 4 of 9".
-    `stage.Gaps` remains and is arithmetic: it subtracts what a chart declares
-    from what its **declared shape** asks for, and says nothing at all where no
-    shape is declared. Nothing raises a document for a reader; `guide` names
-    them and `find` reaches them by subject.
+    `stage.Current`, `stage.Relevant`, the numbering and "stage 4 of 9" - and,
+    since 2026-09-05, `stage.Gaps` too. It was arithmetic, subtracting what a
+    chart declares from what its **declared shape** asked for, and it was sound
+    arithmetic on an unsound input: the shape was a note of what somebody meant
+    to build, which is not something this tool can check. There is nowhere to
+    record one now. Nothing raises a document for a reader; `guide` names them
+    and `find` reaches them by subject.
 
   - **Everything an agent reads has a parseable form.** Held. `find`,
     `project`, `question`, `request`, `task`, `check` and `verify` take

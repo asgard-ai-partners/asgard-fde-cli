@@ -20,12 +20,10 @@ const profileFlag = "profile"
 // choice that changes nothing about what they answer.
 func addProfileFlag(cmd *cobra.Command, target *string) {
 	// No backquotes in a flag's usage string: cobra reads the first
-	// backquoted word as the placeholder to print after the flag name, so
-	// "the profile `login --set-default` recorded" rendered as
-	// `--profile login --set-default` in every command's help.
+	// backquoted word as the placeholder to print after the flag name.
 	cmd.Flags().StringVar(target, profileFlag, "",
-		fmt.Sprintf("platform environment: one of %s; defaults to %s or the profile \"login --set-default\" recorded",
-			joinNames(auth.BuiltinProfileNames()), auth.EnvProfile))
+		fmt.Sprintf("platform environment: one of %s; defaults to %s, then %s",
+			joinNames(auth.BuiltinProfileNames()), auth.EnvProfile, auth.DefaultProfileName))
 }
 
 func joinNames(names []string) string {
@@ -41,10 +39,9 @@ func joinNames(names []string) string {
 
 func newLoginCmd() *cobra.Command {
 	var (
-		profile    string
-		noBrowser  bool
-		setDefault bool
-		format     string
+		profile   string
+		noBrowser bool
+		format    string
 	)
 
 	cmd := &cobra.Command{
@@ -60,14 +57,26 @@ CLI ships no client secret, so nothing in a release is worth lifting out of it.
 The session lasts 24 hours and renews itself for 30 days without asking again;
 after that, or once it is revoked, the next command says to run this one.
 
-    asgard-cli login                     sign in to dev
-    asgard-cli login --profile prod      sign in to prod
+    asgard-cli login                     sign in to prod
+    asgard-cli login --profile dev       sign in to dev
     asgard-cli login --no-browser        print the URL instead of opening one
 
-Two profiles exist, dev and prod, and each is a different platform with different
+Two profiles exist, prod and dev, and each is a different platform with different
 workspaces. Signing in to one leaves the other alone, so both can be held at once
-and --profile picks between them per command; --set-default records which one is
-meant when nothing says.
+and --profile picks between them per command.
+
+**Nothing records which profile is meant when nothing says; it is prod.** A
+default used to be recordable, in a file beside the credentials, and it is gone:
+a preference stored on one machine is a preference two people running the same
+command do not share, and it was one more file an upgrade had to keep
+understanding. Say it per command with --profile, or once per shell:
+
+    export ASGARD_PROFILE=dev
+
+That way round is the safe one. The recorded default was usually dev, so
+forgetting it was set meant a command reaching a customer's platform believing
+it was the test one - and an exported variable is visible in the shell that set
+it, where a file under the user's config directory is not.
 
 WITH NO BROWSER - CI, a container, an agent sandbox - do not use this command.
 Set ASGARD_TOKEN to an access token instead: it bypasses the store completely,
@@ -101,17 +110,6 @@ not carry the state value this run generated - which means it was not this run's
 			if err := auth.SaveCredential(p, cred); err != nil {
 				return err
 			}
-			if setDefault {
-				settings, err := auth.LoadSettings()
-				if err != nil {
-					return err
-				}
-				settings.DefaultProfile = p.Name
-				if err := auth.SaveSettings(settings); err != nil {
-					return err
-				}
-			}
-
 			out := cmd.OutOrStdout()
 			if format == formatJSON {
 				return writeJSON(out, map[string]any{
@@ -131,8 +129,11 @@ not carry the state value this run generated - which means it was not this run's
 			}
 			fmt.Fprintf(out, ".\nThe session expires %s and renews itself until then.\n",
 				cred.ExpiresAt.Local().Format("2006-01-02 15:04"))
-			if setDefault {
-				fmt.Fprintf(out, "%s is now the default profile.\n", p.Name)
+			// Said whenever the profile was chosen rather than defaulted,
+			// because nothing on disk remembers it for the next command.
+			if p.Name != auth.DefaultProfileName {
+				fmt.Fprintf(out, "\nEvery command still defaults to %s. Say %s per command,\nor `export %s=%s` once for this shell.\n",
+					auth.DefaultProfileName, profileArgFor(p.Name), auth.EnvProfile, p.Name)
 			}
 			return nil
 		},
@@ -141,8 +142,6 @@ not carry the state value this run generated - which means it was not this run's
 	addProfileFlag(cmd, &profile)
 	cmd.Flags().BoolVar(&noBrowser, "no-browser", false,
 		"print the sign-in URL instead of opening a browser; the loopback port still has to be reachable from wherever it is opened")
-	cmd.Flags().BoolVar(&setDefault, "set-default", false,
-		"record this profile as the one used when --profile and "+auth.EnvProfile+" say nothing")
 	cmd.Flags().StringVar(&format, formatFlag, formatText, formatUsage)
 
 	return cmd
@@ -164,8 +163,8 @@ revoked at the platform, and any other machine holding one keeps it. Signing out
 of a profile that has no session is not an error - running this twice reports the
 same thing both times.
 
-    asgard-cli logout                    forget the dev session
-    asgard-cli logout --profile prod     forget the prod session
+    asgard-cli logout                    forget the prod session
+    asgard-cli logout --profile dev      forget the dev session
     asgard-cli logout --all              forget every profile's
 
 --all does not take --profile, because it means every one of them.`,

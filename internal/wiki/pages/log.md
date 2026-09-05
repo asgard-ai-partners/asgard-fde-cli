@@ -735,3 +735,30 @@ time, and editing removes exactly that.
   word of a flag's usage string as the placeholder to print after the flag name,
   so a command name quoted in prose became the flag's argument name. Six flags,
   quoted with `"` now
+- `fix` 2026-09-05 **the user config directory holds `credentials.json` and
+  nothing else.** `config.json` is gone, and every field in it was a preference
+  something else already expressed: `defaultProfile` is `ASGARD_PROFILE` or
+  `--profile`, `defaultWorkspaces` is `ASGARD_WORKSPACE` or `--workspace` or the
+  committed `.asgard-cli.yaml`, and the `profiles` map is the three field
+  overrides. Each was also a thing an upgrade had to keep understanding, on a
+  file nobody remembers writing. A credential is the one thing that genuinely
+  has to live there: a secret, per-person rather than per-repository, and not
+  re-derivable. `login --set-default` and `workspace use --default` go with it
+- `fix` 2026-09-05 a leftover `config.json` is an **error, not a warning**, and
+  the reason is which way it fails. The retired `defaultProfile` was usually
+  `dev`; ignore the file quietly and the default becomes `prod`, which is a
+  customer's platform, and a warning printed afterwards is printed after the
+  command has already run there. So the first command that resolves a profile
+  refuses, names each retired key with what replaces it, and says to delete the
+  file. It is reached only from `ResolveProfile`, so `wiki`, `find`, `brief`,
+  `guide`, `usecase` and `size` still answer with no network and no login
+- `fix` 2026-09-05 `workspace use` no longer takes `--profile`. It reaches no
+  platform - it writes a file naming a workspace id - and a flag that decides
+  nothing is worse than no flag. That is the rule in AGENTS.md, applied to a
+  flag that stopped reading anything when `--default` went
+- `fix` 2026-09-05 the README documented `.asgard-config.json`, an `init` that
+  wrote it, a `project add --env` that declared namespaces, and a workspace
+  binding "kept beside the credentials, keyed by profile and by the repository's
+  origin remote" - four claims about a world that ended at the Pipeline
+  cut-over. STRUCTURE.md still listed `config` and `deploy` as packages, and
+  both were deleted. Rewritten against what the binary does

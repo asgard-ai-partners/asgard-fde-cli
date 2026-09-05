@@ -7,7 +7,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/asgard-ai-partners/asgard-fde-cli/internal/auth"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/binding"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/platform"
 )
@@ -127,11 +126,12 @@ one is still a list.`,
 	return cmd
 }
 
+// `workspace use` reaches no platform, so it carries no --profile.
+//
+// It writes a file, and the file names a workspace id. Which platform that id
+// lives on is settled by whatever later command acts on it, and a --profile
+// here would have looked like it decided something.
 func newWorkspaceUseCmd() *cobra.Command {
-	var (
-		profile  string
-		asGlobal bool
-	)
 
 	cmd := &cobra.Command{
 		Use:   "use <workspace-id>",
@@ -145,10 +145,13 @@ declaration per team has one pipeline per team, and a single file at the root
 could name only one of them.
 
     asgard-cli workspace use 1862431170889781248
-    asgard-cli workspace use 1862431170889781248 --default
 
---default records it for this machine instead, for commands run where there is
-no declaration to write beside. It is per profile.
+**It writes a file in the repository and nothing outside it.** A machine-wide
+default used to be recordable with --default, and it is gone: it was invisible
+on the machine that had it and absent on every other, so the same command in the
+same checkout did different things for two people. Outside a checkout, name the
+workspace with --workspace or export ASGARD_WORKSPACE - both are visible where
+they are set.
 
 **Moving to a different workspace clears the pipeline line.** A pipeline belongs
 to one workspace, so the id recorded beside it is not a pipeline of the new one -
@@ -168,25 +171,7 @@ choice - the first command that acts on it reports a bad one anyway.`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			workspaceID := args[0]
-
-			p, err := auth.ResolveProfile(profile)
-			if err != nil {
-				return err
-			}
-			settings, err := auth.LoadSettings()
-			if err != nil {
-				return err
-			}
 			out := cmd.OutOrStdout()
-
-			if asGlobal {
-				settings.SetFallbackWorkspace(p.Name, workspaceID)
-				if err := auth.SaveSettings(settings); err != nil {
-					return err
-				}
-				fmt.Fprintf(out, "Recorded %s as the default workspace on %s.\n", workspaceID, p.Name)
-				return nil
-			}
 
 			// The binding belongs beside the declaration it is for, so a
 			// repository with two declarations gets two bindings rather than
@@ -251,9 +236,6 @@ choice - the first command that acts on it reports a bad one anyway.`,
 		},
 	}
 
-	addProfileFlag(cmd, &profile)
-	cmd.Flags().BoolVar(&asGlobal, "default", false,
-		"record it for this machine, for commands run where there is no declaration to write beside")
 	return cmd
 }
 
@@ -270,9 +252,10 @@ func newWorkspaceShowCmd() *cobra.Command {
 
 The reason is the useful half. A command that acted in the wrong workspace is
 the failure the resolution order exists to prevent, and the order is:
---workspace, then ASGARD_WORKSPACE, then the checkout's .asgard-cli.yaml, then
-the default recorded on this machine. **There is no last resort**: an account
-that can reach exactly one workspace still has to say so once.
+--workspace, then ASGARD_WORKSPACE, then the checkout's .asgard-cli.yaml. Those
+three are the whole list. **There is no last resort and no machine-wide
+default**: every answer is either on the command line or in a committed file, so
+two people in the same checkout get the same one.
 
 The "origin remote" line is a statement about this checkout and nothing more.
 Nothing compares it to anything: which remote somebody calls origin is their
