@@ -151,9 +151,9 @@ The slug becomes part of every namespace this project deploys to
 (asgard-<workspace>-<slug>-<env>), so keep it short: names derived from a
 namespace inherit its length, and Kubernetes caps a namespace at 63 characters.
 
---env may be repeated and defaults to dev. The two environments are independent:
-a project may declare dev only, prod only, or both. Adding an environment later
-means running this command again with --force, or editing the config.
+Where the chart deploys is a release in .asgard-pipeline.yaml, not an
+environment here: one chart can have several, each bound to its own project on
+the platform. This records the project and writes its chart skeleton.
 
 If the workspace id is still unset this says so, because a project is what the
 platform deploys and so is the point at which the id is worth chasing. It is a

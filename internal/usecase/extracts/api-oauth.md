@@ -48,7 +48,7 @@ should be calling this API directly at all.
 
 ## Generate it
 
-    asgard-cli add httptool notify --project <project> --connector-less
+    asgard-cli add httptool notify --project <project> --toolset ts-notify
 
 Then add the token processor in front of the call, and wire it as below. There is
 no generator for the two-step form: the second call's shape depends entirely on
