@@ -10,7 +10,7 @@
 - **Kind**: Helm charts only. No application source code — everything is declarative Kubernetes custom resources under `asgard-ai.com/v1alpha1`. (`scripts/db/` is a local DB tool-chain, not deployed.)
 - **Standard Asgard-Kube layout**: each **Project** is its own Helm chart under `projects/<project>/chart/app`, deployed to its own namespace. Cross-project shared plumbing lives in `common/`. ("Project" is the generalized unit — a Platform Project == a K8s Namespace.)
 <<if .Projects>>- **Projects**:
-<<range .Projects>>  - `<<.Slug>>` — <<.Name>>. TODO: what it does, who calls it, which systems it reads.
+<<range .Projects>>  - `<<.Slug>>` — TODO: what it does, who calls it, which systems it reads.
 <<end>><<else>>- **Projects**: none yet. Add one with `asgard-cli project add <slug>`.
 <<end>>
 > **TODO — fill this in as the engagement discovers it.** What the customer's business systems
@@ -73,8 +73,9 @@ subject.
 | `deploy` | deploy | see Deploy / CI |
 
 Not every chart ends with an entry point. Which CR kinds finish one depends on
-the project's shape, which the files cannot say - declare it with
-`asgard-cli project shape <slug> <shape>` and see `asgard-cli size`.
+what this project is for, which the files cannot say and no tool can check -
+so say it in the chart next to what makes it unusual. `asgard-cli size` lists
+the shapes an engagement chooses between.
 
 Steps 4, 5 and 6 are the three decisions in the next section. Each one has an
 answer that looks obvious and is wrong.

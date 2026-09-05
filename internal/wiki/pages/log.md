@@ -676,3 +676,21 @@ time, and editing removes exactly that.
   `R11 <layer>: no Agent binds it and nothing else in the render mentions it`
   and stops: whether that is finished or unfinished is a judgement this tool
   does not have. `olapOnlyLayers` and the flag are deleted with them
+- `fix` 2026-09-05 **`.asgard-config.json` is gone**, and every field it carried
+  failed the same test: a value belongs in a config file only when nothing on
+  disk implies it and the platform cannot be asked. The project list is the
+  declaration's chart paths and the directories under `projects/`; the
+  customer's name is the platform's answer, fetched when a template needs it and
+  never stored; the per-project **shape** recorded an intent no tool can check,
+  and it took gate rule R10, `Gaps` and `project shape` with it; the workspace
+  slug named `docs/spec/<slug>-asgard/`, and that directory is just
+  `docs/spec/asgard/` now - the customer's name written into a path inside that
+  customer's own repository was the last reason the file existed
+- `fix` 2026-09-05 `init` is deleted. It wrote that file. `scaffold` writes the
+  skeleton and `workspace use` records the binding; `init` returns as the
+  composition of those two once the binding rules land
+- `lint` 2026-09-05 `audit-material --commands` caught four references to the
+  commands this change deleted - `project shape` in the scaffolded AGENTS.md and
+  two stage prompts, `init` in a third - which is exactly the class of defect it
+  was written for, found the same afternoon rather than by somebody re-reading a
+  provenance line weeks later

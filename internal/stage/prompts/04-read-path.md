@@ -29,11 +29,10 @@ point or BotProvider is written at all.
     watch the same numbers    a layer, and the chart stops there
     both, different people    both - two deliveries over one model
 
-When the chart stops there, record it, or the next stage will keep asking this
-project for an entry point it is not supposed to have:
-
-    asgard-cli project shape <project> mimir-dashboard, which is the claim that
-    nobody asks this a question - not a way to silence the stage
+When the chart stops there, **say so in the chart, next to the layer.** There
+used to be a field for it - a "shape" recorded per project - and it is gone:
+this tool cannot check such a claim and has no business judging it, so the only
+place the answer belongs is where the next reader will be looking anyway.
 
 `asgard-cli usecase mimir-dashboard` is the shape, including the trap: a later
 reader finds a SemanticLayer nothing references, assumes it is a missed

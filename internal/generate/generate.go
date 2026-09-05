@@ -19,7 +19,7 @@ import (
 	"text/template"
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/chart"
-	"github.com/asgard-ai-partners/asgard-fde-cli/internal/config"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/repo"
 )
 
 //go:embed templates
@@ -318,7 +318,7 @@ type Data struct {
 	Chart     string // the chart's helper prefix
 	CRName    string // prefixed
 	ValuesKey string // the name as a Helm values key
-	Workspace config.Workspace
+	Workspace repo.Workspace
 	SpecSlug  string
 }
 
@@ -451,11 +451,14 @@ func Resolve(root string, kind Kind, opts Options) (Options, []string, error) {
 	return opts, notes, nil
 }
 
-func Write(root string, cfg *config.Config, kind Kind, opts Options) ([]Result, error) {
-	project, ok := cfg.Project(opts.Project)
-	if !ok {
-		return nil, fmt.Errorf("no project %q in %s; add it with `asgard-cli project add %s`",
-			opts.Project, config.FileName, opts.Project)
+func Write(root string, kind Kind, opts Options) ([]Result, error) {
+	projects, err := repo.Projects(root)
+	if err != nil {
+		return nil, err
+	}
+	if !slices.Contains(projects, opts.Project) {
+		return nil, fmt.Errorf("no project %q in this repository; it has: %s",
+			opts.Project, strings.Join(projects, ", "))
 	}
 	// Every reference in this CLI's own guidance is written prefixed - "--connector
 	// dc-<name>", "--layer sl-<name>" - so the prefixed form is the natural thing
@@ -463,7 +466,7 @@ func Write(root string, cfg *config.Config, kind Kind, opts Options) ([]Result, 
 	// metadata.name, which lints clean and is only found by the xref gate, or by
 	// nobody. Accept either form.
 	opts.Name = strings.TrimPrefix(opts.Name, kind.Prefix)
-	if err := config.ValidateSlug("name", opts.Name); err != nil {
+	if err := repo.ValidateSlug("name", opts.Name); err != nil {
 		return nil, err
 	}
 
@@ -476,17 +479,16 @@ func Write(root string, cfg *config.Config, kind Kind, opts Options) ([]Result, 
 
 	data := Data{
 		Options:   opts,
-		Chart:     project.Slug,
+		Chart:     opts.Project,
 		CRName:    kind.Prefix + opts.Name,
 		ValuesKey: valuesKey(opts.Name),
-		Workspace: cfg.Workspace,
-		SpecSlug:  cfg.Workspace.Slug + "-asgard",
+		SpecSlug:  repo.SpecSlug,
 	}
 	if data.DisplayName == "" {
 		data.DisplayName = data.CRName
 	}
 
-	templatesDir := filepath.Join(root, "projects", project.Slug, "chart", "app", "templates")
+	templatesDir := filepath.Join(root, "projects", opts.Project, "chart", "app", "templates")
 
 	// Resolve every path before writing any of them, so a kind that would
 	// clobber something does not leave half its files behind.

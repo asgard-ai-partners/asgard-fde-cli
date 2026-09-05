@@ -156,7 +156,7 @@ that has not finished.
     asgard-cli request ready <<.RequestID>>          once the audience and the scope are settled
 
 Keep the slug short. It becomes part of every namespace
-(asgard-<<.Workspace.Slug>>-<slug>-<env>), and names derived from a namespace
+names, and Kubernetes caps a name at 63 characters, so names derived from it
 inherit its length.
 
 Done when: projects/ has a directory per project, the root README table lists

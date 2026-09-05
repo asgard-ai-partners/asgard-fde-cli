@@ -3,10 +3,12 @@ package cli
 import (
 	"fmt"
 	"io"
+	"slices"
+	"strings"
 
 	"github.com/spf13/cobra"
 
-	"github.com/asgard-ai-partners/asgard-fde-cli/internal/config"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/repo"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/stage"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/work"
 )
@@ -129,15 +131,19 @@ interview that has not finished looks like.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			title := args[0]
 
-			root, cfg, err := loadRepo()
+			root, err := loadRepo()
 			if err != nil {
 				return err
 			}
 
 			if project != "" {
-				if _, ok := cfg.Project(project); !ok {
-					return fmt.Errorf("no project %q in %s; add it with `asgard-cli project add %s`",
-						project, root, project)
+				projects, err := repo.Projects(root)
+				if err != nil {
+					return err
+				}
+				if !slices.Contains(projects, project) {
+					return fmt.Errorf("no project %q in this repository; it has: %s",
+						project, strings.Join(projects, ", "))
 				}
 			}
 
@@ -153,7 +159,7 @@ interview that has not finished looks like.`,
 				Audience: audience,
 				Project:  project,
 				Raised:   today(),
-				SpecSlug: cfg.Workspace.Slug + "-asgard",
+				SpecSlug: repo.SpecSlug,
 			}
 
 			request, err = work.AddRequest(root, request)
@@ -207,7 +213,7 @@ way to tell which one is current.
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id := args[0]
 
-			root, _, err := loadRepo()
+			root, err := loadRepo()
 			if err != nil {
 				return err
 			}
@@ -245,13 +251,17 @@ request's Meta, and a dated line in its log.
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id, project := args[0], args[1]
 
-			root, cfg, err := loadRepo()
+			root, err := loadRepo()
 			if err != nil {
 				return err
 			}
-			if _, ok := cfg.Project(project); !ok {
-				return fmt.Errorf("no project %q in %s; add it with `asgard-cli project add %s`",
-					project, config.FileName, project)
+			projects, err := repo.Projects(root)
+			if err != nil {
+				return err
+			}
+			if !slices.Contains(projects, project) {
+				return fmt.Errorf("no project %q in this repository; it has: %s",
+					project, strings.Join(projects, ", "))
 			}
 			if err := work.SetRequestProject(root, id, project, today()); err != nil {
 				return err

@@ -21,7 +21,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/asgard-ai-partners/asgard-fde-cli/internal/config"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/repo"
 )
 
 // The tree is embedded with all: so that dot-prefixed paths (.agents, .github,
@@ -73,44 +73,42 @@ const (
 	// containing projectDir is written once per project.
 	specSlugDir = "__SPEC_SLUG__"
 	projectDir  = "__PROJECT__"
-
-	// specSuffix turns the workspace slug into the living spec's slug.
-	specSuffix = "-asgard"
 )
 
-// Project wraps config.Project with the presentation the templates need.
+// Project is one project's chart, as the templates see it.
 type Project struct {
-	config.Project
+	Slug string
 }
 
 // Data is what every template is rendered with. Project is set only while
 // rendering a file that lives under a __PROJECT__ path.
 type Data struct {
-	Workspace config.Workspace
+	Workspace repo.Workspace
 	Projects  []Project
-	RepoName  string
-	SpecSlug  string
+	// RepoName is the repository's own directory name - a fact on disk, not a
+	// recorded one, so renaming the checkout needs no correction anywhere.
+	RepoName string
+	SpecSlug string
 
 	Project *Project
 }
 
-// NewData derives the render data from a config.
-func NewData(cfg *config.Config) Data {
-	projects := make([]Project, len(cfg.Projects))
-	for i, p := range cfg.Projects {
-		projects[i] = Project{Project: p}
+// NewData derives the render data from what the caller found.
+//
+// **Nothing here is read from a config file.** The projects are the
+// repository's own directories and declaration, and the workspace name is the
+// platform's answer - both passed in, which is where the looking belongs.
+func NewData(root string, ws repo.Workspace, projects []string) Data {
+	out := make([]Project, len(projects))
+	for i, slug := range projects {
+		out[i] = Project{Slug: slug}
 	}
 	return Data{
-		Workspace: cfg.Workspace,
-		Projects:  projects,
-		RepoName:  cfg.RepoName(),
-		SpecSlug:  SpecSlug(cfg.Workspace.Slug),
+		Workspace: ws,
+		Projects:  out,
+		RepoName:  filepath.Base(root),
+		SpecSlug:  repo.SpecSlug,
 	}
-}
-
-// SpecSlug is the directory name under docs/spec/ for this workspace.
-func SpecSlug(workspaceSlug string) string {
-	return workspaceSlug + specSuffix
 }
 
 // Status is what happened to one file.
@@ -162,12 +160,8 @@ type Result struct {
 // Write renders the skeleton into root. It never removes anything, and without
 // force it leaves existing files alone, so it can be run again after a project
 // is added or when a file was deleted by hand.
-func Write(root string, cfg *config.Config, force bool) ([]Result, error) {
-	if err := cfg.Validate(); err != nil {
-		return nil, err
-	}
-
-	jobs, err := plan(NewData(cfg))
+func Write(root string, ws repo.Workspace, projects []string, force bool) ([]Result, error) {
+	jobs, err := plan(NewData(root, ws, projects))
 	if err != nil {
 		return nil, err
 	}

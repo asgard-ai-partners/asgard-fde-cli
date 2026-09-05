@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/repo"
+
 	"github.com/spf13/cobra"
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/work"
@@ -59,7 +61,7 @@ that changed it keeps its version.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			topic := args[0]
 
-			root, cfg, err := loadRepo()
+			root, err := loadRepo()
 			if err != nil {
 				return err
 			}
@@ -81,7 +83,7 @@ that changed it keeps its version.`,
 				}
 			}
 
-			specSlug := cfg.Workspace.Slug + "-asgard"
+			specSlug := repo.SpecSlug
 			path, linkErr := work.AddDecision(root, topic, slug, specSlug, module, today())
 			if path == "" {
 				return linkErr

@@ -1,14 +1,14 @@
 package cli
 
 import (
-	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
+
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/pipelineconfig"
 
 	"github.com/spf13/cobra"
 
-	"github.com/asgard-ai-partners/asgard-fde-cli/internal/config"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/repo"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/scaffold"
 )
 
@@ -17,8 +17,8 @@ func newScaffoldCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "scaffold",
-		Short: "Write the repository skeleton next to " + config.FileName,
-		Long: `Write the repository skeleton next to ` + config.FileName + `.
+		Short: "Write the repository skeleton next to " + pipelineconfig.FileName,
+		Long: `Write the repository skeleton next to ` + pipelineconfig.FileName + `.
 
 This is the part of a customer repo that is the same for every engagement: the
 four-layer docs model, the SDD rules, the six design-time skills that hold for
@@ -42,23 +42,24 @@ so it can be re-run after adding a project or when a file was deleted by hand.
 				return fmt.Errorf("get current directory: %w", err)
 			}
 
-			path, err := config.Find(dir)
+			// **The skeleton is written where you are.** Every other command
+			// finds the repository by its declaration, and this is the command
+			// that writes one - so it cannot require one to already exist.
+			root := dir
+			if found := repo.Root(dir); found != "" {
+				root = found
+			}
+
+			ws, err := workspaceForTemplates(cmd)
 			if err != nil {
-				if errors.Is(err, config.ErrNotFound) {
-					return fmt.Errorf("no %s found; run `asgard-cli init` first", config.FileName)
-				}
 				return err
 			}
-			cfg, err := config.Load(path)
+			projects, err := repo.Projects(root)
 			if err != nil {
 				return err
 			}
 
-			// The skeleton belongs next to the config, not in whatever
-			// subdirectory the command happened to be run from.
-			root := filepath.Dir(path)
-
-			results, err := scaffold.Write(root, cfg, force)
+			results, err := scaffold.Write(root, ws, projects, force)
 			if err != nil {
 				return err
 			}
@@ -138,7 +139,7 @@ about a CLI release:
 
   asgard-cli skill update
 
-Then "asgard-cli project" for what each chart declares and still lacks, and
+Then "asgard-cli project" for what each chart declares, and
 AGENTS.md for how to change the repo.
 `)
 			}

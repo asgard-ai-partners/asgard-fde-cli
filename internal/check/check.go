@@ -17,8 +17,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/asgard-ai-partners/asgard-fde-cli/internal/config"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/pipelineconfig"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/repo"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/work"
 )
 
@@ -176,37 +176,36 @@ func (c *checker) discoverProjects() ([]string, error) {
 	}
 	sort.Strings(projects)
 
-	// A project the config declares but that has no chart on disk is the
-	// failure this check exists for: everything else here inspects files, so
-	// without this the repo passes and `render` is the first thing to say the
-	// project is not real.
-	if cfg, err := config.Load(filepath.Join(c.root, config.FileName)); err == nil {
-		on := make(map[string]bool, len(projects))
-		for _, p := range projects {
-			on[p] = true
-		}
-		for _, p := range cfg.Projects {
-			if !on[p.Slug] {
-				c.errf("%s declares project %q but projects/%s/chart/app has no Chart.yaml; "+
-					"run `asgard-cli scaffold` to write it", config.FileName, p.Slug, p.Slug)
+	// The declaration and the disk are the two facts, and each direction is
+	// worth reporting: a chart the declaration does not name deploys nowhere,
+	// and a chart path the declaration names that has no Chart.yaml fails the
+	// plan rather than this gate. Neither is compared against a third record
+	// any more - `.asgard-config.json` was that record, and it drifted from
+	// both.
+	if decl, err := pipelineconfig.LoadFromRepo(c.root, ""); err == nil {
+		named := map[string]bool{}
+		for _, chart := range decl.Charts() {
+			named[chart] = true
+			if _, err := os.Stat(filepath.Join(c.root, filepath.FromSlash(chart), "Chart.yaml")); err != nil {
+				c.errf("%s declares chart %s, which has no Chart.yaml; the plan fails on this with config/chart-missing",
+					pipelineconfig.FileName, chart)
 			}
 		}
-
-		// The other direction: a chart on disk that the config does not
-		// declare. `render` and CD both work from the config, so such a project
-		// is dead weight nobody deploys, and until this check existed the only
-		// symptom was a directory that never appeared in any output.
-		declared := make(map[string]bool, len(cfg.Projects))
-		for _, p := range cfg.Projects {
-			declared[p.Slug] = true
-		}
 		for _, p := range projects {
-			if !declared[p] {
-				c.errf("projects/%s has a chart but %s does not declare it, so nothing renders or deploys it; "+
-					"add it with `asgard-cli project add %s` or delete the directory", p, config.FileName, p)
+			if !named[filepath.ToSlash(repo.ChartDir(p))] {
+				c.warnf("projects/%s has a chart that %s does not deploy; declare a release for it, or delete the directory",
+					p, pipelineconfig.FileName)
 			}
 		}
+	}
 
+	// A repository scaffolded before the config was deleted still has the file,
+	// and it records four things that are now derived, asked for, or gone -
+	// so leaving it means two answers to every question it used to answer.
+	if repo.HasLegacyConfig(c.root) {
+		c.errf("%s is still here. It is not read any more: the project list comes from %s and the directories on disk, "+
+			"the customer's name comes from the platform, and the deployment shape and olapOnlyLayers are gone. Delete it",
+			repo.LegacyConfigName, pipelineconfig.FileName)
 	}
 	return projects, nil
 }

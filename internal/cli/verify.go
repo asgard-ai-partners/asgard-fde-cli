@@ -137,7 +137,7 @@ time.`,
 				return finish(record(rendered, docs, gate.Options{}))
 			}
 
-			root, _, err := loadRepo()
+			root, err := loadRepo()
 			if err != nil {
 				return err
 			}

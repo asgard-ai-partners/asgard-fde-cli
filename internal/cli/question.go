@@ -182,7 +182,7 @@ This is not the place to park a question to avoid asking it. If the customer can
 answer it in the next meeting, it belongs in that agenda, not in a table.`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			root, _, err := loadRepo()
+			root, err := loadRepo()
 			if err != nil {
 				return err
 			}
@@ -235,7 +235,7 @@ reasoning goes.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			number, answer := args[0], args[1]
 
-			root, _, err := loadRepo()
+			root, err := loadRepo()
 			if err != nil {
 				return err
 			}
