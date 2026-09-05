@@ -12,9 +12,11 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/binding"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/check"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/gate"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/pipelineconfig"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/platform"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/render"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/skills"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/tool"
@@ -95,6 +97,12 @@ What it runs, in order:
   tools    helm is on PATH. Without it the three chart steps cannot run, and
            they are reported as skipped rather than passed
   repo     the structural invariants a chart render cannot see
+  binding  whether .asgard-cli.yaml names a workspace and a pipeline that the
+           platform still has. It is the step that catches a half-bound
+           checkout - ` + "`workspace use`" + ` clears the pipeline line, and this goes
+           red rather than waiting for whichever command somebody runs next.
+           Platform facts only: no git remote is read here or anywhere else.
+           Needs a session; --offline skips the half that asks
   skills   whether the reference material here still describes the server this
            repository deploys to. Needs a session; --offline skips it
   lint     helm lint on each chart, with the reserved asgard block and NOTHING
@@ -150,6 +158,7 @@ Exits non-zero if any step failed.`,
 			helmReady := steps[0].Status == stepPass
 
 			steps = append(steps, gateRepo(root, args))
+			steps = append(steps, gateBinding(cmd, root, profile, offline))
 			steps = append(steps, gateSkills(cmd, profile, offline))
 			steps = append(steps, gateCharts(cmd, root, releases, helmReady)...)
 
@@ -175,7 +184,7 @@ Exits non-zero if any step failed.`,
 
 	addProfileFlag(cmd, &profile)
 	cmd.Flags().StringVar(&format, formatFlag, formatText, formatUsage)
-	cmd.Flags().BoolVar(&offline, "offline", false, "skip the reference-material step, which is the only one that needs the platform")
+	cmd.Flags().BoolVar(&offline, "offline", false, "skip the two steps that need the platform: binding and skills")
 	return cmd
 }
 
@@ -277,6 +286,119 @@ func gateRepo(root string, only []string) stepResult {
 	default:
 		res.Summary = "structure and declaration are consistent"
 	}
+	return res
+}
+
+// gateBinding checks that this checkout names a workspace and a pipeline the
+// platform still has.
+//
+// **It is here because a half-bound checkout has no other symptom.**
+// `workspace use <other>` clears the pipeline line, deliberately - a pipeline
+// belongs to one workspace - and if the agent that ran it does not go on to
+// `pipeline use`, nothing is wrong until somebody runs a pipeline command,
+// which might be `runs approve`. This is a command an agent already runs after
+// every change, so the half state surfaces at the next edit instead.
+//
+// **It reads platform facts and nothing else.** It does not compare the
+// pipeline's repository to a git remote: a checkout may have several remotes,
+// and which one is called `origin` is not this tool's business. The gap that
+// leaves - a repository copied wholesale within one workspace - is named in the
+// binding file's own header.
+func gateBinding(cmd *cobra.Command, root, profile string, offline bool) stepResult {
+	res := stepResult{Name: "binding"}
+
+	f, err := binding.LoadFrom(root)
+	switch {
+	case errors.Is(err, binding.ErrNotFound):
+		// Nothing recorded is the ordinary state of a repository nobody has
+		// bound yet, and the same reasoning as the repo step applies: this is
+		// not a repository failing to be something it never claimed to be.
+		res.Status = stepSkip
+		res.Summary = "no " + binding.FileName + ", so this checkout is not bound to a pipeline yet"
+		res.Remedy = "asgard-cli init"
+		return res
+	case err != nil:
+		res.Status = stepFail
+		res.Summary = err.Error()
+		return res
+	}
+
+	// The local half runs offline and runs first: a missing field is a fact
+	// about the file, and asking the platform about it would be asking the
+	// wrong question.
+	if missing := f.Missing(); len(missing) > 0 {
+		res.Status = stepFail
+		res.Summary = fmt.Sprintf("%s records no %s", binding.FileName, strings.Join(missing, " and no "))
+		if len(missing) == 1 && missing[0] == "pipeline" {
+			res.Details = append(res.Details,
+				"a workspace is recorded and a pipeline is not, which is what `asgard-cli workspace use` leaves behind")
+			res.Remedy = "asgard-cli pipeline list, then asgard-cli pipeline use <id>"
+			return res
+		}
+		res.Remedy = "asgard-cli workspace use <id>, then asgard-cli pipeline use <id>"
+		return res
+	}
+
+	if offline {
+		res.Status = stepSkip
+		res.Summary = "--offline, so the platform was not asked whether these still exist"
+		return res
+	}
+
+	pc, err := resolveContext(cmd, contextOptions{Profile: profile})
+	if err != nil {
+		res.Status = stepSkip
+		res.Summary = "no session, so the platform was not asked (`asgard-cli login`, or --offline to say so on purpose)"
+		return res
+	}
+
+	// The recorded workspace, not the resolved one. --workspace and
+	// ASGARD_WORKSPACE outrank the file everywhere else on purpose, and here
+	// the file is the thing being checked.
+	workspaces, err := platform.New(pc.Session, "").ListWorkspaces(cmd.Context())
+	if err != nil {
+		res.Status = stepSkip
+		res.Summary = fmt.Sprintf("the platform did not answer: %v", err)
+		return res
+	}
+	wsName := ""
+	found := false
+	for _, w := range workspaces {
+		if w.ID == f.Workspace {
+			wsName, found = w.Name, true
+			break
+		}
+	}
+	if !found {
+		res.Status = stepFail
+		res.Summary = fmt.Sprintf("workspace %s is not one this account can reach on %s", f.Workspace, pc.Session.Profile.Name)
+		for _, w := range workspaces {
+			res.Details = append(res.Details, fmt.Sprintf("      %-22s %s", w.ID, w.Name))
+		}
+		res.Remedy = "asgard-cli workspace list"
+		return res
+	}
+
+	pipelines, err := platform.New(pc.Session, f.Workspace).ListPipelines(cmd.Context())
+	if err != nil {
+		res.Status = stepFail
+		res.Summary = fmt.Sprintf("workspace %s exists, and its pipelines could not be listed: %v", f.Workspace, err)
+		return res
+	}
+	for _, p := range pipelines {
+		if p.PipelineId == f.Pipeline {
+			res.Status = stepPass
+			res.Summary = fmt.Sprintf("%s -> %s (%s), pipeline %s", binding.FileName, f.Workspace, wsName, p.Name)
+			return res
+		}
+	}
+
+	res.Status = stepFail
+	res.Summary = fmt.Sprintf("pipeline %s is not in workspace %s (%s)", f.Pipeline, f.Workspace, wsName)
+	for _, p := range pipelines {
+		res.Details = append(res.Details, fmt.Sprintf("      %-22s %-20s %s", p.PipelineId, p.Name, p.RepoFullName))
+	}
+	res.Remedy = "asgard-cli pipeline use <id>"
 	return res
 }
 

@@ -19,8 +19,12 @@ const profileFlag = "profile"
 // work with no network and no session, and a flag in their help implies a
 // choice that changes nothing about what they answer.
 func addProfileFlag(cmd *cobra.Command, target *string) {
+	// No backquotes in a flag's usage string: cobra reads the first
+	// backquoted word as the placeholder to print after the flag name, so
+	// "the profile `login --set-default` recorded" rendered as
+	// `--profile login --set-default` in every command's help.
 	cmd.Flags().StringVar(target, profileFlag, "",
-		fmt.Sprintf("platform environment: one of %s; defaults to %s or the profile `login --set-default` recorded",
+		fmt.Sprintf("platform environment: one of %s; defaults to %s or the profile \"login --set-default\" recorded",
 			joinNames(auth.BuiltinProfileNames()), auth.EnvProfile))
 }
 

@@ -236,110 +236,9 @@ server has, which is the state where an agent's next CR is written against facts
 that no longer hold.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			if err := checkFormat(formatOut); err != nil {
-				return err
-			}
-			root, repoRoot, err := skillRoot(cmd, dir)
-			if err != nil {
-				return err
-			}
-			stamp, err := skills.ReadStamp(root)
-			if err != nil {
-				return err
-			}
-
-			pc, err := resolveContext(cmd, contextOptions{Profile: profile})
-			if err != nil {
-				return err
-			}
-			bundle, err := pc.Client.DocsSkills(cmd.Context())
-			if err != nil {
-				return err
-			}
-			if len(bundle.Files) == 0 {
-				return fmt.Errorf("the platform sent no files, so there is nothing to write; this is a platform fault, not a local one")
-			}
-
-			contents := make([]skills.Content, 0, len(bundle.Files))
-			for _, f := range bundle.Files {
-				contents = append(contents, skills.Content{Path: f.Path, Content: f.Content})
-			}
-			plan, err := skills.Plan(root, contents, stamp)
-			if err != nil {
-				return err
-			}
-
-			out := cmd.OutOrStdout()
-			rel := root
-			if r, relErr := filepath.Rel(repoRoot, root); relErr == nil {
-				rel = r
-			}
-
-			var edited []string
-			changes := 0
-			for _, f := range plan {
-				if f.Status == skills.Edited {
-					edited = append(edited, f.Path)
-				}
-				if f.Status != skills.Unchanged {
-					changes++
-				}
-			}
-
-			if formatOut == formatJSON {
-				rows := make([]map[string]string, 0, len(plan))
-				for _, f := range plan {
-					rows = append(rows, map[string]string{"path": f.Path, "status": string(f.Status)})
-				}
-				if err := writeJSON(out, map[string]any{
-					"directory": rel,
-					"version":   bundle.Version,
-					"applied":   !check && (force || len(edited) == 0),
-					"files":     rows,
-				}); err != nil {
-					return err
-				}
-			} else {
-				fmt.Fprintf(out, "%s  (%s)\n", bundle.Version, pc.Session.Profile.Name)
-				for _, f := range plan {
-					fmt.Fprintf(out, "  %-10s %s\n", f.Status, filepath.Join(rel, f.Path))
-				}
-			}
-
-			if check {
-				if changes == 0 {
-					if formatOut != formatJSON {
-						fmt.Fprintf(out, "\nCurrent.\n")
-					}
-					return nil
-				}
-				return fmt.Errorf("%d file(s) are not what the platform has; run `asgard-cli skill update`", changes)
-			}
-
-			if len(edited) > 0 && !force {
-				return fmt.Errorf("%d generated file(s) were edited here since they were written (%s).\n"+
-					"They say not to edit them, so this is probably a correction that belongs in the server rather than\n"+
-					"in a file the next update replaces. `--force` overwrites them",
-					len(edited), edited[0])
-			}
-
-			if err := skills.Apply(root, contents, skills.Stamp{
-				Version:   bundle.Version,
-				Platform:  pc.Session.Profile.API,
-				FetchedAt: time.Now().UTC().Format(time.RFC3339),
-				Sources:   sourceDigests(bundle.Sources),
-			}); err != nil {
-				return err
-			}
-
-			if formatOut != formatJSON {
-				if changes == 0 {
-					fmt.Fprintf(out, "\nAlready current; the record beside them was refreshed.\n")
-				} else {
-					fmt.Fprintf(out, "\nWrote %d file(s) into %s. Commit them.\n", len(contents), rel)
-				}
-			}
-			return nil
+			return runSkillUpdate(cmd, skillUpdateOptions{
+				Profile: profile, Dir: dir, Check: check, Force: force, Format: formatOut,
+			})
 		},
 	}
 
@@ -349,6 +248,133 @@ that no longer hold.`,
 	cmd.Flags().BoolVar(&force, "force", false, "overwrite a generated file that was edited here")
 	cmd.Flags().StringVar(&formatOut, formatFlag, formatText, formatUsage)
 	return cmd
+}
+
+// skillUpdateOptions is one run of the update.
+type skillUpdateOptions struct {
+	Profile string
+	Dir     string
+	Check   bool
+	Force   bool
+	Format  string
+}
+
+// runSkillUpdate writes the platform's material into the repository.
+//
+// Split out of the command for `init`, which composes it: fetching the material
+// is part of onboarding a repository, and an onboarding that leaves it to be
+// remembered separately is how a repository ends up with an agent writing CRs
+// against no statement of what the server accepts.
+func runSkillUpdate(cmd *cobra.Command, opts skillUpdateOptions) error {
+	profile, dir, check, force := opts.Profile, opts.Dir, opts.Check, opts.Force
+	formatOut := opts.Format
+	if formatOut == "" {
+		formatOut = formatText
+	}
+	if err := checkFormat(formatOut); err != nil {
+		return err
+	}
+	root, repoRoot, err := skillRoot(cmd, dir)
+	if err != nil {
+		return err
+	}
+	stamp, err := skills.ReadStamp(root)
+	if err != nil {
+		return err
+	}
+
+	pc, err := resolveContext(cmd, contextOptions{Profile: profile})
+	if err != nil {
+		return err
+	}
+	bundle, err := pc.Client.DocsSkills(cmd.Context())
+	if err != nil {
+		return err
+	}
+	if len(bundle.Files) == 0 {
+		return fmt.Errorf("the platform sent no files, so there is nothing to write; this is a platform fault, not a local one")
+	}
+
+	contents := make([]skills.Content, 0, len(bundle.Files))
+	for _, f := range bundle.Files {
+		contents = append(contents, skills.Content{Path: f.Path, Content: f.Content})
+	}
+	plan, err := skills.Plan(root, contents, stamp)
+	if err != nil {
+		return err
+	}
+
+	out := cmd.OutOrStdout()
+	rel := root
+	if r, relErr := filepath.Rel(repoRoot, root); relErr == nil {
+		rel = r
+	}
+
+	var edited []string
+	changes := 0
+	for _, f := range plan {
+		if f.Status == skills.Edited {
+			edited = append(edited, f.Path)
+		}
+		if f.Status != skills.Unchanged {
+			changes++
+		}
+	}
+
+	if formatOut == formatJSON {
+		rows := make([]map[string]string, 0, len(plan))
+		for _, f := range plan {
+			rows = append(rows, map[string]string{"path": f.Path, "status": string(f.Status)})
+		}
+		if err := writeJSON(out, map[string]any{
+			"directory": rel,
+			"version":   bundle.Version,
+			"applied":   !check && (force || len(edited) == 0),
+			"files":     rows,
+		}); err != nil {
+			return err
+		}
+	} else {
+		fmt.Fprintf(out, "%s  (%s)\n", bundle.Version, pc.Session.Profile.Name)
+		for _, f := range plan {
+			fmt.Fprintf(out, "  %-10s %s\n", f.Status, filepath.Join(rel, f.Path))
+		}
+	}
+
+	if check {
+		if changes == 0 {
+			if formatOut != formatJSON {
+				fmt.Fprintf(out, "\nCurrent.\n")
+			}
+			return nil
+		}
+		return fmt.Errorf("%d file(s) are not what the platform has; run `asgard-cli skill update`", changes)
+	}
+
+	if len(edited) > 0 && !force {
+		return fmt.Errorf("%d generated file(s) were edited here since they were written (%s).\n"+
+			"They say not to edit them, so this is probably a correction that belongs in the server rather than\n"+
+			"in a file the next update replaces. `--force` overwrites them",
+			len(edited), edited[0])
+	}
+
+	if err := skills.Apply(root, contents, skills.Stamp{
+		Version:   bundle.Version,
+		Platform:  pc.Session.Profile.API,
+		FetchedAt: time.Now().UTC().Format(time.RFC3339),
+		Sources:   sourceDigests(bundle.Sources),
+	}); err != nil {
+		return err
+	}
+
+	if formatOut != formatJSON {
+		if changes == 0 {
+			fmt.Fprintf(out, "\nAlready current; the record beside them was refreshed.\n")
+		} else {
+			fmt.Fprintf(out, "\nWrote %d file(s) into %s. Commit them.\n", len(contents), rel)
+		}
+	}
+	return nil
 }
 
 // sourceDigests flattens the bundle's per-upstream digests for the stamp and

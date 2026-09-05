@@ -35,30 +35,32 @@ thing to decide up front is the workspace itself.
 
 ## What you need
 
-**The slug**, and that is all. Short, lowercase, hyphens only. It is load
-bearing:
-
-    repository   <slug>-asgard-kube
-    namespace    asgard-<slug>-<project>-<env>
-
-Kubernetes caps a namespace at 63 characters and names derived from a namespace
-inherit its length, so keep it short. Prefer the customer's own short name.
-
-**Which workspace this checkout deploys into is recorded, and nothing else is.**
-It is the one fact no file in the repository implies and the platform cannot be
-asked for on your behalf:
+**Two ids, and nothing else.** Which workspace this checkout deploys into and
+which pipeline it deploys through are the only two facts no file in the
+repository implies and the platform cannot be asked for on your behalf:
 
     asgard-cli workspace list
-    asgard-cli workspace use <id>
+    asgard-cli pipeline list --workspace <id>
 
 Everything else about the repository - which projects it has, what each chart
-declares - is read off the repository itself.
+declares, where each chart deploys - is read off the repository itself or held
+on the platform.
 
-When you do get it: it is a long decimal number (around 19 digits), **not** a
-UUID - if what you have looks like `7ab7f523-3cd9-...`, it is the wrong value.
-Ask the platform team for it, or read it off the platform. **Do not copy a
-workspace id from another customer's repository or from an example**: it is a live production identifier,
-and a wrong one binds this repository to somebody else's workspace.
+**Neither id is ever guessed**, including when there is only one candidate. A
+command with nothing recorded lists what there is and stops. That costs a step
+on a customer with one workspace, and it buys the property that matters: a rule
+which resolves while a list holds one entry starts resolving to something nobody
+chose on the day it holds two.
+
+An id is a long decimal number (around 19 digits), **not** a UUID - if what you
+have looks like `7ab7f523-3cd9-...`, it is the wrong value. **Do not copy a
+workspace id from another customer's repository or from an example**: it is a
+live production identifier, and a wrong one binds this repository to somebody
+else's workspace.
+
+There is no pipeline yet on a genuinely new customer. `asgard-cli pipeline
+connections` and `asgard-cli pipeline create` make one; that is a decision about
+the platform, taken before the repository exists.
 
 **Do not ask the customer about projects yet.** How the work splits is decided by interviewing
 the customer - `asgard-cli guide projects`. Starting with none is the
@@ -66,54 +68,61 @@ normal case.
 
 ## Start
 
-**Run scaffold in the directory that is to become the workspace.** In the
-common case that is the directory you are already in - an empty one, or a
-repository just cloned for this customer:
+**Run it in the directory that is to become the repository.** In the common case
+that is the directory you are already in - an empty one, or a repository just
+cloned for this customer:
 
-    asgard-cli scaffold
+    asgard-cli init --workspace <id> --pipeline <id>
 
 **Do not create another directory level.** Check where you are before assuming.
 
-Only if you are sitting in a *parent* directory - the place other
-`*-asgard-kube` repos live - create the workspace first:
+That one command does the three things this step used to list separately, in
+the only order they work in:
 
-    mkdir <slug>-asgard-kube && cd <slug>-asgard-kube
-    asgard-cli scaffold
+    1  asgard-cli scaffold        the skeleton, including .asgard-pipeline.yaml
+    2  the binding                .asgard-cli.yaml beside that declaration
+    3  asgard-cli skill update    what this platform's CRs actually accept
 
-### The slug comes from the directory name
+Each is still its own command and each can be re-run alone. They are composed
+because a list of three steps kept in prose is a list that goes stale - and this
+one did.
 
-`init` takes it from the current directory, dropping a trailing `-asgard-kube`,
-so `acme-asgard-kube` and `acme` both give the slug `acme`. Pass
-`--workspace-slug <slug>` when the directory is named something else - a generic
-checkout directory, or a name with characters a namespace cannot take.
+Run it again after an upgrade: on a repository that already records both ids,
+neither flag is needed, existing files are left alone, and step 3 brings the
+reference material up to whatever the server now serves.
 
-Check what it chose: `init` prints the slug and the namespaces derived from it
-before you build anything on top.
+## The repository name
+
+Convention is `<slug>-asgard-kube`, and **nothing reads it**. Namespaces come
+from the platform project a release binds to, not from any name on disk, and no
+file records a slug. Rename the directory whenever you like; nothing has to be
+corrected afterwards.
 
 ## Then
 
-    asgard-cli scaffold
-
-`asgard-cli guide scaffold` is what that step is deciding - what the skeleton
+`asgard-cli guide scaffold` is what the skeleton step is deciding - what it
 contains, what it deliberately does not, and the one thing to read ahead of
 rather than on arrival.
+
+    asgard-cli gate
+
+That is the one command to run after changing anything, and its `binding` step
+is what catches a checkout that names a workspace and no pipeline.
+
+    asgard-cli project
 
     asgard-cli project
 
 That reads what each chart declares off the repository itself, so it stays right
 no matter who did what. **It reports no step**, because there is none.
 
-## If you named the directory wrong
-
-Rename it. **Nothing records the name**, so nothing has to be corrected
-afterwards: namespaces come from the platform project a release binds to, and
-the repository's own name is not read by anything this tool writes.
-
 **Checked:** 2026-09-05 - nothing here to check against a source. This document
 makes **no claim about the platform**: it is the repository shape this tool
-writes. Two claims it used to make are retired: that namespaces carry a
-workspace slug, and that a slug is recorded at all. `.asgard-config.json` is
-gone, and with it the slug, the project list and the per-project shape.
+writes. Three claims it used to make are retired: that namespaces carry a
+workspace slug, that a slug is recorded at all, and that the pipeline follows
+from the checkout's origin remote. `.asgard-config.json` is gone, and with it
+the slug, the project list and the per-project shape; the pipeline is a recorded
+choice now, and nothing here reads a git remote.
 
 **Unchecked:** that one workspace is one repository, and that the tenant-per-
 directory shape one production repository uses is right for a platform's

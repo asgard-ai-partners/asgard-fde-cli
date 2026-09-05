@@ -29,7 +29,6 @@ const (
 	fromEnv      WorkspaceSource = auth.EnvWorkspace
 	fromBinding  WorkspaceSource = binding.FileName
 	fromFallback WorkspaceSource = "recorded as this machine's default"
-	fromOnlyOne  WorkspaceSource = "the only workspace you can reach"
 )
 
 // platformContext is what every command that talks to the platform needs: a
@@ -69,14 +68,19 @@ type contextOptions struct {
 //  3. the checkout's `.asgard-cli.yaml`
 //  4. the default `workspace use --default` recorded on this machine, which
 //     only applies outside a checkout
-//  5. the only workspace the session can reach, when there is exactly one
 //
 // The order puts the two explicit forms above the committed file on purpose.
 // A file that says a customer's workspace and a flag that says a test one
 // disagree in only one safe direction: acting on the test workspace when the
 // customer's was meant costs a confusing error, and the reverse deploys to a
-// customer. Five is deliberately last and deliberately present - somebody with
-// one workspace should never have to name it, and anybody with two must.
+// customer.
+//
+// **There is no fifth step, and there was.** When the account could reach
+// exactly one workspace, that one was used. It is the same rule everywhere else
+// in this tool now: nothing is guessed from a candidate list, even a list of
+// one. A rule that only holds while there is one candidate changes behaviour
+// silently on the day a customer opens a second workspace, and nobody is
+// watching that day.
 func resolveContext(cmd *cobra.Command, opts contextOptions) (*platformContext, error) {
 	ctx := cmd.Context()
 
@@ -164,17 +168,15 @@ func resolveWorkspace(
 		return id, fromFallback, nil
 	}
 
-	// Nothing recorded. One workspace needs no choice; more than one does, and
-	// the error lists them rather than making somebody go and look.
+	// Nothing recorded, so nothing is decided. The error lists what there is
+	// rather than sending somebody off to look for it - and it lists one
+	// candidate the same way it lists five.
 	workspaces, err := platform.New(session, "").ListWorkspaces(ctx)
 	if err != nil {
 		return "", "", err
 	}
-	switch len(workspaces) {
-	case 0:
+	if len(workspaces) == 0 {
 		return "", "", fmt.Errorf("the %s platform reports no workspaces for this account", session.Profile.Name)
-	case 1:
-		return workspaces[0].ID, fromOnlyOne, nil
 	}
 	return "", "", &needWorkspaceError{
 		Profile:    session.Profile.Name,
@@ -183,8 +185,12 @@ func resolveWorkspace(
 	}
 }
 
-// needWorkspaceError is the "which of these?" that a first run in a second
-// workspace produces.
+// needWorkspaceError is the "which of these?" that a run with nothing recorded
+// produces.
+//
+// **It is produced for one candidate as well as for five.** That is the whole
+// of the rule: the answer is a choice somebody makes, and a list that happens
+// to be short today is not a choice having been made.
 type needWorkspaceError struct {
 	Profile    string
 	InRepo     bool
@@ -193,18 +199,29 @@ type needWorkspaceError struct {
 
 func (e *needWorkspaceError) Error() string {
 	var b strings.Builder
-	fmt.Fprintf(&b, "no workspace chosen for the %s platform, and this account can reach %d:\n", e.Profile, len(e.Workspaces))
+	fmt.Fprintf(&b, "no workspace chosen for the %s platform, and this account can reach %s:\n",
+		e.Profile, plural(len(e.Workspaces), "workspace"))
 	for _, w := range e.Workspaces {
 		fmt.Fprintf(&b, "  %-22s %s\n", w.ID, w.Name)
 	}
 	if e.InRepo {
 		fmt.Fprintf(&b, "\nRecord one in %s, which is committed so nobody has to choose again:\n\n", binding.FileName)
 		fmt.Fprintf(&b, "    asgard-cli workspace use <id>%s\n", profileArgFor(e.Profile))
+		fmt.Fprintf(&b, "\nNone is assumed, and that includes a list of one: which workspace a\nrepository deploys into is a decision, not a lookup.\n")
 	} else {
 		fmt.Fprintf(&b, "\nThis is not a checkout with a declaration, so there is nothing to write a\nbinding beside. Record one for this machine instead:\n\n")
 		fmt.Fprintf(&b, "    asgard-cli workspace use <id> --default%s\n", profileArgFor(e.Profile))
 	}
 	return b.String()
+}
+
+// plural writes "1 workspace" and "3 workspaces", so that a message which now
+// fires for a single candidate does not read as though something is wrong.
+func plural(n int, noun string) string {
+	if n == 1 {
+		return "1 " + noun
+	}
+	return fmt.Sprintf("%d %ss", n, noun)
 }
 
 // profileArgFor is profileArg for a bare profile name.

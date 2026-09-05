@@ -694,3 +694,44 @@ time, and editing removes exactly that.
   two stage prompts, `init` in a third - which is exactly the class of defect it
   was written for, found the same afternoon rather than by somebody re-reading a
   provenance line weeks later
+- `fix` 2026-09-05 **nothing is inferred from a candidate list any more, including
+  a list of one.** Three sites went: the workspace when an account could reach
+  exactly one, the pipeline when exactly one of the workspace's bound the
+  checkout's origin remote, and the VCS connection when a workspace had one.
+  Each was correct on the day it was written and each changes behaviour silently
+  on the day a customer opens a second of whatever it counted - and nobody is
+  watching that day. A command with nothing recorded now lists the candidates
+  and refuses; the errors carry the list, so refusing to guess costs a read
+  rather than a search
+- `fix` 2026-09-05 **no git remote is read as an identity.** `pipeline` used to
+  refuse a binding whose pipeline was bound to a repository other than the
+  checkout's `origin`, on the theory that it caught a file copied from another
+  repository. A checkout may have any number of remotes: somebody whose main one
+  is `upstream` was refused with a message about a copy, and somebody with no
+  `origin` at all skipped the check entirely. The gap it was for is real and is
+  now written into `.asgard-cli.yaml`'s own header - a repository copied
+  wholesale within one workspace keeps a pipeline id that still resolves -
+  because a stated gap is worth more than a rule that fires on the wrong input.
+  The one remaining read of `origin` is `pipeline create --repo`'s default, at
+  the moment a person is naming a new thing, and it says so on stderr before it
+  acts
+- `fix` 2026-09-05 `.asgard-cli.yaml` has two required fields, and `workspace use`
+  **clears the pipeline** when the workspace changes, because a pipeline belongs
+  to one workspace. The half state that leaves is the point: every `pipeline`
+  command refuses and names the remedy, `gate`'s new `binding` step goes red, and
+  the platform is untouched - versus the old behaviour, which was to go and find
+  a pipeline in the new workspace and act on it without a word. The failure lands
+  on the next command rather than on whichever later one was destructive
+- `fix` 2026-09-05 `init` is back, as the composition it was always described as:
+  scaffold, then the binding, then `skill update`. It chooses nothing - both ids
+  are given or already recorded - and it exists for the same reason `gate` does,
+  which is that a list of three steps kept in prose is a list that goes stale
+- `fix` 2026-09-05 `workspaceForTemplates` resolved with `NeedWorkspace` unset, so
+  the id was always empty and **every scaffolded document said `<workspace>`**
+  whether or not the checkout was bound. Found while wiring `init`, which needed
+  the same lookup
+- `fix` 2026-09-05 every command's help printed `--profile login --set-default`
+  and `--workspace asgard-cli workspace use`. cobra reads the first backquoted
+  word of a flag's usage string as the placeholder to print after the flag name,
+  so a command name quoted in prose became the flag's argument name. Six flags,
+  quoted with `"` now

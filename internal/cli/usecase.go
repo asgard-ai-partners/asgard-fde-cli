@@ -152,7 +152,7 @@ For what the platform is and who each piece is for, "asgard-cli wiki".
 		},
 	}
 
-	cmd.Flags().StringVar(&search, "search", "", "search this half only; `asgard-cli find` searches both")
+	cmd.Flags().StringVar(&search, "search", "", "search this half only; \"asgard-cli find\" searches both")
 	cmd.Flags().BoolVar(&sources, "sources", false, "print the documentation links an extract cites; every extract with no argument")
 	cmd.Flags().BoolVar(&unverified, "unverified", false,
 		"list only what has NOT been held against a real deployment, and what about each is unchecked")

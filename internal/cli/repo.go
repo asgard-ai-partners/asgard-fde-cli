@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/auth"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/binding"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/pipelineconfig"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/platform"
@@ -75,22 +76,32 @@ func errNotInRepo() error {
 // a copy on disk is a copy that is wrong the day somebody renames it. Offline,
 // or before a workspace is bound, the id or a placeholder is written instead -
 // which is at least true, and re-running `scaffold` fills it in.
+//
+// NeedWorkspace is set: without it the resolution stops at the session and
+// leaves the id empty, so every scaffolded document said "<workspace>" whether
+// or not the checkout was bound. Every way this can fail - not logged in,
+// nothing recorded, no network - is a placeholder rather than an error, because
+// none of them is a reason to refuse to write a skeleton.
 func workspaceForTemplates(cmd *cobra.Command) (repo.Workspace, error) {
-	pc, err := resolveContext(cmd, contextOptions{})
-	if err != nil {
+	pc, err := resolveContext(cmd, contextOptions{NeedWorkspace: true})
+	if err != nil || pc.Workspace == "" {
 		return repo.Workspace{Name: "<workspace>"}, nil
 	}
-	if pc.Workspace == "" {
-		return repo.Workspace{Name: "<workspace>"}, nil
-	}
-	workspaces, err := platform.New(pc.Session, "").ListWorkspaces(cmd.Context())
+	return workspaceNamed(cmd, pc.Session, pc.Workspace), nil
+}
+
+// workspaceNamed turns a workspace id into the display name the templates
+// print, falling back to the id - which is at least true - when the platform
+// cannot be asked or does not know it.
+func workspaceNamed(cmd *cobra.Command, session *auth.Session, id string) repo.Workspace {
+	workspaces, err := platform.New(session, "").ListWorkspaces(cmd.Context())
 	if err != nil {
-		return repo.Workspace{Name: pc.Workspace}, nil
+		return repo.Workspace{Name: id}
 	}
 	for _, w := range workspaces {
-		if w.ID == pc.Workspace {
-			return repo.Workspace{Name: w.Name}, nil
+		if w.ID == id {
+			return repo.Workspace{Name: w.Name}
 		}
 	}
-	return repo.Workspace{Name: pc.Workspace}, nil
+	return repo.Workspace{Name: id}
 }
