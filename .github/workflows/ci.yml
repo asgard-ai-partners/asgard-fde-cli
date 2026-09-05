@@ -32,6 +32,30 @@ jobs:
         run: go vet ./...
 
 
+  material:
+    # The corpus gates. They existed as flags and were never wired here, which
+    # is how six documents came to name `asgard-cli pipeline deliveries` - a
+    # command nobody had built - and stayed that way until a person re-read a
+    # provenance line weeks later.
+    #
+    # --urls is deliberately not here: it fetches every docs.asgard-ai.com link
+    # and a third party's outage is not this repository's build failure.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: every document pointer resolves
+        run: go run ./cmd/asgard-cli audit-material --links
+
+      - name: every command this material names exists
+        run: go run ./cmd/asgard-cli audit-material --commands
+
+
   build:
     # Confirm before merging that every platform still builds and the
     # GoReleaser config is still valid.

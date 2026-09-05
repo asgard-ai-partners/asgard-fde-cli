@@ -163,15 +163,21 @@ go build ./...
 go vet ./...
 gofmt -l internal/ cmd/
 asgard-cli audit-material --links
+asgard-cli audit-material --commands
 asgard-cli audit-material --urls   # needs the network
 ```
 
+<<<<<<< HEAD
 That is this repository's gate. **A customer repository's gate is one command,
 `asgard-cli gate`**, and the difference is deliberate: the thing an agent runs
 after every edit has to be one command whose definition lives in the binary,
 not a list in a markdown file that goes stale. This list is for the maintainer,
 who is editing the binary - and when a step is added to `gate`, nothing here
 needs changing, which is the point.
+=======
+`--links` and `--commands` run in CI (the `material` job). `--urls` does not: a
+third party's outage is not this repository's build failure.
+>>>>>>> origin/feat/skills-from-platform
 
 `--urls` fetches every `docs.asgard-ai.com` link the material cites and fails on
 a 404. It is separate because it needs the network, and a gate that only works
@@ -187,6 +193,19 @@ the only way to leave a dead pointer behind; it reads correctly and resolves to
 nothing, and the reader who follows it cannot tell that from a page they failed
 to find.
 
+`--commands` is `--links` for the tool itself: it resolves every
+`asgard-cli <command>` this material writes - prose, help screens and the
+scaffold templates alike - against the command tree the binary answers to, and
+exits 1 on one that does not exist. **It reads what is embedded**, which is what
+an engagement gets; this file, `README.md` and `STRUCTURE.md` are not in it,
+because they are read from a checkout rather than shipped.
+
+It exists because that failure shipped. `asgard-cli pipeline deliveries` was
+named in six documents - the verification skill, a scaffolded `AGENTS.md` and
+`README`, two stage prompts - as the one place a push that produced no run
+explains itself, and no such command had ever been built. A person re-reading a
+provenance line found it, weeks later.
+
 None of those sees a wrong string in an embedded template, a pointer that
 resolves to the wrong page rather than to none, or a generated CR the apiserver
 would reject. **So exercise the change by hand**, against a scratch repository
@@ -196,9 +215,9 @@ outside this one:
 go build -o .out/asgard-cli ./cmd/asgard-cli
 cd $(mktemp -d)
 /path/to/.out/asgard-cli init && /path/to/.out/asgard-cli scaffold
-/path/to/.out/asgard-cli project add app --env dev
+/path/to/.out/asgard-cli project add app
 /path/to/.out/asgard-cli add <kind> <name> --project app
-/path/to/.out/asgard-cli check && /path/to/.out/asgard-cli render app dev
+/path/to/.out/asgard-cli check && /path/to/.out/asgard-cli render <release>
 ```
 
 If the change touched a CR template, validate the rendered output against the
