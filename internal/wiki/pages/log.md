@@ -608,3 +608,20 @@ time, and editing removes exactly that.
   a Toolset - which is the exact defect `add` exists to prevent, "applies cleanly
   and appears with no name in the UI" - and one Toolset. Every one of those is a
   chart's to fix, not a rule's to stop asking
+- `lint` 2026-09-05 `audit-material --commands`: every `asgard-cli <command>` this
+  material writes now resolves against the command tree, and the tree and the
+  material are both in CI (the `material` job, which also runs `--links` - they
+  existed as flags and had never been wired to anything). Written because
+  `asgard-cli pipeline deliveries` was named in six documents as the one place a
+  push that produced no run explains itself, and no such command existed: it was
+  found by a person re-reading a provenance line, weeks later
+- `fix` 2026-09-05 the first run resolved 629 references and found **4 dead
+  flags**, none of them a command name: `project add --env` in the scaffolded
+  `AGENTS.md` and the projects prompt (the environment model went with the
+  Pipeline cut-over), `size --plain` in the proposal-deck skill (the plain
+  reading is `size <shape>`'s second output and was never optional) and
+  `add --connector-less` in `api-oauth` (an `httptool` takes `--toolset`, and has
+  never taken a connector). `project add`'s own help still described `--env` and
+  `--force` in prose, which is the same defect one level down and is not
+  mechanically caught - a flag is only resolved where it is written after an
+  invocation
