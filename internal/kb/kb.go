@@ -227,6 +227,144 @@ func Links(body string) ([]Link, bool) {
 	return out, named
 }
 
+// ── Command references ────────────────────────────────────────────────────
+//
+// A document that tells somebody to run `asgard-cli pipeline deliveries` is
+// making a checkable claim: that this build answers to that command. Six
+// documents made exactly that claim about a command nobody had built, and it
+// was found by a person re-reading a provenance line - which is a terrible
+// mechanism for a claim a program can resolve in a millisecond.
+//
+// Links() above resolves the four DOCUMENT pointers (`wiki`, `usecase`,
+// `brief`, `guide`). This resolves the invocation itself, against the command
+// tree, and the two are deliberately separate: a dead document pointer is a
+// rename nobody swept, a dead command is a command that does not exist.
+
+// invocationRe matches a mention of this tool and the plain lower-case words
+// after it. It stops where a command name cannot continue: a placeholder
+// (`<name>`, `[project]`), a flag (`--links`), a redirection, a comment, a
+// closing backtick, or end of line.
+//
+// **Exactly one space between words**, the same rule Links() settled on and
+// for the same reason: these documents are full of two-column lists, where a
+// command is padded out to a margin and the description follows.
+//
+//	asgard-cli project          every chart, and what each still lacks
+//
+// A separator of "one or more spaces" reads that as `project every`, and the
+// first run of this check reported twelve of them.
+//
+// **Same line only.** Links() tolerates a pointer that wraps, because a
+// document name at the right margin really does get split. This must not: the
+// word after a line break is usually the next sentence, and consuming it would
+// invent a subcommand out of prose. A wrapped invocation resolves the part
+// before the break, which is still checked - a false negative here costs a
+// missed reference, and a false positive costs a failing build over a sentence
+// that reads perfectly.
+var invocationRe = regexp.MustCompile(`asgard-cli((?: [a-z][a-z0-9-]*)*)`)
+
+// fence matches the start or end of a fenced code block.
+var fence = regexp.MustCompile("^\\s*```")
+
+// flagRe matches a long flag. Only long ones: `-f` is also a diff marker, a
+// bullet and half of `-force`, and a short flag carries no name to check.
+var flagRe = regexp.MustCompile(`--([a-z][a-z0-9-]*)`)
+
+// handoff matches where one command's arguments end and another program's
+// begin. Without it, `asgard-cli render x | kubectl apply --dry-run=server`
+// resolves `--dry-run` against `render`, and the first run of this check
+// reported exactly that.
+//
+// A redirection has to be a `>` that follows a space. Every placeholder in this
+// material ends in one - `asgard-cli project add <slug> --env dev` - and a bare
+// `>` ended the span before the flag, which silently un-checked five of the six
+// stale flags this found.
+var handoff = regexp.MustCompile(`\|\||\||&&|;|(?:^|[ \t])>`)
+
+// Invocation is one mention of this tool with the words that follow it.
+type Invocation struct {
+	// Words are the tokens after `asgard-cli`, in order. Empty for a bare
+	// mention of the tool, which claims nothing.
+	Words []string
+	// Flags are the long flags written after those words, without the dashes.
+	// A flag is the other half of the same claim - `--env may be repeated` sat
+	// in `project add`'s own help for a day after the flag was deleted - and
+	// it resolves against the same node the words reached.
+	Flags []string
+	// Line is the 1-based line it was written on, so a report can point at it.
+	Line int
+}
+
+// Invocations returns every command reference this body makes.
+//
+// **Only the ones written as code.** Prose says "what asgard-cli uses" and
+// "how asgard-cli is distributed", and a scanner that read those would resolve
+// `uses` and `is` against the command tree and fail the build over correct
+// English. A real instruction is written the way it is typed: inside backticks,
+// inside a fenced block, or on an indented line of its own. Those three forms
+// cover all 551 invocations in this material and none of the prose.
+func Invocations(body string) []Invocation {
+	var out []Invocation
+	inFence := false
+	for i, line := range strings.Split(body, "\n") {
+		if fence.MatchString(line) {
+			inFence = !inFence
+			continue
+		}
+		for _, seg := range codeSegments(line, inFence) {
+			ms := invocationRe.FindAllStringSubmatchIndex(seg, -1)
+			for j, m := range ms {
+				// A flag belongs to the invocation it follows, so one
+				// invocation owns the text up to the next one - which is what
+				// `asgard-cli render x | asgard-cli check xref -` needs.
+				end := len(seg)
+				if j+1 < len(ms) {
+					end = ms[j+1][0]
+				}
+				if h := handoff.FindStringIndex(seg[m[3]:end]); h != nil {
+					end = m[3] + h[0]
+				}
+				inv := Invocation{Words: strings.Fields(seg[m[2]:m[3]]), Line: i + 1}
+				for _, f := range flagRe.FindAllStringSubmatch(seg[m[3]:end], -1) {
+					inv.Flags = append(inv.Flags, f[1])
+				}
+				out = append(out, inv)
+			}
+		}
+	}
+	return out
+}
+
+// codeSegments returns the parts of a line that are written as code.
+//
+// Inside a fence the whole line is. Outside one, it is what the backticks
+// enclose, plus the line itself when it begins with the tool's name - the
+// indented example form, which the help screens and the wiki both use and
+// which carries no backticks at all.
+func codeSegments(line string, inFence bool) []string {
+	if inFence {
+		return []string{line}
+	}
+	var out []string
+	// The indented-example form. **Indented** is the whole test: an example
+	// block is set in from the margin, and a paragraph that opens with the
+	// tool's name is prose - the root help begins "asgard-cli is what an agent
+	// asks about integrating with Asgard", and reading that as code resolves
+	// `is` against the command tree.
+	if indent := len(line) - len(strings.TrimLeft(line, " \t")); indent > 0 {
+		if trimmed := strings.TrimLeft(line, " \t$"); strings.HasPrefix(trimmed, "asgard-cli") {
+			out = append(out, trimmed)
+		}
+	}
+	// Backtick spans. An odd trailing backtick opens nothing, so a line with
+	// one is read up to it and no further.
+	parts := strings.Split(line, "`")
+	for i := 1; i < len(parts); i += 2 {
+		out = append(out, parts[i])
+	}
+	return out
+}
+
 // marker matches a provenance or attribution line - the bold-prefixed labels a
 // document carries below its opening paragraph. They end the summary, and two
 // of them are read as fields.

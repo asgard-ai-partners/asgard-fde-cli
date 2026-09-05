@@ -94,12 +94,19 @@ assembly is new knowledge: write it into a page, or the next reader repeats it.
 
 ### lint - the audit
 
-Two of these are mechanical and ship as flags:
+Three of these are mechanical and ship as flags:
 
     asgard-cli audit-material --links     every pointer resolves
+    asgard-cli audit-material --commands  every command named exists
     asgard-cli audit-material --orphans   what nothing points at
 
-**They are two halves of one thing.** A pointer that goes nowhere is loud - the
+**--commands is --links pointed at the tool.** A document that tells somebody to
+run something resolves the same way a pointer does, against the command tree
+this binary answers to, and six documents once named a command nobody had
+built. It reads the scaffold templates too - a customer meets these names in a
+generated README before meeting any of this.
+
+**--links and --orphans are two halves of one thing.** A pointer that goes nowhere is loud - the
 reader follows it and finds nothing. A document nothing points at is silent, and
 costs more: it is there, it is correct, and it is never read. The index does not
 count as a pointer in the second check, because `wiki operations` sat in
