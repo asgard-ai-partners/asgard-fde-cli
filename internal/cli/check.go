@@ -1,15 +1,11 @@
 package cli
 
 import (
-	"errors"
 	"fmt"
-	"os"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/check"
-	"github.com/asgard-ai-partners/asgard-fde-cli/internal/config"
 )
 
 func newCheckCmd() *cobra.Command {
@@ -53,18 +49,10 @@ text and differ only in a word at the left margin, and only one of them fails.`,
 			if err := checkFormat(format); err != nil {
 				return err
 			}
-			dir, err := os.Getwd()
+			root, err := loadRepo()
 			if err != nil {
-				return fmt.Errorf("get current directory: %w", err)
-			}
-			path, err := config.Find(dir)
-			if err != nil {
-				if errors.Is(err, config.ErrNotFound) {
-					return fmt.Errorf("no %s found; run `asgard-cli init` first", config.FileName)
-				}
 				return err
 			}
-			root := filepath.Dir(path)
 
 			report, err := check.Run(root, args...)
 			if err != nil {

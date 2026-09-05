@@ -3,12 +3,11 @@ package cli
 import (
 	"fmt"
 	"io"
-	"path/filepath"
 	"sort"
 
 	"github.com/spf13/cobra"
 
-	"github.com/asgard-ai-partners/asgard-fde-cli/internal/config"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/repo"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/stage"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/usecase"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/wiki"
@@ -52,11 +51,10 @@ used. The reading log is, because it carries only page names of this tool.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			out := cmd.OutOrStdout()
-			path, err := config.Find(".")
-			if err != nil {
-				return err
+			root := repo.Root(".")
+			if root == "" {
+				return errNotInRepo()
 			}
-			root := filepath.Dir(path)
 
 			if misses {
 				return printMisses(out, root)

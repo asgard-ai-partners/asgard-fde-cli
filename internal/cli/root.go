@@ -4,12 +4,11 @@ package cli
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/check"
-	"github.com/asgard-ai-partners/asgard-fde-cli/internal/config"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/repo"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/stage"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/version"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/work"
@@ -167,7 +166,6 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 		newIssueCmd(),
 	)
 	addTo(cmd, groupBuild,
-		newInitCmd(),
 		newScaffoldCmd(),
 		newProjectCmd(),
 		newAddCmd(),
@@ -248,6 +246,11 @@ func addTo(parent *cobra.Command, group string, children ...*cobra.Command) {
 // ask a maintainer. That is the answer living in a conversation instead of in
 // the binary.
 var replacements = map[string]string{
+	"init": "It wrote `.asgard-config.json`, which is gone: the project list is read off the repository, the customer's name comes from the platform, " +
+		"and the deployment shape recorded an intent no tool can check. What is left of it is two commands - `asgard-cli scaffold` writes the skeleton, " +
+		"`asgard-cli workspace use <id>` records which workspace this checkout deploys into",
+	"project shape": "Gone with `.asgard-config.json`. It recorded what a chart was being built to be, which is a claim about intent that nothing can verify - " +
+		"say it in the chart, next to whatever makes the project unusual, where the next reader is already looking. `asgard-cli size` still lists the shapes",
 	"next": "It derived a position from the earliest missing CR kind and there is no replacement for that, deliberately - an onboarding is not linear. " +
 		"Where it meant \"what is still open\", `asgard-cli question`; where it meant \"what does each chart declare\", `asgard-cli project`; " +
 		"`next --stage <name>` is `asgard-cli guide <name>`, and `next --list` is `asgard-cli guide` with no argument",
@@ -276,9 +279,9 @@ func commandNames(root *cobra.Command) []string {
 // is deliberate, they are reference material - so this finds one if there is
 // one and does nothing if there is not.
 func recallHere(kind, name string) {
-	path, err := config.Find(".")
-	if err != nil {
+	root := repo.Root(".")
+	if root == "" {
 		return
 	}
-	work.Recall(filepath.Dir(path), kind, name)
+	work.Recall(root, kind, name)
 }

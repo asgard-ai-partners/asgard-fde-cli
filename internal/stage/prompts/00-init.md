@@ -1,17 +1,17 @@
 # Start the onboarding
 
-No .asgard-config.json here, so this directory is not an onboarding yet.
+No .asgard-pipeline.yaml here, so this directory is not an onboarding yet.
 
 ## The shape, before anything else
 
 **One workspace is one repository.** The workspace is the customer, and the
-repository root *is* the workspace - that is what `init` fixes in place. Every
-project lives inside it:
+repository root *is* the workspace. Every project lives inside it:
 
     <slug>-asgard-kube/          <- the workspace. One customer, one repo.
-      .asgard-config.json        <- the workspace id and the project list
+      .asgard-pipeline.yaml      <- what deploys, and the only file the platform reads
+      .asgard-cli.yaml           <- which workspace and pipeline this checkout is bound to
       projects/<project>/        <- every project, always here
-      docs/ requirements/ common/ scripts/ .agents/
+      docs/ requirements/ .agents/
 
 **One production deployment does it differently, and knowing why matters.** A
 commerce middleware repository serves several **tenants** from one repo -
@@ -44,16 +44,15 @@ bearing:
 Kubernetes caps a namespace at 63 characters and names derived from a namespace
 inherit its length, so keep it short. Prefer the customer's own short name.
 
-**The workspace id can wait.** It comes from the Asgard platform and nothing this
-repository renders reads it - namespaces come from the slug - so not having one
-should not stop the work that comes before it. Add it whenever it arrives:
+**Which workspace this checkout deploys into is recorded, and nothing else is.**
+It is the one fact no file in the repository implies and the platform cannot be
+asked for on your behalf:
 
-    asgard-cli init --workspace-id <id>
+    asgard-cli workspace list
+    asgard-cli workspace use <id>
 
-On an already-initialised repository that fills the field in and changes nothing
-else, so it needs no `--force`. `asgard-cli project add` and `asgard-cli check`
-both say when it is still unset, because a project is what the platform deploys
-and so is the point at which it is worth chasing.
+Everything else about the repository - which projects it has, what each chart
+declares - is read off the repository itself.
 
 When you do get it: it is a long decimal number (around 19 digits), **not** a
 UUID - if what you have looks like `7ab7f523-3cd9-...`, it is the wrong value.
@@ -67,11 +66,11 @@ normal case.
 
 ## Start
 
-**Run init in the directory that is to become the workspace.** In the common
-case that is the directory you are already in - an empty one, or a repository
-just cloned for this customer:
+**Run scaffold in the directory that is to become the workspace.** In the
+common case that is the directory you are already in - an empty one, or a
+repository just cloned for this customer:
 
-    asgard-cli init
+    asgard-cli scaffold
 
 **Do not create another directory level.** Check where you are before assuming.
 
@@ -79,7 +78,7 @@ Only if you are sitting in a *parent* directory - the place other
 `*-asgard-kube` repos live - create the workspace first:
 
     mkdir <slug>-asgard-kube && cd <slug>-asgard-kube
-    asgard-cli init
+    asgard-cli scaffold
 
 ### The slug comes from the directory name
 
@@ -104,18 +103,17 @@ rather than on arrival.
 That reads what each chart declares off the repository itself, so it stays right
 no matter who did what. **It reports no step**, because there is none.
 
-## If you picked the slug wrong
+## If you named the directory wrong
 
-It is cheap: `asgard-cli init --force --workspace-slug <new>` then
-`asgard-cli scaffold --force`, and rename the directory. The slug names the
-repository and nothing else - namespaces come from the platform projects a
-release binds, so renaming does not strand a deployment.
+Rename it. **Nothing records the name**, so nothing has to be corrected
+afterwards: namespaces come from the platform project a release binds to, and
+the repository's own name is not read by anything this tool writes.
 
-**Checked:** 2026-09-04 - nothing here to check against a source. This document
+**Checked:** 2026-09-05 - nothing here to check against a source. This document
 makes **no claim about the platform**: it is the repository shape this tool
-writes. The claim it used to make, that namespaces carry the workspace slug and
-so the slug is irreversible, is retired: a namespace comes from the platform
-project a release binds to, and the slug names the repository only.
+writes. Two claims it used to make are retired: that namespaces carry a
+workspace slug, and that a slug is recorded at all. `.asgard-config.json` is
+gone, and with it the slug, the project list and the per-project shape.
 
 **Unchecked:** that one workspace is one repository, and that the tenant-per-
 directory shape one production repository uses is right for a platform's

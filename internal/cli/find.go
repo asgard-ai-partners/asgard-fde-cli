@@ -3,14 +3,13 @@ package cli
 import (
 	"fmt"
 	"io"
-	"path/filepath"
 	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
 
-	"github.com/asgard-ai-partners/asgard-fde-cli/internal/config"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/kb"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/repo"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/scaffold"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/stage"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/usecase"
@@ -496,11 +495,11 @@ func unmatched(query string, matched []string) []string {
 // does nothing if there is not. What it writes goes to work.MissLog, which is
 // not committed: see the contract there.
 func recordMiss(kind, query string) {
-	path, err := config.Find(".")
-	if err != nil {
+	root := repo.Root(".")
+	if root == "" {
 		return
 	}
-	work.Miss(filepath.Dir(path), kind, query)
+	work.Miss(root, kind, query)
 }
 
 // reportTerms names the query terms that appear nowhere in what was returned.

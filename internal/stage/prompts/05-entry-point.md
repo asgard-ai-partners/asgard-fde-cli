@@ -14,12 +14,11 @@ explore the model by conversation and save Views and Dashboards in the product,
 and no Agent, Toolset, entry point or BotProvider is written at all.
 
 Nothing on disk can tell that apart from an agent nobody has written yet, so it
-has to be said:
+has to be said **in the chart, next to the layer** - there is no field for it
+and there should not be, because no tool can check the claim.
 
-    asgard-cli project shape <project> mimir-dashboard
-
-**That is a claim about what the customer gets, not a way to stop this stage
-asking.** Declare it only when the answer to "who asks it a question" is nobody,
+**It is a claim about what the customer gets, not a way to stop this stage
+asking.** Say it only when the answer to "who asks it a question" is nobody,
 and then say so in the chart next to the layer - a later reader who finds a
 SemanticLayer that nothing references will read it as a missed connection and
 bind an Agent to it, which hands agents deliberately restricted to an API a

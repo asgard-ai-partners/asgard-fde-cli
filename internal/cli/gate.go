@@ -13,7 +13,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/check"
-	"github.com/asgard-ai-partners/asgard-fde-cli/internal/config"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/gate"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/pipelineconfig"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/render"
@@ -137,15 +136,11 @@ Exits non-zero if any step failed.`,
 			out := cmd.OutOrStdout()
 
 			// The declaration is what anchors a Pipeline repository, and it is
-			// the one file every one of them has. `.asgard-config.json` is this
-			// tool's own scaffold record, and a repository can legitimately be
-			// without it - so the root is found from the declaration and the
-			// config is read if it happens to be there.
+			// the one file every one of them has.
 			root, err := repoRoot()
 			if err != nil {
 				return err
 			}
-			cfg := optionalConfig(root)
 			releases, err := releasesToVerify(root, args)
 			if err != nil {
 				return err
@@ -154,9 +149,9 @@ Exits non-zero if any step failed.`,
 			steps := []stepResult{gateTools()}
 			helmReady := steps[0].Status == stepPass
 
-			steps = append(steps, gateRepo(root, cfg, args))
+			steps = append(steps, gateRepo(root, args))
 			steps = append(steps, gateSkills(cmd, profile, offline))
-			steps = append(steps, gateCharts(cmd, root, cfg, releases, helmReady)...)
+			steps = append(steps, gateCharts(cmd, root, releases, helmReady)...)
 
 			if format == formatJSON {
 				if err := writeJSON(out, map[string]any{
@@ -245,31 +240,19 @@ func gateTools() stepResult {
 	return stepResult{Name: "tools", Status: stepPass, Summary: "helm is on PATH"}
 }
 
-// optionalConfig reads `.asgard-config.json` when the repository has one.
-//
-// It carries this tool's own record of the engagement - the project list, the
-// shapes - and a repository that was never
-// scaffolded by this tool has none. That is a reason to check less, not a
-// reason to refuse: the declaration and the charts are what a deployment is
-// made of, and both are checkable without it.
-func optionalConfig(root string) *config.Config {
-	path, err := config.Find(root)
-	if err != nil {
-		return nil
-	}
-	cfg, err := config.Load(path)
-	if err != nil {
-		return nil
-	}
-	return cfg
-}
-
-func gateRepo(root string, cfg *config.Config, only []string) stepResult {
-	if cfg == nil {
+func gateRepo(root string, only []string) stepResult {
+	// AGENTS.md is what `scaffold` always writes, and it is the marker `stage`
+	// already uses for "this repository has a skeleton". Without one there is
+	// no skeleton to hold the repository against - the docs layers, the README
+	// project table, the requirements indexes are all things `scaffold` writes
+	// - and reporting their absence as six failures would be reporting that a
+	// repository is not something it never claimed to be.
+	if _, err := os.Stat(filepath.Join(root, "AGENTS.md")); err != nil {
 		return stepResult{
 			Name:    "repo",
 			Status:  stepSkip,
-			Summary: "no " + config.FileName + " here, so there is no scaffold record to check the repository against",
+			Summary: "no AGENTS.md, so this repository has no skeleton to check",
+			Remedy:  "asgard-cli scaffold",
 		}
 	}
 	report, err := check.Run(root, only...)
@@ -377,7 +360,7 @@ func gateSkills(cmd *cobra.Command, profile string, offline bool) stepResult {
 // gateCharts runs lint, render and verify over the releases, and reports them
 // as three steps rather than one: they fail for different reasons and are fixed
 // in different places, and a single "charts" line would hide which.
-func gateCharts(cmd *cobra.Command, root string, cfg *config.Config, releases []string, helmReady bool) []stepResult {
+func gateCharts(cmd *cobra.Command, root string, releases []string, helmReady bool) []stepResult {
 	lint := stepResult{Name: "lint", Status: stepPass}
 	rendered := stepResult{Name: "render", Status: stepPass}
 	verified := stepResult{Name: "verify", Status: stepPass}
@@ -475,12 +458,6 @@ func gateCharts(cmd *cobra.Command, root string, cfg *config.Config, releases []
 	lint.Summary = fmt.Sprintf("%d of %d chart(s) declare a default for every value they read", charts, len(releases))
 	rendered.Summary = fmt.Sprintf("%d of %d release(s) rendered", renders, len(releases))
 
-	if cfg == nil && renders > 0 {
-		// R7's exemption list and the OLAP-only layers live in the scaffold
-		// record. Without it those rules run unexempted, which is a reason to
-		// read a finding rather than to trust the green.
-		warnings.add("no "+config.FileName+", so the sampleQuestions exemption was not applied", "")
-	}
 	lines := warnings.lines()
 
 	switch {

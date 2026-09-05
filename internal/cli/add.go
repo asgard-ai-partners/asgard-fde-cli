@@ -1,16 +1,13 @@
 package cli
 
 import (
-	"errors"
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
 
-	"github.com/asgard-ai-partners/asgard-fde-cli/internal/config"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/generate"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/repo"
 )
 
 func newAddCmd() *cobra.Command {
@@ -83,29 +80,21 @@ Run "asgard-cli add" with no arguments to list the kinds.`,
 			opts.Name = args[1]
 			opts.Layers = layers
 
-			dir, err := os.Getwd()
-			if err != nil {
-				return fmt.Errorf("get current directory: %w", err)
-			}
-			path, err := config.Find(dir)
-			if err != nil {
-				if errors.Is(err, config.ErrNotFound) {
-					return fmt.Errorf("no %s found; run `asgard-cli init` first", config.FileName)
-				}
-				return err
-			}
-			cfg, err := config.Load(path)
+			root, err := loadRepo()
 			if err != nil {
 				return err
 			}
-			root := filepath.Dir(path)
 
+			// **Not "one project, so use it".** A rule that only holds while
+			// there is exactly one changes behaviour silently on the day a
+			// second appears, and nobody is watching that day.
 			if opts.Project == "" {
-				if len(cfg.Projects) != 1 {
-					return fmt.Errorf("--project is required; this repo has %d projects", len(cfg.Projects))
+				projects, err := repo.Projects(root)
+				if err != nil {
+					return err
 				}
-				// One project is unambiguous, so do not make them type it.
-				opts.Project = cfg.Projects[0].Slug
+				return fmt.Errorf("--project is required. This repository has: %s",
+					strings.Join(projects, ", "))
 			}
 			if err := requiredFlags(kind, opts); err != nil {
 				return err
@@ -116,7 +105,7 @@ Run "asgard-cli add" with no arguments to list the kinds.`,
 				return err
 			}
 
-			results, err := generate.Write(root, cfg, kind, opts)
+			results, err := generate.Write(root, kind, opts)
 			if err != nil {
 				return err
 			}

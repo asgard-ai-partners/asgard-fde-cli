@@ -1,36 +1,42 @@
 package cli
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"time"
 
-	"github.com/asgard-ai-partners/asgard-fde-cli/internal/config"
+	"github.com/spf13/cobra"
+
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/binding"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/pipelineconfig"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/platform"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/repo"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/stage"
 )
 
-// loadRepo finds the customer repository from the working directory and reads
-// its config. Every command that writes into the repo starts here, so that the
-// error for "you are not in one" is worded the same way each time.
-func loadRepo() (root string, cfg *config.Config, err error) {
+// loadRepo finds the customer repository from the working directory.
+//
+// **The declaration is what makes a directory one.** It used to be
+// `.asgard-config.json`, this tool's own scaffold record - so a repository that
+// had everything the platform needs and none of this tool's bookkeeping was not
+// a repository as far as every command was concerned. The declaration is the
+// file the platform reads on every run, which is the honest test.
+func loadRepo() (root string, err error) {
 	dir, err := os.Getwd()
 	if err != nil {
-		return "", nil, fmt.Errorf("get current directory: %w", err)
+		return "", fmt.Errorf("get current directory: %w", err)
 	}
-	path, err := config.Find(dir)
+	declPath, _, err := binding.Locate(dir)
 	if err != nil {
-		if errors.Is(err, config.ErrNotFound) {
-			return "", nil, fmt.Errorf("no %s found; run `asgard-cli init` first", config.FileName)
-		}
-		return "", nil, err
+		return "", err
 	}
-	cfg, err = config.Load(path)
-	if err != nil {
-		return "", nil, err
+	if declPath == "" {
+		return "", fmt.Errorf("no %s at or above %s, so this is not a repository this tool deploys from.\n"+
+			"`asgard-cli scaffold` writes one, along with the rest of the skeleton",
+			pipelineconfig.FileName, dir)
 	}
-	return filepath.Dir(path), cfg, nil
+	return filepath.Dir(declPath), nil
 }
 
 // today is the date the records are stamped with. It is a variable so a test can
@@ -46,9 +52,45 @@ var today = func() string { return time.Now().Format("2006-01-02") }
 // separate claims and an agent asking what is unanswered should not have to
 // read past what a chart declares to find out.
 func loadState() (stage.State, error) {
-	root, cfg, err := loadRepo()
+	root, err := loadRepo()
 	if err != nil {
 		return stage.State{}, err
 	}
-	return stage.Inspect(root, cfg)
+	return stage.Inspect(root)
+}
+
+// errNotInRepo is the one wording for "you are not in a repository this tool
+// deploys from", so the answer reads the same whichever command asked.
+func errNotInRepo() error {
+	dir, _ := os.Getwd()
+	return fmt.Errorf("no %s at or above %s, so this is not a repository this tool deploys from.\n"+
+		"`asgard-cli scaffold` writes one, along with the rest of the skeleton",
+		pipelineconfig.FileName, dir)
+}
+
+// workspaceForTemplates resolves the customer's name for the scaffolded
+// documents, from the platform.
+//
+// **Nothing stores it.** The name belongs to the workspace on the platform, and
+// a copy on disk is a copy that is wrong the day somebody renames it. Offline,
+// or before a workspace is bound, the id or a placeholder is written instead -
+// which is at least true, and re-running `scaffold` fills it in.
+func workspaceForTemplates(cmd *cobra.Command) (repo.Workspace, error) {
+	pc, err := resolveContext(cmd, contextOptions{})
+	if err != nil {
+		return repo.Workspace{Name: "<workspace>"}, nil
+	}
+	if pc.Workspace == "" {
+		return repo.Workspace{Name: "<workspace>"}, nil
+	}
+	workspaces, err := platform.New(pc.Session, "").ListWorkspaces(cmd.Context())
+	if err != nil {
+		return repo.Workspace{Name: pc.Workspace}, nil
+	}
+	for _, w := range workspaces {
+		if w.ID == pc.Workspace {
+			return repo.Workspace{Name: w.Name}, nil
+		}
+	}
+	return repo.Workspace{Name: pc.Workspace}, nil
 }

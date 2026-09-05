@@ -67,7 +67,7 @@ Filing material is not reading it. ` + "`asgard-cli check`" + ` says so: materia
 because the interview is what turns a document into a requirement.`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			root, _, err := loadRepo()
+			root, err := loadRepo()
 			if err != nil {
 				return err
 			}

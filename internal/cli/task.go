@@ -3,6 +3,10 @@ package cli
 import (
 	"fmt"
 	"io"
+	"slices"
+	"strings"
+
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/repo"
 
 	"github.com/spf13/cobra"
 
@@ -128,15 +132,19 @@ Next Task section at whatever is now most advanced.
 		RunE: func(cmd *cobra.Command, args []string) error {
 			title := args[0]
 
-			root, cfg, err := loadRepo()
+			root, err := loadRepo()
 			if err != nil {
 				return err
 			}
 
 			if project != "" {
-				if _, ok := cfg.Project(project); !ok {
-					return fmt.Errorf("no project %q in %s; add it with `asgard-cli project add %s`",
-						project, root, project)
+				projects, err := repo.Projects(root)
+				if err != nil {
+					return err
+				}
+				if !slices.Contains(projects, project) {
+					return fmt.Errorf("no project %q in this repository; it has: %s",
+						project, strings.Join(projects, ", "))
 				}
 			}
 			if request != "" {
@@ -169,7 +177,7 @@ Next Task section at whatever is now most advanced.
 				Project:    project,
 				Request:    request,
 				Created:    today(),
-				SpecSlug:   cfg.Workspace.Slug + "-asgard",
+				SpecSlug:   repo.SpecSlug,
 			}
 
 			task, err = work.AddTask(root, task)
@@ -227,7 +235,7 @@ current.
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id := args[0]
 
-			root, _, err := loadRepo()
+			root, err := loadRepo()
 			if err != nil {
 				return err
 			}

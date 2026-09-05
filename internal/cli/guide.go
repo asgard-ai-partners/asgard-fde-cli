@@ -1,13 +1,11 @@
 package cli
 
 import (
-	"errors"
 	"fmt"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
 
-	"github.com/asgard-ai-partners/asgard-fde-cli/internal/config"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/repo"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/stage"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/work"
 )
@@ -70,23 +68,17 @@ those parts empty.`,
 			}
 
 			// Reference material reads with no repository - that is the point
-			// of it - so a missing config renders against an empty one rather
-			// than failing.
-			cfg, state := &config.Config{}, stage.State{}
-			if path, err := config.Find("."); err == nil {
-				root := filepath.Dir(path)
-				if loaded, err := config.Load(path); err == nil {
-					cfg = loaded
-					if s, err := stage.Inspect(root, cfg); err == nil {
-						state = s
-					}
+			// of it - so being outside one renders against an empty state
+			// rather than failing.
+			ws, state := repo.Workspace{}, stage.State{}
+			if root := repo.Root("."); root != "" {
+				if s, err := stage.Inspect(root); err == nil {
+					state = s
 				}
 				work.Recall(root, "stage", string(found.Name))
-			} else if !errors.Is(err, config.ErrNotFound) {
-				return err
 			}
 
-			prompt, err := found.Prompt(cfg, state)
+			prompt, err := found.Prompt(ws, state)
 			if err != nil {
 				return err
 			}

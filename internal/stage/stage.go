@@ -18,9 +18,8 @@ import (
 	"text/template"
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/chart"
-	"github.com/asgard-ai-partners/asgard-fde-cli/internal/config"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/kb"
-	"github.com/asgard-ai-partners/asgard-fde-cli/internal/size"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/repo"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/work"
 )
 
@@ -158,7 +157,7 @@ func (s State) InFlight() bool {
 
 // ProjectState is what one project's chart contains.
 type ProjectState struct {
-	config.Project
+	Slug  string
 	Kinds map[string]int
 }
 
@@ -175,13 +174,14 @@ func (p ProjectState) Has(kinds ...string) bool {
 // NeedsEntryPoint reports whether this project is still missing the thing that
 // reaches it.
 //
-// It exists so a prompt and the ladder cannot disagree. The entry-point prompt
-// lists the projects needing one, and it used to ask `.Has "Agent"
-// "BotProvider"` directly - which is the ladder's question minus the shape, so
-// a finished mimir-dashboard project would be listed as needing an entry point
-// on any run where some other project put the repository at that stage.
+// It used to be qualified by the project's declared shape, so that a finished
+// mimir-dashboard - which has no entry point by design - was not listed as
+// missing one. That shape was a record of intent this tool has no way to check
+// and no business judging, and it is gone; what is left is the plain question,
+// and a project that deliberately has no entry point will answer yes to it.
+// **That is a prompt naming a project, not a gate failing one.**
 func (p ProjectState) NeedsEntryPoint() bool {
-	return wants(p, true) && !p.Has("Agent", "BotProvider")
+	return !p.Has("Agent", "BotProvider")
 }
 
 // summaryOrder is the order CR kinds are reported in. It is fixed so that the
@@ -228,7 +228,7 @@ func (p ProjectState) Summary() string {
 }
 
 // Inspect reads the repository at root and reports its state.
-func Inspect(root string, cfg *config.Config) (State, error) {
+func Inspect(root string) (State, error) {
 	state := State{}
 
 	// AGENTS.md is the marker: scaffold always writes it, and it is the file an
@@ -239,10 +239,14 @@ func Inspect(root string, cfg *config.Config) (State, error) {
 		return state, fmt.Errorf("stat AGENTS.md: %w", err)
 	}
 
-	for _, project := range cfg.Projects {
-		ps := ProjectState{Project: project, Kinds: map[string]int{}}
+	projects, err := repo.Projects(root)
+	if err != nil {
+		return state, err
+	}
+	for _, project := range projects {
+		ps := ProjectState{Slug: project, Kinds: map[string]int{}}
 
-		refs, err := chart.Scan(root, project.Slug)
+		refs, err := chart.Scan(root, project)
 		if err != nil {
 			return state, err
 		}
@@ -312,29 +316,8 @@ var projectStages = []struct {
 //
 // Before this, the ladder asked every project for an Agent or a BotProvider.
 // A finished mimir-dashboard chart could not satisfy that and never can, so
-// `next` reported entry-point forever and asked the reader to build the CR the
-// material forbids. An undeclared shape keeps the old behaviour: every
-// repository written before this field existed has none, and the common shape
-// does have an entry point.
-func wants(p ProjectState, entryPoint bool) bool {
-	if !entryPoint {
-		return true
-	}
-	shape, ok := size.Find(p.Shape)
-	return !ok || shape.HasEntryPoint()
-}
 
 // Gap is what one project's chart still lacks for the shape it is being built
-// to, in the CR kinds a reader can go and add.
-type Gap struct {
-	Slug    string
-	Missing []string
-
-	// Done is true when the chart has everything its shape asks for. It is not
-	// "deployed": whether a complete chart is waiting for a tag or already live
-	// is not a fact about files.
-	Done bool
-}
 
 // Gaps reports what each project is missing.
 //
@@ -348,28 +331,10 @@ type Gap struct {
 // between arithmetic and a guess. Against a declared shape, "this shape asks for
 // X and X is absent" is subtraction. With no shape there is nothing to subtract
 // from, and answering anyway means picking a set of kinds every chart is assumed
-// to want - which is the ladder, rebuilt out of a default.
-func Gaps(state State) []Gap {
-	var out []Gap
-	for _, p := range state.Projects {
-		if p.Shape == "" {
-			continue
-		}
-		g := Gap{Slug: p.Slug, Done: true}
-		for _, s := range projectStages {
-			if wants(p, s.entryPoint) && !p.Has(s.kinds...) {
-				g.Missing = append(g.Missing, strings.Join(s.kinds, " or "))
-				g.Done = false
-			}
-		}
-		out = append(out, g)
-	}
-	return out
-}
 
 // Data is what a stage prompt is rendered with.
 type Data struct {
-	Workspace  config.Workspace
+	Workspace  repo.Workspace
 	Projects   []ProjectState
 	Requests   []work.Request
 	References int
@@ -452,7 +417,7 @@ func readPrompt(name string) ([]byte, error) {
 	return prompts.ReadFile("prompts/" + name)
 }
 
-func (s Stage) Prompt(cfg *config.Config, state State) (string, error) {
+func (s Stage) Prompt(ws repo.Workspace, state State) (string, error) {
 	content, err := readPrompt(s.promptF)
 	if err != nil {
 		return "", fmt.Errorf("read prompt %s: %w", s.promptF, err)
@@ -465,13 +430,12 @@ func (s Stage) Prompt(cfg *config.Config, state State) (string, error) {
 
 	var out strings.Builder
 	err = tmpl.Execute(&out, Data{
-		Workspace:  cfg.Workspace,
+		Workspace:  ws,
 		Projects:   state.Projects,
 		Requests:   work.ActiveRequests(state.Requests),
 		References: state.References,
 		Questions:  len(state.Questions),
-		RepoName:   cfg.RepoName(),
-		SpecSlug:   cfg.Workspace.Slug + "-asgard",
+		SpecSlug:   repo.SpecSlug,
 		Stage:      s,
 	})
 	if err != nil {

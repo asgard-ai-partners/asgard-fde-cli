@@ -3,11 +3,10 @@ package cli
 import (
 	"fmt"
 	"io"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
 
-	"github.com/asgard-ai-partners/asgard-fde-cli/internal/config"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/repo"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/version"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/work"
 )
@@ -180,11 +179,11 @@ func writeReport(out io.Writer) error {
 // is evidence rather than recollection - and it is the half of section 4 that
 // separates a missing page from an unfindable one.
 func writeMisses(out io.Writer) {
-	path, err := config.Find(".")
-	if err != nil {
+	root := repo.Root(".")
+	if root == "" {
 		return
 	}
-	misses, err := work.Misses(filepath.Dir(path))
+	misses, err := work.Misses(root)
 	if err != nil || len(misses) == 0 {
 		return
 	}
