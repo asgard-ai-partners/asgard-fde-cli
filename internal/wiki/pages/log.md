@@ -625,3 +625,13 @@ time, and editing removes exactly that.
   `--force` in prose, which is the same defect one level down and is not
   mechanically caught - a flag is only resolved where it is written after an
   invocation
+- `fix` 2026-09-05 `asgard-cr-verification` left this binary. It described
+  `deploy.yaml`, per-environment values files, a python CRD-fidelity script and
+  cloning asgard-kube to find out whether a field exists - **a month after the
+  Pipeline cut-over removed all four** - and nothing was ever going to correct
+  it: `scaffold` does not overwrite a file that exists, and no version number
+  covered it. It is now served from the platform's `/v1/docs/skills` alongside
+  the extracted CR shapes and processor catalogue, and rewritten on every
+  `asgard-cli skill update`. The line for what stays here is **authority, not
+  subject**: how to run a local gate is true of any Asgard, what a server
+  accepts is not

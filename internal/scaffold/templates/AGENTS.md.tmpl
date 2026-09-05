@@ -224,7 +224,9 @@ from making the same choice.
 │   ├── proposal-deck/             #   a slide deck for the CUSTOMER, from their own material
 │   ├── plain-chinese/             #   any 繁體中文 a customer reads — the shapes that
 │   │                              #     mark it as machine-written
-│   └── asgard-cr-verification/    #   the four-step acceptance gate
+│   └── (fetched)                  #   asgard-cr-verification and the CR/processor
+│                                  #     references come from `asgard-cli skill update`,
+│                                  #     because they describe the server you deploy to
 ├── docs/                          # Spec-Driven Development — the spec & decision layers
 │   ├── README.md                  #   the index + the four-layer model + the AGENTS.md boundary
 │   ├── spec-driven-development.md #   the SDD rules (status flow, task spec format, gates)
@@ -581,6 +583,13 @@ does it produce the objects I meant. The authoritative answer is the plan report
 
 Load the **`asgard-cr-verification`** skill (`.agents/skills/`) and run its gate; release omitted =
 every release. **Any red step stops the work.**
+
+That skill comes from the platform rather than from the CLI, so it describes the Asgard server
+this repository deploys to. If it is not there, or the CLI says the material here is behind:
+
+```bash
+asgard-cli skill update    # writes it, plus the CR shapes and the processor catalogue
+```
 
 Locally, before pushing:
 

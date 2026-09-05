@@ -129,7 +129,7 @@ implement against a spec that no longer describes the system.
 
 ## Verification Gates
 
-This repo has a **four-step** acceptance gate; run all of it (the `asgard-cr-verification` skill under `.agents/skills/` documents it in full):
+This repo has a **four-step** acceptance gate; run all of it (the `asgard-cr-verification` skill under `.agents/skills/` documents it in full, and `asgard-cli skill update` is what writes that skill - it comes from the platform, so it describes the server this repository deploys to):
 
 ```bash
 # 1. structural repo consistency (README registry, .asgard-pipeline.yaml, common/skills,

@@ -1,10 +1,13 @@
 // Package scaffold writes the parts of a customer repository that are the same
-// for every engagement: the four-layer docs model, the SDD rules, the acceptance
-// gate scripts, the design-time skills and the CD workflow.
+// for every engagement: the four-layer docs model, the SDD rules, and the
+// design-time skills that hold for any Asgard.
 //
-// What it deliberately does not write is the customer's own knowledge - which
-// systems exist, how the projects split, what the CRs look like. That is what
-// the onboarding is for, and templates cannot produce it.
+// It deliberately does not write two other things. The customer's own knowledge
+// - which systems exist, how the projects split, what the CRs look like - is
+// what the onboarding is for, and templates cannot produce it. And anything
+// that describes a particular Asgard server comes from `asgard-cli skill
+// update`, which asks the platform; see the embed comment below for why that
+// line is where it is.
 package scaffold
 
 import (
@@ -24,22 +27,35 @@ import (
 // The tree is embedded with all: so that dot-prefixed paths (.agents, .github,
 // .gitignore, .env.example) are included; the default pattern skips them.
 //
-// THE SKILLS UNDER .agents/skills/ ARE NOT MEANT TO STAY HERE, and the reason is
-// not tidiness. Asgard is a SaaS platform today and an on-prem product next: a
-// customer's server can be several versions behind ours, or ahead of it, and a
-// skill that says what a CRD field is called is only true of one of them. A
-// skill compiled into this binary is pinned to whatever release the customer
-// happened to install the CLI from, which is unrelated to the server they
-// deploy against - so it would be wrong for every on-prem installation that is
-// not on our version, and there would be no way to fix it without shipping them
-// a binary.
+// NO SKILL THAT DESCRIBES A PARTICULAR ASGARD SERVER MAY BE EMBEDDED HERE, and
+// the reason is not tidiness. Asgard is a SaaS platform today and an on-prem
+// product next: a customer's server can be several versions behind ours, or
+// ahead of it, and a skill saying what a CRD field is called is only true of one
+// of them. A skill compiled into this binary is pinned to whatever release the
+// customer happened to install the CLI from, which is unrelated to the server
+// they deploy against - so it would be wrong for every on-prem installation not
+// on our version, and there would be no way to fix it without shipping them a
+// binary.
 //
-// So the platform serves them, from an endpoint that renders what THAT server
-// knows, and this embed keeps only the parts that are true of any Asgard: the
-// repository skeleton, the docs layers, the declaration template. See
-// asgard-odin-pm tracking/studio/tasks, the Asgard CR Skill pipeline plan,
-// phase C. **Moving the skills back in here would look like a simplification
-// and would break every customer whose server is not on our version.**
+// **asgard-cr-verification was exactly that, and it proved the point before it
+// left.** Written into a repository by scaffold and never overwritten - scaffold
+// does not replace a file that exists, and no version number covered it - it
+// spent a month telling readers to look in `deploy.yaml`, to overlay a
+// per-environment values file and to run a python CRD-fidelity script, none of
+// which had existed since the Pipeline cut-over. It is now served from
+// `/v1/docs/skills` and rewritten on every `asgard-cli skill update`.
+//
+// **The line is authority, not subject.** What stays here is what is true of any
+// Asgard, whoever is running it: the repository skeleton, the docs layers, the
+// declaration template, how to write plain Chinese, how to run a local gate,
+// how to model a semantic layer from a customer's own database. What leaves is
+// every claim about what a server accepts, rejects or calls things - the CRD
+// shapes, the processor catalogue, and the document that says what happens when
+// you get one of them wrong.
+//
+// See asgard-odin-pm tracking/studio/tasks, TASK-035, phase C. **Moving any of
+// it back in here would look like a simplification and would break every
+// customer whose server is not on our version.**
 //
 //go:embed all:templates
 var templates embed.FS
