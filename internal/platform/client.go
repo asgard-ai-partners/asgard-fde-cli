@@ -189,6 +189,14 @@ func (c *Client) do(ctx context.Context, req request) error {
 	}
 	defer resp.Body.Close()
 
+	// Every response carries the platform's reference-material version, and
+	// noting it here is what lets a command say "what this repository has is
+	// not what this server enforces" without making a call of its own. Read
+	// before the status check on purpose: a 403 still answers the question.
+	if version := resp.Header.Get(DocsVersionHeader); version != "" {
+		lastDocsVersion.Store(version)
+	}
+
 	raw, err := io.ReadAll(io.LimitReader(resp.Body, 32<<20))
 	if err != nil {
 		return fmt.Errorf("read the response to %s %s: %w", req.method, endpoint, err)
