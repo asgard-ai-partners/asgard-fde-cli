@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -25,6 +26,17 @@ what they default to. Those are not in this binary and must not be.
 
     asgard-cli skill status    what is here, and what the platform has
     asgard-cli skill update    write what the platform has
+
+The version is a number the platform declares and a person increments. It is
+not a digest of the material, deliberately: three upstreams feed it - a
+cluster's CRDs, the runtime's own constants, the written documents - and any of
+them can move for a cosmetic reason. Deriving the version from them would tell
+every repository in the world that it was behind because a map iterated
+differently. So the number is a claim somebody makes, and it only goes up.
+
+The consequence worth knowing: the material can change without the number
+moving. ` + "`skill status`" + ` says so when it does, and ` + "`skill update`" + ` writes what the
+platform has now whatever the number says.
 
 **The reason it is fetched is on-prem.** Asgard runs as a hosted platform and,
 for some customers, on their own hardware. A customer's server can be several
@@ -154,11 +166,29 @@ agent reads here now describes something else.`,
 				fmt.Fprintf(out, "  (fetched %s)", fetchedAt)
 			}
 			fmt.Fprintln(out)
-			if local == remote.Version {
-				fmt.Fprintf(out, "\nCurrent.\n")
+
+			if local != remote.Version {
+				if skills.Behind(local, remote.Version) {
+					fmt.Fprintf(out, "\nBehind: the platform has published a newer version of the material.\n\n    asgard-cli skill update\n")
+				} else {
+					fmt.Fprintf(out, "\nDifferent: this was not written from %s.\n"+
+						"A repository can hold material fetched from another platform - check the api line above.\n\n"+
+						"    asgard-cli skill update\n", pc.Session.Profile.Name)
+				}
 				return nil
 			}
-			fmt.Fprintf(out, "\nThe server has moved since this was written.\n\n    asgard-cli skill update\n")
+
+			// Same version and different content is a state the declared
+			// version makes possible on purpose: somebody publishes a change
+			// and does not consider it worth telling everybody about. It still
+			// changes what an author reads, so it is worth saying here.
+			if moved := skills.MovedSources(stamp, sourceDigests(remote.Sources)); len(moved) > 0 {
+				fmt.Fprintf(out, "\nSame version, different material: %s moved since this was fetched.\n"+
+					"The version is declared rather than derived, so a change reaches you when you ask.\n\n"+
+					"    asgard-cli skill update\n", strings.Join(moved, ", "))
+				return nil
+			}
+			fmt.Fprintf(out, "\nCurrent.\n")
 			return nil
 		},
 	}
@@ -297,6 +327,7 @@ that no longer hold.`,
 				Version:   bundle.Version,
 				Platform:  pc.Session.Profile.API,
 				FetchedAt: time.Now().UTC().Format(time.RFC3339),
+				Sources:   sourceDigests(bundle.Sources),
 			}); err != nil {
 				return err
 			}
@@ -318,6 +349,19 @@ that no longer hold.`,
 	cmd.Flags().BoolVar(&force, "force", false, "overwrite a generated file that was edited here")
 	cmd.Flags().StringVar(&formatOut, formatFlag, formatText, formatUsage)
 	return cmd
+}
+
+// sourceDigests flattens the bundle's per-upstream digests for the stamp and
+// for the comparison.
+func sourceDigests(sources []platform.DocsSource) map[string]string {
+	if len(sources) == 0 {
+		return nil
+	}
+	out := make(map[string]string, len(sources))
+	for _, s := range sources {
+		out[s.Name] = s.Digest
+	}
+	return out
 }
 
 // warnIfBehind says so when the version the platform reported during this
@@ -366,8 +410,13 @@ func warnIfBehind(cmd *cobra.Command) {
 	if stamp.Version == remote {
 		return
 	}
-	fmt.Fprintf(errOut, "\nthe server's reference material is %s; this repository holds %s\n"+
-		"    asgard-cli skill update\n", remote, stamp.Version)
+	if skills.Behind(stamp.Version, remote) {
+		fmt.Fprintf(errOut, "\nthe platform has published version %s of the reference material; this repository holds %s\n"+
+			"    asgard-cli skill update\n", remote, stamp.Version)
+		return
+	}
+	fmt.Fprintf(errOut, "\nthis repository holds version %s of the reference material and this platform serves %s\n"+
+		"    asgard-cli skill update\n", stamp.Version, remote)
 }
 
 // declaresPipeline reports whether this repository declares one. A repository

@@ -16,6 +16,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -49,6 +50,16 @@ type Stamp struct {
 	Platform string `json:"platform"`
 	// FetchedAt is when, in RFC 3339. It is not part of the identity.
 	FetchedAt string `json:"fetched_at"`
+	// Sources is each upstream's digest as it was when this was written.
+	//
+	// **The version alone is not enough, because the version is declared.** A
+	// person on the platform side increments it when a change is worth telling
+	// everybody about; the material can move without that happening - a field
+	// added to a CRD, a processor gaining a config key - and then two equal
+	// version numbers describe two different sets of facts. Comparing these
+	// says so, and says which half moved, without downloading the material to
+	// find out.
+	Sources map[string]string `json:"sources,omitempty"`
 	// Files maps each written path to the digest of what was written, so a
 	// later run can tell a hand edit from an update.
 	Files map[string]string `json:"files"`
@@ -144,6 +155,48 @@ func Plan(root string, files []Content, stamp *Stamp) ([]File, error) {
 type Content struct {
 	Path    string
 	Content string
+}
+
+// Behind compares two versions.
+//
+// The platform's version is a declared number that only goes up, so "behind" is
+// a real answer rather than "differs" - which is what a content digest could
+// have said. A version that is not a number is not compared: this has to keep
+// working against a platform that changes how it spells one, and guessing there
+// would report every repository as behind at once.
+func Behind(local, remote string) bool {
+	l, lok := strconv.Atoi(local)
+	r, rok := strconv.Atoi(remote)
+	if lok != nil || rok != nil {
+		return false
+	}
+	return l < r
+}
+
+// MovedSources returns the upstreams whose digest differs from what was
+// recorded here, in a stable order.
+//
+// This is what notices a change the declared version did not announce. An empty
+// result with a stamp that has no sources at all means the stamp predates them,
+// not that nothing moved - the caller has to tell those apart, so this returns
+// nothing for both and Stamp.Sources is what says which case it is.
+func MovedSources(stamp *Stamp, remote map[string]string) []string {
+	if stamp == nil || len(stamp.Sources) == 0 {
+		return nil
+	}
+	var out []string
+	for name, digest := range remote {
+		if recorded, ok := stamp.Sources[name]; ok && recorded != digest {
+			out = append(out, name)
+		}
+	}
+	for name := range stamp.Sources {
+		if _, ok := remote[name]; !ok {
+			out = append(out, name+" (gone)")
+		}
+	}
+	sort.Strings(out)
+	return out
 }
 
 // Apply writes the files and the stamp beside them.
