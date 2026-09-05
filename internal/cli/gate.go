@@ -112,6 +112,14 @@ What it runs, in order:
 
 **A skip is not a pass**, and the two are printed differently on purpose.
 
+**Do not run helm by hand here.** The platform injects a reserved ` + "`asgard`" + ` block
+into every render, and a chart must not declare it in its own values.yaml - so
+` + "`helm lint <chart>`" + ` with no -f fails on every chart that reads
+` + "`.Values.asgard.projectEnvironmentId`" + `, which is every chart that labels
+anything. That failure looks like the chart is broken and it is not. This
+supplies that one file and nothing else, which is why the lint step still
+proves that values.yaml defaults everything the chart itself owns.
+
 **It does not reproduce the platform's checks, and it must not.** Whether a CR
 is admitted is decided by an apiserver, and no client is ever given credentials
 for one - so a copy of those rules here would drift from the server the first

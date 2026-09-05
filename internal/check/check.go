@@ -3,7 +3,7 @@
 // when the next person tries to pick the repo up.
 //
 // It replaces the check_repo_consistency.py the layout used to carry, so that
-// the first gate needs no Python environment and every repo gets the same
+// the repo step of `asgard-cli gate` needs no Python environment and every repo gets the same
 // version of the rules.
 package check
 

@@ -655,3 +655,15 @@ time, and editing removes exactly that.
   fidelity, against the cluster" and counted as a tool the gate needs. Both
   moved to the platform's plan at the cut-over and no client is issued cluster
   credentials, so it is optional now and `doctor` says why it is there
+- `fix` 2026-09-05 the top-level help was a flat list of thirty commands, which is
+  what made four commands that **compose** look like four commands that
+  **compete**. It is four groups now - Ask, Build, Check, Deploy - and the
+  grouping is the source rather than a rendering of it: a command is added by
+  naming its group, so adding one without deciding where it goes does not
+  compile. Within a group the order is insertion, not alphabetical, because
+  alphabetical put `check` and `doctor` in front of `gate`
+- `fix` 2026-09-05 `check`, `render`, `verify` and `doctor` each say which step of
+  `asgard-cli gate` they are. Three of them still described the **four-step**
+  gate of the pre-Pipeline world - `check` called itself "the first step", and
+  `verify` called itself "steps 2 and 3" and sent the reader to a step 4 that
+  needs a cluster no client is given
