@@ -667,3 +667,12 @@ time, and editing removes exactly that.
   gate of the pre-Pipeline world - `check` called itself "the first step", and
   `verify` called itself "steps 2 and 3" and sent the reader to a step 4 that
   needs a cluster no client is given
+- `fix` 2026-09-05 **R10 is gone and R11 is an observation.** R10 refused an Agent
+  binding a layer recorded as "OLAP-only" in `.asgard-config.json`, and the
+  recording was done by `verify --olap-only-layer`. **A rule that needs a
+  per-customer exemption list to work is not a rule** - and the field wrote a
+  product use case (Data Insight, read through Mimir) into the config of a tool
+  that cannot know what a customer is building. R11 now says
+  `R11 <layer>: no Agent binds it and nothing else in the render mentions it`
+  and stops: whether that is finished or unfinished is a judgement this tool
+  does not have. `olapOnlyLayers` and the flag are deleted with them

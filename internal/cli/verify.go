@@ -6,12 +6,10 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
 
-	"github.com/asgard-ai-partners/asgard-fde-cli/internal/config"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/gate"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/pipelineconfig"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/render"
@@ -20,7 +18,6 @@ import (
 func newVerifyCmd() *cobra.Command {
 	var (
 		rendered string
-		layers   []string
 		tools    bool
 		format   string
 	)
@@ -56,10 +53,6 @@ reference to a CR that does not exist, an entry name nothing declares, a
 Workflow with no set labels, a missing display annotation. Each applies cleanly
 and then breaks at run time or renders a blank page in the platform UI, which is
 why they need a gate of their own rather than being left to the plan.
-
-A layer that feeds Data Insight rather than a chat agent belongs in the
-olapOnlyLayers list of .asgard-config.json, so the rule applies on every run
-instead of only when somebody remembers the flag.
 
 With no arguments it does every release the declaration names. It renders in
 process, so there is no pipeline and no temporary file:
@@ -137,20 +130,14 @@ time.`,
 				if err != nil {
 					return err
 				}
-				// A pre-rendered stream may come from outside a repository, so
-				// the config is read when there is one and not required.
-				olap := layers
-				if _, cfg, err := loadRepo(); err == nil {
-					olap = olapLayers(cfg, layers)
-				}
 				if tools {
 					printTools(out, rendered, docs)
 					return nil
 				}
-				return finish(record(rendered, docs, gate.Options{OLAPOnlyLayers: olap}))
+				return finish(record(rendered, docs, gate.Options{}))
 			}
 
-			root, cfg, err := loadRepo()
+			root, _, err := loadRepo()
 			if err != nil {
 				return err
 			}
@@ -159,11 +146,6 @@ time.`,
 			if err != nil {
 				return err
 			}
-			olap := olapLayers(cfg, layers)
-			if err := recordOLAPLayers(root, cfg, layers, out); err != nil {
-				return err
-			}
-
 			ok := true
 			checked := 0
 			for _, release := range releases {
@@ -187,7 +169,7 @@ time.`,
 				// The gate fills a remedy command with this, and those name a
 				// project rather than a release, so it has to be the project -
 				// a command printed with the wrong one cannot be run as printed.
-				if !record(release, docs, gate.Options{Project: projectOfRelease(root, release), OLAPOnlyLayers: olap}) {
+				if !record(release, docs, gate.Options{Project: projectOfRelease(root, release)}) {
 					ok = false
 				}
 			}
@@ -206,62 +188,8 @@ time.`,
 	cmd.Flags().BoolVar(&tools, "tools", false, "print every tool name and description instead of checking; the one review a rule cannot do")
 	cmd.Flags().StringVar(&rendered, "rendered", "", "check a file of already-rendered manifests, or - for stdin (defaults to rendering each project)")
 	cmd.Flags().StringVar(&format, formatFlag, formatText, formatUsage)
-	cmd.Flags().StringSliceVar(&layers, "olap-only-layer", nil, "semantic layer deliberately bound to no Agent because it feeds Data Insight, repeatable; adds to olapOnlyLayers in "+config.FileName+" (defaults to whatever that records)")
 
 	return cmd
-}
-
-// recordOLAPLayers writes what --olap-only-layer named into the config, so the
-// rule holds on every later run rather than only on the run that passed the
-// flag.
-//
-// The flag's help has always said it does this and it never did, which mattered
-// little while the only way to learn about the list was to read that help.
-// R11 now tells a reader to run this exact command to record a layer as
-// deliberately unbound - and an instruction that silences one run and forgets is
-// worse than no instruction, because the reader believes the fact is recorded.
-func recordOLAPLayers(root string, cfg *config.Config, layers []string, out io.Writer) error {
-	have := map[string]bool{}
-	for _, name := range cfg.OLAPOnlyLayers {
-		have[name] = true
-	}
-	var added []string
-	for _, name := range layers {
-		if name == "" || have[name] {
-			continue
-		}
-		have[name] = true
-		added = append(added, name)
-	}
-	if len(added) == 0 {
-		return nil
-	}
-
-	cfg.OLAPOnlyLayers = append(cfg.OLAPOnlyLayers, added...)
-	sort.Strings(cfg.OLAPOnlyLayers)
-	if err := config.Save(filepath.Join(root, config.FileName), cfg); err != nil {
-		return err
-	}
-	fmt.Fprintf(out, "Recorded %s in %s as bound to no Agent on purpose. R10 refuses any later attempt to bind %s to one.\n\n",
-		strings.Join(added, ", "), config.FileName, pluralThem(added))
-	return nil
-}
-
-// pluralThem keeps the sentence above readable for one layer and for several.
-func pluralThem(names []string) string {
-	if len(names) == 1 {
-		return "it"
-	}
-	return "them"
-}
-
-// olapLayers combines what the config records with what the flag added, into a
-// new slice: appending onto the config's own would let one run's flag leak into
-// whatever reads the config next.
-func olapLayers(cfg *config.Config, extra []string) []string {
-	out := make([]string, 0, len(cfg.OLAPOnlyLayers)+len(extra))
-	out = append(out, cfg.OLAPOnlyLayers...)
-	return append(out, extra...)
 }
 
 // readRendered loads manifests from a file or stdin.

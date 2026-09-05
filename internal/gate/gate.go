@@ -35,15 +35,6 @@ type Options struct {
 	// problem's remedy names, so that what is printed can be run as printed;
 	// empty becomes a placeholder.
 	Project string
-
-	// OLAPOnlyLayers are semantic layers deliberately bound to no Agent,
-	// because they exist to feed Data Insight rather than a chat agent: their
-	// cross-schema joins are unrestricted, which is the point of a data lake and
-	// exactly the reason not to hang an agent off one.
-	//
-	// It is per customer, and lives in .asgard-config.json so that the rule
-	// applies on every run rather than when somebody remembers a flag.
-	OLAPOnlyLayers []string
 }
 
 // ProjectOr returns the project name, or a placeholder when it is not known -

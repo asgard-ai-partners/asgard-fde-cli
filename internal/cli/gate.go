@@ -248,7 +248,7 @@ func gateTools() stepResult {
 // optionalConfig reads `.asgard-config.json` when the repository has one.
 //
 // It carries this tool's own record of the engagement - the project list, the
-// shapes, the olapOnlyLayers exemption - and a repository that was never
+// shapes - and a repository that was never
 // scaffolded by this tool has none. That is a reason to check less, not a
 // reason to refuse: the declaration and the charts are what a deployment is
 // made of, and both are checkable without it.
@@ -402,10 +402,6 @@ func gateCharts(cmd *cobra.Command, root string, cfg *config.Config, releases []
 		lint.Status, lint.Summary = stepFail, err.Error()
 		return []stepResult{lint, rendered, verified}
 	}
-	var olap []string
-	if cfg != nil {
-		olap = olapLayers(cfg, nil)
-	}
 
 	charts, renders, resources, problems := 0, 0, 0, 0
 	warnings := &warningSet{}
@@ -458,7 +454,7 @@ func gateCharts(cmd *cobra.Command, root string, cfg *config.Config, releases []
 		}
 		resources += len(docs)
 
-		for _, r := range gates(docs, gate.Options{Project: projectOfRelease(root, name), OLAPOnlyLayers: olap}) {
+		for _, r := range gates(docs, gate.Options{Project: projectOfRelease(root, name)}) {
 			for _, p := range r.Problems {
 				verified.Status = stepFail
 				verified.Details = append(verified.Details, fmt.Sprintf("FAIL  %s: %s", name, p))
@@ -483,7 +479,7 @@ func gateCharts(cmd *cobra.Command, root string, cfg *config.Config, releases []
 		// R7's exemption list and the OLAP-only layers live in the scaffold
 		// record. Without it those rules run unexempted, which is a reason to
 		// read a finding rather than to trust the green.
-		warnings.add("no "+config.FileName+", so the olapOnlyLayers and sampleQuestions exemptions were not applied", "")
+		warnings.add("no "+config.FileName+", so the sampleQuestions exemption was not applied", "")
 	}
 	lines := warnings.lines()
 
