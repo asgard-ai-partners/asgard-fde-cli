@@ -166,6 +166,13 @@ asgard-cli audit-material --links
 asgard-cli audit-material --urls   # needs the network
 ```
 
+That is this repository's gate. **A customer repository's gate is one command,
+`asgard-cli gate`**, and the difference is deliberate: the thing an agent runs
+after every edit has to be one command whose definition lives in the binary,
+not a list in a markdown file that goes stale. This list is for the maintainer,
+who is editing the binary - and when a step is added to `gate`, nothing here
+needs changing, which is the point.
+
 `--urls` fetches every `docs.asgard-ai.com` link the material cites and fails on
 a 404. It is separate because it needs the network, and a gate that only works
 online is one that fails on a plane. A citation that already says the link 404s

@@ -138,7 +138,8 @@ not just a line to write.
 
 Connection coordinates, endpoints, schedules and suspend switches go in
 the platform's variables, one group per thing, declared as `chartValues`. `values.yaml` declares a default
-for **every** `.Values.*` a template reads - the bare `helm lint`, with no `-f`,
+for **every** `.Values.*` the chart itself owns - the lint `asgard-cli gate` runs,
+which supplies only the reserved `asgard` block and no environment file,
 is the only step that proves it, and without it a missing default is masked in
 the gate and nil-pointers for anyone running plain `helm template`.
 

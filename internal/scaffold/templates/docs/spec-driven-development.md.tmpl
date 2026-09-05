@@ -137,7 +137,7 @@ This repo has a **four-step** acceptance gate; run all of it (the `asgard-cr-ver
 asgard-cli check [project]
 
 # 2. chart static validation
-helm lint projects/<project>/chart/app          # bare: values.yaml must default every .Values.*
+asgard-cli gate                                 # lint + render + xref + the reference material
 helm lint projects/<project>/chart/app
 
 # 3. render + CR cross-reference completeness, then the agent-split invariants

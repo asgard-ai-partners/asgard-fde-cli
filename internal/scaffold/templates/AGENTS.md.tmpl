@@ -85,6 +85,7 @@ answer that looks obvious and is wrong.
 
 | command | when |
 |---|---|
+| `asgard-cli gate` | **after changing anything under a chart or `.asgard-pipeline.yaml`, and before pushing.** Everything this machine can check, in one command. A repository of custom resources has no compiler; this is the nearest thing to one, and it is one command so that it cannot go stale the way a checklist does |
 | `asgard-cli brief <what>` | **before a meeting, a chart change or a handover.** The activity you are about to do, and how it has been got wrong |
 | `asgard-cli question` | what nobody has answered yet, and who each is waiting on. **Read this before designing anything** |
 | `asgard-cli request`, `asgard-cli task` | what the customer asked for, and the task specs open against it |
@@ -92,7 +93,7 @@ answer that looks obvious and is wrong.
 | `asgard-cli guide <name>` | the guidance for one decision; `asgard-cli guide` lists it |
 | `asgard-cli find <terms>` | **start here for a question.** Searches the wiki, the shapes, the guidance and the skills together; ask in Chinese if that is the language it was asked in |
 | `asgard-cli usecase` | **before authoring any CR.** How each shape is built, taken from deployments already in production: when to use it, the skeleton, the fields that are not obvious, and what the mistake cost someone. `--search <terms>` finds a shape from what the customer asked for |
-| `asgard-cli check` | the first gate: structural invariants a chart render cannot see |
+| `asgard-cli check` | one step of `gate`, when that is the step you are fixing |
 | `asgard-cli project add <slug> --env dev` | the engagement discovers a new project |
 | `asgard-cli scaffold` | after adding a project, to write its chart skeleton. Safe to re-run - it never overwrites a file that already exists, so edits to this file survive |
 | `asgard-cli skill update` | **when the platform says the reference material here is behind.** It writes what the Asgard server this repository deploys to actually enforces - the processor catalogue and its config keys - into `.agents/skills/`. Commit what it writes; the diff is the changelog |
@@ -591,13 +592,27 @@ this repository deploys to. If it is not there, or the CLI says the material her
 asgard-cli skill update    # writes it, plus the CR shapes and the processor catalogue
 ```
 
-Locally, before pushing:
+Locally, before pushing, **one command**:
 
-1. `asgard-cli check` — structural invariants of the repository
-2. `helm lint projects/<project>/chart/app` — bare, which proves `values.yaml` defaults every
-   `.Values.*`
-3. `asgard-cli verify [release]` — renders, then checks CR cross-reference completeness **and**
-   the one-system-one-Agent invariants. One command, both sets.
+```bash
+asgard-cli gate            # every release
+asgard-cli gate <release>  # one of them
+```
+
+It runs everything this machine can check, in order, and a step that could not run is reported
+as skipped rather than passed:
+
+| step | what it proves |
+|---|---|
+| `tools` | `helm` is on PATH; without it the three chart steps cannot run |
+| `repo` | the structural invariants a chart render cannot see |
+| `skills` | the reference material here still describes the server this repo deploys to |
+| `lint` | `values.yaml` defaults every `.Values.*` the chart itself owns. It supplies the reserved `asgard` block and nothing else — linting with no `-f` at all fails on every chart that reads `.Values.asgard.*`, which a chart must not declare |
+| `render` | each release renders |
+| `verify` | the rendered CRs against each other: dangling references, both halves of every entrypoint, display annotations, workflow-set labels, the agent-split invariants |
+
+The individual commands (`asgard-cli check`, `asgard-cli verify`) still exist and are what to
+reach for when one step fails and you want only that one.
 
 Then push, because the rest cannot be done here:
 
