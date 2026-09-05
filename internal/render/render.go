@@ -158,6 +158,22 @@ func Run(ctx context.Context, opts Options, out, errOut io.Writer) (Result, erro
 	return res, nil
 }
 
+// AsgardValuesFile writes the reserved block to a temporary file and returns
+// its path, for a caller that wants to hand it to helm itself. The caller
+// removes it.
+//
+// It is exported for `helm lint`, which needs exactly this file and nothing
+// else. **A chart cannot declare the `asgard` block in its own values.yaml** -
+// the platform overwrites it, and declaring it is a warning on every plan - so
+// linting with no values file at all makes every chart that reads
+// `.Values.asgard.projectEnvironmentId` fail on a nil pointer. Supplying this
+// one file, and only this one, keeps the property the bare form was for: every
+// OTHER `.Values.*` a template reads still has to have a default in the
+// chart's own values.yaml, or the lint fails.
+func AsgardValuesFile(releaseName, namespace string) (string, error) {
+	return writeAsgardValues(releaseName, namespace)
+}
+
 // writeAsgardValues puts the reserved block in a temporary file for helm's -f.
 func writeAsgardValues(releaseName, namespace string) (string, error) {
 	body, err := yaml.Marshal(map[string]any{"asgard": AsgardValues(releaseName, namespace)})

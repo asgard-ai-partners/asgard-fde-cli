@@ -635,3 +635,23 @@ time, and editing removes exactly that.
   `asgard-cli skill update`. The line for what stays here is **authority, not
   subject**: how to run a local gate is true of any Asgard, what a server
   accepts is not
+- `lint` 2026-09-05 `asgard-cli gate`: one command for everything a machine with
+  no cluster can check - tools, repo, the reference material's freshness, lint,
+  render, xref. Every part existed; the only thing assembling them was prose,
+  and prose is what went stale. **A skip is not a pass**, and the two print
+  differently, because "kubectl was not installed so the cluster step did not
+  run" was reported as green in the gate this replaces
+- `fix` 2026-09-05 **the bare `helm lint` instruction had been wrong since the
+  Pipeline cut-over.** A chart must not declare the reserved `asgard` block -
+  the platform injects it and declaring it is a warning on every plan - so
+  linting with no `-f` at all fails on every chart that reads
+  `.Values.asgard.projectEnvironmentId`, which is every chart that labels
+  anything. Four of four charts in a real repository, all for that reason and no
+  other. The gate supplies that one file and nothing else, which keeps the
+  property the bare form was for: every OTHER `.Values.*` still needs a default
+  in the chart's own `values.yaml`. Verified both ways - a chart with a genuinely
+  undeclared value still fails
+- `fix` 2026-09-05 `kubectl` was still described as "server-side dry run and CRD
+  fidelity, against the cluster" and counted as a tool the gate needs. Both
+  moved to the platform's plan at the cut-over and no client is issued cluster
+  credentials, so it is optional now and `doctor` says why it is there

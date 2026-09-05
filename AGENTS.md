@@ -167,8 +167,17 @@ asgard-cli audit-material --commands
 asgard-cli audit-material --urls   # needs the network
 ```
 
+<<<<<<< HEAD
+That is this repository's gate. **A customer repository's gate is one command,
+`asgard-cli gate`**, and the difference is deliberate: the thing an agent runs
+after every edit has to be one command whose definition lives in the binary,
+not a list in a markdown file that goes stale. This list is for the maintainer,
+who is editing the binary - and when a step is added to `gate`, nothing here
+needs changing, which is the point.
+=======
 `--links` and `--commands` run in CI (the `material` job). `--urls` does not: a
 third party's outage is not this repository's build failure.
+>>>>>>> origin/feat/skills-from-platform
 
 `--urls` fetches every `docs.asgard-ai.com` link the material cites and fails on
 a 404. It is separate because it needs the network, and a gate that only works

@@ -536,7 +536,7 @@ func Write(root string, cfg *config.Config, kind Kind, opts Options) ([]Result, 
 
 // appendValues adds the keys this CR reads to the chart's values.yaml, unless
 // they are declared already. values.yaml has to default every .Values.* a
-// template reads: the bare helm lint is the only step that proves it, and
+// template reads: the lint step of `asgard-cli gate` is what proves it, and
 // without it a missing default is masked whenever an env file is overlaid, then
 // nil-pointers for anyone running plain helm template.
 func appendValues(templatesDir string, kind Kind, data Data) (string, error) {
@@ -563,7 +563,7 @@ func appendValues(templatesDir string, kind Kind, data Data) (string, error) {
 	// agent, so the second one's whole snippet was skipped as "already there",
 	// and its template then read `.Values.botProviders.<name>.disabled` off a
 	// map with no such entry. Bare `helm lint` catches it - which is exactly
-	// what bare lint is for - but only after the file is written.
+	// what the gate's lint step is for - but only after the file is written.
 	top, nested := splitSnippet(string(snippet))
 	if top == "" {
 		return "", nil

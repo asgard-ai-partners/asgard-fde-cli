@@ -63,8 +63,13 @@ var (
 	}
 
 	Kubectl = Tool{
-		Name:        "kubectl",
-		Purpose:     "server-side dry run and CRD fidelity, against the cluster",
+		Name: "kubectl",
+		// **No check in this tool needs it.** The server-side dry run and the
+		// unknown-field check moved to the platform's plan when the Pipeline
+		// landed, and no client is given cluster credentials - so kubectl is
+		// something an FDE may want by hand and the gate never asks for.
+		Purpose:     "reading a cluster by hand; no check here needs it",
+		Optional:    true,
 		VersionArgs: []string{"version", "--client", "--output=json"},
 		version:     kubectlVersion,
 		brew:        "kubernetes-cli",

@@ -385,7 +385,7 @@ func warnIfBehind(cmd *cobra.Command) {
 	// context. Repeating it under the command whose job this is reads like a
 	// second, different problem.
 	for c := cmd; c != nil; c = c.Parent() {
-		if c.Name() == "skill" {
+		if c.Name() == "skill" || c.Name() == "gate" {
 			return
 		}
 	}

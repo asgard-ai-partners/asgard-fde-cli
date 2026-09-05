@@ -3,35 +3,50 @@
 Every project has a read path and an entry point. Run the gate before committing
 anything, and **stop at the first red step** - do not push past it.
 
-Load the `asgard-cr-verification` skill under .agents/skills/ for the full
-procedure. It comes from the platform - `asgard-cli skill update` writes it -
-so it states what the server this repository deploys to actually checks, rather
-than what some version of it did when this tool was built. The four steps:
+Run it with one command:
 
-  1. asgard-cli check
+    asgard-cli gate
 
-     The repository's structure: the README project table against the folders on
-     disk, .asgard-pipeline.yaml against the charts it names, the docs/ layers,
-     the requirements indexes.
+That is the whole local half, and it is one command on purpose: a checklist in
+prose is not a gate, and the one this replaced named four steps of which the
+fourth ran a script deleted a month earlier. A step it could not run is
+reported as skipped, which is not a pass.
 
-  2. helm lint projects/<project>/chart/app
+Load the `asgard-cr-verification` skill under .agents/skills/ for what the
+PLATFORM checks, which is the other half and the authoritative one. It comes
+from the platform - `asgard-cli skill update` writes it - so it states what the
+server this repository deploys to actually checks, rather than what some
+version of it did when this tool was built.
 
-     **Bare, with no -f.** It is the only step that proves values.yaml declares
-     a default for every .Values.* a template reads. Overlay a file and a
-     missing default is masked, and then it nil-pointers for anyone running
-     plain helm template.
+What `asgard-cli gate` runs, and what each step is for:
 
-  3. asgard-cli verify
+  tools    helm on PATH. Without it the three chart steps cannot run, and the
+           gate says skipped rather than passed.
 
-     The invariants helm cannot see, because to helm these are opaque CRs: a
-     dangling reference, a missing display annotation, a Workflow with no set
-     labels, the agent split. A wrong **entry** name is as fatal as a wrong
-     workflow name, and apply catches neither.
+  repo     the repository's structure: the README project table against the
+           folders on disk, .asgard-pipeline.yaml against the charts it names,
+           the docs/ layers, the requirements indexes. Alone: asgard-cli check
 
-     With no arguments it does every release the declaration names, rendering
-     each one itself. Name a release to narrow it.
+  skills   whether the reference material here still describes the server this
+           repository deploys to. Alone: asgard-cli skill status
 
-  4. The platform's plan. Push, then read it back:
+  lint     helm lint on each chart, **with the reserved asgard block and
+           nothing else**. That is what proves values.yaml declares a default
+           for every .Values.* the chart itself owns; overlay an environment
+           file and a missing default is masked until it nil-pointers for
+           somebody running plain helm template. Linting with no -f at all -
+           which this prompt used to say - fails on every chart that reads
+           .Values.asgard.*, and a chart must not declare that block.
+
+  render   each release renders, with placeholder platform values.
+
+  verify   the invariants helm cannot see, because to helm these are opaque
+           CRs: a dangling reference, a missing display annotation, a Workflow
+           with no set labels, the agent split. A wrong **entry** name is as
+           fatal as a wrong workflow name, and apply catches neither.
+           Alone: asgard-cli verify [release]
+
+Then the step that cannot be run here. Push, and read the plan back:
 
          asgard-cli pipeline runs watch --release <name> --commit $(git rev-parse HEAD)
 
@@ -59,8 +74,9 @@ than what some version of it did when this tool was built. The four steps:
      schema cannot express at all. Read it before deciding a red deploy is a
      mystery.
 
-Steps 1 to 3 need only `helm` on PATH. Step 4 needs a remote and a signed-in
-session, and no cluster access at all. `asgard-cli doctor` says whether helm is
+`asgard-cli gate` needs only `helm` on PATH, plus a session for the one step
+that asks the platform (`--offline` skips it). Reading the plan needs a remote
+and a signed-in session, and no cluster access at all. `asgard-cli doctor` says whether helm is
 installed and how to install it.
 
 Done when: every step is green, and you have said which ones could not be run.

@@ -43,7 +43,8 @@ helm lint projects/<<.Project.Slug>>/chart/app
 asgard-cli verify <<.Project.Slug>>
 ```
 
-第一關的 bare `helm lint`(不帶 `-f`)是唯一會驗「`values.yaml` 有沒有替每個 `.Values.*`
+`asgard-cli gate` 的 lint 一關只帶保留的 `asgard` 區塊、不帶任何環境檔,是唯一會驗
+「`values.yaml` 有沒有替每個 chart 自己擁有的 `.Values.*`
 宣告預設值」的一步,不要跳過。
 
 ## 部署後人工步驟
