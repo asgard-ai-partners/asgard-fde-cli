@@ -98,16 +98,6 @@ type Project struct {
 type Config struct {
 	Workspace Workspace `json:"workspace"`
 	Projects  []Project `json:"projects"`
-
-	// OLAPOnlyLayers are semantic layers deliberately bound to no Agent,
-	// because they exist to feed Data Insight rather than a chat agent: their
-	// cross-schema joins are unrestricted, which is the point of a data lake and
-	// exactly the reason not to hang an agent off one.
-	//
-	// It is per customer, and it lives here rather than as a flag somebody has
-	// to remember on every run: `asgard-cli verify` reads it, and a policy that
-	// only applies when you pass the right argument is not a policy.
-	OLAPOnlyLayers []string `json:"olapOnlyLayers,omitempty"`
 }
 
 // RepoName is the repository this onboarding produces, derived rather than

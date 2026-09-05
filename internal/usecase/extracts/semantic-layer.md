@@ -266,7 +266,13 @@ Setting `allowedCubes` is a deliberate departure that needs a reason.
 A company-wide warehouse layer is a **superset** of the per-system layers, with
 unrestricted cross-schema joins. That freedom is the point of a warehouse and
 exactly why it is the wrong tool for a chat agent. Such a layer is mounted on no
-agent at all, and the gate enforces it by name.
+agent at all.
+
+**Nothing enforces that, and nothing should.** The gate used to, from a list of
+layer names recorded per customer - which meant a tool that cannot know what a
+customer is building was carrying that customer's use case in a config field.
+What the gate does now is report a layer no Agent binds, as an observation; a
+layer bound to an Agent that should not be is a review's job, not a rule's.
 
 Where a system has no live database - a third-party SaaS reached only through an
 ETL - a layer over the warehouse is the only option. Say so in the layer's

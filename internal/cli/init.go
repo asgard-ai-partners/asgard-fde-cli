@@ -112,7 +112,6 @@ instead.`,
 			if force && len(projects) == 0 {
 				if existing, err := config.Load(path); err == nil {
 					cfg.Projects = existing.Projects
-					cfg.OLAPOnlyLayers = existing.OLAPOnlyLayers
 				}
 			}
 			for _, slug := range projects {

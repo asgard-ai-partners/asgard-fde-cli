@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"sort"
 	"strings"
-
-	"github.com/asgard-ai-partners/asgard-fde-cli/internal/config"
 )
 
 const (
@@ -35,10 +33,16 @@ const (
 //	R7   a published Agent has at least two sampleQuestions. Published is the
 //	     agent-published label, and that label is the only gate on whether a
 //	     caller includes the Agent in agent_hub.agent_names.
-//	R10  no Agent references an OLAP-only layer.
-//	R11  a SemanticLayer that no Agent binds is either recorded as OLAP-only or
-//	     reported, so that "deliberately unbound" and "somebody forgot" stop
-//	     looking identical. A warning, because both are legitimate mid-onboarding.
+//	R11  a SemanticLayer that no Agent binds is reported. An observation, not a
+//	     verdict: the render cannot tell "deliberately unbound" from "somebody
+//	     has not finished the read path", and neither can this tool.
+//
+//	R10 is gone. It refused an Agent binding a layer recorded as "OLAP-only" in
+//	`+"`"+`.asgard-config.json`+"`"+`, and the recording was done by a flag on `+"`"+`verify`+"`"+`. **A rule
+//	that needs a per-customer exemption list to work is not a rule.** It also
+//	wrote a product use case - Data Insight, read through Mimir - into a config
+//	field of a tool that cannot know what a customer is building. See
+//	asgard-odin-pm docs/decisions/2026-09-05-asgard-cli-config-surface.md.
 //	R12  prompt.task and prompt.format are byte-identical across every Agent in
 //	     one render. An Agent CR has no include mechanism, so a shared section
 //	     can only be copied; keeping the copies identical is what lets a later
@@ -83,11 +87,6 @@ func AgentSplit(docs []Doc, opts Options) Result {
 	ix := newIndex(docs)
 	agents := ix.of("Agent")
 	subagents := blueprintAgents(docs)
-
-	olapOnly := map[string]bool{}
-	for _, name := range opts.OLAPOnlyLayers {
-		olapOnly[name] = true
-	}
 
 	var problems []string
 	errf := func(format string, args ...any) {
@@ -146,11 +145,6 @@ func AgentSplit(docs []Doc, opts Options) Result {
 				errf("R4 %s: %s sets allowedCubes, against the standing decision that a bound layer is queryable in full",
 					a.Name, name)
 			}
-
-			if olapOnly[name] {
-				errf("R10 %s: references %s, which is a Data Insight OLAP store and should be bound to no Agent",
-					a.Name, name)
-			}
 		}
 
 		if strings.EqualFold(a.Labels[publishedLabel], "true") {
@@ -198,24 +192,21 @@ func AgentSplit(docs []Doc, opts Options) Result {
 		}
 	}
 
-	// R11. A layer nobody binds is either a Data Insight store, which is
-	// correct and permanent, or a read path somebody has not finished wiring,
-	// which is temporary - and the rendered chart cannot tell them apart. The
-	// danger is not the layer sitting there: it is the later reader who binds it
-	// to an Agent as a tidy-up, and so gives an agent restricted to an API a
-	// second path straight into the database. R10 catches that only for layers
-	// already recorded as OLAP-only, so the recording has to happen while
-	// somebody still knows which kind it is.
+	// R11. A layer nobody binds may be finished and correct, or a read path
+	// somebody has not wired yet, and **the render cannot tell them apart**.
 	//
-	// A warning, not a failure: a layer added before its Agent is the normal
-	// order of work, and failing here would make the gate red for doing the
-	// steps in the order the stages ask for.
+	// So this states the fact and stops. It used to end with a remedy - record
+	// the layer as "OLAP-only" and R10 will refuse to let anyone bind it later -
+	// which required a per-customer exemption list and put a product use case
+	// into a config field. Both are gone. What is left is worth saying because a
+	// reader who finds an unbound layer months later tends to bind it as a
+	// tidy-up, and that can hand an agent a second path into a database; but
+	// whether that matters here is a judgement this tool does not have.
 	for _, d := range ix.of("SemanticLayer") {
-		if boundBy[d.Name] != "" || olapOnly[d.Name] || mentionedElsewhere(docs, d) {
+		if boundBy[d.Name] != "" || mentionedElsewhere(docs, d) {
 			continue
 		}
-		warnf("R11 %s has no consumer: no Agent binds it and nothing else in the render mentions it. If that is deliberate - a Data Insight OLAP store, read through Mimir rather than by an agent - record it with `asgard-cli verify --olap-only-layer %s`, which writes it to %s and makes R10 refuse any later attempt to bind it to an Agent. If it is not deliberate, its read path is unfinished. Record it either way while you still know which it is: the render cannot tell them apart, and the reader who finds it later is the one who binds it as a tidy-up",
-			d.Name, d.Name, config.FileName)
+		warnf("R11 %s: no Agent binds it and nothing else in the render mentions it", d.Name)
 	}
 
 	sort.Strings(problems)
