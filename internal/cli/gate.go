@@ -80,7 +80,7 @@ func newGateCmd() *cobra.Command {
 
     asgard-cli gate                  every release the declaration names
     asgard-cli gate internal-dev     one of them
-    asgard-cli gate --offline        skip the step that needs the platform
+    asgard-cli gate --offline        skip the two steps that need the platform
     asgard-cli gate --format json    one record per step, for an agent
 
 **Run it after changing anything under a chart or ` + "`" + pipelineconfig.FileName + "`" + `.** It is the
@@ -118,6 +118,23 @@ What it runs, in order:
            workflow-set labels, the agent-split invariants
 
 **A skip is not a pass**, and the two are printed differently on purpose.
+
+**This is the local half of the loop, and it is the half this binary owns.**
+
+    1. locally      asgard-cli gate                 <- documented here
+    2. push         a tag or branch matching a release's trigger
+    3. the plan     the platform renders it for real and checks it
+    4. review       approve or reject
+    5. apply
+
+Steps 2 to 5 belong to the platform, and the platform describes them: the
+` + "`asgard-cr-verification`" + ` skill that ` + "`asgard-cli skill update`" + ` fetches lists the six
+run steps, all fourteen rule codes and what each means. **It deliberately says
+nothing about step 1**, because a server cannot know which version of this
+binary somebody installed - an on-prem customer's CLI can be several releases
+from the platform's in either direction. So the two documents interlock rather
+than overlap, and each is written where it moves when the thing it describes
+moves. This help is the answer to "what does step 1 check".
 
 **Do not run helm by hand here.** The platform injects a reserved ` + "`asgard`" + ` block
 into every render, and a chart must not declare it in its own values.yaml - so

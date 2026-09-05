@@ -623,10 +623,15 @@ asgard-cli gate <release>  # one of them
 It runs everything this machine can check, in order, and a step that could not run is reported
 as skipped rather than passed:
 
+**`asgard-cli gate --help` is the authoritative list**; the table below is a convenience copy in
+this repository and moves only when `asgard-cli scaffold` is re-run (which reports it as `stale`
+when this CLI has since changed it).
+
 | step | what it proves |
 |---|---|
 | `tools` | `helm` is on PATH; without it the three chart steps cannot run |
 | `repo` | the structural invariants a chart render cannot see |
+| `binding` | `.asgard-cli.yaml` names a workspace and a pipeline the platform still has. Catches a half-bound checkout — `workspace use` clears the pipeline line — before some later command acts on it |
 | `skills` | the reference material here still describes the server this repo deploys to |
 | `lint` | `values.yaml` defaults every `.Values.*` the chart itself owns. It supplies the reserved `asgard` block and nothing else — linting with no `-f` at all fails on every chart that reads `.Values.asgard.*`, which a chart must not declare |
 | `render` | each release renders |
@@ -644,6 +649,12 @@ the apiserver with a server-side dry run, so the CRDs' CEL rules, patterns, requ
 unknown-field pruning are checked against the real cluster. Nothing local can do that: no cluster
 credential is issued to a client, which is the whole reason steps 1–3 are the shape they are —
 they check what a dry run passes and runtime still fails.
+
+**What the plan found, and what each rule code means, is the platform's document, not this one.**
+`.agents/skills/asgard-cr-verification/` is fetched from the server this repository deploys to and
+rewritten on every `asgard-cli skill update`; it carries the six run steps and all fourteen rule
+codes. It says nothing about `asgard-cli gate`, deliberately — a server cannot know which version
+of the CLI is installed here. Local half: `asgard-cli gate --help`. Server half: that skill.
 
 ## Spec-Driven Development
 

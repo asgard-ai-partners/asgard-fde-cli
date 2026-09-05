@@ -762,3 +762,31 @@ time, and editing removes exactly that.
   origin remote" - four claims about a world that ended at the Pipeline
   cut-over. STRUCTURE.md still listed `config` and `deploy` as packages, and
   both were deleted. Rewritten against what the binary does
+- `fix` 2026-09-06 **the served `asgard-cr-verification` was describing this
+  binary.** Version 1 opened with a five-step "order of the loop" whose first
+  step was `asgard-cli gate`, then listed what that command checks. Every
+  sentence of that is a claim about a client whose version the server does not
+  know - and on-prem, which is the whole reason the document is served rather
+  than shipped, cuts both ways: a customer on an older CLI reads a current
+  document describing a gate their binary does not have. The platform's copy now
+  stops at the push and says so out loud; `gate --help` carries the local half,
+  where it moves when this binary moves. A test in platform-api enforces it:
+  nothing in the bundle may name `asgard-cli` except `asgard-cli skill update`,
+  which is the command that wrote the file
+- `fix` 2026-09-06 the scaffolded `AGENTS.md` carried its own copy of the gate
+  step table, and it was already missing `binding` - added in the same session
+  that wrote the table's last edit. It stays, because `scaffold` reports a
+  shipped file this CLI has since changed as `stale`, which is a drift detector
+  the old copy of `asgard-cr-verification` never had; but it now says out loud
+  that `asgard-cli gate --help` is the authoritative list and it is the copy
+- `note` 2026-09-06 **the CLI does not run the platform's lint rules, and that
+  is a decision rather than an omission.** asgard-iac's `pkg/lint` holds all
+  fourteen, and its package comment used to say the codes were "shared by the
+  asgard-iac runner and the Asgard CLI" and that plain-value inputs were "what
+  lets the CLI import this package". Neither was true - no dependency exists,
+  and the two rule namespaces are disjoint (`config/*` `chart/*` `vars/*`
+  `crd/*` `run/*` against `R*` `X*` `C*`). It is also not something to finish: a
+  client that reproduces the server's rules is a second implementation of a set
+  only one side owns. The Pipeline lints at the start of every run, so reading
+  the run's report gives the same verdict more consistently, at the cost of
+  having to trigger a run. That comment now says the opposite, with the reason
