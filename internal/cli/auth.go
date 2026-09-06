@@ -113,13 +113,13 @@ not carry the state value this run generated - which means it was not this run's
 			out := cmd.OutOrStdout()
 			if format == formatJSON {
 				return writeJSON(out, map[string]any{
-					"profile":   p.Name,
-					"issuer":    p.Issuer,
-					"api":       p.API,
-					"subject":   info.Sub,
-					"email":     info.Email,
-					"name":      info.Who(),
-					"expiresAt": cred.ExpiresAt,
+					"profile":      p.Name,
+					"issuer":       p.Issuer,
+					"platform_api": p.PlatformAPI,
+					"subject":      info.Sub,
+					"email":        info.Email,
+					"name":         info.Who(),
+					"expiresAt":    cred.ExpiresAt,
 				})
 			}
 
@@ -292,19 +292,19 @@ func reportWhoami(out io.Writer, format string, s *auth.Session, info auth.Useri
 
 	if format == formatJSON {
 		return writeJSON(out, map[string]any{
-			"profile":   s.Profile.Name,
-			"issuer":    s.Profile.Issuer,
-			"api":       s.Profile.API,
-			"source":    string(s.Source),
-			"subject":   info.Sub,
-			"email":     info.Email,
-			"name":      who,
-			"confirmed": checked,
+			"profile":      s.Profile.Name,
+			"issuer":       s.Profile.Issuer,
+			"platform_api": s.Profile.PlatformAPI,
+			"source":       string(s.Source),
+			"subject":      info.Sub,
+			"email":        info.Email,
+			"name":         who,
+			"confirmed":    checked,
 		})
 	}
 
 	fmt.Fprintf(out, "%-9s %s\n", "profile", s.Profile.Name)
-	fmt.Fprintf(out, "%-9s %s\n", "api", s.Profile.API)
+	fmt.Fprintf(out, "%-9s %s\n", "platform", s.Profile.PlatformAPI)
 	fmt.Fprintf(out, "%-9s %s\n", "user", who)
 	if info.Email != "" && info.Email != who {
 		fmt.Fprintf(out, "%-9s %s\n", "email", info.Email)

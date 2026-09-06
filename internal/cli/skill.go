@@ -134,14 +134,14 @@ agent reads here now describes something else.`,
 			out := cmd.OutOrStdout()
 			if format == formatJSON {
 				return writeJSON(out, map[string]any{
-					"directory":  root,
-					"local":      local,
-					"fetched_at": fetchedAt,
-					"platform":   remote.Version,
-					"profile":    pc.Session.Profile.Name,
-					"api":        pc.Session.Profile.API,
-					"sources":    remote.Sources,
-					"current":    local != "" && local == remote.Version,
+					"directory":    root,
+					"local":        local,
+					"fetched_at":   fetchedAt,
+					"platform":     remote.Version,
+					"profile":      pc.Session.Profile.Name,
+					"platform_api": pc.Session.Profile.PlatformAPI,
+					"sources":      remote.Sources,
+					"current":      local != "" && local == remote.Version,
 				})
 			}
 
@@ -360,7 +360,7 @@ func runSkillUpdate(cmd *cobra.Command, opts skillUpdateOptions) error {
 
 	if err := skills.Apply(root, contents, skills.Stamp{
 		Version:   bundle.Version,
-		Platform:  pc.Session.Profile.API,
+		Platform:  pc.Session.Profile.PlatformAPI,
 		FetchedAt: time.Now().UTC().Format(time.RFC3339),
 		Sources:   sourceDigests(bundle.Sources),
 	}); err != nil {

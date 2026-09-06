@@ -775,8 +775,19 @@ Two profiles exist: `prod` (the default) and `dev`. `--profile` picks per
 command and `ASGARD_PROFILE` sets it for a shell. **Nothing records a default**,
 and `login --set-default` used to: a preference on one machine is a preference
 two people running the same command do not share, and it failed towards `prod`
-if forgotten. `ASGARD_API`, `ASGARD_ISSUER` and `ASGARD_CLIENT_ID` override a
-profile's fields one at a time, for a platform running somewhere else.
+if forgotten. `ASGARD_PLATFORM_API`, `ASGARD_ISSUER` and `ASGARD_CLIENT_ID`
+override a profile's fields one at a time, for a platform running somewhere
+else.
+
+**`ASGARD_PLATFORM_API` is named for the service, not for "the API".** This tool
+talks to one Asgard service today and is expected to grow into others - the
+Control Center API is the next one - so the general word is not spent on
+whichever arrived first. `ASGARD_ISSUER`, `ASGARD_CLIENT_ID` and `ASGARD_TOKEN`
+stay general on purpose: every Asgard service authenticates against the same
+Casdoor and accepts the same token, so those three genuinely are about all of
+them. It was called `ASGARD_API` in v0.1.0; a shell that still exports that name
+is refused with the rename rather than quietly ignored, because ignoring it
+would send every command to the built-in prod URL.
 
 With no browser - CI, a container, an agent sandbox - set `ASGARD_TOKEN` to an
 access token instead. It bypasses the store completely, reading nothing from

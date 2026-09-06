@@ -293,18 +293,18 @@ command is about to do something that matters.`,
 					pipeline = pc.Binding.Pipeline
 				}
 				return writeJSON(out, map[string]any{
-					"profile":   pc.Session.Profile.Name,
-					"api":       pc.Session.Profile.API,
-					"workspace": pc.Workspace,
-					"name":      name,
-					"source":    string(pc.WorkspaceSource),
-					"origin":    pc.RepoFullName,
-					"pipeline":  pipeline,
+					"profile":      pc.Session.Profile.Name,
+					"platform_api": pc.Session.Profile.PlatformAPI,
+					"workspace":    pc.Workspace,
+					"name":         name,
+					"source":       string(pc.WorkspaceSource),
+					"origin":       pc.RepoFullName,
+					"pipeline":     pipeline,
 				})
 			}
 
 			fmt.Fprintf(out, "%-11s %s\n", "profile", pc.Session.Profile.Name)
-			fmt.Fprintf(out, "%-11s %s\n", "api", pc.Session.Profile.API)
+			fmt.Fprintf(out, "%-11s %s\n", "platform", pc.Session.Profile.PlatformAPI)
 			if pc.RepoFullName != "" {
 				// Labelled for what it is. It used to be called "repository",
 				// which read as a claim that this checkout is that repository
