@@ -790,3 +790,15 @@ time, and editing removes exactly that.
   only one side owns. The Pipeline lints at the start of every run, so reading
   the run's report gives the same verdict more consistently, at the cost of
   having to trigger a run. That comment now says the opposite, with the reason
+- `fix` 2026-09-06 **`ASGARD_API` had taken the general word for whichever
+  service arrived first.** This CLI talks to one Asgard service today - the
+  Platform API - and is expected to grow into others; the Control Center API at
+  `cc-api.asgard-ai.com` is the next one. `ASGARD_PLATFORM_API` and
+  `Profile.PlatformAPI` now name the service, leaving the general name unspent.
+  `ASGARD_ISSUER`, `ASGARD_CLIENT_ID` and `ASGARD_TOKEN` are deliberately NOT
+  split the same way: every Asgard service authenticates against the same
+  Casdoor and accepts the same token, so those three are about all of them and
+  the general name is the right one. A shell still exporting the old name is
+  refused with the rename rather than quietly ignored - ignored, every command
+  would go to the built-in prod URL, which is a customer's platform, and nothing
+  would say so

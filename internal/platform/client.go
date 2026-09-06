@@ -150,7 +150,7 @@ type request struct {
 
 // do makes one call and unwraps the envelope.
 func (c *Client) do(ctx context.Context, req request) error {
-	endpoint := c.profile.API + req.path
+	endpoint := c.profile.PlatformAPI + req.path
 	if len(req.query) > 0 {
 		endpoint += "?" + req.query.Encode()
 	}
