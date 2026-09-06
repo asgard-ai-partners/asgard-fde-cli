@@ -160,11 +160,25 @@ caps a name at 63 characters and names derived from this inherit its length.
 
 ### `scaffold`
 
-Write the repository skeleton, including the declaration everything else hangs off:
+Write the repository skeleton, including the declaration everything else hangs
+off - **for a repository that is not bound to a pipeline yet**:
 
 ```bash
 asgard-cli scaffold
 ```
+
+[`init`](#init) is what to run when the platform already has a pipeline for this
+repository: it runs this, records the binding, and fetches the reference
+material. **This is the same command with the platform left out**, and that is
+the one thing it does that `init` cannot - `init` requires a workspace id and a
+pipeline id and refuses to guess either, and a repository with no pipeline has
+neither to give. Two cases look like that: before there is an account (a
+proposal, a spike, a repository written while somebody creates the workspace),
+and an existing repository being migrated onto the Pipeline, which already has
+charts and its own CI and lacks the skeleton and a pipeline in that order.
+
+Once the pipeline exists, `asgard-cli init` records it, and re-running reports
+most of the skeleton as already present.
 
 It writes the part of a customer repo that is the same for every engagement:
 
@@ -185,7 +199,9 @@ produces, and no template can generate it.
 
 Re-running is safe. Existing files are left alone and counted as already
 present, so it can be run again after adding a project, or when a file was
-deleted by hand. `--force` overwrites, which discards local edits.
+deleted by hand. `--force` overwrites, which discards local edits - and is how a
+repository takes shipped material this CLI has changed since, which is otherwise
+reported as `stale` rather than replaced silently.
 
 The generated skeleton passes its own gate on the first run:
 
