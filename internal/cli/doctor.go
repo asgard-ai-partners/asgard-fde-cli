@@ -19,8 +19,9 @@ that are missing.
 
 asgard-cli does the repository work on its own. helm is needed to render a chart
 and to lint it, and kubectl to dry-run against the cluster; python3 is only for
-the database introspection tools under scripts/db/, so a missing one is reported
-without failing.
+the db-query skill, which reads a customer's source systems at design time, so
+a missing one is reported without failing. An engagement that never connects to
+a database never needs it.
 
 The install line is worked out for the machine it runs on - including which Linux
 distribution, because neither helm nor kubectl is in the Debian or Ubuntu default

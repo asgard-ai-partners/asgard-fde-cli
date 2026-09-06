@@ -104,18 +104,20 @@ history and the next person asks the customer the same questions again.
   into a three-week one, and it is free to ask on day one.
 - Credential owner: TODO - the person or team who issues it, by name or role.
   A credential with no owner is not a dependency, it is a delay.
-- Secret key name: TODO - the ` + "`.env`" + ` key (` + "`<TARGET>_DB_PASSWORD`" + `) and the
-  ` + "`app-secret`" + ` key (` + "`<target>_db_password`" + `). The names, not the values.
+- Key names: TODO - the ` + "`.env`" + ` prefix this system gets at design time
+  (` + "`<PREFIX>PASSWORD`" + ` and friends) and the ` + "`app-secret`" + ` key the
+  deployed CR reads. The names, not the values.
 - Confirmed working: TODO - the date somebody actually connected with it, and
   how. Credentials that were only ever pasted into a chat have not been tested,
   and an untested one fails at the least convenient moment.
 
-Once a database is agreed, register it in three places or it will not work end
-to end - ` + "`.env.example`" + ` at the repo root lists them:
+Once a database is agreed, it has to land in two places or it will not work end
+to end - ` + "`.env.example`" + ` at the repo root explains both:
 
-    .env                             the real values, locally, never committed
-    scripts/db/pgenv.py DB_TARGETS   so the introspection tooling can reach it
-    .asgard-pipeline.yaml            declares the coordinate keys; values go on the platform
+    .env                    the real values, locally, never committed. One group per
+                            system, under a prefix you choose; the key suffixes are
+                            the CRD field names
+    .asgard-pipeline.yaml   declares the coordinate keys; values go on the platform
 
 and create the CR with ` + "`asgard-cli add dataconnector <name> --db-class <class>`" + `.
 

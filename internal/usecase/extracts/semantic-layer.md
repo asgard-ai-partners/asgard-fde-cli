@@ -282,7 +282,8 @@ ETL - a layer over the warehouse is the only option. Say so in the layer's
 
 ```bash
 # every sampleQuery, against the real database, before committing
-.venv/bin/python scripts/db/query.py -d <target> -f query.sql
+.venv/bin/python .agents/skills/db-query/scripts/query.py \
+  --class <class> --prefix <PREFIX> -f query.sql
 
 asgard-cli check
 helm lint projects/<project>/chart/app

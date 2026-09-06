@@ -47,49 +47,58 @@ proceeding on.
 
 ## Do not guess a schema
 
-Load the `semantic-layer-modeling` skill under .agents/skills/ and connect to the
-real database. Reasoning about a schema is not verifying it - the same skill
-records what that cost last time: a plausible-looking query written from a spec
-document turned out to reference a column that does not exist, to sum to zero
-because of a missing filter, and to be wrong about where half the rows came from.
-None of that is visible in column names.
+Load the `db-query` skill under .agents/skills/ and connect to the real system.
+Reasoning about a schema is not verifying it - `semantic-layer-modeling` records
+what that cost last time: a plausible-looking query written from a spec document
+turned out to reference a column that does not exist, to sum to zero because of a
+missing filter, and to be wrong about where half the rows came from. None of that
+is visible in column names.
 
     asgard-cli usecase semantic-layer
 
 ## The steps
 
-  1. cp .env.example .env, then fill in the connection values. The non-password
-     fields come from the customer; the passwords come from the cluster secret:
+  1. Pick a prefix for the system - one per source system - and write the keys
+     it needs into .env, which is gitignored:
 
-         kubectl get secret app-secret -n <namespace> \
-           -o jsonpath='{.data.<key>}' | base64 -d
+         cp .env.example .env
+         .venv/bin/python .agents/skills/db-query/scripts/query.py \
+           --class postgres --prefix UOF_DB_ --keys >> .env
 
-  2. Register each database in DB_TARGETS in scripts/db/pgenv.py.
+  2. Ask whoever owns that system for the values. **Name the keys; never ask
+     anybody to type a password into the conversation.** The coordinates and the
+     password both come from them - not from the cluster. The Secret in the
+     cluster is the deployed CR's copy, on its own lifecycle; reading it to get
+     a design-time credential conflates two mechanisms that must stay apart.
 
   3. Verify the connection before writing any CR:
 
-         .venv/bin/python scripts/db/query.py -d <target> "select 1"
+         .venv/bin/python .agents/skills/db-query/scripts/query.py \
+           --class postgres --prefix UOF_DB_ "select 1"
 
-  4. Introspect: tables, columns, primary keys, foreign keys. The skill has the
-     recipes for PostgreSQL and MSSQL. Foreign keys are often absent in older
-     business systems - infer relationships from naming, then **verify with a
-     join query** before writing anything down.
+  4. Introspect: tables, columns, primary keys, foreign keys. db-query's
+     references/connectors.md has the recipes per engine. Foreign keys are often
+     absent in older business systems - infer relationships from naming, then
+     **verify with a join query** before writing anything down.
 
-  5. Write one DataConnector CR per database, under
+  5. Write one DataConnector CR per system, under
      projects/<project>/chart/app/templates/data_connector/dc-<system>.yaml.
-     Connection coordinates are declared as chartValues in .asgard-pipeline.yaml
-     and their values set on the platform per release; the
-     password is a secretKeyRef into app-secret and never enters values or git.
+     The .env key suffixes are the CR field names, so this step is a transcription
+     rather than a translation. Connection coordinates are declared as chartValues
+     in .asgard-pipeline.yaml and their values set on the platform per release;
+     the password is a secretKeyRef into app-secret and never enters values or git.
 
-Read-only throughout. SELECT and introspection only.
+Read-only throughout. SELECT and introspection only, and db-query enforces it.
 
 Done when: every project that reads something has its DataConnector, and
 asgard-cli verify resolves it.
 
 **Checked:** 2026-09-04 against asgard-kube `15ded0f`. `dataConnectorClass` is
 one of postgres, mysql, mssql, oracle, salesforce, hana, netsuite, trino, athena,
-and is immutable after creation - so "a database we can read" covers ten engines
-and picking the wrong one is a replacement rather than an edit. Every credential
+and is immutable after creation - so "a database we can read" covers nine engines
+and picking the wrong one is a replacement rather than an edit. db-query has a
+design-time path for eight of them; hana has none, because SAP's driver is not
+installable from PyPI. Every credential
 block takes a `secretKeyRef`, with the CRD enforcing exactly one of
 [secretKeyRef configMapKeyRef] and exactly one of [value valueFrom], so the
 instruction to keep the password out of values and git is supported by the

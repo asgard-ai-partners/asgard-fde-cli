@@ -12,9 +12,9 @@ stage you are at, so it is the same command the day before any meeting.
 
     asgard-cli scaffold
 
-That writes AGENTS.md (the platform contract), the acceptance gate under
-scripts/, the four-layer docs structure, the requirements/ and references/
-entry points, the design-time skills, and the CD workflow. It is safe to re-run
+That writes AGENTS.md (the platform contract), the four-layer docs structure,
+the requirements/ and references/ entry points, the design-time skills, and the
+CD workflow. It is safe to re-run
 at any point: it never overwrites a file that already exists.
 
 Two of those decide where everything later ends up, and are worth reading once

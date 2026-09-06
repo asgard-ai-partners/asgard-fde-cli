@@ -216,7 +216,8 @@ filters on.
 
 ```bash
 # run each tool's SQL against the real database and record the row count
-.venv/bin/python scripts/db/query.py -d <target> -f tool.sql
+.venv/bin/python .agents/skills/db-query/scripts/query.py \
+  --class <class> --prefix <PREFIX> -f tool.sql
 
 asgard-cli check
 helm lint projects/<project>/chart/app

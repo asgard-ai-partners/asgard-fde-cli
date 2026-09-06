@@ -53,3 +53,9 @@ config.local.*
 ._*
 Thumbs.db
 desktop.ini
+
+# ---- Python bytecode ---------------------------------------------------
+# Written next to the db-query scripts under internal/scaffold/templates the
+# moment one is run in place, and `go:embed all:` would embed it.
+__pycache__/
+*.pyc

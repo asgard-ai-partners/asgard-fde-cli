@@ -96,7 +96,7 @@ chart 從 `.asgard-pipeline.yaml` 裡該 Release 的宣告讀,
 
 - **這個 repo 讀的是客戶實際存在的資料庫**,不是由 `.sql` 生出來的 demo 資料。
   所以寫 `SemanticLayer` 之前要真的連上去 introspect,不要照著文件猜 schema ——
-  `.agents/skills/semantic-layer-modeling/` 說明怎麼做。
-  `scripts/db/apply.py` 只在真的需要寫 seed 時才用得到;純讀取的話可以略過。
+  `.agents/skills/db-query/` 是連線與內省的工具,
+  `.agents/skills/semantic-layer-modeling/` 說明怎麼把看到的東西變成 CR。
 - 版面是一個 project 一個 Helm chart、一個 namespace,全部放在 `projects/<project>/`。
   project 的數量與拆分由客戶的 audience 決定(見 `AGENTS.md`),不是固定的。

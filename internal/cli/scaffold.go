@@ -40,7 +40,7 @@ Once the pipeline exists, ` + "`asgard-cli init`" + ` records it - re-running is
 will report most of this skeleton as already present.
 
 This writes the part of a customer repo that is the same for every engagement: the
-four-layer docs model, the SDD rules, the six design-time skills that hold for
+four-layer docs model, the SDD rules, the seven design-time skills that hold for
 any Asgard, and an AGENTS.md carrying the platform contract. What it does not write
 is the customer's own knowledge - which systems exist, how the projects split,
 what the CRs look like. That is what the onboarding produces.
