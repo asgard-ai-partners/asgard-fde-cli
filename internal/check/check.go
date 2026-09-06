@@ -232,7 +232,12 @@ func (c *checker) checkDeclaration() error {
 	}
 
 	if len(cfg.Releases) == 0 {
-		c.warnf("%s declares no releases, so no tag or branch deploys anything from here", pipelineconfig.FileName)
+		// The fact alone strands a reader who has just run `init`: they are
+		// told nothing deploys and not what makes it deploy. A repository this
+		// early is SUPPOSED to look like this, so the warning says both.
+		c.warnf("%s declares no releases, so no tag or branch deploys anything from here. "+
+			"A repository this early is expected to look like this: `asgard-cli project add <slug>` "+
+			"writes a chart, and a release for it is declared here", pipelineconfig.FileName)
 		return nil
 	}
 

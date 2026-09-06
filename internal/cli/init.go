@@ -127,6 +127,14 @@ When it finishes, commit what it wrote and run ` + "`asgard-cli gate`" + `.`,
 Commit all of it, %s included: whoever clones this repository, and whatever
 agent works in it, then needs no --workspace and no --pipeline.
 
+**Nothing here declares a release yet, so nothing deploys.** A gate run says so
+and it is not a problem to fix - a release is what the onboarding produces, and
+this repository has not had one yet. What produces it:
+
+    asgard-cli guide                     the decisions an onboarding makes
+    asgard-cli brief customer-meeting    before the first conversation
+    asgard-cli project add <slug>        once the work's split is decided
+
 Then, after changing anything under a chart or the declaration:
 
     asgard-cli gate
