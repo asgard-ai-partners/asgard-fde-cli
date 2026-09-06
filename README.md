@@ -1,5 +1,7 @@
 # asgard-fde-cli
 
+**English** | [繁體中文](README.zh-TW.md)
+
 Command line tool for Asgard FDE (`asgard-cli`).
 
 ## Install
@@ -624,12 +626,16 @@ generated repo is the pass for that.
 These three are why the acceptance gate now runs on Windows.
 
 ```bash
-asgard-cli render erp dev              # manifests to stdout, summary to stderr
-asgard-cli verify                      # render every declared env, check invariants
+asgard-cli render internal-dev         # manifests to stdout, summary to stderr
+asgard-cli verify                      # render every release, check the invariants
 asgard-cli verify --rendered file.yaml # check a stream that is already rendered
 asgard-cli verify --format json        # one record per render, each check named
 asgard-cli doctor                      # which external tools are here, and how to get them
 ```
+
+`render` takes a **release**, not a project and an environment. Where a chart
+deploys is a release in `.asgard-pipeline.yaml`, and one chart can have several;
+`asgard-cli pipeline releases` lists the ones the platform has.
 
 **`check` and `verify` are the pair an agent works hardest**, because they are
 the gate it is trying to turn green - so both take `--format json`. In text a
@@ -658,17 +664,23 @@ asgard-cli verify  ->  helm template  ->  internal/gate
 forms still work identically in cmd, PowerShell and bash.
 
 The gate rules were ported one for one, and the port was checked by running both
-implementations over the same rendered chart: same findings, same counts. Step 4
-of the gate still needs `kubectl` and `check_crd_fidelity.py`, because it talks
-to a cluster.
+implementations over the same rendered chart: same findings, same counts.
+
+**What used to be step 4 is not a local step any more.** It ran `kubectl` and a
+`check_crd_fidelity.py` against a cluster; both moved to the platform's plan at
+the Pipeline cut-over, because the checks worth the most - the apiserver's own
+CEL, pattern and required validation, and the unknown-field pruning a dry run
+hides - need a cluster, and **no client is ever issued credentials for one**.
+The local half is `asgard-cli gate`; the authority is the plan report.
 
 ### helm and kubectl are prerequisites, not dependencies
 
 Nothing about how asgard-cli is distributed can install them. A tar.gz, a zip and
 `go install` carry no dependency metadata and never can, and a dependency
 declared on a Homebrew tap or a Scoop bucket would only cover people who install
-that way - which is nobody today, since neither repository exists. Declaring one
-anyway would read as a guarantee that does not hold.
+that way - which is nobody, because those channels are deliberately off for a
+private repository (see [Releasing](#private-and-the-channels-that-off-follows-from)).
+Declaring one anyway would read as a guarantee that does not hold.
 
 So the binary is the mechanism. Every command that needs helm resolves it through
 `internal/tool` first and refuses with the install line for the machine it is on,
@@ -695,8 +707,10 @@ repositories, so the honest answer there is not an `apt install`. It exits
 non-zero when a required tool is missing, so it works as a CI preflight.
 
 `init`, `scaffold`, `project`, `request`, `task`, `question`, `decision`
-and `check` need none of these tools. `render` and `verify` need helm; step 4 of
-the gate needs kubectl.
+and `check` need none of these tools. `render`, `verify` and the three chart
+steps of `gate` need helm. **kubectl is optional**: nothing in this binary talks
+to a cluster, and `doctor` lists it because a person debugging a deployment
+still wants to know whether it is there.
 
 ### The files
 
