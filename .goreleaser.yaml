@@ -86,13 +86,62 @@ changelog:
     - title: Others
       order: 999
 
+# THIS REPOSITORY IS PRIVATE, AND SO IS EVERY RELEASE OF IT. GitHub gives a
+# release the visibility of the repository it belongs to: the page, the notes
+# and every asset below are reachable only by an account with read access, and
+# an unauthenticated request for an asset URL gets a 404 rather than a 403.
+# Nothing here is published to anywhere else - see the note at the bottom of
+# this file about the channels that would.
+#
+# That makes the footer the install instructions. Somebody landing on a release
+# page cannot `brew install` this and cannot curl the tarball without a token,
+# so the page has to say what does work.
 release:
   prerelease: auto
   footer: |
+    ## Install
+
+    This repository is private, so every asset below needs an authenticated
+    request. `gh` already has your credentials:
+
+    ```bash
+    gh release download {{ .Tag }} --repo asgard-ai-partners/asgard-fde-cli \
+      --pattern '*_darwin_arm64.tar.gz' --output - | tar xz asgard-cli
+    sudo mv asgard-cli /usr/local/bin/
+    asgard-cli doctor
+    ```
+
+    Swap the pattern for your own platform - the assets cover darwin / linux /
+    windows on amd64 / arm64. On Debian or RPM hosts the `.deb` and `.rpm`
+    below install the same binary.
+
+    (Spelled out rather than templated on purpose: release notes are rendered
+    once for the whole release, so there is no per-platform `.Os` or `.Arch` in
+    scope here. A template using them fails at publish time - which is a tag
+    you cannot take back.)
+
+    A downloaded-by-CLI file is not quarantined by Gatekeeper the way a
+    browser download is, so no `xattr` dance is needed.
+
+    ### Or from source, if you already build Go
+
+    ```bash
+    GOPRIVATE=github.com/asgard-ai-partners/* \
+      go install github.com/asgard-ai-partners/asgard-fde-cli/cmd/asgard-cli@{{ .Tag }}
+    ```
+
     **Full diff**: https://github.com/asgard-ai-partners/asgard-fde-cli/compare/{{ .PreviousTag }}...{{ .Tag }}
 
 # ---------------------------------------------------------------------------
-# The channels below need extra setup; uncomment once that is in place.
+# The channels below are OFF, and while this tool is internal they stay off.
+#
+# **They do not fit a private repository.** A Homebrew tap or a Scoop bucket is
+# a second repository that has to be readable by whoever installs; making that
+# one private too means every user runs `brew tap` against a repo needing
+# credentials, which is more setup than the `gh release download` line the
+# release notes already give them - for a smaller audience than the tap exists
+# to serve. Audience decided internal-only, john 2026-09-06. If this ever goes
+# public, enabling them is the first thing to revisit.
 #
 # None of them declares helm or kubectl as a dependency, deliberately. A
 # dependency only fires on a package-manager install, so it would cover a
