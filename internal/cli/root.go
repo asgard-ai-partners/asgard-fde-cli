@@ -79,9 +79,12 @@ today. "asgard-cli request add" opens one, and every status the engagement keeps
 lives in the customer's repository, never in this tool, so the agent that opens
 that repo next can read where the work stands.
 
-With no repository yet, "asgard-cli guide init" says how one begins and
-"asgard-cli init" does it: the skeleton, the binding to a workspace and a
-pipeline on the platform, and the reference material describing that platform.
+With no repository yet, "asgard-cli init" writes one: the skeleton, and nothing
+else. It is the one command here written for a person rather than for an agent,
+because it runs before there is an agent to write for - what teaches one what a
+workspace is is the material init writes. Connecting the checkout to a platform
+comes after, guided by that agent.
+
 Which workspace and which pipeline are the only two facts a repository cannot
 supply about itself, so they are the only two it records - and neither is ever
 guessed, not even from a list of one.
@@ -171,7 +174,6 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 	)
 	addTo(cmd, groupBuild,
 		newInitCmd(),
-		newScaffoldCmd(),
 		newProjectCmd(),
 		newAddCmd(),
 		newLocalEnvCmd(),

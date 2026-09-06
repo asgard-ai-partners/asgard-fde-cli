@@ -29,7 +29,7 @@ end?**
 
   - Same audience as an existing project -> it goes in that project.
   - A new audience -> it is a **new project**: `asgard-cli project add <slug>`,
-    then `asgard-cli scaffold`, and it finds its own way from there.
+    which writes its chart skeleton too, and it finds its own way from there.
 
 Do not put a public capability into an internal project because the data happens
 to be nearby. The entry point and the read path follow the audience, and mixing

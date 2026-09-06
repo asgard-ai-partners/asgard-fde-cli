@@ -92,93 +92,68 @@ without deciding where in the help it belongs.
 
 ### `init`
 
-Onboard a repository, in one command: the skeleton, the binding, and the
-reference material describing the platform it deploys to.
+Write the repository skeleton here, so that a coding agent can take over.
 
 ```bash
-asgard-cli workspace list
-asgard-cli pipeline list --workspace <id>
-asgard-cli init --workspace <id> --pipeline <id>
+mkdir acme-asgard-kube && cd acme-asgard-kube
+asgard-cli init
 ```
 
 ```
-workspace   1878677014576107520  (JohnWS)
-pipeline    2095845443282931712  (iac-test -> asgard-ai-platform/asgard-iac-test)
-directory   /path/to/acme-asgard-kube
+This writes the Asgard repository skeleton into
 
-1/3 skeleton
-  created      .asgard-pipeline.yaml
+    /path/to/acme-asgard-kube
+
+and the repository will be called acme-asgard-kube, after that directory.
+
+Write it here? [Y/n]
+
+This is not a git repository yet. The skeleton expects one: the customer's
+design-time credentials live in a .env that a .gitignore line keeps out of git.
+
+Run `git init` here? [Y/n]
+
+  created      .agents/skills/asgard-fde-onboarding/SKILL.md
   ...
-2/3 binding
-  wrote        .asgard-cli.yaml
-3/3 reference material
-  ...
+45 created in /path/to/acme-asgard-kube
+
+Now open this directory in your coding agent and say:
+
+    Connect this repo to the Asgard platform
 ```
 
-It runs `scaffold`, writes `.asgard-cli.yaml` beside the declaration that
-scaffold produced, and runs `skill update` - in the only order that works, since
-the binding belongs beside a declaration that has to exist first. Each is still
-its own command and each can be re-run alone; they are composed here because a
-list of three steps kept in prose is a list that goes stale, and this one did.
+**This is the one command written for a person, and the only one that asks
+questions.** Everything else here is written for a coding agent working in a
+repository that already exists - and until this has run, that repository does
+not: no `AGENTS.md`, no `CLAUDE.md`, no `.agents/skills/`. An agent opened in an
+empty directory knows nothing about Asgard at all, which is why asking it to run
+a command that needs a workspace id was circular.
 
-**It chooses nothing.** Both ids are given or already recorded; with neither, it
-lists the candidates and stops, and it does that for a list of one exactly as
-for a list of five. On a repository that already records both, neither flag is
-needed - so re-running it after an upgrade is a safe way to bring a repository
-current.
+**It touches no network and needs no account.** The skeleton is a fact about
+this tool, not about any platform, so it can be written on a plane, before a
+workspace exists, or before anybody has signed in. That is what makes it
+possible to run first.
 
-**It does not create the pipeline.** That binds a repository on the provider and
-needs a VCS connection, which is a decision about the platform rather than about
-this checkout: `asgard-cli pipeline create`. `--force` overwrites the skeleton;
-`--skip-skills` leaves step 3 out and reports it as skipped, which is not a
-pass.
+**Connecting the checkout to a platform is deliberately not part of it.**
+Signing in, choosing a workspace, creating a pipeline and fetching the material
+describing the server all come afterwards, guided by the agent this command just
+equipped - which is a better guide than a list of six commands somebody follows
+by hand. `asgard-cli gate` says what is still missing at any point.
 
-There used to be a different `init`, which wrote `.asgard-config.json`. That
-file is gone: the project list is read off the repository, the customer's name
-is asked of the platform, and the deployment "shape" it recorded was a claim
-about intent that no tool can check.
+Run it again whenever this CLI has moved on or a project was added: existing
+files are left alone and reported as skipped. `--force` takes the newer shipped
+material, discarding local edits to the skeleton; files this tool writes into -
+the indexes, the open-questions table, the living spec - are preserved either
+way and reported. `--yes` asks nothing, which is also what happens when stdin is
+not a terminal, so a re-run from an agent or from CI needs no interaction.
 
-### `project add`
+It refuses to write into a home directory or a filesystem root. Forty-five files
+one directory up from where they were meant is the mistake worth a guard.
 
-Write a project's chart skeleton under `projects/<slug>/chart/app`.
-
-```bash
-asgard-cli project add internal
-```
-
-A project is one Helm chart. **Which releases deploy it, and to which platform
-project, is declared in `.asgard-pipeline.yaml`** - this writes the chart, and
-declaring a release for it is a separate step that this does not do.
-
-**Nothing records the project anywhere else.** It exists because the directory
-exists and because the declaration names its chart; there is no third list to
-keep in step, and no way for one to disagree with the others. Existing files are
-left alone, so it is safe to re-run.
-
-The slug ends up in the names the chart renders, so keep it short: Kubernetes
-caps a name at 63 characters and names derived from this inherit its length.
-
-### `scaffold`
-
-Write the repository skeleton, including the declaration everything else hangs
-off - **for a repository that is not bound to a pipeline yet**:
-
-```bash
-asgard-cli scaffold
-```
-
-[`init`](#init) is what to run when the platform already has a pipeline for this
-repository: it runs this, records the binding, and fetches the reference
-material. **This is the same command with the platform left out**, and that is
-the one thing it does that `init` cannot - `init` requires a workspace id and a
-pipeline id and refuses to guess either, and a repository with no pipeline has
-neither to give. Two cases look like that: before there is an account (a
-proposal, a spike, a repository written while somebody creates the workspace),
-and an existing repository being migrated onto the Pipeline, which already has
-charts and its own CI and lacks the skeleton and a pipeline in that order.
-
-Once the pipeline exists, `asgard-cli init` records it, and re-running reports
-most of the skeleton as already present.
+**There is no separate `scaffold` command.** There used to be - it was this
+without the platform steps, back when `init` had platform steps. Once `init`
+stopped needing a session the two did the same thing, and two commands doing the
+same thing is a question that gets asked.
 
 It writes the part of a customer repo that is the same for every engagement:
 
@@ -195,12 +170,6 @@ It writes the part of a customer repo that is the same for every engagement:
 What it does **not** write is the customer's own knowledge: which systems exist,
 how the projects split, what the CRs look like. That is what the onboarding
 produces, and no template can generate it.
-
-Re-running is safe. Existing files are left alone and counted as already
-present, so it can be run again after adding a project, or when a file was
-deleted by hand. `--force` overwrites, which discards local edits - and is how a
-repository takes shipped material this CLI has changed since, which is otherwise
-reported as `stale` rather than replaced silently.
 
 The generated skeleton passes its own gate on the first run:
 
@@ -231,7 +200,6 @@ asgard-cli find "<terms>"          # reach any of it by subject
 
 ```
   init           Start the onboarding
-  scaffold       Write the repository skeleton
   requirements   Turn what the customer said into a request
   projects       Decide how the work splits into projects
   data-sources   Wire up the customer's databases
@@ -721,7 +689,7 @@ distribution - neither kubectl nor helm is in the Debian or Ubuntu default
 repositories, so the honest answer there is not an `apt install`. It exits
 non-zero when a required tool is missing, so it works as a CI preflight.
 
-`init`, `scaffold`, `project`, `request`, `task`, `question`, `decision`
+`init`, `project`, `request`, `task`, `question`, `decision`
 and `check` need none of these tools. `render`, `verify` and the three chart
 steps of `gate` need helm. **kubectl is optional**: nothing in this binary talks
 to a cluster, and `doctor` lists it because a person debugging a deployment

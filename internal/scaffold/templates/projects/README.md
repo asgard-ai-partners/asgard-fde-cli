@@ -15,7 +15,7 @@ branch 規則觸發,一份 chart 可以有好幾個 Release。namespace 從 `.Va
 來,不寫在 chart 裡。
 
 用 `asgard-cli project add <slug>` 產生上面的骨架。**不要手動建目錄** ——
-根 README 的 project 表由 `asgard-cli scaffold` 維護,清單直接讀這個目錄與
+根 README 的 project 表由 `asgard-cli init` 與 `asgard-cli project add` 維護,清單直接讀這個目錄與
 `.asgard-pipeline.yaml` 宣告的 chart 路徑(沒有第三份清單會跟它們不一致),
 而 `asgard-cli check` 會比對那張表與這裡實際的資料夾,兩邊對不上就是紅的。
 

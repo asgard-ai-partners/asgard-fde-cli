@@ -29,10 +29,46 @@
 
 ## Where this repo is, and what to do first
 
-`asgard-cli` scaffolded this repo. What exists is the platform contract (this
+`asgard-cli init` wrote this repo. What exists is the platform contract (this
 file), the docs structure, the design-time skills, and an empty chart skeleton
 per project. **Everything customer-specific is still to be
 written**, including the sections of this file marked TODO.
+
+### If this checkout is not connected to a platform yet, that is the first job
+
+`asgard-cli init` needs no account and touches no network - the skeleton exists
+before the platform does, deliberately, so that a coding agent is in service as
+early as possible. **Connecting the checkout is the part that was left for you.**
+
+```bash
+asgard-cli gate      # says exactly what is missing, at any point
+```
+
+While `.asgard-cli.yaml` is absent, the `binding` step reports "not bound to a
+pipeline yet" and the `skills` step reports no session. Walk the FDE through it:
+
+```bash
+asgard-cli login --no-browser         # print the URL and hand it to them; do not
+                                      #   open a browser on their behalf
+asgard-cli workspace list             # show it; they choose
+asgard-cli workspace use <id>
+asgard-cli pipeline connections       # none? asgard-cli pipeline connect
+asgard-cli pipeline create --name <n> --connection <id> --repo <owner/name>
+asgard-cli pipeline use <id>
+asgard-cli skill update               # the CR reference material arrives here
+```
+
+Three things to know while doing it:
+
+- **`asgard-cli pipeline connect` can block on somebody else.** It installs a
+  GitHub App, which in many organisations needs an admin. Say so and stop, rather
+  than retrying: waiting a day for the right person is the normal outcome.
+- **Do not write any CR until `asgard-cli skill update` has run.** The skills
+  describing what this server accepts - the CR shapes, the processor catalogue -
+  are fetched, not shipped. Authoring against what you assume is exactly the
+  window that has cost this project a month before.
+- **Never ask anybody to type a password at you.** `asgard-cli local-env` opens a
+  form for them; see the rules at the end of this file.
 
 Read `docs/spec/<<.SpecSlug>>/` first. If its module index is empty, no behaviour
 has been settled yet and the first job is the three decisions below.
@@ -97,7 +133,7 @@ answer that looks obvious and is wrong.
 | `asgard-cli check` | one step of `gate`, when that is the step you are fixing |
 | `asgard-cli local-env` | **somebody has to give you a credential.** Opens a form on 127.0.0.1 for them to type it into, and reports back which keys were filled - never the values. Re-read `.env` after it, since they can add keys |
 | `asgard-cli project add <slug>` | the engagement discovers a new project |
-| `asgard-cli scaffold` | after adding a project, to write its chart skeleton. Safe to re-run - it never overwrites a file that already exists, so edits to this file survive |
+| `asgard-cli init` | **when this CLI has moved on.** It wrote this skeleton and re-running is safe: files that already exist are left alone and reported, so edits to this file survive. `--force` takes the newer shipped material |
 | `asgard-cli skill update` | **when the platform says the reference material here is behind.** It writes what the Asgard server this repository deploys to actually enforces - the processor catalogue and its config keys - into `.agents/skills/`. Commit what it writes; the diff is the changelog |
 
 What each chart declares is read from what is on disk - which files exist, which
@@ -626,7 +662,7 @@ It runs everything this machine can check, in order, and a step that could not r
 as skipped rather than passed:
 
 **`asgard-cli gate --help` is the authoritative list**; the table below is a convenience copy in
-this repository and moves only when `asgard-cli scaffold` is re-run (which reports it as `stale`
+this repository and moves only when `asgard-cli init` is re-run (which reports it as `stale`
 when this CLI has since changed it).
 
 | step | what it proves |

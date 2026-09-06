@@ -30,8 +30,6 @@ var prompts embed.FS
 type Name string
 
 const (
-	Init        Name = "init"
-	Scaffold    Name = "scaffold"
 	Projects    Name = "projects"
 	DataSources Name = "data-sources"
 	ReadPath    Name = "read-path"
@@ -90,8 +88,6 @@ func titleOf(file string) string {
 
 // Stages lists every stage in order.
 var Stages = []Stage{
-	{Name: Init, promptF: "00-init.md"},
-	{Name: Scaffold, promptF: "01-scaffold.md"},
 	{Name: Projects, promptF: "02-projects.md"},
 	{Name: DataSources, promptF: "03-data-sources.md"},
 	{Name: ReadPath, promptF: "04-read-path.md"},
@@ -134,11 +130,10 @@ func Find(name string) (Stage, bool) {
 
 // State is what the repository looks like right now.
 type State struct {
-	Scaffolded bool
-	Projects   []ProjectState
-	Requests   []work.Request
-	Tasks      []work.Task
-	Questions  []work.Question
+	Projects  []ProjectState
+	Requests  []work.Request
+	Tasks     []work.Task
+	Questions []work.Question
 
 	// References is how many files of customer material have been filed. It is
 	// here so the interview prompt can tell the difference between an interview
@@ -230,14 +225,6 @@ func (p ProjectState) Summary() string {
 // Inspect reads the repository at root and reports its state.
 func Inspect(root string) (State, error) {
 	state := State{}
-
-	// AGENTS.md is the marker: scaffold always writes it, and it is the file an
-	// agent is told to read first.
-	if _, err := os.Stat(filepath.Join(root, "AGENTS.md")); err == nil {
-		state.Scaffolded = true
-	} else if !os.IsNotExist(err) {
-		return state, fmt.Errorf("stat AGENTS.md: %w", err)
-	}
 
 	projects, err := repo.Projects(root)
 	if err != nil {
@@ -453,8 +440,6 @@ func (s Stage) String() string {
 		return "nothing in flight"
 	case Requirements:
 		return "the interview"
-	case Init:
-		return "not started yet"
 	}
 	return fmt.Sprintf("%s: %s", s.Name, s.Title)
 }

@@ -111,7 +111,6 @@ Ask —— 平台是什麼、一個形狀怎麼組起來
 
 Build —— 寫出 repo 與裡面的 CR
   init                   一個指令完成 onboarding：骨架 + 綁定 + 參考素材
-  scaffold               只寫骨架
   project                每份 chart 宣告了什麼
     add <slug>           寫一個 project 的 chart 骨架
   add <kind> <name>      寫一份 CR 骨架，接上 chart 已宣告的東西
@@ -145,63 +144,45 @@ Deploy —— 平台，以及它知道的事
 
 ### `init`
 
-一個指令完成 repo 的 onboarding：骨架、綁定、以及描述它要部署到哪座平台的參考素材。
+把 repo 骨架寫在這裡，好讓 coding agent 接手。
 
 ```bash
-asgard-cli workspace list
-asgard-cli pipeline list --workspace <id>
-asgard-cli init --workspace <id> --pipeline <id>
+mkdir acme-asgard-kube && cd acme-asgard-kube
+asgard-cli init
 ```
 
 ```
-workspace   1878677014576107520  (JohnWS)
-pipeline    2095845443282931712  (iac-test -> asgard-ai-platform/asgard-iac-test)
-directory   /path/to/acme-asgard-kube
+This writes the Asgard repository skeleton into
 
-1/3 skeleton
-  created      .asgard-pipeline.yaml
+    /path/to/acme-asgard-kube
+
+and the repository will be called acme-asgard-kube, after that directory.
+
+Write it here? [Y/n]
+
+This is not a git repository yet. ...
+Run `git init` here? [Y/n]
+
+  created      .agents/skills/asgard-fde-onboarding/SKILL.md
   ...
-2/3 binding
-  wrote        .asgard-cli.yaml
-3/3 reference material
-  ...
+45 created in /path/to/acme-asgard-kube
+
+Now open this directory in your coding agent and say:
+
+    Connect this repo to the Asgard platform
 ```
 
-它跑 `scaffold`、把 `.asgard-cli.yaml` 寫在 scaffold 產生的宣告檔旁邊、再跑 `skill update` —— 順序是唯一可行的那個，因為綁定要放在一個必須先存在的宣告檔旁邊。三者各自仍是獨立指令、各自可以單獨重跑；合在一起是因為**一份寫在散文裡的三步清單會過期**，而這一份真的過期過。
+**這是唯一寫給人的指令，也是唯一會問問題的。** 這個工具裡其他東西都是寫給「在一個已經存在的 repo 裡工作的 coding agent」—— 而在這個指令跑完之前，那個 repo 並不存在：沒有 `AGENTS.md`、沒有 `CLAUDE.md`、沒有 `.agents/skills/`。**一個被打開在空目錄裡的 agent 對 Asgard 一無所知**，所以要求它去跑一個需要 workspace id 的指令是循環的。
 
-**它什麼都不猜。** 兩個 id 要嘛給、要嘛已經記著；兩個都沒有時它列出候選然後停下來，而且**一個候選跟五個候選的做法完全一樣**。在一個已經記著兩者的 repo 上，兩個旗標都不需要 —— 所以升級之後重跑一次是把 repo 帶到最新的安全做法。
+**它不碰網路、不需要帳號。** 骨架是關於這個工具的事實，不是關於任何平台的，所以飛機上、workspace 還沒開、還沒有人登入，都寫得出來。那正是它能當第一個指令的原因。
 
-**它不建立 pipeline。** 那件事會在 provider 上綁定一個 repo、需要一個 VCS connection，是關於平台的決定而不是關於這個 checkout 的：`asgard-cli pipeline create` 做那件事，這裡只記錄結果。
+**把 checkout 接上平台刻意不在裡面。** 登入、選 workspace、建 pipeline、抓描述 server 的素材，全部在之後 —— 由這個指令剛裝備好的 agent 帶著走，那比讓人照著六個指令的清單手動走要好。`asgard-cli gate` 在任何時候都會說還缺什麼。
 
-`--force` 覆寫骨架；`--skip-skills` 跳過第 3 步並**報成 skipped，那不是 pass**。
+CLI 有更新、或新增了 project 的時候就再跑一次：既有檔案不動、報成 skipped。`--force` 取用比較新的出貨素材（會丟掉你對骨架的修改）；被這個工具寫入過的檔案 —— 索引、open-questions 表、living spec —— 兩種情況都會保留並回報。`--yes` 什麼都不問，stdin 不是終端機時行為相同，所以 agent 或 CI 重跑不需要互動。
 
-以前有另一個 `init`，它寫 `.asgard-config.json`。那個檔沒了：project 清單直接讀 repo、客戶名字跟平台問、而它記的部署「形狀」是一個沒有工具能檢查的意圖。
+它拒絕寫進家目錄或檔案系統根目錄。**四十五個檔案寫錯一層目錄**，是值得設一道防呆的錯。
 
-### `project add`
-
-在 `projects/<slug>/chart/app` 底下寫一個 project 的 chart 骨架。
-
-```bash
-asgard-cli project add internal
-```
-
-一個 project 就是一份 Helm chart。**哪些 Release 部署它、部署到哪個平台 Project，是在 `.asgard-pipeline.yaml` 裡宣告的** —— 這個指令寫 chart，替它宣告一個 Release 是另一件事，這裡不做。
-
-**沒有任何地方另外記錄這個 project。** 它存在是因為目錄存在、以及宣告檔指名了它的 chart；沒有第三份清單要同步，也就沒有任何一份會跟其他兩份不一致。既有檔案不動，所以重跑是安全的。
-
-slug 會出現在 chart 渲染出來的物件名稱裡，所以要短：Kubernetes 的名稱上限是 63 字元，而衍生出來的名稱會繼承它的長度。
-
-### `scaffold`
-
-寫出 repo 骨架，包含其他東西都掛在上面的那份宣告檔 —— **給還沒綁定 pipeline 的 repo 用**：
-
-```bash
-asgard-cli scaffold
-```
-
-平台上已經有這個 repo 的 pipeline 時，要跑的是 [`init`](#init)：它會跑這個、記下綁定、再抓參考素材。**這個指令就是同一件事把平台拿掉**，而那正是它能做而 `init` 不能做的唯一一件事 —— `init` 兩個 id 都必填、而且都不猜，一個還沒有 pipeline 的 repo 兩個都給不出來。真的長這樣的情境有兩種：**還沒開戶**（提案、spike、有人正在建 workspace 的同時先寫 repo），以及**既有 repo 要遷移過來**（已經有 chart 和自己的 CI，缺的是骨架與 pipeline，順序也是這樣）。
-
-pipeline 建好之後跑 `asgard-cli init` 記下它，重跑是安全的，骨架多半會被報成已存在。
+**沒有獨立的 `scaffold` 指令了。** 以前有 —— 它就是這個把平台步驟拿掉，而當時 `init` 有平台步驟。`init` 不再需要 session 之後兩者做的事完全一樣，而兩個做同樣事的指令就是一個會被問的問題。
 
 它寫的是每個 engagement 都一樣的那部分：
 
@@ -217,8 +198,6 @@ pipeline 建好之後跑 `asgard-cli init` 記下它，重跑是安全的，骨�
 
 它**不寫**的是客戶自己的知識：有哪些系統、工作怎麼切分、CR 長什麼樣。那是 onboarding 產出的，沒有模板生得出來。
 
-重跑是安全的。既有檔案不動並計為已存在，所以加了 project 之後、或某個檔被手動刪掉之後可以再跑一次。`--force` 覆寫，那會丟掉對骨架的本機修改 —— 而它也是**升級後重新取用 shipped 素材**的方式，否則那些檔會被報成 `stale` 而不是被安靜換掉。
-
 產生出來的骨架第一次跑就過得了自己的 gate：
 
 ```bash
@@ -226,6 +205,20 @@ asgard-cli gate
 ```
 
 **不要手動跑 `helm lint`。** 平台會在每次渲染時注入保留的 `.Values.asgard` 區塊，而 chart **不可以**在自己的 `values.yaml` 宣告它 —— 所以不帶 `-f` 裸跑會在每個讀 `.Values.asgard.projectEnvironmentId` 的 chart 上失敗，也就是每個會貼 label 的 chart。`gate` 只供給那一個檔案，其他都不給。
+
+### `project add`
+
+在 `projects/<slug>/chart/app` 底下寫一個 project 的 chart 骨架。
+
+```bash
+asgard-cli project add internal
+```
+
+一個 project 就是一份 Helm chart。**哪些 Release 部署它、部署到哪個平台 Project，是在 `.asgard-pipeline.yaml` 裡宣告的** —— 這個指令寫 chart，替它宣告一個 Release 是另一件事，這裡不做。
+
+**沒有任何地方另外記錄這個 project。** 它存在是因為目錄存在、以及宣告檔指名了它的 chart；沒有第三份清單要同步，也就沒有任何一份會跟其他兩份不一致。既有檔案不動，所以重跑是安全的。
+
+slug 會出現在 chart 渲染出來的物件名稱裡，所以要短：Kubernetes 的名稱上限是 63 字元，而衍生出來的名稱會繼承它的長度。
 
 ### `guide`
 
@@ -239,7 +232,6 @@ asgard-cli find "<terms>"          # 依主題到達其中任何一份
 
 ```
   init           開始 onboarding
-  scaffold       寫出 repo 骨架
   requirements   把客戶說的話變成一個 request
   projects       決定工作怎麼切成 project
   data-sources   接上客戶的資料庫
@@ -444,7 +436,7 @@ asgard-cli 的散佈方式沒有一種裝得了它們。tar.gz、zip 與 `go ins
 
 所以 binary 本身就是那個機制。每個需要 helm 的指令都先透過 `internal/tool` 解析它，不在就帶著這台機器的安裝指令拒絕；`asgard-cli doctor` 一次報告全部。
 
-`init`、`scaffold`、`project`、`request`、`task`、`question`、`decision`、`check` **都不需要這些工具**。`render`、`verify` 與 `gate` 的三個 chart 步驟需要 helm。**kubectl 是選用的**：這個 binary 沒有任何一處跟叢集講話，`doctor` 列它是因為一個在除錯部署的人仍然想知道它在不在。
+`init`、`project`、`request`、`task`、`question`、`decision`、`check` **都不需要這些工具**。`render`、`verify` 與 `gate` 的三個 chart 步驟需要 helm。**kubectl 是選用的**：這個 binary 沒有任何一處跟叢集講話，`doctor` 列它是因為一個在除錯部署的人仍然想知道它在不在。
 
 ### 三個檔案
 
