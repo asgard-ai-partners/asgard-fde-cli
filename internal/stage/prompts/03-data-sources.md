@@ -65,11 +65,19 @@ is visible in column names.
          .venv/bin/python .agents/skills/db-query/scripts/query.py \
            --class postgres --prefix UOF_DB_ --keys >> .env
 
-  2. Ask whoever owns that system for the values. **Name the keys; never ask
-     anybody to type a password into the conversation.** The coordinates and the
-     password both come from them - not from the cluster. The Secret in the
-     cluster is the deployed CR's copy, on its own lifecycle; reading it to get
-     a design-time credential conflates two mechanisms that must stay apart.
+  2. Hand the filling-in to whoever owns that system:
+
+         asgard-cli local-env --focus UOF_DB_HOST,UOF_DB_PASSWORD
+
+     It opens a form on 127.0.0.1 and tells you which keys got a value, never
+     what the value was. **Never ask anybody to type a password into the
+     conversation.** The coordinates and the password both come from them - not
+     from the cluster. The Secret in the cluster is the deployed CR's copy, on
+     its own lifecycle; reading it to get a design-time credential conflates two
+     mechanisms that must stay apart.
+
+     **Re-read .env after they save.** They can add keys - a second database
+     nobody had mentioned - and that is deliberate.
 
   3. Verify the connection before writing any CR:
 

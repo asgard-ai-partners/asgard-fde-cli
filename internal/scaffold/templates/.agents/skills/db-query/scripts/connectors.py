@@ -158,14 +158,35 @@ def parse_value(raw: str) -> str:
       - `#` 只有在**前面有空白**(或整行開頭)時才開始註解。所以 `abc#123` 是一個
         完整的密碼,不是 `abc`。
       - 引號內的 `#` 一律是值的一部分。值本身要保留前後空白時,就用引號包起來。
+        單引號裡一切照字面;雙引號裡認 `\\\\` `\\"` `\\n` `\\r` `\\t`。
+
+    **Go 那邊有第二份實作**(`internal/localenv` 的 `ParseValue`),因為 local-env
+    的 UI 讀寫同一個檔。兩邊照同一段描述寫,改一邊就要改另一邊。
     """
     raw = raw.strip()
-    if raw[:1] in ('"', "'"):
-        quote = raw[0]
-        end = raw.find(quote, 1)
-        if end != -1:
-            return raw[1:end]
-        return raw[1:]          # 引號沒收尾,當作整段都是值
+    if not raw:
+        return ""
+    if raw[0] == "'":
+        end = raw.find("'", 1)
+        return raw[1:end] if end != -1 else raw[1:]
+    if raw[0] == '"':
+        # 雙引號裡認 \\ \" \n \r \t —— 這是 PEM 能寫在一行裡的原因。
+        out, i, body = [], 0, raw[1:]
+        while i < len(body):
+            ch = body[i]
+            if ch == '"':
+                break
+            if ch == "\\" and i + 1 < len(body):
+                nxt = body[i + 1]
+                # 認不得的跳脫兩個字元都留著:值裡的 Windows 路徑不是筆誤,
+                # 安靜吃掉它的反斜線才是。
+                out.append({"n": "\n", "r": "\r", "t": "\t",
+                            "\\": "\\", '"': '"'}.get(nxt, "\\" + nxt))
+                i += 2
+                continue
+            out.append(ch)
+            i += 1
+        return "".join(out)
     cut = re.search(r"(?:^|\s)#", raw)
     if cut:
         raw = raw[: cut.start()]

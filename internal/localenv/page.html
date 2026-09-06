@@ -1,0 +1,250 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>asgard-cli local-env</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #fbfbfa; --fg: #1a1a19; --muted: #6b6b66; --line: #e0e0dc;
+    --card: #ffffff; --focus: #fff8e1; --focusline: #e8c56a; --accent: #2f6f4f;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #17181a; --fg: #e8e8e4; --muted: #9a9a94; --line: #2e3033;
+      --card: #1e2022; --focus: #2b2718; --focusline: #7a6428; --accent: #6bbd8e;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg);
+         font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Noto Sans TC", sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 32px 20px 96px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .path { color: var(--muted); font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+          margin: 0 0 20px; word-break: break-all; }
+  .lede { border-left: 3px solid var(--line); padding: 2px 0 2px 14px; color: var(--muted);
+          margin: 0 0 28px; font-size: 14px; }
+  .row { background: var(--card); border: 1px solid var(--line); border-radius: 8px;
+         padding: 14px 16px; margin-bottom: 10px; }
+  .row.focus { background: var(--focus); border-color: var(--focusline); }
+  .key { font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 600;
+         display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .badge { font: 11px/1 ui-sans-serif, system-ui, sans-serif; font-weight: 500;
+           border: 1px solid var(--line); border-radius: 20px; padding: 3px 8px; color: var(--muted); }
+  .badge.todo { border-color: var(--focusline); color: var(--fg); background: var(--focus); }
+  .note { color: var(--muted); font-size: 13px; margin: 4px 0 8px; }
+  .field { display: flex; gap: 8px; align-items: stretch; }
+  input, textarea { flex: 1; min-width: 0; background: var(--bg); color: var(--fg);
+         border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px;
+         font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  textarea { min-height: 88px; resize: vertical; }
+  input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  button { border: 1px solid var(--line); background: var(--card); color: var(--fg);
+           border-radius: 6px; padding: 8px 12px; font-size: 13px; cursor: pointer; }
+  button:hover { border-color: var(--muted); }
+  .bar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--card);
+         border-top: 1px solid var(--line); padding: 12px 20px; display: flex; gap: 10px;
+         align-items: center; justify-content: center; }
+  .bar .grow { flex: 1; max-width: 740px; display: flex; gap: 10px; align-items: center; }
+  .primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .status { color: var(--muted); font-size: 13px; }
+  .add { margin-top: 22px; padding-top: 18px; border-top: 1px dashed var(--line); }
+  .add .field { margin-top: 8px; }
+  .done { text-align: center; padding: 80px 20px; }
+  .done h1 { font-size: 18px; }
+</style>
+
+<main id="app">
+  <h1>Design-time credentials</h1>
+  <p class="path" id="path"></p>
+  <p class="lede">
+    These are the values the coding agent uses <strong>on this machine</strong> to read the
+    systems being modelled. They are written to a file that is never committed.
+    <br><br>
+    This is not the same thing as a pipeline variable or a runtime secret in the cluster -
+    the value may be identical, but each is set in its own place. Nothing typed here leaves
+    this computer, and nothing typed here is printed back to the agent: it is told which keys
+    were filled in, never what they were filled in with.
+  </p>
+  <div id="rows"></div>
+
+  <div class="add">
+    <div class="key">Add a key</div>
+    <p class="note">
+      If you know about something the agent did not ask for - a second database, another
+      account - add it here. The agent re-reads the file after you save, so it will see it.
+    </p>
+    <div class="field">
+      <input id="newkey" placeholder="NEW_DB_HOST" autocomplete="off" spellcheck="false">
+      <button id="addbtn" type="button">Add</button>
+    </div>
+    <p class="note" id="adderr"></p>
+  </div>
+</main>
+
+<div class="bar" id="bar">
+  <div class="grow">
+    <span class="status" id="status"></span>
+    <span style="flex:1"></span>
+    <button type="button" id="cancel">Cancel</button>
+    <button type="button" id="save" class="primary">Save and close</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  var token = new URLSearchParams(location.search).get("t") || "";
+  var rows = document.getElementById("rows");
+  var statusEl = document.getElementById("status");
+  var entries = [];
+
+  function api(path, body) {
+    return fetch(path, {
+      method: body ? "POST" : "GET",
+      headers: { "X-Asgard-Token": token, "Content-Type": "application/json" },
+      body: body ? JSON.stringify(body) : undefined
+    });
+  }
+
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined) n.textContent = text;
+    return n;
+  }
+
+  // A value long enough to be a PEM gets a textarea. Newlines are written to
+  // the file as a literal \n, which is how a key lives on one line.
+  function multiline(v) { return v.length > 120 || v.indexOf("\n") >= 0; }
+
+  function render() {
+    rows.textContent = "";
+    entries.forEach(function (e, i) {
+      var row = el("div", "row" + (e.focus ? " focus" : ""));
+      var key = el("div", "key");
+      key.appendChild(el("span", null, e.key));
+      if (!e.value) key.appendChild(el("span", "badge todo", "to fill in"));
+      else if (e.secret) key.appendChild(el("span", "badge", "hidden"));
+      if (e.focus) key.appendChild(el("span", "badge", "asked for"));
+      row.appendChild(key);
+      if (e.note) row.appendChild(el("p", "note", e.note));
+
+      var field = el("div", "field");
+      // A secret starts masked whatever shape it is. A masked control is always
+      // a single-line password input, even for a value that needs a textarea to
+      // edit: a textarea cannot mask its contents, and the first version of this
+      // page shipped a PEM in the clear behind a button labelled "Hide".
+      var eye = el("button", null, "");
+      eye.type = "button";
+
+      function control(masked) {
+        var v = entries[i].value;
+        var input;
+        // A single-line input silently drops the newlines out of any value put
+        // into it - the HTML sanitisation step - so a PEM masked that way loses
+        // its line breaks the moment somebody toggles Show and Hide. A masked
+        // multiline value is therefore shown as a stand-in that is not the
+        // value at all, and editing it means revealing it first.
+        if (masked && v.indexOf("\n") >= 0) {
+          input = el("input");
+          input.type = "text";
+          input.readOnly = true;
+          input.value = "\u2022".repeat(24) + "  (" + v.length + " characters, " +
+                        (v.split("\n").length) + " lines)";
+          return input;
+        }
+        if (masked) {
+          input = el("input");
+          input.type = "password";
+        } else if (multiline(v)) {
+          input = el("textarea");
+        } else {
+          input = el("input");
+          input.type = "text";
+        }
+        input.value = v;
+        input.autocomplete = "off";
+        input.spellcheck = false;
+        input.addEventListener("input", function () {
+          entries[i].value = input.value;
+          statusEl.textContent = "";
+        });
+        return input;
+      }
+
+      var masked = e.secret;
+      var input = control(masked);
+      field.appendChild(input);
+
+      if (e.secret) {
+        eye.textContent = masked ? "Show" : "Hide";
+        eye.addEventListener("click", function () {
+          masked = !masked;
+          var next = control(masked);
+          field.replaceChild(next, input);
+          input = next;
+          eye.textContent = masked ? "Show" : "Hide";
+          input.focus();
+        });
+        field.appendChild(eye);
+      }
+      row.appendChild(field);
+      rows.appendChild(row);
+    });
+  }
+
+  function finish(title, detail) {
+    document.getElementById("bar").remove();
+    var app = document.getElementById("app");
+    app.textContent = "";
+    app.className = "done";
+    app.appendChild(el("h1", null, title));
+    app.appendChild(el("p", "note", detail));
+  }
+
+  document.getElementById("addbtn").addEventListener("click", function () {
+    var box = document.getElementById("newkey");
+    var err = document.getElementById("adderr");
+    var name = box.value.trim();
+    err.textContent = "";
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) {
+      err.textContent = "A key is letters, digits and underscore, and does not start with a digit.";
+      return;
+    }
+    if (entries.some(function (e) { return e.key === name; })) {
+      err.textContent = name + " is already on the list.";
+      return;
+    }
+    entries.push({ key: name, value: "", note: "", secret: /pass|secret|token|key|auth/i.test(name), focus: true });
+    box.value = "";
+    render();
+    window.scrollTo(0, document.body.scrollHeight);
+  });
+
+  document.getElementById("save").addEventListener("click", function () {
+    statusEl.textContent = "saving...";
+    api("/api/save", { entries: entries.map(function (e) { return { key: e.key, value: e.value }; }) })
+      .then(function (r) {
+        if (!r.ok) return r.text().then(function (t) { throw new Error(t); });
+        var filled = entries.filter(function (e) { return e.value; }).length;
+        finish("Saved", filled + " of " + entries.length + " keys have a value. You can close this tab.");
+      })
+      .catch(function (e) { statusEl.textContent = "not saved: " + e.message; });
+  });
+
+  document.getElementById("cancel").addEventListener("click", function () {
+    api("/api/cancel", {}).then(function () {
+      finish("Nothing was saved", "The file is unchanged. You can close this tab.");
+    });
+  });
+
+  api("/api/env").then(function (r) { return r.json(); }).then(function (data) {
+    document.getElementById("path").textContent = data.path;
+    entries = data.entries || [];
+    if (!entries.length) {
+      rows.appendChild(el("p", "note",
+        "This file has no keys yet. Add the ones you need below, or let the agent write them first."));
+    }
+    render();
+  });
+})();
+</script>

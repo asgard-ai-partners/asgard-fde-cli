@@ -98,11 +98,23 @@ The flow is:
      --class postgres --prefix UOF_DB_ --keys >> .env
    ```
 
-3. Ask the user to fill in the values - **name the keys, never ask for a value**.
-4. Run `select 1` to confirm, then get on with the introspection.
+3. Open the form for whoever holds the credential:
+
+   ```bash
+   asgard-cli local-env --focus UOF_DB_HOST,UOF_DB_PASSWORD
+   ```
+
+   It serves one page on 127.0.0.1, and when they save it tells you **which
+   keys now have a value and nothing else**. `--focus` highlights the ones you
+   are waiting for without hiding the rest.
+
+4. **Re-read `.env`.** They can add keys from the form - a second database you
+   had not heard of - and that is deliberate, so do not assume you got back
+   exactly the list you asked for.
+5. Run `select 1` to confirm, then get on with the introspection.
 
 **You write the keys because only you know what you are about to connect to.**
-The user knows the values; naming what has to be filled in is your half of it.
+They know the values; naming what has to be filled in is your half of it.
 
 ### Three kinds of credential, and they are not interchangeable
 
