@@ -69,6 +69,10 @@ table to stdout, so it pipes.
 a client-side fetch limit, not something appended to your SQL, so it works the
 same on every engine.
 
+**A failure is one sentence, not a stack trace** - which credential or which
+column, in the driver's own words. `--traceback` on the same command gives the
+full thing when the sentence is not enough.
+
 **`--prefix` is not optional and there is no default.** One repository can
 connect to two PostgreSQL databases, which are two groups of keys in one `.env`
 and cannot share names. The prefix is how you say which group. If you omit it,

@@ -104,7 +104,6 @@ SPECS: dict[str, Spec] = {
                 Field("JWT_ACCESS_TOKEN", required=False, secret=True),
                 Field("SSL_CERTIFICATE_PEM", required=False, secret=True)),
         connect="dbapi", package="trino>=0.330",
-        at_least_one=("PASSWORD", "JWT_ACCESS_TOKEN"),
     ),
     "athena": Spec(
         fields=(Field("REGION", note="例:ap-northeast-1"),
@@ -278,6 +277,10 @@ def assert_read_only(sql: str) -> None:
 
 Runner = Callable[[str, int], tuple[list[str], list[list[str]]]]
 
+# 由 query.py 依 --traceback 設定。診斷訊息蓋掉的是「哪個憑證錯、哪一欄不存在」
+# 那一層;真的要看 driver 的 stack 時,這個開關讓原例外原樣往上丟。
+SHOW_TRACEBACK = False
+
 
 def _need(cls: str, *modules: str):
     """載入 driver,缺了就講清楚要裝什麼。回傳第一個模組。"""
@@ -293,6 +296,23 @@ def _need(cls: str, *modules: str):
                 f"  或一次裝齊:.venv/bin/pip install -r "
                 f"{rel(pathlib.Path(__file__).with_name('requirements.txt'))}")
     return loaded[0]
+
+
+def _pem_file(pem: str) -> str:
+    """把 .env 裡的 PEM 字串寫成暫存檔,回傳路徑。
+
+    .env 是一行一個值,所以 PEM 多半寫成單行、換行是字面 `\\n` —— 跟 NetSuite
+    的私鑰同一個處理。行程結束時刪掉。
+    """
+    import atexit
+    import tempfile
+    body = (pem.replace("\\r\\n", "\n").replace("\\n", "\n")
+               .replace("\\r", "").replace("\r", "").strip()) + "\n"
+    fd, path = tempfile.mkstemp(suffix=".pem")
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        f.write(body)
+    atexit.register(lambda: os.path.exists(path) and os.remove(path))
+    return path
 
 
 def _dbapi_connect(cls: str, cfg: dict[str, str]):
@@ -328,12 +348,30 @@ def _dbapi_connect(cls: str, cfg: dict[str, str]):
         # dbapi 與 auth 都要顯式載入,import trino 不會把它們帶進來。
         dbapi = _need(cls, "trino.dbapi", "trino.auth")
         from trino import auth as trino_auth
-        if cfg.get("jwt_access_token"):
-            how = trino_auth.JWTAuthentication(cfg["jwt_access_token"])
-        else:
-            how = trino_auth.BasicAuthentication(cfg["user"], cfg["password"])
-        return dbapi.connect(host=cfg["host"], port=int(cfg["port"]), user=cfg["user"],
-                             http_scheme=cfg.get("scheme") or "https", auth=how)
+        scheme = cfg.get("scheme") or "https"
+        kw = dict(host=cfg["host"], port=int(cfg["port"]), user=cfg["user"],
+                  http_scheme=scheme)
+
+        # 三個憑證在 CRD 裡都是選填的,因為 Trino 可能擋在 gateway 後面、自己
+        # 不驗證。所以「沒有憑證」是一個合法的連法,不是設定漏填。
+        if scheme == "http":
+            # trino 的 client 會直接拒絕 basic over http,而 JWT 走明文等於把
+            # token 送出去。兩個都不送,並且講明為什麼。
+            if cfg.get("password") or cfg.get("jwt_access_token"):
+                raise SystemExit(
+                    "x trino 的 SCHEME 是 http,但同時給了 PASSWORD 或 "
+                    "JWT_ACCESS_TOKEN。\n"
+                    "  明文連線不送憑證:要嘛把 SCHEME 改成 https,要嘛把憑證留空"
+                    "(未驗證的 Trino 是合法的連法)。")
+        elif cfg.get("jwt_access_token"):
+            kw["auth"] = trino_auth.JWTAuthentication(cfg["jwt_access_token"])
+        elif cfg.get("password"):
+            kw["auth"] = trino_auth.BasicAuthentication(cfg["user"], cfg["password"])
+
+        if cfg.get("ssl_certificate_pem"):
+            # requests 要的是一個 CA bundle 檔案路徑,不是 PEM 字串。
+            kw["verify"] = _pem_file(cfg["ssl_certificate_pem"])
+        return dbapi.connect(**kw)
 
     if cls == "athena":
         pyathena = _need(cls, "pyathena")
@@ -357,7 +395,13 @@ def _dbapi_runner(conn) -> Runner:
     def run(sql: str, limit: int) -> tuple[list[str], list[list[str]]]:
         cur = conn.cursor()
         try:
-            cur.execute(sql)
+            try:
+                cur.execute(sql)
+            except Exception as e:
+                if SHOW_TRACEBACK:
+                    raise
+                # driver 的訊息通常帶著行號與位置,那是最有用的部分。
+                raise SystemExit(f"x 查詢失敗:{type(e).__name__}: {e}")
             if cur.description is None:
                 return [], []
             # psycopg 的 Column 有 .name;其他 driver 的 description 是 tuple。
@@ -377,7 +421,21 @@ def runner(cls: str, prefix: str) -> Runner:
     cfg = config(cls, prefix)
     how = SPECS[cls].connect
     if how == "dbapi":
-        return _dbapi_runner(_dbapi_connect(cls, cfg))
+        try:
+            conn = _dbapi_connect(cls, cfg)
+        except SystemExit:
+            raise
+        except Exception as e:
+            if SHOW_TRACEBACK:
+                raise
+            # driver 的原文留著(它才知道是密碼錯還是連不上),但不要 traceback:
+            # 八行 stack 把唯一有用的那行推到最下面,而且會印出這台機器的
+            # 絕對路徑。
+            raise SystemExit(
+                f"x 連不上 {cls} 前綴 '{prefix}':{type(e).__name__}: {e}\n"
+                f"  依序確認:host 與 port 通不通、帳密對不對、這個帳號看不看得到"
+                f"這個 database。憑證跟系統的擁有者要,不要去讀叢集的 Secret。")
+        return _dbapi_runner(conn)
     if how == "netsuite":
         import netsuite  # 同目錄
         return netsuite.runner(cfg)
@@ -411,6 +469,22 @@ def columns_query(cls: str, table: str) -> tuple[str, bool]:
         return netsuite.columns_sql(table), True
     if cls == "salesforce":
         raise SystemExit("x salesforce 走 describe 端點,不是 SQL(query.py 會自己處理)")
+    if cls == "trino":
+        # Trino 是聯邦查詢:information_schema 是**每個 catalog 一份**,不帶
+        # catalog 的話 apiserver 回 MISSING_CATALOG_NAME,而那個訊息不會提到
+        # 你少打的是什麼。所以這裡要三段式。
+        parts = [x.strip('"') for x in table.split(".")]
+        if len(parts) != 3:
+            raise SystemExit(
+                f"x trino 的表要寫成 catalog.schema.table(收到 '{table}')。\n"
+                "  它把好幾個來源掛在一起,catalog 就是掛哪一個。\n"
+                "  列出有哪些:--class trino --prefix <P> \"show catalogs\"")
+        catalog, schema, name = parts
+        return (f"select column_name, data_type, is_nullable "
+                f"from {catalog}.information_schema.columns "
+                f"where table_schema = '{schema}' and table_name = '{name}' "
+                f"order by ordinal_position"), False
+
     if cls == "oracle":
         # Oracle 的字典把識別字存成大寫。
         where = f"table_name = '{name.upper()}'"
