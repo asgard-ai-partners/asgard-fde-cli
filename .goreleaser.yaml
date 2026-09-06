@@ -96,6 +96,19 @@ changelog:
 # That makes the footer the install instructions. Somebody landing on a release
 # page cannot `brew install` this and cannot curl the tarball without a token,
 # so the page has to say what does work.
+#
+# **The footer is read by somebody installing a binary, and nothing else belongs
+# in it.** v0.1.0 shipped with a paragraph in it explaining why the download
+# pattern is spelled out rather than templated - true, useful, and addressed to
+# whoever edits this file. It is a comment now, which is where a note to a
+# maintainer goes:
+#
+#   the download pattern below is written out per-platform rather than as
+#   `{{ .Os }}`/`{{ .Arch }}`, because release notes are rendered ONCE for the
+#   whole release - those fields are artifact-scoped and are not in scope here.
+#   A footer referencing them fails at publish time, which is a tag you cannot
+#   take back, and neither `goreleaser check` (schema only) nor a snapshot
+#   (`--skip=publish`) renders the footer at all.
 release:
   prerelease: auto
   footer: |
@@ -115,11 +128,6 @@ release:
     windows on amd64 / arm64. On Debian or RPM hosts the `.deb` and `.rpm`
     below install the same binary.
 
-    (Spelled out rather than templated on purpose: release notes are rendered
-    once for the whole release, so there is no per-platform `.Os` or `.Arch` in
-    scope here. A template using them fails at publish time - which is a tag
-    you cannot take back.)
-
     A downloaded-by-CLI file is not quarantined by Gatekeeper the way a
     browser download is, so no `xattr` dance is needed.
 
@@ -130,7 +138,7 @@ release:
       go install github.com/asgard-ai-partners/asgard-fde-cli/cmd/asgard-cli@{{ .Tag }}
     ```
 
-    **Full diff**: https://github.com/asgard-ai-partners/asgard-fde-cli/compare/{{ .PreviousTag }}...{{ .Tag }}
+    {{ if .PreviousTag }}**Full diff**: https://github.com/asgard-ai-partners/asgard-fde-cli/compare/{{ .PreviousTag }}...{{ .Tag }}{{ end }}
 
 # ---------------------------------------------------------------------------
 # The channels below are OFF, and while this tool is internal they stay off.
