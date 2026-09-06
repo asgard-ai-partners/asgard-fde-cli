@@ -3,7 +3,7 @@ name: proposal-deck
 description: Use when deciding what to propose to the customer, or building any deck they will see - a discovery deck taken while the questions are still open, a proposal, a scope review, a phase kick-off, or a handover after the work lands. Covers how the shape is chosen and what phase 1 is, where a deck lives in this repo, which material it is allowed to be built from, the order a proposal argues in, how to say it in the customer's own words without claiming further than the evidence goes, and what must never appear on a customer's screen. Typesetting is delegated to the kami skill; this one owns the content.
 ---
 
-# Proposal decks for <<.Workspace.Name>>
+# Proposal decks
 
 A deck is the only thing in this repository the customer reads. Everything else
 records what we think; a deck records what they were told, and they agree to

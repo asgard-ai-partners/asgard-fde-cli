@@ -334,7 +334,6 @@ var projectStages = []struct {
 
 // Data is what a stage prompt is rendered with.
 type Data struct {
-	Workspace  repo.Workspace
 	Projects   []ProjectState
 	Requests   []work.Request
 	References int
@@ -417,7 +416,7 @@ func readPrompt(name string) ([]byte, error) {
 	return prompts.ReadFile("prompts/" + name)
 }
 
-func (s Stage) Prompt(ws repo.Workspace, state State) (string, error) {
+func (s Stage) Prompt(state State) (string, error) {
 	content, err := readPrompt(s.promptF)
 	if err != nil {
 		return "", fmt.Errorf("read prompt %s: %w", s.promptF, err)
@@ -430,7 +429,6 @@ func (s Stage) Prompt(ws repo.Workspace, state State) (string, error) {
 
 	var out strings.Builder
 	err = tmpl.Execute(&out, Data{
-		Workspace:  ws,
 		Projects:   state.Projects,
 		Requests:   work.ActiveRequests(state.Requests),
 		References: state.References,

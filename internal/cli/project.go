@@ -134,10 +134,6 @@ Existing files are left alone, so this is safe to re-run.`,
 			}
 			out := cmd.OutOrStdout()
 
-			ws, err := workspaceForTemplates(cmd)
-			if err != nil {
-				return err
-			}
 			projects, err := repo.Projects(root)
 			if err != nil {
 				return err
@@ -146,7 +142,7 @@ Existing files are left alone, so this is safe to re-run.`,
 				projects = append(projects, slug)
 			}
 
-			written, err := scaffold.Write(root, ws, projects, false)
+			written, err := scaffold.Write(root, projects, false)
 			if err != nil {
 				return fmt.Errorf("write the chart skeleton for %q: %w", slug, err)
 			}

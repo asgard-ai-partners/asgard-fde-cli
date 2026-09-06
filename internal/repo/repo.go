@@ -108,16 +108,6 @@ func HasLegacyConfig(root string) bool {
 	return err == nil
 }
 
-// Workspace is the customer, for the templates that print their name.
-//
-// **It is passed in, never stored.** The name belongs to the platform - it is
-// what `workspace list` returns - and a copy on disk is a copy that goes stale
-// the day somebody renames the workspace. A caller with no session writes the
-// workspace id instead, which is at least true.
-type Workspace struct {
-	Name string
-}
-
 // Root finds the repository containing dir, or "" when there is none.
 //
 // The declaration is the test: it is the file the platform reads on every run.

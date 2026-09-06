@@ -318,7 +318,6 @@ type Data struct {
 	Chart     string // the chart's helper prefix
 	CRName    string // prefixed
 	ValuesKey string // the name as a Helm values key
-	Workspace repo.Workspace
 	SpecSlug  string
 }
 
