@@ -35,7 +35,9 @@ import (
 // like a permission problem rather than a mismatch.
 type Profile struct {
 	// Name is what --profile takes.
-	Name string `json:"name"`
+	// Name is the map key in profiles.json; it is not written into the value,
+	// where a second copy could disagree with the key after a hand edit.
+	Name string `json:"name,omitempty"`
 	// Issuer is the Casdoor base URL, with no trailing slash.
 	Issuer string `json:"issuer"`
 	// ClientID is the Casdoor application's client id. It is not a secret:
@@ -61,40 +63,92 @@ type Profile struct {
 
 // DefaultProfileName is the profile used when nothing selects one.
 //
-// It is prod, because the people this binary is built for are customers running
-// against the platform, and a tool whose default is the vendor's test
-// environment is a tool that fails for everybody except the vendor. We are the
-// exception, and the exception is the one that carries the flag: ASGARD_PROFILE
-// or --profile switches to dev, and ASGARD_PLATFORM_API points at anything else.
-const DefaultProfileName = "prod"
+// **It is a name, not an environment.** It used to be "prod", with "dev" beside
+// it as the other built-in, and that spent two general words on two particular
+// installations of ours. An on-prem customer runs their own dev and their own
+// prod, and neither is either of those.
+//
+// A profile that does not exist, or exists and sets none of the three fields,
+// resolves to the hosted platform below - so a customer who never opens the
+// file reaches the right place, and everybody else names their own.
+const DefaultProfileName = "default"
 
-// builtinProfiles are the two environments the platform runs. They are compiled
-// in rather than configured because a hostname somebody has to type is a
-// hostname somebody gets wrong, and the failure surfaces as an authentication
-// error rather than as a typo.
-var builtinProfiles = map[string]Profile{
-	"dev": {
-		Name:        "dev",
-		Issuer:      "https://iam.dev.asgard-ai.com",
-		ClientID:    "q0bnivgjxhvtg2poqmle",
-		PlatformAPI: "https://platform-api.dev.asgard-ai.com",
-	},
-	"prod": {
-		Name:        "prod",
-		Issuer:      "https://iam.asgard-ai.com",
-		ClientID:    "r21ntx0eb5igyokl3px4",
-		PlatformAPI: "https://platform-api.asgard-ai.com",
-	},
+// The hosted platform. **These are a fallback, not a profile.**
+//
+// They are compiled in because a hostname somebody has to type is a hostname
+// somebody gets wrong, and the failure surfaces as an authentication error
+// rather than as a typo. They are the value of each field that a profile leaves
+// empty - per field, so a profile that names only its own API keeps everything
+// else - and they are what makes `default` work with no file at all.
+//
+// There is deliberately no compiled-in entry for our development platform. It
+// is one installation among the ones this tool will meet, not a second kind of
+// thing, and baking it in would put an internal endpoint in every customer's
+// binary. Ours is written with `asgard-cli profile set`, like anybody else's.
+const (
+	hostedIssuer      = "https://iam.asgard-ai.com"
+	hostedClientID    = "r21ntx0eb5igyokl3px4"
+	hostedPlatformAPI = "https://platform-api.asgard-ai.com"
+)
+
+// Origin says where a resolved field came from, so `profile show` can print it.
+//
+// **The provenance is the feature.** A profile that sets one field and inherits
+// the rest looks identical to a complete one until something fails at the far
+// end, and the two mixes that matter are silent by construction - see
+// mixedOrigin.
+type Origin string
+
+const (
+	FromProfileFile Origin = "profiles.json"
+	FromHosted      Origin = "the hosted platform (this profile does not set it)"
+	FromEnv         Origin = "environment"
+)
+
+// Resolved is a profile with a record of where each field came from.
+type Resolved struct {
+	Profile
+	// Exists reports whether profiles.json actually holds this name.
+	Exists       bool
+	IssuerFrom   Origin
+	ClientIDFrom Origin
+	APIFrom      Origin
 }
 
-// BuiltinProfileNames lists the built-in profiles, the default first.
+// mixedOrigin reports a profile whose Platform API and identity provider come
+// from different places, which is almost always a half-written profile.
 //
-// It is the whole list. A settings file used to be able to add profiles and
-// override a built-in by name; that went with the file, and the three field
-// overrides below do the same job for the case it was for - pointing at a
-// platform that has moved, or at a local stack - without anything on disk that
-// a later release has to keep understanding.
-func BuiltinProfileNames() []string { return []string{"prod", "dev"} }
+// Both directions are wrong and neither announces itself:
+//
+//   - an explicit API with an inherited issuer sends you to sign in against the
+//     hosted Casdoor and then presents that token to somebody else's server;
+//   - an explicit issuer with an inherited API signs you in against your own
+//     Casdoor and then sends that token to OUR hosted production API, which is
+//     the direction worth being loud about.
+//
+// The client id is not part of this: a different application on the same issuer
+// is an ordinary thing to want.
+//
+// It is a warning rather than a refusal because a local Platform API against a
+// real Casdoor is a legitimate way to develop - it is just never the thing an
+// on-prem installation wants.
+func (r Resolved) mixedOrigin() bool {
+	return r.APIFrom != r.IssuerFrom
+}
+
+// Warning returns what is worth saying about this resolution, or "".
+func (r Resolved) Warning() string {
+	if !r.mixedOrigin() {
+		return ""
+	}
+	return fmt.Sprintf(
+		"profile %q takes its Platform API from %s and its identity provider from %s.\n"+
+			"An API and the Casdoor that issues tokens for it have to be the same installation:\n"+
+			"a token from one is not accepted by the other, and the failure reads as a permission\n"+
+			"problem rather than as a mismatch. Set both, or neither.\n\n"+
+			"    asgard-cli profile set %s --platform-api <url> --issuer <url> --client-id <id>",
+		r.Name, r.APIFrom, r.IssuerFrom, r.Name)
+}
 
 // Environment variables that override a profile's fields, one field each.
 //
@@ -134,7 +188,26 @@ type ErrUnknownProfile struct {
 }
 
 func (e *ErrUnknownProfile) Error() string {
-	return fmt.Sprintf("unknown profile %q; one of %s", e.Name, strings.Join(e.Known, ", "))
+	var b strings.Builder
+	fmt.Fprintf(&b, "no profile named %q.\n", e.Name)
+
+	// The two names this binary used to have compiled in. Somebody who typed
+	// one is not making a typo - they are running a habit from an older build,
+	// and the answer is different for each.
+	switch e.Name {
+	case "prod":
+		fmt.Fprintf(&b, "\n%q was a built-in name and is now just %q, which is the hosted platform\nwith nothing configured. Drop the flag.\n", "prod", DefaultProfileName)
+	case "dev":
+		fmt.Fprintf(&b, "\n%q was a built-in name. Our development platform is one installation among\nthe ones this tool meets, not a second kind of thing, so it is written like any\nother - see the internal setup notes for the three values:\n\n    asgard-cli profile set dev --issuer <url> --client-id <id> --platform-api <url>\n", "dev")
+	}
+
+	if len(e.Known) == 0 {
+		fmt.Fprintf(&b, "\nNo profiles are configured, so every name resolves to the hosted platform\nexcept the one that says so:\n\n    asgard-cli --profile %s ...\n    asgard-cli profile set <name> --platform-api <url> --issuer <url> --client-id <id>\n", DefaultProfileName)
+		return b.String()
+	}
+	fmt.Fprintf(&b, "\nConfigured: %s\n\n    asgard-cli profile list\n    asgard-cli profile set %s --platform-api <url> --issuer <url> --client-id <id>\n",
+		strings.Join(e.Known, ", "), e.Name)
+	return b.String()
 }
 
 // Home is the directory this CLI keeps its own state in: **the credential
@@ -302,19 +375,35 @@ func checkRetiredSettings() error {
 
 // ResolveProfile returns the profile named by want, or the default when want is
 // empty.
-//
-// Precedence, highest first: the --profile argument, ASGARD_PROFILE, and prod.
-// **There is no fourth**, and there was: a `defaultProfile` recorded by `login
-// --set-default` in a file under the user's config directory. It was one more
-// thing an upgrade had to keep understanding, and one more way for two machines
-// running the same command to do different things. The three field overrides
-// are applied last, on whichever profile that produced.
 func ResolveProfile(want string) (Profile, error) {
-	if err := checkRetiredSettings(); err != nil {
+	r, err := ResolveWithOrigin(want)
+	if err != nil {
 		return Profile{}, err
 	}
+	return r.Profile, nil
+}
+
+// ResolveWithOrigin is ResolveProfile with a record of where each field came from.
+//
+// The order is: which profile (--profile, then ASGARD_PROFILE, then "default"),
+// then each of its three fields (the file if it sets one, otherwise the hosted
+// platform), then the three environment overrides on top.
+//
+// **The per-field fallback is the point.** A profile that names only its own
+// Platform API is a complete, working profile for a local stack; one that names
+// all three is an on-prem installation. Neither has to restate what it is not
+// changing, and `profile show` says which is which.
+//
+// **A name with no entry in the file is not an error.** `default` is expected
+// to have none - that is the hosted platform, reached with nothing configured -
+// and any other name resolving to the hosted platform would be a confusing way
+// to spell it, so that one is refused. See ErrUnknownProfile.
+func ResolveWithOrigin(want string) (Resolved, error) {
+	if err := checkRetiredSettings(); err != nil {
+		return Resolved{}, err
+	}
 	if err := checkRetiredEnv(); err != nil {
-		return Profile{}, err
+		return Resolved{}, err
 	}
 
 	name := want
@@ -325,29 +414,50 @@ func ResolveProfile(want string) (Profile, error) {
 		name = DefaultProfileName
 	}
 
-	p, ok := builtinProfiles[name]
-	if !ok {
-		return Profile{}, &ErrUnknownProfile{Name: name, Known: BuiltinProfileNames()}
+	file, err := LoadProfiles()
+	if err != nil {
+		return Resolved{}, err
 	}
-	p.Name = name
+	stored, exists := file.Profiles[name]
+	if !exists && name != DefaultProfileName {
+		return Resolved{}, &ErrUnknownProfile{Name: name, Known: file.Names()}
+	}
+
+	r := Resolved{
+		Profile:      Profile{Name: name},
+		Exists:       exists,
+		IssuerFrom:   FromHosted,
+		ClientIDFrom: FromHosted,
+		APIFrom:      FromHosted,
+	}
+	r.Issuer, r.ClientID, r.PlatformAPI = hostedIssuer, hostedClientID, hostedPlatformAPI
+	if stored.Issuer != "" {
+		r.Issuer, r.IssuerFrom = stored.Issuer, FromProfileFile
+	}
+	if stored.ClientID != "" {
+		r.ClientID, r.ClientIDFrom = stored.ClientID, FromProfileFile
+	}
+	if stored.PlatformAPI != "" {
+		r.PlatformAPI, r.APIFrom = stored.PlatformAPI, FromProfileFile
+	}
 
 	if v := os.Getenv(EnvIssuer); v != "" {
-		p.Issuer = v
+		r.Issuer, r.IssuerFrom = v, FromEnv
 	}
 	if v := os.Getenv(EnvClientID); v != "" {
-		p.ClientID = v
+		r.ClientID, r.ClientIDFrom = v, FromEnv
 	}
 	if v := os.Getenv(EnvPlatformAPI); v != "" {
-		p.PlatformAPI = v
+		r.PlatformAPI, r.APIFrom = v, FromEnv
 	}
 
-	p.Issuer = strings.TrimRight(p.Issuer, "/")
-	p.PlatformAPI = strings.TrimRight(p.PlatformAPI, "/")
+	r.Issuer = strings.TrimRight(r.Issuer, "/")
+	r.PlatformAPI = strings.TrimRight(r.PlatformAPI, "/")
 
-	if err := p.validate(); err != nil {
-		return Profile{}, err
+	if err := r.Profile.validate(); err != nil {
+		return Resolved{}, err
 	}
-	return p, nil
+	return r, nil
 }
 
 // validate rejects a profile that cannot be used, naming the field. A profile

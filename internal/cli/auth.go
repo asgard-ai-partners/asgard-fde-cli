@@ -22,8 +22,8 @@ func addProfileFlag(cmd *cobra.Command, target *string) {
 	// No backquotes in a flag's usage string: cobra reads the first
 	// backquoted word as the placeholder to print after the flag name.
 	cmd.Flags().StringVar(target, profileFlag, "",
-		fmt.Sprintf("platform environment: one of %s; defaults to %s, then %s",
-			joinNames(auth.BuiltinProfileNames()), auth.EnvProfile, auth.DefaultProfileName))
+		fmt.Sprintf("which platform to act on; defaults to %s, then %q. \"asgard-cli profile list\" shows them",
+			auth.EnvProfile, auth.DefaultProfileName))
 }
 
 func joinNames(names []string) string {

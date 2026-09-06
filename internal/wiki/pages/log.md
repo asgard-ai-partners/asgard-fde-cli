@@ -802,3 +802,32 @@ time, and editing removes exactly that.
   refused with the rename rather than quietly ignored - ignored, every command
   would go to the built-in prod URL, which is a customer's platform, and nothing
   would say so
+- `fix` 2026-09-06 **profiles are a file again, and deleting that map was the one
+  part of retiring `config.json` that went too far.** Its three fields were
+  judged as one thing: `defaultProfile` and `defaultWorkspaces` were per-machine
+  preferences and deserved to go, but `profiles` was the only way to reach a
+  platform this binary does not have compiled in - which is exactly on-prem. It
+  passes the test the deletion was made under: an installation's issuer, client
+  id and API are implied by nothing on disk, and the platform cannot be asked
+  because **which platform is the question**. The argument that the three
+  environment overrides cover it holds for one platform and fails for a customer
+  running their own dev and their own prod, because you cannot hold two sets of
+  three variables at once and switch by name
+- `fix` 2026-09-06 `prod` and `dev` stopped being built-in profile NAMES. They
+  spent two general words on two particular installations of ours, while an
+  on-prem customer runs their own dev and their own prod and neither is either
+  of those. The hosted platform's three values remain compiled in, but as a
+  per-field FALLBACK rather than as a profile - so `default` works with no file
+  at all, which is the shape a tool for customers should have. Our development
+  platform is written with `profile set` like anybody else's; compiling it in
+  would put an internal endpoint in every customer's binary
+- `note` 2026-09-06 **the provenance is the feature, not decoration.** A profile
+  that sets one field and inherits two looks identical to a complete one until
+  something fails at the far end, and the two mixes that matter are silent by
+  construction: an explicit API with an inherited issuer signs you in against
+  the hosted Casdoor and presents that token to somebody else's server; an
+  explicit issuer with an inherited API signs you in against your own Casdoor
+  and sends that token to OUR hosted production API. `profile show` prints where
+  each of the three came from and warns when the API and the identity provider
+  disagree. It warns rather than refuses: a local Platform API against a real
+  Casdoor is a legitimate way to develop
