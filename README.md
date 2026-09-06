@@ -714,13 +714,14 @@ still wants to know whether it is there.
 
 ### The files
 
-Three, and each is somebody else's answer to a different question.
+Four, and each is somebody else's answer to a different question.
 
 | file | who writes it | who reads it | committed |
 |---|---|---|---|
 | `.asgard-pipeline.yaml` | a person | **the platform**, on every run | yes |
 | `.asgard-cli.yaml` | `asgard-cli` | `asgard-cli` only | yes |
 | `os.UserConfigDir()/asgard-cli/credentials.json` | `asgard-cli login` | `asgard-cli` | **never** |
+| `os.UserConfigDir()/asgard-cli/profiles.json` | `asgard-cli profile set` | `asgard-cli` | **never** (but it can be handed to a colleague) |
 
 **`.asgard-pipeline.yaml` is the declaration**, and the only file a deployment
 depends on: which releases exist, which chart each deploys, what triggers it,
@@ -731,7 +732,12 @@ checkout acts on, and nothing else. Both fields are required and neither is
 derived. See `internal/binding`, whose package comment explains why it lives
 beside the declaration rather than at the repository root.
 
-**`credentials.json` is the only thing this CLI keeps outside a repository.**
+**`profiles.json` names a platform this binary does not have compiled in** -
+an on-prem deployment, or a stack running locally. It holds no secret and it is
+optional: with no file, every profile is the hosted platform. See
+[`profile`](#profile).
+
+**`credentials.json` is the secret this CLI keeps outside a repository.**
 0600, one file for every profile, and nothing beside it. There was a
 `config.json` there too, holding a default profile, a default workspace per
 profile and a map of custom profiles; it is gone. Every field was a preference
@@ -771,13 +777,16 @@ RFC 8252 asks for on a machine that has a browser. The binary ships no client
 secret. The session is stored under this user account - never inside a customer
 repository - at `os.UserConfigDir()/asgard-cli/`, 0600.
 
-Two profiles exist: `prod` (the default) and `dev`. `--profile` picks per
-command and `ASGARD_PROFILE` sets it for a shell. **Nothing records a default**,
-and `login --set-default` used to: a preference on one machine is a preference
-two people running the same command do not share, and it failed towards `prod`
-if forgotten. `ASGARD_PLATFORM_API`, `ASGARD_ISSUER` and `ASGARD_CLIENT_ID`
-override a profile's fields one at a time, for a platform running somewhere
-else.
+A **profile** is one Asgard installation. `--profile` picks per command and
+`ASGARD_PROFILE` sets it for a shell; with neither it is `default`, which is the
+hosted platform. **Nothing records a current profile**, and `login --set-default`
+used to: a preference on one machine is a preference two people running the same
+command do not share.
+
+Profiles other than the hosted one are written with
+[`asgard-cli profile`](#profile). `ASGARD_PLATFORM_API`, `ASGARD_ISSUER` and
+`ASGARD_CLIENT_ID` still override one field at a time on top of whichever
+profile applies, for a one-off.
 
 **`ASGARD_PLATFORM_API` is named for the service, not for "the API".** This tool
 talks to one Asgard service today and is expected to grow into others - the
@@ -792,6 +801,77 @@ would send every command to the built-in prod URL.
 With no browser - CI, a container, an agent sandbox - set `ASGARD_TOKEN` to an
 access token instead. It bypasses the store completely, reading nothing from
 disk and writing nothing to it.
+
+### `profile`
+
+**If you use the hosted Asgard platform, you need none of this.** With no file
+at all, every command reaches it - that is what `default` means, and why it is
+the default. These commands exist for the two installations this binary cannot
+know about: an on-prem deployment, and a stack running locally.
+
+```bash
+asgard-cli profile list              # what is configured, and what applies now
+asgard-cli profile show [name]       # the three values, and where each came from
+asgard-cli profile set onprem --platform-api https://asgard.acme.internal \
+    --issuer https://iam.acme.internal --client-id abc123
+asgard-cli profile remove onprem
+```
+
+A profile holds three values and **each falls back on its own** to the hosted
+platform's:
+
+| | |
+|---|---|
+| `--platform-api` | where the Asgard Platform API is |
+| `--issuer` | the Casdoor that issues tokens for it |
+| `--client-id` | the application this CLI presents itself as (not a secret - it is disclosed to the browser on every sign-in) |
+
+**An on-prem installation sets all three.** Its API and the Casdoor that issues
+tokens for it are the same deployment, and a token from one is not accepted by
+the other - so setting the API alone leaves you signing in against the hosted
+Casdoor and presenting that token to somebody else's server. `profile show`
+prints where every value came from and warns when the two disagree:
+
+```
+profile        onprem
+platform api   https://asgard.acme.internal    profiles.json
+issuer         https://iam.asgard-ai.com       the hosted platform (this profile does not set it)
+client id      r21ntx0eb5igyokl3px4            the hosted platform (this profile does not set it)
+
+WARNING: profile "onprem" takes its Platform API from profiles.json and its
+identity provider from the hosted platform ...
+```
+
+It warns rather than refuses, because a local Platform API against a real
+Casdoor is a legitimate way to develop.
+
+**There is no `profile use`.** Recording which profile is current is the one
+field of the retired `config.json` that is not coming back - it was invisible on
+the machine that had it and absent on every other. Which profile is `--profile`,
+`ASGARD_PROFILE`, or `default`.
+
+`profile set` is the only command that creates `profiles.json`, and only when
+run. Nothing writes it as a side effect. It holds no secret, so it can be handed
+to a colleague setting up the same installation; credentials are a separate file
+and cannot.
+
+#### Working against our own development platform
+
+`dev` is not a built-in name. Our development platform is one installation among
+the ones this tool meets, not a second kind of thing, and compiling it in would
+put an internal endpoint in every customer's binary.
+
+Write it like any other, with the three values from the internal setup notes -
+**they are not in this repository**:
+
+```bash
+asgard-cli profile set dev \
+    --issuer       <internal>  \
+    --client-id    <internal>  \
+    --platform-api <internal>
+asgard-cli login --profile dev
+export ASGARD_PROFILE=dev        # for a shell
+```
 
 ### `workspace`, `pipeline use`
 

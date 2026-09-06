@@ -445,13 +445,14 @@ asgard-cli 的散佈方式沒有一種裝得了它們。tar.gz、zip 與 `go ins
 
 ### 三個檔案
 
-只有三個，而且每一個都是別人對不同問題的答案。
+四個，而且每一個都是別人對不同問題的答案。
 
 | 檔案 | 誰寫 | 誰讀 | 進版控 |
 |---|---|---|---|
 | `.asgard-pipeline.yaml` | 人 | **平台**，每次 run | 是 |
 | `.asgard-cli.yaml` | `asgard-cli` | 只有 `asgard-cli` | 是 |
 | `os.UserConfigDir()/asgard-cli/credentials.json` | `asgard-cli login` | `asgard-cli` | **絕不** |
+| `os.UserConfigDir()/asgard-cli/profiles.json` | `asgard-cli profile set` | `asgard-cli` | **絕不**（但可以直接交給同事） |
 
 **`.asgard-pipeline.yaml` 是宣告檔**，也是一次部署唯一依賴的檔案：有哪些 release、每個部署哪份 chart、什麼觸發它、吃哪些 key。
 
@@ -477,9 +478,64 @@ asgard-cli logout --all              # 忘掉每一個 session
 
 OAuth 2.0 authorization code ＋ PKCE，走 loopback redirect，那是 RFC 8252 對一台有瀏覽器的機器給的答案。binary 不帶 client secret。session 存在這個使用者帳號底下 —— **絕不放在客戶 repo 裡** —— 位置是 `os.UserConfigDir()/asgard-cli/`，0600。
 
-兩個 profile：`prod`（預設）與 `dev`。`--profile` 逐指令指定、`ASGARD_PROFILE` 對一個 shell 生效。**沒有任何地方記錄預設值** —— `login --set-default` 以前可以，它沒了：一台機器上的偏好是另外那個人不會有的偏好，而且忘記它被設過時它會往 `prod` 失敗。
+一個 **profile 就是一座 Asgard 安裝**。`--profile` 逐指令指定、`ASGARD_PROFILE` 對一個 shell 生效；兩個都沒有時是 `default`，也就是**代管平台**。**沒有任何地方記錄「現在是哪個 profile」** —— `login --set-default` 以前可以，它沒了：一台機器上的偏好是另外那個人不會有的偏好。
+
+代管平台以外的 profile 用 [`asgard-cli profile`](#profile) 寫。`ASGARD_PLATFORM_API`、`ASGARD_ISSUER`、`ASGARD_CLIENT_ID` 仍然可以逐欄位蓋在生效的 profile 上，那是給一次性用的。
 
 沒有瀏覽器的時候（CI、容器、agent sandbox）改設 `ASGARD_TOKEN`。它**完全繞過儲存**，不讀磁碟也不寫磁碟。
+
+### `profile`
+
+**如果你用的是代管的 Asgard 平台，這一整節你都不需要。** 完全沒有這個檔的時候，每個指令都會連到它 —— 那就是 `default` 的意思，也是它之所以是預設的理由。這些指令是為了兩種**這個 binary 不可能知道**的安裝：**地端部署**，以及**跑在本機的 stack**。
+
+```bash
+asgard-cli profile list              # 設了哪些、現在生效的是哪個
+asgard-cli profile show [name]       # 三個值，以及每個是哪來的
+asgard-cli profile set onprem --platform-api https://asgard.acme.internal \
+    --issuer https://iam.acme.internal --client-id abc123
+asgard-cli profile remove onprem
+```
+
+一個 profile 裝三個值，而且**每一個各自 fallback** 到代管平台的：
+
+| | |
+|---|---|
+| `--platform-api` | Asgard Platform API 在哪裡 |
+| `--issuer` | 替它發 token 的那座 Casdoor |
+| `--client-id` | 這支 CLI 用哪個 application 出面（**不是機密** —— 每次登入都會出現在瀏覽器） |
+
+**地端安裝三個都要設。** 它的 API 與替它發 token 的 Casdoor 是**同一座部署**，而其中一座發的 token 另一座不會接受 —— 所以只設 API 的結果是：你對著**代管的** Casdoor 登入，然後把那顆 token 送去別人的伺服器。`profile show` 會印出每個值的來源，並在兩者不同源時警告：
+
+```
+profile        onprem
+platform api   https://asgard.acme.internal    profiles.json
+issuer         https://iam.asgard-ai.com       the hosted platform (this profile does not set it)
+client id      r21ntx0eb5igyokl3px4            the hosted platform (this profile does not set it)
+
+WARNING: profile "onprem" takes its Platform API from profiles.json and its
+identity provider from the hosted platform ...
+```
+
+它**警告而不拒絕**，因為「本機的 Platform API 配真的 Casdoor」是一種合理的開發方式。
+
+**沒有 `profile use`。** 記錄「現在是哪個 profile」是退休的 `config.json` 裡唯一不會回來的那個欄位 —— 它在設了它的那台機器上看不見，在其他每一台上都不存在。選哪個 profile 就是 `--profile`、`ASGARD_PROFILE`、或 `default`。
+
+`profile set` 是**唯一**會建立 `profiles.json` 的指令，而且只在你跑它的時候。沒有任何東西會把它當成別的動作的副作用寫出來。它不含機密，所以可以直接交給要架同一座安裝的同事；**憑證是另一個檔，不行**。
+
+#### 對我們自己的開發平台工作
+
+`dev` **不是內建名字**。我們的開發平台是這支工具會遇到的其中一座安裝，不是第二種東西；把它編進去等於在每個客戶的 binary 裡塞一個內部端點。
+
+跟其他 profile 一樣寫出來，三個值去看內部的設定筆記 —— **它們不在這個 repo 裡**：
+
+```bash
+asgard-cli profile set dev \
+    --issuer       <內部>  \
+    --client-id    <內部>  \
+    --platform-api <內部>
+asgard-cli login --profile dev
+export ASGARD_PROFILE=dev        # 對一個 shell 生效
+```
 
 ### `workspace`、`pipeline use`
 
