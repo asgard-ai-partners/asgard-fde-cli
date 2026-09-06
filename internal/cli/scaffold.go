@@ -17,10 +17,29 @@ func newScaffoldCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "scaffold",
-		Short: "Write the repository skeleton next to " + pipelineconfig.FileName,
+		Short: "Write the repository skeleton, for a repository not bound to a pipeline yet",
 		Long: `Write the repository skeleton next to ` + pipelineconfig.FileName + `.
 
-This is the part of a customer repo that is the same for every engagement: the
+**` + "`asgard-cli init`" + ` is what to run when the platform already has a pipeline for
+this repository.** It runs this, records which workspace and pipeline the
+checkout deploys through, and fetches the reference material - the three things
+a bound repository needs, in the only order they work in.
+
+**This is the same command with the platform left out**, and that is the one
+thing it can do that ` + "`init`" + ` cannot: ` + "`init`" + ` requires a workspace id and a pipeline
+id, refuses to guess either, and a repository that has no pipeline yet has
+neither to give. Two cases actually look like that:
+
+  - **before there is an account.** A proposal, a spike, a repository being
+    written while somebody else creates the workspace.
+  - **an existing repository being migrated.** The repositories moving onto the
+    Pipeline already have charts and their own CI; what they lack is the
+    skeleton and a pipeline, in that order.
+
+Once the pipeline exists, ` + "`asgard-cli init`" + ` records it - re-running is safe and it
+will report most of this skeleton as already present.
+
+This writes the part of a customer repo that is the same for every engagement: the
 four-layer docs model, the SDD rules, the six design-time skills that hold for
 any Asgard, and an AGENTS.md carrying the platform contract. What it does not write
 is the customer's own knowledge - which systems exist, how the projects split,
@@ -34,7 +53,9 @@ only true of one of them.
 
 Running it again is safe: existing files are left alone and reported as skipped,
 so it can be re-run after adding a project or when a file was deleted by hand.
---force overwrites, which discards local edits to the skeleton.`,
+--force overwrites, which discards local edits to the skeleton - and is how a
+repository takes shipped material this CLI has changed since, which is reported
+as ` + "`stale`" + ` rather than overwritten silently.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			root, err := scaffoldRoot()
@@ -157,10 +178,15 @@ Verify the skeleton before writing any CRs:
 
   asgard-cli check
 
-Then fetch the material that describes the server this repository deploys to -
-the CR shapes, the processor catalogue and the verification skill. It is not in
-this binary, because what a field is called is a fact about a server and not
-about a CLI release:
+**This repository is not bound to a pipeline.** Nothing here says which
+workspace it deploys into or which pipeline deploys it, so the platform
+commands have nothing to act on. When the pipeline exists:
+
+  asgard-cli init --workspace <id> --pipeline <id>
+
+which re-runs this, records the binding, and fetches the material describing
+that server. Until then, the material can still be fetched on its own - it
+needs a session, not a binding:
 
   asgard-cli skill update
 

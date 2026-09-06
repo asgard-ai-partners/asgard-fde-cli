@@ -831,3 +831,17 @@ time, and editing removes exactly that.
   each of the three came from and warns when the API and the identity provider
   disagree. It warns rather than refuses: a local Platform API against a real
   Casdoor is a legitimate way to develop
+- `fix` 2026-09-06 **`scaffold` and `init` read as two versions of the same
+  onboarding, and only one of them was current.** `init` composes scaffold, the
+  binding and `skill update`; `scaffold` run alone then ended by naming `check`,
+  `skill update` and `project` - the sequence from before `init` existed. Two
+  commands documenting two versions of one sequence is the shape that made four
+  composing commands look like four competing ones in the top-level help. The
+  overlap is real but it is composition, not duplication: what was missing was
+  that `scaffold` has exactly one thing `init` cannot do, and its help never
+  said it. `init` requires a workspace id and a pipeline id and refuses to guess
+  either, so a repository with no pipeline yet cannot run it - which is a
+  proposal, a spike, or **an existing repository being migrated onto the
+  Pipeline**, and that last one is a whole wave of them. `scaffold` is now
+  documented as the unbound path and its tail points at `init` for when the
+  pipeline exists
