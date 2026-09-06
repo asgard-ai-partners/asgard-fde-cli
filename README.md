@@ -2,6 +2,42 @@
 
 Command line tool for Asgard FDE (`asgard-cli`).
 
+## Install
+
+**This repository is private, and so is every release of it.** A GitHub release
+takes the visibility of its repository: the page, the notes and every asset are
+reachable only by an account with read access, and an unauthenticated request
+for an asset URL gets a 404 rather than a 403. Nothing is published anywhere
+else - no Homebrew tap, no Scoop bucket, no package repository (see
+[Releasing](#releasing) for why).
+
+So every install path needs credentials, and the shortest one uses the ones
+`gh` already holds:
+
+```bash
+gh release download --repo asgard-ai-partners/asgard-fde-cli \
+  --pattern '*_darwin_arm64.tar.gz' --output - | tar xz asgard-cli
+sudo mv asgard-cli /usr/local/bin/
+asgard-cli doctor          # says whether helm is on PATH
+```
+
+Swap the pattern for your platform - assets cover darwin / linux / windows on
+amd64 / arm64, and Debian or RPM hosts can take the `.deb` / `.rpm` instead.
+A file downloaded by a CLI is not quarantined by Gatekeeper the way a browser
+download is, so no `xattr` step is needed.
+
+If you already build Go, the module works directly once git can reach the
+private repo:
+
+```bash
+GOPRIVATE=github.com/asgard-ai-partners/* \
+  go install github.com/asgard-ai-partners/asgard-fde-cli/cmd/asgard-cli@latest
+```
+
+`asgard-cli version` reports what a release built; a `go build` with no ldflags
+falls back to the module and VCS metadata rather than claiming a version it
+does not have.
+
 ## Development
 
 ```bash
@@ -839,24 +875,34 @@ goreleaser check
 goreleaser release --snapshot --clean --skip=publish
 ```
 
-### Channels not yet enabled
+### Private, and the channels that off follows from
+
+Every release is private because the repository is. That is not a limitation to
+work around while the audience is internal - it is the point - but it does
+decide the install path, which is why the release notes carry a
+`gh release download` line rather than a `brew install` one.
 
 The bottom of `.goreleaser.yaml` has ready-made **Homebrew tap** and **Scoop
-bucket** blocks. Create the corresponding repo and a PAT with write access to it,
-then uncomment:
-
-| Channel | Prerequisite |
-| --- | --- |
-| Homebrew | Create `asgard-ai-partners/homebrew-tap`, secret `HOMEBREW_TAP_TOKEN` |
-| Scoop | Create `asgard-ai-partners/scoop-bucket`, secret `SCOOP_BUCKET_TOKEN` |
+bucket** blocks, and they stay commented out. A tap or a bucket is a second
+repository that whoever installs has to be able to read; making that one private
+too means every user runs `brew tap` against a repo needing credentials, which
+is more setup than the one-line download it would replace, for a smaller
+audience than a tap exists to serve. Audience decided internal-only, 2026-09-06.
+**If this ever goes public, enabling them is the first thing to revisit** - the
+blocks and their prerequisites (`HOMEBREW_TAP_TOKEN`, `SCOOP_BUCKET_TOKEN`) are
+left in place for that.
 
 Other things worth knowing:
 
 - **CGO**: builds run with `CGO_ENABLED=0` so cross-compilation fits on a single
   runner. Pulling in a cgo dependency (sqlite and friends) means switching to
   zig cc or per-platform runners.
-- **macOS signing**: an unsigned binary downloaded through a browser is blocked by
-  Gatekeeper (installing via Homebrew is not affected). Add `anchore/quill` when
-  notarization becomes necessary.
-- **LICENSE**: the archive config picks up `LICENSE*`. No such file exists yet, so
-  GoReleaser prints one warning, which does not affect the release.
+- **macOS signing**: the binaries are unsigned. That is survivable *because* the
+  install path is a CLI download - `gh` and `curl` do not set the
+  `com.apple.quarantine` attribute that makes Gatekeeper refuse an unsigned
+  binary; a browser does. Handing somebody a release URL to click is the case
+  that breaks, and `anchore/quill` is the answer if that ever becomes the normal
+  way in.
+- **Every PR builds a release.** `ci.yml`'s `build` job runs
+  `goreleaser release --snapshot --clean --skip=publish`, so a config or
+  cross-compilation break is caught before it is a failed tag.
