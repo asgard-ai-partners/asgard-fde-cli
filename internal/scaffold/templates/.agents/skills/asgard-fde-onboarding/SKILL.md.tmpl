@@ -68,7 +68,9 @@ Not a sequence to follow - a map of what answers what.
 | how to change this repo - layout, conventions, CRD traps | `AGENTS.md` |
 | what the system currently does | `docs/spec/<<.SpecSlug>>/` |
 | why something was decided | `docs/decisions/` |
-| a `SemanticLayer` or `DataConnector`, or any query against a customer database | `semantic-layer-modeling` skill |
+| **reading a customer's own system** - list tables, check a column's real values, verify a join | `db-query` skill. Eight connector classes, read-only |
+| turning what you found into a `SemanticLayer` or `DataConnector` | `semantic-layer-modeling` skill |
+| **somebody has to give you a credential** | `asgard-cli local-env` - opens a form for them to type it into. **Never ask for a password in the conversation** |
 | before committing anything under `projects/*/chart` or `common/` | `asgard-cr-verification` skill (`asgard-cli skill update` writes it) |
 | work that needs a spec before implementation | `spec-workflow` skill |
 | a slide deck for the customer | `proposal-deck` skill |
@@ -97,7 +99,14 @@ wrong".
 ## Rules that hold at every stage
 
 - **Never guess a schema.** Connect to the real database and introspect it.
-  Reasoning about a schema is not verifying it.
+  Reasoning about a schema is not verifying it. The `db-query` skill is how.
+- **Never ask anybody to tell you a password.** Not in the conversation, not
+  "paste it and I will remove it after" - a credential that has been through a
+  transcript has to be treated as disclosed. Write the keys you need into
+  `.env` with empty values, then run `asgard-cli local-env`: it opens a form
+  for whoever holds the credential, and tells you only which keys were filled
+  in. **Re-read `.env` afterwards** - they can add keys you did not ask for,
+  and that is the point of letting them.
 - **Source systems are read-only** until a spec says otherwise. Any write path
   points outward, never at a source system, and needs human approval.
 - **Run the gate before committing** anything under `projects/*/chart` or

@@ -17,6 +17,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/localenv"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/pipelineconfig"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/repo"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/work"
@@ -123,6 +124,9 @@ func Run(root string, only ...string) (Report, error) {
 		return Report{}, err
 	}
 	c.checkRequirementIndexes()
+	if err := c.checkEnvIgnored(); err != nil {
+		return Report{}, err
+	}
 	if err := c.checkInterviewRecorded(); err != nil {
 		return Report{}, err
 	}
@@ -760,6 +764,35 @@ func (c *checker) checkRequirementIndexes() {
 			c.errf("missing %s; it is an SDD entry point, see docs/spec-driven-development.md", filepath.ToSlash(rel))
 		}
 	}
+}
+
+// checkEnvIgnored refuses to let the design-time credentials be committable.
+//
+// **An error rather than a warning.** Everything else here is about a document
+// being wrong, which costs a reader some time; this is one `git add -A` away
+// from a customer's database password in a repository's history, and history is
+// not something a delete removes. `asgard-cli local-env` adds the line itself,
+// so reaching this means somebody wrote the file another way.
+func (c *checker) checkEnvIgnored() error {
+	if _, err := os.Stat(filepath.Join(c.root, localenv.FileName)); err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return err
+	}
+	data, err := os.ReadFile(filepath.Join(c.root, ".gitignore"))
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	for _, line := range strings.Split(string(data), "\n") {
+		switch strings.TrimSpace(line) {
+		case localenv.FileName, "/" + localenv.FileName, "*.env", ".env*":
+			return nil
+		}
+	}
+	c.errf("%s exists and .gitignore does not cover it; it holds design-time credentials "+
+		"and must never be committable. `asgard-cli local-env` adds the line", localenv.FileName)
+	return nil
 }
 
 // dateNamed matches the filename convention for dated records.

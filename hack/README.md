@@ -29,6 +29,24 @@ being audited is what somebody actually read.
 Hidden from `--help`, because its reader edits this material and the help output
 belongs to whoever is onboarding a customer.
 
+## Two implementations of the .env format, and whether they agree
+
+    go run ./hack/dotenv-agreement
+
+There have to be two: `asgard-cli local-env` writes the file in Go, the
+db-query scripts read it in python. A format with two implementations and
+nothing comparing them drifts silently, and the way it surfaces is the worst
+kind - the form shows one value and the query connects with another.
+
+It also checks that a save changes the one value it was asked to change and
+nothing else. **That file is edited by hand as well**, and a note somebody left
+for the next reader is worth as much as the value beside it. Two ways to lose
+one have already been caught here: a trailing comment dropped when its line was
+rewritten, and a quoted value re-spelled bare on a line nobody had touched -
+which is also a meaning change to any shell that sources it.
+
+Needs python3. Without it the python half reports as **skipped**, not passed.
+
 ## Running the gate over the deployments its rules came from
 
     hack/verify-references.sh [parent-dir]        default: ..

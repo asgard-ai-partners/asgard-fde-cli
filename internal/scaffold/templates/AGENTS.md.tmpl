@@ -95,6 +95,7 @@ answer that looks obvious and is wrong.
 | `asgard-cli find <terms>` | **start here for a question.** Searches the wiki, the shapes, the guidance and the skills together; ask in Chinese if that is the language it was asked in |
 | `asgard-cli usecase` | **before authoring any CR.** How each shape is built, taken from deployments already in production: when to use it, the skeleton, the fields that are not obvious, and what the mistake cost someone. `--search <terms>` finds a shape from what the customer asked for |
 | `asgard-cli check` | one step of `gate`, when that is the step you are fixing |
+| `asgard-cli local-env` | **somebody has to give you a credential.** Opens a form on 127.0.0.1 for them to type it into, and reports back which keys were filled - never the values. Re-read `.env` after it, since they can add keys |
 | `asgard-cli project add <slug>` | the engagement discovers a new project |
 | `asgard-cli scaffold` | after adding a project, to write its chart skeleton. Safe to re-run - it never overwrites a file that already exists, so edits to this file survive |
 | `asgard-cli skill update` | **when the platform says the reference material here is behind.** It writes what the Asgard server this repository deploys to actually enforces - the processor catalogue and its config keys - into `.agents/skills/`. Commit what it writes; the diff is the changelog |
