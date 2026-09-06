@@ -23,6 +23,25 @@ and they cannot share names. Pick a prefix per system - `UOF_DB_`, `ERP_DB_`,
 
 `query.py --class <class> --prefix <PREFIX> --keys` prints the block to append.
 
+## The `.env` format
+
+Two rules, and they are the ones every dotenv reader uses:
+
+- **A `#` starts a comment only when a space comes before it**, or at the start
+  of a line. So `PASSWORD=abc#123` is the whole password; `PASSWORD=abc #123` is
+  `abc`.
+- **Inside quotes, a `#` is part of the value**, and quotes are how a value keeps
+  its leading or trailing spaces: `PASSWORD="  two spaces  "`.
+
+**A note about a key goes on its own line above it, never after the `=`.** A
+trailing comment is read as the value, so a key documented that way looks
+filled in when it is empty - and then the tool connects to a host named
+`# the bare host`, or hands a driver an `sslMode` of `# optional`. `--keys`
+writes notes above the key for this reason.
+
+A value written on one line with a literal `\n` in it - a PEM, typically - has
+its newlines restored when it is used.
+
 ## Where the values come from, and where they do not
 
 The connection coordinates come from **the customer**: the person who runs that

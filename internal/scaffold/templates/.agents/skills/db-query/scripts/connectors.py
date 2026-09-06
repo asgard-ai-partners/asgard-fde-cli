@@ -147,6 +147,31 @@ def rel(path: pathlib.Path) -> str:
         return str(path)
 
 
+def parse_value(raw: str) -> str:
+    """把 `.env` 一行的等號右邊解成值。
+
+    **行內註解要拿掉。** 少了這一步,`KEY=   # 說明` 會被讀成值 `# 說明`,於是一個
+    還沒填的鍵看起來像填好了 —— 接著就是拿註解去當 host 連線,或把它當成 sslMode
+    餵給 driver。
+
+    規則跟其他 dotenv 讀取器一致,兩條:
+      - `#` 只有在**前面有空白**(或整行開頭)時才開始註解。所以 `abc#123` 是一個
+        完整的密碼,不是 `abc`。
+      - 引號內的 `#` 一律是值的一部分。值本身要保留前後空白時,就用引號包起來。
+    """
+    raw = raw.strip()
+    if raw[:1] in ('"', "'"):
+        quote = raw[0]
+        end = raw.find(quote, 1)
+        if end != -1:
+            return raw[1:end]
+        return raw[1:]          # 引號沒收尾,當作整段都是值
+    cut = re.search(r"(?:^|\s)#", raw)
+    if cut:
+        raw = raw[: cut.start()]
+    return raw.strip()
+
+
 def load_env() -> dict[str, str]:
     """讀 repo 根的 .env,再讓真正的環境變數覆蓋同名的鍵。"""
     env: dict[str, str] = {}
@@ -157,7 +182,7 @@ def load_env() -> dict[str, str]:
             if not line or line.startswith("#") or "=" not in line:
                 continue
             key, val = line.split("=", 1)
-            env[key.strip()] = val.strip().strip('"').strip("'")
+            env[key.strip()] = parse_value(val)
     env.update(os.environ)
     return env
 
@@ -168,7 +193,11 @@ def keys(cls: str, prefix: str) -> list[tuple[str, Field]]:
 
 
 def env_block(cls: str, prefix: str) -> str:
-    """印一段可以直接接到 .env 後面的佔位鍵。值一律留空,由使用者填。"""
+    """印一段可以直接接到 .env 後面的佔位鍵。值一律留空,由使用者填。
+
+    說明寫在鍵的**上一行**,不是等號後面。等號後面的註解會被當成值 —— 不只是被
+    這支工具,任何 dotenv 讀取器都可能 —— 而一個「填了註解」的鍵看起來就是填好了。
+    """
     lines = [f"# --- {prefix.rstrip('_')} ({cls}) ---"]
     for name, f in keys(cls, prefix):
         tags = []
@@ -178,9 +207,11 @@ def env_block(cls: str, prefix: str) -> str:
             tags.append("機密")
         if f.note:
             tags.append(f.note)
-        comment = ("   # " + ";".join(tags)) if tags else ""
-        lines.append(f"{name}={comment}")
-    return "\n".join(lines)
+        if tags:
+            lines.append("# " + ";".join(tags))
+        lines.append(f"{name}=")
+    # 結尾空一行:`--keys >> .env` 連續接兩組的時候,兩組之間才不會黏在一起。
+    return "\n".join(lines) + "\n"
 
 
 def config(cls: str, prefix: str) -> dict[str, str]:
