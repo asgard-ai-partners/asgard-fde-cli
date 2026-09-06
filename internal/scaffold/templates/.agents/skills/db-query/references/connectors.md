@@ -152,16 +152,24 @@ Three things that cost time, all found the hard way:
 | `host` | `<P>HOST` | yes | |
 | `port` | `<P>PORT` | yes in the CR | design time defaults to 443 |
 | `user` | `<P>USER` | yes | |
-| `password` | `<P>PASSWORD` | one of | secret |
-| `jwtAccessToken` | `<P>JWT_ACCESS_TOKEN` | one of | secret |
-| `sslCertificatePem` | `<P>SSL_CERTIFICATE_PEM` | no | secret |
+| `password` | `<P>PASSWORD` | no | secret |
+| `jwtAccessToken` | `<P>JWT_ACCESS_TOKEN` | no | secret |
+| `sslCertificatePem` | `<P>SSL_CERTIFICATE_PEM` | no | secret. A PEM, which `query.py` writes to a temporary file because the HTTP client wants a CA bundle path |
 
-All three credentials are optional in the CRD, because a Trino behind a gateway
-may need none of them. `query.py` still asks for a password or a JWT, since a
-design-time connection from a laptop is not behind that gateway.
+**All three credentials are optional**, in the CRD and here. A Trino behind a
+gateway that authenticates for it needs none of them, and that is a normal
+deployment rather than a half-filled configuration.
 
-Trino federates: `information_schema` exists per catalog, and a table is
-`catalog.schema.table`.
+**Over `http`, no credential is sent at all** - the Trino client refuses basic
+auth without TLS, and a JWT over cleartext is the token given away. Setting
+`SCHEME=http` together with a password or a JWT is refused rather than quietly
+downgraded: pick `https`, or leave the credential empty.
+
+**Trino federates, so a table is `catalog.schema.table`** - three parts, not two.
+`information_schema` exists once per catalog, so an unqualified query answers
+`MISSING_CATALOG_NAME`, which does not mention what is missing.
+`--columns tpch.sf1.orders` works; `--columns sf1.orders` is refused with the
+reason. `show catalogs` lists what is mounted.
 
 ## athena
 

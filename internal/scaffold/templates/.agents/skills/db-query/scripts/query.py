@@ -45,17 +45,22 @@ def render(cols: list[str], rows: list[list[str]], width: int = 48) -> str:
 
 
 def suggest_prefixes(cls: str) -> list[str]:
-    """.env 裡看起來屬於這個 class 的前綴。用來把「忘了給 --prefix」變成一個提示。"""
-    spec = connectors.SPECS[cls]
-    anchors = [f.suffix for f in spec.fields if f.required]
-    found: list[str] = []
-    for key in connectors.load_env():
+    """.env 裡看起來屬於這個 class 的前綴。用來把「忘了給 --prefix」變成一個提示。
+
+    要**每一個**必填欄位都在才算數。只要有一個就算的話,postgres 會把 trino 那
+    群也列出來(兩邊都有 HOST/USER),而那是一個會讓人照著打、然後撞牆的建議。
+    """
+    env = connectors.load_env()
+    anchors = [f.suffix for f in connectors.SPECS[cls].fields if f.required]
+    candidates: list[str] = []
+    for key in env:
         for a in anchors:
-            if key.endswith("_" + a) or key == a:
+            if key.endswith("_" + a):
                 p = key[: len(key) - len(a)]
-                if p and p not in found:
-                    found.append(p)
-    return sorted(found)
+                if p and p not in candidates:
+                    candidates.append(p)
+    return sorted(p for p in candidates
+                  if all((p + a) in env for a in anchors))
 
 
 def main(argv: list[str]) -> int:
@@ -72,7 +77,10 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--limit", type=int, default=DEFAULT_LIMIT,
                     help=f"最多取幾列(預設 {DEFAULT_LIMIT};0 表示不限)")
     ap.add_argument("--classes", action="store_true", help="列出支援的 class 後結束")
+    ap.add_argument("--traceback", action="store_true",
+                    help="出錯時印完整 traceback(除錯用;平時是一行診斷)")
     args = ap.parse_args(argv)
+    connectors.SHOW_TRACEBACK = args.traceback
 
     if args.classes:
         for name in connectors.CLASSES:
@@ -129,4 +137,17 @@ def main(argv: list[str]) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    # 最後一道防線。driver 各家會丟什麼例外我們蓋不全,而一個八行的 traceback
+    # 把唯一有用的那行推到最下面,還會印出這台機器的絕對路徑。
+    try:
+        sys.exit(main(sys.argv[1:]))
+    except SystemExit:
+        raise
+    except KeyboardInterrupt:
+        sys.exit(130)
+    except Exception as exc:
+        if "--traceback" in sys.argv:
+            raise
+        print(f"x {type(exc).__name__}: {exc}", file=sys.stderr)
+        print("  完整 traceback:同一道指令加 --traceback", file=sys.stderr)
+        sys.exit(1)
