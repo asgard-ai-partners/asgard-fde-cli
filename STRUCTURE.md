@@ -211,7 +211,7 @@ docs/spec/__SPEC_SLUG__/README.md.tmpl
 ```
 
 A `.tmpl` suffix means the file is rendered; anything else is copied verbatim.
-`.agents/skills/` under it holds the six design-time skills the coding agent in
+`.agents/skills/` under it holds the seven design-time skills the coding agent in
 the customer repo loads. **Only five, and the line is authority.** A skill that
 states what a particular Asgard server accepts or calls things - the CRD shapes,
 the processor catalogue, `asgard-cr-verification` - is served from the platform
@@ -247,8 +247,9 @@ server-side dry-run all pass a document the apiserver would reject or silently
 prune. `hack/README.md` is the procedure, and the PR template asks for its
 output.
 
-Not to be confused with the `scripts/` directory `asgard-cli scaffold` writes
-into a **customer** repo, which holds that repo's acceptance gates.
+Not to be confused with `.agents/skills/db-query/scripts/`, which `asgard-cli
+scaffold` writes into a **customer** repo - that is the tool-chain for reading
+the customer's own source systems at design time.
 
 ## Reference material that is not in this repo
 

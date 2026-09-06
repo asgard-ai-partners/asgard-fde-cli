@@ -210,8 +210,7 @@ pipeline 建好之後跑 `asgard-cli init` 記下它，重跑是安全的，骨�
 | `AGENTS.md` | 平台契約，客戶特有的段落標成 TODO |
 | `docs/` | 四層模型（meeting-notes / decisions / living spec）與 SDD 規則 |
 | `requirements/` | task 與 request 的索引 |
-| `scripts/db/` | 查詢與內省的工具鏈，target registry 是空的 |
-| `.agents/skills/` | 對任何 Asgard 都成立的六個設計期 skill；描述某一座 server 的那些來自 `asgard-cli skill update` |
+| `.agents/skills/` | 對任何 Asgard 都成立的七個設計期 skill，`db-query` 是其中之一；描述某一座 server 的那些來自 `asgard-cli skill update` |
 | `common/` | runtime skill 目錄 |
 | `.asgard-pipeline.yaml` | 部署宣告，每個 project 一個 release 待填 |
 | `projects/<slug>/` | 每個 project 一份 chart 骨架 |

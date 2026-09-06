@@ -56,8 +56,6 @@ references/                  # 背景資料(不可直接照著實作)
 .asgard-cli.yaml             # 這個 checkout 對到哪個 workspace / pipeline。**Platform 不讀**
 common/
   skills/<skill>/SKILL.md    # runtime 技能來源(由各 SkillSet 挑選,同步進平台)
-scripts/
-  db/                        # 對客戶資料庫做查詢與 schema 探勘(隨接上的系統增加)
 projects/<project>/
   chart/app/{templates,values.yaml}   # values.yaml 只放預設值
 ```
@@ -100,7 +98,7 @@ requirements/tasks/   可執行任務規格(draft→done)   ── 「這件工�
 
 ```bash
 python3 -m venv .venv
-.venv/bin/pip install -r scripts/db/requirements.txt
+.venv/bin/pip install -r .agents/skills/db-query/scripts/requirements.txt
 cp .env.example .env                                   # 再填入各資料庫的連線值
 brew install helm                                      # 只需要 helm;asgard-cli doctor 會告訴你缺什麼
 ```
@@ -117,7 +115,7 @@ asgard-cli pipeline variables list --release <name>
 
 |  | `.env` | Release 專屬 Secret(K8s Secret) |
 |---|---|---|
-| 誰讀 | **你的筆電**上的 `scripts/db/*` 工具鏈 | **叢集裡**的 Asgard CR |
+| 誰讀 | **你的筆電**上的 `db-query` skill | **叢集裡**的 Asgard CR |
 | 誰建 | 你自己 `cp .env.example .env` | **Platform**,每個 Release 一組,名字注入 `.Values.asgard.appSecretName` |
 | 放什麼 | 只有 DB 連線 | 所有 CR 用到的憑證,由 `.asgard-pipeline.yaml` 的 `appSecret` 宣告 key |
 | 會進叢集嗎 | **不會**,完全不參與部署 | 會,CR 以 `secretKeyRef` 取用 |

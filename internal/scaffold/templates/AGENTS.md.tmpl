@@ -7,7 +7,7 @@
 
 - **Project**: `<<.RepoName>>` — the repo where **all Asgard custom resources for <<.Workspace.Name>> are specified**, and from which they are deployed.
 - **How work is driven**: **spec-driven** — `requirements/` is the implementation source of truth (see Spec-Driven Development below).
-- **Kind**: Helm charts only. No application source code — everything is declarative Kubernetes custom resources under `asgard-ai.com/v1alpha1`. (`scripts/db/` is a local DB tool-chain, not deployed.)
+- **Kind**: Helm charts only. No application source code — everything is declarative Kubernetes custom resources under `asgard-ai.com/v1alpha1`. (`.agents/skills/db-query/` is a local tool-chain for reading the customer's systems at design time, not deployed.)
 - **Standard Asgard-Kube layout**: each **Project** is its own Helm chart under `projects/<project>/chart/app`, deployed to its own namespace. Cross-project shared plumbing lives in `common/`. ("Project" is the generalized unit — a Platform Project == a K8s Namespace.)
 <<if .Projects>>- **Projects**:
 <<range .Projects>>  - `<<.Slug>>` — TODO: what it does, who calls it, which systems it reads.
@@ -30,8 +30,8 @@
 ## Where this repo is, and what to do first
 
 `asgard-cli` scaffolded this repo. What exists is the platform contract (this
-file), the acceptance gate under `scripts/`, the docs structure, and an empty
-chart skeleton per project. **Everything customer-specific is still to be
+file), the docs structure, the design-time skills, and an empty chart skeleton
+per project. **Everything customer-specific is still to be
 written**, including the sections of this file marked TODO.
 
 Read `docs/spec/<<.SpecSlug>>/` first. If its module index is empty, no behaviour
@@ -65,7 +65,7 @@ subject.
 |---|---|---|
 | `requirements` | inventory the customer's systems, and who talks to each one | `docs/meeting-notes/`, then a `docs/decisions/` record |
 | `projects` | decide how the work splits into projects | `projects/<slug>/` via `asgard-cli project add` |
-| `data-sources` | wire up the databases | `.env`, `DB_TARGETS` in `scripts/db/pgenv.py`, `DataConnector` CRs |
+| `data-sources` | wire up the databases | `.env` connection groups, `DataConnector` CRs |
 | `read-path` | **decide each project's read path** | `SemanticLayer`, or a fixed-query `Toolset` |
 | `entry-point` | **decide each project's entry point** | the agent hub, or `BotProvider` -> `Workflow` - or nothing, if the shape has none |
 | `knowledge` | **decide where unstructured knowledge lives**, if there is any | a `SourceSet` Drive |
@@ -90,7 +90,7 @@ answer that looks obvious and is wrong.
 | `asgard-cli brief <what>` | **before a meeting, a chart change or a handover.** The activity you are about to do, and how it has been got wrong |
 | `asgard-cli question` | what nobody has answered yet, and who each is waiting on. **Read this before designing anything** |
 | `asgard-cli request`, `asgard-cli task` | what the customer asked for, and the task specs open against it |
-| `asgard-cli project` | what each chart declares, and what its declared shape still lacks. It reports no step, because there is none |
+| `asgard-cli project` | what each chart declares, and what it still lacks. It reports no step, because there is none |
 | `asgard-cli guide <name>` | the guidance for one decision; `asgard-cli guide` lists it |
 | `asgard-cli find <terms>` | **start here for a question.** Searches the wiki, the shapes, the guidance and the skills together; ask in Chinese if that is the language it was asked in |
 | `asgard-cli usecase` | **before authoring any CR.** How each shape is built, taken from deployments already in production: when to use it, the skeleton, the fields that are not obvious, and what the mistake cost someone. `--search <terms>` finds a shape from what the customer asked for |
@@ -221,11 +221,12 @@ from making the same choice.
 │   └── chart/
 │       ├── app/templates/<kind>/  # one directory per CR kind, one file per CR
 │       └── app/values.yaml        # DEFAULTS ONLY. Real values live on the platform
-├── scripts/                       # what needs a cluster or a database — the rest is asgard-cli
-│   └── db/                        # query + introspection helpers (add as databases are wired up)
 ├── .agents/skills/                # DESIGN-TIME skills — for the coding agent working in this repo
 │   ├── spec-workflow/             #   turn unclear work into a reviewable spec
-│   ├── semantic-layer-modeling/   #   connect to the real DBs, introspect, model a SemanticLayer
+│   ├── db-query/                  #   read the customer's own systems: 8 connector classes,
+│   │                              #     read-only, and how to get a credential without
+│   │                              #     asking anybody to type a password into a chat
+│   ├── semantic-layer-modeling/   #   turn an introspected schema into a SemanticLayer
 │   ├── proposal-deck/             #   a slide deck for the CUSTOMER, from their own material
 │   ├── plain-chinese/             #   any 繁體中文 a customer reads — the shapes that
 │   │                              #     mark it as machine-written

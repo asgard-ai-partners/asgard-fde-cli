@@ -73,6 +73,9 @@ const (
 	// containing projectDir is written once per project.
 	specSlugDir = "__SPEC_SLUG__"
 	projectDir  = "__PROJECT__"
+
+	// pycacheDir is never part of the skeleton; see plan.
+	pycacheDir = "__pycache__"
 )
 
 // Project is one project's chart, as the templates see it.
@@ -267,8 +270,6 @@ func shipped(target string) bool {
 		return true
 	case t == "AGENTS.md":
 		return true
-	case strings.HasPrefix(t, "scripts/"):
-		return true
 	}
 	return false
 }
@@ -308,6 +309,17 @@ func plan(data Data) ([]job, error) {
 			return err
 		}
 		if d.IsDir() {
+			// Python bytecode is written next to the source the moment anybody
+			// runs a db-query script in place, and `go:embed all:` has no
+			// exclude pattern - so without this a maintainer's local test run
+			// ships .pyc files into every customer repository built from that
+			// binary. It happened on the first build after the skill landed.
+			if d.Name() == pycacheDir {
+				return fs.SkipDir
+			}
+			return nil
+		}
+		if strings.HasSuffix(d.Name(), ".pyc") {
 			return nil
 		}
 

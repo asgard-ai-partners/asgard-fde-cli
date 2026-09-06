@@ -1,8 +1,8 @@
 # hack/
 
 This repository's own tooling. Not shipped, not embedded, and not the same thing
-as the `scripts/` directory `asgard-cli scaffold` writes into a customer repo -
-that one holds the four acceptance gates and the database tool-chain, and is
+as `.agents/skills/db-query/scripts/`, which `asgard-cli scaffold` writes into a
+customer repo - that one reads the customer's own source systems, and is
 described in `README.md`.
 
 Everything here answers one question: **is what this repo emits still accepted by

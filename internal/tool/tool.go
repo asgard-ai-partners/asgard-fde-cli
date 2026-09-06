@@ -80,7 +80,7 @@ var (
 	Python = Tool{
 		Name:         "python3",
 		Alternatives: []string{"python"},
-		Purpose:      "the database introspection tools under scripts/db/",
+		Purpose:      "the db-query skill, which reads a customer's source systems",
 		Optional:     true,
 		VersionArgs:  []string{"--version"},
 		brew:         "python",
