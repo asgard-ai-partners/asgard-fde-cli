@@ -4,17 +4,29 @@ One section per `DataConnectorClass`. Each lists the fields the CR declares, the
 `.env` key that carries the same field at design time, and how to introspect that
 engine once you are connected.
 
-## The naming rule
+## The naming convention, which is a convenience and not a contract
 
-**A `.env` key is `<PREFIX>` + the CR field name in upper snake case.**
+**A `.env` key is `<PREFIX>` + the field name in upper snake case, and those
+names presently match what the `DataConnector` CRD calls them.**
 
     spec.postgres.sslMode      ->  <PREFIX>SSL_MODE
     spec.athena.accessKeyId    ->  <PREFIX>ACCESS_KEY_ID
     spec.netsuite.privateKeyPem -> <PREFIX>PRIVATE_KEY_PEM
 
-The rule exists so that what you fill in locally maps one-to-one onto what the CR
-declares. Nobody has to translate between two vocabularies, and a field that has
-no `.env` key is a field somebody forgot.
+It is worth having because it saves a translation: what you fill in locally goes
+into the CR a field at a time, and matching names mean nobody has to keep two
+vocabularies straight.
+
+**It is not a guarantee, and nothing checks it.** This skill's job is connecting
+to a database and reading it, not tracking a CRD. When the CRD grows a field, or
+when connecting needs something the CRD has no opinion about - a driver package,
+a port default measured against a real server, "a password or a JWT, at least
+one" - the two are allowed to diverge.
+
+**For what the platform will actually accept, the authority is
+`.agents/skills/asgard-cr-shapes/`**, which `asgard-cli skill update` fetches and
+which is read off a live cluster rather than off anybody's checkout. Not this
+page.
 
 **`<PREFIX>` is yours to choose, and this skill will not pick one for you.** An
 engagement with two PostgreSQL databases has two groups of keys in one `.env`,

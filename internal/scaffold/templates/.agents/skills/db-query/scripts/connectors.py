@@ -1,13 +1,17 @@
 """connectors.py -- db-query 的共用層:class 定義、讀 .env、建立連線、跑查詢。
 
-一個 DataConnector class 對應這裡的一筆 SPECS。**欄位名不是我們發明的** ——
-每個 .env key 的字尾就是 CRD 欄位名的大寫底線寫法:
+**這支工具的工作是「連上一個資料庫、看清楚它」,不是「跟 DataConnector CRD 保持一致」。**
+它中立地為 local 連 DB 這件事服務,而每個 class 的欄位在這裡是一筆 SPECS。
+
+.env key 的字尾**現在**跟 CRD 欄位名的大寫底線寫法一樣:
 
     DataConnectorSpec.postgres.sslMode   ->   <PREFIX>SSL_MODE
     DataConnectorSpec.athena.accessKeyId ->   <PREFIX>ACCESS_KEY_ID
 
-這條規則是刻意的。design-time 在 .env 填的東西,最後要一格一格搬進 CR;字尾一致
-的話,搬的人不需要在兩套名字之間翻譯,也不會漏掉某個欄位。
+**那是一個方便,不是一個契約。** 好處是填 .env 跟填 CR 少一次翻譯;而 CRD 之後長出
+新欄位、或這裡為了連得上而多要一個東西,**兩邊分岔是可以的,沒有東西在比對它們**。
+需要知道平台實際會收什麼的時候,權威是 `.agents/skills/asgard-cr-shapes/`(那份是從
+活著的叢集讀出來的,`asgard-cli skill update` 抓),不是這裡。
 
 **前綴由使用中的 agent 自己取,不是這裡規定的。** 一個 engagement 可能同時接兩個
 PostgreSQL,它們在 .env 裡本來就是兩群 key-value,不可能共用名字。所以每次查詢都要
@@ -29,7 +33,7 @@ from typing import Callable, NamedTuple
 class Field(NamedTuple):
     """一個連線欄位。suffix 是 .env key 的字尾,也是 CRD 欄位名。"""
 
-    suffix: str          # <PREFIX> 後面接的部分,對應 CRD 欄位
+    suffix: str          # <PREFIX> 後面接的部分。現在跟 CRD 欄位同名,見檔頭
     required: bool = True
     secret: bool = False  # 真值不進版控、不印在 transcript
     default: str = ""
