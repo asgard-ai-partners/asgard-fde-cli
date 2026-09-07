@@ -146,6 +146,15 @@ could name only one of them.
 
     asgard-cli workspace use 1862431170889781248
 
+**An id is a long decimal number, around 19 digits - not a UUID.** If what you
+have looks like ` + "`7ab7f523-3cd9-...`" + `, it is the wrong value; ` + "`asgard-cli workspace list`" + `
+prints the right ones for the account you are signed in as.
+
+**Never copy one out of another customer's repository, or out of an example.**
+It is a live production identifier, and a wrong one binds this repository to
+somebody else's workspace - where the commands will work, which is what makes it
+expensive.
+
 **It writes a file in the repository and nothing outside it.** A machine-wide
 default used to be recordable with --default, and it is gone: it was invisible
 on the machine that had it and absent on every other, so the same command in the

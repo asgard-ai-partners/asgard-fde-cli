@@ -255,8 +255,10 @@ Half the job is answering a question, and that question gets asked in a meeting,
 before the engagement has a directory. `wiki`, `usecase`, `find`, `brief`, `size`
 and `guide` all answer outside one - reference material that requires an
 engagement is unavailable exactly when somebody is deciding whether to have one,
-and `guide init` is how somebody with no directory finds out what to do first. A new command that calls `config.Find` before it can say anything
-has quietly left that half. Run it in an empty directory.
+and `asgard-cli init` is what somebody with no directory runs first - it needs
+no repository, no session and no network. A new command that calls `config.Find`
+before it can say anything has quietly left that half. Run it in an empty
+directory.
 
 **Which kind of artefact is this recipe for, and what inverts for the others?**
 A rule that produces a good artefact of one kind silently produces a bad one of

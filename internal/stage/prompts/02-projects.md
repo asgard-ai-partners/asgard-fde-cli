@@ -146,7 +146,6 @@ Then, in this order:
 ## Then register each project, and point the request at it
 
     asgard-cli project add <slug>
-    asgard-cli scaffold
 
 Then point the request at it. That is what moves this stage on: until the request
 names a project this repository has, `asgard-cli request` shows it with no project

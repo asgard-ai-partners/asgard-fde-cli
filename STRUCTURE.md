@@ -99,7 +99,7 @@ is what `add` writes, not something anybody reads to decide.
 | `wiki/pages/` | 27 | what the platform is, and who each piece is for | English | yes |
 | `usecase/extracts/` | 18 | how one shape of deployment is assembled, field by field | English | yes |
 | `stage/prompts/` | 12 | what to weigh at one point in the work | English | yes |
-| `scaffold/templates/.agents/skills/` | 6 | what the agent in a customer repo loads to do one kind of work | mixed | yes |
+| `scaffold/templates/.agents/skills/` | 7 | what the agent in a customer repo loads to do one kind of work | mixed | yes |
 | `scaffold/templates/` | 45 | the part of a customer repo that is the same every time | mixed | the skills only |
 | `generate/templates/` | 12 | the CR skeletons `asgard-cli add` writes | English | no |
 
@@ -219,7 +219,7 @@ and written by `asgard-cli skill update`, because a customer's server can be
 several versions from whichever release they installed this from. See the embed
 comment in `scaffold/scaffold.go`.
 
-Those six are **searchable**, and `scaffold/skills.go` is what makes them so.
+Those seven are **searchable**, and `scaffold/skills.go` is what makes them so.
 They are material like the wiki is material, and leaving them out of `find` meant
 an agent asked to build a deck searched for one and was told nothing matched
 anywhere - while the skill that owns the subject sat in the repository it was

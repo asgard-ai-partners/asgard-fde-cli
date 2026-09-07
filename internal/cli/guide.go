@@ -47,15 +47,14 @@ those parts empty.`,
 			out := cmd.OutOrStdout()
 
 			if len(args) == 0 {
+				// Printed where it actually happens. It used to follow
+				// `scaffold`, which was the step before it; with the two
+				// procedural pages gone it is the first thing, because the
+				// interview is what everything below is decided from.
+				fmt.Fprintf(out, "  %-14s %s\n",
+					stage.RequirementsStage.Name, stage.RequirementsStage.Title)
 				for _, s := range stage.Stages {
 					fmt.Fprintf(out, "  %-14s %s\n", s.Name, s.Title)
-					if s.Name == stage.Scaffold {
-						// Printed where it actually happens - after the
-						// skeleton, before the split. At the end it read as
-						// though it came after deploy.
-						fmt.Fprintf(out, "  %-14s %s\n",
-							stage.RequirementsStage.Name, stage.RequirementsStage.Title)
-					}
 				}
 				fmt.Fprintf(out, "  %-14s %s\n", stage.IdleStage.Name, stage.IdleStage.Title)
 				fmt.Fprintf(out, "\nRead one with `asgard-cli guide <name>`.\n")

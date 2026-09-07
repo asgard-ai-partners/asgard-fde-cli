@@ -119,7 +119,7 @@ does not echo the secrets.`,
 	f.StringSliceVar(&focus, "focus", nil,
 		"highlight these keys in the form; it never hides the rest")
 	f.BoolVar(&noBrowser, "no-browser", false,
-		"print the URL instead of opening a browser")
+		"do not open a browser; the URL is printed either way")
 	f.BoolVar(&terminal, "terminal", false,
 		"ask for each value at the prompt, for a machine that cannot reach a browser at all")
 	f.DurationVar(&timeout, "timeout", 15*time.Minute,

@@ -58,6 +58,7 @@ Not a sequence to follow - a map of what answers what.
 
 | what you are doing | where to look |
 |---|---|
+| **this checkout is not connected to a platform yet** - no `.asgard-cli.yaml`, or `asgard-cli gate` reports the binding step as skipped | `AGENTS.md`, "If this checkout is not connected to a platform yet". **This is the first job**, and `asgard-cli init` left it for you on purpose |
 | **about to talk to the customer** | `asgard-cli brief customer-meeting` - five things said wrong to a customer, each because somebody said it. The riskiest thing here leaves no trace in this repo, so nothing in the repo will remind you |
 | about to touch a chart, or hand it over | `asgard-cli brief write-chart`, `asgard-cli brief handover` |
 | anything, first | `asgard-cli question`, then `request`, `task` and `project` |
@@ -100,6 +101,12 @@ wrong".
 
 - **Never guess a schema.** Connect to the real database and introspect it.
   Reasoning about a schema is not verifying it. The `db-query` skill is how.
+- **Connect the checkout before authoring anything.** `asgard-cli init` writes
+  the skeleton with no account and no network, so a repository can exist before
+  the platform does - which is why you are here this early. Until
+  `asgard-cli skill update` has run, nothing in this repo states what this
+  server accepts, and a CR written against an assumption is the failure that
+  costs a month.
 - **Never ask anybody to tell you a password.** Not in the conversation, not
   "paste it and I will remove it after" - a credential that has been through a
   transcript has to be treated as disclosed. Write the keys you need into

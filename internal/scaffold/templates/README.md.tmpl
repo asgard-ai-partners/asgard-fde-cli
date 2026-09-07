@@ -11,7 +11,7 @@
 每個 **project** 是一份獨立 Helm chart,放在 `projects/<project>/`:
 
 <!-- asgard-cli:managed:start -->
-<!-- 這張表由 `asgard-cli scaffold` 維護,project 清單直接讀 repo 本身
+<!-- 這張表由 `asgard-cli init` 與 `asgard-cli project add` 維護,清單直接讀 repo 本身
      (.asgard-pipeline.yaml 的 chart 路徑 ∪ projects/ 底下的資料夾),
      不另存一份。兩個標記之間的內容
      每次 scaffold 都會重寫。說明欄要填的話,填在標記外面的段落。
@@ -24,7 +24,7 @@
 |---|---|---|
 <<range .Projects>>| `<<.Slug>>` | `projects/<<.Slug>>/` | TODO |
 <<end>><<if not .Projects>>
-> 還沒有 project。用 `asgard-cli project add <slug>` 新增,再跑一次 `asgard-cli scaffold`。
+> 還沒有 project。用 `asgard-cli project add <slug>` 新增 —— 它會連 chart 骨架一起寫。
 <<end>>
 <!-- asgard-cli:managed:end -->
 **部署宣告只有一份:根目錄的 [`.asgard-pipeline.yaml`](.asgard-pipeline.yaml)。** 它列出有哪些

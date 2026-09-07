@@ -332,7 +332,13 @@ func gateBinding(cmd *cobra.Command, root, profile string, offline bool) stepRes
 		// not a repository failing to be something it never claimed to be.
 		res.Status = stepSkip
 		res.Summary = "no " + binding.FileName + ", so this checkout is not bound to a pipeline yet"
-		res.Remedy = "asgard-cli init"
+		res.Remedy = "asgard-cli login, then workspace use <id> and pipeline use <id>"
+		// One string, not three lines: this step wraps its own details, and
+		// pre-broken lines come out broken in a different place.
+		res.Details = append(res.Details,
+			"`asgard-cli init` writes the skeleton and deliberately stops there - it needs no account, "+
+				"so the repository exists before the platform does. Connecting it is a separate act, and "+
+				"`asgard-cli pipeline create` makes the pipeline when there is none yet.")
 		return res
 	case err != nil:
 		res.Status = stepFail
