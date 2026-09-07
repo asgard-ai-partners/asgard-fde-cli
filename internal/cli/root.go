@@ -25,6 +25,7 @@ an FDE can walk into a customer's room with it.
 
 BEFORE A MEETING, run the one for what you are about to do:
 
+    asgard-cli needs <scenario>          what they have to give us before we start
     asgard-cli brief customer-meeting    the five things said wrong to a customer
     asgard-cli brief write-chart         before touching a chart
     asgard-cli brief handover            before telling anyone it is live
@@ -167,6 +168,7 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 		newWikiCmd(),
 		newUsecaseCmd(),
 		newBriefCmd(),
+		newNeedsCmd(),
 		newGuideCmd(),
 		newSizeCmd(),
 		newReadingCmd(),

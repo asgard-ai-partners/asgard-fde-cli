@@ -879,3 +879,23 @@ time, and editing removes exactly that.
   it, and five production charts set it - `wiki platform-unknowns` P10. It is
   written because those charts run, and the template says so where somebody
   would otherwise take it for a documented field
+- `ingest` 2026-09-07 `asgard-cli needs <scenario>` answers what a scenario has
+  to be got from the customer. It is the second of the four things `Goal.md` asks
+  for and the only one that had no command at all: everything else says what the
+  platform has and how a shape is assembled, and this says what a shape cannot
+  start without. **Nothing in it is new** - the coordinates question, the
+  per-channel credential table, the four-shape ladder for a system nobody here
+  has integrated - and reaching it meant reading a 1200-line interview, a wiki
+  page and three extracts and assembling the answer. So no row states a fact of
+  its own: each carries the document that owns it, and `audit-material --links`
+  resolves those like any other pointer
+- `fix` 2026-09-07 `needs` resolves a scenario differently from `find`, and the
+  difference is the point. `find` drops partial matches once some document
+  carries every term, because an extra word should narrow a lookup; a scenario is
+  a sentence with common words in it and touches several shapes on purpose, so
+  "answer questions on LINE" had three words reaching almost everything and one
+  reaching the answer, and the narrowing rule threw the answer away. **And the
+  index decides before any searching**: 客服's row already says
+  `asgard-cli usecase chat-channel`, and searching the translated words instead
+  ranked external-api above it - the index knowing the answer with nothing using
+  it
