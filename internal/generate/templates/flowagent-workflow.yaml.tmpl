@@ -23,6 +23,100 @@ metadata:
     {{- end }}
     {{- include "<<.Chart>>.labels" . | nindent 4 }}
 spec:
+<<if .Supervisor>>  # The supervisor loop: four processors and five relationships, and **three
+  # deployments have it edge for edge identical** - read off their prod values on
+  # 2026-09-04. `asgard-cli usecase flow-agent-supervisor` has why each edge is
+  # where it is; this is that shape with the prompt left TODO.
+  #
+  # It has no exits and that is not an omission: 14 of the 17 Workflows across
+  # every reference deployment declare none, and a run ends when its terminal
+  # processor finishes.
+  variables: []
+  entries:
+    - name: entry-main
+      handlingProcessor: proc-init
+      labels:
+        display_name: Entry
+        description: "TODO: 這條流程從哪裡開始"
+  exits: []
+  processors:
+    # Primes the context once, before the first answer. It takes no configs.
+    - name: proc-init
+      type: update-context
+      labels:
+        display_name: 初始化
+      configs: []
+
+    - name: proc-agent
+      type: stream-llm-completion-message
+      labels:
+        display_name: 總管
+      configs:
+        - name: completionModel
+          value: {{ .Values.defaultCompletionModelName | quote }}
+        # The supervisor's own instruction. Its specialists are subagents on the
+        # blueprint, and **their prompts are their own** - a subagent's task is
+        # what makes it a specialist, so do not copy this into them.
+        - name: prompt
+          template: |-
+            TODO: who the supervisor is, in 繁體中文 written to
+            .agents/skills/plain-chinese/. Say that it works through its
+            subagents rather than from memory, and which kind of request goes
+            to which - by what each does, never by CR or agent names.
+        # Three deployments set these three identically. maxTokens and effort are
+        # in the CRD; **`await` is in neither the CRD nor asgard-core's
+        # ProcessorDefinitions** and is set in five production charts - see
+        # `asgard-cli wiki platform-unknowns` P10. It is here because those
+        # charts run, not because a source documents it.
+        - name: maxTokens
+          value: "60000"
+        - name: effort
+          value: medium
+        - name: await
+          value: "true"
+        # Capabilities live one CR further out, on the blueprint - including the
+        # subagents. Do NOT also declare toolsets here.
+        - name: sandboxBlueprint
+          value: sbp-<<.Name>>
+
+    # A turn that failed says so and stays in the loop. A run that failed and one
+    # that answered must not look the same to the caller, which is why this is a
+    # processor of its own rather than the same exit.
+    - name: proc-error
+      type: push-message
+      labels:
+        display_name: 錯誤回覆
+      configs:
+        - name: message
+          value: "TODO: 一句對使用者說的話,不要技術細節"
+        - name: payload
+          expression: |-
+            (() => {
+              return { prevError };
+            })()
+        - name: flush
+          value: "true"
+
+    # What makes it a conversation rather than one request: it waits for the
+    # next turn and hands back to the completion processor.
+    - name: proc-listen
+      type: listen-message
+      labels:
+        display_name: 等待下一輪
+      configs: []
+
+  relationships:
+    - from: {processor: proc-init, relationName: success}
+      to: {processor: proc-agent}
+    - from: {processor: proc-agent, relationName: success}
+      to: {processor: proc-listen}
+    - from: {processor: proc-agent, relationName: failure}
+      to: {processor: proc-error}
+    - from: {processor: proc-listen, relationName: success}
+      to: {processor: proc-agent}
+    - from: {processor: proc-error, relationName: success}
+      to: {processor: proc-listen}
+<<else>>
   variables: []
   entries:
     - name: entry-main
@@ -71,3 +165,4 @@ spec:
               format        how to answer, and what never to say
             Keep it high-level: naming a tool here means editing the prompt
             every time the tools change.
+<<end>>

@@ -864,3 +864,18 @@ time, and editing removes exactly that.
   `requirements.txt`. The description conflated the tool's reach with the
   platform's, which would tell a reader asked about SAP HANA that the platform
   cannot get there
+- `ingest` 2026-09-07 `add flowagent --supervisor` writes the conversation loop.
+  The shape was documented on `usecase flow-agent-supervisor` two days ago and
+  could not be generated: `add flowagent` wrote the single-processor Workflow,
+  which is right for what it is, and the note underneath said "several
+  specialists means adding subagents to the blueprint" without a way to get the
+  loop. Four processors, five relationships, no exits - **edge for edge what
+  three deployments run**, with `completionModel`, `maxTokens: 60000`,
+  `effort: medium` and `await: true` identical in all three. Verified: helm
+  renders it, the gate is green, `hack/validate-crs.py` reports 0 schema
+  violations, and the rendered graph matches the production one edge for edge
+- `lint` 2026-09-07 **`await: true` is in the generated skeleton and no source
+  documents it.** Neither the CRD nor asgard-core's `ProcessorDefinitions` has
+  it, and five production charts set it - `wiki platform-unknowns` P10. It is
+  written because those charts run, and the template says so where somebody
+  would otherwise take it for a documented field

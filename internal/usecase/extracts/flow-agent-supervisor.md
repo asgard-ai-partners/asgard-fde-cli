@@ -41,6 +41,12 @@ available to an anonymous caller, and `BotProvider.entrypoint` takes a
 
 ### What "the conversation loop" is
 
+    asgard-cli add flowagent <name> --project <p> --supervisor
+
+writes it, with the prompt left TODO and the subagents left to be added to the
+blueprint. What follows is what it writes and why each edge is where it is.
+
+
 It is four processors and five relationships, and **three deployments have it
 edge for edge identical** - a finance supervisor, a manufacturing one and a
 commerce back-office one, read at their prod values on 2026-09-04:

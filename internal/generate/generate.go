@@ -244,8 +244,9 @@ triggers:
 			"  mounts. That argument stops holding the moment a parameterised or",
 			"  write-capable tool is added.",
 			"The prompt lives on the workflow's processor. Several specialists means",
-			"  adding subagents to the blueprint - see asgard-cli usecase",
-			"  flow-agent-supervisor.",
+			"  --supervisor, which writes the four-processor conversation loop three",
+			"  deployments share edge for edge, and then subagents on the blueprint -",
+			"  see asgard-cli usecase flow-agent-supervisor.",
 		},
 		Values: `
 # <<.DisplayName>>
@@ -290,8 +291,14 @@ type Options struct {
 	Private     bool
 	Write       bool
 	Public      bool
-	DBClass     string
-	Force       bool
+
+	// Supervisor writes the four-processor conversation loop instead of the
+	// single-processor shape: the one three deployments share edge for edge.
+	// Its specialists are subagents on the blueprint.
+	Supervisor bool
+
+	DBClass string
+	Force   bool
 
 	// SkillSets the project's chart already declares, filled in by Resolve. A
 	// skeleton references only what exists: a name that does not is a dangling
