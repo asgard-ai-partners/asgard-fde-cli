@@ -32,7 +32,7 @@ is generalised from a single instance. It is the most confidently written
 extract with the thinnest sample, and the two facts are worth holding together.
 
 **The knowledge-base shapes come from one deployment too.** `KnowledgeBase`,
-`Loader` and `Source` appear only in auto-post, so `usecase knowledge-drive`
+`Loader` and `Source` appear only in auto-post, so `asgard-cli usecase knowledge-drive`
 describes auto-post's arrangement of them. That it is the platform's own
 deployment rather than a customer's cuts both ways - it is written by the people
 who built the CRs, and it is not a customer's constraints.

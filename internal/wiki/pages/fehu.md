@@ -28,7 +28,7 @@ which product the capability lands in - and that is decided at
 about billing. A customer with a model contract, or a compliance rule about
 where inference happens, needs to hear this while the shape is still open.
 
-It also bounds `wiki settings`: a custom `CompletionModel` CR is an Odin-side
+It also bounds `asgard-cli wiki settings`: a custom `CompletionModel` CR is an Odin-side
 thing. It does not make a hub agent or a dashboard use the customer's key.
 
 ## What is billed, and in what units

@@ -118,7 +118,7 @@ POST {base_url}/generic/ns/{namespace}/bot-provider/{bot_provider_name}/message/
 SDK and a production tenant's own chart README both give it without `/generic`.
 `asgard-cli wiki api` has the evidence and the rule that follows: take the URL
 from the deployment, where the BotProvider's name and namespace are, and confirm
-it with one request before it goes in a document. `wiki platform-unknowns` P9
+it with one request before it goes in a document. `asgard-cli wiki platform-unknowns` P9
 tracks which is right.
 
 Authenticated with an `X-API-KEY` header. The key comes from the project's

@@ -756,7 +756,7 @@ Two things worth knowing before answering:
 
   - **the Workspace is the billing unit.** So how the work splits into projects
     and workspaces has a cost consequence, and the split is decided in
-    `guide projects` - before anybody has asked this question. Ask it now
+    `asgard-cli guide projects` - before anybody has asked this question. Ask it now
   - **a seat is a line item.** "Everyone in the company can use it" is a
     sentence with a price, and the customer usually has not connected the two
   - **only Odin lets them bring their own model.** Sindri and Mimir use the

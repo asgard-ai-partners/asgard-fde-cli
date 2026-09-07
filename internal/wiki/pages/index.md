@@ -101,7 +101,7 @@ The sources this material is actually built from:
 | asgard-kube `crd/` | the contract | read per page, per field, and dated on the page |
 | **asgard-kube `pkg/apis/`** | **the Go types the CRDs are generated from, with the reasoning as comments** | read once, 2026-09-02, for the validation rules - `crd-rules`. 134KB of declarations; what has been taken is the behavioural comments, not the field list |
 | **[asgard-core](https://github.com/asgard-ai-platform/asgard-core)** `internal/constants.go` | **the processor definitions the CRD is generated from** | read once, 2026-09-02, for the type list. Its per-processor config definitions are not carried anywhere |
-| **asgard-freyr-skills** | **nine runtime skills, incl. the SHOPLINE pair** | one page - `usecase skill-layers` |
+| **asgard-freyr-skills** | **nine runtime skills, incl. the SHOPLINE pair** | one page - `asgard-cli usecase skill-layers` |
 | **seven deployment charts** | **every shape the extracts describe** | see below |
 
 **Deployment coverage cannot be measured from this material, by design.** An

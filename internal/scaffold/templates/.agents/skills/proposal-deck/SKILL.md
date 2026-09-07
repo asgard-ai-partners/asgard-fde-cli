@@ -738,7 +738,7 @@ fires then. Use it when re-reading a page, and see the review section above.
 you would do differently.** "Ming issues it" and "Ming spends five hours a
 day on it" are perfect answers that change nothing. **Three of the six were copied out of this material**, not reasoned into
 existence - from filter 0 saying to ask who issues an account, from
-`wiki operations` saying to get the name of whoever approves a change, and from
+`asgard-cli wiki operations` saying to get the name of whoever approves a change, and from
 the LINE integration needing an owner on their side. All three instructions are
 correct **for tracking**. None is slide content, and each now says so where it
 stands, because somebody copying reads one place and not the canonical one.

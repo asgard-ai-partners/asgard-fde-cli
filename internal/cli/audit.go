@@ -205,6 +205,65 @@ func material() ([]source, error) {
 	return out, nil
 }
 
+// bare matches a document named without the command that opens it - “ `guide
+// projects` “ rather than “ `asgard-cli guide projects` “.
+//
+// **A pointer written that way is invisible to everything.** `kb.Link` reads a
+// pointer as an invocation on purpose: a bare name is not actionable, because a
+// reader cannot follow it without knowing which command takes it. The cost is
+// that a writer who drops the prefix writes a pointer nothing can follow and
+// nothing reports - seven of them were in the material, and one of them was the
+// only route to `guide projects`, which became an orphan the moment the
+// document that carried the other route was deleted.
+var bare = regexp.MustCompile("`(wiki|usecase|guide|brief) ([a-z][a-z0-9-]*)`")
+
+// checkBare reports a document named without its command, where the name
+// resolves to a real document.
+//
+// Only where it resolves: “ `guide projects` “ names something, and a
+// backticked phrase that happens to start with one of those words does not.
+// The log is skipped - it is append-only, and a line in it records what was
+// written at the time rather than sending anybody anywhere.
+func checkBare(out io.Writer, sources []source) error {
+	known, err := targets()
+	if err != nil {
+		return err
+	}
+
+	type hit struct{ where, kind, name string }
+	var found []hit
+	for _, s := range sources {
+		if strings.HasSuffix(s.name, "log") {
+			continue
+		}
+		seen := map[string]bool{}
+		for _, m := range bare.FindAllStringSubmatch(s.body, -1) {
+			key := m[1] + "/" + m[2]
+			if seen[key] || !known[m[1]][m[2]] {
+				continue
+			}
+			seen[key] = true
+			found = append(found, hit{s.label + " " + s.name, m[1], m[2]})
+		}
+	}
+
+	fmt.Fprintf(out, "Documents named without the command that opens them.\n\n"+
+		"**A pointer written this way is invisible.** `kb.Link` reads a pointer as an\n"+
+		"invocation on purpose - a bare name is not actionable, because a reader cannot\n"+
+		"follow it without knowing which command takes it - so `--links` never checks\n"+
+		"one and `--orphans` never counts one. Seven were in the material, and one was\n"+
+		"the only route to `asgard-cli guide projects`.\n\n")
+
+	for _, h := range found {
+		fmt.Fprintf(out, "bare  %s -> `%s %s` should be `asgard-cli %s %s`\n", h.where, h.kind, h.name, h.kind, h.name)
+	}
+	fmt.Fprintf(out, "\n%d bare name(s).\n", len(found))
+	if len(found) > 0 {
+		return fmt.Errorf("%d document(s) named without a command", len(found))
+	}
+	return nil
+}
+
 // bookkeeping is the corpus's own navigation - the index of pages, the alias
 // index and the log. None of it is material about the platform.
 //
@@ -269,7 +328,7 @@ func helpText(cmd *cobra.Command) []source {
 }
 
 func newAuditCmd() *cobra.Command {
-	var onlyAsk, onlyUnmarked, cross, links, commands, orphans, urls bool
+	var onlyAsk, onlyUnmarked, cross, links, commands, orphans, bareNames, urls bool
 	var term string
 
 	cmd := &cobra.Command{
@@ -300,6 +359,8 @@ a customer deck.
                                            not exist
     asgard-cli audit-material --orphans    documents nothing points at. The
                                            index does not count as a pointer
+    asgard-cli audit-material --bare       documents named without the command
+                                           that opens them, which nothing sees
     asgard-cli audit-material --term <s>   every line mentioning <s>, in the
                                            templates as well as the prose
     asgard-cli audit-material --urls       fetch every docs link; exits 1 on a
@@ -394,6 +455,9 @@ maintainer can see.`,
 				}
 				return checkCommands(out, cmd.Root(), append(all, helpText(cmd.Root())...))
 			}
+			if bareNames {
+				return checkBare(out, append(sources, bookkeeping()...))
+			}
 			if orphans {
 				// Help counts as a pointer and the index does not. A command's
 				// help is read at the moment somebody is deciding what to run;
@@ -447,6 +511,7 @@ maintainer can see.`,
 	f.BoolVar(&cross, "crossref", false, "only sentences claiming what another command says")
 	f.BoolVar(&links, "links", false, "resolve every pointer in the material; exits 1 on a dead one")
 	f.BoolVar(&commands, "commands", false, "resolve every `asgard-cli <command>` this material names, against the command tree; exits 1 on one that does not exist")
+	f.BoolVar(&bareNames, "bare", false, "documents named without the command that opens them, which nothing else can see; exits 1 on one")
 	f.BoolVar(&orphans, "orphans", false, "documents nothing else points at; the index does not count as a pointer")
 	f.StringVar(&term, "term", "", "every line mentioning this word, templates included - for a rename")
 	f.BoolVar(&urls, "urls", false, "fetch every docs.asgard-ai.com link in the material; exits 1 on a 404. Needs the network")

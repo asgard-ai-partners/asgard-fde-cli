@@ -916,3 +916,14 @@ time, and editing removes exactly that.
   reports as landed. `find` now says so when a query of four or more terms
   matches more than twelve documents. Gated on the query being a sentence:
   "semantic layer" reaches 34 documents and is a perfectly good two-word lookup
+- `fix` 2026-09-07 seven documents were named without the command that opens
+  them - `` `guide projects` `` rather than `` `asgard-cli guide projects` `` -
+  and **a pointer written that way is invisible to everything**. `kb.Link` reads
+  a pointer as an invocation on purpose, because a bare name is not actionable
+  without knowing which command takes it; the cost is that dropping the prefix
+  writes a pointer `--links` never checks and `--orphans` never counts. One of
+  the seven was the only remaining route to `guide projects`, which became an
+  orphan the moment `guide init` was deleted. `audit-material --bare` reports
+  the class now and exits 1, verified by writing one on purpose. The log is
+  skipped: it is append-only and its lines record what was written rather than
+  sending anybody anywhere
