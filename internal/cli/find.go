@@ -321,6 +321,23 @@ func (r *results) drop(readCmd string) {
 	}
 }
 
+// broadResult is where a result stops narrowing anything, and broadQuery is
+// how long a query has to be for that to be the query's fault rather than the
+// subject being everywhere.
+const (
+	broadResult = 12
+	broadQuery  = 4
+)
+
+// count is how many documents matched across every part.
+func (r results) count() int {
+	n := 0
+	for _, h := range r.hits {
+		n += len(h)
+	}
+	return n
+}
+
 func (r results) terms() []string {
 	var out []string
 	for _, h := range r.hits {
@@ -377,6 +394,23 @@ func printResults(out io.Writer, query string, r results) {
 		}
 	}
 
+	// **A query that matched almost everything narrowed nothing**, and the
+	// ranking cannot fix that: a question asked in a sentence - "which
+	// questions to ask the customer" - is six common words, every one of them
+	// in most documents, so the section that answers it can be fifteen rows
+	// down while every term reports as landed. Saying so beats leaving a
+	// scanner to stop before it.
+	// Gated on the query being a sentence, not on the count alone: "semantic
+	// layer" reaches 34 documents and is a perfectly good two-word lookup.
+	// What does not narrow is four or more words, most of them common.
+	if n := r.count(); n > broadResult && len(kb.Terms(query)) >= broadQuery {
+		fmt.Fprintf(out, "**%d documents matched, which means this query narrowed almost nothing.**\n"+
+			"Every term landed, so nothing above says otherwise - a question asked in a\n"+
+			"sentence is mostly common words. One or two distinctive nouns work better\n"+
+			"here, and the section that answers a question about **what to ask** is\n"+
+			"DECISIONS rather than PLATFORM.\n\n", n)
+	}
+
 	// The reading order is the same whichever half you landed in.
 	fmt.Fprintf(out, "Read the platform side first; an extract assumes you have.\n")
 }
@@ -418,6 +452,11 @@ func reportRouted(out io.Writer, query string) {
 		"  asgard-cli wiki taiwan-channels   the four, and what each one costs\n"+
 		"  asgard-cli question add \"which of the four shapes does %s give us\" \\\n"+
 		"      --ask \"<who at the customer>\"\n\n"+
+		"**Before writing a question down, put it through the interview's own test:\n"+
+		"imagine the most specific answer possible, then ask what you would do\n"+
+		"differently.** A perfect answer that changes nothing is not a question -\n"+
+		"`asgard-cli guide requirements` has the test and the shape of one that\n"+
+		"works.\n\n"+
 		"**And this is a gap worth filing**, because the next engagement asks the\n"+
 		"same thing and gets the same answer. What to write is\n"+
 		"`asgard-cli issue-report --help`; `asgard-cli issue-report --new` writes it\n"+
@@ -682,7 +721,18 @@ func nothingMatched(out io.Writer, query string) error {
 		"The answer changes what gets built, so it belongs where somebody will\n"+
 		"answer it rather than in a decision made here:\n\n"+
 		"  asgard-cli question add \"which of the four shapes does <it> give us\" \\\n"+
-		"      --ask \"<who at the customer>\"\n\n")
+		"      --ask \"<who at the customer>\"\n\n"+
+		"**Before writing that question down, put it through the test the interview\n"+
+		"uses**, because this is the one place in this tool that hands you a\n"+
+		"`question add` unprompted and the reader of it is, by definition, not in\n"+
+		"the interview: **imagine the most specific answer possible, then ask what\n"+
+		"you would do differently.** \"Ming issues it\" and \"Ming spends five hours a\n"+
+		"day on it\" are both perfect answers and neither changes anything, so\n"+
+		"neither is a question. What we need FROM them is ours to chase - a\n"+
+		"credential, an endpoint, a network path, a document, an account. How they\n"+
+		"staff a channel is theirs.\n\n"+
+		"  asgard-cli guide requirements   the test in full, and the shape of a\n"+
+		"                                  question that works\n\n")
 
 	fmt.Fprintf(out, "**This search was recorded.** If the subject does exist here under another\n"+
 		"name, that is a missing row in the index rather than a missing page, and\n"+

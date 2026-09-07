@@ -899,3 +899,20 @@ time, and editing removes exactly that.
   `asgard-cli usecase chat-channel`, and searching the translated words instead
   ranked external-api above it - the index knowing the answer with nothing using
   it
+- `fix` 2026-09-07 issue #43: `find`'s empty-result fallback is the only place in
+  this tool that hands somebody `question add` unprompted, and it said who to
+  address a question to and not **what makes one worth asking**. The reader of
+  that fallback is by definition not in the interview - they searched for a thing
+  and it was not there - so filter 0's test now travels with the suggestion:
+  imagine the most specific answer possible, then ask what you would do
+  differently. It cost that engagement a two-item question list with one item
+  whose perfect answer was a person's name, and it was the second such list; the
+  first was in a real meeting round
+- `lint` 2026-09-07 the same issue's second claim does **not** reproduce on main:
+  `guide requirements` is the first DECISIONS hit for "which questions to ask the
+  customer". What is real is where it sits - fifteen rows down, after eight
+  platform pages and seven shapes - because the six words of a question asked in
+  a sentence are common words that reach almost everything, and every one of them
+  reports as landed. `find` now says so when a query of four or more terms
+  matches more than twelve documents. Gated on the query being a sentence:
+  "semantic layer" reaches 34 documents and is a perfectly good two-word lookup
