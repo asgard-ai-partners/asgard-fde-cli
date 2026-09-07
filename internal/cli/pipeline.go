@@ -240,14 +240,41 @@ Creating one is ` + "`asgard-cli pipeline connect`" + `.`,
 				return nil
 			}
 			for _, c := range conns {
-				fmt.Fprintf(out, "%-22s %-24s %-8s %s (%d pipeline(s))\n",
-					c.ConnectionId, c.AccountLogin, c.Status, c.Provider, c.PipelineCount)
+				fmt.Fprintf(out, "%-22s %-24s %-8s %-7s %-18s %s\n",
+					c.ConnectionId, c.AccountLogin, c.Status, c.Provider,
+					repositoryScope(c.RepositorySelection), connectionUse(c))
 			}
 			return nil
 		},
 	}
 	f.register(cmd, false)
 	return cmd
+}
+
+// repositoryScope renders what the installation grants. Empty for a connection
+// recorded before the platform started asking, which is not the same as
+// knowing it grants nothing — so it says so rather than guessing.
+func repositoryScope(selection string) string {
+	switch selection {
+	case "all":
+		return "all repositories"
+	case "selected":
+		return "some repositories"
+	}
+	// Empty on a connection recorded before the platform started asking. Not
+	// the same as "grants nothing", so it says it does not know.
+	return "scope unknown"
+}
+
+// connectionUse is the one line that changes what somebody does next: how many
+// pipelines depend on it here, and whether anyone else is on the same
+// installation.
+func connectionUse(c *platform.VcsConnection) string {
+	use := fmt.Sprintf("%d pipeline(s)", c.PipelineCount)
+	if c.SharedWithWorkspaceCount > 0 {
+		use += fmt.Sprintf(", also connected by %d other workspace(s)", c.SharedWithWorkspaceCount)
+	}
+	return use
 }
 
 func newPipelineReposCmd() *cobra.Command {
