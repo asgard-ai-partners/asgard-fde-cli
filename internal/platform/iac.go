@@ -808,6 +808,36 @@ type Project struct {
 	Namespace   string `json:"k8s_namespace_name"`
 }
 
+// CreateProject creates a project in the workspace, and with it the default
+// environment that makes the project usable.
+//
+// **The environment is not a second call.** The platform's create does both -
+// it writes the project, creates its default environment and stamps the main
+// environment annotation - which matters because `release create` refuses a
+// project that has none. A project made this way cannot be in that state; the
+// ones that can are older than the requirement.
+//
+// It is not part of `/v1/iac` for the same reason ListProjects is not: a
+// project is a platform concept the pipeline borrows. The workspace comes from
+// the header every request here already carries.
+//
+// **It consumes quota.** The route is behind a subscription check, so a refusal
+// here is an account limit rather than a bad argument, and the caller says so.
+func (c *Client) CreateProject(ctx context.Context, name string, annotations map[string]any) (*Project, error) {
+	body := map[string]any{"project_name": name}
+	if len(annotations) > 0 {
+		body["annotations"] = annotations
+	}
+	var out Project
+	err := c.do(ctx, request{
+		method: http.MethodPost,
+		path:   "/v1/project",
+		body:   body,
+		out:    &out,
+	})
+	return &out, err
+}
+
 // ListProjects returns the workspace's projects.
 //
 // It is not part of `/v1/iac` - a project is a platform concept the pipeline

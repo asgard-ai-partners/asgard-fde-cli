@@ -54,6 +54,8 @@ asgard-cli workspace use <id>
 asgard-cli pipeline connections       # none? asgard-cli pipeline connect
 asgard-cli pipeline create --name <n> --connection <id> --repo <owner/name>
 asgard-cli pipeline use <id>
+asgard-cli pipeline projects          # empty? that is where a new customer starts:
+                                      #   asgard-cli pipeline project create <name>
 asgard-cli skill update               # the CR reference material arrives here
 ```
 
@@ -67,6 +69,11 @@ Three things to know while doing it:
 - **`asgard-cli pipeline connect` can block on somebody else.** It installs a
   GitHub App, which in many organisations needs an admin. Say so and stop, rather
   than retrying: waiting a day for the right person is the normal outcome.
+- **A workspace with no projects is the normal start, not a fault.** A release
+  deploys into a project, so nothing deploys until one exists:
+  `asgard-cli pipeline project create <name>` makes one, with the default
+  environment that `pipeline release create` requires. It consumes account
+  quota, so a refusal there is a subscription limit rather than a bad name.
 - **Do not write any CR until `asgard-cli skill update` has run.** The skills
   describing what this server accepts - the CR shapes, the processor catalogue -
   are fetched, not shipped. Authoring against what you assume is exactly the
