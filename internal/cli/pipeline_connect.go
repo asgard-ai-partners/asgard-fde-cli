@@ -47,8 +47,9 @@ are expected: a connection records which provider it is, and adding one later
 should be a new value here, not a new command to learn. Today github is the only
 one, and naming another says so rather than pretending.
 
-WHAT HAPPENS. The platform mints a single-use state bound to this workspace and
-returns the provider's installation URL carrying it. This opens that URL, and
+WHAT HAPPENS. The platform mints a state bound to this workspace and returns the
+provider's installation URL carrying it. The state is sealed rather than stored,
+so it stays usable for its whole lifetime rather than being spent on first use. This opens that URL, and
 the provider redirects back to the platform - not to this machine - which is
 what completes the connection. So there is nothing here to catch: what this
 waits on is a new connection appearing in the workspace, which is the same
@@ -67,8 +68,13 @@ deleting the connection that holds it.
 An installation that already exists on the provider still has to be connected
 here once: existing on GitHub and being bound to a workspace are different
 things, and the provider's page for an already-installed App is a "configure"
-screen rather than an "install" one. Clicking through it completes the same
-flow.`,
+screen rather than an "install" one.
+
+That screen has a catch worth knowing before you meet it: its save button is
+disabled while there is nothing to save, which is exactly the case when the
+repository access you want is already granted. There is then no button to click
+and no redirect back here, so this command waits for a connection that cannot
+arrive.`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			provider := platform.ProviderGitHub
@@ -111,7 +117,7 @@ flow.`,
 			}
 			fmt.Fprintf(msg, "Open this URL and complete the installation:\n\n    %s\n\n", install.InstallUrl)
 			if install.ExpiresAt != nil {
-				fmt.Fprintf(msg, "The link is single-use and expires %s.\n", install.ExpiresAt.Local().Format("15:04"))
+				fmt.Fprintf(msg, "The link expires %s.\n", install.ExpiresAt.Local().Format("15:04"))
 			}
 			fmt.Fprintf(msg, "Waiting for the connection to appear...\n")
 
