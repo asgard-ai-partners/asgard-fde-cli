@@ -816,6 +816,10 @@ type InstallStatus struct {
 	ExpiresAt    *time.Time `json:"expires_at"`
 	// Expired reports that the window closed with nothing decided.
 	Expired bool `json:"expired"`
+	// AttachState and Installations are set when the flow ended in a choice
+	// rather than a connection.
+	AttachState   string              `json:"attach_state"`
+	Installations []*UserInstallation `json:"installations"`
 }
 
 // Settled reports whether this flow has stopped being worth waiting for.
@@ -832,6 +836,58 @@ func (c *Client) GetInstallStatus(ctx context.Context, state string) (*InstallSt
 		path:   "/v1/iac/connections/install-status",
 		query:  url.Values{"state": {state}},
 		out:    &out,
+	})
+	return &out, err
+}
+
+// UserInstallation is one installation the authorizing person can reach.
+type UserInstallation struct {
+	InstallationId string `json:"installation_id"`
+	AccountLogin   string `json:"account_login"`
+	AccountType    string `json:"account_type"`
+	// "all" or "selected" — what the installation grants on the provider.
+	RepositorySelection string `json:"repository_selection"`
+	// Set when this workspace already holds it.
+	ConnectionId string `json:"connection_id"`
+}
+
+// AttachChoices is what the attach path returns instead of a connection.
+type AttachChoices struct {
+	Installations []*UserInstallation `json:"installations"`
+	AttachState   string              `json:"attach_state"`
+}
+
+// BeginGitHubAttach starts the other way in: identify the person on the
+// provider first, then pick from what it says they reach.
+func (c *Client) BeginGitHubAttach(ctx context.Context) (*BeginInstall, error) {
+	var out struct {
+		AuthorizeUrl string     `json:"authorize_url"`
+		State        string     `json:"state"`
+		ExpiresAt    *time.Time `json:"expires_at"`
+	}
+	err := c.do(ctx, request{
+		method: http.MethodPost,
+		path:   "/v1/iac/connections/begin-github-attach",
+		out:    &out,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &BeginInstall{InstallUrl: out.AuthorizeUrl, State: out.State, ExpiresAt: out.ExpiresAt}, nil
+}
+
+// AttachInstallation connects one of the installations the authorizing person
+// was shown to reach.
+func (c *Client) AttachInstallation(ctx context.Context, attachState, installationID string) (*VcsConnection, error) {
+	var out VcsConnection
+	err := c.do(ctx, request{
+		method: http.MethodPost,
+		path:   "/v1/iac/connections/attach",
+		body: map[string]string{
+			"attach_state":    attachState,
+			"installation_id": installationID,
+		},
+		out: &out,
 	})
 	return &out, err
 }
