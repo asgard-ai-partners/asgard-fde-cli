@@ -666,17 +666,26 @@ func (e *ErrNoSuchRelease) Error() string {
 // VcsConnection is one provider installation a workspace can build pipelines
 // on.
 type VcsConnection struct {
-	ConnectionId   string     `json:"connection_id"`
-	WorkspaceId    string     `json:"workspace_id"`
-	Provider       string     `json:"provider"`
-	InstallationId string     `json:"installation_id"`
-	AccountLogin   string     `json:"account_login"`
-	AccountType    string     `json:"account_type"`
-	Status         string     `json:"status"`
-	PipelineCount  int32      `json:"pipeline_count"`
-	CreatedBy      string     `json:"created_by"`
-	CreatedAt      *time.Time `json:"created_at"`
-	UpdatedAt      *time.Time `json:"updated_at"`
+	ConnectionId   string `json:"connection_id"`
+	WorkspaceId    string `json:"workspace_id"`
+	Provider       string `json:"provider"`
+	InstallationId string `json:"installation_id"`
+	AccountLogin   string `json:"account_login"`
+	AccountType    string `json:"account_type"`
+	Status         string `json:"status"`
+	PipelineCount  int32  `json:"pipeline_count"`
+	// RepositorySelection is what the installation grants on the provider:
+	// "all" or "selected". Read only, and not ours to change — the control for
+	// it is on the provider. It is the upper bound on what any pipeline through
+	// this connection can reach, which is why it is worth a column.
+	RepositorySelection string `json:"repository_selection"`
+	// SharedWithWorkspaceCount is how many OTHER workspaces hold this same
+	// installation. A count rather than names: "this account is already in use
+	// elsewhere" is the part that changes what you do next.
+	SharedWithWorkspaceCount int32      `json:"shared_with_workspace_count"`
+	CreatedBy                string     `json:"created_by"`
+	CreatedAt                *time.Time `json:"created_at"`
+	UpdatedAt                *time.Time `json:"updated_at"`
 }
 
 // Repository is one repository visible through a connection.
