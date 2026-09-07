@@ -86,8 +86,7 @@ type Project struct {
 // Data is what every template is rendered with. Project is set only while
 // rendering a file that lives under a __PROJECT__ path.
 type Data struct {
-	Workspace repo.Workspace
-	Projects  []Project
+	Projects []Project
 	// RepoName is the repository's own directory name - a fact on disk, not a
 	// recorded one, so renaming the checkout needs no correction anywhere.
 	RepoName string
@@ -98,19 +97,19 @@ type Data struct {
 
 // NewData derives the render data from what the caller found.
 //
-// **Nothing here is read from a config file.** The projects are the
-// repository's own directories and declaration, and the workspace name is the
-// platform's answer - both passed in, which is where the looking belongs.
-func NewData(root string, ws repo.Workspace, projects []string) Data {
+// **Nothing here is read from a config file, and nothing is asked of the
+// platform.** The projects are the repository's own directories and
+// declaration; the repository name is the directory it is in. Both are facts on
+// disk, which is why the skeleton can be written before there is an account.
+func NewData(root string, projects []string) Data {
 	out := make([]Project, len(projects))
 	for i, slug := range projects {
 		out[i] = Project{Slug: slug}
 	}
 	return Data{
-		Workspace: ws,
-		Projects:  out,
-		RepoName:  filepath.Base(root),
-		SpecSlug:  repo.SpecSlug,
+		Projects: out,
+		RepoName: filepath.Base(root),
+		SpecSlug: repo.SpecSlug,
 	}
 }
 
@@ -163,8 +162,8 @@ type Result struct {
 // Write renders the skeleton into root. It never removes anything, and without
 // force it leaves existing files alone, so it can be run again after a project
 // is added or when a file was deleted by hand.
-func Write(root string, ws repo.Workspace, projects []string, force bool) ([]Result, error) {
-	jobs, err := plan(NewData(root, ws, projects))
+func Write(root string, projects []string, force bool) ([]Result, error) {
+	jobs, err := plan(NewData(root, projects))
 	if err != nil {
 		return nil, err
 	}

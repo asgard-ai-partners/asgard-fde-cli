@@ -5,7 +5,7 @@
 
 ## Repo Context
 
-- **Project**: `<<.RepoName>>` — the repo where **all Asgard custom resources for <<.Workspace.Name>> are specified**, and from which they are deployed.
+- **Project**: `<<.RepoName>>` — the repo where **all Asgard custom resources for this engagement are specified**, and from which they are deployed.
 - **How work is driven**: **spec-driven** — `requirements/` is the implementation source of truth (see Spec-Driven Development below).
 - **Kind**: Helm charts only. No application source code — everything is declarative Kubernetes custom resources under `asgard-ai.com/v1alpha1`. (`.agents/skills/db-query/` is a local tool-chain for reading the customer's systems at design time, not deployed.)
 - **Standard Asgard-Kube layout**: each **Project** is its own Helm chart under `projects/<project>/chart/app`, deployed to its own namespace. Cross-project shared plumbing lives in `common/`. ("Project" is the generalized unit — a Platform Project == a K8s Namespace.)

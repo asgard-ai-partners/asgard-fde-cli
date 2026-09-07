@@ -12,7 +12,6 @@ import (
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/binding"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/pipelineconfig"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/platform"
-	"github.com/asgard-ai-partners/asgard-fde-cli/internal/repo"
 )
 
 // `asgard-cli init` is the composition, and the composition is the point.
@@ -101,7 +100,7 @@ When it finishes, commit what it wrote and run ` + "`asgard-cli gate`" + `.`,
 			fmt.Fprintf(out, "%-11s %s\n\n", "directory", root)
 
 			fmt.Fprintf(out, "1/3 skeleton\n")
-			if err := runScaffold(cmd, root, repo.Workspace{Name: t.Workspace.Name}, force, false); err != nil {
+			if err := runScaffold(cmd, root, force, false); err != nil {
 				return err
 			}
 

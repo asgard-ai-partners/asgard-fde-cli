@@ -62,11 +62,7 @@ as ` + "`stale`" + ` rather than overwritten silently.`,
 			if err != nil {
 				return err
 			}
-			ws, err := workspaceForTemplates(cmd)
-			if err != nil {
-				return err
-			}
-			return runScaffold(cmd, root, ws, force, true)
+			return runScaffold(cmd, root, force, true)
 		},
 	}
 
@@ -99,13 +95,13 @@ func scaffoldRoot() (string, error) {
 // next two steps itself, and printing "then run skill update" in the middle of
 // a command that is about to run it reads as an instruction rather than as a
 // report.
-func runScaffold(cmd *cobra.Command, root string, ws repo.Workspace, force, standalone bool) error {
+func runScaffold(cmd *cobra.Command, root string, force, standalone bool) error {
 	projects, err := repo.Projects(root)
 	if err != nil {
 		return err
 	}
 
-	results, err := scaffold.Write(root, ws, projects, force)
+	results, err := scaffold.Write(root, projects, force)
 	if err != nil {
 		return err
 	}

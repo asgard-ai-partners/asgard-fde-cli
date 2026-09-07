@@ -70,7 +70,7 @@ those parts empty.`,
 			// Reference material reads with no repository - that is the point
 			// of it - so being outside one renders against an empty state
 			// rather than failing.
-			ws, state := repo.Workspace{}, stage.State{}
+			state := stage.State{}
 			if root := repo.Root("."); root != "" {
 				if s, err := stage.Inspect(root); err == nil {
 					state = s
@@ -78,7 +78,7 @@ those parts empty.`,
 				work.Recall(root, "stage", string(found.Name))
 			}
 
-			prompt, err := found.Prompt(ws, state)
+			prompt, err := found.Prompt(state)
 			if err != nil {
 				return err
 			}

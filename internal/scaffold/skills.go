@@ -50,7 +50,7 @@ func Body(name string) (string, error) { return skillBody(name) }
 
 // skillBody reads one skill's SKILL.md, rendered or not. The templated ones are
 // searched as written, placeholders and all: a search hits prose, and the only
-// placeholder in them is the workspace name.
+// placeholder left in any of them is the spec slug, which is a constant.
 func skillBody(name string) (string, error) { return corpus.Read(name) }
 
 // corpus is the skills as a body of material, on the same terms as the wiki and
@@ -83,7 +83,8 @@ var corpus = kb.Corpus{
 
 // skillRefs lists each skill directory and the SKILL.md inside it. The
 // templated ones are searched as written, placeholders and all: a search hits
-// prose, and the only placeholder in them is the workspace name.
+// prose, and the only placeholder left in any of them is the spec slug, which
+// is a constant.
 func skillRefs() ([]kb.Ref, error) {
 	entries, err := fs.ReadDir(templates, skillRoot)
 	if err != nil {
@@ -107,8 +108,14 @@ func skillRefs() ([]kb.Ref, error) {
 }
 
 // parseSkill takes the title and summary from the frontmatter rather than from
-// a heading. The heading exists but carries the workspace name as an unrendered
-// placeholder, so it reads as broken text in a listing.
+// a heading.
+//
+// The heading used to carry the workspace name as an unrendered placeholder,
+// which read as broken text in a listing. That reason is gone with the name,
+// and the behaviour stays for a better one: the frontmatter `description` is
+// what an agent's own runtime reads to decide whether a skill is relevant, so a
+// listing that shows anything else is showing a second answer to the same
+// question.
 func parseSkill(name string, data []byte) kb.Doc {
 	d := kb.Parse(name, data)
 	d.Title = ""
