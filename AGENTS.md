@@ -154,6 +154,41 @@ and nothing here checks. Read the `Long` of a neighbouring command and match it.
 To add a subcommand: write `newXxxCmd()` in `internal/cli/`, register it in the
 `cmd.AddCommand(...)` call in `root.go`.
 
+## Every directory the scaffold writes must document itself
+
+Same rule as the commands above, applied to `internal/scaffold/templates/`. A
+directory that arrives in a customer's repository with nothing in it but its own
+name is a question the FDE has to ask somebody.
+
+**Say both halves: what goes in it, and what does not.**
+
+The second half is the load-bearing one, and it is not politeness. `assets/skills/`
+and `.agents/skills/` differ by one word and are opposite mechanisms - one is
+synced into a running system, the other is read by the agent editing this
+repository - and what stops somebody putting a file in the wrong one is a
+sentence in a README saying which is which. Every "not" in those files is there
+because the confusion is available, not to fill space.
+
+So, for **a directory whose name is ours to choose**:
+
+- It contains a `README.md` (or an `_index.md` where a command writes into the
+  same file) that names its purpose in the first line.
+- It says what it is **not**, naming the directory somebody would otherwise
+  confuse it with.
+- One that starts empty says **why it is there at all** - `assets/skills/` is
+  empty in a fresh repository on purpose, because a path invented per engagement
+  is a path that differs per engagement, and `SkillSet.searchPaths` carries it.
+
+**git cannot track an empty directory**, so this is not only documentation: the
+README is what makes the directory exist in a clone at all.
+
+The rule does not reach a directory whose shape somebody else decided.
+`.agents/skills/` and `plugins/asgard-fde/` are the agent-skill and Claude Code
+plugin layouts, `.claude-plugin/` holds a manifest with a schema, and
+`db-query/scripts/` holds the scripts its own `SKILL.md` documents. Naming what
+those are for is the external convention's job, and a README in each would be a
+second answer to a question already answered.
+
 ## The gate
 
 There is no test suite - it was removed on 2026-09-02. What is left:

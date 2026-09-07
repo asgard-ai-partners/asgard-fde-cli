@@ -19,7 +19,7 @@ first, come back with the schema.
 
 > **Design time, not runtime.** This skill is for the *coding agent* working in this repo.
 > It is never synced into the platform. Skills the *deployed* agent uses at runtime live in
-> `common/skills/<skill>/SKILL.md` and are bound via a `SkillSet` CR — a completely separate
+> `assets/skills/<skill>/SKILL.md` and are bound via a `SkillSet` CR — a completely separate
 > mechanism. Do not confuse the two.
 
 ## When To Use

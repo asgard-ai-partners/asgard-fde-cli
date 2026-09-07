@@ -47,5 +47,5 @@ it from there: a spec that inlines forty pages stops being readable as a spec.
 
 > Related but **not** here: domain knowledge the *agent* needs at runtime (status-code semantics,
 > cross-system entity mapping, aggregation conventions) belongs in a skill under
-> `common/skills/<skill>/SKILL.md`, because it has to be synced into the platform to be usable.
-> `references/` is for humans and spec-writing agents; `common/skills/` is for the running agent.
+> `assets/skills/<skill>/SKILL.md`, because it has to be synced into the platform to be usable.
+> `references/` is for humans and spec-writing agents; `assets/skills/` is for the running agent.

@@ -177,7 +177,7 @@ counter-intuitive:
   - **It is the cheapest thing on the list and the one that decides whether the
     rest is usable.** Nothing to procure, nothing to provision - a document
 
-It goes to `common/skills/<name>/SKILL.md` and is synced to the platform. In
+It goes to `assets/skills/<name>/SKILL.md` and is synced to the platform. In
 `references/` it is invisible to the running agent, and the failure then looks
 like a model ignoring instructions rather than a file in the wrong place -
 `asgard-cli guide requirements` has the full rule.

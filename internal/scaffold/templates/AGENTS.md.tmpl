@@ -8,7 +8,7 @@
 - **Project**: `<<.RepoName>>` — the repo where **all Asgard custom resources for this engagement are specified**, and from which they are deployed.
 - **How work is driven**: **spec-driven** — `requirements/` is the implementation source of truth (see Spec-Driven Development below).
 - **Kind**: Helm charts only. No application source code — everything is declarative Kubernetes custom resources under `asgard-ai.com/v1alpha1`. (`.agents/skills/db-query/` is a local tool-chain for reading the customer's systems at design time, not deployed.)
-- **Standard Asgard-Kube layout**: each **Project** is its own Helm chart under `projects/<project>/chart/app`, deployed to its own namespace. Cross-project shared plumbing lives in `common/`. ("Project" is the generalized unit — a Platform Project == a K8s Namespace.)
+- **Standard Asgard-Kube layout**: each **Project** is its own Helm chart under `projects/<project>/chart/app`, deployed to its own namespace. Cross-project shared plumbing lives in `assets/`. ("Project" is the generalized unit — a Platform Project == a K8s Namespace.)
 <<if .Projects>>- **Projects**:
 <<range .Projects>>  - `<<.Slug>>` — TODO: what it does, who calls it, which systems it reads.
 <<end>><<else>>- **Projects**: none yet. Add one with `asgard-cli project add <slug>`.
@@ -255,7 +255,7 @@ from making the same choice.
 │                                  #   what triggers each, which keys each takes. NO VALUES.
 ├── .asgard-cli.yaml               # which workspace/pipeline this checkout acts in.
 │                                  #   CLIENT-SIDE ONLY — the platform never reads it
-├── common/                        # cross-project shared plumbing
+├── assets/                        # cross-project shared plumbing
 │   ├── skills/<skill>/SKILL.md    # RUNTIME skills, synced into the platform
 │   └── README.md                  # what is shared and what is not
 ├── projects/<project>/
@@ -426,7 +426,7 @@ Where a fact belongs when it is not obvious:
 They are **not interchangeable**. Deciding which one you are writing is the first question,
 because the delivery mechanism is completely different.
 
-| | `.agents/skills/<skill>/SKILL.md` | `common/skills/<skill>/SKILL.md` |
+| | `.agents/skills/<skill>/SKILL.md` | `assets/skills/<skill>/SKILL.md` |
 |---|---|---|
 | **Who reads it** | the **coding agent** working in this repo (you) | the **deployed Asgard agent**, at runtime |
 | **When** | design time — while authoring CRs | runtime — while answering a user |

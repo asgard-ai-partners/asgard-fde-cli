@@ -7,7 +7,7 @@ description: Use FIRST when working in this repo - it routes you to the right co
 
 > **Design time.** This skill is for the coding agent working in this repo. It is
 > never synced into the platform. Skills the *deployed* agent uses at runtime
-> live in `common/skills/` and reach the cluster through a `SkillSet` - a
+> live in `assets/skills/` and reach the cluster through a `SkillSet` - a
 > completely separate mechanism. Do not confuse the two.
 
 This repo defines the Asgard custom resources (`asgard-ai.com/v1alpha1`) for
@@ -72,7 +72,7 @@ Not a sequence to follow - a map of what answers what.
 | **reading a customer's own system** - list tables, check a column's real values, verify a join | `db-query` skill. Eight connector classes, read-only |
 | turning what you found into a `SemanticLayer` or `DataConnector` | `semantic-layer-modeling` skill |
 | **somebody has to give you a credential** | `asgard-cli local-env` - opens a form for them to type it into. **Never ask for a password in the conversation** |
-| before committing anything under `projects/*/chart` or `common/` | `asgard-cr-verification` skill (`asgard-cli skill update` writes it) |
+| before committing anything under `projects/*/chart` or `assets/` | `asgard-cr-verification` skill (`asgard-cli skill update` writes it) |
 | work that needs a spec before implementation | `spec-workflow` skill |
 | a slide deck for the customer | `proposal-deck` skill |
 | **any 繁體中文 the customer will read** - a slide, a reply to their question, a cube `description`, an agent's prompt | `plain-chinese` skill. Load it for the second pass, not while drafting |
@@ -117,7 +117,7 @@ wrong".
 - **Source systems are read-only** until a spec says otherwise. Any write path
   points outward, never at a source system, and needs human approval.
 - **Run the gate before committing** anything under `projects/*/chart` or
-  `common/`, and stop at the first red step.
+  `assets/`, and stop at the first red step.
 - **Write the decision down the day it is settled** -
   `docs/decisions/YYYY-MM-DD-<topic>.md`, saying why the rejected option was
   rejected. That sentence is the only part nobody can reconstruct later.
@@ -127,7 +127,7 @@ wrong".
 
 **Checked:** 2026-09-04 - every command this page routes to exists and answers
 what is claimed, checked by running each. The one platform statement it makes is
-the distinction between a runtime skill under `common/skills/` bound by a
+the distinction between a runtime skill under `assets/skills/` bound by a
 `SkillSet` CR and a design-time skill under `.agents/skills/` that only the
 coding agent reads; `SkillSet` is in the contract at asgard-kube `15ded0f` and
 the two mechanisms are separate, which is why the warning is at the top.

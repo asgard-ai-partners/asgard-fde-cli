@@ -192,7 +192,7 @@ CLI 有更新、或新增了 project 的時候就再跑一次：既有檔案不�
 | `docs/` | 四層模型（meeting-notes / decisions / living spec）與 SDD 規則 |
 | `requirements/` | task 與 request 的索引 |
 | `.agents/skills/` | 對任何 Asgard 都成立的七個設計期 skill，`db-query` 是其中之一；描述某一座 server 的那些來自 `asgard-cli skill update` |
-| `common/` | runtime skill 目錄 |
+| `assets/` | runtime skill 目錄 |
 | `.asgard-pipeline.yaml` | 部署宣告，每個 project 一個 release 待填 |
 | `projects/<slug>/` | 每個 project 一份 chart 骨架 |
 
@@ -406,7 +406,7 @@ asgard-cli check --format json      # error 與 warning 是兩個陣列
 
 - 根 README 的 project 表格跟 `projects/` 底下的目錄一致
 - `.asgard-pipeline.yaml` 解析得開、沒有重複的 release 名、每個宣告的 release 都指向一個有 `Chart.yaml` 的 chart 目錄
-- `common/skills/` 底下的 runtime skill 帶著 `name` 與 `description` frontmatter，且名字與目錄相符
+- `assets/skills/` 底下的 runtime skill 帶著 `name` 與 `description` frontmatter，且名字與目錄相符
 - `requirements/` 底下的 SDD 入口都在
 - `docs/` 的 spec 層完整：必要檔案、living spec 的模組索引與磁碟上的檔案相符、日期檔名、以及 `docs/` 裡每個相對連結都解得開
 - **沒有孤兒頁** —— `docs/` 或 `requirements/` 底下一份沒有任何東西連到的文件不會被讀到，而寫它的人永遠不會發現，因為檔案還在。這是警告而非錯誤：一份今天記下、還沒被套用的決議，在被套用之前本來就是孤兒。

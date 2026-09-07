@@ -615,7 +615,7 @@ Nobody can reconstruct it later from the schema, because it is not in the schema
 An agent without it does not fail visibly - it answers confidently and wrongly,
 having interpreted a code that meant something else.
 
-It goes to `common/skills/<name>/SKILL.md`, which is synced to the platform. In
+It goes to `assets/skills/<name>/SKILL.md`, which is synced to the platform. In
 `references/` it is invisible to the running agent, and the failure then looks
 like a model ignoring instructions rather than a file in the wrong place.
 
@@ -863,7 +863,7 @@ is who reads them:
 
     references/            background, for humans and spec-writing agents
     requirements/          the implementation source of truth
-    common/skills/         what the RUNNING agent needs, synced to the platform
+    assets/skills/         what the RUNNING agent needs, synced to the platform
 
 So: file the material into `references/`, and have the request **cite** it. A
 request that inlines forty pages of API documentation stops being readable as a
@@ -894,7 +894,7 @@ their own staff describes the system they believe they have.
 
 **Domain knowledge the agent needs at runtime is the third case, and it is the
 one people get wrong.** Status-code meanings, cross-system entity mapping,
-aggregation conventions - those belong in `common/skills/<skill>/SKILL.md`,
+aggregation conventions - those belong in `assets/skills/<skill>/SKILL.md`,
 because they have to be synced into the platform to be usable at all. Left in
 `references/`, they are invisible to the running agent, and the failure looks
 like a model that ignores instructions rather than a file in the wrong place.

@@ -120,7 +120,7 @@ func Run(root string, only ...string) (Report, error) {
 	if err := c.checkRegistry(projects); err != nil {
 		return Report{}, err
 	}
-	if err := c.checkCommonSkills(projects); err != nil {
+	if err := c.checkAssetSkills(projects); err != nil {
 		return Report{}, err
 	}
 	c.checkRequirementIndexes()
@@ -338,7 +338,7 @@ func frontmatter(data []byte) map[string]string {
 	return out
 }
 
-// checkCommonSkills validates the runtime skills. The platform resolves one
+// checkAssetSkills validates the runtime skills. The platform resolves one
 // directory as one skill, so the directory name and the declared name have to
 // agree or the SkillSet's searchPath silently resolves to nothing.
 //
@@ -347,12 +347,14 @@ func frontmatter(data []byte) map[string]string {
 // every run of every new repo and teaches the reader that a warn from this
 // command means nothing - which matters, because the interview check below
 // reports something worth acting on through the same channel.
-func (c *checker) checkCommonSkills(projects []string) error {
-	dir := filepath.Join(c.root, "common", "skills")
+func (c *checker) checkAssetSkills(projects []string) error {
+	c.checkRenamedCommonDir()
+
+	dir := filepath.Join(c.root, assetsDir, "skills")
 	entries, err := os.ReadDir(dir)
 	if os.IsNotExist(err) {
 		if len(projects) > 0 {
-			c.warnf("common/skills/ does not exist; it is where runtime skills live, and there are none yet")
+			c.warnf("assets/skills/ does not exist; it is where runtime skills live, and there are none yet")
 		}
 		return nil
 	}
@@ -369,7 +371,7 @@ func (c *checker) checkCommonSkills(projects []string) error {
 		path := filepath.Join(dir, e.Name(), "SKILL.md")
 		data, err := os.ReadFile(path)
 		if os.IsNotExist(err) {
-			c.errf("common/skills/%s/ has no SKILL.md; one directory is one skill", e.Name())
+			c.errf("assets/skills/%s/ has no SKILL.md; one directory is one skill", e.Name())
 			continue
 		}
 		if err != nil {
@@ -378,20 +380,20 @@ func (c *checker) checkCommonSkills(projects []string) error {
 
 		fm := frontmatter(data)
 		if fm == nil {
-			c.errf("common/skills/%s/SKILL.md has no frontmatter; it needs name and description", e.Name())
+			c.errf("assets/skills/%s/SKILL.md has no frontmatter; it needs name and description", e.Name())
 			continue
 		}
 		for _, key := range []string{"name", "description"} {
 			if fm[key] == "" {
-				c.errf("common/skills/%s/SKILL.md frontmatter is missing %s", e.Name(), key)
+				c.errf("assets/skills/%s/SKILL.md frontmatter is missing %s", e.Name(), key)
 			}
 		}
 		if name := fm["name"]; name != "" && name != e.Name() {
-			c.errf("common/skills/%s/SKILL.md declares name %q, which does not match its directory", e.Name(), name)
+			c.errf("assets/skills/%s/SKILL.md declares name %q, which does not match its directory", e.Name(), name)
 		}
 	}
 	if !found && len(projects) > 0 {
-		c.warnf("common/skills/ has no skill directories yet")
+		c.warnf("assets/skills/ has no skill directories yet")
 	}
 	return nil
 }
@@ -793,6 +795,46 @@ func (c *checker) checkEnvIgnored() error {
 	c.errf("%s exists and .gitignore does not cover it; it holds design-time credentials "+
 		"and must never be committable. `asgard-cli local-env` adds the line", localenv.FileName)
 	return nil
+}
+
+// assetsDir holds what the running system uses, most often by way of a Syncer
+// pulling this repository into a SourceSet volume.
+//
+// It was `common/` until 2026-09-07, named after the fact that the projects in
+// one engagement shared it. Sharing was that engagement's circumstance; what
+// the directory is for is the runtime.
+const assetsDir = "assets"
+
+// legacyAssetsDir is what assetsDir used to be called.
+const legacyAssetsDir = "common"
+
+// checkRenamedCommonDir tells a repository written before the rename what to do
+// about it, once.
+//
+// **A warning, not an error.** The rename is not finished by moving the
+// directory: a SkillSet's searchPaths name a path inside the synced volume, so
+// they carry this repository's directory name - `git/common/skills/<skill>` has
+// to become `git/assets/skills/<skill>` - and that string lives in a Helm
+// template, where nothing here can see it. So this cannot verify the fix, only
+// name the half somebody is about to forget.
+//
+// Getting it wrong is quiet: a searchPath that resolves to no skill directory
+// resolves to **zero skills**, and the platform does not call that an error.
+func (c *checker) checkRenamedCommonDir() {
+	if _, err := os.Stat(filepath.Join(c.root, legacyAssetsDir)); err != nil {
+		return
+	}
+	if _, err := os.Stat(filepath.Join(c.root, assetsDir)); err == nil {
+		// Both present: somebody is mid-migration and knows it.
+		return
+	}
+	c.warnf("%s/ is what %s/ is called now - it holds what the runtime uses, and "+
+		"whether the projects share it was never the point. Move it, and then move "+
+		"the other half: a SkillSet's searchPaths carry this directory's name, so "+
+		"`git/%s/skills/<skill>` has to become `git/%s/skills/<skill>` in the chart. "+
+		"A searchPath that resolves to no directory resolves to zero skills, and the "+
+		"platform does not report that",
+		assetsDir, legacyAssetsDir, legacyAssetsDir, assetsDir)
 }
 
 // dateNamed matches the filename convention for dated records.
