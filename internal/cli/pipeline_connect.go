@@ -49,11 +49,17 @@ one, and naming another says so rather than pretending.
 
 WHAT HAPPENS. The platform mints a state bound to this workspace and returns the
 provider's installation URL carrying it. The state is sealed rather than stored,
-so it stays usable for its whole lifetime rather than being spent on first use. This opens that URL, and
-the provider redirects back to the platform - not to this machine - which is
-what completes the connection. So there is nothing here to catch: what this
-waits on is a new connection appearing in the workspace, which is the same
-thing to watch whatever the provider is.
+so it stays usable for its whole lifetime rather than being spent on first use.
+This opens that URL, and the provider redirects back to the platform - not to
+this machine - which is what completes the connection. So there is nothing here
+to catch.
+
+What this waits on is therefore two things at once: a new connection appearing,
+and the platform reporting how the attempt ended. Both are needed. The callbacks
+never reach this process, so from here "nothing yet" and "it failed a minute ago"
+look identical - which is why a refused installation used to sit until the
+timeout and then produce a guess. It now says what happened, and why, as soon as
+the platform knows.
 
     asgard-cli pipeline connect --no-browser
 
@@ -124,7 +130,7 @@ arrive.`,
 			if wait <= 0 {
 				wait = connectTimeout
 			}
-			created, err := waitForConnection(ctx, pc, before, wait)
+			created, err := waitForConnection(ctx, pc, before, install.State, wait)
 			if err != nil {
 				return err
 			}
@@ -161,15 +167,23 @@ func connectionIDs(ctx context.Context, pc *platformContext) (map[string]bool, e
 	return ids, nil
 }
 
-// waitForConnection polls until a connection that was not in before appears.
+// waitForConnection ends as soon as EITHER signal lands: a connection that was
+// not there before, or the platform reporting how this flow ended.
+//
+// Watching only for the connection is what this used to do, and it is why every
+// failure took the full timeout and then produced a guess. The provider's
+// callbacks never reach this process, so "nothing yet" and "it failed four
+// minutes ago" look identical from here — the status is the only thing that
+// separates them.
 //
 // A transient failure while polling is not fatal: the installation may well
 // have succeeded, and giving up on one bad response would report a failure that
-// did not happen. Only the deadline ends the wait.
+// did not happen. Only the deadline, or a settled flow, ends the wait.
 func waitForConnection(
 	ctx context.Context,
 	pc *platformContext,
 	before map[string]bool,
+	state string,
 	wait time.Duration,
 ) (*platform.VcsConnection, error) {
 	deadline := time.Now().Add(wait)
@@ -196,14 +210,26 @@ func waitForConnection(
 			}
 		}
 
+		// Asked second, so a connection that exists is reported as success
+		// even if the status write lost a race with it.
+		if status, serr := pc.Client.GetInstallStatus(ctx, state); serr == nil && status.Settled() {
+			if status.ConnectionId != "" {
+				// It connected, and the listing has not caught up. Fetch it
+				// rather than reporting a bare id.
+				if c, gerr := pc.Client.GetConnection(ctx, status.ConnectionId); gerr == nil {
+					return c, nil
+				}
+			}
+			return nil, fmt.Errorf("%s", strings.TrimSpace(status.Message))
+		}
+
 		if time.Now().After(deadline) {
 			if lastErr != nil {
 				return nil, fmt.Errorf("gave up after %s, and the last check failed: %w", wait, lastErr)
 			}
 			return nil, fmt.Errorf(
-				"gave up after %s: no new connection appeared in workspace %s.\n"+
-					"The installation may not have been completed, or it may already be held by another\n"+
-					"workspace - one installation binds one workspace, and the platform refuses a second.\n"+
+				"gave up after %s: workspace %s reports no outcome for this installation yet.\n"+
+					"The provider page may still be open, or it was closed without finishing.\n"+
 					"`asgard-cli pipeline connections` shows what this workspace has.", wait, pc.Workspace)
 		}
 	}

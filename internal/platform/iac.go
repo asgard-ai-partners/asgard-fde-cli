@@ -694,6 +694,19 @@ type Repository struct {
 }
 
 // ListConnections returns the workspace's VCS connections.
+// GetConnection returns one connection. Used when the platform reports a flow
+// as connected but the workspace listing has not caught up: reporting a bare id
+// would be worse than one more request.
+func (c *Client) GetConnection(ctx context.Context, connectionID string) (*VcsConnection, error) {
+	var out VcsConnection
+	err := c.do(ctx, request{
+		method: http.MethodGet,
+		path:   "/v1/iac/connections/" + url.PathEscape(connectionID),
+		out:    &out,
+	})
+	return &out, err
+}
+
 func (c *Client) ListConnections(ctx context.Context) ([]*VcsConnection, error) {
 	var out []*VcsConnection
 	err := c.do(ctx, request{
@@ -786,6 +799,43 @@ type BeginInstall struct {
 // caller, so there is nothing here to wait on directly. What a caller does
 // instead is watch the workspace's connections for a new one, which is the same
 // thing to do whatever the provider turns out to be.
+// InstallStatus is how one install flow ended, for whoever started it.
+//
+// It exists because the middle of that flow is a browser talking to the
+// provider: this process never sees the callbacks, so without asking, every
+// failure looks like the same non-event — no connection appeared.
+type InstallStatus struct {
+	// Outcome is one of the platform's outcome names. Compared as a string
+	// rather than switched on an enum here: a value this binary has not heard
+	// of should still print its Message, which is the part a person reads.
+	Outcome string `json:"outcome"`
+	// Message says what to do next. Present for every outcome.
+	Message string `json:"message"`
+	// ConnectionId is set only when the flow connected.
+	ConnectionId string     `json:"connection_id"`
+	ExpiresAt    *time.Time `json:"expires_at"`
+	// Expired reports that the window closed with nothing decided.
+	Expired bool `json:"expired"`
+}
+
+// Settled reports whether this flow has stopped being worth waiting for.
+func (s *InstallStatus) Settled() bool {
+	return s != nil && (s.Expired || (s.Outcome != "" && s.Outcome != "pending"))
+}
+
+// GetInstallStatus asks how an install flow ended. The state is the handle
+// BeginGitHubInstall returned.
+func (c *Client) GetInstallStatus(ctx context.Context, state string) (*InstallStatus, error) {
+	var out InstallStatus
+	err := c.do(ctx, request{
+		method: http.MethodGet,
+		path:   "/v1/iac/connections/install-status",
+		query:  url.Values{"state": {state}},
+		out:    &out,
+	})
+	return &out, err
+}
+
 func (c *Client) BeginGitHubInstall(ctx context.Context) (*BeginInstall, error) {
 	var out BeginInstall
 	err := c.do(ctx, request{
