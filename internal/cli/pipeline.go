@@ -288,10 +288,13 @@ func newPipelineReposCmd() *cobra.Command {
 		Short: "List the repositories a connection can reach",
 		Long: `List the repositories a connection can reach.
 
-The list comes from GitHub's own view of the installation, so a repository
-missing from it is a repository the App was not granted - fix that on GitHub,
-where the installation's repository selection lives, and it appears here on the
-next call.
+The list is read from GitHub on every call, not cached, and it is complete: an
+organisation with hundreds of repositories is walked page by page rather than
+cut off at the first hundred. Nothing here needs re-syncing.
+
+So a repository missing from this list is one the installation was not granted.
+That is fixed on GitHub, where the installation's repository selection lives,
+and it appears here on the next call.
 
 A repository already bound by another pipeline of this workspace is marked.
 That is not a refusal: one repository may carry several pipelines as long as
@@ -496,7 +499,16 @@ func resolveRepository(ctx context.Context, pc *platformContext, connectionID, w
 			return r.RepositoryId, r.FullName, nil
 		}
 	}
-	return "", "", fmt.Errorf("connection %s cannot reach %q; `asgard-cli pipeline repos` lists what it can, and adding one is a change to the App's repository selection on GitHub", connectionID, want)
+	// Says what was actually established — the name is not among the ones this
+	// connection lists — and not why, which this has no way to know. The old
+	// message asserted the App's repository selection was the cause; when the
+	// real cause was a truncated listing, that sent somebody to check a GitHub
+	// setting that was already correct.
+	return "", "", fmt.Errorf(
+		"connection %s lists %d repositories and none of them is %q.\n"+
+			"`asgard-cli pipeline repos` shows them. If the one you want is missing there too,\n"+
+			"the installation was not granted it on the provider.",
+		connectionID, len(repos), want)
 }
 
 func newPipelineListCmd() *cobra.Command {
