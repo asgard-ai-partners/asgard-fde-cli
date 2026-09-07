@@ -311,14 +311,7 @@ type Delivery struct {
 
 // ListPipelines returns the workspace's pipelines.
 func (c *Client) ListPipelines(ctx context.Context) ([]*Pipeline, error) {
-	var out []*Pipeline
-	err := c.do(ctx, request{
-		method: http.MethodGet,
-		path:   "/v1/iac/pipelines",
-		query:  url.Values{"size": {"100"}},
-		out:    &out,
-	})
-	return out, err
+	return listAll[Pipeline](ctx, c, "/v1/iac/pipelines", nil)
 }
 
 // GetPipeline returns one pipeline, with its declared releases.
@@ -363,14 +356,7 @@ func (c *Client) ListDeliveries(ctx context.Context, pipelineID string, limit in
 
 // ListReleases returns a pipeline's releases.
 func (c *Client) ListReleases(ctx context.Context, pipelineID string) ([]*Release, error) {
-	var out []*Release
-	err := c.do(ctx, request{
-		method: http.MethodGet,
-		path:   "/v1/iac/pipelines/" + url.PathEscape(pipelineID) + "/releases",
-		query:  url.Values{"size": {"100"}},
-		out:    &out,
-	})
-	return out, err
+	return listAll[Release](ctx, c, "/v1/iac/pipelines/"+url.PathEscape(pipelineID)+"/releases", nil)
 }
 
 // GetRelease returns one release.
@@ -717,26 +703,55 @@ func (c *Client) GetConnection(ctx context.Context, connectionID string) (*VcsCo
 }
 
 func (c *Client) ListConnections(ctx context.Context) ([]*VcsConnection, error) {
-	var out []*VcsConnection
-	err := c.do(ctx, request{
-		method: http.MethodGet,
-		path:   "/v1/iac/connections",
-		query:  url.Values{"size": {"100"}},
-		out:    &out,
-	})
-	return out, err
+	return listAll[VcsConnection](ctx, c, "/v1/iac/connections", nil)
+}
+
+// listPageSize is what every paged listing asks for. It is the platform's
+// maximum, so it is the fewest round trips, not a limit on the answer.
+const listPageSize = 100
+
+// maxListPages bounds the walk so a server that never stops advertising a
+// total cannot spin here forever. It is not a product limit: at this page size
+// it is a hundred thousand rows, which no engagement has.
+const maxListPages = 100
+
+// listAll fetches EVERY page of a paged collection.
+//
+// The platform answers a page at a time. A caller that takes the first page and
+// stops does not get a short list — it gets a WRONG one, silently, and only for
+// the accounts large enough to have a second page. That is how an organisation
+// with 206 repositories was told its App could not reach a repository the App
+// was in fact granted: the name sorted onto page three, and nothing in the
+// tool, the message, or the help said a page was all it had.
+func listAll[T any](ctx context.Context, c *Client, path string, query url.Values) ([]*T, error) {
+	out := make([]*T, 0, listPageSize)
+	for index := int64(0); index < maxListPages; index++ {
+		q := url.Values{}
+		for k, v := range query {
+			q[k] = v
+		}
+		q.Set("size", strconv.FormatInt(listPageSize, 10))
+		q.Set("page", strconv.FormatInt(index, 10))
+
+		var batch []*T
+		var paging Paging
+		err := c.do(ctx, request{method: http.MethodGet, path: path, query: q, out: &batch, paging: &paging})
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, batch...)
+		// Stop on a short page as well as on the total: a server that reports
+		// no total at all should end the walk, not restart it forever.
+		if len(batch) < listPageSize || (paging.Total > 0 && int64(len(out)) >= paging.Total) {
+			return out, nil
+		}
+	}
+	return out, nil
 }
 
 // ListRepositories returns the repositories a connection can reach.
 func (c *Client) ListRepositories(ctx context.Context, connectionID string) ([]*Repository, error) {
-	var out []*Repository
-	err := c.do(ctx, request{
-		method: http.MethodGet,
-		path:   "/v1/iac/connections/" + url.PathEscape(connectionID) + "/repositories",
-		query:  url.Values{"size": {"100"}},
-		out:    &out,
-	})
-	return out, err
+	return listAll[Repository](ctx, c, "/v1/iac/connections/"+url.PathEscape(connectionID)+"/repositories", nil)
 }
 
 // CreatePipelineInput is what binding a repository needs.
