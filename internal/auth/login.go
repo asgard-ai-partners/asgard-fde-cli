@@ -31,10 +31,11 @@ const LoginTimeout = 5 * time.Minute
 // LoginOptions is one sign-in.
 type LoginOptions struct {
 	Profile Profile
-	// NoBrowser prints the URL instead of opening it. It is what makes this
-	// usable over SSH, where opening a browser would open it on the wrong
-	// machine - the URL can be pasted into a browser anywhere, as long as that
-	// browser can reach the loopback port, which over SSH means `ssh -L`.
+	// NoBrowser suppresses opening a browser. **The URL is printed either
+	// way** - see announce - so this is not what makes the URL available; it
+	// is what stops a browser opening on the wrong machine, which is the
+	// difference that matters over SSH. There the URL is pasted into a browser
+	// anywhere that can reach the loopback port, which means `ssh -L`.
 	NoBrowser bool
 	// Out is where progress and the URL are written. It is stderr for the
 	// command, so that a --format json run's stdout stays parseable.

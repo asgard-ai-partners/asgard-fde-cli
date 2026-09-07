@@ -135,7 +135,7 @@ flow.`,
 
 	f.register(cmd, false)
 	cmd.Flags().BoolVar(&noBrowser, "no-browser", false,
-		"print the installation URL instead of opening a browser")
+		"do not open a browser; the installation URL is printed either way")
 	cmd.Flags().DurationVar(&wait, "wait", connectTimeout,
 		"how long to wait for the connection to appear before giving up")
 	return cmd

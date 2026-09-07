@@ -48,8 +48,7 @@ While `.asgard-cli.yaml` is absent, the `binding` step reports "not bound to a
 pipeline yet" and the `skills` step reports no session. Walk the FDE through it:
 
 ```bash
-asgard-cli login --no-browser         # print the URL and hand it to them; do not
-                                      #   open a browser on their behalf
+asgard-cli login                      # opens a browser AND prints the URL
 asgard-cli workspace list             # show it; they choose
 asgard-cli workspace use <id>
 asgard-cli pipeline connections       # none? asgard-cli pipeline connect
@@ -60,6 +59,11 @@ asgard-cli skill update               # the CR reference material arrives here
 
 Three things to know while doing it:
 
+- **`asgard-cli login` and `asgard-cli pipeline connect` both open a browser and
+  print the URL.** Let them open it - the person is at this machine. The printed
+  URL is the fallback for when nothing opened, and it is there every time so
+  that recovering needs no second run; hand it over then. `--no-browser` is for
+  a machine with no desktop at all, not for a machine you are borrowing.
 - **`asgard-cli pipeline connect` can block on somebody else.** It installs a
   GitHub App, which in many organisations needs an admin. Say so and stop, rather
   than retrying: waiting a day for the right person is the normal outcome.

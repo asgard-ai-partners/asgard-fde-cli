@@ -59,7 +59,8 @@ after that, or once it is revoked, the next command says to run this one.
 
     asgard-cli login                     sign in to prod
     asgard-cli login --profile dev       sign in to dev
-    asgard-cli login --no-browser        print the URL instead of opening one
+    asgard-cli login --no-browser        do not open a browser; the URL is
+                                         printed either way
 
 Two profiles exist, prod and dev, and each is a different platform with different
 workspaces. Signing in to one leaves the other alone, so both can be held at once
@@ -141,7 +142,7 @@ not carry the state value this run generated - which means it was not this run's
 
 	addProfileFlag(cmd, &profile)
 	cmd.Flags().BoolVar(&noBrowser, "no-browser", false,
-		"print the sign-in URL instead of opening a browser; the loopback port still has to be reachable from wherever it is opened")
+		"do not open a browser; the sign-in URL is printed either way, and the loopback port still has to be reachable from wherever it is opened")
 	cmd.Flags().StringVar(&format, formatFlag, formatText, formatUsage)
 
 	return cmd
