@@ -30,7 +30,7 @@ func newPipelineConnectCmd() *cobra.Command {
 	var (
 		f         pipelineFlags
 		noBrowser bool
-		existing  bool
+		account   string
 		wait      time.Duration
 	)
 
@@ -48,19 +48,30 @@ are expected: a connection records which provider it is, and adding one later
 should be a new value here, not a new command to learn. Today github is the only
 one, and naming another says so rather than pretending.
 
-WHAT HAPPENS. The platform mints a state bound to this workspace and returns the
-provider's installation URL carrying it. The state is sealed rather than stored,
-so it stays usable for its whole lifetime rather than being spent on first use.
-This opens that URL, and the provider redirects back to the platform - not to
-this machine - which is what completes the connection. So there is nothing here
-to catch.
+WHAT HAPPENS. This identifies you on the provider first, and only then works out
+what to connect. That order is deliberate: whether the app is already installed
+on the account is a fact the caller may not have — somebody else, or another
+workspace, may have installed it months ago — and the two ways in fail very
+differently if you guess wrong. So it is never asked.
 
-What this waits on is therefore two things at once: a new connection appearing,
-and the platform reporting how the attempt ended. Both are needed. The callbacks
-never reach this process, so from here "nothing yet" and "it failed a minute ago"
-look identical - which is why a refused installation used to sit until the
-timeout and then produce a guess. It now says what happened, and why, as soon as
-the platform knows.
+    1. the provider says who you are
+    2. it lists the installations you can reach
+    3. the one matching --account is connected
+
+Nothing prompts. --account defaults to the owner of this checkout's origin
+remote, which is the account whose repositories this engagement is about; name
+it explicitly when connecting some other account, or when there is no remote to
+read. When the account you asked for is not among the ones you reach, the app
+has to be installed on it first, and the installation URL is printed rather than
+guessed at.
+
+The state is sealed rather than stored, so it stays usable for its whole
+lifetime rather than being spent on first use. The provider redirects back to
+the platform - not to this machine - which is what completes the connection.
+What this waits on is therefore two things at once: a connection appearing, and
+the platform reporting how the attempt ended. Both are needed: the callbacks
+never reach this process, so from here "nothing yet" and "it failed a minute
+ago" look identical.
 
     asgard-cli pipeline connect --no-browser
 
@@ -70,24 +81,7 @@ somewhere else. The URL is printed either way.
 ONE ACCOUNT, AS MANY WORKSPACES AS NEED IT. GitHub issues one installation per
 account, so a rule that one installation belongs to one workspace would have
 meant a GitHub organisation could serve one workspace. Each workspace holds its
-own connection to the same installation, and they do not see each other's.
-
-An installation that already exists on the provider still has to be connected
-here once: existing on GitHub and being bound to a workspace are different
-things, and the provider's page for an already-installed App is a "configure"
-screen rather than an "install" one.
-
-That screen has a catch worth knowing before you meet it: its save button is
-disabled while there is nothing to save, which is exactly the case when the
-repository access you want is already granted. There is then no button to click
-and no redirect back here.
-
-    asgard-cli pipeline connect --existing
-
-takes the other way in for that case: it identifies you on the provider first,
-then offers the installations it says you can reach, and connects the one you
-pick. Nothing on the provider is changed, which matters because the repository
-access on an installation is now shared by every workspace connected to it.`,
+own connection to the same installation, and they do not see each other's.`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			provider := platform.ProviderGitHub
@@ -114,11 +108,19 @@ access on an installation is now shared by every workspace connected to it.`,
 				return err
 			}
 
-			begin := pc.Client.BeginGitHubInstall
-			if existing {
-				begin = pc.Client.BeginGitHubAttach
+			wanted := account
+			if wanted == "" {
+				// The owner of this checkout's remote is the account this
+				// engagement is about. Derived rather than asked, because
+				// asking would need somebody at the terminal and this command
+				// is run by an agent.
+				wanted, _, _ = strings.Cut(pc.RepoFullName, "/")
 			}
-			install, err := begin(ctx)
+
+			// Identify first, always. Which way in is right depends on
+			// whether the app is already installed on the account, and that is
+			// a fact the caller may not have.
+			install, err := pc.Client.BeginGitHubAttach(ctx)
 			if err != nil {
 				return err
 			}
@@ -132,11 +134,7 @@ access on an installation is now shared by every workspace connected to it.`,
 					fmt.Fprintf(msg, "Could not open a browser (%v).\n", err)
 				}
 			}
-			what := "complete the installation"
-			if existing {
-				what = "authorize, so the provider can say which installations you reach"
-			}
-			fmt.Fprintf(msg, "Open this URL and %s:\n\n    %s\n\n", what, install.InstallUrl)
+			fmt.Fprintf(msg, "Open this URL and authorize, so the provider can say what you can connect:\n\n    %s\n\n", install.InstallUrl)
 			if install.ExpiresAt != nil {
 				fmt.Fprintf(msg, "The link expires %s.\n", install.ExpiresAt.Local().Format("15:04"))
 			}
@@ -145,15 +143,22 @@ access on an installation is now shared by every workspace connected to it.`,
 			if wait <= 0 {
 				wait = connectTimeout
 			}
-			created, choices, err := waitForConnection(ctx, pc, before, install.State, wait)
+			created, choices, insufficient, err := waitForConnection(ctx, pc, before, install.State, wait)
 			if err != nil {
 				return err
 			}
-			if choices != nil {
-				created, err = pickAndAttach(cmd, pc, choices)
-				if err != nil {
-					return err
-				}
+			switch {
+			case choices != nil:
+				created, err = attachNamedAccount(cmd, pc, choices, wanted)
+			case insufficient:
+				// Authorized, and reaches nothing here. Not a failure to report
+				// — it is the answer to "which way in", arrived at without
+				// asking anybody to know it in advance.
+				fmt.Fprintf(msg, "\nYou reach no installation of this app yet, so it has to be installed first.\n")
+				created, err = installFirst(cmd, pc, before, noBrowser, wait)
+			}
+			if err != nil {
+				return err
 			}
 
 			out := cmd.OutOrStdout()
@@ -170,8 +175,8 @@ access on an installation is now shared by every workspace connected to it.`,
 	f.register(cmd, false)
 	cmd.Flags().BoolVar(&noBrowser, "no-browser", false,
 		"do not open a browser; the URL is printed either way")
-	cmd.Flags().BoolVar(&existing, "existing", false,
-		"connect an account the app is already installed on: identify yourself on the provider, then pick from what it says you reach")
+	cmd.Flags().StringVar(&account, "account", "",
+		"which provider account to connect; defaults to the owner of this checkout's origin remote")
 	cmd.Flags().DurationVar(&wait, "wait", connectTimeout,
 		"how long to wait for the connection to appear before giving up")
 	return cmd
@@ -208,7 +213,7 @@ func waitForConnection(
 	before map[string]bool,
 	state string,
 	wait time.Duration,
-) (*platform.VcsConnection, *platform.AttachChoices, error) {
+) (*platform.VcsConnection, *platform.AttachChoices, bool, error) {
 	deadline := time.Now().Add(wait)
 	ticker := time.NewTicker(connectPollInterval)
 	defer ticker.Stop()
@@ -217,7 +222,7 @@ func waitForConnection(
 	for {
 		select {
 		case <-ctx.Done():
-			return nil, nil, ctx.Err()
+			return nil, nil, false, ctx.Err()
 		case <-ticker.C:
 		}
 
@@ -228,7 +233,7 @@ func waitForConnection(
 			lastErr = nil
 			for _, c := range conns {
 				if !before[c.ConnectionId] {
-					return c, nil, nil
+					return c, nil, false, nil
 				}
 			}
 		}
@@ -241,25 +246,30 @@ func waitForConnection(
 				return nil, &platform.AttachChoices{
 					Installations: status.Installations,
 					AttachState:   status.AttachState,
-				}, nil
+				}, false, nil
 			}
 			if status.Settled() {
 				if status.ConnectionId != "" {
 					// It connected, and the listing has not caught up. Fetch it
 					// rather than reporting a bare id.
 					if c, gerr := pc.Client.GetConnection(ctx, status.ConnectionId); gerr == nil {
-						return c, nil, nil
+						return c, nil, false, nil
 					}
 				}
-				return nil, nil, fmt.Errorf("%s", strings.TrimSpace(status.Message))
+				if status.Outcome == "authorization_insufficient" {
+					// Reported rather than raised: it is not a failure of this
+					// attempt, it is which way in the person needs.
+					return nil, nil, true, nil
+				}
+				return nil, nil, false, fmt.Errorf("%s", strings.TrimSpace(status.Message))
 			}
 		}
 
 		if time.Now().After(deadline) {
 			if lastErr != nil {
-				return nil, nil, fmt.Errorf("gave up after %s, and the last check failed: %w", wait, lastErr)
+				return nil, nil, false, fmt.Errorf("gave up after %s, and the last check failed: %w", wait, lastErr)
 			}
-			return nil, nil, fmt.Errorf(
+			return nil, nil, false, fmt.Errorf(
 				"gave up after %s: workspace %s reports no outcome for this installation yet.\n"+
 					"The provider page may still be open, or it was closed without finishing.\n"+
 					"`asgard-cli pipeline connections` shows what this workspace has.", wait, pc.Workspace)
@@ -267,44 +277,99 @@ func waitForConnection(
 	}
 }
 
-// pickAndAttach shows what the provider says this person reaches and connects
-// the one they choose.
+// attachNamedAccount connects the installation whose account was named, and
+// says what it saw when it cannot.
 //
-// One installation is still shown rather than taken silently: the person is
-// about to give a workspace access to somebody's repositories, and seeing which
-// account and how much of it is the last moment that is cheap.
-func pickAndAttach(cmd *cobra.Command, pc *platformContext, choices *platform.AttachChoices) (*platform.VcsConnection, error) {
+// Nothing prompts. This command is run by an agent following a skill, not by
+// somebody at a terminal — `init` is the one command in this tool with a person
+// in front of it — so a question here is not a slower path, it is a dead one.
+// The caller declares which account it means and the platform matches it.
+func attachNamedAccount(
+	cmd *cobra.Command,
+	pc *platformContext,
+	choices *platform.AttachChoices,
+	account string,
+) (*platform.VcsConnection, error) {
 	msg := cmd.ErrOrStderr()
-	if len(choices.Installations) == 0 {
-		return nil, fmt.Errorf("the provider reports no installation you can reach")
-	}
 
-	fmt.Fprintf(msg, "\nThe provider says you can reach:\n\n")
-	for i, in := range choices.Installations {
-		scope := in.RepositorySelection
-		if scope == "all" {
-			scope = "all repositories"
-		} else if scope == "selected" {
-			scope = "selected repositories"
-		}
+	fmt.Fprintf(msg, "\nYou can reach:\n\n")
+	for _, in := range choices.Installations {
 		held := ""
 		if in.ConnectionId != "" {
 			held = "  (already connected here)"
 		}
-		fmt.Fprintf(msg, "  %d) %s (%s) - %s%s\n", i+1, in.AccountLogin, in.AccountType, scope, held)
+		fmt.Fprintf(msg, "  %s (%s) - %s%s\n", in.AccountLogin, in.AccountType, repositoryScope(in.RepositorySelection), held)
 	}
 
-	choice := 1
-	if len(choices.Installations) > 1 {
-		fmt.Fprintf(msg, "\nWhich one? [1-%d]: ", len(choices.Installations))
-		if _, err := fmt.Fscanln(cmd.InOrStdin(), &choice); err != nil {
-			return nil, fmt.Errorf("no choice made: %w", err)
-		}
-		if choice < 1 || choice > len(choices.Installations) {
-			return nil, fmt.Errorf("%d is not one of the choices", choice)
+	if account == "" {
+		return nil, fmt.Errorf(
+			"no --account, and this is not a git checkout with a recognisable origin remote.\n" +
+				"Name the account to connect with --account; the ones you reach are listed above")
+	}
+	for _, in := range choices.Installations {
+		if strings.EqualFold(in.AccountLogin, account) {
+			fmt.Fprintf(msg, "\nConnecting %s...\n", in.AccountLogin)
+			return pc.Client.AttachInstallation(cmd.Context(), choices.AttachState, in.InstallationId)
 		}
 	}
-	picked := choices.Installations[choice-1]
-	fmt.Fprintf(msg, "\nConnecting %s...\n", picked.AccountLogin)
-	return pc.Client.AttachInstallation(cmd.Context(), choices.AttachState, picked.InstallationId)
+	// Says what was established — the account is not among the ones reached —
+	// and what would change that, without asserting which of the two reasons it
+	// is. Both are real: the app may not be installed there, or this identity
+	// may not reach it.
+	return nil, fmt.Errorf(
+		"%q is not among the accounts you reach on the provider (listed above).\n"+
+			"Either the app is not installed on it, or the account you authorized as cannot see its repositories.\n"+
+			"`asgard-cli pipeline connect --account <one of the above>` connects one of them",
+		account)
+}
+
+// installFirst prints where to install the app, for an account that has no
+// installation yet. Installing is a person's action on the provider; there is
+// nothing this can do but say where and wait.
+func installFirst(
+	cmd *cobra.Command,
+	pc *platformContext,
+	before map[string]bool,
+	noBrowser bool,
+	wait time.Duration,
+) (*platform.VcsConnection, error) {
+	ctx := cmd.Context()
+	msg := cmd.ErrOrStderr()
+
+	install, err := pc.Client.BeginGitHubInstall(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if !noBrowser {
+		if berr := browser.Open(install.InstallUrl); berr != nil {
+			fmt.Fprintf(msg, "Could not open a browser (%v).\n", berr)
+		}
+	}
+	fmt.Fprintf(msg, "\nOpen this URL and install the app on the account you want:\n\n    %s\n\n", install.InstallUrl)
+	fmt.Fprintf(msg, "Waiting...\n")
+
+	created, choices, _, err := waitForConnection(ctx, pc, before, install.State, wait)
+	if err != nil {
+		return nil, err
+	}
+	if choices != nil {
+		// The provider sent them through authorization on the way. Whatever
+		// they installed is the one to connect, so there is still nothing to
+		// ask: a fresh installation is the only one that was not reachable a
+		// moment ago.
+		return attachFreshest(cmd, pc, choices, before)
+	}
+	return created, nil
+}
+
+// attachFreshest connects the installation this workspace does not already
+// hold, which after an install is the one just made.
+func attachFreshest(cmd *cobra.Command, pc *platformContext, choices *platform.AttachChoices, _ map[string]bool) (*platform.VcsConnection, error) {
+	for _, in := range choices.Installations {
+		if in.ConnectionId == "" {
+			fmt.Fprintf(cmd.ErrOrStderr(), "\nConnecting %s...\n", in.AccountLogin)
+			return pc.Client.AttachInstallation(cmd.Context(), choices.AttachState, in.InstallationId)
+		}
+	}
+	return nil, fmt.Errorf("nothing new was installed; every account you reach is already connected here")
 }
