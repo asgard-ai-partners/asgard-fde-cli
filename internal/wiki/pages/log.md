@@ -845,3 +845,22 @@ time, and editing removes exactly that.
   Pipeline**, and that last one is a whole wave of them. `scaffold` is now
   documented as the unbound path and its tail points at `init` for when the
   pipeline exists
+- `ingest` 2026-09-07 `add dataconnector` writes any of the nine
+  `DataConnectorClass` values. It wrote two - postgres and mssql - and every
+  other class shares nothing with them but `host`: salesforce has no port and no
+  user, athena has neither host nor database, netsuite authenticates with a
+  certificate, oracle takes serviceName **or** sid and the CRD refuses both and
+  refuses neither. An FDE whose customer runs Oracle got a postgres skeleton and
+  the difference to work out from the CRD. The field sets are read off
+  `crd/asgard-ai.com_dataconnectors.yaml` at `15ded0f`; the port defaults are the
+  ones the db-query skill already recorded from real connections rather than
+  conventional guesses. Nine rendered, `hack/validate-crs.py` reports 0 schema
+  violations
+- `fix` 2026-09-07 the `db-query` skill said it covers "all eight DataConnector
+  classes **the platform can read**". The platform reads **nine**: `spec.hana` is
+  in the CRD and a HANA source is a valid `DataConnector`. Eight is the number
+  this skill's own scripts drive, and its `connectors.py` says so precisely in a
+  comment - SAP does not distribute `hdbcli` openly, so it cannot be a line in
+  `requirements.txt`. The description conflated the tool's reach with the
+  platform's, which would tell a reader asked about SAP HANA that the platform
+  cannot get there

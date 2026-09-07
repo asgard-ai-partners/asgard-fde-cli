@@ -62,18 +62,14 @@ var Kinds = []Kind{
 	{
 		Name: "dataconnector", Summary: "connection to one database",
 		Prefix: "dc-", Files: []File{{Dir: "data_connector", Template: "dataconnector.yaml.tmpl"}},
-		Needs:   []string{"--db-class postgres|mssql"},
+		Needs:   []string{"--db-class <one of nine; see asgard-cli add --help>"},
 		Extract: "semantic-layer",
 		Wiki:    "settings",
-		Values: `
-# <<.DisplayName>>
-<<.ValuesKey>>DB:
-  host: ""
-  port: <<if eq .DBClass "mssql">>1433<<else>>5432<<end>>
-  user: ""
-  database: ""
-<<if eq .DBClass "postgres">>  sslMode: "disable"
-<<end>>`,
+		// The values block is per class: salesforce has no port and no user,
+		// athena has neither host nor database. dbValues renders it from the
+		// CRD's own field list rather than from a template that assumed one
+		// shape for all nine.
+		Values: "<<.DBValues>>",
 	},
 	{
 		Name: "semanticlayer", Summary: "read surface over one system, for an internal audience",
@@ -319,6 +315,23 @@ type Data struct {
 	CRName    string // prefixed
 	ValuesKey string // the name as a Helm values key
 	SpecSlug  string
+
+	// DBSpec and DBValues are the DataConnector's class block and the values
+	// keys it reads, rendered from the CRD's field list for that class. They
+	// are not a template because the nine classes share almost nothing: one
+	// template with conditionals in it would have to encode every difference
+	// and would still have assumed a shape.
+	DBSpec   string
+	DBValues string
+
+	// DBNote is what the class needs that its shape cannot say - Oracle taking
+	// serviceName or sid and never both, HANA having no design-time driver.
+	DBNote string
+
+	// DBSecretKeys are the keys the release's Secret needs before the first
+	// deploy, so the generator can name them instead of leaving somebody to
+	// derive them from the template.
+	DBSecretKeys []string
 }
 
 // valuesKey turns a CR name into something addressable in a values file.
@@ -485,6 +498,12 @@ func Write(root string, kind Kind, opts Options) ([]Result, error) {
 	}
 	if data.DisplayName == "" {
 		data.DisplayName = data.CRName
+	}
+	if kind.Name == "dataconnector" {
+		data.DBSpec = dbSpec(opts.DBClass, data.ValuesKey, data.Chart)
+		data.DBValues = dbValues(opts.DBClass, data.DisplayName, data.ValuesKey)
+		data.DBNote = dbNote(opts.DBClass)
+		data.DBSecretKeys = dbSecretKeys(opts.DBClass, data.ValuesKey)
 	}
 
 	templatesDir := filepath.Join(root, "projects", opts.Project, "chart", "app", "templates")

@@ -41,6 +41,16 @@ The name is written without the kind's prefix: "asgard-cli add dataconnector erp
 creates dc-erp. Passing the prefixed form is accepted and means the same thing,
 so dc-erp never becomes dc-dc-erp.
 
+**--db-class takes any of the nine DataConnector classes and they share almost
+nothing.** salesforce has no port and no user; athena has neither host nor
+database, just a region, an S3 output location and an IAM key pair; netsuite
+authenticates with a certificate whose PEM is a secret and whose id is not;
+oracle takes serviceName **or** sid and the CRD refuses both and refuses
+neither. Each skeleton carries that class's fields and the note its shape cannot
+say. hana is generated like the rest - the platform reads it - but
+the db-query skill cannot reach it, because SAP does not distribute its driver
+openly.
+
 A flowagent serves your own front end unless --bot-class names a chat platform:
 
     asgard-cli add flowagent support --project site --bot-class line
@@ -158,7 +168,8 @@ Run "asgard-cli add" with no arguments to list the kinds.`,
 	cmd.Flags().BoolVar(&opts.Private, "private", false, "the skills repo is private and needs a PAT")
 	cmd.Flags().BoolVar(&opts.Write, "write", false, "this tool has a side effect, so gate it with requestConsent")
 	cmd.Flags().BoolVar(&opts.Public, "public", false, "the entry point serves anonymous visitors (authMode: none)")
-	cmd.Flags().StringVar(&opts.DBClass, "db-class", "postgres", "database class: postgres or mssql")
+	cmd.Flags().StringVar(&opts.DBClass, "db-class", "postgres",
+		"DataConnector class: "+strings.Join(generate.DBClasses(), ", ")+". Each has its own fields - salesforce has no port and no user, athena has neither host nor database")
 	cmd.Flags().StringVar(&opts.BotClass, "bot-class", "", "for flowagent, the channel the BotProvider serves: "+strings.Join(generate.BotClasses, ", ")+" (defaults to generic, an HTTP API for your own front end)")
 	cmd.Flags().BoolVar(&opts.Force, "force", false, "overwrite an existing file")
 
@@ -183,8 +194,9 @@ func requiredFlags(kind generate.Kind, opts generate.Options) error {
 			return fmt.Errorf("%s needs --toolset ts-<name>, the set this tool belongs to", kind.Name)
 		}
 	}
-	if kind.Name == "dataconnector" && opts.DBClass != "postgres" && opts.DBClass != "mssql" {
-		return fmt.Errorf("--db-class must be postgres or mssql, got %q", opts.DBClass)
+	if kind.Name == "dataconnector" && !generate.ValidDBClass(opts.DBClass) {
+		return fmt.Errorf("--db-class %q is not a DataConnectorClass; the CRD has %s",
+			opts.DBClass, strings.Join(generate.DBClasses(), ", "))
 	}
 	return nil
 }

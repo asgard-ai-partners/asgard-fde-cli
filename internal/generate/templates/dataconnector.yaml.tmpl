@@ -14,13 +14,6 @@ metadata:
     {{- include "<<.Chart>>.labels" . | nindent 4 }}
 spec:
   dataConnectorClass: <<.DBClass>>
-  <<.DBClass>>:
-    host: {{ .Values.<<.ValuesKey>>DB.host | quote }}
-    port: {{ .Values.<<.ValuesKey>>DB.port }}
-    user: {{ .Values.<<.ValuesKey>>DB.user | quote }}
-    database: {{ .Values.<<.ValuesKey>>DB.database | quote }}
-    password:
-      valueFrom:
-        secretKeyRef:
-          key: <<.ValuesKey>>_db_password
-          name: {{ include "<<.Chart>>.appSecretName" . }}
+<<.DBSpec>><<if .DBNote>>
+# <<.DBNote>>
+<<end>>

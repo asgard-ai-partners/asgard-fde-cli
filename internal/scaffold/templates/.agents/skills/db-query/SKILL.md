@@ -1,6 +1,6 @@
 ---
 name: db-query
-description: Use when you need to look at a customer source system at design time - list tables, read a column's real values, check a row count, confirm a join actually holds, or verify a query before it goes into a SemanticLayer or a fixed-query Toolset. Covers all eight DataConnector classes the platform can read (postgres, mysql, mssql, oracle, salesforce, netsuite, trino, athena), how a connection is configured, and how to get a credential without asking anybody to type a password into a chat.
+description: Use when you need to look at a customer source system at design time - list tables, read a column's real values, check a row count, confirm a join actually holds, or verify a query before it goes into a SemanticLayer or a fixed-query Toolset. Covers eight of the nine DataConnector classes the platform can read - postgres, mysql, mssql, oracle, salesforce, netsuite, trino, athena - and not hana, whose driver SAP does not distribute openly; how a connection is configured; and how to get a credential without asking anybody to type a password into a chat.
 version: 1.0.0
 alwaysApply: false
 ---
@@ -53,7 +53,7 @@ A missing one names itself when you first use that class.
 ```bash
 Q=".venv/bin/python .agents/skills/db-query/scripts/query.py"
 
-$Q --classes                                        # the eight supported classes
+$Q --classes                                        # the eight this tool drives
 $Q --class postgres --prefix UOF_DB_ --keys         # the .env keys this connection needs
 $Q --class postgres --prefix UOF_DB_ "select 1"
 $Q --class postgres --prefix UOF_DB_ -f some.sql
@@ -81,6 +81,14 @@ the tool lists the prefixes it can see.
 `references/connectors.md` has, for each class: the CR fields, the matching
 `.env` keys, the driver, and the introspection recipes that `--columns` does not
 cover (tables, primary keys, foreign keys).
+
+**Eight is this tool's number, not the platform's.** `DataConnectorClass` has
+**nine** values and `hana` is the ninth: `spec.hana` is in the CRD and a HANA
+source is a perfectly valid `DataConnector`, but SAP distributes `hdbcli` under
+its own licence rather than from PyPI, so it cannot be a line in
+`requirements.txt` that anyone can install. **A customer on SAP HANA is not out
+of reach of the platform** - only out of reach of this skill. Introspect it with
+whatever their own DBAs use and record what you found in the spec.
 
 ## Getting a credential, without asking for a password in chat
 
@@ -156,3 +164,20 @@ Record what surprised you. A status column whose real values are not what the
 documentation says, a join that turns out to be many-to-many, a table that is
 empty in practice - none of that is visible again later unless somebody writes it
 down, and the next reader will otherwise re-derive it from the same queries.
+
+**Checked:** 2026-09-07 against asgard-kube `15ded0f` and against this skill's
+own scripts. `DataConnectorClass` has nine values; `SPECS` in
+`scripts/connectors.py` implements eight and its comment says which is left out
+and why. **The description claimed "all eight DataConnector classes the platform
+can read", and the platform reads nine** - a completeness claim that would tell
+a reader asked about SAP HANA that the platform cannot reach it, when what
+cannot reach it is this tool. Corrected here and in `--classes`.
+
+**Unchecked:** every driver but one. The commands, the `--prefix` rule and the
+failure shapes come from one engagement's PostgreSQL and NetSuite work; oracle,
+salesforce, trino, athena, mssql and mysql are configured from
+`references/connectors.md` and the CR fields and **have not been run against a
+customer's system from here**. The credential path is likewise one engagement's:
+`asgard-cli local-env` exists so nobody types a password at an agent, and
+whether that survives a customer whose credentials come through their own vault
+is the first real test of it.
