@@ -27,7 +27,12 @@ This is the list ` + "`pipeline release create --project`" + ` takes a value fro
 also reports whether each project has a main environment. One without is refused
 at create time, and finding that out after typing the id is the wrong end of the
 mistake - a project created before environments were mandatory can easily have
-none.`,
+none.
+
+**An empty list is the normal start for a new customer, not a fault.** A
+workspace has no projects until somebody makes one, and
+` + "`asgard-cli pipeline project create <name>`" + ` is that - it makes the default
+environment too, so what it creates can take a release immediately.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			pc, err := f.context(cmd)
@@ -43,7 +48,9 @@ none.`,
 				return writeJSON(out, projects)
 			}
 			if len(projects) == 0 {
-				fmt.Fprintf(out, "No projects in workspace %s.\n", pc.Workspace)
+				fmt.Fprintf(out, "No projects in workspace %s.\n\n", pc.Workspace)
+				fmt.Fprintf(out, "That is the normal start for a new customer. Make one:\n\n"+
+					"    asgard-cli pipeline project create <name>\n")
 				return nil
 			}
 			// A project with no main environment is refused at create time,
@@ -68,6 +75,131 @@ none.`,
 	}
 	f.register(cmd, false)
 	return cmd
+}
+
+// newPipelineProjectCmd is the singular noun, mirroring `release`: the plural
+// lists, the singular carries the actions.
+func newPipelineProjectCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "project",
+		Short: "Create a project for a release to deploy into",
+		Long: `Create and inspect the projects a release deploys into.
+
+` + "`asgard-cli pipeline projects`" + ` lists them. This is where one is made.`,
+	}
+	cmd.AddCommand(newPipelineProjectCreateCmd())
+	return cmd
+}
+
+func newPipelineProjectCreateCmd() *cobra.Command {
+	var (
+		f           pipelineFlags
+		annotations []string
+	)
+
+	cmd := &cobra.Command{
+		Use:   "create <name>",
+		Short: "Create a project in this workspace",
+		Long: `Create a project in this workspace, and with it the default environment.
+
+    asgard-cli pipeline project create acme-internal
+
+**A workspace with no projects is where a new customer starts**, not a fault to
+diagnose. A release deploys into a project - the project decides the namespace,
+and the platform injects that namespace and the project's main environment id
+into every run - so nothing can be deployed until one exists.
+
+**The environment comes with it.** The platform creates the project's default
+environment and marks it as the main one in the same call, which matters because
+` + "`pipeline release create`" + ` refuses a project that has none. What this makes can
+take a release immediately; the projects that cannot are older than the
+requirement.
+
+**It is not undone here.** Deleting a project deletes what has been deployed
+into it, and that is a decision worth making in a place that shows you what is
+there - the Console. This command creates.
+
+**It consumes account quota**, so a refusal can be a subscription limit rather
+than anything about the name. The error says which.`,
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name := strings.TrimSpace(args[0])
+			if name == "" {
+				return fmt.Errorf("a project needs a name")
+			}
+			extra, err := parseAnnotations(annotations)
+			if err != nil {
+				return err
+			}
+
+			pc, err := f.context(cmd)
+			if err != nil {
+				return err
+			}
+			actingOn(cmd, pc.Session)
+
+			p, err := pc.Client.CreateProject(cmd.Context(), name, extra)
+			if err != nil {
+				return err
+			}
+
+			// Asked rather than assumed. The create is supposed to have made
+			// one, and reporting "it has an environment" without looking would
+			// be reporting the intention.
+			env, envErr := pc.Client.MainEnvironment(cmd.Context(), p.ID)
+
+			out := cmd.OutOrStdout()
+			if f.format == formatJSON {
+				payload := map[string]any{"project": p}
+				if envErr == nil && env != nil {
+					payload["main_environment"] = env
+				}
+				return writeJSON(out, payload)
+			}
+
+			// The three values the next step needs, not just "created".
+			fmt.Fprintf(out, "%-11s %s\n", "project", p.ID)
+			fmt.Fprintf(out, "%-11s %s\n", "name", p.Name)
+			fmt.Fprintf(out, "%-11s %s\n", "namespace", p.Namespace)
+			switch {
+			case envErr != nil:
+				fmt.Fprintf(out, "%-11s could not be read back (%v)\n", "main env", envErr)
+			case env == nil:
+				fmt.Fprintf(out, "%-11s NONE, which a release cannot be created against\n", "main env")
+			default:
+				fmt.Fprintf(out, "%-11s %s\n", "main env", env.Value)
+			}
+
+			fmt.Fprintf(out, "\nA release binds a chart to this project:\n\n"+
+				"    asgard-cli pipeline release create <name> --project %s\n", p.ID)
+			return nil
+		},
+	}
+
+	// false: a project belongs to the workspace, not to a pipeline, so there is
+	// no --pipeline for this to read - and a flag the code does not read is
+	// worse than no flag.
+	f.register(cmd, false)
+	cmd.Flags().StringArrayVar(&annotations, "annotation", nil,
+		"an annotation as `key=value`, repeatable; the platform stores them on the project")
+	return cmd
+}
+
+// parseAnnotations turns repeated key=value flags into what the API takes.
+func parseAnnotations(in []string) (map[string]any, error) {
+	if len(in) == 0 {
+		return nil, nil
+	}
+	out := make(map[string]any, len(in))
+	for _, item := range in {
+		k, v, ok := strings.Cut(item, "=")
+		k = strings.TrimSpace(k)
+		if !ok || k == "" {
+			return nil, fmt.Errorf("--annotation takes key=value, and %q is not that", item)
+		}
+		out[k] = v
+	}
+	return out, nil
 }
 
 func newPipelineReleaseCmd() *cobra.Command {
