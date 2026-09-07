@@ -84,6 +84,7 @@ flow.`,
 			if err != nil {
 				return err
 			}
+			actingOn(cmd, pc.Session)
 			ctx := cmd.Context()
 
 			// Snapshot first. The new connection is identified by not having

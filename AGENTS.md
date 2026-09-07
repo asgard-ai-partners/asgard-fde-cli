@@ -189,6 +189,29 @@ plugin layouts, `.claude-plugin/` holds a manifest with a schema, and
 those are for is the external convention's job, and a README in each would be a
 second answer to a question already answered.
 
+## A command that changes something says what it is changing
+
+Before it acts, on stderr, in one line: the Platform API it is about to change,
+the profile in effect, and **how that profile came to be the one in effect**.
+`actingOn` in `internal/cli/context.go` is the helper; `actingLocally` is the
+variant for the two commands that write the checkout's binding rather than
+reaching the platform.
+
+**The URL is the identity and the name is a local label.** Two people's `dev`
+can point at different installations and one of them can be production, so a
+line naming only the profile names the one part that is nobody else's fact.
+
+**It has no conditions.** Printing it only when the profile was implicit - not
+typed on the command line - was considered and refused: once somebody types
+`--profile` out of habit the line disappears, and its absence then carries no
+information, exactly the way a skipped gate step is not a pass.
+
+It goes to stderr so that `--format json` keeps a parseable stdout. Adding the
+same facts *into* the JSON was not done for the pipeline group: those commands
+return a bare object or a bare array, and wrapping them to add three fields
+would change the shape every existing reader depends on. `gate` was already
+emitting a map, so it carries a `platform` key.
+
 ## The gate
 
 There is no test suite - it was removed on 2026-09-02. What is left:

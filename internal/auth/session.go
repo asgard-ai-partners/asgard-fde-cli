@@ -25,6 +25,11 @@ type Session struct {
 	Profile Profile
 	Token   string
 	Source  Source
+	// ProfileFrom is how this profile came to be the one in effect: the flag,
+	// the environment, or the default. Carried on the session because every
+	// command that changes something says it before acting, and the answer is
+	// the same for the whole of one command's run.
+	ProfileFrom Origin
 
 	// Subject, Email and Name are what the store recorded at sign-in. They are
 	// empty for an ASGARD_TOKEN session, which carries no such record - `whoami`
@@ -69,13 +74,14 @@ func (e *NeedsLoginError) Is(target error) bool { return target == ErrNotSignedI
 // the next command would otherwise refresh again, and Casdoor issues a new
 // refresh token each time.
 func Resolve(ctx context.Context, profileName string) (*Session, error) {
-	p, err := ResolveProfile(profileName)
+	r, err := ResolveWithOrigin(profileName)
 	if err != nil {
 		return nil, err
 	}
+	p, from := r.Profile, r.NameFrom
 
 	if token := os.Getenv(EnvToken); token != "" {
-		return &Session{Profile: p, Token: token, Source: SourceEnv}, nil
+		return &Session{Profile: p, ProfileFrom: from, Token: token, Source: SourceEnv}, nil
 	}
 
 	cred, err := LoadCredential(p)
@@ -108,12 +114,13 @@ func Resolve(ctx context.Context, profileName string) (*Session, error) {
 	}
 
 	return &Session{
-		Profile: p,
-		Token:   cred.Token(),
-		Source:  SourceStore,
-		Subject: cred.Subject,
-		Email:   cred.Email,
-		Name:    cred.Name,
+		Profile:     p,
+		ProfileFrom: from,
+		Token:       cred.Token(),
+		Source:      SourceStore,
+		Subject:     cred.Subject,
+		Email:       cred.Email,
+		Name:        cred.Name,
 	}, nil
 }
 

@@ -14,6 +14,11 @@ import (
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/platform"
 )
 
+// Every subcommand here that changes something prints one line to stderr first,
+// naming the Platform API it is about to change and how that profile came to be
+// the one in effect. See actingOn: it is a receipt, and a receipt has no
+// conditions - the line is there whether or not --profile was typed, because
+// its absence would otherwise have to mean two different things.
 func newPipelineCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "pipeline",
@@ -378,6 +383,7 @@ recovers it.`,
 			if err != nil {
 				return err
 			}
+			actingOn(cmd, pc.Session)
 			connID, err := resolveConnection(cmd.Context(), pc, connection)
 			if err != nil {
 				return err
@@ -560,6 +566,7 @@ another.`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			want := args[0]
+			actingLocally(cmd, f.profile, binding.FileName)
 			pc, err := f.context(cmd)
 			if err != nil {
 				return err

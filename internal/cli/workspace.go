@@ -181,6 +181,12 @@ choice - the first command that acts on it reports a bad one anyway.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			workspaceID := args[0]
 			out := cmd.OutOrStdout()
+			// No --profile here on purpose: this command does not reach the
+			// platform, so TASK-036 took the flag away. The receipt therefore
+			// reports the ambient profile, which is the case most worth
+			// reporting - an id recorded while ASGARD_PROFILE said something
+			// nobody remembered setting.
+			actingLocally(cmd, "", binding.FileName)
 
 			// The binding belongs beside the declaration it is for, so a
 			// repository with two declarations gets two bindings rather than

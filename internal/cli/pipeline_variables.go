@@ -244,6 +244,7 @@ Saving changes only the platform's copy. A run is what sends it to the cluster.`
 			if err != nil {
 				return err
 			}
+			actingOn(cmd, pc.Session)
 			write := platform.VariableWrite{Kind: kind, Key: key, Value: value}
 			if cmd.Flags().Changed("description") {
 				write.Description = &description
@@ -341,6 +342,7 @@ Like every other write here, this changes the platform only.`,
 			if err != nil {
 				return err
 			}
+			actingOn(cmd, pc.Session)
 			if err := pc.Client.DeleteVariable(cmd.Context(), rel.ReleaseId, kind, args[0]); err != nil {
 				return err
 			}
@@ -375,6 +377,7 @@ marked Orphan.`,
 			if err != nil {
 				return err
 			}
+			actingOn(cmd, pc.Session)
 			before, err := pc.Client.GetVariables(cmd.Context(), rel.ReleaseId)
 			if err != nil {
 				return err

@@ -235,3 +235,51 @@ var errNoDeclarationToBind = errors.New(
 	"no .asgard-pipeline.yaml at or above this directory, so there is nothing for a binding to belong to.\n" +
 		"`asgard-cli scaffold` writes one. To act in a workspace without recording it, pass --workspace or " +
 		"export " + auth.EnvWorkspace)
+
+// actingOn writes the one line every command that changes something prints
+// before it acts.
+//
+// **It is a receipt, not a reminder, and a receipt has no conditions.** The
+// alternative considered was printing it only when the profile was chosen
+// implicitly - inherited from the environment, or defaulted - on the reasoning
+// that a name typed on the command line cannot be a surprise. That was refused
+// for the same reason a skipped gate step is not a pass: once somebody types
+// `--profile` out of habit the line disappears, and its absence carries no
+// information at all. You cannot tell "this is safe" from "this build does not
+// have that yet".
+//
+// **The URL is the identity; the name is a local label.** Two people's `dev`
+// can point at different installations, and one of them can be production, so a
+// line naming only the profile would be naming the one part that is nobody
+// else's fact. The name is there because it is what you pass to change the
+// answer, and the origin is there because it is where you go to look.
+//
+// stderr, so that `--format json` keeps a parseable stdout.
+func actingOn(cmd *cobra.Command, session *auth.Session) {
+	fmt.Fprintf(cmd.ErrOrStderr(), "acting on %s  (profile %s, from %s)\n",
+		session.Profile.PlatformAPI, session.Profile.Name, session.ProfileFrom)
+}
+
+// actingLocally is actingOn for the commands that write this checkout's binding
+// rather than changing the platform.
+//
+// It exists separately because "acting on <api url>" would be a lie - nothing
+// is sent anywhere - while the platform is still the fact worth printing: an id
+// recorded against the wrong one is accepted here and fails several commands
+// later, somewhere that does not mention profiles.
+//
+// **It takes the flag rather than a session, because these commands have no
+// session and should not acquire one.** `workspace use` says so in its own
+// help: a check would put a network call in the middle of recording a choice.
+// ResolveWithOrigin reads profiles.json and the environment and touches nothing
+// else, so this stays as offline as the command it decorates.
+func actingLocally(cmd *cobra.Command, profileFlag, what string) {
+	r, err := auth.ResolveWithOrigin(profileFlag)
+	if err != nil {
+		// The command itself reports a profile that cannot be resolved. A
+		// receipt is not the place to raise it a second time.
+		return
+	}
+	fmt.Fprintf(cmd.ErrOrStderr(), "recording %s for %s  (profile %s, from %s)\n",
+		what, r.PlatformAPI, r.Name, r.NameFrom)
+}

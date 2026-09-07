@@ -31,6 +31,9 @@ const LoginTimeout = 5 * time.Minute
 // LoginOptions is one sign-in.
 type LoginOptions struct {
 	Profile Profile
+	// ProfileFrom is how this profile came to be the one in effect, printed so
+	// that somebody signing in to the wrong installation can see where to look.
+	ProfileFrom Origin
 	// NoBrowser suppresses opening a browser. **The URL is printed either
 	// way** - see announce - so this is not what makes the URL available; it
 	// is what stops a browser opening on the wrong machine, which is the
@@ -148,7 +151,13 @@ func Login(ctx context.Context, opts LoginOptions) (Credential, Userinfo, error)
 // a URL on the terminal is the only recovery that does not need the command run
 // again.
 func announce(opts LoginOptions, authURL string) {
-	fmt.Fprintf(opts.Out, "Signing in to the %s platform (%s).\n\n", opts.Profile.Name, opts.Profile.Issuer)
+	// Both URLs, because they are two different installations' worth of
+	// trust: the issuer is what you are about to authenticate against, and the
+	// Platform API is where the resulting token gets used. A profile that
+	// mixes them is the failure Resolved.Warning covers, and naming only one
+	// here is how it stays invisible.
+	fmt.Fprintf(opts.Out, "Signing in to %s  (profile %s, from %s)\n", opts.Profile.Issuer, opts.Profile.Name, opts.ProfileFrom)
+	fmt.Fprintf(opts.Out, "The token will be used on %s\n\n", opts.Profile.PlatformAPI)
 
 	if !opts.NoBrowser {
 		if err := browser.Open(authURL); err != nil {

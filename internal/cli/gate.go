@@ -12,6 +12,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/auth"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/binding"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/check"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/gate"
@@ -81,6 +82,11 @@ func newGateCmd() *cobra.Command {
     asgard-cli gate                  every release the declaration names
     asgard-cli gate internal-dev     one of them
     asgard-cli gate --offline        skip the two steps that need the platform
+
+The first line says which platform this run's verdict is about, and how that
+profile came to be the one in effect. Two of the steps ask a platform, so a
+verdict read against the wrong one is worth nothing; ` + "`--offline`" + ` and "not signed
+in" say so there rather than leaving the line out.
     asgard-cli gate --format json    one record per step, for an agent
 
 **Run it after changing anything under a chart or ` + "`" + pipelineconfig.FileName + "`" + `.** It is the
@@ -179,10 +185,13 @@ Exits non-zero if any step failed.`,
 			steps = append(steps, gateSkills(cmd, profile, offline))
 			steps = append(steps, gateCharts(cmd, root, releases, helmReady)...)
 
+			against := gateAgainst(profile, offline)
+
 			if format == formatJSON {
 				if err := writeJSON(out, map[string]any{
-					"ok":    stepsOK(steps),
-					"steps": steps,
+					"ok":       stepsOK(steps),
+					"platform": against,
+					"steps":    steps,
 				}); err != nil {
 					return err
 				}
@@ -191,6 +200,10 @@ Exits non-zero if any step failed.`,
 				}
 				return nil
 			}
+			// Before the steps, because a verdict is only a verdict about
+			// something: two of these steps ask a platform, and reading their
+			// answer against the wrong one is the failure this line exists for.
+			fmt.Fprintf(out, "against   %s\n\n", against)
 			printSteps(out, steps)
 			if !stepsOK(steps) {
 				return ErrSilent
@@ -203,6 +216,25 @@ Exits non-zero if any step failed.`,
 	cmd.Flags().StringVar(&format, formatFlag, formatText, formatUsage)
 	cmd.Flags().BoolVar(&offline, "offline", false, "skip the two steps that need the platform: binding and skills")
 	return cmd
+}
+
+// gateAgainst is the one line at the top saying what this run's verdict is a
+// verdict about.
+//
+// **`--offline` and "not signed in" get a sentence rather than silence.** The
+// two platform steps report themselves as skipped, but the header is where
+// somebody looks to know whether the run means anything about a platform at
+// all, and an empty header there would read as "no platform involved" rather
+// than "the platform was not asked".
+func gateAgainst(profile string, offline bool) string {
+	if offline {
+		return "nothing - --offline, so no platform was asked"
+	}
+	r, err := auth.ResolveWithOrigin(profile)
+	if err != nil {
+		return "no resolvable profile, so no platform was asked"
+	}
+	return fmt.Sprintf("%s  (profile %s, from %s)", r.PlatformAPI, r.Name, r.NameFrom)
 }
 
 func stepsOK(steps []stepResult) bool {

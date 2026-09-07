@@ -132,6 +132,7 @@ other's deployment.`,
 			if err != nil {
 				return err
 			}
+			actingOn(cmd, pc.Session)
 			p, err := resolvePipeline(cmd.Context(), pc, f.pipeline)
 			if err != nil {
 				return err
