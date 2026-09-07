@@ -17,7 +17,7 @@ how MCP Server, Skillset and Plugin differ. This page assumes you have.
 
 Decide design time or runtime first - they are not interchangeable.
 
-| | `.agents/skills/<skill>/SKILL.md` | `common/skills/<skill>/SKILL.md` |
+| | `.agents/skills/<skill>/SKILL.md` | `assets/skills/<skill>/SKILL.md` |
 |---|---|---|
 | read by | the coding agent working in the repo | the deployed agent, at runtime |
 | when | while authoring CRs | while answering a user |
@@ -161,7 +161,7 @@ spec:
     - git/skills/docx/
 ```
 
-The skill files themselves live in `common/skills/<skill>/SKILL.md` when they
+The skill files themselves live in `assets/skills/<skill>/SKILL.md` when they
 come from this repo, with `name` in the frontmatter matching the directory.
 
 ## Designing a skill - the part the generator leaves TODO

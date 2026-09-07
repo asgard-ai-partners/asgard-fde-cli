@@ -163,7 +163,7 @@ It writes the part of a customer repo that is the same for every engagement:
 | `docs/` | the four-layer model (meeting-notes / decisions / living spec) and the SDD rules |
 | `requirements/` | the task and request indexes |
 | `.agents/skills/` | the seven design-time skills that hold for any Asgard, `db-query` among them; the ones describing a particular server come from `asgard-cli skill update` |
-| `common/` | the runtime-skill directory |
+| `assets/` | the runtime-skill directory |
 | `.asgard-pipeline.yaml` | the deployment declaration, with one release per project to fill in |
 | `projects/<slug>/` | one chart skeleton per project |
 
@@ -571,14 +571,14 @@ asgard-cli check --format json      # errors and warnings as separate arrays
 ```
 
 ```
-warn   common/skills/ has no skill directories yet
+warn   assets/skills/ has no skill directories yet
 ok  structure is consistent (1 project(s): [erp])
 ```
 
 - the root README's project table matches the directories under `projects/`
 - `.asgard-pipeline.yaml` parses, names no release twice, and every release it
   declares points at a chart directory that has a `Chart.yaml`
-- runtime skills under `common/skills/` carry `name` and `description`
+- runtime skills under `assets/skills/` carry `name` and `description`
   frontmatter, with the name matching the directory
 - the SDD entry points under `requirements/` are present
 - the `docs/` spec layer is intact: required files, the living spec's module index

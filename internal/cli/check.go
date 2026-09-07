@@ -21,7 +21,7 @@ repo up:
   - the root README's project table matches the directories under projects/
   - .asgard-pipeline.yaml parses, names no release twice, and every release it
     declares points at a chart directory that has a Chart.yaml
-  - runtime skills under common/skills/ carry name and description frontmatter,
+  - runtime skills under assets/skills/ carry name and description frontmatter,
     with the name matching the directory
   - the SDD entry points under requirements/ are present
   - the docs/ spec layer is intact: required files, the living spec's module

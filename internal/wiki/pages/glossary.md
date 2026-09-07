@@ -18,7 +18,7 @@ something else.**
 | **agent** | a `Agent` CR, which the UI calls a Managed Agent | the flow-agent shape, which contains no `Agent` CR at all; and not the coding agent working in a repository |
 | **workspace** | the customer, and the repository root | nothing else. It is also the platform's billing unit, which is the same thing seen from Fehu |
 | **template** | a Go template this tool renders | the "Template" node type the product overview describes, which maps to nothing else here - see `what-they-read` |
-| **skill** | `common/skills/<name>/SKILL.md`, read by the deployed agent at runtime | `.agents/skills/`, which the coding agent reads while authoring. Say **design-time skill** for the second |
+| **skill** | `assets/skills/<name>/SKILL.md`, read by the deployed agent at runtime | `.agents/skills/`, which the coding agent reads while authoring. Say **design-time skill** for the second |
 | **request** | a record under `requirements/requests/` | an HTTP request, and not one run of an agent. For the platform's per-request limits, say **per run** |
 | **source** | a `Source` CR under a KnowledgeBase | source code, and not a documentation source. For the material's provenance say **source block**; for code say **source code** |
 | **check** | `asgard-cli check`, the structural gate | a layout or content checker in a typesetting skill - say which one |

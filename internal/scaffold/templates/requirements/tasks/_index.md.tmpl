@@ -1,5 +1,14 @@
 # Task Index
 
+**一個 task 是一份開工前要先寫好的實作規格**,是對 living spec 的 delta。每一列一個
+`TASK-*.md`,由 `asgard-cli task` 開與移動狀態。
+
+**這裡不是客戶的要求。** 那些是 request(`../requests/`),用客戶自己的話記。
+**這裡也不是行為的事實來源** —— 一份 task 到 `done` 之後就不再被讀,所以行為變了要把
+delta 套回 `docs/spec/<<.SpecSlug>>/`,那份才是下一個人會讀的。
+
+**這張表由 `asgard-cli` 維護。**
+
 ## Config
 - SPEC_DIR: `docs/spec/<<.SpecSlug>>/` (living spec — 開工前先讀,收工後套回 delta)
 - DECISIONS: `docs/decisions/YYYY-MM-DD-<topic>.md` (dated、不可變)

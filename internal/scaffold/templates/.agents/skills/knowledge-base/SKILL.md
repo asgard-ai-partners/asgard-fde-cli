@@ -56,7 +56,7 @@ next reader have to redo this?* If yes, file it, in whichever layer owns it:
     that from several sources -> a decision record only if a decision was
     actually taken; otherwise it belongs in the spec module as context
   - it is **how to work in this repo** -> `AGENTS.md`
-  - the **running agent** needs it -> `common/skills/<skill>/SKILL.md`, because
+  - the **running agent** needs it -> `assets/skills/<skill>/SKILL.md`, because
     nothing else reaches the cluster
   - you could not settle it -> `docs/open-questions.md`, with what it blocks and
     who can answer
@@ -93,7 +93,7 @@ cheapest:
 4. **`AGENTS.md` against the living spec.** These answer different questions -
    how to change the repo, versus what the system does - so overlap between them
    is a sign a fact has two homes, and two homes drift.
-5. **A `common/skills/` skill against the living spec.** The most expensive kind,
+5. **A `assets/skills/` skill against the living spec.** The most expensive kind,
    because the skill is what the *running agent* believes. A stale skill is a
    production behaviour, not a documentation problem.
 
@@ -147,7 +147,7 @@ customer.
 
 Order by the cost of being wrong, which is not the same as how obvious it is:
 
-    1. anything under common/skills/     the running agent believes it today
+    1. anything under assets/skills/     the running agent believes it today
     2. the living spec                   the next person will believe it
     3. decisions and requirements        found only when somebody goes looking
 

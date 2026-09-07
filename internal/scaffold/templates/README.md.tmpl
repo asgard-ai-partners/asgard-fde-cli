@@ -54,7 +54,7 @@ references/                  # 背景資料(不可直接照著實作)
 .agents/skills/              # design-time 技能(給在這個 repo 工作的 coding agent)
 .asgard-pipeline.yaml        # ★ 部署宣告:有哪些 Release、各自的觸發規則與 key。不放值
 .asgard-cli.yaml             # 這個 checkout 對到哪個 workspace / pipeline。**Platform 不讀**
-common/
+assets/
   skills/<skill>/SKILL.md    # runtime 技能來源(由各 SkillSet 挑選,同步進平台)
 projects/<project>/
   chart/app/{templates,values.yaml}   # values.yaml 只放預設值
@@ -67,14 +67,14 @@ Platform 的答案** —— 它會把每個 CR 送進 apiserver 做 dry run,那�
 
 ### 技能放哪裡 —— 兩種技能,不可混用
 
-| | `.agents/skills/` | `common/skills/` |
+| | `.agents/skills/` | `assets/skills/` |
 |---|---|---|
 | 給誰用 | **在這個 repo 工作的 coding agent** | **部署後的 Asgard agent** |
 | 什麼時候 | design time(寫 CR 的時候) | runtime(回答使用者的時候) |
 | 怎麼生效 | 任何認 `.agents/skills` 的 coding agent 直接從工作目錄讀 | commit → SourceSet 同步 → `SkillSet.searchPaths` 選取 → 由 Agent 或 SandboxBlueprint 綁定 |
 | 會進叢集嗎 | 不會 | 會,那就是目的 |
 
-`common/skills/` 的 `searchPaths` 要**逐個技能目錄**列出,不能只列父目錄(平台以「一個
+`assets/skills/` 的 `searchPaths` 要**逐個技能目錄**列出,不能只列父目錄(平台以「一個
 searchPath = 一個技能目錄」解析)。
 
 ## Spec-Driven Development
