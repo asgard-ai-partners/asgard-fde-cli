@@ -93,17 +93,19 @@ not carry the state value this run generated - which means it was not this run's
 			if err := checkFormat(format); err != nil {
 				return err
 			}
-			p, err := auth.ResolveProfile(profile)
+			r, err := auth.ResolveWithOrigin(profile)
 			if err != nil {
 				return err
 			}
+			p := r.Profile
 
 			// Progress goes to stderr so that a --format json run's stdout is
 			// the answer and nothing else.
 			cred, info, err := auth.Login(cmd.Context(), auth.LoginOptions{
-				Profile:   p,
-				NoBrowser: noBrowser,
-				Out:       cmd.ErrOrStderr(),
+				Profile:     p,
+				ProfileFrom: r.NameFrom,
+				NoBrowser:   noBrowser,
+				Out:         cmd.ErrOrStderr(),
 			})
 			if err != nil {
 				return err
@@ -189,10 +191,11 @@ same thing both times.
 				return nil
 			}
 
-			p, err := auth.ResolveProfile(profile)
+			r, err := auth.ResolveWithOrigin(profile)
 			if err != nil {
 				return err
 			}
+			p := r.Profile
 			had, err := auth.DeleteCredential(p.Name)
 			if err != nil {
 				return err
@@ -201,7 +204,13 @@ same thing both times.
 				fmt.Fprintf(out, "No stored session for %s.\n", p.Name)
 				return nil
 			}
-			fmt.Fprintf(out, "Forgot the %s session. It is not revoked at the platform.\n", p.Name)
+			// Which installation's session, not just which local label: the
+			// profile in effect can be one nobody remembers setting, and this
+			// is the command whose effect is "you are no longer signed in to
+			// something" - worth naming the something.
+			fmt.Fprintf(out, "Forgot the session for %s  (profile %s, from %s).\n",
+				p.PlatformAPI, p.Name, r.NameFrom)
+			fmt.Fprintf(out, "It is not revoked at the platform.\n")
 			return nil
 		},
 	}

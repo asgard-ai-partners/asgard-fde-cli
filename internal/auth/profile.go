@@ -103,13 +103,29 @@ const (
 	FromProfileFile Origin = "profiles.json"
 	FromHosted      Origin = "the hosted platform (this profile does not set it)"
 	FromEnv         Origin = "environment"
+
+	// The three ways the profile *name* gets chosen, as opposed to where one
+	// of its fields came from. They read as the thing a person would look at
+	// to change the answer, because that is what somebody does with this line
+	// when it says something they did not expect.
+	FromFlag       Origin = "--profile"
+	FromEnvProfile Origin = EnvProfile
+	FromDefault    Origin = "the default: no --profile, no " + EnvProfile
 )
 
 // Resolved is a profile with a record of where each field came from.
 type Resolved struct {
 	Profile
 	// Exists reports whether profiles.json actually holds this name.
-	Exists       bool
+	Exists bool
+	// NameFrom is how this profile came to be the one in effect, which is a
+	// different question from where its fields came from.
+	//
+	// **It is the half that decides whether somebody can be wrong about it.**
+	// A name typed on the command line cannot be a surprise; one inherited from
+	// the environment was decided once, possibly in another shell, and the
+	// default is the hosted platform reached by configuring nothing.
+	NameFrom     Origin
 	IssuerFrom   Origin
 	ClientIDFrom Origin
 	APIFrom      Origin
@@ -406,12 +422,12 @@ func ResolveWithOrigin(want string) (Resolved, error) {
 		return Resolved{}, err
 	}
 
-	name := want
+	name, nameFrom := want, FromFlag
 	if name == "" {
-		name = os.Getenv(EnvProfile)
+		name, nameFrom = os.Getenv(EnvProfile), FromEnvProfile
 	}
 	if name == "" {
-		name = DefaultProfileName
+		name, nameFrom = DefaultProfileName, FromDefault
 	}
 
 	file, err := LoadProfiles()
@@ -426,6 +442,7 @@ func ResolveWithOrigin(want string) (Resolved, error) {
 	r := Resolved{
 		Profile:      Profile{Name: name},
 		Exists:       exists,
+		NameFrom:     nameFrom,
 		IssuerFrom:   FromHosted,
 		ClientIDFrom: FromHosted,
 		APIFrom:      FromHosted,

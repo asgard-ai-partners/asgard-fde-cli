@@ -442,6 +442,7 @@ the only record of why, and the next run does not inherit it.`
 			if err != nil {
 				return err
 			}
+			actingOn(cmd, pc.Session)
 			var run *platform.Run
 			if action == "approve" {
 				run, err = pc.Client.ApproveRun(cmd.Context(), args[0], comment)
@@ -492,6 +493,7 @@ run does not queue behind the stuck one.`,
 			if err != nil {
 				return err
 			}
+			actingOn(cmd, pc.Session)
 			run, err := pc.Client.CancelRun(cmd.Context(), args[0])
 			if err != nil {
 				return err
