@@ -272,7 +272,86 @@ func (c *checker) checkDeclaration() error {
 			c.warnf("%s: release %q declares no trigger, so only a manual run deploys it", pipelineconfig.FileName, r.Name)
 		}
 	}
+	c.checkOneReleasePerEnvironment(cfg)
 	return nil
+}
+
+// environmentWords are the names an environment goes by in a release name or a
+// trigger pattern. Matched as whole tokens, never as substrings: a project
+// called "developer-portal" is not a dev release, and finding one would train
+// everybody to ignore the warning.
+var environmentWords = map[string]bool{
+	"dev": true, "develop": true, "development": true,
+	"stg": true, "stage": true, "staging": true,
+	"prod": true, "production": true,
+	"uat": true, "sit": true, "qa": true, "test": true,
+}
+
+// tokens splits an identifier or a trigger pattern into the words in it, so a
+// match is on a word rather than on a substring.
+var tokens = regexp.MustCompile(`[a-zA-Z]+`)
+
+// namesAnEnvironment reports whether any whole word in s is an environment
+// name.
+func namesAnEnvironment(s string) bool {
+	for _, w := range tokens.FindAllString(s, -1) {
+		if environmentWords[strings.ToLower(w)] {
+			return true
+		}
+	}
+	return false
+}
+
+// checkOneReleasePerEnvironment warns about a chart that one release names, when
+// that release says which environment it is.
+//
+// **A project normally needs a release per environment**, sharing one chart
+// directory and differing by trigger pattern, each created against a different
+// platform project — which is what gives them different namespaces. One release
+// is right for a POC nobody will maintain, and for nothing else.
+//
+// Nothing used to say so. Every prompt around a release was singular, which
+// reads as a 1:1:1 chart-to-release-to-platform-project mapping, and an agent
+// onboarding a repository takes the prompts literally: the reported case wrote
+// a lone release with the pattern `dev-\d+\.\d+\.\d+` — naming a dev
+// environment and never asking what the other one was.
+//
+// That is the shape this catches, and it is why the environment word is
+// required rather than warning on every single-release chart. A release that
+// does not say which environment it is has not made the mistake this is about;
+// a release that does has named one of a set and stopped at one.
+func (c *checker) checkOneReleasePerEnvironment(cfg *pipelineconfig.Config) {
+	byChart := map[string][]pipelineconfig.Release{}
+	order := []string{}
+	for _, r := range cfg.Releases {
+		if r.Chart == "" {
+			continue
+		}
+		if _, seen := byChart[r.Chart]; !seen {
+			order = append(order, r.Chart)
+		}
+		byChart[r.Chart] = append(byChart[r.Chart], r)
+	}
+	for _, chart := range order {
+		rs := byChart[chart]
+		if len(rs) != 1 {
+			continue
+		}
+		r := rs[0]
+		pattern := ""
+		if r.On != nil {
+			pattern = r.On.Pattern
+		}
+		if !namesAnEnvironment(r.Name) && !namesAnEnvironment(pattern) {
+			continue
+		}
+		c.warnf("%s: chart %s is named by one release, %q, and that release says which "+
+			"environment it is. A project normally needs one per environment - the same chart, "+
+			"a different name and on.pattern, each created against a DIFFERENT platform project, "+
+			"which is what gives them different namespaces. One release is the POC shape; if that "+
+			"is what this is, nothing here is wrong",
+			pipelineconfig.FileName, chart, r.Name)
+	}
 }
 
 // projectRow matches the second column of the root README's project table,

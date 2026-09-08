@@ -110,7 +110,13 @@ func newProjectAddCmd() *cobra.Command {
 
 A project is one Helm chart. Which releases deploy it, and to which platform
 project, is declared in ` + "`" + pipelineconfig.FileName + "`" + ` - **this writes the chart, and
-declaring a release for it is a separate step that this does not do.**
+declaring its releases is a separate step that this does not do.**
+
+**One chart usually carries one release per environment.** ` + "`" + `<slug>-dev` + "`" + ` and
+` + "`" + `<slug>-prod` + "`" + ` name the same chart directory here and differ by their trigger
+pattern; what separates them at deploy time is that each is bound to a different
+platform project, and a platform project is what decides the namespace. A single
+release is the POC shape.
 
 The slug ends up in the names of the objects the chart renders, so keep it
 short: Kubernetes caps a name at 63 characters and names derived from this
@@ -154,10 +160,36 @@ Existing files are left alone, so this is safe to re-run.`,
 			}
 			fmt.Fprintf(out, "Wrote %d file(s) under projects/%s/chart.\n", created, slug)
 
-			fmt.Fprintf(out, "\nDeclare a release for it in %s, and create that release on the\n"+
-				"platform bound to the project whose namespace it deploys into. A chart that\n"+
-				"no release names deploys nowhere, and nothing here will say so.\n",
+			// Said in the plural, at the moment the decision is made.
+			//
+			// Every prompt around this used to be singular — "a release", "that
+			// release", "the project" — which reads as a 1:1:1 chart-to-release-
+			// to-platform-project mapping, and an agent onboarding a repository
+			// takes the prompts literally. One release is right only for a
+			// throwaway POC; the cost of finding that out later is that the
+			// platform project, its namespace and the release name are already
+			// the ones production uses.
+			fmt.Fprintf(out, "\nDeclare its releases in %s, and create each one on the platform bound to\n"+
+				"the platform project whose namespace it deploys into. A chart that no release\n"+
+				"names deploys nowhere, and nothing here will say so.\n",
 				pipelineconfig.FileName)
+			fmt.Fprintf(out, "\n**Usually one release per environment, not one release.** %s-dev and\n"+
+				"%s-prod share this chart directory and differ by on.pattern, each bound to a\n"+
+				"DIFFERENT platform project, which is what gives them different namespaces.\n"+
+				"One release is right for a POC nobody will maintain, and for nothing else.\n",
+				slug, slug)
+			// Naming the requirement without naming the command is how the
+			// other half of this went wrong: an output that says what must be
+			// true and not what does it leaves the reader to find the command,
+			// and `project add` here and `pipeline project create` there are
+			// close enough in name to look like the same thing already done.
+			fmt.Fprintf(out, "\nThe platform project is not this one - `project add` wrote a chart in this\nrepository, and a platform project is a division of the workspace that owns a\nnamespace. Each release needs one, and they must not be the same one:\n\n")
+			fmt.Fprintf(out, "    asgard-cli pipeline projects                     what the workspace already has\n")
+			fmt.Fprintf(out, "    asgard-cli pipeline project create %s-dev\n", slug)
+			fmt.Fprintf(out, "    asgard-cli pipeline project create %s-prod\n", slug)
+			fmt.Fprintf(out, "    asgard-cli pipeline release create %s-dev --project <id>\n", slug)
+			fmt.Fprintf(out, "    asgard-cli pipeline release create %s-prod --project <id>\n", slug)
+			fmt.Fprintf(out, "\nAn existing platform project can serve one of them; what cannot happen is both\nreleases on the same one, because then both deploy into the same namespace and\nprod is whatever was tagged last.\n")
 			return nil
 		},
 	}

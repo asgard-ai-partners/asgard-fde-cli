@@ -332,11 +332,18 @@ platform runs the rollout: a tag matching a release's rule produces a run that r
 chart, checks every CR against the cluster's own CRDs, waits for review and applies. What this
 repository holds is the chart and the one declaration.
 
-Adding a project = add `projects/<project>/chart`, declare a release for it in
-`.asgard-pipeline.yaml`, and create that release on the platform bound to the project whose
-namespace it deploys into:
+Adding a project = add `projects/<project>/chart`, declare its releases in
+`.asgard-pipeline.yaml`, and create each one on the platform bound to the platform project
+whose namespace it deploys into:
 
     asgard-cli pipeline release create <name> --project <id>
+
+**A project usually needs one release per environment, not one release.** `<project>-dev`
+and `<project>-prod` name the same `chart:` directory and differ by `on.pattern`; what
+separates them is that each is created against a **different platform project**, and the
+platform project is what decides the namespace. One release is the shape for a POC nobody
+will maintain — discovering otherwise later means the platform project, the namespace and
+the release name are already the ones production is using.
 
 A tag matching a release nobody created produces no run at all — `asgard-cli pipeline
 deliveries` says so, and nothing else will. Also add the project to the root `README.md`

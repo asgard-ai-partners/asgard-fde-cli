@@ -14,7 +14,7 @@ something else.**
 |---|---|---|
 | **sandbox** | the isolated runtime the platform starts to run an agent in | the customer's test environment - call that a **test environment** |
 | **project** | one Helm chart deployed to one namespace, under `projects/<slug>/` | the platform's own Project object, which is a division inside a Workspace - say **platform Project** |
-| **environment** | `dev` or `prod`, a namespace and a values file | the platform's Environment inside a platform Project - say **platform Environment**. How the two correspond is undocumented |
+| **environment** | `dev` or `prod`: one release in `.asgard-pipeline.yaml`, bound to its own platform Project | the platform's Environment inside a platform Project - say **platform Environment**. There are no per-environment values files; a release's values are variables set on the platform |
 | **agent** | a `Agent` CR, which the UI calls a Managed Agent | the flow-agent shape, which contains no `Agent` CR at all; and not the coding agent working in a repository |
 | **workspace** | the customer, and the repository root | nothing else. It is also the platform's billing unit, which is the same thing seen from Fehu |
 | **template** | a Go template this tool renders | the "Template" node type the product overview describes, which maps to nothing else here - see `what-they-read` |
