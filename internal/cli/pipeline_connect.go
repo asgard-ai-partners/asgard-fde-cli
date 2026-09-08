@@ -109,12 +109,18 @@ own connection to the same installation, and they do not see each other's.`,
 			}
 
 			wanted := account
-			if wanted == "" {
+			if wanted == "" && pc.RepoFullName != "" {
 				// The owner of this checkout's remote is the account this
 				// engagement is about. Derived rather than asked, because
 				// asking would need somebody at the terminal and this command
 				// is run by an agent.
+				//
+				// Said out loud, like `pipeline create` does with --repo: a
+				// value taken from the remote is a suggestion the caller did
+				// not make, and one it cannot correct if it never hears it.
 				wanted, _, _ = strings.Cut(pc.RepoFullName, "/")
+				fmt.Fprintf(cmd.ErrOrStderr(),
+					"no --account, so the owner of this checkout's origin remote is used: %s\n", wanted)
 			}
 
 			// Identify first, always. Which way in is right depends on
