@@ -56,11 +56,18 @@ metadata:
   annotations:
     asgard-ai.com/syncer-name: "<<.DisplayName>> 資料同步"
   labels:
-    # The platform's switch: stops the scheduler, does NOT stop CD - the deploy
-    # step uses `kubectl create job --from`, which works on a suspended CronJob.
-    # To stop it on deploy too, add this repo's own opt-out label
-    # asgard-ai.com/syncer-cd-trigger: "false". Silence takes both.
+    # Two switches, and neither reads the other.
+    #
+    # suspend stops the scheduler. auto-fire-on-rollout is read ONLY by the
+    # platform's apply step, which fires this Syncer once per deploy and waits
+    # for it - firing works on a suspended CronJob. So suspend plus auto-fire
+    # is a Syncer that runs on deploys and never on a clock, and a suspended
+    # Syncer WITHOUT auto-fire never runs at all.
+    #
+    # Auto-fire is set here so the first deploy loads the drive, rather than
+    # the drive staying empty until the next scheduled tick.
     asgard-ai.com/syncer-suspend: {{ .Values.<<.ValuesKey>>.dbSync.suspend | quote }}
+    asgard-ai.com/auto-fire-on-rollout: "true"
     {{- include "<<.Chart>>.labels" . | nindent 4 }}
 spec:
   sourceSetName: <<.CRName>>

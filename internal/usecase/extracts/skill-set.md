@@ -241,40 +241,41 @@ that key.
           secretKeyRef: {name: ..., key: asgard-github-pat-password}
 ```
 
-## Two suspend switches, and they are not the same
+## Two labels, and neither reads the other
 
-    asgard-ai.com/syncer-suspend: "true"      the platform's. Stops the scheduler.
-                                              Does NOT stop CD.
-    asgard-ai.com/syncer-cd-trigger: "false"  this repo's own opt-out, read only
-                                              by CD.
+    asgard-ai.com/syncer-suspend: "true"        stops the SCHEDULER, and nothing else
+    asgard-ai.com/auto-fire-on-rollout: "true"  the deploy fires it once, and waits
 
-Both shapes set `syncer-suspend: "true"` and let CD trigger each Syncer once
-after `helm upgrade` - sync timing is tied to deploys on purpose.
+Both shapes set `syncer-suspend: "true"` and let the deploy fire each Syncer
+once - sync timing is tied to deploys on purpose. **That takes both labels.**
+The platform's apply step fires only the Syncers of this release that carry
+`auto-fire-on-rollout`, and firing works fine against a suspended CronJob.
 
-The CD step is `kubectl create job --from=cronjob`, which works fine against a
-suspended CronJob. **Never "fix" CD by skipping suspended CronJobs** - every git
-skill Syncer is suspended, and skipping them stops skills syncing everywhere.
+**A suspended Syncer with no auto-fire label never runs at all.** Nothing
+reports it: the chart renders, the apiserver accepts it, the gate is green, the
+run succeeds, and the agent has zero skills. `asgard-cli add skillset` writes
+both labels - a Syncer written by hand is where this goes wrong.
 
-That opt-out label lives **on the Syncer CR, and CD has to go and fetch it**. The
-reconciler puts only `syncer-name` on the derived CronJob and copies nothing
-else, so reading the opt-out off the CronJob silently finds nothing and triggers
-anyway. That shipped once as a bug; the CronJob-vs-CR distinction is the whole
-of it.
+The label is read off the **applied manifest, so off the CR**. The reconciler
+copies only `syncer-name` onto the derived CronJob, so anything that goes
+looking for these labels on the CronJob silently finds nothing.
 
-## And one that fails the deploy
+**The polarity flipped, which is why an older chart reads back-to-front.**
+Firing on deploy used to be the default, opted out of per Syncer with
+`asgard-ai.com/syncer-cd-trigger: "false"` - a label **the platform does not
+read at all**, left behind by the GitHub Actions workflows that predate the
+pipeline. In a repo that still deploys through its own CD it still means
+something; in one deployed by `asgard-cli pipeline` it means nothing, and the
+label that matters is the opt-in one above.
 
-**Whether CD requires at least one Syncer per deployed project is one `if` in
-your own workflow.** The trigger-and-wait step polls for CronJobs labelled
-`asgard-ai.com/syncer-name` and exits 1 after 180 seconds if it finds none, even
-when `helm upgrade` succeeded - but some workflows count what the chart declares
-first and skip the whole step at zero, and a production chart runs today with
-none. Check before the first tag:
+## Whether a deploy fails with no Syncer
 
-    grep -n syncer-name -A15 .github/workflows/*.y*ml
-
-If it waits unconditionally, a project whose only skills are design-time still
-needs one. If it skips, nothing in the pipeline is checking that project at all,
-and a green deploy means helm returned.
+**That is the platform's question now, not an `if` in your own workflow.** The
+apply step fires what carries the label and waits for it, so with nothing to
+fire there is nothing after the dry run that proves the platform accepted any of
+it - which is why `asgard-cli gate` warns at zero Syncers, and why a succeeded
+run only means helm returned. A project whose only skills are design-time still
+wants one.
 
 ## Verify
 

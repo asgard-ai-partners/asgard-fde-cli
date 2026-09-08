@@ -82,16 +82,25 @@ The derived CRs take the SourceSet's name with a `-ci` suffix, so a Drive named
 `ss-<name>-knowledge` produces `ss-<name>-knowledge-ci`. That is what to look for
 on a cluster when the index is not running.
 
-## Two switches, and one does not do what its name suggests
+## Two labels, and neither reads the other
 
-`asgard-ai.com/syncer-suspend: "true"` stops the **scheduler** and **does not
-stop CD**: the deploy step runs `kubectl create job --from`, which works on a
-suspended CronJob. That is deliberate - the skills Syncer relies on it - so CD
-cannot be changed to skip suspended ones.
+`asgard-ai.com/syncer-suspend: "true"` stops the **scheduler**, and nothing
+else. It does not stop a deploy from firing the Syncer, and that is deliberate -
+the skills Syncer relies on exactly that.
 
-To stop a Syncer running on deploy as well, it needs this repo's own opt-out
-label `asgard-ai.com/syncer-cd-trigger: "false"`, which only CD reads. **Silence
-takes both.** See `asgard-cli usecase skill-set` for the CD side.
+What fires it on a deploy is a **second, opt-in label**,
+`asgard-ai.com/auto-fire-on-rollout: "true"`: the platform's apply step fires
+the Syncers of the release that carry it and waits for them. Only that runner
+reads the label; the Syncer module ignores it, and neither label reads the
+other. **A suspended Syncer with no auto-fire label never runs at all**, and the
+symptom is an empty drive or an agent with zero skills - with a green gate, a
+succeeded run and no error anywhere.
+
+**The polarity flipped.** Firing on deploy used to be the default, opted out of
+with `asgard-ai.com/syncer-cd-trigger: "false"` - a label **the platform does
+not read at all**, left from the CD workflows that predate the pipeline. Silence
+is the default now, so noise is what has to be asked for. See
+`asgard-cli usecase skill-set`.
 
 ## Knowledge Base
 
