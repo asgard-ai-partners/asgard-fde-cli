@@ -69,7 +69,7 @@ hand-written skills beside them are for.`,
 // can print a path rather than leave somebody guessing which of two
 // directories was written.
 func skillRoot(cmd *cobra.Command, override string) (root, repoRoot string, err error) {
-	repoRoot, _ = locateRepo(cmd.Context())
+	repoRoot, _, _ = locateRepo(cmd.Context())
 	if repoRoot == "" {
 		// Outside a checkout the working directory is the only honest answer.
 		// It is also usually a mistake, which `status` says out loud.

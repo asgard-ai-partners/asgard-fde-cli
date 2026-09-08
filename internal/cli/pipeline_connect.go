@@ -109,7 +109,12 @@ own connection to the same installation, and they do not see each other's.`,
 			}
 
 			wanted := account
-			if wanted == "" && pc.RepoFullName != "" {
+			// Only when the remote is on the provider being connected. An
+			// account name is a name ON a provider: "acme" from a gitlab.com
+			// remote is not a GitHub account, and treating it as one would
+			// connect whatever GitHub org happens to share the name — silently,
+			// and correctly as far as anything here could tell.
+			if wanted == "" && pc.RepoFullName != "" && isGitHubHost(pc.RepoHost) {
 				// The owner of this checkout's remote is the account this
 				// engagement is about. Derived rather than asked, because
 				// asking would need somebody at the terminal and this command
@@ -378,4 +383,14 @@ func attachFreshest(cmd *cobra.Command, pc *platformContext, choices *platform.A
 		}
 	}
 	return nil, fmt.Errorf("nothing new was installed; every account you reach is already connected here")
+}
+
+// isGitHubHost reports whether a remote host is github.com.
+//
+// Deliberately not "anything that looks like a git host": GitHub Enterprise
+// lives on a host this cannot know, so an account there has to be named with
+// --account rather than assumed. Refusing to guess costs one flag; guessing
+// wrong connects an account nobody asked for.
+func isGitHubHost(host string) bool {
+	return host == "github.com" || host == "www.github.com"
 }
