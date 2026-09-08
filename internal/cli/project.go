@@ -178,6 +178,18 @@ Existing files are left alone, so this is safe to re-run.`,
 				"DIFFERENT platform project, which is what gives them different namespaces.\n"+
 				"One release is right for a POC nobody will maintain, and for nothing else.\n",
 				slug, slug)
+			// Naming the requirement without naming the command is how the
+			// other half of this went wrong: an output that says what must be
+			// true and not what does it leaves the reader to find the command,
+			// and `project add` here and `pipeline project create` there are
+			// close enough in name to look like the same thing already done.
+			fmt.Fprintf(out, "\nThe platform project is not this one - `project add` wrote a chart in this\nrepository, and a platform project is a division of the workspace that owns a\nnamespace. Each release needs one, and they must not be the same one:\n\n")
+			fmt.Fprintf(out, "    asgard-cli pipeline projects                     what the workspace already has\n")
+			fmt.Fprintf(out, "    asgard-cli pipeline project create %s-dev\n", slug)
+			fmt.Fprintf(out, "    asgard-cli pipeline project create %s-prod\n", slug)
+			fmt.Fprintf(out, "    asgard-cli pipeline release create %s-dev --project <id>\n", slug)
+			fmt.Fprintf(out, "    asgard-cli pipeline release create %s-prod --project <id>\n", slug)
+			fmt.Fprintf(out, "\nAn existing platform project can serve one of them; what cannot happen is both\nreleases on the same one, because then both deploy into the same namespace and\nprod is whatever was tagged last.\n")
 			return nil
 		},
 	}

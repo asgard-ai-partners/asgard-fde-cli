@@ -40,8 +40,17 @@
 
 # **一個 Project 通常要一個環境一條 Release,不是一條。** dev 與 prod 共用同一份
 # chart 目錄,差別只在 name 與 on.pattern,而且各自 bind 到**不同的 Platform
-# Project**(因此不同 namespace)—— 這是在 `pipeline release create --project <id>`
-# 決定的,不在這個檔案裡。
+# Project**(因此不同 namespace)。
+#
+# Platform Project 不是 projects/<slug>/ —— 後者是這個 repo 裡的 chart,前者是
+# Workspace 底下擁有一個 namespace 的分區。bind 是在這個檔案外面做的:
+#
+#   asgard-cli pipeline projects                    看 Workspace 現有哪些
+#   asgard-cli pipeline project create <name>       建一個(連預設 environment)
+#   asgard-cli pipeline release create <release-name> --project <id>
+#
+# 其中一條可以沿用既有的 Platform Project;不能兩條共用同一個 —— 那樣兩條會部署
+# 進同一個 namespace,prod 就變成「最後一個被 tag 的那個」。
 #
 # 一條 Release 只有在「沒人要維護的 POC」時才是對的。上線後才想加 staging,
 # 那時 Platform Project、namespace 和 Release 名都已經是 prod 在用的了。
