@@ -66,14 +66,20 @@ asgard-cli login                      # opens a browser AND prints the URL
 asgard-cli workspace list             # show it; they choose
 asgard-cli workspace use <id>
 asgard-cli pipeline connections       # none? asgard-cli pipeline connect
-asgard-cli pipeline create --name <n> --connection <id> --repo <owner/name>
-asgard-cli pipeline use <id>
+asgard-cli pipeline list              # ask which of these is this engagement's, if any
+                                      #   it is one of them:
+                                      #     asgard-cli pipeline use <id>
+                                      #   it is none of them:
+                                      #     asgard-cli pipeline create --name <n> \
+                                      #       --connection <id> --repo <owner/name>
+                                      # both record it in .asgard-cli.yaml; neither
+                                      # follows the other
 asgard-cli pipeline projects          # empty? that is where a new customer starts:
                                       #   asgard-cli pipeline project create <name>
 asgard-cli skill update               # the CR reference material arrives here
 ```
 
-Three things to know while doing it:
+Seven things to know while doing it:
 
 - **`asgard-cli login` and `asgard-cli pipeline connect` both open a browser and
   print the URL.** Let them open it - the person is at this machine. The printed

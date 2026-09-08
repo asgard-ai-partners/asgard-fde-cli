@@ -190,7 +190,11 @@ way in was the list of installations you already reach.`,
 			}
 			fmt.Fprintf(out, "Connected %s (%s), installation %s, connection %s.\n",
 				created.AccountLogin, created.AccountType, created.InstallationId, created.ConnectionId)
-			fmt.Fprintf(out, "\n`asgard-cli pipeline repos` lists what it can reach; a repository missing from\nthat list is one the installation was not granted, which is changed on the\nprovider rather than here.\n")
+			// The id is on the line above. A suggestion that cannot be run as
+			// printed costs a round trip for nothing, and `pipeline repos`
+			// refuses without --connection on purpose - nothing is assumed
+			// from a list of one, including a list of one connection.
+			fmt.Fprintf(out, "\n`asgard-cli pipeline repos --connection %s` lists what it can reach; a\nrepository missing from that list is one the installation was not granted,\nwhich is changed on the provider rather than here.\n", created.ConnectionId)
 			return nil
 		},
 	}
