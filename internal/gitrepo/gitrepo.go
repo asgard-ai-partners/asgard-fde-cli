@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -64,44 +65,93 @@ func HeadSHA(ctx context.Context, dir string) (string, error) {
 	return run(ctx, dir, "rev-parse", "HEAD")
 }
 
-// remotePattern matches the two URL shapes a provider hands out, capturing
-// owner and repository:
+// scpLike matches git's abbreviated ssh syntax, which is not a URL and cannot
+// be parsed as one: the colon separates host from PATH, not host from port.
 //
 //	git@github.com:owner/name.git
-//	https://github.com/owner/name(.git)
+var scpLike = regexp.MustCompile(`^(?:([^@/]+)@)?([^/:]+):(.+)$`)
+
+// RemoteHost is the host a remote URL points at, lowercased, without any port.
+// Empty when the URL is not a shape this understands.
+func RemoteHost(remoteURL string) string {
+	host, _, ok := splitRemote(remoteURL)
+	if !ok {
+		return ""
+	}
+	return host
+}
+
+// splitRemote reduces a remote URL to its host and its path.
 //
-// It is deliberately not a general URL parser. The only thing this has to
-// produce is the "owner/name" a pipeline records, and a shape it does not
-// recognise is reported as such rather than guessed at - a wrong guess would
-// silently match no pipeline, which reads like "you have not created one".
-var remotePattern = regexp.MustCompile(`^(?:[a-z]+://)?(?:[^@/]+@)?[^/:]+[:/]([^/]+)/(.+?)(?:\.git)?/?$`)
+// It is deliberately conservative. Anything it is not sure about is reported as
+// unrecognised rather than reduced to a best guess: a wrong guess here does not
+// fail, it succeeds at the wrong thing, and the caller has no way to tell.
+func splitRemote(remoteURL string) (host, path string, ok bool) {
+	raw := strings.TrimSpace(remoteURL)
+	if raw == "" {
+		return "", "", false
+	}
+
+	if strings.Contains(raw, "://") {
+		u, err := url.Parse(raw)
+		if err != nil || u.Host == "" {
+			// file:///srv/git/x has no host: a local path, not a provider.
+			return "", "", false
+		}
+		// Hostname() drops the port, which is why this is parsed rather than
+		// pattern-matched: in ssh://host:2222/owner/name the 2222 is a port,
+		// and a pattern that treats the colon as a separator reads it as the
+		// owner.
+		return strings.ToLower(u.Hostname()), strings.Trim(u.Path, "/"), true
+	}
+
+	m := scpLike.FindStringSubmatch(raw)
+	if m == nil {
+		// A bare path (/srv/git/x, ../sibling.git) is not a provider remote.
+		return "", "", false
+	}
+	return strings.ToLower(m[2]), strings.Trim(m[3], "/"), true
+}
 
 // FullName reduces a remote URL to "owner/name", or returns false when the URL
 // is not a shape it recognises.
+//
+// Exactly two path segments. A deeper path — a GitLab subgroup, say — is
+// refused rather than folded into an owner and a name with a slash in it: this
+// names the repository a pipeline binds, and that shape has two parts.
 func FullName(remoteURL string) (string, bool) {
-	m := remotePattern.FindStringSubmatch(strings.TrimSpace(remoteURL))
-	if m == nil {
+	_, path, ok := splitRemote(remoteURL)
+	if !ok {
 		return "", false
 	}
-	owner, name := m[1], m[2]
-	if owner == "" || name == "" {
+	path = strings.TrimSuffix(path, ".git")
+	owner, name, found := strings.Cut(path, "/")
+	if !found || owner == "" || name == "" || strings.Contains(name, "/") {
 		return "", false
 	}
 	return owner + "/" + name, true
 }
 
-// OriginFullName is the composition the callers actually want: the origin
-// remote of the checkout containing dir, as "owner/name".
+// OriginFullName is the origin remote reduced to "owner/name".
 func OriginFullName(ctx context.Context, dir string) (string, error) {
-	url, err := OriginURL(ctx, dir)
+	remote, err := OriginURL(ctx, dir)
 	if err != nil {
 		return "", err
 	}
-	full, ok := FullName(url)
+	full, ok := FullName(remote)
 	if !ok {
-		return "", fmt.Errorf("origin %q is not a shape this understands, so the repository it names cannot be matched against a pipeline", url)
+		return "", fmt.Errorf("origin %q is not a shape this understands, so the repository it names cannot be matched against a pipeline", remote)
 	}
 	return full, nil
+}
+
+// OriginHost is the host the origin remote points at, or empty.
+func OriginHost(ctx context.Context, dir string) string {
+	remote, err := OriginURL(ctx, dir)
+	if err != nil {
+		return ""
+	}
+	return RemoteHost(remote)
 }
 
 // run executes one git command and returns its trimmed stdout.

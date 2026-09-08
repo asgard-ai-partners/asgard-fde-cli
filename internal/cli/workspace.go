@@ -223,7 +223,7 @@ choice - the first command that acts on it reports a bad one anyway.`,
 			}
 
 			rel := bindPath
-			if root, _ := locateRepo(cmd.Context()); root != "" {
+			if root, _, _ := locateRepo(cmd.Context()); root != "" {
 				if r, relErr := filepath.Rel(root, bindPath); relErr == nil {
 					rel = r
 				}

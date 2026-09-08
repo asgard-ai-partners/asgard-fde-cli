@@ -39,6 +39,13 @@ type platformContext struct {
 	Workspace string
 	// WorkspaceSource is why that workspace, for the line a command prints.
 	WorkspaceSource WorkspaceSource
+	// RepoHost is the host the origin remote points at, lowercased and without
+	// a port. Empty when there is no remote or it is not a shape we read.
+	//
+	// Kept apart from RepoFullName because a name and the provider it lives on
+	// are different facts: "acme/app" on gitlab.com is not an account on
+	// GitHub, and anything that treats it as one is guessing.
+	RepoHost string
 	// RepoFullName is the origin remote as "owner/name"; empty outside a
 	// checkout, or when the remote is a shape this does not recognise.
 	RepoFullName string
@@ -90,7 +97,7 @@ func resolveContext(cmd *cobra.Command, opts contextOptions) (*platformContext, 
 	}
 
 	pc := &platformContext{Session: session}
-	pc.RepoRoot, pc.RepoFullName = locateRepo(ctx)
+	pc.RepoRoot, pc.RepoFullName, pc.RepoHost = locateRepo(ctx)
 	pc.Binding = loadBinding()
 
 	if !opts.NeedWorkspace {
@@ -110,20 +117,21 @@ func resolveContext(cmd *cobra.Command, opts contextOptions) (*platformContext, 
 // locateRepo reports the checkout the command was run in, or two empty strings.
 // Not being in one is normal - half this tool answers questions in a meeting -
 // so nothing here is an error.
-func locateRepo(ctx context.Context) (root, fullName string) {
+func locateRepo(ctx context.Context) (root, fullName, host string) {
 	dir, err := os.Getwd()
 	if err != nil {
-		return "", ""
+		return "", "", ""
 	}
 	root, err = gitrepo.Root(ctx, dir)
 	if err != nil {
-		return "", ""
+		return "", "", ""
 	}
+	host = gitrepo.OriginHost(ctx, root)
 	fullName, err = gitrepo.OriginFullName(ctx, root)
 	if err != nil {
-		return root, ""
+		return root, "", host
 	}
-	return root, fullName
+	return root, fullName, host
 }
 
 // loadBinding reads `.asgard-cli.yaml` for the working directory, or nil.
