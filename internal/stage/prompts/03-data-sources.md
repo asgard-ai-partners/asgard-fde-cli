@@ -94,7 +94,10 @@ is visible in column names.
      The .env key suffixes are the CR field names, so this step is a transcription
      rather than a translation. Connection coordinates are declared as chartValues
      in .asgard-pipeline.yaml and their values set on the platform per release;
-     the password is a secretKeyRef into app-secret and never enters values or git.
+     the password is declared there too, under appSecret, and set with
+     `variables set --kind secret`. It is only ever a secretKeyRef, and the
+     Secret's name comes from the platform - `asgard-cli add dataconnector`
+     prints the exact key names it wrote.
 
 Read-only throughout. SELECT and introspection only, and db-query enforces it.
 

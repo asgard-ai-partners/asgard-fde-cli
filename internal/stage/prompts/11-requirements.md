@@ -484,18 +484,18 @@ fixed by rotating the credential, which means going back to the customer to ask
 for a new one, having just told them we leaked the last one.
 
     coordinates  -> the request record, and the platform's variables
-    passwords    -> .env locally (gitignored), app-secret in the cluster
+    passwords    -> .env locally (gitignored), the release's own Secret in the cluster
 
 Write the *name* of the key in the record - `<TARGET>_DB_PASSWORD` locally,
-`<target>_db_password` in app-secret - and never its value. `.env.example` at
+`<target>_db_password` in the release Secret - and never its value. `.env.example` at
 the repo root has the full pattern, including the three places a new database
 has to be registered before it works end to end.
 
 **A credential the customer's own users supply is a different problem again**,
 and it comes up whenever the agent acts on behalf of individual people rather
 than as one service account: each user's token for a third-party platform has to
-be stored and replayed, so it cannot live in `app-secret` and cannot live in
-`.env` either.
+be stored and replayed, so it cannot live in the release's Secret and cannot
+live in `.env` either.
 
 That is a service with a database, not a chart - one existing deployment holds
 them AES-256-GCM sealed in a column, with the key from its own environment,
@@ -542,7 +542,7 @@ changing it later means a new BotProvider, not an edit. The CRD enforces both
 that and exactly one of the five class blocks being present.
 
     LINE / Telegram          the platform posts a webhook; one CR
-    Slack / Discord          a connector pod holds a socket; infra provisions it
+    Slack / Discord          a connector pod holds a socket; the operator creates it
     your own front end       generic, and you own the appearance
 
 Ask where their users already are, not where it would be convenient to put them.

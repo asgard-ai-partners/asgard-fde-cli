@@ -229,8 +229,8 @@ also why a local `helm upgrade` breaks the Syncer: the placeholder version
 renders as a git ref that does not exist.
 
 **Auth only for a private repo.** A public one carries no `auth` block and needs
-no `asgard-github-pat-password` in `app-secret`. Adding a private source adds
-that key.
+no `asgard-github-pat-password` declared. Adding a private source adds that key -
+under `appSecret:` in `.asgard-pipeline.yaml`, and then set on the platform.
 
 ```yaml
     auth:

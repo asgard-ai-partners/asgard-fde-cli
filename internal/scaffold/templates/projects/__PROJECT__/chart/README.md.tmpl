@@ -32,16 +32,43 @@ namespace)、由一條 tag 或 branch 規則觸發。namespace 由那個 Project
 
 | key | 誰在用 |
 |---|---|
-| `asgard_resource_api_key` | 平台資源憑證。**一個 namespace 一把,所有需要的 CR 共用** —— `SourceSet.apiKey`、`Toolset.apiKey`、`BotProvider.adminApiKey` 都是同一種東西,不要為每個 CR 各發一把 |
+| `asgard_resource_api_key` | 平台資源憑證的**慣用名**。`SourceSet.apiKey`、`Toolset.apiKey`、`BotProvider.adminApiKey` 都屬於這一類,`asgard-cli add` 預設指向這一把。**幾個 CR 共用一把是這次部署的設計決定**(輪替範圍、爆炸半徑),不是規則 —— Platform 只讀 `secretKeyRef.key` 寫什麼,不認識這個名字 |
+
+## 非機密的 runtime 值:專屬 ConfigMap
+
+Secret 有一個對應物,而且它一樣是 Platform 建的:`.Values.asgard.appConfigMapName`。
+**跟 `chartValues` 的差別在值在哪裡被解開:**
+
+| | 值在哪 | 誰看得到 |
+|---|---|---|
+| `chartValues` | **烘進渲染出來的 manifest** | reviewer 在 plan 報告上看得到,適合影響模板長相的值 |
+| `appConfigMap` | ConfigMap,CR 在 runtime 取 | 不進 manifest,適合會改而不想動模板的值 |
+
+兩種都在 `.asgard-pipeline.yaml` 宣告,寫法一樣:
+
+```yaml
+    recipients:
+      valueFrom:
+        configMapKeyRef:
+          key: email_recipients                                  # 與宣告逐字一致
+          name: {{ include "<<.Project.Slug>>.appConfigMapName" . }}
+```
+
+```bash
+asgard-cli pipeline variables set --release <r> --kind config email_recipients "a@x.com,b@x.com"
+```
 
 ## 驗證
 
 ```bash
-asgard-cli check <<.Project.Slug>>
-helm lint projects/<<.Project.Slug>>/chart/app
-helm lint projects/<<.Project.Slug>>/chart/app
-asgard-cli verify <<.Project.Slug>>
+asgard-cli gate
 ```
+
+**不要裸跑 `helm lint`。** Platform 每次渲染都疊一組保留的 `.Values.asgard` 進來,
+而 chart **不可以**在自己的 `values.yaml` 宣告它 —— 所以不帶 `-f` 跑會在每個讀
+`.Values.asgard.*` 的模板上失敗,也就是每個貼 label 或引用憑證的模板。`gate` 只供給
+那一個檔案,其他都不給,所以「chart 自己擁有的每個 `.Values.*` 都要有預設」這個性質
+仍然被驗到。
 
 `asgard-cli gate` 的 lint 一關只帶保留的 `asgard` 區塊、不帶任何環境檔,是唯一會驗
 「`values.yaml` 有沒有替每個 chart 自己擁有的 `.Values.*`

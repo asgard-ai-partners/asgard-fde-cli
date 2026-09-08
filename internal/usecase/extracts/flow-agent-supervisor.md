@@ -296,11 +296,12 @@ content.
                         could keep secret, so protection has to be on the
                         capability side: read-only chain, zero-parameter tools,
                         read-only mounts.
-    authMode: api-key   a caller that can hold a credential, with the key
-                        read from app-secret.
+    authMode: api-key   a caller that can hold a credential, with the key read
+                        from the release's own Secret.
 
-`adminApiKey` is separate from visitor auth: it guards the admin API and reads
-`asgard_resource_api_key`, per the one-key-per-namespace convention.
+`adminApiKey` is separate from visitor auth: it guards the admin API, and the
+skeleton points it at `asgard_resource_api_key` - the conventional name, shared
+with the other platform resource credentials by convention rather than by rule.
 
 Also on the BotProvider: `maxUnsupervisedSteps` (30 in one deployment) caps how
 far the orchestrator runs without a human, and `debugMode: on-demand`.

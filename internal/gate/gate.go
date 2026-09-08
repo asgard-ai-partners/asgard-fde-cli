@@ -35,6 +35,13 @@ type Options struct {
 	// problem's remedy names, so that what is printed can be run as printed;
 	// empty becomes a placeholder.
 	Project string
+
+	// Release the manifests were rendered for. The Platform derives this
+	// release's Secret and ConfigMap names from it, and a credential reference
+	// has to point at one of those two - so a check needs the name to know what
+	// the references SHOULD say. Empty when checking a stream rendered
+	// elsewhere, and the credential check then has nothing to compare against.
+	Release string
 }
 
 // ProjectOr returns the project name, or a placeholder when it is not known -

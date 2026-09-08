@@ -55,7 +55,7 @@ current - so the second copy is worse than no copy, because it is believed.
 | customer API docs, manuals, schema dumps, ERDs | `references/` | a spec that inlines forty pages stops being readable as a spec |
 | how to edit **this repo** - layout, CR field traps, gates | `AGENTS.md` | different question, different reader |
 | domain knowledge the **running agent** needs | `assets/skills/<skill>/SKILL.md` | it has to be synced to the platform, or the agent cannot see it at all |
-| any password, token or key | `.env` (gitignored) and `app-secret` | everything here is committed, and git history keeps what you delete |
+| any password, token or key | `.env` (gitignored) and the release's own Secret on the platform | everything here is committed, and git history keeps what you delete |
 
 The last two are the ones that go wrong most often. Runtime knowledge left in a
 spec produces an agent that looks like it is ignoring instructions, and a secret

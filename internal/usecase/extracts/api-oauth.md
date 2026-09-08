@@ -27,7 +27,7 @@ BotProvider payload every turn and lands in the sandbox through a hook - see
 
 Do **not** use it when:
 
-- **a static key works.** A header with a key from `app-secret` is one processor
+- **a static key works.** A header with a key from the release's Secret is one processor
   instead of two, and no token to expire. Read
   `asgard-cli usecase external-api` for that shape - the whole of it applies
   here too, and this extract only adds the token step.
@@ -74,7 +74,7 @@ spec:
     - name: clientSecret
       valueFrom:
         secretKeyRef:
-          name: app-secret
+          name: {{ include "<chart>.appSecretName" . }}
           key: graph_client_secret
 
   entries:
@@ -217,8 +217,9 @@ with the customer's IT:
   from the customer explicitly - write it down as a decision record, because the
   next person will not know it was asked for.
 - **Only the secret is a secret.** Tenant id, client id, sender address are not:
-  they go in values, so they are reviewable in a diff. Putting them in
-  `app-secret` makes them invisible for no benefit.
+  they go in values, so they are reviewable in a diff. Declaring them under
+  `appSecret` instead makes them invisible for no benefit - a `chartValue` is in
+  the plan report the reviewer reads, and a Secret key is not.
 
 ### The rollout that made this safe
 

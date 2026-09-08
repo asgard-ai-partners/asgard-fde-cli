@@ -175,8 +175,9 @@ spec:
             })()
 ```
 
-Endpoints and non-secret settings are `chartValues` set on the platform; a token is a
-`secretKeyRef` into `app-secret`, never a value.
+Endpoints and non-secret settings are `chartValues` set on the platform; a token is
+declared under `appSecret` and read with a `secretKeyRef`, never a value. The Secret
+belongs to the release and the platform injects its name.
 
 ## Several systems of the same kind
 

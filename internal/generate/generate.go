@@ -117,8 +117,10 @@ defaultSemanticLayerEffort: "medium"
 		After: []string{
 			"Measure the request and response against the real API. The body field",
 			"  names are ours until someone checks them against theirs.",
-			"Add the auth header only once infra has created the key - a secretKeyRef",
-			"  to a key that does not exist deploys fine and fails on first call.",
+			"Add the auth header only once its key is declared AND set - a secretKeyRef",
+			"  to a key nothing injects deploys fine and fails on the first call. The",
+			"  lines above name the keys this wrote; declaring them is the half that",
+			"  gets missed, and no local check can see it.",
 		},
 		Values: `
 # <<.DisplayName>>
@@ -334,11 +336,6 @@ type Data struct {
 	// DBNote is what the class needs that its shape cannot say - Oracle taking
 	// serviceName or sid and never both, HANA having no design-time driver.
 	DBNote string
-
-	// DBSecretKeys are the keys the release's Secret needs before the first
-	// deploy, so the generator can name them instead of leaving somebody to
-	// derive them from the template.
-	DBSecretKeys []string
 }
 
 // valuesKey turns a CR name into something addressable in a values file.
@@ -356,6 +353,87 @@ func valuesKey(name string) string {
 }
 
 // Result reports what was written.
+// SecretKeysWritten names every Secret and ConfigMap key the files just written
+// reference, so that `add` can say what has to be declared before any of it
+// works.
+//
+// This replaces a per-class list (dbSecretKeys) that was computed on every run
+// and read by nothing, with two comments explaining that it existed so nobody
+// would have to derive the names from the template. Somebody derived them from
+// the template anyway - by running `strings` on this binary. Reading the files
+// that were actually written covers every kind, including the next one added,
+// and cannot disagree with them.
+//
+// It anchors on the ref block rather than matching `key:` anywhere: `key` is
+// also an Asgard field name on several specs, and matching it loosely reports
+// identifiers that have nothing to do with a Secret.
+func SecretKeysWritten(results []Result) (secretKeys, configKeys []string, err error) {
+	for _, r := range results {
+		if r.Values || !r.Created {
+			continue
+		}
+		body, err := os.ReadFile(r.Path)
+		if err != nil {
+			return nil, nil, err
+		}
+		sec, cfg := refKeys(string(body))
+		secretKeys = append(secretKeys, sec...)
+		configKeys = append(configKeys, cfg...)
+	}
+	return dedupeSorted(secretKeys), dedupeSorted(configKeys), nil
+}
+
+// refKeys reads the `key:` that belongs to each secretKeyRef / configMapKeyRef
+// block, and nothing else.
+func refKeys(body string) (secret, config []string) {
+	lines := strings.Split(body, "\n")
+	for i, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		var into *[]string
+		switch trimmed {
+		case "secretKeyRef:":
+			into = &secret
+		case "configMapKeyRef:":
+			into = &config
+		default:
+			continue
+		}
+		indent := len(line) - len(strings.TrimLeft(line, " "))
+		// The block ends at the first line indented no further than the ref
+		// itself, so a `key` belonging to the next field is never picked up.
+		for _, next := range lines[i+1:] {
+			if strings.TrimSpace(next) == "" {
+				continue
+			}
+			if len(next)-len(strings.TrimLeft(next, " ")) <= indent {
+				break
+			}
+			if v, ok := strings.CutPrefix(strings.TrimSpace(next), "key:"); ok {
+				if v = strings.TrimSpace(v); v != "" && !strings.Contains(v, "{{") {
+					*into = append(*into, v)
+				}
+			}
+		}
+	}
+	return secret, config
+}
+
+func dedupeSorted(in []string) []string {
+	if len(in) == 0 {
+		return nil
+	}
+	seen := map[string]bool{}
+	out := make([]string, 0, len(in))
+	for _, v := range in {
+		if !seen[v] {
+			seen[v] = true
+			out = append(out, v)
+		}
+	}
+	sort.Strings(out)
+	return out
+}
+
 type Result struct {
 	Path    string
 	Created bool
@@ -380,9 +458,9 @@ func botClassNote(class string) string {
 	switch class {
 	case "line":
 		return "botProviderClass line: one LINE official account cannot host two bots, so replacing an existing one is a cutover - deploy with disabled: true first. " +
-			"Add line_channel_access_token and line_channel_secret to app-secret before deploying. Read `asgard-cli usecase chat-channel`"
+			"Both of its keys come from the LINE Developers console for that channel, so somebody outside this repo has to fetch them. Read `asgard-cli usecase chat-channel`"
 	case "telegram":
-		return "botProviderClass telegram: add telegram_bot_token and telegram_webhook_secret to app-secret before deploying. Read `asgard-cli usecase chat-channel`"
+		return "botProviderClass telegram: both of its keys come from BotFather, so somebody outside this repo has to fetch them before the first deploy. Read `asgard-cli usecase chat-channel`"
 	case "discord", "slack":
 		return "botProviderClass " + class + ": the operator creates a Connector Pod for this class, because it holds an outbound WebSocket. " +
 			"Read `asgard-cli usecase chat-channel`"
@@ -510,7 +588,6 @@ func Write(root string, kind Kind, opts Options) ([]Result, error) {
 		data.DBSpec = dbSpec(opts.DBClass, data.ValuesKey, data.Chart)
 		data.DBValues = dbValues(opts.DBClass, data.DisplayName, data.ValuesKey)
 		data.DBNote = dbNote(opts.DBClass)
-		data.DBSecretKeys = dbSecretKeys(opts.DBClass, data.ValuesKey)
 	}
 
 	templatesDir := filepath.Join(root, "projects", opts.Project, "chart", "app", "templates")
