@@ -96,7 +96,8 @@ can be pending when you look for why the bot is silent.
     asgard-cli add flowagent support --project <project> --bot-class line
 
 That writes the three CRs of the flow agent with the channel's credential block
-in place, and prints what the channel costs: which keys infra has to add, and
+in place, and prints what the channel costs: which keys the release's Secret
+needs, and
 whether the class needs a connector pod. `--bot-class` accepts any of the five
 and defaults to `generic`.
 
@@ -124,21 +125,21 @@ spec:
   adminApiKey:                    # guards the admin API, separate from the channel
     valueFrom:
       secretKeyRef:
-        name: app-secret
+        name: {{ include "<chart>.appSecretName" . }}
         key: asgard_resource_api_key
   line:
     # Both from the LINE Developers console for this channel. They are NEW keys
-    # in app-secret, so infra adds them before the first deploy - the same
-    # ordering trap as the namespace itself.
+    # keys, so each has to be declared under `appSecret:` and then set - a
+    # value set against no declaration is stored and never injected.
     channelAccessToken:
       valueFrom:
         secretKeyRef:
-          name: app-secret
+          name: {{ include "<chart>.appSecretName" . }}
           key: line_channel_access_token
     channelSecret:
       valueFrom:
         secretKeyRef:
-          name: app-secret
+          name: {{ include "<chart>.appSecretName" . }}
           key: line_channel_secret
 ```
 
@@ -198,9 +199,10 @@ requires the `bot-provider-name` annotation.
 
 What it cannot check, and what to check by hand:
 
-- **whether the credential keys exist in `app-secret`**, or belong to the channel
-  you think they do. The first symptom of a wrong token is a webhook that returns
-  200 and a bot that never answers.
+- **whether each credential key is declared AND set**, and belongs to the channel
+  you think it does. Declared without set fails the run; set without declared is
+  stored and never injected, and every local check stays green. The first symptom
+  of a wrong token is a webhook that returns 200 and a bot that never answers.
 - **whether the old bot on that channel is off.** Nothing in the repo can see it.
 - **whether a connector pod came up**, for `discord` and `slack`:
   `kubectl get deploy -n <namespace>`.

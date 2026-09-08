@@ -45,7 +45,7 @@ inertia.
 
     KnowledgeBase  kb-<name>          knowledgeBaseClass: asgard-baseline
       spec.asgardBaseline.aliasName   what the retrieval side refers to it by
-      spec.asgardBaseline.apiKey      secretKeyRef into app-secret
+      spec.asgardBaseline.apiKey      secretKeyRef into the release Secret
 
     Source  src-<name>-NNNN           one per document
       spec.knowledgeBaseName          binds it to the base

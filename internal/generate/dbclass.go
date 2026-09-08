@@ -174,14 +174,3 @@ func dbValues(class, display, valuesKey string) string {
 
 // dbNote is what the class needs that its shape cannot say, or "".
 func dbNote(class string) string { return dbClasses[class].note }
-
-// dbSecretKeys names the secret keys a class needs in the release's Secret, so
-// the generator can tell somebody what to set before the first deploy.
-func dbSecretKeys(class, valuesKey string) []string {
-	c := dbClasses[class]
-	out := make([]string, 0, len(c.secrets))
-	for _, f := range c.secrets {
-		out = append(out, fmt.Sprintf("%s_db_%s", valuesKey, strings.ToLower(f.name)))
-	}
-	return out
-}

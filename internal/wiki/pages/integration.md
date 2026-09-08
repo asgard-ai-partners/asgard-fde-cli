@@ -155,8 +155,8 @@ client (web / SDK / REST API / chat platform)
 ## Before writing the chart
 
 `asgard-cli usecase chat-channel` has each class's credential block and what a
-channel costs - which credentials infra has to provide, and whether the class
-needs a connector pod.
+channel costs - which credentials have to be obtained from the channel's own
+console and declared, and whether the class needs a connector pod.
 
 ## What the platform cannot send
 

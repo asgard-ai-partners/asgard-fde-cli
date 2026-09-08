@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/generate"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/pipelineconfig"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/repo"
 )
 
@@ -56,7 +57,7 @@ A flowagent serves your own front end unless --bot-class names a chat platform:
     asgard-cli add flowagent support --project site --bot-class line
 
 That writes the channel's credential block and says what the channel costs -
-which credentials infra has to add, and whether the class needs a connector pod.
+which credential keys have to be declared and set, and whether the class needs a connector pod.
 The field is immutable on the platform side, so it is worth getting right the
 first time. Read "asgard-cli usecase chat-channel" before choosing.
 
@@ -129,6 +130,28 @@ Run "asgard-cli add" with no arguments to list the kinds.`,
 					continue
 				}
 				fmt.Fprintf(out, "created %s\n", r.Path)
+			}
+
+			// What was just written is what has to be declared. Naming the keys is
+			// the half that was missing: `variables set` alone stores a value and
+			// never injects it, and every local check stays green while the CR
+			// resolves to nothing at runtime.
+			secretKeys, configKeys, err := generate.SecretKeysWritten(results)
+			if err != nil {
+				return err
+			}
+			if len(secretKeys) > 0 || len(configKeys) > 0 {
+				fmt.Fprintf(out, "\nBefore any of it resolves, declare these in %s and set each on the platform:\n", pipelineconfig.FileName)
+				if len(secretKeys) > 0 {
+					fmt.Fprintf(out, "  appSecret:     %s\n", strings.Join(secretKeys, ", "))
+					fmt.Fprintf(out, "    asgard-cli pipeline variables set --release <release> --kind %s %s --from-file <path>\n", kindSecret, secretKeys[0])
+				}
+				if len(configKeys) > 0 {
+					fmt.Fprintf(out, "  appConfigMap:  %s\n", strings.Join(configKeys, ", "))
+					fmt.Fprintf(out, "    asgard-cli pipeline variables set --release <release> --kind %s %s <value>\n", kindConfig, configKeys[0])
+				}
+				fmt.Fprintf(out, "  A value set against no declaration is stored and never injected - `variables list` calls it ORPHAN,\n")
+				fmt.Fprintf(out, "  and lint, render and the server dry run all stay green while the CR resolves to nothing.\n")
 			}
 
 			if len(kind.After) > 0 {

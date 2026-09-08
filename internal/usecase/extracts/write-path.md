@@ -255,16 +255,21 @@ field is discarded, and then helm's server-side apply fails **in CD** with
 `field not declared in schema`. That broke a release once, after passing 25 of 25
 dry-runs.
 
-### Credentials are per-namespace, not per-tool
+### One credential or several is a requirement, not a convention
 
-The platform resource key is one per namespace, shared by every CR that needs
-one. A token for the **external** service is its own key in `app-secret`, and
-only ever a `secretKeyRef`.
+`asgard_resource_api_key` is the conventional name the skeleton uses for a
+platform resource credential, and `asgard-cli add` points every CR of that kind
+at it. Whether they in fact share one is a question about rotation scope and
+blast radius - a requirement, not something a template settles. A token for the
+**external** service is its own key either way, and only ever a `secretKeyRef`.
 
-**Do not declare a `secretKeyRef` for a key that does not exist yet.** Config
-evaluation fails at call time, not at apply time, so the chart deploys and the
-tool breaks the first time someone uses it. Leave the variables list empty until
-infra has provisioned the key.
+**Do not declare a `secretKeyRef` for a key that is not both declared and set.**
+Config evaluation fails at call time, not at apply time, so the chart deploys
+and the tool breaks the first time somebody uses it. The key has to be declared
+under `appSecret:` in `.asgard-pipeline.yaml` **and** given a value with
+`asgard-cli pipeline variables set --kind secret` - a value with no declaration
+is stored and never injected, which `variables list` reports as `ORPHAN` and the
+run reports as `vars/orphan`. Leave the variables list empty until both are done.
 
 ## A mock is a fallback, not the default
 

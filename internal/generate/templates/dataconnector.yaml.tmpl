@@ -1,8 +1,12 @@
 # <<.DisplayName>>
 #
 # Connection coordinates live in the platform's variables, declared as chartValues, one group per
-# connector. The password is only ever a secretKeyRef into the release's own Secret, which
-# infra provisions - never a value, never in git.
+# connector. The password is only ever a secretKeyRef into the release's own Secret - the Platform
+# creates and maintains that Secret, and injects its name; never a value, never in git.
+#
+# The password key has to be declared under `appSecret:` in .asgard-pipeline.yaml as well as set on
+# the platform. Set without declared is stored and never injected, and the CR then resolves to
+# nothing at runtime while lint, render and the dry run all stay green.
 apiVersion: asgard-ai.com/v1alpha1
 kind: DataConnector
 metadata:

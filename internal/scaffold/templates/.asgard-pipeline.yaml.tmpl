@@ -24,7 +24,19 @@
 #   - on.type:tag | branch;on.pattern:RE2 regex,比對整個 tag / branch 名(隱含錨定)
 #   - chart:chart **目錄**(含 Chart.yaml),相對 repo 根目錄
 #   - chartValues[].key:helm dotted path;type 預設 auto(型別推斷)| string | json
+#   - appSecret[].key / appConfigMap[].key:**Secret / ConfigMap 裡的平的 key 名,
+#     不是 helm path**。CR 用 secretKeyRef / configMapKeyRef 取,key 名要與這裡逐字一致
 #   - required 預設 true;false = 沒設值就沿用 chart values.yaml 的預設
+#
+# 三個清單的差別在**值在哪裡被解開**:
+#   chartValues   烘進渲染出來的 manifest —— reviewer 在 plan 報告上看得到
+#   appSecret     寫進本 Release 的 Secret,CR 在 runtime 用 secretKeyRef 取;
+#                 值永不進 helm value、log 或 plan 報告
+#   appConfigMap  同上,但走 ConfigMap 與 configMapKeyRef(非機密)
+#
+# **沒宣告的 key 不會被注入。** 只在 Platform 上設值不算 —— 那筆變數會被存起來但
+# 永遠不注入,`variables list` 標它 ORPHAN,Run 報 vars/orphan,而 lint、render、
+# CRD dry-run 全部是綠的,只有 runtime 取不到。
 
 version: 1
 

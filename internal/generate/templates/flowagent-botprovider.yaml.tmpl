@@ -79,8 +79,9 @@ spec:
           name: {{ include "<<.Chart>>.appSecretName" . }}
           key: asgard_resource_api_key
 <<end>><<end>><<if eq .BotClass "line">>  # Both come from the LINE Developers console for this channel. They are new
-  # keys in app-secret, so infra has to add them before the first deploy - the
-  # same ordering trap as the namespace itself.
+  # keys, so each has to be DECLARED under `appSecret:` in .asgard-pipeline.yaml
+  # and then set with `variables set --kind secret`, before the first deploy. A
+  # value set against no declaration is stored and never injected.
   line:
     channelAccessToken:
       valueFrom:

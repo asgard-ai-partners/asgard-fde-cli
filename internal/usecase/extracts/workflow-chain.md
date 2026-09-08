@@ -61,7 +61,7 @@ spec:
     - name: apiKey
       valueFrom:
         secretKeyRef:
-          name: app-secret
+          name: {{ include "<chart>.appSecretName" . }}
           key: search_api_key
 
   entries:

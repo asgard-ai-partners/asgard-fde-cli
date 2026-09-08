@@ -143,12 +143,19 @@ which supplies only the reserved `asgard` block and no environment file,
 is the only step that proves it, and without it a missing default is masked in
 the gate and nil-pointers for anyone running plain `helm template`.
 
-**Credentials never go in values.** A chart only ever writes a `secretKeyRef`
-into `app-secret`, which infra provisions - not this repo.
+**Credentials never go in values, and neither does the name.** A chart writes a
+`secretKeyRef` and reads the object's name through its `appSecretName` helper:
+each Release has its own Secret, created and maintained by the Platform, whose
+name arrives as `.Values.asgard.appSecretName`. A literal name in a template
+points at an object that is not in that namespace, and nothing catches it - the
+CR is valid, the dry run passes, apply succeeds, and it fails at runtime.
 
-One platform resource key per namespace, `asgard_resource_api_key`, shared by
-every CR that needs one: `SourceSet.apiKey`, `Toolset.apiKey`,
-`BotProvider.adminApiKey`. Do not mint one per CR.
+`asgard_resource_api_key` is the **conventional** name for a platform resource
+credential. `SourceSet.apiKey`, `Toolset.apiKey` and `BotProvider.adminApiKey`
+are all of that kind, and `asgard-cli add` points them at that one key. Whether
+they share one credential or need separate ones is a requirement about rotation
+scope, not a rule this page can state: the Platform reads whatever
+`secretKeyRef.key` says and never the name itself.
 
 **Do not declare a `secretKeyRef` for a key that does not exist yet.** Config
 evaluation fails at call time, not at apply time, so the chart deploys and the

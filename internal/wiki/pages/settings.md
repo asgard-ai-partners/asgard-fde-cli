@@ -55,7 +55,8 @@ tested against - and those are good reasons. "We prefer this one" usually is not
 **In a chart, a custom model is a `CompletionModel` CR** - the built-in tiers are
 that CR's `builtin` class rather than the absence of one, which is the reading
 that gets this wrong. Three reference deployments declare their own, with the
-provider's key as a secretKeyRef into app-secret:
+provider's key as a secretKeyRef into the release's own Secret - whose name the
+Platform injects, and which a chart never writes out:
 
 | | |
 |---|---|
@@ -86,8 +87,9 @@ Trino, Athena.
 The form takes Name, Provider, Host, Port, Database, User and Password. Test
 Connection can be run before Save. The form marks nothing as required.
 
-In a chart, the non-secret coordinates are declared as `chartValues` and set on the platform, and the
-password is always a secretKeyRef into `app-secret`.
+In a chart, the non-secret coordinates are declared as `chartValues` and the password as `appSecret`,
+both set on the platform per release. The password is only ever a secretKeyRef, and the Secret's name
+comes from `.Values.asgard.appSecretName` - a literal name in a template points at nothing.
 
 **An HTTP API does not go here.** Data Source is these nine database providers
 and nothing else, and Connection below is OAuth to five named services. A REST

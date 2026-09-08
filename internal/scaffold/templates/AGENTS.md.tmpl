@@ -562,7 +562,7 @@ their systems, their people. The shape is enough.
 
 ## Completion Model
 
-**Default: use the platform's builtins by name.** No CR, no model API key in `app-secret`. One
+**Default: use the platform's builtins by name.** No CR, and no model API key to hold. One
 knob — `defaultCompletionModelName`, read by every `SemanticLayer` and overridable per-env.
 **Never hardcode a model name in a template**: the builtin tiers are semantic aliases, and a
 specific name becomes something to come back and fix when that model is retired.
@@ -572,7 +572,7 @@ customer brings their own model or their own key — three reference deployments
 
     completionModelClass:  aoai-chat | openai-chat | gemini | anthropic | mistral | builtin
     exactly one of:        aoaiChat, openaiChat, gemini, anthropic, mistral, builtin
-    the key:               spec.<provider>.apiKey.valueFrom.secretKeyRef into app-secret
+    the key:               spec.<provider>.apiKey.valueFrom.secretKeyRef into the release Secret
 
 Two things the CRD enforces and helm will not tell you: **`completionModelClass` is immutable** —
 changing it means a new CR, not an edit — and exactly one provider block may be present, so a
@@ -585,16 +585,43 @@ picks the orchestrator's model per turn).
 
 ## Secrets
 
-All secrets are read from the Kubernetes secret `app-secret` (configurable via `values.yaml` →
-`appSecretName`), provisioned per project by infra (Terraform), **not by this repo**.
+**The name is injected, never written.** Each Release has its own Secret and ConfigMap,
+`iac-<release>-app-secret` and `iac-<release>-app-config`, created and maintained by the Platform
+the moment the Release exists — empty until Variables are set. Their names arrive as
+`.Values.asgard.appSecretName` and `.Values.asgard.appConfigMapName`, and the chart reads them
+through the chart helper `{{ include "<project>.appSecretName" . }}` — `_helpers.tpl` defines it,
+and `asgard-cli add` writes it into every CR that needs a credential.
 
-- `asgard_resource_api_key` — the platform resource key. **One key per namespace, shared by every
-  CR that needs one**: `SourceSet.apiKey`, `Toolset.apiKey` and `BotProvider.adminApiKey` are all
-  platform resource credentials of the same kind. Do **not** mint a per-CR key for them.
-- `asgard-github-pat-password` — only needed when a git `Syncer` clones a **private** repo.
-- one `<system>_db_password` per database.
+A chart that writes a name instead points at an object that is not in its namespace, and **nothing
+catches it**: the CR is valid, the dry run passes, apply succeeds, `gate` is green, and the
+credential fails to resolve at runtime with no error on the CR. If you see a literal `app-secret`
+anywhere in a template, that is this bug — the name is real in the Terraform-provisioned demo
+namespaces and absent from every Release namespace, which is why it reads as correct.
 
-Charts **only ever write `secretKeyRef`**; credential values never enter values files or git.
+**A key reaches the Secret only if it is declared.** Two steps, and the first is the one that gets
+missed:
+
+    .asgard-pipeline.yaml   appSecret:  - key: <name>      the declaration
+    asgard-cli pipeline variables set --release <r> --kind secret <name> --from-file <path>
+
+A value set without a declaration is stored and never injected — `variables list` reports it as
+`ORPHAN`, and the run reports `vars/orphan`. `configMapKeyRef` works the same way against
+`appConfigMap:`.
+
+Which keys, and how many, is **this deployment's design**, not a rule this file can state:
+
+- `asgard_resource_api_key` — the conventional name for a platform resource credential.
+  `SourceSet.apiKey`, `Toolset.apiKey` and `BotProvider.adminApiKey` are all credentials of that
+  kind, and `asgard-cli add` writes them pointing at this one key. Whether they in fact share one
+  credential or need separate ones is a requirement — rotation scope and blast radius are the
+  question — so it belongs in `requirements/`, not here. The Platform never reads the key's name;
+  it reads whatever `secretKeyRef.key` says.
+- `asgard-github-pat-password` — only when a git `Syncer` clones a **private** repo.
+- one `<system>_db_password` per database. `asgard-cli add dataconnector` prints the exact key
+  names it wrote.
+
+Charts **only ever write `secretKeyRef` / `configMapKeyRef`**, never the values, and must **not**
+declare the Secret or the ConfigMap themselves — the Platform owns both.
 
 ## Deploy
 

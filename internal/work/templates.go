@@ -105,8 +105,8 @@ history and the next person asks the customer the same questions again.
 - Credential owner: TODO - the person or team who issues it, by name or role.
   A credential with no owner is not a dependency, it is a delay.
 - Key names: TODO - the ` + "`.env`" + ` prefix this system gets at design time
-  (` + "`<PREFIX>PASSWORD`" + ` and friends) and the ` + "`app-secret`" + ` key the
-  deployed CR reads. The names, not the values.
+  (` + "`<PREFIX>PASSWORD`" + ` and friends) and the key the deployed CR reads out
+  of the release's own Secret. The names, not the values.
 - Confirmed working: TODO - the date somebody actually connected with it, and
   how. Credentials that were only ever pasted into a chat have not been tested,
   and an untested one fails at the least convenient moment.
@@ -243,8 +243,11 @@ the customer's live systems, which is why they are reviewed before they are made
 
 ### Data and secret dependencies
 
-TODO. One ` + "`app-secret`" + ` per namespace, and ` + "`asgard_resource_api_key`" + ` is shared by
-every CR that needs a platform credential.
+TODO. **How many platform identities does this deployment need, and which CRs share one?**
+` + "`SourceSet.apiKey`" + `, ` + "`Toolset.apiKey`" + ` and ` + "`BotProvider.adminApiKey`" + ` are all platform resource
+credentials; the skeleton points them all at one key, ` + "`asgard_resource_api_key`" + `, and whether
+that is right here is a question about rotation scope and blast radius. Answer it, do not inherit
+it. Each Release has its own Secret either way.
 
 ### External API contracts
 

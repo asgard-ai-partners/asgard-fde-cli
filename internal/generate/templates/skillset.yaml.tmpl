@@ -70,7 +70,7 @@ spec:
             name: {{ include "<<.Chart>>.appSecretName" . }}
             key: asgard-github-pat-password
 <<else>>    revision: "main"
-    # A public repo needs no auth block, and no PAT key in app-secret.
+    # A public repo needs no auth block, and no PAT key to declare.
 <<end>>---
 apiVersion: asgard-ai.com/v1alpha1
 kind: SkillSet

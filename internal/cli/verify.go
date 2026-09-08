@@ -169,7 +169,7 @@ time.`,
 				// The gate fills a remedy command with this, and those name a
 				// project rather than a release, so it has to be the project -
 				// a command printed with the wrong one cannot be run as printed.
-				if !record(release, docs, gate.Options{Project: projectOfRelease(root, release)}) {
+				if !record(release, docs, gate.Options{Project: projectOfRelease(root, release), Release: release}) {
 					ok = false
 				}
 			}
@@ -246,6 +246,7 @@ func gates(docs []gate.Doc, opts gate.Options) []verifyCheck {
 		{"enums", gate.Enums(docs, opts)},
 		{"constraints", gate.Constraints(docs, opts)},
 		{"shapes", gate.Shapes(docs, opts)},
+		{"credentials", gate.CredentialRefs(docs, opts)},
 		{"deployability", gate.Deployability(docs, opts)},
 	}
 	out := make([]verifyCheck, 0, len(named))

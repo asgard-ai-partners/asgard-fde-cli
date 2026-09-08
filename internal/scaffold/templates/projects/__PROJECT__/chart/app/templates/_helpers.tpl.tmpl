@@ -39,8 +39,25 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 app: {{ include "<<.Project.Slug>>.name" . }}
 {{- end }}
 
+{{/*
+Secret 與 ConfigMap 的名字來自 Platform,永遠不由 chart 決定。
+
+每個 Release 有自己的一組 —— `iac-<release>-app-secret` 與
+`iac-<release>-app-config` —— 由 Platform 建立與維護,名字在每次 Run 以保留值
+注入。chart 自己寫一個名字,就是指向一個在它 namespace 裡不存在的物件,而**沒有
+任何一道關卡會擋**:CR 合法、dry-run 通過、apply 成功,只有 runtime 取不到憑證。
+
+**刻意用 `required` 而不是 `default`。** default 會渲染出一個看起來合理的名字,
+把上面那個失敗藏起來 —— 這正是它曾經出錯的方式:`default "app-secret"`,而
+`app-secret` 在 Terraform 建的 demo namespace 裡是真的存在的名字,在任何 Release
+的 namespace 裡都不存在。所以那個 fallback 讀起來完全正確。
+*/}}
 {{- define "<<.Project.Slug>>.appSecretName" -}}
-{{- default "app-secret" .Values.appSecretName }}
+{{- required "Platform 每次 Run 注入 .Values.asgard.appSecretName;用 `asgard-cli render` 或 `asgard-cli gate` 渲染,它們會供給這組值" .Values.asgard.appSecretName }}
+{{- end }}
+
+{{- define "<<.Project.Slug>>.appConfigMapName" -}}
+{{- required "Platform 每次 Run 注入 .Values.asgard.appConfigMapName;用 `asgard-cli render` 或 `asgard-cli gate` 渲染,它們會供給這組值" .Values.asgard.appConfigMapName }}
 {{- end }}
 
 {{/*

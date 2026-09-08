@@ -69,8 +69,27 @@ type Result struct {
 // a secret name or an environment id down - so they are listed here in full
 // rather than assembled, and a local render supplies the shape with placeholder
 // contents.
+// HelmReleaseName is the helm release the Platform installs for a declared
+// release name, and AppSecretName / AppConfigMapName are the two objects it
+// creates and maintains for that release.
+//
+// A chart must READ these names, never write them - so the derivation lives
+// here once and the gate's credential check uses the same one. Two copies of a
+// naming rule is how a chart came to point at `app-secret`, a name that is real
+// in the Terraform-provisioned demo namespaces and absent from every Release
+// namespace.
+func HelmReleaseName(releaseName string) string { return "iac-" + releaseName }
+
+// AppSecretName is the Release's own Secret.
+func AppSecretName(releaseName string) string { return HelmReleaseName(releaseName) + "-app-secret" }
+
+// AppConfigMapName is the Release's own ConfigMap.
+func AppConfigMapName(releaseName string) string {
+	return HelmReleaseName(releaseName) + "-app-config"
+}
+
 func AsgardValues(releaseName, namespace string) map[string]any {
-	helm := "iac-" + releaseName
+	helm := HelmReleaseName(releaseName)
 	if namespace == "" {
 		namespace = Placeholder
 	}
@@ -80,8 +99,8 @@ func AsgardValues(releaseName, namespace string) map[string]any {
 		"namespace":            namespace,
 		"projectId":            Placeholder,
 		"projectEnvironmentId": Placeholder,
-		"appSecretName":        helm + "-app-secret",
-		"appConfigMapName":     helm + "-app-config",
+		"appSecretName":        AppSecretName(releaseName),
+		"appConfigMapName":     AppConfigMapName(releaseName),
 		"ref":                  Placeholder,
 		"commitSha":            Placeholder,
 	}

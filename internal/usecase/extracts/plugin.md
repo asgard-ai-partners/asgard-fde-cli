@@ -142,8 +142,8 @@ configuration and is a public parameter. Two questions settle it: is this
 BotProvider's `authMode` `none`, and does anything validate the names before
 they are joined?
 
-In this deployment the first answer is no - `authMode: api-key`, with the key in
-`app-secret` - so every caller is one the operator issued a key to, and handing
+In this deployment the first answer is no - `authMode: api-key`, with the key read
+from the release's own Secret - so every caller is one the operator issued a key to, and handing
 that caller its own bundle selection is a reasonable thing to do. **The second
 answer is that nothing validates them**: the names go from the payload into
 `join(",")` untouched. That is safe here because the caller is authenticated and
