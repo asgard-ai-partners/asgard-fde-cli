@@ -18,10 +18,14 @@ func newDoctorCmd() *cobra.Command {
 that are missing.
 
 asgard-cli does the repository work on its own. helm is needed to render a chart
-and to lint it, and kubectl to dry-run against the cluster; python3 is only for
-the db-query skill, which reads a customer's source systems at design time, so
-a missing one is reported without failing. An engagement that never connects to
-a database never needs it.
+and for the gate's lint step, and kubectl to dry-run against the cluster; python3
+is only for the db-query skill, which reads a customer's source systems at design
+time, so a missing one is reported without failing. An engagement that never
+connects to a database never needs it.
+
+**The gate's lint step is the only place a chart gets linted.** A bare
+` + "`helm lint <chart>`" + ` has no reserved asgard values file, so it fails on every
+chart that labels anything - see ` + "`asgard-cli gate --help`" + `.
 
 The install line is worked out for the machine it runs on - including which Linux
 distribution, because neither helm nor kubectl is in the Debian or Ubuntu default

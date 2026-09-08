@@ -60,8 +60,10 @@ Use status flow `draft` -> `ready` -> `in-progress` -> `done`. Do not use `in_pr
 - Acceptance criteria are satisfied.
 - All four verification gates are run (or explicitly documented as not runnable):
   1. `asgard-cli check [project]`
-  2. `helm lint projects/<project>/chart/app`
-  `asgard-cli verify <project>`
+  2. `asgard-cli gate` - every local check in one command, the `lint` step included. **Never run
+     `helm lint` by hand**: without the reserved `asgard` values file the gate supplies, every
+     chart that labels anything fails.
+  3. `asgard-cli verify <project>`
   4. `asgard-cli render <project> dev | kubectl apply --dry-run=server -n <ns> -f -` and
      then push and read the plan: `asgard-cli pipeline runs watch --release <name> --ref <tag>`
 - **The living spec carries the behaviour change**, and a settled decision gets its own record —

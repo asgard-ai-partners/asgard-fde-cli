@@ -260,9 +260,12 @@ TODO, or none.
 
 ### Verification plan
 
-    asgard-cli check {{if .Project}}{{.Project}}{{else}}<project>{{end}}
-    helm lint projects/{{if .Project}}{{.Project}}{{else}}<project>{{end}}/chart/app
+    asgard-cli gate
     asgard-cli verify {{if .Project}}{{.Project}}{{else}}<project>{{end}}
+
+asgard-cli gate is every local check, the lint step included. **Never run
+helm lint by hand** - without the reserved asgard values file the gate supplies,
+every chart that labels anything fails. See: asgard-cli gate --help
 
 ## 3) Implementation Tasks
 

@@ -339,10 +339,13 @@ from a chart that has it.
 ## Verify
 
 ```bash
-asgard-cli check
-helm lint projects/<project>/chart/app
-asgard-cli verify <project>
+asgard-cli gate               # every local check, the lint step included
+asgard-cli verify <project>   # or one step alone, while iterating
 ```
+
+**Never run `helm lint` by hand**: without the reserved `asgard` values file
+that `gate` supplies, every chart that labels anything fails. `asgard-cli gate
+--help` says why.
 
 The xref check follows the whole chain including `agents[].baseAgentName` parsed
 out of the JSON the CRD stores it in - a typo there silently drops a subagent,

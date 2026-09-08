@@ -60,8 +60,8 @@ projects/<project>/
   chart/app/{templates,values.yaml}   # values.yaml 只放預設值
 ```
 
-本地能跑的檢核是 `asgard-cli check`(結構不變量)、`helm lint`(每個 `.Values.*` 有沒有預設值)
-與 `asgard-cli verify`(渲染後的 CR 交叉引用與一系統一 Agent 的不變量)。**能不能部署是
+本地能跑的檢核是 `asgard-cli gate` 一個命令:`check`(結構不變量)、`lint`(每個 `.Values.*`
+有沒有預設值)與 `verify`(渲染後的 CR 交叉引用與一系統一 Agent 的不變量)都在裡面。**能不能部署是
 Platform 的答案** —— 它會把每個 CR 送進 apiserver 做 dry run,那是本機做不到的,因為 client
 從頭到尾不會拿到叢集憑證。
 
@@ -128,10 +128,14 @@ chart 裡**永遠只寫 `secretKeyRef`**,憑證值不進 values、不進 git,而
 本機三關(release 可省略=全部);完整程序見 `.agents/skills/asgard-cr-verification/`:
 
 ```bash
-asgard-cli check
-helm lint projects/<project>/chart/app
-asgard-cli verify [release]
+asgard-cli gate                 # 本機能檢的全部,含 lint 那一關
+asgard-cli verify [release]     # 或者迭代時單跑一關
 ```
+
+**不要裸跑 `helm lint`。** Platform 每次渲染都注入保留的 `.Values.asgard` 區塊,而 chart 不可以
+在自己的 values.yaml 宣告它 —— 所以不帶 `-f` 裸跑會在每個貼 label 的 chart 上失敗,看起來像
+chart 壞了,其實沒有。`gate` 的 `lint` 那一關只餵那一個檔案,其餘一概不餵,所以它仍然證明
+values.yaml 替 chart 自己擁有的每個 `.Values.*` 都宣告了預設值。
 
 **第四關在 Platform 上,而且跳不掉**:推上去之後,Plan 會把每個渲染出來的 CR 送進 apiserver
 做 server-side dry run,CRD 的 CEL、pattern、必填欄位與「欄位會不會被靜默丟棄」都在那裡被檢查。
