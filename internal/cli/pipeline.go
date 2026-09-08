@@ -646,7 +646,7 @@ another.`,
 			}
 			if rel == "" {
 				return fmt.Errorf("no %s at or above this directory, so there is nothing for a binding to belong to.\n"+
-					"A pipeline is recorded beside the declaration it deploys; `asgard-cli scaffold` writes one.",
+					"A pipeline is recorded beside the declaration it deploys; `asgard-cli init` writes one.",
 					pipelineconfig.FileName)
 			}
 

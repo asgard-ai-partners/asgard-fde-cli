@@ -33,7 +33,7 @@ const StampName = ".asgard-docs.json"
 // they are looked for. The first that exists wins; when none does, the first is
 // created.
 //
-// `.agents/skills` is what `asgard-cli scaffold` writes and is not tied to one
+// `.agents/skills` is what `asgard-cli init` writes and is not tied to one
 // vendor's tool. `.claude/skills` is where Claude Code looks. A repository that
 // has chosen one should not acquire the other by running an update.
 var Roots = []string{

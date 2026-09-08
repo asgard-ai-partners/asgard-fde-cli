@@ -329,7 +329,7 @@ Next:
   2. how to build it: asgard-cli usecase semantic-layer
   3. fill in the TODOs
   4. verify:          asgard-cli check
-                      asgard-cli verify erp
+                      asgard-cli verify
 ```
 
 Ten kinds: `dataconnector`, `semanticlayer`, `agent`, `httptool`, `querytool`,

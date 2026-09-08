@@ -310,7 +310,7 @@ func gateRepo(root string, only []string) stepResult {
 			Name:    "repo",
 			Status:  stepSkip,
 			Summary: "no AGENTS.md, so this repository has no skeleton to check",
-			Remedy:  "asgard-cli scaffold",
+			Remedy:  "asgard-cli init",
 		}
 	}
 	report, err := check.Run(root, only...)

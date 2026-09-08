@@ -1,7 +1,7 @@
 # hack/
 
 This repository's own tooling. Not shipped, not embedded, and not the same thing
-as `.agents/skills/db-query/scripts/`, which `asgard-cli scaffold` writes into a
+as `.agents/skills/db-query/scripts/`, which `asgard-cli init` writes into a
 customer repo - that one reads the customer's own source systems, and is
 described in `README.md`.
 

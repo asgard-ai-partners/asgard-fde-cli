@@ -23,7 +23,7 @@ func newVerifyCmd() *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use:   "verify [project ...]",
+		Use:   "verify [release ...]",
 		Short: "Render each project and check the invariants a render cannot see",
 		Long: `Render each project and check the invariants that helm lint, CRD validation and a
 server-side dry run all pass:
@@ -124,7 +124,7 @@ time.`,
 
 			if rendered != "" {
 				if len(args) > 0 {
-					return fmt.Errorf("--rendered checks a stream that is already rendered, so it takes no project arguments")
+					return fmt.Errorf("--rendered checks a stream that is already rendered, so it takes no release arguments")
 				}
 				docs, err := readRendered(cmd, rendered)
 				if err != nil {

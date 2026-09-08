@@ -29,7 +29,7 @@ func loadRepo() (root string, err error) {
 	}
 	if declPath == "" {
 		return "", fmt.Errorf("no %s at or above %s, so this is not a repository this tool deploys from.\n"+
-			"`asgard-cli scaffold` writes one, along with the rest of the skeleton",
+			"`asgard-cli init` writes one, along with the rest of the skeleton",
 			pipelineconfig.FileName, dir)
 	}
 	return filepath.Dir(declPath), nil
@@ -60,6 +60,6 @@ func loadState() (stage.State, error) {
 func errNotInRepo() error {
 	dir, _ := os.Getwd()
 	return fmt.Errorf("no %s at or above %s, so this is not a repository this tool deploys from.\n"+
-		"`asgard-cli scaffold` writes one, along with the rest of the skeleton",
+		"`asgard-cli init` writes one, along with the rest of the skeleton",
 		pipelineconfig.FileName, dir)
 }

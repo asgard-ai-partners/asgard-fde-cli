@@ -241,7 +241,7 @@ func profileArgFor(name string) string {
 // declaration to write a binding beside.
 var errNoDeclarationToBind = errors.New(
 	"no .asgard-pipeline.yaml at or above this directory, so there is nothing for a binding to belong to.\n" +
-		"`asgard-cli scaffold` writes one. To act in a workspace without recording it, pass --workspace or " +
+		"`asgard-cli init` writes one. To act in a workspace without recording it, pass --workspace or " +
 		"export " + auth.EnvWorkspace)
 
 // actingOn writes the one line every command that changes something prints

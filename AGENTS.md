@@ -272,7 +272,7 @@ outside this one:
 ```bash
 go build -o .out/asgard-cli ./cmd/asgard-cli
 cd $(mktemp -d)
-/path/to/.out/asgard-cli init && /path/to/.out/asgard-cli scaffold
+/path/to/.out/asgard-cli init -y
 /path/to/.out/asgard-cli project add app
 /path/to/.out/asgard-cli add <kind> <name> --project app
 /path/to/.out/asgard-cli check && /path/to/.out/asgard-cli render <release>
