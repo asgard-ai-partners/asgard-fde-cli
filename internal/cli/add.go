@@ -150,10 +150,10 @@ Run "asgard-cli add" with no arguments to list the kinds.`,
 			for _, also := range kind.AlsoRead {
 				fmt.Fprintf(out, "     and:            asgard-cli usecase %s\n", also)
 			}
-			fmt.Fprintf(out, `  3. fill in the TODOs
+			fmt.Fprint(out, `  3. fill in the TODOs
   4. verify:          asgard-cli check
-                      asgard-cli verify %s
-`, opts.Project)
+                      asgard-cli verify
+`)
 			return nil
 		},
 	}

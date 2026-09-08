@@ -647,7 +647,7 @@ func AddDecision(root, topic, slug, specSlug, module, date string) (string, erro
 
 	data, err := os.ReadFile(filepath.Join(root, DecisionTmpl))
 	if os.IsNotExist(err) {
-		return "", fmt.Errorf("%s is missing; run `asgard-cli scaffold` first", DecisionTmpl)
+		return "", fmt.Errorf("%s is missing; run `asgard-cli init` first", DecisionTmpl)
 	}
 	if err != nil {
 		return "", fmt.Errorf("read %s: %w", DecisionTmpl, err)
@@ -751,7 +751,7 @@ func appendRow(path, section, row string) error {
 		// to platform-unknowns are both instructions. Creating a bare table
 		// here would produce a file that works and teaches nothing, so say
 		// what is missing instead.
-		return fmt.Errorf("%s does not exist yet. `asgard-cli scaffold` writes it, along with the rest of the documents this repository expects", filepath.Base(path))
+		return fmt.Errorf("%s does not exist yet. `asgard-cli init` writes it, along with the rest of the documents this repository expects", filepath.Base(path))
 	}
 	if err != nil {
 		return fmt.Errorf("read %s: %w", path, err)

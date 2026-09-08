@@ -33,9 +33,17 @@ metadata:
     asgard-ai.com/syncer-name: "<<.DisplayName>> 同步"
   labels:
     asgard-ai.com/managed-by: skill-set
-    # Scheduler off; CD triggers this once after each helm upgrade, so sync
-    # timing is tied to deploys on purpose.
+    # Scheduler off, and the deploy fires it instead: the platform's apply step
+    # fires the Syncers of this release that carry auto-fire-on-rollout and
+    # waits for them, so sync timing is tied to deploys on purpose.
+    #
+    # BOTH labels are load bearing, and they read nothing of each other.
+    # auto-fire-on-rollout is opt-in and only the platform's runner reads it;
+    # the Syncer module ignores it and never looks at suspend. So a suspended
+    # Syncer without auto-fire NEVER RUNS - the skills resolve to zero, the
+    # chart renders, the gate is green and nothing reports it.
     asgard-ai.com/syncer-suspend: "true"
+    asgard-ai.com/auto-fire-on-rollout: "true"
     {{- include "<<.Chart>>.labels" . | nindent 4 }}
 spec:
   sourceSetName: ss-<<.Name>>

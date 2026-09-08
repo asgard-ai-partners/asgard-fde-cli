@@ -90,7 +90,7 @@ func runScaffold(cmd *cobra.Command, root string, force bool) error {
 		for _, p := range stale {
 			fmt.Fprintf(out, "  %s\n", p)
 		}
-		fmt.Fprintf(out, "\nTake the newer ones with `asgard-cli scaffold --force`. Nothing an\n"+
+		fmt.Fprintf(out, "\nTake the newer ones with `asgard-cli init --force`. Nothing an\n"+
 			"`asgard-cli` command writes into is touched by that - indexes, the\n"+
 			"open-questions table and the living spec are preserved either way.\n")
 	}

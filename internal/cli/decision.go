@@ -92,7 +92,7 @@ that changed it keeps its version.`,
 			out := cmd.OutOrStdout()
 			fmt.Fprintf(out, "Wrote %s\n", path)
 			if linkErr != nil {
-				fmt.Fprintf(out, "\n%v\n\nAdd the row by hand, or re-run `asgard-cli scaffold`.\n", linkErr)
+				fmt.Fprintf(out, "\n%v\n\nAdd the row by hand, or re-run `asgard-cli init`.\n", linkErr)
 				return nil
 			}
 			fmt.Fprintf(out, "Linked from docs/spec/%s/README.md\n", specSlug)
