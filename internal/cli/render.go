@@ -39,7 +39,7 @@ placeholders and checks nothing at all. It is for the loop that is too fast to
 involve a push - does the template compile, does it produce the objects I meant
 - and the authoritative answer is always the plan report:
 
-    asgard-cli pipeline runs watch --release <name> --commit $(git rev-parse HEAD)
+    asgard-cli pipeline runs watch --release <name> --ref <tag>
 
 The values a run would take from the platform are not fetched. Coercing a stored
 string to the type its declaration gives it is the platform's rule, and a second

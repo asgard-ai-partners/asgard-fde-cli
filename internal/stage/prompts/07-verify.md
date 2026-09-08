@@ -48,7 +48,7 @@ What `asgard-cli gate` runs, and what each step is for:
 
 Then the step that cannot be run here. Push, and read the plan back:
 
-         asgard-cli pipeline runs watch --release <name> --commit $(git rev-parse HEAD)
+         asgard-cli pipeline runs watch --release <name> --ref <tag>
 
      **This is the step that cannot be run here, and it is not optional.** The
      plan renders with the release's real values and sends every CR to the

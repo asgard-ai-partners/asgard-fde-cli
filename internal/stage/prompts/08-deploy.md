@@ -76,7 +76,7 @@ and stop - do not `git init`, do not add one, and do not offer to.
 
     git tag -a dev-0.1.0 -m "dev-0.1.0"
     git push origin dev-0.1.0
-    asgard-cli pipeline runs watch --release <name> --commit $(git rev-parse HEAD)
+    asgard-cli pipeline runs watch --release <name> --ref dev-0.1.0
 
 **Which tag reaches which release is in `.asgard-pipeline.yaml`, one RE2 pattern
 per release.** There is no global convention any more and no fallback: a tag that

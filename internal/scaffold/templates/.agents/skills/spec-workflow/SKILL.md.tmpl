@@ -63,7 +63,7 @@ Use status flow `draft` -> `ready` -> `in-progress` -> `done`. Do not use `in_pr
   2. `helm lint projects/<project>/chart/app`
   `asgard-cli verify <project>`
   4. `asgard-cli render <project> dev | kubectl apply --dry-run=server -n <ns> -f -` and
-     then push and read the plan: `asgard-cli pipeline runs watch --release <name> --commit $(git rev-parse HEAD)`
+     then push and read the plan: `asgard-cli pipeline runs watch --release <name> --ref <tag>`
 - **The living spec carries the behaviour change**, and a settled decision gets its own record —
   see the converge loop below. A behaviour change that never reached `docs/spec/` is not done.
 - Generated/config/deployment artifacts are updated when required (including `.asgard-pipeline.yaml` and the root README project table, which `asgard-cli check` cross-checks).

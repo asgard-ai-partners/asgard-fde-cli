@@ -636,7 +636,7 @@ ConfigMap, does `helm upgrade --install`, and triggers the Syncers marked
 `asgard-ai.com/auto-fire-on-rollout: "true"`.
 
     git push origin dev-0.1.0
-    asgard-cli pipeline runs watch --release <name> --commit $(git rev-parse HEAD)
+    asgard-cli pipeline runs watch --release <name> --ref dev-0.1.0
 
 `watch` waits for the run the push created, follows the steps and prints the plan report or the
 reason it failed. A run stops at review unless the release has auto-apply on:
@@ -718,7 +718,7 @@ reach for when one step fails and you want only that one.
 
 Then push, because the rest cannot be done here:
 
-4. `asgard-cli pipeline runs watch --release <name> --commit $(git rev-parse HEAD)`
+4. `asgard-cli pipeline runs watch --release <name> --ref <tag>`
 
 **Step 4 is not a formality and it is not skippable.** It is where every rendered CR is sent to
 the apiserver with a server-side dry run, so the CRDs' CEL rules, patterns, required fields and

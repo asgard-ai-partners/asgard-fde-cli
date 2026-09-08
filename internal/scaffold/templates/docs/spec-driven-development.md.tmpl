@@ -145,7 +145,7 @@ asgard-cli verify <project>
 
 # 4. against the cluster you deploy to (read-only, needs kubectl)
 asgard-cli render <project> dev | kubectl apply --dry-run=server -n <ns> -f -
-asgard-cli pipeline runs watch --release <name> --commit $(git rev-parse HEAD)
+asgard-cli pipeline runs watch --release <name> --ref <tag>
 ```
 
 Step 3 catches what `helm lint` cannot: an `Agent` referencing a `SemanticLayer`/`Toolset` that does not exist, a `Toolset` pointing at a missing `Workflow`, a `SemanticLayer` pointing at a missing `DataConnector`, a wrong `entry` name on any entrypoint, and the Platform UI metadata whose absence is invisible to every other check.
