@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -42,7 +43,7 @@ them, on the platform, against the real cluster's CRDs. This is where the answer
 comes back.
 
     asgard-cli pipeline runs list
-    asgard-cli pipeline runs watch --release dev --commit $(git rev-parse HEAD)
+    asgard-cli pipeline runs watch --release dev --ref <tag>
     asgard-cli pipeline runs get <run-id>
     asgard-cli pipeline runs log <run-id> lint
     asgard-cli pipeline runs approve <run-id>
@@ -221,6 +222,7 @@ func newRunsWatchCmd() *cobra.Command {
 	var (
 		f       pipelineFlags
 		release string
+		ref     string
 		commit  string
 		runID   string
 		appear  time.Duration
@@ -238,17 +240,25 @@ CRDs, and reports back - and this is how that answer arrives without opening a
 browser.
 
     git push origin dev-0.0.4
-    asgard-cli pipeline runs watch --release internal-dev --commit $(git rev-parse dev-0.0.4^{})
+    asgard-cli pipeline runs watch --release internal-dev --ref dev-0.0.4
 
---commit waits for the run the push created, which does not exist yet when the
+--ref waits for the run the push created, which does not exist yet when the
 command starts: a push reaches the platform in a few seconds. Waiting for it to
 appear and then following it is one command because they are one question.
 
+**--ref is the tag or branch you pushed**, which is what a run is indexed by and
+what you already know. --commit takes a SHA instead, and there are two reasons
+not to reach for it: an ANNOTATED tag is its own git object, so
+"git rev-parse <tag>" is not the commit, and "git rev-parse HEAD" is not the tag
+target unless you tagged HEAD; and the run summaries carry no commit, so
+matching on one costs a request per run per poll.
+
 --release alone follows that release's newest run. --run follows one by id.
 
-If no run appears, the push matched nothing: the tag did not match a pattern, or
-the release it matched was never created. The pipeline's deliveries say which,
-and nothing here can - a run that was not created has no record of its own.
+If no run appears, this says which of the two it is rather than guessing. When
+there are runs it lists them - the push was received, and the search was for the
+wrong name. When there are none the push really did match nothing, and the
+pipeline's deliveries say why.
 
 EXIT CODES. 0 when the run succeeded or is waiting for review; 1 when it failed,
 was rejected, expired, was superseded or cancelled. Waiting for review is not a
@@ -267,7 +277,7 @@ failure: the plan is good and a person has to approve it.`,
 			case runID != "":
 				run, err = pc.Client.GetRun(ctx, runID)
 			default:
-				run, err = findRunToWatch(ctx, pc, f.pipeline, release, commit, appear, msg)
+				run, err = findRunToWatch(ctx, pc, f.pipeline, release, ref, commit, appear, msg)
 			}
 			if err != nil {
 				return err
@@ -294,6 +304,7 @@ failure: the plan is good and a person has to approve it.`,
 	}
 	f.register(cmd, true)
 	cmd.Flags().StringVar(&release, "release", "", "release name whose run to follow")
+	cmd.Flags().StringVar(&ref, "ref", "", "wait for the run of this tag or branch, which a push may not have created yet")
 	cmd.Flags().StringVar(&commit, "commit", "", "wait for the run of this commit SHA, which a push may not have created yet")
 	cmd.Flags().StringVar(&runID, "run", "", "follow this run id, instead of finding one")
 	cmd.Flags().DurationVar(&appear, "appear-timeout", appearTimeout, "how long to wait for a run of --commit to appear")
@@ -304,7 +315,7 @@ failure: the plan is good and a person has to approve it.`,
 func findRunToWatch(
 	ctx context.Context,
 	pc *platformContext,
-	pipelineRef, release, commit string,
+	pipelineRef, release, ref, commit string,
 	appear time.Duration,
 	msg io.Writer,
 ) (*platform.Run, error) {
@@ -321,18 +332,23 @@ func findRunToWatch(
 		filter.ReleaseID = rel.ReleaseId
 	}
 
-	if commit == "" {
+	if ref == "" && commit == "" {
 		runs, err := pc.Client.ListRuns(ctx, filter)
 		if err != nil {
 			return nil, err
 		}
 		if len(runs) == 0 {
-			return nil, fmt.Errorf("no runs to follow; --commit waits for one that a push is about to create")
+			return nil, fmt.Errorf("no runs to follow; --ref waits for one that a push is about to create")
 		}
 		return pc.Client.GetRun(ctx, runs[0].RunId)
 	}
 
-	fmt.Fprintf(msg, "Waiting for the run of %s...\n", short(commit))
+	waitingFor := ref
+	if waitingFor == "" {
+		waitingFor = "commit " + short(commit)
+	}
+	fmt.Fprintf(msg, "Waiting for the run of %s...\n", waitingFor)
+
 	deadline := time.Now().Add(appear)
 	for {
 		runs, err := pc.Client.ListRuns(ctx, filter)
@@ -340,6 +356,16 @@ func findRunToWatch(
 			return nil, err
 		}
 		for _, r := range runs {
+			// --ref matches the summary, which already carries the ref.
+			// --commit cannot: the summary has no commit, so every row costs a
+			// GetRun on every poll - about 1500 calls to conclude nothing at
+			// the default timeout. That is the second reason --ref exists.
+			if ref != "" {
+				if r.Ref == ref {
+					return pc.Client.GetRun(ctx, r.RunId)
+				}
+				continue
+			}
 			full, err := pc.Client.GetRun(ctx, r.RunId)
 			if err != nil {
 				return nil, err
@@ -349,12 +375,7 @@ func findRunToWatch(
 			}
 		}
 		if time.Now().After(deadline) {
-			return nil, fmt.Errorf(
-				"no run for commit %s appeared within %s.\n"+
-					"The push matched nothing: either no release's pattern matched the ref, or the one it\n"+
-					"matched was never created on the platform. A run that was not created leaves no record\n"+
-					"of its own, so the reason is in the pipeline's deliveries:\n\n"+
-					"    asgard-cli pipeline deliveries", short(commit), appear)
+			return nil, noRunAppeared(waitingFor, commit, release, appear, runs)
 		}
 		select {
 		case <-ctx.Done():
@@ -362,6 +383,51 @@ func findRunToWatch(
 		case <-time.After(runPollInterval):
 		}
 	}
+}
+
+// noRunAppeared explains a timeout with what the search actually found.
+//
+// The old message asserted two causes - no pattern matched, or the release was
+// never created - and pointed at the one command that contradicts it. Both were
+// false the one time it fired: the run existed and had already planned
+// successfully. The loop is holding that run when it gives up, because it lists
+// the release's runs on every poll, and it threw the list away.
+//
+// Trusting the message would have sent somebody after an uncreated release or a
+// broken pattern, and the next step in that hunt is re-pushing the tag or
+// recreating the release - one of them destructive against a deploy that is
+// already waiting for review.
+func noRunAppeared(waitingFor, commit, release string, appear time.Duration, found []*platform.RunSummary) error {
+	if len(found) == 0 {
+		where := "no release's pattern matched the ref, or the one it matched was never created on the platform"
+		if release != "" {
+			where = "nothing has been pushed that matches " + release + "'s pattern"
+		}
+		return fmt.Errorf(
+			"no run for %s appeared within %s, and there are no runs here at all.\n"+
+				"So the push matched nothing: %s. A run that was not\n"+
+				"created leaves no record of its own, so the reason is in the pipeline's deliveries:\n\n"+
+				"    asgard-cli pipeline deliveries", waitingFor, appear, where)
+	}
+
+	var b strings.Builder
+	fmt.Fprintf(&b, "no run for %s appeared within %s, but there are runs here:\n\n", waitingFor, appear)
+	for i, r := range found {
+		if i == 5 {
+			fmt.Fprintf(&b, "    ... and %d more\n", len(found)-i)
+			break
+		}
+		fmt.Fprintf(&b, "    #%-4d %-20s %-16s %s %s\n", r.Number, r.ReleaseName, r.State, r.Trigger, r.Ref)
+	}
+	b.WriteString("\nSo the push was received. Follow one of those by id with --run, or by name with\n")
+	b.WriteString("--ref <tag-or-branch> - which is what a run is indexed by.\n")
+	if commit != "" {
+		b.WriteString("\nAgainst an older platform an ANNOTATED tag recorded the tag object rather than\n")
+		b.WriteString("the commit, and then no --commit value can match it. --ref can.\n")
+	}
+	b.WriteString("\nIf none of those is the push you are waiting for, the deliveries say what arrived:\n\n")
+	b.WriteString("    asgard-cli pipeline deliveries")
+	return errors.New(b.String())
 }
 
 // followRun polls a run to a terminal state, reporting each step as it moves.

@@ -912,7 +912,7 @@ asgard-cli pipeline release create <name> --project <id>
 asgard-cli pipeline releases                    # created releases, and the ghost rows
 asgard-cli pipeline variables list --release <name>
 asgard-cli pipeline variables set --release <name> --kind secret <key> --from-file <path>
-asgard-cli pipeline runs watch --release <name> --commit $(git rev-parse HEAD)
+asgard-cli pipeline runs watch --release <name> --ref <tag>
 asgard-cli pipeline runs approve <run-id>
 ```
 

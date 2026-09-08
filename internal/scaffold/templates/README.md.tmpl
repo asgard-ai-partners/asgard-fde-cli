@@ -139,7 +139,7 @@ asgard-cli verify [release]
 是**過得了 dry run、但 runtime 才炸**的那一類。
 
 ```bash
-asgard-cli pipeline runs watch --release <name> --commit $(git rev-parse HEAD)
+asgard-cli pipeline runs watch --release <name> --ref <tag>
 ```
 
 任何一步紅就停。
@@ -151,7 +151,7 @@ Release 的 `on.pattern` 決定;同一個 tag 可以同時命中多個 Release,�
 
 ```bash
 git push origin dev-0.1.0
-asgard-cli pipeline runs watch --release <name> --commit $(git rev-parse HEAD)
+asgard-cli pipeline runs watch --release <name> --ref dev-0.1.0
 asgard-cli pipeline runs approve <run-id>     # Run 停在 Review,除非該 Release 開了 auto apply
 ```
 

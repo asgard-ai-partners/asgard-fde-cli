@@ -568,7 +568,7 @@ asgard-cli pipeline use <id>               # 記下這個 checkout 用哪一條
 asgard-cli pipeline show                   # 這個 checkout 記著的那一條
 asgard-cli pipeline releases               # 它的 release，以及只被宣告的幽靈列
 asgard-cli pipeline variables list --release <name>
-asgard-cli pipeline runs watch --release <name> --commit $(git rev-parse HEAD)
+asgard-cli pipeline runs watch --release <name> --ref <tag>
 ```
 
 這些指令是平台 API 的包裝，**自己不持有任何規則**。**檢核跑在平台上**，因為最有價值的檢查 —— apiserver 自己對每個渲染出來的 CR 做的 CEL、pattern 與必填驗證 —— 需要一座叢集，而**任何 client 都不會拿到叢集憑證**。所以迴圈是：改 chart、用 `asgard-cli gate` 檢查本機能檢查的、推上去、把 plan 讀回來。

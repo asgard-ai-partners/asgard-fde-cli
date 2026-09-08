@@ -157,7 +157,7 @@ time either changed, while still missing the two that matter most: a field the
 CRD silently prunes, and a rejection only the apiserver can produce. A green
 gate means "worth pushing", never "this will deploy". The authority is the plan:
 
-    asgard-cli pipeline runs watch --release <name> --commit $(git rev-parse HEAD)
+    asgard-cli pipeline runs watch --release <name> --ref <tag>
 
 Exits non-zero if any step failed.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -276,7 +276,7 @@ func printSteps(out io.Writer, steps []stepResult) {
 	// Said every time, because a green local gate is the moment somebody is
 	// most likely to believe the work is finished.
 	fmt.Fprintf(out, "This is what a machine with no cluster can check. The plan checks the rest:\n"+
-		"    asgard-cli pipeline runs watch --release <name> --commit $(git rev-parse HEAD)\n")
+		"    asgard-cli pipeline runs watch --release <name> --ref <tag>\n")
 }
 
 // ── the steps ────────────────────────────────────────────────────────────
