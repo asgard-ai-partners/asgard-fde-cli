@@ -56,6 +56,14 @@ spec:
       measures: []
   # Analysis views go here, never as a cube-level sql: virtual cube.
   sampleQueries: []
+  # Plain strings. Data Insight renders each as a button under this layer's
+  # prompt box and sends it when somebody clicks it, so an empty list is a
+  # blank page for whoever opens the layer. Optional to the apiserver and the
+  # highest-value optional field there is when a person is the consumer.
+  #
+  # NOT the Agent CRD's managed.sampleQuestions: same name, different CR, and
+  # the two-question minimum that `gate` R7 enforces there does not apply here.
+  sampleQuestions: []
   # REQUIRED, and the same trap as measures: a single-cube layer still has to
   # say `joins: []` rather than leave the key out.
   #
