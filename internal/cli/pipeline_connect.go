@@ -57,13 +57,19 @@ differently if you guess wrong. So it is never asked.
     1. the provider says who you are
     2. it lists the installations you can reach
     3. the one matching --account is connected
+    4. no match, so the app's install page is opened for that account
 
 Nothing prompts. --account defaults to the owner of this checkout's origin
 remote, which is the account whose repositories this engagement is about; name
 it explicitly when connecting some other account, or when there is no remote to
-read. When the account you asked for is not among the ones you reach, the app
-has to be installed on it first, and the installation URL is printed rather than
-guessed at.
+read.
+
+Step 4 is what makes the account you asked for reachable, and it is a step
+nobody can take unaided: the install page is /apps/<slug>/installations/new, the
+slug differs per platform, and a wrong slug and a private app look identical
+from outside. So the platform is asked for that URL rather than anybody guessing
+it. Whatever gets installed is then matched against --account again - an install
+that lands on a different account is reported, not connected.
 
 The state is sealed rather than stored, so it stays usable for its whole
 lifetime rather than being spent on first use. The provider redirects back to
@@ -81,7 +87,13 @@ somewhere else. The URL is printed either way.
 ONE ACCOUNT, AS MANY WORKSPACES AS NEED IT. GitHub issues one installation per
 account, so a rule that one installation belongs to one workspace would have
 meant a GitHub organisation could serve one workspace. Each workspace holds its
-own connection to the same installation, and they do not see each other's.`,
+own connection to the same installation, and they do not see each other's.
+
+AND ONE WORKSPACE, AS MANY ACCOUNTS. The other direction is a connection each:
+run this once per account, and the workspace ends up holding one connection per
+installation, which is what "pipeline create --connection" chooses between.
+Holding one already is not a reason this stops - it was, for as long as the only
+way in was the list of installations you already reach.`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			provider := platform.ProviderGitHub
@@ -160,13 +172,13 @@ own connection to the same installation, and they do not see each other's.`,
 			}
 			switch {
 			case choices != nil:
-				created, err = attachNamedAccount(cmd, pc, choices, wanted)
+				created, err = attachNamedAccount(cmd, pc, choices, wanted, before, noBrowser, wait)
 			case insufficient:
 				// Authorized, and reaches nothing here. Not a failure to report
 				// — it is the answer to "which way in", arrived at without
 				// asking anybody to know it in advance.
 				fmt.Fprintf(msg, "\nYou reach no installation of this app yet, so it has to be installed first.\n")
-				created, err = installFirst(cmd, pc, before, noBrowser, wait)
+				created, err = installFirst(cmd, pc, before, wanted, noBrowser, wait)
 			}
 			if err != nil {
 				return err
@@ -289,17 +301,28 @@ func waitForConnection(
 }
 
 // attachNamedAccount connects the installation whose account was named, and
-// says what it saw when it cannot.
+// when there is no such installation, goes and gets one.
 //
 // Nothing prompts. This command is run by an agent following a skill, not by
 // somebody at a terminal — `init` is the one command in this tool with a person
 // in front of it — so a question here is not a slower path, it is a dead one.
 // The caller declares which account it means and the platform matches it.
+//
+// **The miss used to end the command, and that was the dead end.** Reaching an
+// installation at all sends every call down this path, so holding one — the
+// state every returning engagement is in — made a second account unreachable
+// from this tool: the remedy on offer was "pick one of the ones you already
+// have", which is never the answer when the point is a new one. Installing is
+// the step that was missing, and only the platform knows the URL for it, so
+// there was nowhere else to get it either.
 func attachNamedAccount(
 	cmd *cobra.Command,
 	pc *platformContext,
 	choices *platform.AttachChoices,
 	account string,
+	before map[string]bool,
+	noBrowser bool,
+	wait time.Duration,
 ) (*platform.VcsConnection, error) {
 	msg := cmd.ErrOrStderr()
 
@@ -313,34 +336,42 @@ func attachNamedAccount(
 	}
 
 	if account == "" {
+		// Nothing to match and nothing to install towards either: which account
+		// this engagement is about is the one fact neither the checkout nor the
+		// provider supplied.
 		return nil, fmt.Errorf(
 			"no --account, and this is not a git checkout with a recognisable origin remote.\n" +
 				"Name the account to connect with --account; the ones you reach are listed above")
 	}
-	for _, in := range choices.Installations {
-		if strings.EqualFold(in.AccountLogin, account) {
-			fmt.Fprintf(msg, "\nConnecting %s...\n", in.AccountLogin)
-			return pc.Client.AttachInstallation(cmd.Context(), choices.AttachState, in.InstallationId)
-		}
+	if in := findInstallation(choices.Installations, account); in != nil {
+		return attach(cmd, pc, choices.AttachState, in)
 	}
-	// Says what was established — the account is not among the ones reached —
-	// and what would change that, without asserting which of the two reasons it
+
+	// Says what was established without asserting which of the two reasons it
 	// is. Both are real: the app may not be installed there, or this identity
-	// may not reach it.
-	return nil, fmt.Errorf(
-		"%q is not among the accounts you reach on the provider (listed above).\n"+
-			"Either the app is not installed on it, or the account you authorized as cannot see its repositories.\n"+
-			"`asgard-cli pipeline connect --account <one of the above>` connects one of them",
+	// may not reach it. Installing is the one this can act on — and the only
+	// one whose next step nobody can work out for themselves.
+	fmt.Fprintf(msg,
+		"\n%q is not among the accounts you reach on the provider (listed above).\n"+
+			"Either the app is not installed on it, or the account you authorized as\n"+
+			"cannot see its repositories. Installing is the fix for the first.\n",
 		account)
+	return installFirst(cmd, pc, before, account, noBrowser, wait)
 }
 
-// installFirst prints where to install the app, for an account that has no
-// installation yet. Installing is a person's action on the provider; there is
-// nothing this can do but say where and wait.
+// installFirst prints where to install the app and waits. Installing is a
+// person's action on the provider; there is nothing this can do but say where.
+//
+// account is what the caller asked for, and it is checked again on the way
+// back. The provider's install page asks which account to install on, so an
+// install can land somewhere other than where this was heading — and reporting
+// that as success would connect an account nobody named. Empty only on the way
+// in from "you reach nothing at all", where there is nothing to tell apart.
 func installFirst(
 	cmd *cobra.Command,
 	pc *platformContext,
 	before map[string]bool,
+	account string,
 	noBrowser bool,
 	wait time.Duration,
 ) (*platform.VcsConnection, error) {
@@ -356,7 +387,12 @@ func installFirst(
 			fmt.Fprintf(msg, "Could not open a browser (%v).\n", berr)
 		}
 	}
-	fmt.Fprintf(msg, "\nOpen this URL and install the app on the account you want:\n\n    %s\n\n", install.InstallUrl)
+	where := "the account you want"
+	if account != "" {
+		where = account
+	}
+	fmt.Fprintf(msg, "\nOpen this URL and install the app on %s:\n\n    %s\n\n", where, install.InstallUrl)
+	fmt.Fprintf(msg, "Installing on an organisation may need one of its admins, which is a wait\nrather than a failure.\n")
 	fmt.Fprintf(msg, "Waiting...\n")
 
 	created, choices, _, err := waitForConnection(ctx, pc, before, install.State, wait)
@@ -364,25 +400,98 @@ func installFirst(
 		return nil, err
 	}
 	if choices != nil {
-		// The provider sent them through authorization on the way. Whatever
-		// they installed is the one to connect, so there is still nothing to
-		// ask: a fresh installation is the only one that was not reachable a
-		// moment ago.
-		return attachFreshest(cmd, pc, choices, before)
+		// The provider sent them through authorization on the way, so this
+		// ended in a list rather than a connection.
+		return attachInstalled(cmd, pc, choices, account)
+	}
+	if created == nil {
+		// Settled, reaching nothing, and no connection: the install and the
+		// authorization went to accounts that do not overlap.
+		return nil, fmt.Errorf(
+			"the app was installed, but the account that authorized reaches no installation of it.\n" +
+				"Authorize as an account with repository access to the one it was installed on")
+	}
+	if account != "" && !strings.EqualFold(created.AccountLogin, account) {
+		return nil, fmt.Errorf(
+			"the app was installed on %q rather than the %q that was asked for, and %q is\n"+
+				"what this workspace is now connected to.\n"+
+				"Re-run to install on %s, or `--account %s` to keep what you got",
+			created.AccountLogin, account, created.AccountLogin, account, created.AccountLogin)
 	}
 	return created, nil
 }
 
-// attachFreshest connects the installation this workspace does not already
-// hold, which after an install is the one just made.
-func attachFreshest(cmd *cobra.Command, pc *platformContext, choices *platform.AttachChoices, _ map[string]bool) (*platform.VcsConnection, error) {
+// attachInstalled connects what the install produced, matched against the same
+// --account the caller named.
+//
+// **It used to connect whichever installation this workspace did not already
+// hold**, which is only right when it held none — the one state the install
+// path used to be reachable from. Reached from a miss it is not: the caller can
+// reach installations that were never connected here, so "not held" names
+// several, and taking the first would connect an account nobody asked for.
+// Silently, and looking exactly like success.
+func attachInstalled(
+	cmd *cobra.Command,
+	pc *platformContext,
+	choices *platform.AttachChoices,
+	account string,
+) (*platform.VcsConnection, error) {
+	if account != "" {
+		in := findInstallation(choices.Installations, account)
+		if in == nil {
+			return nil, fmt.Errorf(
+				"%q is still not among the accounts you reach, so nothing was installed on it.\n"+
+					"`asgard-cli pipeline connections` shows what this workspace has",
+				account)
+		}
+		return attach(cmd, pc, choices.AttachState, in)
+	}
+
+	// No account named, which is the "you reach nothing at all" way in. What
+	// this workspace does not hold is what was just installed — and when that
+	// is more than one thing, saying so beats picking.
+	var fresh []*platform.UserInstallation
 	for _, in := range choices.Installations {
 		if in.ConnectionId == "" {
-			fmt.Fprintf(cmd.ErrOrStderr(), "\nConnecting %s...\n", in.AccountLogin)
-			return pc.Client.AttachInstallation(cmd.Context(), choices.AttachState, in.InstallationId)
+			fresh = append(fresh, in)
 		}
 	}
-	return nil, fmt.Errorf("nothing new was installed; every account you reach is already connected here")
+	switch len(fresh) {
+	case 0:
+		return nil, fmt.Errorf("nothing new was installed; every account you reach is already connected here")
+	case 1:
+		return attach(cmd, pc, choices.AttachState, fresh[0])
+	}
+	names := make([]string, 0, len(fresh))
+	for _, in := range fresh {
+		names = append(names, in.AccountLogin)
+	}
+	return nil, fmt.Errorf(
+		"more than one account you reach is unconnected here (%s), so which one was just\n"+
+			"installed cannot be told apart.\n"+
+			"`asgard-cli pipeline connect --account <one of them>` names it",
+		strings.Join(names, ", "))
+}
+
+// attach records the connection, saying which account it is for first: the
+// account is the whole question this command answers, so the one it settled on
+// is worth reading before the result.
+func attach(cmd *cobra.Command, pc *platformContext, attachState string, in *platform.UserInstallation) (*platform.VcsConnection, error) {
+	fmt.Fprintf(cmd.ErrOrStderr(), "\nConnecting %s...\n", in.AccountLogin)
+	return pc.Client.AttachInstallation(cmd.Context(), attachState, in.InstallationId)
+}
+
+// findInstallation is the account match, in the one place both paths use so
+// they cannot come to different answers. Case-insensitive, because provider
+// account names are: a caller that typed one differently means the same
+// account.
+func findInstallation(installations []*platform.UserInstallation, account string) *platform.UserInstallation {
+	for _, in := range installations {
+		if strings.EqualFold(in.AccountLogin, account) {
+			return in
+		}
+	}
+	return nil
 }
 
 // isGitHubHost reports whether a remote host is github.com.
