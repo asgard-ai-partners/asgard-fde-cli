@@ -38,11 +38,19 @@
 # 永遠不注入,`variables list` 標它 ORPHAN,Run 報 vars/orphan,而 lint、render、
 # CRD dry-run 全部是綠的,只有 runtime 取不到。
 
+# **一個 Project 通常要一個環境一條 Release,不是一條。** dev 與 prod 共用同一份
+# chart 目錄,差別只在 name 與 on.pattern,而且各自 bind 到**不同的 Platform
+# Project**(因此不同 namespace)—— 這是在 `pipeline release create --project <id>`
+# 決定的,不在這個檔案裡。
+#
+# 一條 Release 只有在「沒人要維護的 POC」時才是對的。上線後才想加 staging,
+# 那時 Platform Project、namespace 和 Release 名都已經是 prod 在用的了。
+
 version: 1
 
 releases:
 <<- range .Projects >>
-  # <<.Slug>> 的 dev。prod 就再加一個 name 不同、pattern 不同、chart 相同的 Release。
+  # <<.Slug>>:一個環境一條,兩條共用同一個 chart。
   - name: <<.Slug>>-dev
     on:
       type: tag
@@ -54,4 +62,33 @@ releases:
     appSecret: []
     # 同上,對應 .Values.asgard.appConfigMapName。
     appConfigMap: []
+  - name: <<.Slug>>-prod
+    on:
+      type: tag
+      pattern: '^[0-9]+\.[0-9]+\.[0-9]+$'
+    chart: projects/<<.Slug>>/chart/app
+    chartValues: []
+    appSecret: []
+    appConfigMap: []
+<<- end >>
+<<- if not .Projects >>
+  # 還沒有 Project。`asgard-cli project add <slug>` 寫出 chart 之後,
+  # 一個環境一條 Release 長這樣 —— 兩條的 chart 相同,name 與 pattern 不同:
+  #
+  #   - name: <slug>-dev
+  #     on:
+  #       type: tag
+  #       pattern: '^dev-[0-9]+\.[0-9]+\.[0-9]+$'
+  #     chart: projects/<slug>/chart/app
+  #     chartValues: []
+  #     appSecret: []
+  #     appConfigMap: []
+  #   - name: <slug>-prod
+  #     on:
+  #       type: tag
+  #       pattern: '^[0-9]+\.[0-9]+\.[0-9]+$'
+  #     chart: projects/<slug>/chart/app
+  #     chartValues: []
+  #     appSecret: []
+  #     appConfigMap: []
 <<- end >>

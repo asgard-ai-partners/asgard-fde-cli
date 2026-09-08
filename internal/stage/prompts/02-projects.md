@@ -42,6 +42,29 @@ this: `entry-point` and `knowledge` have nothing to say about it, and `asgard-cl
 will report an Agent with no capability only because there is no Agent.
 `asgard-cli usecase mimir-dashboard` is the shape.
 
+**A third question is not about the split at all, and gets missed for that
+reason: how many environments.** A project is one chart, and that chart normally
+deploys more than once - `dev` and `prod` at least. Those are not two projects
+and not two charts. They are **two releases in `.asgard-pipeline.yaml` naming the
+same `chart:` directory**, differing by `on.pattern`, and each created against a
+**different platform project**:
+
+    - name: <slug>-dev     pattern '^dev-[0-9]+\.[0-9]+\.[0-9]+$'   -> platform project A
+    - name: <slug>-prod    pattern '^[0-9]+\.[0-9]+\.[0-9]+$'       -> platform project B
+
+The platform project is what decides the namespace, which is why the two have to
+be different ones: it is the same reason `asgard-<workspace>-<project>-<env>` has
+an `-<env>` in it at all. There are no per-environment values files - what
+differs between them is the variables set on each release on the platform.
+
+**One release is the shape for a POC nobody will maintain.** It is a real answer,
+and worth writing down as one rather than arriving at by not asking. The cost of
+getting there by not asking is that it surfaces the first time somebody needs a
+staging deploy, when the platform project, the namespace and the release name are
+already the ones production uses. `asgard-cli gate` warns about a chart that one
+release names when that release says which environment it is, which is that
+mistake exactly.
+
 ## What to ask the customer
 
   - Which business systems hold the data an agent would need to read?
@@ -62,6 +85,10 @@ will report an Agent with no capability only because there is no Agent.
     website - rather than rows in a database?
   - Is there anything the agent should be able to **change**, not just read?
     Every write path needs a spec and human approval, so find out early.
+  - **Which environments does this have to run in** - is there a staging or UAT
+    the customer expects to see it in before production, and who signs off there?
+    Ask it even when the answer is obviously "just prod": that is a decision, and
+    the release names and platform projects are cheap now and expensive later.
 
 ## Build this table as you ask
 
