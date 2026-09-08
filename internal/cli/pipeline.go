@@ -171,9 +171,31 @@ func needPipelineError(pc *platformContext, pipelines []*platform.Pipeline) erro
 	for _, p := range pipelines {
 		fmt.Fprintf(&b, "  %-22s %-20s %-52s %s\n", p.PipelineId, p.Name, p.RepoFullName, p.ConfigPath)
 	}
-	fmt.Fprintf(&b, "\nRecord one, which is committed so nobody has to choose again:\n\n")
+
+	// Both ways out, side by side, because listing only one of them is what
+	// made a list of one read as a default.
+	//
+	// "None is assumed, and that includes a list of one" was already here, and
+	// an agent bound the single candidate anyway — its name resembled the
+	// directory, and the human wanted a new pipeline against a different
+	// repository. Prose saying do-not-guess cannot compete with an output whose
+	// only actionable line is `pipeline use`: one action on screen IS the
+	// default, whatever the sentence above it says. `pipeline create` used to
+	// appear only when the list was empty, which is the one case where nobody
+	// needed telling.
+	if len(pipelines) == 1 {
+		fmt.Fprintf(&b, "\nThat is one candidate, not the answer. A workspace's pipeline may be for a\n"+
+			"different repository, and a repository may want a pipeline it does not have yet.\n")
+	} else {
+		fmt.Fprintf(&b, "\nThose are candidates, not the answer. A workspace's pipeline may be for a\n"+
+			"different repository, and a repository may want a pipeline it does not have yet.\n")
+	}
+	fmt.Fprintf(&b, "\nBoth of these are normal, and which one this checkout wants is a question for\nwhoever asked for it:\n\n")
 	fmt.Fprintf(&b, "    asgard-cli pipeline use <id>\n")
-	fmt.Fprintf(&b, "\nOr name one for this run with --pipeline. None is assumed, and that\nincludes a list of one.\n")
+	fmt.Fprintf(&b, "        bind to one of the above; committed, so nobody has to choose again\n\n")
+	fmt.Fprintf(&b, "    asgard-cli pipeline create --name <name> --connection <id> --repo <owner/name>\n")
+	fmt.Fprintf(&b, "        a new pipeline, for a repository none of the above is about\n")
+	fmt.Fprintf(&b, "\n`asgard-cli brief connect` is the walk this is one item of, and what each item\ncosts when it is guessed. --pipeline <id> names one for a single run.\n")
 	return fmt.Errorf("%s", b.String())
 }
 
@@ -367,7 +389,13 @@ func resolveConnection(ctx context.Context, pc *platformContext, want string) (s
 	for _, c := range conns {
 		fmt.Fprintf(&b, "  %-22s %-24s %s\n", c.ConnectionId, c.AccountLogin, c.Status)
 	}
-	fmt.Fprintf(&b, "\nNone is assumed, and that includes a list of one.\n")
+	// The same reason `pipeline create` now sits next to `pipeline use`: a
+	// connection this workspace holds is not evidence that it is the one this
+	// repository is under, and connecting another account is the other half of
+	// the choice. Offering only the list makes the list the answer.
+	fmt.Fprintf(&b, "\nNone is assumed, and that includes a list of one: a connection is one provider\n"+
+		"account, and the repository this engagement is about may be under a different\n"+
+		"one. `asgard-cli pipeline connect --account <account>` adds that account.\n")
 	return "", fmt.Errorf("%s", b.String())
 }
 

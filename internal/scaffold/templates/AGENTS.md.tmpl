@@ -45,7 +45,21 @@ asgard-cli gate      # says exactly what is missing, at any point
 ```
 
 While `.asgard-cli.yaml` is absent, the `binding` step reports "not bound to a
-pipeline yet" and the `skills` step reports no session. Walk the FDE through it:
+pipeline yet" and the `skills` step reports no session.
+
+**Read the checklist before running any of it:**
+
+```bash
+asgard-cli brief connect
+```
+
+Every line of the walk below has a question in it that only the FDE can answer,
+and each one has an answer this tool will appear to have already made. A list of
+one is the shape to distrust most: a workspace with a single pipeline, an account
+with a single connection. `brief connect` is those questions, item by item, with
+what each has cost when it was guessed instead.
+
+Then walk the FDE through it:
 
 ```bash
 asgard-cli login                      # opens a browser AND prints the URL
@@ -69,6 +83,15 @@ Three things to know while doing it:
 - **`asgard-cli pipeline connect` can block on somebody else.** It installs a
   GitHub App, which in many organisations needs an admin. Say so and stop, rather
   than retrying: waiting a day for the right person is the normal outcome.
+- **One workspace can reach several accounts, and one account can serve several
+  workspaces.** A connection is one provider account, so a workspace that already
+  has one may still need another for the repository this engagement is about:
+  `asgard-cli pipeline connect --account <account>`, which prints the app's
+  install URL when that account has no installation yet.
+- **`asgard-cli pipeline list` showing one row is not an answer.** An existing
+  pipeline may be for a different repository entirely, and `pipeline create` is
+  as normal as `pipeline use`. Ask which; both appear in the output for that
+  reason.
 - **A workspace with no projects is the normal start, not a fault.** A release
   deploys into a project, so nothing deploys until one exists:
   `asgard-cli pipeline project create <name>` makes one, with the default
