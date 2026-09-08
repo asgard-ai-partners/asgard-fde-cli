@@ -59,6 +59,12 @@ than by position.
 				return fmt.Errorf("no briefing for %q; one of: %s",
 					args[0], strings.Join(brief.Names(), ", "))
 			}
+			// **This is the one the log most needs.** Every entry here exists
+			// because somebody got it wrong, so whether a predecessor was
+			// briefed before talking to a customer changes what the next
+			// person does - and the log could not say, because these reads
+			// were never recorded.
+			recallHere("brief", a.Name)
 			a.Render(out)
 			return nil
 		},

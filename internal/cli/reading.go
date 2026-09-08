@@ -7,6 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/brief"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/needs"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/repo"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/stage"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/usecase"
@@ -30,8 +32,14 @@ pointer, not by browsing, and a page nobody points at when it is needed does not
 exist.
 
 That gap is the only part of this measurable without asking anybody. Every read
-of ` + "`wiki`" + `, ` + "`usecase`" + ` and ` + "`guide`" + ` inside an engagement appends a line to
-` + "`docs/.reading-log`" + `; this reads it back.
+of ` + "`wiki`" + `, ` + "`usecase`" + `, ` + "`guide`" + `, ` + "`brief`" + ` and ` + "`needs`" + ` inside an
+engagement appends a line to ` + "`docs/.reading-log`" + `, under the name of the
+command that reads it; this reads it back.
+
+**The briefings are the ones worth looking for.** Each exists because somebody
+actually got that activity wrong, so whether a predecessor was briefed before
+talking to a customer changes what you do - and for a long time those reads
+were the ones this log did not record.
 
 **It records page names of this tool and nothing about the customer**, so it is
 safe to commit, and worth committing - six months later it says what the person
@@ -65,8 +73,8 @@ used. The reading log is, because it carries only page names of this tool.`,
 				return err
 			}
 			if len(reads) == 0 {
-				fmt.Fprintf(out, "Nothing recorded yet. The log fills as `wiki`, `usecase` and\n"+
-					"`guide` are used inside this repository.\n")
+				fmt.Fprintf(out, "Nothing recorded yet. The log fills as `wiki`, `usecase`, `guide`,\n"+
+					"`brief` and `needs` are used inside this repository.\n")
 				return nil
 			}
 
@@ -101,13 +109,29 @@ used. The reading log is, because it carries only page names of this tool.`,
 				}
 			}
 			for _, s := range stage.List() {
-				if !opened["stage/"+string(s.Name)] {
+				if !opened["guide/"+string(s.Name)] {
 					never = append(never, "guide "+string(s.Name))
+				}
+			}
+			// **The briefings are the column worth reading.** Each exists
+			// because somebody got that activity wrong, so an engagement with
+			// `customer-meeting` in this list has a person who walked into a
+			// room without it - which is the whole reason the log is
+			// committed. They were never recorded until now.
+			for _, a := range brief.Activities {
+				if !opened["brief/"+a.Name] {
+					never = append(never, "brief "+a.Name)
+				}
+			}
+			shapes := needs.Shapes()
+			for _, s := range shapes {
+				if !opened["needs/"+s.Name] {
+					never = append(never, "needs "+s.Name)
 				}
 			}
 			sort.Strings(never)
 
-			total := len(pages) + len(extracts) + len(stage.List())
+			total := len(pages) + len(extracts) + len(stage.List()) + len(brief.Activities) + len(shapes)
 			fmt.Fprintf(out, "\n%d of %d pages opened.\n", total-len(never), total)
 
 			if len(never) > 0 {
