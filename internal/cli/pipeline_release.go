@@ -3,9 +3,11 @@ package cli
 import (
 	"context"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/platform"
 )
@@ -434,6 +436,7 @@ func newPipelineManifestCmd() *cobra.Command {
 		release              string
 		includeManagedFields bool
 		summary              bool
+		withStatus           bool
 	)
 
 	cmd := &cobra.Command{
@@ -464,6 +467,25 @@ managedFields is stripped unless --include-managed-fields. It is large and
 mostly noise, and it is also the only record of which field manager owns which
 field, which is what separates "the pipeline set this" from "somebody changed it
 in the UI".
+
+--status prints each object's own status block, which is already inside the
+YAML this returns - the objects come back from the cluster verbatim. It is the
+nearest thing there is to "does this deployment work", and it is worth knowing
+exactly how near.
+
+**Half the kinds have no status at all, by schema.** Syncer, Trigger, Toolset,
+SourceSet, Source, Sandbox, Loader, Indexer, KnowledgeBase, OAuthCredential,
+BotProvider and SourceSetEditorServer declare one. Agent, Workflow,
+SemanticLayer, DataConnector, Plugin, SkillSet, SandboxBlueprint, OAuthProvider
+and the four model kinds do not, so an empty result there is the schema rather than a reconciler
+that has not got to it - and this says which of the two it is looking at.
+
+**That matters most for a chart with no Syncer.** ` + "`asgard-cli verify`" + ` warns
+that with no Syncer a succeeded run only means helm returned, and a chart of a
+DataConnector and a SemanticLayer is exactly the shape where no object can
+report anything: presence is genuinely all there is, and the only verification
+left is to open the product and ask the layer a question. This turns twenty
+minutes of looking for a read-back into one line that says so.
 
 A release that has never deployed has no manifest, and says so.`,
 		Args: cobra.NoArgs,
@@ -520,6 +542,9 @@ A release that has never deployed has no manifest, and says so.`,
 					state = "DELETED OUT OF BAND"
 				}
 				fmt.Fprintf(out, "%-24s %-40s %s\n", o.Kind, o.Name, state)
+				if withStatus && o.Found {
+					writeObjectStatus(out, o)
+				}
 			}
 			fmt.Fprintf(out, "\n%d object(s)", len(live.Objects))
 			if missing > 0 {
@@ -532,6 +557,9 @@ A release that has never deployed has no manifest, and says so.`,
 			if summary {
 				return nil
 			}
+			if !withStatus {
+				fmt.Fprintf(out, "\n--status prints what each object reports about itself.\n")
+			}
 			fmt.Fprintf(out, "\nFull objects are in --format json; each carries the live YAML verbatim.\n")
 			return nil
 		},
@@ -541,5 +569,45 @@ A release that has never deployed has no manifest, and says so.`,
 	cmd.Flags().BoolVar(&includeManagedFields, "include-managed-fields", false,
 		"keep metadata.managedFields, which says which field manager owns which field")
 	cmd.Flags().BoolVar(&summary, "summary", false, "list the objects without the closing note")
+	cmd.Flags().BoolVar(&withStatus, "status", false,
+		"print each object's own status block, and say when a kind has none to give")
 	return cmd
+}
+
+// writeObjectStatus prints what one live object reports about itself.
+//
+// **The status is already here.** The platform returns each object verbatim, so
+// this parses what it was given rather than asking for anything more - which is
+// why it is a flag on an existing read and not a new endpoint.
+//
+// **An empty status and no status are different answers and are printed
+// differently.** Roughly half the Asgard kinds declare no status schema at all,
+// so for those "nothing" is the shape of the CRD and not a reconciler that has
+// not run. Reporting both as blank is what sends somebody looking for a problem
+// that cannot exist - which is the twenty minutes this flag exists to save.
+//
+// What it can never show is a reconciler's complaint that landed in a
+// Kubernetes Event instead. Events are a different API group, outside both this
+// payload and the release's own impersonated identity, so they need platform
+// work rather than a flag here.
+func writeObjectStatus(out io.Writer, o *platform.LiveObject) {
+	var doc struct {
+		Status map[string]any `yaml:"status"`
+	}
+	if err := yaml.Unmarshal([]byte(o.Yaml), &doc); err != nil {
+		fmt.Fprintf(out, "%-24s %s\n", "", "status: unreadable ("+err.Error()+")")
+		return
+	}
+	if len(doc.Status) == 0 {
+		fmt.Fprintf(out, "%-24s %s\n", "", "status: none reported")
+		return
+	}
+	body, err := yaml.Marshal(doc.Status)
+	if err != nil {
+		fmt.Fprintf(out, "%-24s %s\n", "", "status: unreadable ("+err.Error()+")")
+		return
+	}
+	for _, line := range strings.Split(strings.TrimRight(string(body), "\n"), "\n") {
+		fmt.Fprintf(out, "    %s\n", line)
+	}
 }

@@ -756,6 +756,32 @@ unknown-field pruning are checked against the real cluster. Nothing local can do
 credential is issued to a client, which is the whole reason steps 1–3 are the shape they are —
 they check what a dry run passes and runtime still fails.
 
+5. `asgard-cli pipeline manifest --release <name> --summary` — what is on the cluster now.
+
+**Step 5 exists because step 4 does not always prove anything.** The rollout's apply step fires
+the Syncers this release deploys that carry `asgard-ai.com/auto-fire-on-rollout` and waits for
+them, so a release **with no Syncer** has nothing after the dry run that proves the platform
+accepted any of it — a succeeded run means helm returned. `asgard-cli verify` warns about exactly
+that, and this is what to run when it does. Add `--status` for what each object reports about
+itself.
+
+**Read what it can and cannot tell you.** `ok` is derived from presence, and roughly half the
+Asgard kinds declare no status schema at all — a chart of a `DataConnector` and a `SemanticLayer`
+is one where no object can report anything, so presence really is all there is and the only
+verification left is to open the product and ask. Knowing that in one command beats discovering it
+by dumping YAML. What no command here can see is a Kubernetes Event, which is where a reconciler's
+complaint lands when the CR has nowhere to put it.
+
+`pipeline manifest` reads live state and does not diff: comparing the cluster against the IaC
+source needs the source, and the source is here. Render locally and compare — live against the
+render of the deployed commit says somebody changed the cluster; the render of HEAD against the
+deployed commit says the repository is ahead.
+
+Two more `pipeline` subcommands are worth knowing and are not named above:
+`asgard-cli pipeline repos --connection <id>` lists what a provider connection can reach (a
+repository missing from it was not granted to the installation, which is changed on the provider),
+and `asgard-cli pipeline releases` lists the releases the platform holds for this pipeline.
+
 **What the plan found, and what each rule code means, is the platform's document, not this one.**
 `.agents/skills/asgard-cr-verification/` is fetched from the server this repository deploys to and
 rewritten on every `asgard-cli skill update`; it carries the six run steps and all fourteen rule
