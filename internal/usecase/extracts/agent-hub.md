@@ -210,11 +210,13 @@ Editing one agent's `task` and not the others fails the gate. That is the point.
 ## Verify
 
 ```bash
-asgard-cli check
-helm lint projects/<project>/chart/app
-helm lint projects/<project>/chart/app
-asgard-cli verify <project>
+asgard-cli gate               # every local check, the lint step included
+asgard-cli verify <project>   # or one step alone, while iterating
 ```
+
+**Never run `helm lint` by hand**: without the reserved `asgard` values file
+that `gate` supplies, every chart that labels anything fails. `asgard-cli gate
+--help` says why.
 
 The last one is what catches this shape's specific mistakes: two layers on one
 agent, a layer mounted twice, a published agent with fewer than two sample

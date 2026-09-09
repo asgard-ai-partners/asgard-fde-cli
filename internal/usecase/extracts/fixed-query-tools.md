@@ -219,10 +219,13 @@ filters on.
 .venv/bin/python .agents/skills/db-query/scripts/query.py \
   --class <class> --prefix <PREFIX> -f tool.sql
 
-asgard-cli check
-helm lint projects/<project>/chart/app
-asgard-cli verify <project>
+asgard-cli gate               # every local check, the lint step included
+asgard-cli verify <project>   # or one step alone, while iterating
 ```
+
+**Never run `helm lint` by hand**: without the reserved `asgard` values file
+that `gate` supplies, every chart that labels anything fails. `asgard-cli gate
+--help` says why.
 
 The xref check resolves every `(workflow, entry)` pair. **A wrong `entry` name is
 as fatal as a wrong workflow name and apply catches neither**, so both halves are

@@ -138,7 +138,8 @@ asgard-cli check [project]
 
 # 2. chart static validation
 asgard-cli gate                                 # lint + render + xref + the reference material
-helm lint projects/<project>/chart/app
+#    the lint step is inside gate, which supplies the reserved asgard values file.
+#    A bare `helm lint <chart>` supplies nothing and fails on every chart that labels anything.
 
 # 3. render + CR cross-reference completeness, then the agent-split invariants
 asgard-cli verify <project>

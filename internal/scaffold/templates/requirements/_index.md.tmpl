@@ -44,13 +44,12 @@ The `asgard-cr-verification` skill under `.agents/skills/` documents the full pr
 server this repository deploys to):
 
 ```bash
-asgard-cli check [project]
-
-helm lint projects/<project>/chart/app
-helm lint projects/<project>/chart/app \
-
-asgard-cli verify <project>
+asgard-cli gate                 # every local check, the lint step included
+asgard-cli verify <project>     # or one step alone, while iterating
 ```
+
+**Never run `helm lint` by hand** - the reserved `asgard` values file the gate supplies is what
+makes the lint step pass, and without it every chart that labels anything fails.
 
 `asgard-cli verify` is the step that catches dangling CR references (Agent → SemanticLayer /
 Toolset, Toolset → Workflow, SemanticLayer → DataConnector), which `helm lint` cannot see.

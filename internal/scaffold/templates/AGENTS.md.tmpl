@@ -692,9 +692,6 @@ so a tag moved or a file edited since then changes nothing about a run waiting f
 ## Helm Commands
 
 ```bash
-# Lint a chart on its own defaults — this is what catches a .Values.* with no default
-helm lint ./projects/<project>/chart/app
-
 # Render a release locally. The chart comes from its entry in .asgard-pipeline.yaml and the
 # reserved .Values.asgard.* block is filled with placeholders.
 asgard-cli render <release>
@@ -706,6 +703,13 @@ checks nothing. It is for the loop that is too fast to involve a push — does t
 does it produce the objects I meant. The authoritative answer is the plan report.
 
 `asgard-cli render` needs only `helm` on PATH.
+
+**There is no `helm lint` line here, and that is deliberate.** Linting a chart on its own defaults
+is what catches a `.Values.*` with no default, and it is `asgard-cli gate`'s `lint` step — which
+supplies the reserved `asgard` block and nothing else. A bare `helm lint <chart>` supplies nothing,
+so it fails on every chart that reads `.Values.asgard.projectEnvironmentId`, which is every chart
+that labels anything. **That failure looks like the chart is broken and it is not.** The one step
+of the gate you cannot run alone is also the one whose obvious substitute is wrong, so run the gate.
 
 ## Acceptance Gate
 

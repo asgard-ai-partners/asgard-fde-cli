@@ -155,10 +155,12 @@ you gather the "known context" a spec needs.
 After editing a `SemanticLayer`, run the repo's gate (see the `asgard-cr-verification` skill):
 
 ```bash
-asgard-cli check
-helm lint projects/<project>/chart/app
-asgard-cli verify <project>
+asgard-cli gate               # every local check, the lint step included
+asgard-cli verify <project>   # or one step alone, while iterating
 ```
+
+**Never run `helm lint` by hand**: without the reserved `asgard` values file that `gate` supplies,
+every chart that labels anything fails. `asgard-cli gate --help` says why.
 
 `asgard-cli verify` confirms `SemanticLayer.dataConnectorName` resolves to a real
 `DataConnector` and that the `Agent` references only layers that exist. It does **not** validate
