@@ -257,9 +257,20 @@ returns 89 rows sets a different expectation from one that returns 4.
 
 **`allowWrite: false`** on every binding; the standing architecture is read-only.
 
-**No `allowedCubes`.** The convention is that an agent may query any table in its
-own layer - the restriction is which layer it mounts, not which cubes within it.
-Setting `allowedCubes` is a deliberate departure that needs a reason.
+**No `allowedCubes`, and this one is not a convention you can depart from.**
+An agent may query any table in its own layer - the restriction is which layer it
+mounts, not which cubes within it - and `gate` R4 refuses an Agent that sets the
+field. Note where it is: `Agent.spec.managed.semanticLayers[]`, never the
+`SemanticLayer` itself, which has no such field. So for a layer with no Agent on
+it at all there is nothing to set and nothing to narrow, and the only exposure
+control is which cubes and dimensions the layer declares - see
+`asgard-cli usecase mimir-dashboard`.
+
+**`sampleQuestions` on the layer is not this field's counterpart either.** It is
+what Data Insight renders as the buttons under a layer's prompt box, it takes
+plain strings, and it is the one field in the chart that changes what a person
+sees before they type anything. `usecase mimir-dashboard` is where it is written
+up, because that is the shape whose consumer is a person.
 
 ## The OLAP exception
 

@@ -89,6 +89,19 @@ spec:
   dataConnectorName: dc-<system>
   locale: zh-TW
   timezone: Asia/Taipei
+  instruction: |-                        # optional to the CRD, and the highest-value
+    <rules the column names do not>      # field in the CR. Every rule here is one
+    <carry: which column is the real>    # that returns a wrong answer or zero rows
+    <key, which two "level" columns>     # if it is broken, and none of them is
+    <are unrelated, what a status>       # visible in a schema dump. See
+    <code means>                         # `asgard-cli usecase semantic-layer`.
+  sampleQuestions:                       # optional; plain strings, NOT objects.
+    - <一句這個層真的答得出來的問題>       # Data Insight renders each as a button
+    - <再一句,換一個主題>                  # under the prompt box and sends it when
+                                         # clicked. Empty means a blank page.
+                                         # NOT the same field as the Agent CRD's
+                                         # `managed.sampleQuestions`, whose rules
+                                         # and gate minimum do not transfer.
   cubes:
     - name: <schema>.<table>             # convention: fully-qualified, matches sqlTable
       sqlTable: <schema>.<table>
@@ -132,12 +145,16 @@ spec:
 - **Run every `sampleQuery` against the live DB before committing it.** A `sampleQuery` that errors
   or returns nonsense actively misleads the agent. Record the row count you observed in the
   `comment` if it helps set expectations.
-- **`measures` are optional.** Add one only when there is a real aggregate the business asks
-  for; do not mechanically add `count` to every cube. A layer with no measures at all is a
-  normal outcome.
-- **Check whether the `Agent` binding sets `allowedCubes`.** Without it, every cube in the layer
-  is immediately queryable, so adding one widens the agent's reach — which is why this needs a
-  spec (below).
+- **`measures` must be present on every cube; its CONTENTS are optional.** The key is
+  **required** by the CRD - `measures: []` is a declaration the apiserver accepts, omitting the
+  key is rejected outright, and `helm lint` does not see the difference. So `measures: []` is the
+  normal outcome when there is no real aggregate the business asks for; do not mechanically add
+  `count` to every cube, and do not read "optional" as permission to leave the key out.
+- **Nothing narrows a layer once it is mounted.** `allowedCubes` is not a field on
+  `SemanticLayer` - it exists on `Agent.spec.managed.semanticLayers[]`, and `gate` R4 refuses an
+  Agent that sets it, on the standing decision that a bound layer is queryable in full. So every
+  cube and every dimension you add widens the reach of whatever consumes the layer, with no
+  second setting that takes it back — which is why this needs a spec (below).
 - `Agent.managed.semanticLayers[]` needs `allowQuery: true` and (today) `allowWrite: false`.
 
 ## Spec Gate

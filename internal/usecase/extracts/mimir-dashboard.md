@@ -83,10 +83,46 @@ Two things follow:
 
 ## Fields that are not obvious
 
-**`allowedCubes` still matters, for the same reason as anywhere else.** A layer
-without it is arbitrary SQL over every cube, and the surface grows by itself
-each time a table is added. That a person rather than an agent is on the other
-end does not change it - it changes who is surprised.
+**There is no `allowedCubes` here, and no second setting that narrows the
+surface.** `allowedCubes` is not a field on `SemanticLayer` at all - it lives on
+`Agent.spec.managed.semanticLayers[]` and on the two LLM processors' config, and
+this shape has neither. Even where it exists, `gate` R4 refuses an Agent that
+sets one, on the standing decision that a bound layer is queryable in full.
+
+So **the only exposure control in this shape is which cubes and dimensions exist
+in the layer.** Adding one widens what a person can reach, and nothing can narrow
+it again. That is a stronger statement than "restrict it later", and it decides
+things: a table that keeps credential columns - a password, a hardware-key serial
+- beside the display name is not defensible behind a whitelist here, because
+there is no whitelist. Either the column is not modelled, or it is exposed.
+
+**Write that reason next to the cube**, because "not modelled" is a discipline
+and the next person adding a dimension will not know about it. The `instruction`
+field and a comment on the cube are where it survives a diff.
+
+**`sampleQuestions` is what the product's front page shows, and this is the
+only field in the chart that reaches it.** Data Insight renders each string as a
+button under the layer's prompt box; a reader clicks one and it is sent as their
+question. With the array empty they get a blank box and have to guess what the
+layer knows, which for an internal audience exploring by conversation is the
+difference between a page somebody uses on day one and one they open once.
+
+    spec:
+      sampleQuestions:
+        - 哪些客戶的 KYC 狀態為待覆審(review_due)?
+        - 各客戶類型的委託資產規模分布如何?
+
+Plain strings, not objects. Write them the way the audience refers to things,
+anchor each to a subject that is actually in the layer, and keep each one
+self-contained - a button is read with no context around it.
+
+**`Agent.spec.managed.sampleQuestions` is a different field on a different CRD,
+and its rules do not transfer.** `asgard-cli usecase agent-hub` has a whole
+section for that one, and `gate` R7 enforces a minimum of two on a published
+Agent - our rule, not the platform's. Searching for the field name reaches the
+Agent guidance and nothing else, which is worse than reaching nothing: it is
+confident, well-written and about another CR. There is no minimum here, and no
+gate rule; there is just a front page that is blank until somebody fills it.
 
 **The credential is read-only and this is the one shape where that is easy to
 get.** There is no write path to argue for, so ask for a read replica.
