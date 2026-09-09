@@ -10,7 +10,7 @@ CRs per skill set, versus several skill sets sharing one store.
 
 **Unchecked:** nothing outstanding on the structure. The search-path rule is stated by the deployments themselves rather than enforced anywhere.
 
-**Read the platform side first:** `asgard-cli wiki tools` -
+**Read the platform side first:** `../wiki/tools.md` -
 how MCP Server, Skillset and Plugin differ. This page assumes you have.
 
 ## When this shape, and when not
@@ -67,7 +67,7 @@ repository would be 28 clones of it.
 That shape accepts the UI cost knowingly: those SkillSets carry no
 `skill-set-name` annotation and no `managed-by` label, so they are not presented
 as first-class skill sets in the UI at all - they are implementation detail of a
-Plugin. See `asgard-cli usecase plugin`.
+Plugin. See `../usecase/plugin.md`.
 
 **The rule stands for anything a person picks in the UI.** It is a shared skills
 monorepo behind a bundle that earns the exception, not convenience.

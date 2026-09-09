@@ -10,7 +10,7 @@ layer runs to hundreds of cubes.
 
 **Unchecked:** the modelling guidance - cube granularity, what belongs in instruction. Checkable only against a database, and not checked.
 
-**Read the platform side first:** `asgard-cli wiki semantic-model` -
+**Read the platform side first:** `../wiki/semantic-model.md` -
 what a Semantic Model is, how it is built, and its limits. This page assumes you have.
 
 ## When this shape, and when not
@@ -264,12 +264,12 @@ field. Note where it is: `Agent.spec.managed.semanticLayers[]`, never the
 `SemanticLayer` itself, which has no such field. So for a layer with no Agent on
 it at all there is nothing to set and nothing to narrow, and the only exposure
 control is which cubes and dimensions the layer declares - see
-`asgard-cli usecase mimir-dashboard`.
+`../usecase/mimir-dashboard.md`.
 
 **`sampleQuestions` on the layer is not this field's counterpart either.** It is
 what Data Insight renders as the buttons under a layer's prompt box, it takes
 plain strings, and it is the one field in the chart that changes what a person
-sees before they type anything. `asgard-cli usecase mimir-dashboard` is where
+sees before they type anything. `../usecase/mimir-dashboard.md` is where
 it is written up, because that is the shape whose consumer is a person.
 
 ## The OLAP exception

@@ -11,7 +11,7 @@ built and held behind a mock for days before anyone let it send.
 
 **Unchecked:** the two-call client-credentials shape itself. The deployments read tokens supplied per turn rather than fetching them - see per-turn-credentials - so this page's own shape is less exercised than it looks.
 
-**Read the platform side first:** `asgard-cli wiki api` -
+**Read the platform side first:** `../wiki/api.md` -
 the endpoint, the SSE event sequence, and the four integration patterns. This page assumes you have.
 
 ## When this shape, and when not
@@ -23,13 +23,13 @@ management APIs, and anything behind an identity provider are this.
 **A per-user credential is a different shape.** When the token belongs to the
 person talking to the agent rather than to the service, it arrives in the
 BotProvider payload every turn and lands in the sandbox through a hook - see
-`asgard-cli usecase per-turn-credentials`.
+`../usecase/per-turn-credentials.md`.
 
 Do **not** use it when:
 
 - **a static key works.** A header with a key from the release's Secret is one processor
   instead of two, and no token to expire. Read
-  `asgard-cli usecase external-api` for that shape - the whole of it applies
+  `../usecase/external-api.md` for that shape - the whole of it applies
   here too, and this extract only adds the token step.
 - **the auth is per user.** Client credentials authenticate the *service*.
   If the API needs to know which human is asking - and to enforce what that human
@@ -198,7 +198,7 @@ This reads as a bug the first time and is the mechanism. Two consequences:
 - **`prevPayload` is the tool's arguments** until an `http-request` runs, and then
   it is not. If the call needs the arguments *after* an HTTP step, copy them into
   context with an `update-context` processor first - see
-  `asgard-cli usecase external-api`.
+  `../usecase/external-api.md`.
 
 ## Designing the credential and its scope
 

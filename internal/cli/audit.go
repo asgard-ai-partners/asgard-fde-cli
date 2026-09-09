@@ -681,7 +681,32 @@ func checkLinks(out io.Writer, sources []source) error {
 		known[extra.kind][extra.name] = true
 	}
 
-	type dead struct{ where, kind, name string }
+	// **A pointer written as a path is a claim that the target lands.** The
+	// two forms are not interchangeable: an invocation resolves through this
+	// binary and works anywhere, while `../wiki/log.md` in a repository is a
+	// file that has to be there. `wiki log` is the one page `init` does not
+	// write - the wiki's index says an FDE should never land on the provenance
+	// layer - and converting its pointer to a path made a link that resolved
+	// here and went nowhere in the repository the material had been written
+	// into. Nothing saw it: `--links` resolves against the corpus, where log
+	// exists.
+	lands := map[string]map[string]bool{"wiki": {}, "usecase": {}}
+	landing, err := wiki.Landing()
+	if err != nil {
+		return err
+	}
+	for _, p := range landing {
+		lands["wiki"][p.Name] = true
+	}
+	extracts, err := usecase.All()
+	if err != nil {
+		return err
+	}
+	for _, e := range extracts {
+		lands["usecase"][e.Name] = true
+	}
+
+	type dead struct{ where, kind, name, why string }
 	var found []dead
 	checked := 0
 
@@ -700,13 +725,13 @@ func checkLinks(out io.Writer, sources []source) error {
 			}
 			checked++
 			if !known[ref.kind][ref.name] {
-				found = append(found, dead{"generate " + k.Name, ref.kind, ref.name})
+				found = append(found, dead{where: "generate " + k.Name, kind: ref.kind, name: ref.name})
 			}
 		}
 		for _, name := range k.AlsoRead {
 			checked++
 			if !known["usecase"][name] {
-				found = append(found, dead{"generate " + k.Name, "usecase", name})
+				found = append(found, dead{where: "generate " + k.Name, kind: "usecase", name: name})
 			}
 		}
 	}
@@ -720,12 +745,21 @@ func checkLinks(out io.Writer, sources []source) error {
 			seen[key] = true
 			checked++
 			if !known[l.Kind][l.Name] {
-				found = append(found, dead{s.label + " " + s.name, l.Kind, l.Name})
+				found = append(found, dead{where: s.label + " " + s.name, kind: l.Kind, name: l.Name})
+				continue
+			}
+			if l.Path && !lands[l.Kind][l.Name] {
+				found = append(found, dead{where: s.label + " " + s.name, kind: l.Kind, name: l.Name,
+					why: "written as a path, and `asgard-cli init` does not write that document into a repository - use the invocation"})
 			}
 		}
 	}
 
 	for _, d := range found {
+		if d.why != "" {
+			fmt.Fprintf(out, "dead  %s -> `../%s/%s.md`: %s\n", d.where, d.kind, d.name, d.why)
+			continue
+		}
 		fmt.Fprintf(out, "dead  %s -> `asgard-cli %s %s`\n", d.where, d.kind, d.name)
 	}
 	fmt.Fprintf(out, "\n%d pointer(s) resolved, %d dead.\n", checked, len(found))

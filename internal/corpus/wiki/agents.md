@@ -97,7 +97,7 @@ resources. They are not one to one.
 Managed Agent - there is no other kind. The name suggests a pair of symmetric
 options and there is not one.
 
-For how each shape is assembled: `asgard-cli usecase agent-hub` (an internal
+For how each shape is assembled: `../usecase/agent-hub.md` (an internal
 hub), `flow-agent-single` (anonymous, one job), `flow-agent-supervisor`
 (anonymous, several specialists), `browser-operation` (giving one a browser).
 

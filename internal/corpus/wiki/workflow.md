@@ -42,8 +42,8 @@ enforces exactly one.
 Expression is JavaScript, not CEL, and it is **not** restricted to ECMA5 -
 that limit is `execute-script`'s Engine field and applies to a script body, not
 to these. One shipped tenant chart evaluates
-`prevBlobs.map(b => b.blobId).join(',')`, which is the evidence; `asgard-cli
-wiki processors` carries the count behind it, and said the opposite of this
+`prevBlobs.map(b => b.blobId).join(',')`, which is the evidence;
+`../wiki/processors.md` carries the count behind it, and said the opposite of this
 page until 2026-09-03. `||`, `??`, `String()` and `encodeURIComponent` work, as
 do built-in helpers such as `history(0, -1)` and `urlEncode(...)`.
 
@@ -77,7 +77,7 @@ single turn.
 
 How `prevPayload` and `httpResponse` actually behave - in particular that an
 `http-request` **replaces** `prevPayload` - is in
-`asgard-cli usecase workflow-chain`.
+`../usecase/workflow-chain.md`.
 
 ## Entry and tooling
 
@@ -108,7 +108,7 @@ button, carousel, chart, location, video and quick-reply message templates.
 
 ## Before writing the chart
 
-`asgard-cli usecase workflow-chain` covers what actually passes between
+`../usecase/workflow-chain.md` covers what actually passes between
 processors; `fixed-query-tools` is the shape of a zero-parameter query tool.
 
 ## What goes in a field

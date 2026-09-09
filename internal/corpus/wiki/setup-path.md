@@ -25,7 +25,7 @@ place called **Data Source** and people put everything there.
 Source takes nine database providers and nothing else; Connection is OAuth to
 five named services. A REST API with a bearer token is reached by a tool that
 carries its own credentials - either an `http-request` step inside a Workflow, or
-an MCP Server started with environment variables. `asgard-cli usecase external-api`
+an MCP Server started with environment variables. `../usecase/external-api.md`
 is the whole shape, including which of the two to take and why.
 
 So "we have the API credentials, let's add the data source" is a sentence that
@@ -49,8 +49,8 @@ the source is, and they are not interchangeable:
 | the source | what to build | page |
 |---|---|---|
 | a database the agent should query freely | a **Semantic Model** | [`semantic-model.md`](semantic-model.md) |
-| a database, but only a fixed set of answers | query tools in a Workflow | `asgard-cli usecase fixed-query-tools` |
-| an HTTP API | a Workflow with `http-request`, wrapped as an **MCP Server** | `asgard-cli usecase external-api` |
+| a database, but only a fixed set of answers | query tools in a Workflow | `../usecase/fixed-query-tools.md` |
+| an HTTP API | a Workflow with `http-request`, wrapped as an **MCP Server** | `../usecase/external-api.md` |
 | an existing MCP server somebody already wrote | **MCP Server**, From Existing | [`tools.md`](tools.md) |
 | documents, manuals, FAQs | a **Drive** with a Context Index | [`knowledge.md`](knowledge.md) |
 | how the customer's systems correspond, where their concepts do not line up - status codes, an id written three ways, a word that means two things | a **Skillset**. The row people forget, because it has no credential to ask for | [`tools.md`](tools.md) |
@@ -161,7 +161,7 @@ Agent」, which is the field doing its job in public.
 ## Corresponding extracts
 
 No single extract covers this path, because it is the order rather than a shape.
-The shapes it passes through are `asgard-cli usecase agent-hub`,
+The shapes it passes through are `../usecase/agent-hub.md`,
 `external-api`, `semantic-layer`, `fixed-query-tools`, `knowledge-drive` and
 `skill-set`.
 

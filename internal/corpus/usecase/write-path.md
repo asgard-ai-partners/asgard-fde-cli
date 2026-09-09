@@ -11,11 +11,11 @@ notification chain whose single outward action is deliberately mocked.
 
 **Unchecked:** the reversibility table. It matches what the deployments do, but the deployments did not derive it from this table.
 
-**Read the platform side first:** `asgard-cli wiki sindri` -
+**Read the platform side first:** `../wiki/sindri.md` -
 what the governance gate looks like to the person approving it. This page assumes you have.
 
 **Nothing to link.** This shape has no product documentation page - see
-`asgard-cli wiki sindri`. When a customer asks for documentation on the approval
+`../wiki/sindri.md`. When a customer asks for documentation on the approval
 gate, and they will, the answer is a cropped screenshot and this page.
 
 ## The rule the platform is built on
@@ -54,7 +54,7 @@ no.
 Every image of the gate is Sindri's dialog, and Sindri is where authenticated
 staff work. **On a public channel the person approving is usually the visitor in
 the conversation**, not an operator - so whether `requestConsent` renders there,
-and as what, is not established. `asgard-cli wiki platform-unknowns` P8.
+and as what, is not established. `../wiki/platform-unknowns.md` P8.
 
 Do not promise a customer an approval step on a public channel by showing them a
 screenshot of the internal one. A prompt asking "shall I go ahead?" is not the
@@ -156,8 +156,8 @@ spec:
       requestConsent: true
 ```
 
-The Workflow behind it is the call itself - see `asgard-cli usecase
-external-api` for the `http-request` shape, including where the credential goes
+The Workflow behind it is the call itself - see `../usecase/external-api.md`
+for the `http-request` shape, including where the credential goes
 and why parameters have to be pulled into context before the call.
 
 ## Designing the gate - the part the generator leaves TODO

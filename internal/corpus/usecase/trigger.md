@@ -1,6 +1,6 @@
 # Trigger
 
-**This is written from one Trigger, in one chart.** `asgard-cli wiki coverage`
+**This is written from one Trigger, in one chart.** `../wiki/coverage.md`
 counts them: of eight rendered reference deployments, exactly one declares a
 Trigger, and it declares one. Every rule below about the cursor, the cold start
 and what a scheduled run may not do is generalised from that single instance,
@@ -17,7 +17,7 @@ against records in another, and mails whoever asked for them.
 
 **Unchecked:** the prompt-writing guidance and the cursor rules. Taken from one deployment's experience, not re-derived.
 
-**Read the platform side first:** `asgard-cli wiki automation` -
+**Read the platform side first:** `../wiki/automation.md` -
 Trigger and API, and why only cron is left. This page assumes you have.
 
 ## When this shape, and when not

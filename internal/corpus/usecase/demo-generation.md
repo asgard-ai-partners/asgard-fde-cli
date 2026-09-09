@@ -17,7 +17,7 @@ industry's chart declares.
 engagement, and what the second one costs once the first industry exists. The
 repository records neither.
 
-**Read the platform side first:** `asgard-cli wiki product-suite` -
+**Read the platform side first:** `../wiki/product-suite.md` -
 which product a request lands in. This page assumes you have.
 
 ## When this shape, and when not
@@ -77,8 +77,8 @@ insight ends at an **analysis** - no write, and it is the Mimir half of the same
 data. A demo showing only the flagship looks like automation nobody controls; one
 showing only the insight looks like a report.
 
-`asgard-cli usecase write-path` is the flagship's mechanism and
-`asgard-cli usecase mimir-dashboard` is the insight's.
+`../usecase/write-path.md` is the flagship's mechanism and
+`../usecase/mimir-dashboard.md` is the insight's.
 
 ## The rule the whole repository is built on
 
@@ -120,7 +120,7 @@ from the package:
     helm upgrade <name> "$pkg" --install -n asgard-demo-<industry> \
 
 **Each industry declares its own `CompletionModel`.** Twenty-four of them across
-the generator - see `asgard-cli wiki settings` for the class enum and the two
+the generator - see `../wiki/settings.md` for the class enum and the two
 rules the CRD enforces that helm does not.
 
 **The SQL is the source of truth, not the database.** Data is applied from files
@@ -129,6 +129,6 @@ been clicking around in it - which they will have been.
 
 ## Read the platform side first
 
-`asgard-cli wiki product-suite` for which product a scenario belongs to;
-`asgard-cli usecase write-path` for the approval gate;
-`asgard-cli usecase mimir-dashboard` for the insight half.
+`../wiki/product-suite.md` for which product a scenario belongs to;
+`../usecase/write-path.md` for the approval gate;
+`../usecase/mimir-dashboard.md` for the insight half.

@@ -11,7 +11,7 @@ capability is a skill describing 88 pages plus everything the menu cannot see.
 
 **Unchecked:** the cost estimates and the guidance on building the maps. One capability, one team, not repeated anywhere.
 
-**Read the platform side first:** `asgard-cli wiki agents` -
+**Read the platform side first:** `../wiki/agents.md` -
 what a Managed Agent and a Flow Agent each are, and which the audience decides. This page assumes you have.
 
 ## When this shape, and when not
@@ -189,7 +189,7 @@ spec:
       - sk-<system>-ops
 ```
 
-The skill side is a normal SkillSet trio (`asgard-cli usecase skill-set`)
+The skill side is a normal SkillSet trio (`../usecase/skill-set.md`)
 pointing at wherever the skill files live:
 
 ```yaml
@@ -204,7 +204,7 @@ spec:
 
 Credentials do not go in the skill. A runtime config file written into the
 sandbox by a hook is how a session gets its base URL and the user's token -
-see `asgard-cli usecase flow-agent-supervisor` for the hook, including why it
+see `../usecase/flow-agent-supervisor.md` for the hook, including why it
 must be `user-prompt-submit` rather than `session-start`.
 
 **Where a login cannot be automated, hand the browser to the person.** A real

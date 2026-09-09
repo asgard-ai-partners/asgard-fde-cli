@@ -369,7 +369,7 @@ time, and editing removes exactly that.
   searched corpus it competed with what it points at: it lists every alias, so it
   was reliably the one document carrying every term of a translated query, and a
   search for a commerce subject returned the word list instead of
-  `asgard-cli wiki taiwan-channels`. Verified before and after against that query
+  `../wiki/taiwan-channels.md`. Verified before and after against that query
 - `ingest` 2026-09-04 `aliases.md` gained a second table, for names a customer
   will say. These are **added** to a query rather than replacing it, because the
   name may be written verbatim in a page - SHOPLINE is - and replacing it would
@@ -896,7 +896,7 @@ time, and editing removes exactly that.
   "answer questions on LINE" had three words reaching almost everything and one
   reaching the answer, and the narrowing rule threw the answer away. **And the
   index decides before any searching**: 客服's row already says
-  `asgard-cli usecase chat-channel`, and searching the translated words instead
+  `../usecase/chat-channel.md`, and searching the translated words instead
   ranked external-api above it - the index knowing the answer with nothing using
   it
 - `fix` 2026-09-07 issue #43: `find`'s empty-result fallback is the only place in

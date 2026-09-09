@@ -65,7 +65,7 @@ thing to come back and fix when that model is retired.
 The CRDs carry 79 CEL rules. **Forty are `self == oldSelf`** - they compare a
 proposed object against the one already on the cluster, so a render, which is
 one object with no history, cannot see them. `botProviderClass` is the one that
-bites; `asgard-cli usecase chat-channel` says why.
+bites; `../usecase/chat-channel.md` says why.
 
 The rest are two families, and `asgard-cli verify` checks both as of
 2026-09-04:

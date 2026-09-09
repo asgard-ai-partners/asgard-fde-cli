@@ -2,7 +2,7 @@
 
 **The `KnowledgeBase`, `Loader` and `Source` shapes here come from one
 deployment** - auto-post, the platform's own - which is the only one of eight
-that declares any of them (`asgard-cli wiki coverage`). That cuts both ways: it
+that declares any of them (`../wiki/coverage.md`). That cuts both ways: it
 was written by the people who built the CRs, and it is not a customer's
 constraints.
 
@@ -17,7 +17,7 @@ database, a crawl of its own marketing site, and manually uploaded documents.
 
 **Unchecked:** the contextIndex.prompt guidance. It is advice about the customer's own data and has no source outside the engagement that wrote it.
 
-**Read the platform side first:** `asgard-cli wiki knowledge` -
+**Read the platform side first:** `../wiki/knowledge.md` -
 Drive, Context Index, and how Knowledge Base differs. This page assumes you have.
 
 ## When this shape, and when not
@@ -189,7 +189,7 @@ succeeded run and no error anywhere.
 with `asgard-ai.com/syncer-cd-trigger: "false"` - a label **the platform does
 not read at all**, left from the CD workflows that predate the pipeline. Silence
 is the default now, so noise is what has to be asked for. See
-`asgard-cli usecase skill-set`.
+`../usecase/skill-set.md`.
 
 ## The pause that is not a delete
 

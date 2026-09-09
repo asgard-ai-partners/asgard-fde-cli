@@ -101,7 +101,7 @@ The sources this material is actually built from:
 | asgard-kube `crd/` | the contract | read per page, per field, and dated on the page |
 | **asgard-kube `pkg/apis/`** | **the Go types the CRDs are generated from, with the reasoning as comments** | read once, 2026-09-02, for the validation rules - `crd-rules`. 134KB of declarations; what has been taken is the behavioural comments, not the field list |
 | **[asgard-core](https://github.com/asgard-ai-platform/asgard-core)** `internal/constants.go` | **the processor definitions the CRD is generated from** | read once, 2026-09-02, for the type list. Its per-processor config definitions are not carried anywhere |
-| **asgard-freyr-skills** | **nine runtime skills, incl. the SHOPLINE pair** | one page - `asgard-cli usecase skill-layers` |
+| **asgard-freyr-skills** | **nine runtime skills, incl. the SHOPLINE pair** | one page - `../usecase/skill-layers.md` |
 | **seven deployment charts** | **every shape the extracts describe** | see below |
 
 **Deployment coverage cannot be measured from this material, by design.** An
@@ -143,7 +143,9 @@ came back into `processors` and the subtraction was only done in one place.
 Every page under `pages/` has a row above except `log`, which is deliberate: it
 is the provenance layer - what was read, when, and what it corrected - and an
 FDE looking for an answer should never land there. Reach it with
-`asgard-cli wiki log` when you want to know why a page says what it says.
+`asgard-cli wiki log` when you want to know why a page says what it says -
+**an invocation and not a path, because it is the one page `asgard-cli init`
+does not write into a repository.**
 
 **Adding a page means adding a row**, under the question it answers rather than
 at the end. The extracts index went a third out of date this way -

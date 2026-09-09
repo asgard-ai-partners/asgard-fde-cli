@@ -10,7 +10,7 @@ per source system.
 
 **Unchecked:** the delegation-design guidance - how many agents, where the line between two of them goes. No deployment contradicts it; none confirms it either.
 
-**Read the platform side first:** `asgard-cli wiki agents` -
+**Read the platform side first:** `../wiki/agents.md` -
 what a Managed Agent and a Flow Agent each are, and which the audience decides. This page assumes you have.
 
 ## When this shape, and when not
@@ -103,7 +103,7 @@ search space the split was meant to shrink.
 layer, and the restriction is which layer it mounts rather than which cubes
 within it. Setting it is a deliberate departure that needs a reason - and the
 reason a *public* audience needs one is why that audience gets fixed query tools
-instead of a layer at all. See `asgard-cli usecase semantic-layer`.
+instead of a layer at all. See `../usecase/semantic-layer.md`.
 
 Zero layers is legal when the agent's capability comes from toolsets instead.
 Zero of both is not - an agent with no capability source at all is almost always

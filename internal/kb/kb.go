@@ -69,6 +69,13 @@ type Link struct {
 	Kind string // wiki, usecase, guide, brief
 	Name string
 
+	// Path marks a pointer written as a relative path rather than as an
+	// invocation. It is the difference between "follow this on disk" and "run
+	// this" - and a path is a claim that the target is written into a
+	// repository, which `audit-material --links` checks. `wiki log` is the one
+	// that is not: it stays an invocation because init does not land it.
+	Path bool
+
 	// Deliberate marks a link inside the section where the document names its
 	// counterpart on purpose, as against one mentioned in passing. Taking the
 	// first pointer anywhere sent a reader to whichever reference happened to
@@ -162,20 +169,45 @@ type Corpus struct {
 	Command string // "asgard-cli usecase", "asgard-cli wiki"
 }
 
-// linkRe matches the ways this material sends a reader to another document.
-// Every one of them is an invocation of this tool naming a document by name,
-// which is the only form a pointer takes here - a bare page name in prose is
-// not a pointer, because a reader cannot act on it without knowing which
-// command opens it.
-// A pointer may wrap. This material is hard wrapped at about 78 columns, so one
-// near the right margin is split across two lines, and a pattern expecting a
-// single space did not see it - six real pointers in the corpus were invisible
-// to both `find`'s counterpart and `--links`, reading perfectly to a person the
-// whole time.
-// **Exactly one space, or a line break.** Not "any run of whitespace": a help
-// screen aligns its columns with spaces, so `asgard-cli guide` followed by
-// padding and the words "all of it" resolves to a document called "all". One
-// space or one wrap is what prose actually writes.
+// A pointer is how this material sends a reader to another document, and there
+// are two forms because the two halves of the material are not in the same
+// place.
+//
+// **A path, for anything that lands.** `asgard-cli init` writes the wiki and
+// the extracts into a customer repository as `wiki/` and `usecase/` side by
+// side, and internal/corpus holds them in that same layout, so
+// `../usecase/write-path.md` resolves in both trees. It is written `../` even
+// from inside the half it points into - `../wiki/tools.md` from a wiki page
+// resolves back into `wiki/` - because one form that carries its own kind beats
+// two forms that need to know where the reader is standing. That is also what
+// lets this stay a function of the body alone.
+//
+// **An invocation, for anything that does not land yet.** `brief` and `guide`
+// are still only in the binary, so a path to them would resolve nowhere;
+// `asgard-cli guide requirements` is what a reader can act on. Those convert to
+// paths when they land - see the sequence in TASK.md - and until then a
+// document pointer is one form or the other depending on where its target
+// lives, which is a state to get out of rather than a design.
+//
+// **A bare page name is not a pointer in either form.** A reader cannot act on
+// `write-path` without knowing which command opens it or which directory it is
+// in, and `audit-material --bare` reports one.
+//
+// The invocation form may wrap. This material is hard wrapped at about 78
+// columns, so a pointer near the right margin is split across two lines, and a
+// pattern expecting a single space did not see it - six real pointers were
+// invisible to both `find`'s counterpart and `--links`, reading perfectly to a
+// person the whole time. **Exactly one space, or a line break.** Not "any run
+// of whitespace": a help screen aligns its columns with spaces, so
+// `asgard-cli guide` followed by padding and the words "all of it" would
+// resolve to a document called "all". A path carries no internal whitespace, so
+// it has no equivalent problem.
+//
+// Both yield the same two groups - kind, then name - so everything downstream
+// reads one shape: kb.Link, Counterpart, --links, --orphans, and what `find`
+// prints.
+var pathLinkRe = regexp.MustCompile(`\.\./(wiki|usecase)/([a-z0-9][a-z0-9-]*)\.md`)
+
 var linkRe = regexp.MustCompile(`asgard-cli(?: |[ \t]*\n[ \t]*)(wiki|usecase|brief|guide)(?: |[ \t]*\n[ \t]*)([a-z0-9][a-z0-9-]*)`)
 
 // counterpartSection is where a document states its counterparts on purpose.
@@ -209,23 +241,45 @@ func Links(body string) ([]Link, bool) {
 	named := false
 	if sec := counterpartSection.FindStringSubmatch(body); sec != nil {
 		named = true
-		for _, m := range linkRe.FindAllStringSubmatch(sec[1], -1) {
-			deliberate[m[1]+"/"+m[2]] = true
+		for _, m := range pointers(sec[1]) {
+			deliberate[m.key()] = true
 		}
 	}
 
 	var out []Link
 	seen := map[string]bool{}
-	for _, m := range linkRe.FindAllStringSubmatch(body, -1) {
-		key := m[1] + "/" + m[2]
-		if seen[key] {
+	for _, m := range pointers(body) {
+		if seen[m.key()] {
 			continue
 		}
-		seen[key] = true
-		out = append(out, Link{Kind: m[1], Name: m[2], Deliberate: deliberate[key]})
+		seen[m.key()] = true
+		out = append(out, Link{Kind: m.kind, Name: m.name, Path: m.path, Deliberate: deliberate[m.key()]})
 	}
 	return out, named
 }
+
+// pointers returns every pointer in s, in both forms, as {whole, kind, name}.
+//
+// Order matters for Deliberate but not for correctness: a document naming the
+// same target twice in one section is one link either way, and the dedupe in
+// Links keeps the first.
+func pointers(s string) []pointer {
+	var out []pointer
+	for _, m := range pathLinkRe.FindAllStringSubmatch(s, -1) {
+		out = append(out, pointer{kind: m[1], name: m[2], path: true})
+	}
+	for _, m := range linkRe.FindAllStringSubmatch(s, -1) {
+		out = append(out, pointer{kind: m[1], name: m[2]})
+	}
+	return out
+}
+
+type pointer struct {
+	kind, name string
+	path       bool
+}
+
+func (p pointer) key() string { return p.kind + "/" + p.name }
 
 // ── Command references ────────────────────────────────────────────────────
 //

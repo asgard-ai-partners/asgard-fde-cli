@@ -73,7 +73,7 @@ people:
     POST {{base_url}}/generic/ns/{{namespace}}/bot-provider/{{name}}/message/sse
 
 So an inbound webhook and a person typing reach the platform the same way, and
-`asgard-cli wiki api` describes the request and its SSE response for both. What
+`../wiki/api.md` describes the request and its SSE response for both. What
 differs is what is on the other end of the Workflow, not the route in.
 
 **A webhook and a schedule are not interchangeable** even though both start a run
@@ -83,7 +83,7 @@ the fallback and it will always be later than the event.
 
 ## Before writing the chart
 
-`asgard-cli usecase trigger` has the rules a scheduled run needs: the cursor and
+`../usecase/trigger.md` has the rules a scheduled run needs: the cursor and
 the cold start, why not to write a BotProvider yourself, and why a schedule
 cannot use a tool that asks for consent. Not repeated here.
 

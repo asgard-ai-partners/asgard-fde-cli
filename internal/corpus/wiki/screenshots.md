@@ -48,7 +48,7 @@ the governance gate, which is the hardest thing to explain in words.
 | `sindri-retail-stockout-transfer/03-execution-result.png` | after approval: what was created, and the resulting stock forecast |
 
 The third one is worth a slide on its own whenever the requirement has a write in
-it. `asgard-cli usecase write-path` is the argument; this is the picture of it.
+it. `../usecase/write-path.md` is the argument; this is the picture of it.
 
 For a customer-service shape rather than an internal one:
 
@@ -117,7 +117,7 @@ A worked example of step 3 filled in, rather than empty:
 
 **These four are the ones to be careful with.** Permissions and billing are where
 a customer most easily reads a screenshot as a promise about what can be
-restricted. `asgard-cli wiki platform-unknowns` still has scope control as
+restricted. `../wiki/platform-unknowns.md` still has scope control as
 unanswered: the Console decides who reaches a product, and what a caller can
 touch **after** that is the part no source settles. A permissions screenshot on a
 slide about limiting access is the overstatement this tool warns about most.

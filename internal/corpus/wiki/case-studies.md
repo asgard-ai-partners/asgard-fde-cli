@@ -77,11 +77,11 @@ Agent falling through to Error.
 
 The short-lived scoped credential is the part worth noticing: it lets the agent
 read "this customer's own" data rather than granting it the order database. That
-mechanism is `asgard-cli usecase per-turn-credentials`.
+mechanism is `../usecase/per-turn-credentials.md`.
 
 ## Corresponding extracts
 
-The read/write separation is `asgard-cli usecase write-path`; the delegation
+The read/write separation is `../usecase/write-path.md`; the delegation
 topology is `flow-agent-supervisor` and `agent-hub`.
 
 ## Sources

@@ -13,7 +13,7 @@ orders and nothing else.
 
 **Unchecked:** the public-widget variant, which is described in a case study rather than read out of a chart.
 
-**Read the platform side first:** `asgard-cli wiki api` -
+**Read the platform side first:** `../wiki/api.md` -
 the endpoint, the SSE event sequence, and the four integration patterns. This page assumes you have.
 
 ## When this shape, and when not
@@ -31,7 +31,7 @@ one layer down: the credential itself cannot see anything else.
 Do **not** use it when:
 
 - the credential belongs to the *service* rather than to a user - a static API key
-  or an OAuth client-credentials token is `asgard-cli usecase api-oauth`
+  or an OAuth client-credentials token is `../usecase/api-oauth.md`
 - nothing about the answer depends on who asked. A public catalogue does not need
   per-turn identity, and adding it means the front end now has to hold something
 

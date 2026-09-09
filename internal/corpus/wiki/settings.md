@@ -95,7 +95,7 @@ comes from `.Values.asgard.appSecretName` - a literal name in a template points 
 and nothing else, and Connection below is OAuth to five named services. A REST
 API with a key or a bearer token is configured on the tool that calls it - an
 `http-request` step in a Workflow, or an MCP Server's environment variables.
-[`setup-path.md`](setup-path.md) has the fork; `asgard-cli usecase external-api`
+[`setup-path.md`](setup-path.md) has the fork; `../usecase/external-api.md`
 has the shape.
 
 ## Connection
@@ -121,7 +121,7 @@ removed and only cron is left. See [`automation.md`](automation.md).
 
 ## Before writing the chart
 
-`asgard-cli usecase semantic-layer` has the DataConnector fields - coordinates in
+`../usecase/semantic-layer.md` has the DataConnector fields - coordinates in
 a platform variable, password always a secretKeyRef. Connection has no extract of
 its own, because OAuth authorisation happens in the UI rather than being declared
 in a chart.

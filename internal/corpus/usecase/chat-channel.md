@@ -35,7 +35,7 @@ templates.
 
 Re-checked 2026-09-03, and this is still the position.
 
-**Read the platform side first:** `asgard-cli wiki integration` -
+**Read the platform side first:** `../wiki/integration.md` -
 which credentials each chat platform needs, and who fills in what. This page assumes you have.
 
 ## When this shape, and when not
@@ -48,7 +48,7 @@ loses most of them.
 Do **not** use it when:
 
 - **the caller can authenticate.** Then the agent hub is the shape - see
-  `asgard-cli usecase agent-hub` - and it needs no BotProvider at all.
+  `../usecase/agent-hub.md` - and it needs no BotProvider at all.
 - **you need control of the presentation.** A chat platform owns its own avatar,
   display name and colours, in its own console. Only the `generic` class has an
   `embedConfig` for a web widget's appearance.

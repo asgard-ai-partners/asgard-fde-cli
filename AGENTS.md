@@ -56,12 +56,27 @@ that needs its own reader, its own search and its own match type is a fifth thin
 that will drift. Do not add one. If new material does not fit `kb.Corpus`, that
 is a reason to change `kb`, not to write a second one.
 
-**A pointer is data, not prose.** Write a cross-reference in the canonical form -
-`asgard-cli wiki <page>`, `asgard-cli usecase <name>`, `asgard-cli guide
-<name>`, `asgard-cli brief <activity>` - because `audit-material --links`
-resolves exactly those and fails on one that goes nowhere. A pointer written any
-other way is invisible to the gate, and a dead pointer reads correctly right up
-to the moment somebody follows it.
+**A pointer is data, not prose**, and which of the two forms it takes depends on
+whether the target is written into a repository:
+
+    ../wiki/<page>.md        a wiki page or an extract. `asgard-cli init`
+    ../usecase/<name>.md     writes both halves into a customer repository,
+                             and internal/corpus holds them in the same
+                             layout, so this resolves in both trees - `../`
+                             even from inside the half it points into
+
+    asgard-cli guide <name>      not written into a repository yet, so a
+    asgard-cli brief <activity>  path to it would resolve nowhere
+
+`asgard-cli wiki log` is the exception on the path side: it is the one page
+`init` does not write, so its pointer stays an invocation. **`--links` enforces
+that** - a path whose target does not land is reported dead - and it had to,
+because a path resolves here, where the corpus is whole, and goes nowhere in the
+repository the material was written into.
+
+A pointer written any other way is invisible to the gate, and a bare page name
+is not a pointer at all: a reader cannot act on `write-path` without knowing
+which directory it is in or which command opens it. `--bare` reports one.
 
 **Guidance is retrieved by subject or by condition, never by position.** "You are
 at step 4" is a claim about a walk that no engagement actually performs. What a
@@ -243,13 +258,15 @@ online is one that fails on a plane. A citation that already says the link 404s
 - a page marked `draft: true`, which asgard-docs does not publish - is reported
 and does not fail, so disclosing one is how you keep it.
 
-`--links` resolves every `asgard-cli wiki <page>`, `usecase <extract>`,
-`brief <activity>` and `guide <name>` the material writes - in prose and
-in the generator's own `Wiki:`, `Extract:` and `AlsoRead:` fields - and exits 1
-on one that goes nowhere. **Run it after renaming or removing a page**, which is
-the only way to leave a dead pointer behind; it reads correctly and resolves to
-nothing, and the reader who follows it cannot tell that from a page they failed
-to find.
+`--links` resolves every pointer the material writes, in both forms - the paths
+`../wiki/<page>.md` and `../usecase/<name>.md`, and the invocations
+`asgard-cli brief <activity>` and `asgard-cli guide <name>` - in prose and in
+the generator's own `Wiki:`, `Extract:` and `AlsoRead:` fields, and exits 1 on
+one that goes nowhere. It also fails a path whose target `init` does not write
+into a repository, because that one resolves here and not there.
+**Run it after renaming or removing a page**, which is the only way to leave a
+dead pointer behind; it reads correctly and resolves to nothing, and the reader
+who follows it cannot tell that from a page they failed to find.
 
 `--commands` is `--links` for the tool itself: it resolves every
 `asgard-cli <command>` this material writes - prose, help screens and the

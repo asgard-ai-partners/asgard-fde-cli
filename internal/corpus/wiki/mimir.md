@@ -77,7 +77,7 @@ up is an agent. Getting that wrong builds something used once and left.
 ## Corresponding extracts
 
 Mimir reads Semantic Models and produces no CRs of its own. Building the model is
-`asgard-cli usecase semantic-layer`.
+`../usecase/semantic-layer.md`.
 
 ## Sources
 

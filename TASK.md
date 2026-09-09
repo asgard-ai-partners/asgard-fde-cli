@@ -407,8 +407,15 @@ if it stops there:
      `internal/corpus` holds the material now, in the layout a repository
      receives it, and `internal/wiki` and `internal/usecase` are the way in
      rather than the place. No document changed.
-  2. Convert the pointers to paths and rebuild `kb.Link` on them, with
-     `--links`, `--orphans` and the counterpart green on the new form.
+  2. ~~Convert the pointers to paths and rebuild `kb.Link` on them.~~ **Done** -
+     121 pointers between the wiki and the extracts are now
+     `../wiki/<page>.md` and `../usecase/<name>.md`, which resolve in this tree
+     and in a repository alike. The 8 pointing at `guide` stay invocations
+     until step 4 lands it, and `wiki log` stays one permanently. `kb.Link`
+     records which form a pointer took, and `--links` fails a path whose
+     target `init` does not write - the check exists because converting the
+     `log` pointer produced a link that resolved here and went nowhere in a
+     repository.
   3. Generate the root `index.md`, and hang `needs` and `brief` off it.
   4. Land `needs`, `brief`, and `guide`'s static half.
   5. Delete `wiki` and `usecase`. `--commands` confirms nothing still names
@@ -416,10 +423,14 @@ if it stops there:
   6. Delete `find`, after the sense instruction has been given a release to be
      wrong in.
 
-**Step 1 was the one to do early**, because it moves every document and so
-collides with any other edit to material that changes most weeks. Step 2 is now
-the load-bearing one: it is what a path-form pointer is for, and until it lands
-the two trees agree about layout while every pointer still spends a subprocess.
+**Steps 1 and 2 were the ones to do early**, because between them they touch
+every document in the corpus and so collide with any other edit to material that
+changes most weeks. What is left does not: steps 3 and 4 add files, and 5 and 6
+remove commands.
+
+**Two forms coexist until step 4**, which is a state to get out of rather than a
+design. `brief` and `guide` are invocations because a path to them would resolve
+nowhere; landing them is what makes the form uniform.
 
 ### Three defects the first landing introduced, all fixed
 

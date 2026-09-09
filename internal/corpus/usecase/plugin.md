@@ -8,9 +8,9 @@ knowledge (`pg-med-*`, `pg-biz-*`, `pg-pr-*`) and writing style (`pg-style-*`).
 
 **Checked:** 2026-09-02 against a deployment carrying 28 Plugins, all sharing one skill store, and the CRD.
 
-**Unchecked:** how to divide capability into bundles. The naming IS the taxonomy, and no deployment's taxonomy has been reviewed here. That deployment is also the only one of eight that declares a `Plugin` at all (`asgard-cli wiki coverage`), so there is no second arrangement to tell the shape from its choices.
+**Unchecked:** how to divide capability into bundles. The naming IS the taxonomy, and no deployment's taxonomy has been reviewed here. That deployment is also the only one of eight that declares a `Plugin` at all (`../wiki/coverage.md`), so there is no second arrangement to tell the shape from its choices.
 
-**Read the platform side first:** `asgard-cli wiki tools` -
+**Read the platform side first:** `../wiki/tools.md` -
 how MCP Server, Skillset and Plugin differ. This page assumes you have.
 
 ## When this shape, and when not
@@ -51,7 +51,7 @@ rest of this page is about.
 
 Every Plugin's SkillSet points at **one** `ss-skill-repos`, not at a SourceSet of
 its own. That is the opposite of the 1:1:1 rule in
-`asgard-cli usecase skill-set`, and it is deliberate: the skills live in one
+`../usecase/skill-set.md`, and it is deliberate: the skills live in one
 repository, so a SourceSet per bundle would clone the same repository once per
 bundle. The deployment with 28 Plugins has exactly one.
 

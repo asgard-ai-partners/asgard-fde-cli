@@ -15,13 +15,13 @@ and a `web` Loader on a cron schedule - and against the CRD.
 The repository that chose this one records the choice and not the comparison, and
 the deployment that reversed it is a different engagement.
 
-**Read the platform side first:** `asgard-cli wiki knowledge` -
+**Read the platform side first:** `../wiki/knowledge.md` -
 Drive against Knowledge Base, and why the Drive is preferred for new work. This
 page assumes you have.
 
 ## When this shape, and when not
 
-**Prefer a Drive.** `asgard-cli usecase knowledge-drive` is the recommendation
+**Prefer a Drive.** `../usecase/knowledge-drive.md` is the recommendation
 and this is not a competing one: an engagement reversed from this path to a
 SourceSet Drive with `contextIndex`, because the Loader-and-retrieval-workflow
 route was harder to keep correct than a context index over files. That reversal
@@ -75,7 +75,7 @@ rather than presenting as a decision.
 
 **There are 10 Loaders per Workspace, shared by every project in it.** One
 recurring pull each, so a corpus fed from a dozen places does not fit and the
-failure appears when the eleventh is created. `asgard-cli wiki knowledge` has
+failure appears when the eleventh is created. `../wiki/knowledge.md` has
 what to count.
 
 **`loader-suspend` is how a scheduled pull is turned off.** The deployment's own
@@ -97,6 +97,6 @@ visible at the tenth one.
 
 ## Read the platform side first
 
-`asgard-cli wiki knowledge` for the comparison and for what a Drive's
-`contextIndex` does instead; `asgard-cli usecase knowledge-drive` for the shape
+`../wiki/knowledge.md` for the comparison and for what a Drive's
+`contextIndex` does instead; `../usecase/knowledge-drive.md` for the shape
 this one lost to.

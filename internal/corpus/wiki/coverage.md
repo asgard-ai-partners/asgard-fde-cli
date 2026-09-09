@@ -26,13 +26,13 @@ deployments plus auto-post, the platform's own.
 
 ## What that means for the extracts
 
-**`asgard-cli usecase trigger` is written from one Trigger in one chart.** Every
+**`../usecase/trigger.md` is written from one Trigger in one chart.** Every
 rule in it about the cursor, the cold start and what a scheduled run may not do
 is generalised from a single instance. It is the most confidently written
 extract with the thinnest sample, and the two facts are worth holding together.
 
 **The knowledge-base shapes come from one deployment too.** `KnowledgeBase`,
-`Loader` and `Source` appear only in auto-post, so `asgard-cli usecase knowledge-drive`
+`Loader` and `Source` appear only in auto-post, so `../usecase/knowledge-drive.md`
 describes auto-post's arrangement of them. That it is the platform's own
 deployment rather than a customer's cuts both ways - it is written by the people
 who built the CRs, and it is not a customer's constraints.
@@ -45,7 +45,7 @@ and which are auto-post.
 **Agent is absent from three of eight**, and those three are the Flow Agent
 projects. An engagement that reaches for an Agent CR because the material talks
 about Agents is choosing one of two shapes without being told there are two -
-see `asgard-cli usecase agent-hub` against `flow-agent`.
+see `../usecase/agent-hub.md` against `flow-agent`.
 
 ## What this does not say
 

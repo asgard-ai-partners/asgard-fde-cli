@@ -11,7 +11,7 @@ response, a conversation loop, and a nine-branch content pipeline.
 
 **Unchecked:** nothing outstanding. The replacement of prevPayload by an http-request is stated in a deployment's own comment in the same words.
 
-**Read the platform side first:** `asgard-cli wiki workflow` -
+**Read the platform side first:** `../wiki/workflow.md` -
 the processor types and the three ways a config takes a value. This page assumes you have.
 
 ## When this shape, and when not

@@ -27,7 +27,7 @@ API domains recorded. The discipline is **API first** - where a contract was
 observed the skill calls the back office's own API rather than opening a
 browser, and browser operation is the fallback rather than the method.
 
-That 88-page map is the one `asgard-cli usecase browser-operation` refers to when
+That 88-page map is the one `../usecase/browser-operation.md` refers to when
 it says a capability was "a skill describing 88 pages plus everything the menu
 cannot see". This is that skill.
 
@@ -51,7 +51,7 @@ having SHOPLINE behind it: it says the work is understood rather than unfamiliar
 No table of which platform offers an open API, because that changes and this page
 would be stale before it was useful. What does not change is the ladder:
 
-    an open API with a test environment   `asgard-cli usecase external-api`
+    an open API with a test environment   `../usecase/external-api.md`
     an open API, production only          the same shape - and **ask whether
                                           they permit testing against it** - in
                                           the meeting, not assumed here,
@@ -89,7 +89,7 @@ If nobody knows, that is an open question, not an assumption to price on.
 
 ## Corresponding extracts
 
-`asgard-cli usecase external-api` for an API integration's shape,
+`../usecase/external-api.md` for an API integration's shape,
 `browser-operation` for a channel offering no API,
 `skill-layers` for how the SHOPLINE material is organised - it is the reference
 for a channel skill at full size.

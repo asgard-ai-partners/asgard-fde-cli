@@ -10,7 +10,7 @@ notification chain that posts outward to a mail endpoint.
 
 **Unchecked:** the advice on measuring the request against the real API. That is the step this page exists to make you take, and it cannot be done here.
 
-**Read the platform side first:** `asgard-cli wiki api` -
+**Read the platform side first:** `../wiki/api.md` -
 the endpoint, the SSE event sequence, and the four integration patterns. This page assumes you have.
 
 ## First: is an API the right route at all?
@@ -19,7 +19,7 @@ Per system, take the most capable route it offers:
 
 | route | what you get | shape |
 |---|---|---|
-| **a database you can read** | the agent composes its own queries and joins across tables | `asgard-cli usecase semantic-layer` |
+| **a database you can read** | the agent composes its own queries and joins across tables | `../usecase/semantic-layer.md` |
 | **an API** | a fixed set of calls, but a real contract - reviewable, and gateable for writes | this extract |
 | **a screen a person clicks** | last resort. Brittle, slow, and it breaks whenever the vendor changes their UI | no extract yet - raise it as a question first |
 

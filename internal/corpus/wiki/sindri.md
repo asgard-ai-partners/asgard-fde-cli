@@ -51,10 +51,10 @@ the kind of line that appears on their own acceptance list.
 
 What there is:
 
-    the screen        `asgard-cli wiki screenshots`, the four-image sequence.
+    the screen        `../wiki/screenshots.md`, the four-image sequence.
                       Crop the dialog first - it names a `ts-` prefix and an
                       internal tool name
-    the mechanism     `asgard-cli usecase write-path`
+    the mechanism     `../usecase/write-path.md`
     the limit         a schedule cannot approve anything, so a gated tool and a
                       scheduled run cannot share a Toolset
 
@@ -116,7 +116,7 @@ file other reference material however suits.
 ## Corresponding extracts
 
 Sindri only runs published agents and produces no CRs of its own. Building them
-is `asgard-cli usecase agent-hub` and `flow-agent-supervisor`.
+is `../usecase/agent-hub.md` and `flow-agent-supervisor`.
 
 ## Sources
 

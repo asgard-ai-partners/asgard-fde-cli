@@ -22,7 +22,7 @@ something else.**
 | **request** | a record under `requirements/requests/` | an HTTP request, and not one run of an agent. For the platform's per-request limits, say **per run** |
 | **source** | a `Source` CR under a KnowledgeBase | source code, and not a documentation source. For the material's provenance say **source block**; for code say **source code** |
 | **check** | `asgard-cli check`, the structural gate | a layout or content checker in a typesetting skill - say which one |
-| **payment** | billing between Asgard and this customer - see `asgard-cli wiki fehu` | **the customer's own payment gateway**, which is an external system with side effects: `asgard-cli usecase write-path` and the ladder on `asgard-cli wiki taiwan-channels`. Say **payment gateway** for theirs |
+| **payment** | billing between Asgard and this customer - see `../wiki/fehu.md` | **the customer's own payment gateway**, which is an external system with side effects: `../usecase/write-path.md` and the ladder on `../wiki/taiwan-channels.md`. Say **payment gateway** for theirs |
 
 ## Two more that collide with the customer's vocabulary
 

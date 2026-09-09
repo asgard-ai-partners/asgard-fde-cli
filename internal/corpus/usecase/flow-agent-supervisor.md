@@ -9,7 +9,7 @@ specialists, a manufacturing one with nine, and a finance one with three.
 
 **Unchecked:** how to split responsibilities between subagents, and the routing prose. Judgement, taken from deployments that have not been re-examined.
 
-**Read the platform side first:** `asgard-cli wiki agents` -
+**Read the platform side first:** `../wiki/agents.md` -
 what a Managed Agent and a Flow Agent each are, and which the audience decides. This page assumes you have.
 
 ## When this shape, and when not
@@ -83,7 +83,7 @@ the agent opens the conversation.
 this one.** Two deployments have `update-context --success--> http-request`, with
 the request's `success` **and** `failure` both going to `push-message`: one turn,
 no waiting, and the failure path says so rather than being silent.
-`asgard-cli wiki processors` says which relations each type emits, and a
+`../wiki/processors.md` says which relations each type emits, and a
 `relationName` a type never emits is a branch never taken.
 
 Files group as one directory per supervisor:
@@ -238,7 +238,7 @@ supervisor appear in the Hub's agent list, which is where an internal console
 finds it. Both supervisor deployments carry it.
 
 The opposite case is a public widget, which must **not** carry it - see
-`asgard-cli usecase flow-agent-single`. Copying a supervisor's BotProvider into a
+`../usecase/flow-agent-single.md`. Copying a supervisor's BotProvider into a
 public one is how that mistake actually happened.
 
 ## Fields that are not obvious

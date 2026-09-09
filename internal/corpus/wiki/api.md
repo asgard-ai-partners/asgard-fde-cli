@@ -29,7 +29,7 @@ guess wrong in front of a front-end team.
 BotProvider's name and its namespace are in the chart, and the tenant charts
 that already have a front end put the exact working URL in
 `projects/<project>/chart/README.md`. Confirm it with one request before it goes
-in a document. `asgard-cli wiki platform-unknowns` P9 tracks the question.
+in a document. `../wiki/platform-unknowns.md` P9 tracks the question.
 
 **The header is `X-API-KEY`** - that part is consistent across the API
 reference, the authentication page and the platform's own architecture. If a
@@ -206,7 +206,7 @@ out of front-end code, version control and anywhere public.**
 
 ## Before writing the chart
 
-`asgard-cli usecase external-api` covers an HTTP tool, `api-oauth` the two-call
+`../usecase/external-api.md` covers an HTTP tool, `api-oauth` the two-call
 token chain, and `workflow-chain` what passes between processors.
 
 ## Sources

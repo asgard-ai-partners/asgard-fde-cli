@@ -9,7 +9,7 @@ categories, locations, recommendations and downloads.
 
 **Unchecked:** the guidance on writing a tool description. Nothing mechanical checks whether it names the tool it could be confused with.
 
-**Read the platform side first:** `asgard-cli wiki semantic-model` -
+**Read the platform side first:** `../wiki/semantic-model.md` -
 what a Semantic Model is, how it is built, and its limits. This page assumes you have.
 
 ## When this shape, and when not

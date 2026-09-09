@@ -13,7 +13,7 @@ expectation somebody arrives with.
 The overview frames Odin as democratisation - natural language, modular tools,
 non-technical staff orchestrating AI without a barrier.
 
-**Odin is where we build the charts.** `asgard-cli wiki product-suite` says it
+**Odin is where we build the charts.** `../wiki/product-suite.md` says it
 plainly: the build platform, and whoever builds it is usually us. Their staff
 live in Sindri and in Mimir.
 
@@ -31,7 +31,7 @@ The overview describes three kinds of node tool:
     Advanced Processor   "finer-grained, for developers"
     Template             "a ready-made workflow to adjust"
 
-**No other source has these.** The CRD and `asgard-cli wiki processors` have
+**No other source has these.** The CRD and `../wiki/processors.md` have
 thirteen processor types and no Basic/Advanced split and no Template concept.
 The overview page is also one the index already flags as possibly stale.
 
@@ -45,7 +45,7 @@ until you know whether that surface still exists.
 The ecosystem page calls Mimir the AI brain, using LLMs and predictive
 algorithms, analysing the past and simulating the future.
 
-What `asgard-cli wiki mimir` describes is conversational exploration over a
+What `../wiki/mimir.md` describes is conversational exploration over a
 Semantic Model, producing Views and Dashboards. **Forecasting is not among the
 four concepts.**
 
@@ -59,7 +59,7 @@ The overview says a Workspace has a price plan, and that **how many Projects can
 be created depends on it**.
 
 The quota page gives 40 Projects and 300 GB, and this material carried those as
-flat numbers. They are the numbers for a plan. `asgard-cli wiki integration` has
+flat numbers. They are the numbers for a plan. `../wiki/integration.md` has
 the full list and that they are raised through sales; treat every one of them as
 plan-dependent rather than as a property of the platform, and check before
 quoting one.

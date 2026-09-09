@@ -10,7 +10,7 @@ chart is eight CRs.
 
 **Unchecked:** the security argument for authMode: none. It rests on the whole chain staying read-only, which is a property of the chart you write, not of this page.
 
-**Read the platform side first:** `asgard-cli wiki agents` -
+**Read the platform side first:** `../wiki/agents.md` -
 what a Managed Agent and a Flow Agent each are, and which the audience decides. This page assumes you have.
 
 **A brand-new channel's first message may never be answered.** If the entry

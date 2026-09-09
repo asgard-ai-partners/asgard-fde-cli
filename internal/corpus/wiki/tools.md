@@ -53,7 +53,7 @@ A Skillset maps to three CRs: `SkillSet` plus its own `SourceSet` plus the
 when the skills all live in one repository, several bundles share one SourceSet
 and slice it with searchPaths, at the cost of those Skillsets not being presented
 as first-class objects a person picks. For the chart details see
-`asgard-cli usecase skill-set` and `plugin`.
+`../usecase/skill-set.md` and `plugin`.
 
 ## Plugin
 

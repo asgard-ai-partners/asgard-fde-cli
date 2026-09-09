@@ -16,8 +16,8 @@ the four-level exploration policy.
 built by field exploration and nothing tracks drift, which the material says
 about itself.
 
-**Read the platform side first:** `asgard-cli wiki tools` -
-how MCP Server, Skillset and Plugin differ. `asgard-cli usecase skill-set` has
+**Read the platform side first:** `../wiki/tools.md` -
+how MCP Server, Skillset and Plugin differ. `../usecase/skill-set.md` has
 the CR wiring. This page is about the content.
 
 ## When this shape, and when not
@@ -131,13 +131,13 @@ and no shortcut: 88 page entry points, each declared for whether anything deeper
 sits beneath it, and 160 rows of operations covering in-page tabs, dialogs,
 editor panels and apps inside nested iframes.
 
-That is the number `asgard-cli usecase browser-operation` means when it says a
+That is the number `../usecase/browser-operation.md` means when it says a
 capability was "a skill describing 88 pages plus everything the menu cannot see".
 **Quote it when a customer asks what a system with no API costs.**
 
 ## Read the platform side first
 
-`asgard-cli wiki tools` for what a Skillset is;
-`asgard-cli usecase skill-set` for the CRs;
-`asgard-cli usecase browser-operation` for the shape this library serves;
-`asgard-cli wiki taiwan-channels` for the channel it integrates.
+`../wiki/tools.md` for what a Skillset is;
+`../usecase/skill-set.md` for the CRs;
+`../usecase/browser-operation.md` for the shape this library serves;
+`../wiki/taiwan-channels.md` for the channel it integrates.

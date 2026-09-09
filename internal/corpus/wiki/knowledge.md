@@ -100,11 +100,11 @@ succeeded run and no error anywhere.
 with `asgard-ai.com/syncer-cd-trigger: "false"` - a label **the platform does
 not read at all**, left from the CD workflows that predate the pipeline. Silence
 is the default now, so noise is what has to be asked for. See
-`asgard-cli usecase skill-set`.
+`../usecase/skill-set.md`.
 
 ## Knowledge Base
 
-`asgard-cli usecase knowledge-base` has the `KnowledgeBase` + `Loader` +
+`../usecase/knowledge-base.md` has the `KnowledgeBase` + `Loader` +
 `Indexer` + `Source` shape field by field, the way `knowledge-drive` has the
 Drive one. Reading a chart that uses it is the case it exists for.
 
@@ -128,7 +128,7 @@ number in a Drive makes the agent paraphrase a figure it should have read.
 
 ## Before writing the chart
 
-`asgard-cli usecase knowledge-drive` has the full Drive-plus-Syncer shape.
+`../usecase/knowledge-drive.md` has the full Drive-plus-Syncer shape.
 
 ## Ten Loaders, workspace-wide
 
@@ -145,7 +145,7 @@ than at design time. Two consequences worth carrying into an interview:
   - a Drive with a Syncer is a different mechanism and is not counted here -
     which is one more reason it is the recommendation for new work
 
-They are defaults rather than ceilings - `asgard-cli wiki integration` has all
+They are defaults rather than ceilings - `../wiki/integration.md` has all
 eight numbers and how they are raised.
 
 ## Citations are possible, and they are not automatic

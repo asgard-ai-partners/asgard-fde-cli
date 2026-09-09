@@ -16,7 +16,7 @@ empty on all three Agents - and against the CRD.
 Knowledge are created in the product by the people who use it, not declared in a
 chart, so nothing here can be held against a deployment.
 
-**Read the platform side first:** `asgard-cli wiki mimir` -
+**Read the platform side first:** `../wiki/mimir.md` -
 Thread, View, Dashboard and Knowledge, and that Mimir reads the models Odin
 builds and never edits them. This page assumes you have.
 
@@ -29,7 +29,7 @@ interview at 2b, next to the one about who is on the other end:
     watch the same numbers every day      this shape
     both, for different people            both - two deliveries, one model
 
-`asgard-cli wiki product-suite` says it in one line: **Mimir is often what the
+`../wiki/product-suite.md` says it in one line: **Mimir is often what the
 customer actually wants.** "I want an AI that answers stock questions" is a
 statement about stock questions, not about an agent. Someone glancing at a
 figure every morning wants a page that is already open; an agent makes them ask
@@ -117,7 +117,7 @@ anchor each to a subject that is actually in the layer, and keep each one
 self-contained - a button is read with no context around it.
 
 **`Agent.spec.managed.sampleQuestions` is a different field on a different CRD,
-and its rules do not transfer.** `asgard-cli usecase agent-hub` has a whole
+and its rules do not transfer.** `../usecase/agent-hub.md` has a whole
 section for that one, and `gate` R7 enforces a minimum of two on a published
 Agent - our rule, not the platform's. Searching for the field name reaches the
 Agent guidance and nothing else, which is worse than reaching nothing: it is
@@ -142,6 +142,6 @@ being reasonable.
 
 ## Read the platform side first
 
-`asgard-cli wiki mimir` for what a Thread, View and Dashboard are;
-`asgard-cli wiki semantic-model` for the modelling flow and its limits;
-`asgard-cli wiki product-suite` for which product a request belongs to.
+`../wiki/mimir.md` for what a Thread, View and Dashboard are;
+`../wiki/semantic-model.md` for the modelling flow and its limits;
+`../wiki/product-suite.md` for which product a request belongs to.

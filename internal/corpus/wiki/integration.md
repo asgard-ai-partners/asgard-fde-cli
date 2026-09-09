@@ -116,9 +116,9 @@ POST {base_url}/generic/ns/{namespace}/bot-provider/{bot_provider_name}/message/
 
 **Do not hand that URL to anyone - two shapes of it are in circulation.** The
 SDK and a production tenant's own chart README both give it without `/generic`.
-`asgard-cli wiki api` has the evidence and the rule that follows: take the URL
+`../wiki/api.md` has the evidence and the rule that follows: take the URL
 from the deployment, where the BotProvider's name and namespace are, and confirm
-it with one request before it goes in a document. `asgard-cli wiki platform-unknowns` P9
+it with one request before it goes in a document. `../wiki/platform-unknowns.md` P9
 tracks which is right.
 
 Authenticated with an `X-API-KEY` header. The key comes from the project's
@@ -154,7 +154,7 @@ client (web / SDK / REST API / chat platform)
 
 ## Before writing the chart
 
-`asgard-cli usecase chat-channel` has each class's credential block and what a
+`../usecase/chat-channel.md` has each class's credential block and what a
 channel costs - which credentials have to be obtained from the channel's own
 console and declared, and whether the class needs a connector pod.
 

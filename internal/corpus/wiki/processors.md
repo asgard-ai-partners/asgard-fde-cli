@@ -1,6 +1,6 @@
 # The processors, and the fields that decide behaviour
 
-`asgard-cli wiki workflow` says which processors exist and how they wire
+`../wiki/workflow.md` says which processors exist and how they wire
 together. This page is what each one takes, and it exists because the
 per-processor documentation - fifteen pages and an introduction - had never
 been read into this material. A chart author writing a Workflow was working from a type list.
@@ -37,8 +37,9 @@ only that one is JavaScript and one is Handlebars:
     Template     Handlebars, for producing text. `{{#if prevMessage}}...{{/if}}`
 
 **The ECMA5 limit is `execute-script`'s Engine field, and does not reach the
-Expression fields.** This page previously said it did, and `asgard-cli wiki
-workflow` said the opposite; the deployed charts settle it. Across 520
+Expression fields.** This page previously said it did, and
+`../wiki/workflow.md` said the opposite; the deployed charts settle it.
+Across 520
 `expression:` values in the reference charts exactly one uses an arrow function
 - `prevBlobs.map(b => b.blobId).join(',')`, in a shipped tenant chart - so
 arrow functions evaluate. What no chart uses anywhere is `const`, `let` or a
@@ -169,7 +170,7 @@ when a failed tool call must not be retried - which is most writes.
 
 | processor | field | what it decides |
 |---|---|---|
-| `execute-script` | **Engine** | only `ECMA5` is supported, so the script body is not modern JavaScript - no `let`, no arrow functions, no template literals. **This applies to the script body only**; Expression fields elsewhere are ordinary JavaScript, and `asgard-cli wiki workflow` gives the evidence |
+| `execute-script` | **Engine** | only `ECMA5` is supported, so the script body is not modern JavaScript - no `let`, no arrow functions, no template literals. **This applies to the script body only**; Expression fields elsewhere are ordinary JavaScript, and `../wiki/workflow.md` gives the evidence |
 | `http-request` | **Parse JSON** | off by default. On, `httpResponse` gains a `json` field. Off, the body is a string and every downstream expression has to parse it |
 | `validate-payload` | **Schema** (required), **File Requirements** | this is the entry contract of an automation tool - what the caller must supply, and which file types are accepted |
 | `query-database` | **SQL Type Arguments** | parameterised queries, supplied as extra keys rather than a static field. The alternative is string-building a query, which is the injection surface `fixed-query-tools` exists to remove. **The docs page for this processor is called `query-sql`** - see the naming table below |
@@ -333,11 +334,11 @@ Two things worth knowing from their pages:
   - **a workflow can have several entries**, which is how one Workflow serves
     more than one caller shape
   - **an exit connects workflows to each other**, which is the mechanism behind
-    `asgard-cli usecase workflow-chain`
+    `../usecase/workflow-chain.md`
 
 ## Corresponding extracts
 
-`asgard-cli usecase external-api` uses `http-request` field by field;
+`../usecase/external-api.md` uses `http-request` field by field;
 `workflow-chain` uses `router` and the entry/exit connection;
 `fixed-query-tools` uses `query-database`;
 `knowledge-drive` uses `retrieve-knowledge`.
