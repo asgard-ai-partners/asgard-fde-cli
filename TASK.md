@@ -304,65 +304,114 @@ landed document has to name the command rather than imply it.
     fields, without the cautions attached to them, breaks one fact one home.
   - **Everything under Build, Check and Deploy.** Repository views and actions.
 
-### The endgame: `wiki` and `usecase` stop being commands
+### The target state: static knowledge lives in the repository, and nothing reads it for you
 
-**Where this is going**: the material is on disk, `AGENTS.md` tells the agent to
-grep it, and the two reader commands are deleted. That is the llm-wiki shape -
-one tree, one index at its root, and links that are paths a reader can follow -
-and the landing is the first half of it.
+**Stated by the FDE, and it is a removal rather than a reduction.** Everything
+that is not dynamic is static knowledge, it **has to** be on disk in the
+customer's repository, and it is read there - by grep, by an agent, by a person.
+`wiki`, `usecase` and eventually `find` stop being commands. The binary's job
+narrows to writing the material out and keeping it current.
 
-Nothing about that is blocked by taste. It is blocked by three things, in this
-order, and the first is the one that is not obvious.
+Two kinds of thing stay dynamic, and only these two:
 
-**1. A command-form pointer was chosen because it is independent of the
+    the repository's own state    which projects exist, what each chart
+                                  declares and lacks, what is still open
+                                  -> `project`, `question`, `request`, `task`
+    the platform's own contract   what THIS customer's server accepts, which
+                                  can be several versions from this binary in
+                                  either direction
+                                  -> `skill status` / `skill update`
+
+**Updating the landed material is the software's own update path**, not a
+separate fetch: a new binary carries new pages, and `init` replaces the
+directory because the stamp says the version moved. That mechanism exists -
+`replaceCorpus` - so the update story for landed knowledge is "upgrade the CLI
+and re-run init", with nothing to remember.
+
+#### `find` is to be removed, and printing how to search is an acceptable end
+
+The four things it does that a grep cannot do not survive as one category once
+the material has landed. **Three of the four are driven by data that lands with
+it**: `aliases.md` for translation, `glossary.md` for the senses.
+
+    naming the counterpart   dissolves. Once pointers are paths, the
+                             counterpart IS a path in the document and grep
+                             has it for free
+    translating the query    becomes an instruction - read aliases.md, then
+                             grep. SKILL.md already says so
+    recording a dead query   becomes an instruction - run issue-report when
+                             the search finds nothing
+    warning on a word with   has no equivalent. It fires on a SUCCESSFUL
+    two senses here          search, which is the failure nothing else can
+                             see, and a landed glossary only helps a reader
+                             who thought to open it
+
+So the one thing lost is a mechanism becoming an instruction, and **the
+difference is whether it still works when nobody follows it.** That argument
+proves too much if taken alone - by it, every command stays - and the counter is
+that an instruction in a loaded skill is cheaper than a command and is followed
+reasonably well.
+
+**It is testable rather than arguable.** The payment mistake is on record:
+`find payment` returned Fehu's billing to somebody asking about a customer's
+payment gateway. Land the material, write the instruction, and see whether it
+recurs.
+
+**A `find` that only prints how to search is accepted as an end state** - and
+worth being precise about, because such a thing is a document rather than a
+command. If its output is guidance, that guidance is `SKILL.md`, which already
+lands. The only thing the command form would add is reachability with no
+repository, and `init` in an empty directory is already that.
+
+#### What has to be true first
+
+**1. A command-form pointer was chosen because it does not depend on the
 layout.** `asgard-cli usecase write-path` means the same thing from anywhere. A
-path does not, and the two trees do not agree:
+path does not, and the two trees disagree:
 
     from a wiki page to that extract
       in this repository   ../../usecase/extracts/write-path.md
       as landed            ../usecase/write-path.md
 
-So pointers cannot simply become paths - they would be right in one tree and
-wrong in the other. Three ways out, and only the second reaches the endgame:
+Three ways out, and only the second reaches the target:
 
   - Rewrite them to paths at export. The landed pages then differ from the
-    binary's copy, so nobody can diff the two to see what changed, and the
-    rewrite is a transformation with its own failure modes.
+    binary's copy, so nobody can diff the two, and the rewrite has its own
+    failure modes.
   - **Make this repository's tree match the landed one** - one `corpus/` holding
-    `wiki/` and `usecase/` - so a relative path is correct in both. A real
-    refactor, and the tension goes away permanently rather than being managed.
-  - Teach the mapping once in a generated root index and leave the pointers as
-    commands. Cheapest, and it keeps a subprocess in the loop at the one place
-    the landing was supposed to remove it: the map.
+    `wiki/` and `usecase/` - so a relative path is correct in both.
+  - Teach the mapping in a generated root index and leave the pointers as
+    commands. Cheapest, and it keeps a subprocess at the one place the landing
+    was meant to remove it: the map.
 
-**2. `--links`, `--orphans` and `find`'s counterpart are all built on that
-pointer form.** `linkRe` is the basis of two of the four acceptance rules. Change
-the form and that machinery is rebuilt on the new one - mechanical, and to be
-done carefully, because it is what keeps the corpus honest and a mistake in it
-lapses silently rather than failing. The order is protected by a check, at least:
-change the form first and `--commands` reports every pointer left behind.
+**2. `--links`, `--orphans` and the counterpart are built on that pointer
+form.** `linkRe` is the basis of two of the four acceptance rules, so changing
+the form rebuilds that machinery - mechanical, and a mistake in it lapses
+silently rather than failing. The order is protected: change the form first and
+`--commands` reports every pointer left behind.
 
-**3. Deleting the readers removes the only way to read a whole document with no
-repository.** `find` prints excerpts - 86 lines for a search across all four
-parts, where one page is over 200 - and has no mode that prints a document
-whole. `asgard-cli wiki <page>` is that mode. So either `find` gains it, or one
-reader stays and is understood to be exactly that: the way to read one document
-in full, in a meeting, before any directory exists.
+**3. Reading a whole document is not a blocker.** It was written here as one and
+it is not: the full text lands, so `cat` reads it, and with no repository `init`
+in an empty directory produces the same files. The cost is 51 files and a
+skeleton to read one page - ergonomics, not a missing capability. `find` prints
+excerpts only, and that stops mattering once the documents are on disk.
 
-That last point is the one that decides whether both readers go or one survives,
-and it is worth settling before the work rather than during it.
+**The corpus stays embedded in the binary either way.** `init` needs it to write
+anything out, so removing `find` removes a search implementation, not the
+material.
 
-The sequence, each step verifiable on its own and none of them leaving the tool
-worse if it stops there:
+The sequence, each step verifiable alone and none of them leaving the tool worse
+if it stops there:
 
   1. Move this repository's corpus to `corpus/{wiki,usecase}/`.
   2. Convert the pointers to paths and rebuild `kb.Link` on them, with
      `--links`, `--orphans` and the counterpart green on the new form.
   3. Generate the root `index.md`, and hang `needs` and `brief` off it.
-  4. Give `find` a whole-document mode, or decide deliberately that one reader
-     is it.
+  4. Land `needs`, `brief`, and `guide`'s static half.
   5. Delete `wiki` and `usecase`. `--commands` confirms nothing still names
      them.
+  6. Delete `find`, after the sense instruction has been given a release to be
+     wrong in.
 
 **Step 1 is the one to do early if it is going to happen at all.** It moves every
 document in the corpus, so it collides with any other edit to the material - and
