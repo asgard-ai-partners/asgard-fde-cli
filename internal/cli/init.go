@@ -71,10 +71,20 @@ done, open the directory in your agent and say so; the closing message has the
 words.
 
 Run it again whenever this CLI has moved on or a project was added: existing
-files are left alone and reported as skipped. ` + "`--force`" + ` takes the newer shipped
-material, discarding local edits to the skeleton; files this tool writes into -
-the indexes, the open-questions table, the living spec - are preserved either
-way and reported.
+files are left alone and reported as skipped.
+
+**The files this CLI ships are the ones it has an opinion about** - AGENTS.md and
+the design-time skills - and it keeps a record of which version of itself wrote
+each, in ` + "`.asgard-scaffold.json`" + `, so it can say which of four things a
+difference is rather than guessing. ` + "`behind`" + `: this CLI has moved on and nobody
+here touched the file. ` + "`edited`" + `: somebody here did, and ` + "`--force`" + ` would discard
+it. ` + "`ahead`" + `: a NEWER CLI wrote this repository, and ` + "`--force`" + ` will not hand it
+this binary's older copy. ` + "`retired`" + `: an older CLI shipped the file and this one
+does not, which nothing else in a repository can notice.
+
+` + "`--force`" + ` takes the newer shipped material, discarding local edits to the
+skeleton; files this tool writes into - the indexes, the open-questions table,
+the living spec - are preserved either way and reported.
 
 With ` + "`--yes`" + `, or when stdin is not a terminal, it asks nothing. That is the
 form for a re-run from an agent or from CI.`,
@@ -127,7 +137,8 @@ form for a re-run from an agent or from CI.`,
 
 	f := cmd.Flags()
 	f.BoolVarP(&force, "force", "f", false,
-		"overwrite skeleton files that already exist, taking material this CLI has changed since")
+		"overwrite skeleton files that already exist, taking material this CLI has changed since; "+
+			"it will not replace a shipped file a newer CLI wrote, which would be a downgrade")
 	f.BoolVarP(&yes, "yes", "y", false, "ask nothing; the form for a re-run from an agent or CI")
 	f.BoolVar(&noGit, "no-git", false, "do not offer to run git init, even in an empty directory")
 	return cmd

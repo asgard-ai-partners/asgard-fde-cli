@@ -291,6 +291,10 @@ from making the same choice.
 │                                  #   what triggers each, which keys each takes. NO VALUES.
 ├── .asgard-cli.yaml               # which workspace/pipeline this checkout acts in.
 │                                  #   CLIENT-SIDE ONLY — the platform never reads it
+├── .asgard-scaffold.json          # which CLI version shipped the material IT owns here,
+│                                  #   and what it wrote. Committed. Not edited by hand
+├── .asgard-docs.json              # which version of the PLATFORM's reference material is
+│                                  #   here, written by `asgard-cli skill update`
 ├── assets/                        # cross-project shared plumbing
 │   ├── skills/<skill>/SKILL.md    # RUNTIME skills, synced into the platform
 │   └── README.md                  # what is shared and what is not
@@ -377,6 +381,35 @@ the release name are already the ones production is using.
 A tag matching a release nobody created produces no run at all — `asgard-cli pipeline
 deliveries` says so, and nothing else will. Also add the project to the root `README.md`
 table; `asgard-cli check` cross-checks it against the actual folders.
+
+### `.asgard-scaffold.json` — which CLI version shipped the material it owns here
+
+Some of what is in this repository is neither yours nor the platform's: `asgard-cli` ships it.
+That is `AGENTS.md` and the design-time skills under `.agents/skills/` that did not come from
+`asgard-cli skill update`. This record says **which version of the CLI wrote each of them, and
+what it wrote**. It is committed, and nothing edits it by hand.
+
+It is there because **"already present" is not "up to date"**. A newer `asgard-cli` carries newer
+skills, and without a record of who wrote the ones here, three states that look identical on disk
+cannot be told apart:
+
+    behind   the CLI moved on and nobody here touched the file -> `asgard-cli init --force`
+    edited   somebody here changed it, and --force would discard that
+    ahead    a NEWER CLI than yours wrote this repo -> upgrade asgard-cli
+
+`asgard-cli init` reports all three, and the third is the one `--force` will not act on: the flag
+takes newer shipped material, never older. It also reports a fourth, `retired` — a file some
+older CLI shipped here and this one does not, which nothing else in the repository would notice.
+
+**So do not edit `.agents/skills/` by hand.** A correction there is a claim about how this work is
+done that the next `--force` replaces; it belongs upstream, in the CLI. The one edit the CLI
+expects is the project list at the top of this file, which ships as `TODO` rows for the engagement
+to answer — which is why answering one is reported as `edited` and left alone rather than
+overwritten.
+
+It is a separate file from `.asgard-docs.json` because that one is the **platform's** record of
+the material `asgard-cli skill update` fetches. Two authorities, two records, and the versions in
+them are unrelated numbers.
 
 ## Entry point shapes — the field-level difference
 

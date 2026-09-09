@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -45,8 +46,8 @@ func runScaffold(cmd *cobra.Command, root string, force bool) error {
 	}
 
 	out := cmd.OutOrStdout()
-	var created, overwritten, skipped int
-	var preserved, stale []string
+	var created, overwritten, updated, skipped int
+	var preserved, stale, behind, ahead, edited, retired []string
 	for _, r := range results {
 		switch r.Status {
 		case scaffold.Created:
@@ -55,12 +56,32 @@ func runScaffold(cmd *cobra.Command, root string, force bool) error {
 		case scaffold.Overwritten:
 			overwritten++
 			fmt.Fprintf(out, "  overwritten  %s\n", r.Path)
+		case scaffold.Updated:
+			// Printed rather than counted among the untouched. It used to be
+			// only a managed region being replaced, which is invisible by
+			// design; it now also covers a whole file this CLI wrote being
+			// re-rendered because the repository moved under it, and a command
+			// that changes a file says which.
+			updated++
+			fmt.Fprintf(out, "  updated      %s\n", r.Path)
 		case scaffold.Preserved:
 			preserved = append(preserved, r.Path)
 			fmt.Fprintf(out, "  preserved    %s\n", r.Path)
 		case scaffold.Stale:
 			stale = append(stale, r.Path)
 			fmt.Fprintf(out, "  stale        %s\n", r.Path)
+		case scaffold.Behind:
+			behind = append(behind, r.Path)
+			fmt.Fprintf(out, "  behind       %s\n", r.Path)
+		case scaffold.Ahead:
+			ahead = append(ahead, r.Path)
+			fmt.Fprintf(out, "  ahead        %s\n", r.Path)
+		case scaffold.Edited:
+			edited = append(edited, r.Path)
+			fmt.Fprintf(out, "  edited       %s\n", r.Path)
+		case scaffold.Retired:
+			retired = append(retired, r.Path)
+			fmt.Fprintf(out, "  retired      %s\n", r.Path)
 		default:
 			skipped++
 		}
@@ -70,41 +91,96 @@ func runScaffold(cmd *cobra.Command, root string, force bool) error {
 	if overwritten > 0 {
 		fmt.Fprintf(out, ", %d overwritten", overwritten)
 	}
+	if updated > 0 {
+		fmt.Fprintf(out, ", %d updated", updated)
+	}
 	if skipped > 0 {
 		fmt.Fprintf(out, ", %d already present", skipped)
 	}
-	if len(stale) > 0 {
-		fmt.Fprintf(out, ", %d stale", len(stale))
+	for _, c := range []struct {
+		label string
+		paths []string
+	}{
+		{"behind", behind}, {"edited", edited}, {"ahead", ahead},
+		{"stale", stale}, {"retired", retired},
+	} {
+		if len(c.paths) > 0 {
+			fmt.Fprintf(out, ", %d %s", len(c.paths), c.label)
+		}
 	}
 	fmt.Fprintf(out, " in %s\n", root)
 
-	// "already present" reads as "up to date", and that reading has
-	// been acted on: an agent re-ran scaffold after an upgrade, saw
-	// nothing to do, told the user the repo was current, and went on to
-	// work from a skill three versions old. These files are the ones an
-	// engagement never edits, so a difference in them is this CLI having
-	// moved, not the engagement having written something.
-	if len(stale) > 0 {
-		fmt.Fprintf(out, "\n%d file(s) are shipped material this CLI has since changed. Yours are\n"+
-			"older, and were left alone:\n\n", len(stale))
-		for _, p := range stale {
-			fmt.Fprintf(out, "  %s\n", p)
-		}
+	// "already present" reads as "up to date", and that reading has been acted
+	// on: an agent re-ran scaffold after an upgrade, saw nothing to do, told
+	// the user the repo was current, and went on to work from a skill three
+	// versions old.
+	//
+	// **The five conditions below are separated because each is fixed
+	// somewhere else**, and one of them must not be fixed with --force at all.
+	// They used to be one line saying "yours are older", which was a guess: it
+	// was printed over an engagement's own answers as readily as over material
+	// that really was behind, and the remedy it offered would have deleted
+	// them. `scaffold.StampName` is the record that tells those apart.
+	if len(behind) > 0 {
+		reportShipped(out, behind, "are shipped material this CLI has since changed. Nobody here has\n"+
+			"touched them, so yours are simply older:")
 		fmt.Fprintf(out, "\nTake the newer ones with `asgard-cli init --force`. Nothing an\n"+
 			"`asgard-cli` command writes into is touched by that - indexes, the\n"+
 			"open-questions table and the living spec are preserved either way.\n")
 	}
 
+	if len(edited) > 0 {
+		reportShipped(out, edited, "differ from what this CLI last wrote to them, so somebody here\n"+
+			"changed them:")
+		fmt.Fprintf(out, "\nThey were left alone. `--force` would discard those changes, which is\n"+
+			"worth knowing before running it: the scaffolded AGENTS.md ships a project\n"+
+			"list whose rows say `TODO: what it does`, and answering one is exactly\n"+
+			"this state. A correction to shipped material belongs upstream, in the\n"+
+			"CLI, rather than in a file the next `--force` replaces.\n")
+	}
+
+	if len(ahead) > 0 {
+		reportShipped(out, ahead, "were written here by a NEWER asgard-cli than the one running:")
+		fmt.Fprintf(out, "\nThey were left alone, and `--force` will not take this binary's copy of\n"+
+			"them either - that would be a downgrade, and \"take the newer shipped\n"+
+			"material\" is what the flag is for. Upgrade the CLI. To reset one to this\n"+
+			"binary's version deliberately, delete it and run this again.\n")
+	}
+
+	if len(stale) > 0 {
+		reportShipped(out, stale, "are shipped material that differs from what this CLI carries, and\n"+
+			"which way round is not knowable:")
+		fmt.Fprintf(out, "\nEither %s does not record who wrote them - a repository\n"+
+			"scaffolded before it existed - or the two versions cannot be ordered,\n"+
+			"which is what a `go build` binary reports. `asgard-cli init --force`\n"+
+			"takes this binary's copy; read the diff first.\n", scaffold.StampName)
+	}
+
+	if len(retired) > 0 {
+		reportShipped(out, retired, "were written here by an asgard-cli that shipped them, and this one\n"+
+			"does not:")
+		fmt.Fprintf(out, "\nNothing compares them against anything any more, so whatever they say is\n"+
+			"what they will keep saying. Read them and delete them; a scaffold does not\n"+
+			"remove files from a customer's repository on its own.\n")
+	}
+
 	if len(preserved) > 0 {
-		fmt.Fprintf(out, "\n%d file(s) preserved despite --force, because `asgard-cli`\n"+
-			"writes into them and they no longer match the template they started as:\n\n", len(preserved))
-		for _, p := range preserved {
-			fmt.Fprintf(out, "  %s\n", p)
-		}
+		reportShipped(out, preserved, "preserved despite --force, because `asgard-cli` writes into them\n"+
+			"and they no longer match the template they started as:")
 		fmt.Fprintf(out, "\n--force discards local edits to the skeleton, and each of these stopped\n"+
 			"being skeleton the first time an `asgard-cli` command wrote to it. To reset\n"+
 			"one deliberately, delete it and run scaffold again.\n")
 	}
 
 	return nil
+}
+
+// reportShipped prints one condition: how many files are in it, what the
+// condition is, and which files. The sentence is the caller's because each of
+// them is a different thing to have happened.
+func reportShipped(out io.Writer, paths []string, condition string) {
+	fmt.Fprintf(out, "\n%d file(s) %s\n\n", len(paths), condition)
+	for _, p := range paths {
+		fmt.Fprintf(out, "  %s\n", p)
+	}
 }
