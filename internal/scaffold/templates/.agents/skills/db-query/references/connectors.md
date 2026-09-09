@@ -231,6 +231,12 @@ customer's own DBAs use, and record what you found in the spec.
 
 `query.py --columns <table>` covers the common case. These are the rest.
 
+**Run every one of these with `--limit 0`.** The default caps the fetch at 200
+rows, which is right for looking at data and wrong for enumerating a schema: a
+sweep of `information_schema.tables` on a database with several hundred base
+tables comes back truncated, and a truncated enumeration looks exactly like a
+complete one. One real source in this shape held roughly 580.
+
 ### `information_schema` engines: postgres, mysql, mssql, trino, athena
 
 ```sql

@@ -50,10 +50,13 @@ and foreign keys on each engine. It is read-only and enforces that.
 The one-line version:
 
 ```bash
-Q=".venv/bin/python .agents/skills/db-query/scripts/query.py"
-$Q --class postgres --prefix UOF_DB_ --columns sales.orders
-$Q --class postgres --prefix UOF_DB_ "select status, count(*) from sales.orders group by 1"
+Q() { .venv/bin/python .agents/skills/db-query/scripts/query.py "$@"; }
+Q --class postgres --prefix UOF_DB_ --columns sales.orders
+Q --class postgres --prefix UOF_DB_ "select status, count(*) from sales.orders group by 1"
 ```
+
+A function, not `Q="..."`: zsh does not word-split an unquoted `$Q`, so the
+variable form is one word and exits 127 with nothing to say why.
 
 **Every database this repository models should be reachable that way before a
 single cube is written.** A cube written from a document rather than from the

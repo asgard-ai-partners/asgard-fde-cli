@@ -50,16 +50,24 @@ A missing one names itself when you first use that class.
 
 ## Commands
 
-```bash
-Q=".venv/bin/python .agents/skills/db-query/scripts/query.py"
+Define the shorthand as a FUNCTION, not a variable. `Q="... query.py"` then
+`$Q --classes` is a bash idiom that fails mute under zsh, which is the login
+shell on every macOS this is delivered to: zsh does not word-split an unquoted
+parameter expansion, so `$Q` is one word and the whole string is treated as a
+command name. You get `command not found` and exit 127, with nothing to suggest
+the shell rather than the venv or the credentials. A function word-splits
+correctly in both shells.
 
-$Q --classes                                        # the eight this tool drives
-$Q --class postgres --prefix UOF_DB_ --keys         # the .env keys this connection needs
-$Q --class postgres --prefix UOF_DB_ "select 1"
-$Q --class postgres --prefix UOF_DB_ -f some.sql
-echo "select 1" | $Q --class postgres --prefix UOF_DB_
-$Q --class postgres --prefix UOF_DB_ --columns sales.orders    # what columns does it have
-$Q --class netsuite --prefix NS_ "SELECT 1 AS ok FROM DUAL"
+```bash
+Q() { .venv/bin/python .agents/skills/db-query/scripts/query.py "$@"; }
+
+Q --classes                                        # the eight this tool drives
+Q --class postgres --prefix UOF_DB_ --keys         # the .env keys this connection needs
+Q --class postgres --prefix UOF_DB_ "select 1"
+Q --class postgres --prefix UOF_DB_ -f some.sql
+echo "select 1" | Q --class postgres --prefix UOF_DB_
+Q --class postgres --prefix UOF_DB_ --columns sales.orders    # what columns does it have
+Q --class netsuite --prefix NS_ "SELECT 1 AS ok FROM DUAL"
 ```
 
 The connection summary - **never a password** - goes to stderr and the result
@@ -81,6 +89,12 @@ the tool lists the prefixes it can see.
 `references/connectors.md` has, for each class: the CR fields, the matching
 `.env` keys, the driver, and the introspection recipes that `--columns` does not
 cover (tables, primary keys, foreign keys).
+
+**Pass `--limit 0` for a schema sweep.** The default 200 is right for looking at
+data and wrong for enumerating one: an `information_schema.tables` count on a
+database with several hundred base tables is silently truncated at 200 rows, and
+a truncated enumeration looks exactly like a complete one. One real source in
+this shape held roughly 580.
 
 **Eight is this tool's number, not the platform's.** `DataConnectorClass` has
 **nine** values and `hana` is the ninth: `spec.hana` is in the CRD and a HANA
@@ -173,11 +187,21 @@ can read", and the platform reads nine** - a completeness claim that would tell
 a reader asked about SAP HANA that the platform cannot reach it, when what
 cannot reach it is this tool. Corrected here and in `--classes`.
 
-**Unchecked:** every driver but one. The commands, the `--prefix` rule and the
-failure shapes come from one engagement's PostgreSQL and NetSuite work; oracle,
-salesforce, trino, athena, mssql and mysql are configured from
+**Checked against a real customer system:** postgres, netsuite, mssql. The
+commands, the `--prefix` rule and the failure shapes come from one engagement's
+PostgreSQL and NetSuite work. **mssql** was driven end to end by a later one:
+`--keys` emitted the six keys including the optional named-instance one and
+`asgard-cli local-env` filled them, `select 1` connected, the stderr summary
+printed `user@host:port/database` with no password as documented, and a full
+introspection ran - `information_schema.tables` counts, `sys.tables` joined to
+`sys.partitions` for row counts, `--columns` on eight tables, and about fifteen
+ad-hoc join-verification queries over roughly 580 base tables. The read-only
+guard refused nothing, because every statement was a `SELECT`. The `TOP n` /
+`LIMIT n` dialect note in `references/connectors.md` was correct and needed.
+
+**Unchecked:** oracle, salesforce, trino, athena and mysql are configured from
 `references/connectors.md` and the CR fields and **have not been run against a
-customer's system from here**. The credential path is likewise one engagement's:
-`asgard-cli local-env` exists so nobody types a password at an agent, and
+customer's system from here**. The credential path is one engagement's plus that
+one: `asgard-cli local-env` exists so nobody types a password at an agent, and
 whether that survives a customer whose credentials come through their own vault
-is the first real test of it.
+is still the first real test of it.
