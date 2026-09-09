@@ -23,7 +23,7 @@ into a wall, and that person has the binary and not this repository. Now they ca
 run it at the moment they hit one.
 
 It also reads the **embedded** material, which is what an engagement gets. A
-script over `internal/wiki/pages/*.md` audits the input instead, and the thing
+script over `internal/corpus/wiki/*.md` audits the input instead, and the thing
 being audited is what somebody actually read.
 
 Hidden from `--help`, because its reader edits this material and the help output

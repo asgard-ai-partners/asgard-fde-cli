@@ -19,7 +19,7 @@ import (
 // stamp and the five states with no rule of their own.
 //
 // Why a copy exists at all, and why that reverses what the corpus used to say,
-// is in `internal/wiki/README.md` beside the rule it replaced. Not repeated
+// is in `internal/corpus/wiki/README.md` beside the rule it replaced. Not repeated
 // here.
 const corpusSkillDir = ".agents/skills/asgard-platform"
 
@@ -69,24 +69,21 @@ func corpusJobs() ([]job, error) {
 		}
 	}
 
-	// Two files the wiki keeps outside `pages/`, so they are not in All. The
-	// alias index goes to the skill root because it applies to both halves and
-	// is the first file to read: a query in the customer's own words matches
-	// nothing in an English corpus, and grep reports that identically to a
-	// subject the material genuinely lacks.
-	for _, f := range []struct {
-		target string
-		read   func() (string, error)
-	}{
-		{"aliases.md", wiki.Index},
-		{filepath.Join("wiki", "README.md"), wiki.Conventions},
-	} {
-		body, err := f.read()
-		if err != nil {
-			return nil, fmt.Errorf("read %s: %w", f.target, err)
-		}
-		add(f.target, body)
+	// The alias index is the only file outside either half, and it goes to the
+	// skill root because it applies to both. It is also the first file to read:
+	// a query in the customer's own words matches nothing in an English corpus,
+	// and grep reports that identically to a subject the material genuinely
+	// lacks.
+	//
+	// The wiki's own README needs no line here. It used to, when it sat outside
+	// the corpus directory; since the material moved to `internal/corpus` it is
+	// an unlisted document of the wiki half, so Landing carries it - and while
+	// both were here, two jobs wrote the same path.
+	aliases, err := wiki.Index()
+	if err != nil {
+		return nil, fmt.Errorf("read the alias index: %w", err)
 	}
+	add("aliases.md", aliases)
 
 	add("SKILL.md", corpusSkill)
 	return jobs, nil

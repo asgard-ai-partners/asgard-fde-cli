@@ -2,7 +2,7 @@
 
     python3 scripts/extract-crs.py .out/extracts.ndjson
 
-The skeletons in internal/usecase/extracts/ are chart fragments written for a
+The skeletons in internal/corpus/usecase/ are chart fragments written for a
 person to copy, so they are not parseable YAML: they carry Helm actions and
 <placeholder> text. Both are replaced with sentinels here. validate-crs.py knows
 the sentinels and does not report a pattern or enum failure against one, because
@@ -33,7 +33,7 @@ def defuse(block):
 
 def main(outpath):
     docs, blocks, bad = [], 0, []
-    for p in sorted(glob.glob('internal/usecase/extracts/*.md')):
+    for p in sorted(glob.glob('internal/corpus/usecase/*.md')):
         for b in re.findall(r'```ya?ml\n(.*?)```', open(p).read(), re.S):
             if 'apiVersion: asgard-ai.com' not in b:
                 continue

@@ -22,8 +22,8 @@ question when adding anything is which part it belongs to:
 
 | part | answers | lives in |
 |---|---|---|
-| wiki pages | what the platform is, and who each piece is for | `internal/wiki/pages/` |
-| usecase extracts | how one shape of deployment is assembled, field by field | `internal/usecase/extracts/` |
+| wiki pages | what the platform is, and who each piece is for | `internal/corpus/wiki/` |
+| usecase extracts | how one shape of deployment is assembled, field by field | `internal/corpus/usecase/` |
 | stage prompts | what to weigh at one point in the work | `internal/stage/prompts/` |
 | scaffold templates | the part of a customer repo that is the same every time, including the skills the customer's agent loads | `internal/scaffold/templates/` |
 
@@ -42,7 +42,7 @@ platform has that shape. `asgard-cli add <kind>` prints both, in that order.
 The shape is the [llm-wiki
 pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) -
 raw sources that are never vendored in, a corpus that is rewritten continuously,
-and a schema a person changes deliberately. `internal/wiki/README.md` states it
+and a schema a person changes deliberately. `internal/corpus/wiki/README.md` states it
 for the wiki and is the longer version; these four rules apply to all four
 parts. All four hold as of 2026-09-04, and each has a command that says so -
 `find --unverified`, `audit-material --links`, `audit-material --orphans`. A
@@ -352,7 +352,7 @@ repeatedly. Grep for the name of what you added.
 The wiki was described as covering its sources completely, in the repository, in
 prose. Counting the citations against the source files gave 65 of 162. If a claim
 is countable, count it before writing it, and put the number somewhere the next
-person can recount it - `internal/wiki/pages/index.md` carries that one.
+person can recount it - `internal/corpus/wiki/index.md` carries that one.
 
 **Would this be recognisable to the customer it came from?**
 `--help` shipped a real customer's repository name as its example, and a stage
@@ -407,7 +407,7 @@ that. Both times the FDE followed the page in front of them.
 customer's test environment, twenty lines apart in one section. Nothing
 contradicted anything; the reader took the wrong sense.
 
-    `wiki/pages/glossary.md` lists the terms that already mean something
+    `corpus/wiki/glossary.md` lists the terms that already mean something
     specific. Check it before introducing a word, and before using one of
     those for something else.
 
@@ -528,8 +528,8 @@ nothing else leaves the reader with a schema and no judgement.
 ls ~/asgard-kube/crd/*.yaml | sed 's/.*com_//;s/s.yaml//'
 
 # what any of the material mentions
-cat internal/usecase/extracts/*.md internal/generate/templates/*.tmpl \
-    internal/wiki/pages/*.md | grep -o 'kind: [A-Z][A-Za-z]*' | sort -u
+cat internal/corpus/usecase/*.md internal/generate/templates/*.tmpl \
+    internal/corpus/wiki/*.md | grep -o 'kind: [A-Z][A-Za-z]*' | sort -u
 ```
 
 That comparison currently leaves three: `ImageGenerationModel`,
@@ -564,7 +564,7 @@ incomplete**: `await` and `temperature` are set in five production deployments
 and appear in neither it nor the CRD. A gate rule built on treating it as
 complete called five of five correct charts wrong, and was deleted.
 
-**The reference deployments** - every extract under `internal/usecase/extracts/`
+**The reference deployments** - every extract under `internal/corpus/usecase/`
 was taken from one of these, and a claim about how a shape is built should be
 checkable against at least one:
 

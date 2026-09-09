@@ -108,7 +108,7 @@ What separates them is which one may be rewritten.
 | layer | contents | may be edited |
 |---|---|---|
 | raw sources | asgard-docs, asgard-kube, the eight reference deployments | read-only, never vendored in; only the commit is recorded |
-| the corpus | `wiki/pages/`, `usecase/extracts/`, `stage/prompts/`, the scaffolded skills | rewritten continuously, and only ever describes the present |
+| the corpus | `corpus/wiki/`, `corpus/usecase/`, `stage/prompts/`, the scaffolded skills | rewritten continuously, and only ever describes the present |
 | the schema | `AGENTS.md`, and each corpus's own `README.md` | changed deliberately, by a person |
 
 ### Three operations
@@ -370,7 +370,7 @@ layout.** `asgard-cli usecase write-path` means the same thing from anywhere. A
 path does not, and the two trees disagree:
 
     from a wiki page to that extract
-      in this repository   ../../usecase/extracts/write-path.md
+      before the move      ../../usecase/extracts/write-path.md
       as landed            ../usecase/write-path.md
 
 Three ways out, and only the second reaches the target:
@@ -403,7 +403,10 @@ material.
 The sequence, each step verifiable alone and none of them leaving the tool worse
 if it stops there:
 
-  1. Move this repository's corpus to `corpus/{wiki,usecase}/`.
+  1. ~~Move this repository's corpus to `corpus/{wiki,usecase}/`.~~ **Done** -
+     `internal/corpus` holds the material now, in the layout a repository
+     receives it, and `internal/wiki` and `internal/usecase` are the way in
+     rather than the place. No document changed.
   2. Convert the pointers to paths and rebuild `kb.Link` on them, with
      `--links`, `--orphans` and the counterpart green on the new form.
   3. Generate the root `index.md`, and hang `needs` and `brief` off it.
@@ -413,9 +416,10 @@ if it stops there:
   6. Delete `find`, after the sense instruction has been given a release to be
      wrong in.
 
-**Step 1 is the one to do early if it is going to happen at all.** It moves every
-document in the corpus, so it collides with any other edit to the material - and
-this repository's material changes most weeks.
+**Step 1 was the one to do early**, because it moves every document and so
+collides with any other edit to material that changes most weeks. Step 2 is now
+the load-bearing one: it is what a path-form pointer is for, and until it lands
+the two trees agree about layout while every pointer still spends a subprocess.
 
 ### Three defects the first landing introduced, all fixed
 

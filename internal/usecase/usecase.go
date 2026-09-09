@@ -1,22 +1,18 @@
 // Package usecase serves the extracts: how each shape of Asgard deployment is
 // built, taken from ones already in production.
 //
-// An agent about to author a chart reaches for these. They are embedded rather
-// than written into a customer repo, because an example nobody is using becomes
-// stale boilerplate there, while a stale one here is fixed for every engagement
-// in a single release.
+// An agent about to author a chart reaches for these. **The extracts themselves
+// are in internal/corpus**, beside the wiki and in the layout a repository
+// receives them - that package's doc comment says why. `asgard-cli init` writes
+// both halves into a customer repository.
 //
-// The reading and searching are internal/kb's; what lives here is the corpus.
+// The reading and searching are internal/kb's; this package is the way in.
 package usecase
 
 import (
-	"embed"
-
+	corpusfs "github.com/asgard-ai-partners/asgard-fde-cli/internal/corpus"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/kb"
 )
-
-//go:embed extracts
-var extracts embed.FS
 
 // Extract is one shape. It is kb.Doc under a name that reads at the call site.
 type Extract = kb.Doc
@@ -25,8 +21,8 @@ type Extract = kb.Doc
 type Match = kb.Match
 
 var corpus = kb.Corpus{
-	FS:  extracts,
-	Dir: "extracts",
+	FS:  corpusfs.FS,
+	Dir: "usecase",
 	// README explains how to read an extract; it is not one.
 	Unlisted: map[string]bool{"README": true},
 	Noun:     "extract",
@@ -44,7 +40,7 @@ func All() ([]Extract, error) { return corpus.All() }
 func Read(name string) (string, error) { return corpus.Read(name) }
 
 // Index returns the README, which explains how the extracts are organised.
-func Index() (string, error) { return corpus.File("extracts/README.md") }
+func Index() (string, error) { return corpus.File("usecase/README.md") }
 
 // Search finds extracts mentioning all of the given terms.
 func Search(query string) ([]Match, error) { return corpus.Search(query) }

@@ -7,23 +7,21 @@
 // before that: it has the customer's repository and nothing else, and that
 // repository describes one customer's systems, never the platform they run on.
 //
-// Embedded rather than written into a customer repo, for the same reason the
-// extracts are: a copy in one engagement goes stale where nobody is looking,
-// while a stale page here is fixed for every engagement in one release.
+// **The pages themselves are in internal/corpus**, beside the extracts and in
+// the layout a repository receives them - that package's doc comment says why.
+// `asgard-cli init` writes both halves into a customer repository, and
+// `scaffold.replaceCorpus` replaces them when the binary's version moves.
 //
-// The reading and searching are internal/kb's; what lives here is the corpus.
+// The reading and searching are internal/kb's; this package is the way in.
 package wiki
 
 import (
-	"embed"
 	"sort"
 	"strings"
 
+	corpusfs "github.com/asgard-ai-partners/asgard-fde-cli/internal/corpus"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/kb"
 )
-
-//go:embed pages README.md aliases.md
-var content embed.FS
 
 // Page is one wiki page. It is kb.Doc under a name that reads at the call site.
 type Page = kb.Doc
@@ -32,11 +30,13 @@ type Page = kb.Doc
 type Match = kb.Match
 
 var corpus = kb.Corpus{
-	FS:  content,
-	Dir: "pages",
-	// The index and the log are the wiki's own bookkeeping rather than pages
-	// about the platform. Readable by name, absent from a listing.
-	Unlisted: map[string]bool{"index": true, "log": true},
+	FS:  corpusfs.FS,
+	Dir: "wiki",
+	// The index, the log and the conventions are the wiki's own bookkeeping
+	// rather than pages about the platform. Readable by name, absent from a
+	// listing. README joined them when the pages moved under `wiki/`: it used
+	// to sit outside the corpus directory, so nothing had to exclude it.
+	Unlisted: map[string]bool{"index": true, "log": true, "README": true},
 	Noun:     "wiki page",
 	Command:  "asgard-cli wiki",
 }
@@ -53,7 +53,7 @@ func Read(name string) (string, error) { return corpus.Read(name) }
 
 // Conventions returns the wiki's own README: the three layers, the three
 // operations, and the rules a page has to follow.
-func Conventions() (string, error) { return corpus.File("README.md") }
+func Conventions() (string, error) { return corpus.File("wiki/README.md") }
 
 // Search finds pages mentioning all of the given terms.
 func Search(query string) ([]Match, error) { return corpus.Search(query) }
