@@ -773,13 +773,14 @@ It runs everything this machine can check, in order, and a step that could not r
 as skipped rather than passed:
 
 **`asgard-cli gate --help` is the authoritative list**; the table below is a convenience copy in
-this repository and moves only when `asgard-cli init` is re-run (which reports it as `stale`
-when this CLI has since changed it).
+this repository and moves only when `asgard-cli init` is re-run — which is exactly what the
+`shipped` step below reports, and this table is one of the files it reports on.
 
 | step | what it proves |
 |---|---|
 | `tools` | `helm` is on PATH; without it the three chart steps cannot run |
 | `repo` | the structural invariants a chart render cannot see |
+| `shipped` | this file and the design-time skills are still what the installed `asgard-cli` carries. **The one freshness check that always runs** — it compares against the binary rather than a platform, so no session and no `--offline` skips it. `edited` and `ahead` warn rather than fail: the first is somebody here having changed shipped material on purpose, the second is the binary being older than this repository, which is an install to upgrade rather than a repository to fix |
 | `binding` | `.asgard-cli.yaml` names a workspace and a pipeline the platform still has. Catches a half-bound checkout — `workspace use` clears the pipeline line — before some later command acts on it |
 | `skills` | the reference material here still describes the server this repo deploys to |
 | `lint` | `values.yaml` defaults every `.Values.*` the chart itself owns. It supplies the reserved `asgard` block and nothing else — linting with no `-f` at all fails on every chart that reads `.Values.asgard.*`, which a chart must not declare |

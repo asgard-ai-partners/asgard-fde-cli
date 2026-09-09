@@ -143,6 +143,11 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 	// per command is one that gets forgotten on the command somebody adds next.
 	cmd.PersistentPostRun = func(c *cobra.Command, _ []string) {
 		warnIfBehind(c)
+		// The same argument, for the half of the material that comes from this
+		// binary rather than from a platform - and this one needs no platform
+		// to have been reached, so unlike the line above it is not silent on
+		// the commands that never leave the machine.
+		warnIfShippedStale(c)
 	}
 
 	// The command tree, grouped. **The grouping is the source, not a rendering
