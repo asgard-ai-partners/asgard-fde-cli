@@ -15,13 +15,17 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
+	"maps"
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/repo"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/version"
 )
 
 // The tree is embedded with all: so that dot-prefixed paths (.agents, .github,
@@ -123,17 +127,37 @@ const (
 	Skipped
 	// Overwritten means an existing file was replaced because force was set.
 	Overwritten
-	// Updated means only the file's managed region was refreshed, leaving
-	// everything the engagement wrote around it untouched.
+	// Updated means the file was refreshed without discarding anything the
+	// engagement wrote: either only its managed region was replaced, or the
+	// whole of it was provably still what this CLI last wrote and the render
+	// moved underneath it - a renamed checkout, an added project.
 	Updated
 	// Preserved means force was set and the file was left alone anyway,
 	// because it is one the CLI's own commands write into and it no longer
 	// matches the template it started as.
 	Preserved
-	// Stale means the file is shipped material the CLI has since changed. It
-	// is left alone - the point is to say so, because "already present" reads
-	// as "up to date" and an agent acted on that reading.
+	// Stale means the file is shipped material that differs from what this
+	// binary carries, and which way round is not knowable - the record does
+	// not cover it, or the two CLI versions cannot be ordered. It is left
+	// alone - the point is to say so, because "already present" reads as "up
+	// to date" and an agent acted on that reading.
 	Stale
+	// Behind means the file is shipped material this CLI has since changed,
+	// nobody here has touched it, and the CLI that wrote it was older. This is
+	// the case `--force` is for.
+	Behind
+	// Ahead means the same comparison the other way round: the CLI that wrote
+	// this repository was NEWER than the one running. Taking this binary's
+	// copy would be a downgrade, so `--force` does not.
+	Ahead
+	// Edited means a shipped file differs from what this CLI last wrote to it.
+	// Somebody here changed it, and `--force` would discard that - which is
+	// worth knowing before running it rather than afterwards.
+	Edited
+	// Retired means the record says this CLI wrote the file and this binary no
+	// longer ships it. It is reported and never removed: deleting a file from
+	// a customer's repository is not something a scaffold does on its own.
+	Retired
 )
 
 func (s Status) String() string {
@@ -148,6 +172,14 @@ func (s Status) String() string {
 		return "preserved"
 	case Stale:
 		return "stale"
+	case Behind:
+		return "behind"
+	case Ahead:
+		return "ahead"
+	case Edited:
+		return "edited"
+	case Retired:
+		return "retired"
 	default:
 		return "skipped"
 	}
@@ -162,23 +194,69 @@ type Result struct {
 // Write renders the skeleton into root. It never removes anything, and without
 // force it leaves existing files alone, so it can be run again after a project
 // is added or when a file was deleted by hand.
+//
+// **The shipped files are the ones it has an opinion about**, and it needs the
+// record beside them to have it: see StampName for what a byte comparison
+// against this binary cannot answer and why each of those three questions has
+// been got wrong here.
 func Write(root string, projects []string, force bool) ([]Result, error) {
 	jobs, err := plan(NewData(root, projects))
 	if err != nil {
 		return nil, err
 	}
 
+	// The record is read once, before anything is written: every comparison
+	// below is against what this CLI last wrote, not against what it is about
+	// to write.
+	stamp, err := ReadStamp(root)
+	if err != nil {
+		return nil, err
+	}
+	recorded := map[string]Entry{}
+	if stamp != nil {
+		recorded = stamp.Files
+	}
+	running := version.Get().Version
+
+	// wrote becomes the new record. An entry is carried forward when a run
+	// leaves its file alone, because the record says what this CLI last wrote
+	// to a path and a run that wrote nothing there did not change that.
+	// Recording the digest of whatever is on disk instead would launder a hand
+	// edit into the record, and the next run could no longer see it.
+	wrote := map[string]Entry{}
+
 	results := make([]Result, 0, len(jobs))
 	for _, j := range jobs {
 		target := filepath.Join(root, j.target)
-
-		exists, err := fileExists(target)
-		if err != nil {
-			return nil, err
+		key := stampKey(j.target)
+		isShipped := shipped(j.target)
+		keep := func() {
+			if was, ok := recorded[key]; ok && isShipped {
+				wrote[key] = was
+			}
 		}
+		note := func(content []byte) {
+			if isShipped {
+				wrote[key] = Entry{Digest: digest(content), CLIVersion: running}
+			}
+		}
+
 		content, err := render(j.source, j.data)
 		if err != nil {
 			return nil, err
+		}
+		current, exists, err := readIfExists(target)
+		if err != nil {
+			return nil, err
+		}
+
+		if !exists {
+			if err := writeFile(target, content, executable(j.target)); err != nil {
+				return nil, err
+			}
+			note(content)
+			results = append(results, Result{Path: j.target, Status: Created})
+			continue
 		}
 
 		// An accumulator is a file the CLI's other commands write into after
@@ -189,56 +267,138 @@ func Write(root string, projects []string, force bool) ([]Result, error) {
 		// repo with no commits there is nothing to recover from. Untouched ones
 		// still match their template, so leaving those to the normal path costs
 		// nothing.
-		if exists && force && accumulator(j.target) {
-			current, err := os.ReadFile(target)
-			if err != nil {
-				return nil, fmt.Errorf("read %s: %w", target, err)
-			}
-			if !bytes.Equal(current, content) {
-				results = append(results, Result{Path: j.target, Status: Preserved})
-				continue
-			}
+		if force && accumulator(j.target) && !bytes.Equal(current, content) {
+			keep()
+			results = append(results, Result{Path: j.target, Status: Preserved})
+			continue
 		}
 
-		if exists && !force {
-			// A managed region is derived from the config, so leaving it stale
-			// would put the file out of step with the repo - the project table
-			// in README.md is the case that matters, because the gate compares
-			// it against the directories on disk.
-			merged, updated, err := mergeManaged(target, content)
-			if err != nil {
+		// A shipped file's state is worked out before --force is consulted,
+		// because it decides what --force may do. A repository written by a
+		// NEWER CLI is not behind, and handing it this binary's older copy is
+		// the one thing --force must never do - which matters from the moment
+		// the binary can update itself, since then the two versions move
+		// without anybody choosing.
+		state := Skipped
+		if isShipped {
+			state = classify(current, content, recorded[key], running)
+		}
+		if state == Ahead {
+			keep()
+			results = append(results, Result{Path: j.target, Status: Ahead})
+			continue
+		}
+
+		if force {
+			if err := writeFile(target, content, executable(j.target)); err != nil {
 				return nil, err
 			}
-			if !updated {
-				drifted, err := differs(target, content)
-				if err != nil {
-					return nil, err
-				}
-				if drifted && shipped(j.target) {
-					results = append(results, Result{Path: j.target, Status: Stale})
-					continue
-				}
-				results = append(results, Result{Path: j.target, Status: Skipped})
-				continue
-			}
+			note(content)
+			results = append(results, Result{Path: j.target, Status: Overwritten})
+			continue
+		}
+
+		// A managed region is derived from the config, so leaving it stale
+		// would put the file out of step with the repo - the project table in
+		// README.md is the case that matters, because the gate compares it
+		// against the directories on disk. It is tried before the states
+		// below: replacing one marked region is the narrower change, and it is
+		// the only one that can refresh a file somebody has also edited.
+		if merged, updated := mergeManaged(current, content); updated {
 			if err := writeFile(target, merged, executable(j.target)); err != nil {
 				return nil, err
 			}
+			note(merged)
 			results = append(results, Result{Path: j.target, Status: Updated})
 			continue
 		}
-		if err := writeFile(target, content, executable(j.target)); err != nil {
-			return nil, err
+
+		if state == Updated {
+			// Provably still what this CLI wrote, from a binary of this
+			// version, so what has moved is what the render reads: the
+			// repository's directory name, or its project list. Taking the new
+			// one discards nothing, so it does not wait for --force - and
+			// until this could be told apart from an edit, a renamed checkout
+			// reported AGENTS.md stale for the rest of the engagement.
+			if err := writeFile(target, content, executable(j.target)); err != nil {
+				return nil, err
+			}
+			note(content)
+			results = append(results, Result{Path: j.target, Status: Updated})
+			continue
 		}
 
-		status := Created
-		if exists {
-			status = Overwritten
+		if state == Skipped && isShipped {
+			// Already what this binary carries. Recording it is how a
+			// repository scaffolded before the record existed joins the
+			// mechanism without --force: from the next run on, an edit to it
+			// can be told from a repository that is behind.
+			note(content)
+		} else {
+			keep()
 		}
-		results = append(results, Result{Path: j.target, Status: status})
+		results = append(results, Result{Path: j.target, Status: state})
+	}
+
+	retired, err := retiredFiles(root, recorded, jobs)
+	if err != nil {
+		return nil, err
+	}
+	for _, key := range retired {
+		wrote[key] = recorded[key]
+		results = append(results, Result{Path: filepath.FromSlash(key), Status: Retired})
+	}
+
+	// A record that gains a timestamp on every re-run is a committed file that
+	// churns for no reason, and a diff a reviewer learns to skip.
+	if stamp != nil && maps.Equal(stamp.Files, wrote) {
+		return results, nil
+	}
+	if err := writeStamp(root, Stamp{
+		WrittenAt: time.Now().UTC().Format(time.RFC3339),
+		Files:     wrote,
+	}); err != nil {
+		return nil, err
 	}
 
 	return results, nil
+}
+
+// retiredFiles are the paths the record says this CLI wrote and this binary no
+// longer ships, sorted, and still present.
+//
+// **Nothing else can see them.** `plan` produces a job for each file the binary
+// carries, so a skill dropped from the embed is compared against nothing: it
+// stays in the repository saying whatever it said when it was written, and
+// "already present" is the only thing any report ever says about the directory
+// it sits in. `asgard-cr-verification` spent a month telling readers to look in
+// a file that had not existed since the Pipeline cut-over, and what ended it
+// was somebody re-reading a provenance line rather than any check here.
+//
+// A recorded file that is gone from disk is not retired, it is finished: the
+// entry goes with it and nothing is reported.
+func retiredFiles(root string, recorded map[string]Entry, jobs []job) ([]string, error) {
+	shipping := make(map[string]bool, len(jobs))
+	for _, j := range jobs {
+		shipping[stampKey(j.target)] = true
+	}
+
+	var out []string
+	for key := range recorded {
+		if shipping[key] {
+			continue
+		}
+		exists, err := fileExists(filepath.Join(root, filepath.FromSlash(key)))
+		if err != nil {
+			return nil, err
+		}
+		if !exists {
+			continue
+		}
+		out = append(out, key)
+	}
+	sort.Strings(out)
+	return out, nil
 }
 
 // job is one template rendered to one path with one set of data.
@@ -271,16 +431,6 @@ func shipped(target string) bool {
 		return true
 	}
 	return false
-}
-
-// differs reports whether the file on disk has moved away from what the current
-// template renders.
-func differs(path string, content []byte) (bool, error) {
-	current, err := os.ReadFile(path)
-	if err != nil {
-		return false, fmt.Errorf("read %s: %w", path, err)
-	}
-	return !bytes.Equal(current, content), nil
 }
 
 func accumulator(target string) bool {
@@ -397,6 +547,22 @@ func executable(rel string) bool {
 	}
 }
 
+// readIfExists reads a file, and reports a missing one as absent rather than as
+// an error. Write needs the bytes of everything that is there - the comparisons
+// are all against them - so it reads each file once instead of stat-ing it and
+// then reading it again in whichever branch it lands in.
+func readIfExists(path string) ([]byte, bool, error) {
+	body, err := os.ReadFile(path)
+	switch {
+	case err == nil:
+		return body, true, nil
+	case os.IsNotExist(err):
+		return nil, false, nil
+	default:
+		return nil, false, fmt.Errorf("read %s: %w", path, err)
+	}
+}
+
 func fileExists(path string) (bool, error) {
 	_, err := os.Stat(path)
 	switch {
@@ -434,26 +600,21 @@ var managedRegion = regexp.MustCompile(`(?s)<!-- asgard-cli:managed:start -->.*?
 // mergeManaged replaces the managed region of the file at path with the one from
 // freshly rendered content. It reports false when either side has no managed
 // region, or when the region is already identical.
-func mergeManaged(path string, rendered []byte) ([]byte, bool, error) {
+func mergeManaged(current, rendered []byte) ([]byte, bool) {
 	want := managedRegion.Find(rendered)
 	if want == nil {
-		return nil, false, nil
-	}
-
-	current, err := os.ReadFile(path)
-	if err != nil {
-		return nil, false, fmt.Errorf("read %s: %w", path, err)
+		return nil, false
 	}
 	if managedRegion.Find(current) == nil {
 		// The marker was removed deliberately; leave the file alone.
-		return nil, false, nil
+		return nil, false
 	}
 
 	merged := managedRegion.ReplaceAllFunc(current, func([]byte) []byte { return want })
-	if string(merged) == string(current) {
-		return nil, false, nil
+	if bytes.Equal(merged, current) {
+		return nil, false
 	}
-	return merged, true, nil
+	return merged, true
 }
 
 // TemplateBodies returns every embedded scaffold template, keyed by its path

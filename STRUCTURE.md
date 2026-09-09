@@ -39,7 +39,7 @@ keeps; below it are the checks, the material servers and the plumbing.
 | `auth` | 1118 | the OAuth 2.0 + PKCE sign-in and the credential store, which is the only file this CLI keeps outside a repository |
 | `generate` | 714 | CR skeletons for ten kinds, wired to what the chart already declares |
 | `kb` | 695 | one implementation of listing, reading, scoring, provenance and the link graph, shared by every corpus |
-| `scaffold` | 614 | writes the non-customer-specific tree, and serves the design-time skills inside it |
+| `scaffold` | 1055 | writes the non-customer-specific tree, serves the design-time skills inside it, and keeps `.asgard-scaffold.json` - the record of which CLI wrote the files this binary ships |
 | `stage` | 511 | the onboarding prompts, rendered against the repository's state |
 | `size` | 380 | the deployment shapes, counted off production, and what one costs before anything is added |
 | `tool` | 329 | resolves helm/kubectl/python3 and says how to install one |

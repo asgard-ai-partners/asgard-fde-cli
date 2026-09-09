@@ -147,6 +147,16 @@ the indexes, the open-questions table, the living spec - are preserved either
 way and reported. `--yes` asks nothing, which is also what happens when stdin is
 not a terminal, so a re-run from an agent or from CI needs no interaction.
 
+**"Already present" is not "up to date"**, and the files this CLI ships are the
+ones where that matters: AGENTS.md and the design-time skills. It records which
+version of itself wrote each of them, in `.asgard-scaffold.json` beside the
+declaration, and reports a difference as `behind` (this CLI moved on, nobody here
+touched it), `edited` (somebody here did, and `--force` would discard it), `ahead`
+(a newer CLI wrote this repository, and `--force` refuses to downgrade it) or
+`retired` (an older CLI shipped the file and this one does not). Before the
+record, all four were one line saying "yours are older", which was printed over an
+engagement's own answers as readily as over material that really was behind.
+
 It refuses to write into a home directory or a filesystem root. Forty-five files
 one directory up from where they were meant is the mistake worth a guard.
 
@@ -697,12 +707,14 @@ still wants to know whether it is there.
 
 ### The files
 
-Four, and each is somebody else's answer to a different question.
+Six, and each is somebody else's answer to a different question.
 
 | file | who writes it | who reads it | committed |
 |---|---|---|---|
 | `.asgard-pipeline.yaml` | a person | **the platform**, on every run | yes |
 | `.asgard-cli.yaml` | `asgard-cli` | `asgard-cli` only | yes |
+| `.asgard-scaffold.json` | `asgard-cli init` | `asgard-cli` only | yes |
+| `.agents/skills/.asgard-docs.json` | `asgard-cli skill update` | `asgard-cli` only | yes |
 | `os.UserConfigDir()/asgard-cli/credentials.json` | `asgard-cli login` | `asgard-cli` | **never** |
 | `os.UserConfigDir()/asgard-cli/profiles.json` | `asgard-cli profile set` | `asgard-cli` | **never** (but it can be handed to a colleague) |
 
@@ -714,6 +726,16 @@ which keys it takes. See `internal/pipelineconfig`.
 checkout acts on, and nothing else. Both fields are required and neither is
 derived. See `internal/binding`, whose package comment explains why it lives
 beside the declaration rather than at the repository root.
+
+**The two records answer the same question about different halves of the
+material, and neither is a version check.** `.asgard-scaffold.json` says which
+version of this binary wrote each of the files this binary ships - AGENTS.md and
+the design-time skills - and what it wrote, so a difference can be reported as
+`behind`, `edited`, `ahead` or `retired` rather than guessed at. See
+`internal/scaffold`. `.asgard-docs.json` is the platform's side of it: which
+version of the fetched reference material is here, and each upstream's digest as
+it was when it was fetched. See `internal/skills`. **The two version numbers are
+unrelated**, and so are the commands that move them.
 
 **`profiles.json` names a platform this binary does not have compiled in** -
 an on-prem deployment, or a stack running locally. It holds no secret and it is
