@@ -6,9 +6,11 @@ is [AGENTS.md](AGENTS.md), what the commands do is [README.md](README.md), and
 the defects it has produced and why nothing caught them are in
 `source/FINDINGS.md`.
 
-**There is no worklist here any more.** What could be done from a checkout has
-been, and git log is the record of it; what is left is under "What is not done"
-and every line of it names the thing it is waiting for. A finding that a reader
+**There is one worklist here**, under "Decided: the corpus is written into the
+customer repository", and it is there because somebody asked for that work on
+2026-09-09. Everything else follows the older rule: what could be done from a
+checkout has been, git log is the record of it, and what is left is under "What
+is not done" where every line names the thing it is waiting for. A finding that a reader
 needs lives on the document it concerns rather than here - `**Unchecked:**` on
 the page, a row on `asgard-cli wiki platform-unknowns`, a rule in AGENTS.md.
 
@@ -207,6 +209,103 @@ so unlike `docs/.reading-log` - which carries page names of this tool and
 nothing else - it stays out of the repository, and the scaffold's `.gitignore`
 says so. It only has to live long enough for the issue to be filed; what reaches
 the next engagement is the fix in the next release.
+
+## Decided: the corpus is written into the customer repository
+
+**This is a worklist, and the only one in this file.** The header above says
+there is none, and that still holds for everything else - this section is a
+specification the FDE gave on 2026-09-09, and it goes when it is built.
+
+The three rules as given:
+
+  1. Every wiki, usecase and knowledge document reaches a customer repository
+     through `asgard-cli init`. On an upgrade a version mismatch **deletes what
+     is there and downloads the material again** - replace, not merge.
+  2. Every other folder in the repository is left alone.
+  3. `AGENTS.md` is overwritten.
+
+### 1 - half built, and the missing half is the replace
+
+`asgard-cli init` writes the corpus today: 52 files under
+`.agents/skills/asgard-platform/`, 28 wiki and 22 usecase, plus `aliases.md` and
+a `SKILL.md`. They are jobs in `scaffold`'s own plan, so `shipped` covers the
+prefix and they already carry the stamp, the five states, and `gate`'s `shipped`
+step.
+
+What is not built is the replace. Two behaviours stand in the way, and both are
+correct for the rest of the skeleton:
+
+- **An edited file is preserved and needs `--force`.** For material declared
+  generated that is not a service - the edit is a claim about the platform no
+  other engagement will ever see.
+- **A document removed upstream is reported, not deleted.** `retired` is the
+  state for it, and it exists because `asgard-cr-verification` sat in
+  repositories for a month after the binary stopped shipping it. Reporting was
+  the right fix for a skill somebody might have come to rely on. For a wiki page
+  it is not: a renamed page leaves both names on disk, and grep then returns the
+  old one with nothing marking it stale.
+
+So this subtree wants its own rule rather than the five states: **if the stamp's
+version for it differs from the running binary's, remove the directory and write
+it again.** That gets the rename for free and makes an edit impossible to keep,
+which is what "generated" is supposed to mean.
+
+Two constraints on building it:
+
+- **The version compared is the stamp's, never one written into the files.**
+  `.asgard-scaffold.json` records a CLI version per file. Interpolating a version
+  into a page would change its bytes on every release, and what finds a stale
+  repository is a byte comparison - so every repository in the world would report
+  behind on a release that touched no page.
+- **The delete is scoped to that one directory and nothing else.** A `rm -rf` in
+  a customer repository is the most destructive thing this tool would do, and the
+  only reason it is acceptable is that the whole directory is declared generated
+  in its own `SKILL.md`. It must not follow a symlink out, and it must not run
+  when the stamp has no record of having written there - an unrecorded directory
+  is somebody else's.
+
+### 2 - already holds
+
+Default `init` creates what is missing and leaves everything that exists alone;
+a second run reports `0 created, 97 already present`. The exceptions are all
+`--force`, and two of them survive even that: the accumulators
+(`docs/open-questions.md`, the two `_index.md` files, `docs/decisions/README.md`)
+because the CLI's own commands write into them, and anything in the `ahead`
+state, because handing a repository older material is the one thing `--force`
+must never do.
+
+Nothing needs building. What needs writing down is that rule 1's delete is the
+first exception to rule 2, and is confined to one directory.
+
+### 3 - would destroy an engagement's work as written
+
+**`AGENTS.md` is not purely shipped material.** It ships with sections the
+engagement is told, in the file itself, to fill in:
+
+    line  13   <<range .Projects>>  - `<<.Slug>>` - TODO: what it does, who
+               calls it, which systems it reads.
+    line  16   **TODO - fill this in as the engagement discovers it.** What the
+               customer's business systems ...
+    line  23   **TODO.** Record them here as they are settled.
+    line  35   ... including the sections of this file marked TODO.
+
+Overwriting it unconditionally deletes the project descriptions, the notes on the
+customer's systems and the settled decisions - in a repository that may have no
+commits yet, so there is nothing to recover from. This is the exact failure
+`scaffold.Stamp` was built to stop: before that record existed, the report called
+an engagement's answers "yours are older" and offered `--force`, which would have
+deleted them.
+
+**The mechanism to get what rule 3 is for already exists and is used elsewhere.**
+`mergeManaged` replaces a region between `<!-- asgard-cli:managed:start -->` and
+`<!-- asgard-cli:managed:end -->` even in a file that has otherwise been edited
+by hand, and `README.md.tmpl` ships those markers. `AGENTS.md.tmpl` does not.
+
+So the shape that holds: **put the markers around the parts of `AGENTS.md` this
+CLI owns, and let that region overwrite on every run.** The shipped guidance is
+then always current - which is what rule 3 wants - and the TODO sections are
+outside the region and survive. Unconditional overwrite is the same requirement
+with the engagement's work inside the blast radius.
 
 ## Non-goals
 
