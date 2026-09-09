@@ -157,7 +157,16 @@ const (
 	// Retired means the record says this CLI wrote the file and this binary no
 	// longer ships it. It is reported and never removed: deleting a file from
 	// a customer's repository is not something a scaffold does on its own.
+	//
+	// The exported corpus is the single exception, and it is a directory rather
+	// than a file - see Replaced and `replaceCorpus`.
 	Retired
+	// Replaced means the exported platform corpus was written by a different
+	// version of this CLI and the whole directory was removed before being
+	// written again. It is the one delete this tool performs, because that
+	// material is generated outright and a page renamed upstream would
+	// otherwise leave both names on disk.
+	Replaced
 	// Missing means a shipped file is not there at all. Only InspectShipped
 	// returns it - Write would have written it - and it means an agent working
 	// here is reading no copy of something this CLI ships.
@@ -172,6 +181,8 @@ func (s Status) String() string {
 		return "overwritten"
 	case Updated:
 		return "updated"
+	case Replaced:
+		return "replaced"
 	case Preserved:
 		return "preserved"
 	case Stale:
@@ -224,6 +235,15 @@ func Write(root string, projects []string, force bool) ([]Result, error) {
 	}
 	running := version.Get().Version
 
+	// Before anything is written: the exported corpus is replaced wholesale
+	// when this repository's copy came from another version of this CLI, so
+	// the loop below writes it fresh rather than merging into it. See
+	// replaceCorpus for why this one subtree is deleted and nothing else is.
+	replacedCorpus, err := replaceCorpus(root, recorded, running)
+	if err != nil {
+		return nil, err
+	}
+
 	// wrote becomes the new record. An entry is carried forward when a run
 	// leaves its file alone, because the record says what this CLI last wrote
 	// to a path and a run that wrote nothing there did not change that.
@@ -231,7 +251,10 @@ func Write(root string, projects []string, force bool) ([]Result, error) {
 	// edit into the record, and the next run could no longer see it.
 	wrote := map[string]Entry{}
 
-	results := make([]Result, 0, len(jobs))
+	results := make([]Result, 0, len(jobs)+1)
+	if replacedCorpus {
+		results = append(results, Result{Path: corpusSkillDir, Status: Replaced})
+	}
 	for _, j := range jobs {
 		target := filepath.Join(root, j.target)
 		key := stampKey(j.target)
@@ -316,6 +339,24 @@ func Write(root string, projects []string, force bool) ([]Result, error) {
 			}
 			note(merged)
 			results = append(results, Result{Path: j.target, Status: Updated})
+			continue
+		}
+
+		// **A file with a managed region is never rewritten whole.** Only its
+		// region is this CLI's, so the branch below - which replaces the whole
+		// file when it is provably still what this CLI last wrote - would
+		// delete everything outside it. That is not hypothetical: the moment
+		// AGENTS.md gained a region, a second `init` in a repository whose
+		// TODO sections had been answered wrote those answers away. The merge
+		// above had already brought the region into step, so it reported
+		// nothing to do and this branch took the file instead.
+		//
+		// The digest recorded after a merge is what makes it look provable:
+		// the record then says this CLI wrote those exact bytes, which is true
+		// and does not mean it wrote all of them.
+		if managedRegion.Find(current) != nil {
+			keep()
+			results = append(results, Result{Path: j.target, Status: Skipped})
 			continue
 		}
 

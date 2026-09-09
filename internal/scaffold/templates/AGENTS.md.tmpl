@@ -27,6 +27,19 @@
 >   write path to a source system is a behaviour change that needs a spec.
 > - **Nothing is deployed from a laptop.** See Deploy / CI.
 
+<!-- asgard-cli:managed:start -->
+<!--
+  Everything below this marker is written by `asgard-cli init` and is replaced
+  on every run, even in a file somebody here has edited. It is the platform's
+  contract, not this engagement's - a correction to it belongs upstream in the
+  CLI, where every engagement gets it.
+
+  Everything ABOVE the marker is yours and is never overwritten: the project
+  descriptions, what the customer's systems are, and the invariants. That split
+  is why this file can be kept current without deleting the answers - see
+  `mergeManaged` and the AGENTS.md section of TASK.md.
+-->
+
 ## Where this repo is, and what to do first
 
 `asgard-cli init` wrote this repo. What exists is the platform contract (this
@@ -890,3 +903,5 @@ each decision that got settled.
 - `Toolset.tools[]` require `requestConsent` (bool); `Agent.managed.prompt` requires all of
   `persona`/`task`/`context`/`format`, and `managed.aliasName` + `managed.description` are required.
 - Render with `asgard-cli render` before committing template changes; there is no app to run.
+
+<!-- asgard-cli:managed:end -->

@@ -2,7 +2,9 @@ package scaffold
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/kb"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/usecase"
@@ -159,3 +161,61 @@ record - ` + "`asgard-cli skill status`" + ` - because a customer's server can b
 versions from this CLI in either direction, and only the server can say what it
 accepts.
 `
+
+// corpusPrefix is the stamp-key prefix of everything corpusJobs writes.
+var corpusPrefix = stampKey(corpusSkillDir) + "/"
+
+// replaceCorpus removes the exported corpus when this repository's copy was
+// written by a different version of this CLI, so that the write which follows
+// lays it down fresh. It reports whether it removed anything.
+//
+// **This is the one place a scaffold deletes from a customer's repository**, and
+// the exception is narrow on purpose. Everywhere else a file this binary no
+// longer ships is reported as `Retired` and left, because somebody may have come
+// to rely on it. A wiki page is different in one way that settles it: the whole
+// directory is declared generated in its own SKILL.md, so nothing in it is
+// anybody's work - and a page that was renamed upstream would otherwise leave
+// both names on disk, where grep returns the old one with nothing marking it
+// stale. Merging cannot fix that; only replacing can.
+//
+// Three conditions, all of which must hold:
+//
+//   - The stamp has records under the prefix. **An unrecorded directory is
+//     somebody else's**, and this must not delete a directory it cannot prove
+//     it wrote.
+//   - Some record's CLI version differs from the running one. Same version means
+//     the material is this binary's already, and the byte comparison in the main
+//     loop handles an edit to it.
+//   - The path is a directory rather than a symlink, so the removal cannot
+//     escape the repository by following one out.
+func replaceCorpus(root string, recorded map[string]Entry, running string) (bool, error) {
+	var ours, differ int
+	for key, rec := range recorded {
+		if !strings.HasPrefix(key, corpusPrefix) {
+			continue
+		}
+		ours++
+		if rec.CLIVersion != running {
+			differ++
+		}
+	}
+	if ours == 0 || differ == 0 {
+		return false, nil
+	}
+
+	dir := filepath.Join(root, filepath.FromSlash(corpusSkillDir))
+	info, err := os.Lstat(dir)
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	if err != nil {
+		return false, fmt.Errorf("inspect %s: %w", corpusSkillDir, err)
+	}
+	if !info.IsDir() {
+		return false, fmt.Errorf("%s is not a directory, so it will not be replaced", corpusSkillDir)
+	}
+	if err := os.RemoveAll(dir); err != nil {
+		return false, fmt.Errorf("replace %s: %w", corpusSkillDir, err)
+	}
+	return true, nil
+}
