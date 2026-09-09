@@ -400,8 +400,15 @@ func sourceDigests(sources []platform.DocsSource) map[string]string {
 //
 // It is silent when there is nothing to compare: no call was made, or no
 // material has ever been fetched here. The one exception is a repository that
-// declares a pipeline and holds no material at all, which is an agent writing
-// CRs with no statement of what the server accepts.
+// holds a declaration and no material at all, which is an agent writing CRs
+// with no statement of what the server accepts.
+//
+// **It says what is missing, not what is bound.** The condition is the
+// declaration file, which `init` writes before anything is connected, so a
+// message asserting that this repository "declares a pipeline" was printed on
+// the first four commands anybody runs - at a moment when `.asgard-cli.yaml`
+// held a workspace and no pipeline at all. What the reader needs is which
+// version to fetch and the command that fetches it.
 func warnIfBehind(cmd *cobra.Command) {
 	remote := platform.LastDocsVersion()
 	if remote == "" {
@@ -426,10 +433,10 @@ func warnIfBehind(cmd *cobra.Command) {
 
 	errOut := cmd.ErrOrStderr()
 	if stamp == nil {
-		if !declaresPipeline(repoRoot) {
+		if !isPipelineRepo(repoRoot) {
 			return
 		}
-		fmt.Fprintf(errOut, "\nthis repository declares a pipeline and holds no reference material for %s\n"+
+		fmt.Fprintf(errOut, "\nno reference material here yet; this platform serves version %s\n"+
 			"    asgard-cli skill update\n", remote)
 		return
 	}
@@ -445,10 +452,15 @@ func warnIfBehind(cmd *cobra.Command) {
 		"    asgard-cli skill update\n", stamp.Version, remote)
 }
 
-// declaresPipeline reports whether this repository declares one. A repository
-// with no declaration is not an IaC repository, and telling it to fetch
-// CR-authoring material would be noise.
-func declaresPipeline(repoRoot string) bool {
+// isPipelineRepo reports whether this repository holds a deployment
+// declaration. A repository with none is not an IaC repository, and telling it
+// to fetch CR-authoring material would be noise.
+//
+// The file declares RELEASES, and it declares none until somebody writes one -
+// so this answers "is this the kind of repository that needs the material",
+// never "is this checkout bound to a pipeline". The binding step of
+// `asgard-cli gate` is what answers the second.
+func isPipelineRepo(repoRoot string) bool {
 	_, err := os.Stat(filepath.Join(repoRoot, pipelineconfig.FileName))
 	return err == nil
 }
