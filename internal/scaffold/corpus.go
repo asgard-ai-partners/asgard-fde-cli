@@ -36,16 +36,24 @@ func corpusJobs() ([]job, error) {
 		jobs = append(jobs, job{target: filepath.Join(corpusSkillDir, target), body: []byte(body)})
 	}
 
-	// Both halves come from All rather than List: the index and the log are
-	// hidden from a listing and are exactly what an exported copy needs, and
-	// the extracts' README is unlisted the same way. Writing List's view of
-	// the wiki produced a SKILL.md pointing at an index that was not there.
+	// Not List: a corpus hides its own bookkeeping from a listing, and some of
+	// that bookkeeping is exactly what an exported copy needs. Writing List's
+	// view of the wiki produced a SKILL.md pointing at an index that was not
+	// there.
+	//
+	// **But not all of it, either.** `wiki.Landing` drops the log, because the
+	// two unlisted wiki documents are not alike: the index is the map and has
+	// to travel, while the log is provenance for whoever maintains this
+	// repository - the wiki's own index says an FDE looking for an answer
+	// should never land there. Landing it also put two warnings in every
+	// customer repository, for historical entries that name a command the tool
+	// has since removed and are correct to.
 	for _, half := range []struct {
 		dir  string
 		all  func() ([]kb.Doc, error)
 		read func(string) (string, error)
 	}{
-		{"wiki", wiki.All, wiki.Read},
+		{"wiki", wiki.Landing, wiki.Read},
 		{"usecase", usecase.All, usecase.Read},
 	} {
 		docs, err := half.all()
@@ -149,12 +157,12 @@ is the better tool and needs no subprocess.
 These files came from one binary and a newer one may carry different pages.
 Nothing in this directory can tell you which:
 
-    asgard-cli scaffold
+    asgard-cli init
 
 That compares what is here against the running binary and reports five states.
 **` + "`ahead`" + ` is the one worth knowing**: these files were written by a newer
-asgard-cli than the one you are running, so your binary is the stale half and
-` + "`--force`" + ` would be a downgrade.
+build of this CLI than the one you are running, so your binary is the stale half
+and ` + "`--force`" + ` would be a downgrade.
 
 The platform's own reference material is a separate half with its own
 record - ` + "`asgard-cli skill status`" + ` - because a customer's server can be several

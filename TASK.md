@@ -6,9 +6,11 @@ is [AGENTS.md](AGENTS.md), what the commands do is [README.md](README.md), and
 the defects it has produced and why nothing caught them are in
 `source/FINDINGS.md`.
 
-**There is no worklist here any more.** What could be done from a checkout has
-been, and git log is the record of it; what is left is under "What is not done"
-and every line of it names the thing it is waiting for. A finding that a reader
+**There is one worklist here**, under "Landing the rest of the material", and it
+is there because somebody asked for that work. Everything else follows the older
+rule: what could be done from a checkout has been, git log is the record of it,
+and what is left is under "What is not done" where every line names the thing it
+is waiting for. A finding that a reader
 needs lives on the document it concerns rather than here - `**Unchecked:**` on
 the page, a row on `asgard-cli wiki platform-unknowns`, a rule in AGENTS.md.
 
@@ -207,6 +209,123 @@ so unlike `docs/.reading-log` - which carries page names of this tool and
 nothing else - it stays out of the repository, and the scaffold's `.gitignore`
 says so. It only has to live long enough for the issue to be filed; what reaches
 the next engagement is the fix in the next release.
+
+## Landing the rest of the material
+
+**The test is grep, and it is the only test.** `asgard-cli init` writes the wiki
+and the extracts into `.agents/skills/asgard-platform/` so that an agent in a
+customer repository can find a document by a word rather than by a subprocess
+and a ranking pass. What else belongs there is decided by asking whether that
+retrieval gets better - not by whether the material is valuable.
+
+Three things follow from the test, and they rule as much out as in:
+
+  - **Static, or it cannot be a file.** Anything rendered from the repository's
+    own state freezes one moment into a committed file, and nothing detects that
+    kind of staleness: it is not behind the binary, it is behind the directory
+    next door.
+  - **Found by a word, not by a name.** A document somebody is told to read is
+    already reachable; one they arrive at carrying a term is what grep is for.
+  - **Read while working in this repository.** Material for a meeting held before
+    the repository exists is served by the binary, which is where it has to be.
+
+`asgard-cli find` searches four parts of the material. **Two have landed** - the
+wiki and the extracts - and the two below have not.
+
+### 1. `needs` - do this first
+
+Seven shapes, about thirty rows, each with what to ask, why, and the document
+that owns the claim. **Fully static**, no repository dependency, and `Item`
+already carries json tags, so serialising it is the small part.
+
+It passes the test outright: `allowlist`, `read-only`, `test environment`,
+`Channel Access Token` are words an FDE arrives with, and the answer is one row
+plus its source. Today it is 125 lines of Go that no grep can reach, and it is
+the command Goal's second point names.
+
+### 2. `brief` - same shape, nearly as cheap
+
+Four briefs, 28 recorded ways to get something wrong. **Static** - `Render`
+takes a writer and no data.
+
+It passes the test less cleanly, and the reason is worth keeping: a brief is read
+**by name before an activity**, not found by a word, so landing it wins less than
+`needs` does. What earns it a place is that two of the four - `write-chart` and
+`handover` - are read while inside the repository, and a phrase like "what must
+never appear on a customer's screen" is one somebody would grep for.
+
+### 3. `guide` - the most valuable, and the only one that needs designing
+
+Ten documents, 2313 lines: the interview and its order, how the work splits into
+projects, each project's read path and entry point, where knowledge lives, deploy,
+and adding a capability to something already live. It is the third kind of
+material - `wiki` is what the platform has, `usecase` is what to put in a field,
+and this is **which decision to make now and what it costs to change later**.
+
+**It is already being pointed at from material that has landed**: eight pointers
+across seven exported documents, six of them to `asgard-cli guide requirements`,
+which is where filter 0 lives and which every `needs` row cites. Those resolve
+through the binary and not on disk - a dead pointer in a greppable corpus, the
+same class of defect as the missing index.
+
+**It cannot be exported as it stands, and this is the real work.** 56 template
+sites across the ten files, of two kinds:
+
+    repository state   <<range .Projects>>, <<.RequestID>>, <<with .Requests>>,
+                       <<if not (.Has "DataConnector")>>, <<.Status>>
+    a placeholder      <<.SpecSlug>> in an example path
+
+Dumped verbatim it ships files full of `<<range .Projects>>`; rendered, it commits
+one moment's repository state. So each document has to be **split into its static
+half and its live half** - the decision knowledge becomes a file, and "here is
+what your repository currently has" stays a command.
+
+Two of the ten need no split at all: `06-knowledge.md` and `07-verify.md` have
+zero template sites and could land today.
+
+**The live half is not `gate`'s to serve.** `gate` answers whether the repository
+is in a state to go on; the inventory the prompts interpolate is three other
+commands, and the tool already says so in its own words - the repo check's
+message for a document naming the removed `status` reads: *where it meant "what
+is still open", `asgard-cli question`, `asgard-cli request` and `asgard-cli
+task`; where it meant "what does each chart declare and still lack",
+`asgard-cli project`.* That mapping is the one the split should use, and a
+landed document has to name the command rather than imply it.
+
+### Ruled out, with the reason
+
+  - **`gate` and `check` rule explanations.** Exported, the next rule change
+    makes the file a lie, and nobody greps for a rule - it finds you, and the
+    message it prints carries its own reasoning.
+  - **`size`.** A calculator, not a document: `--databases 2 --queries 4`. Grep
+    does no arithmetic, and its shape table is worthless without the sum.
+  - **`generate`'s twelve CR templates.** 16 of the 21 extracts already carry a
+    `## The skeleton`, and the extracts have landed. A second copy of the same
+    fields, without the cautions attached to them, breaks one fact one home.
+  - **Everything under Build, Check and Deploy.** Repository views and actions.
+
+### Three defects the first landing introduced, all fixed
+
+**All three were found by running `asgard-cli gate` inside a scaffolded
+repository** - the check that should have been run before that commit and was
+not. Landing material into a customer repository makes it subject to that
+repository's own checks, and nothing in this repository's audits sees that.
+
+  - The exported `SKILL.md` named `asgard-cli scaffold`, which this build has no
+    such command for - it is `init`. One word, and the exact failure `2bce648`
+    was written about.
+  - It also read "a newer **asgard-cli than** the one you are running", and the
+    repo check takes `asgard-cli` plus the next word in prose as a command name.
+    Prose naming the tool rather than invoking it now says "this CLI", which is
+    the corpus's own convention.
+  - **`wiki/log.md` is no longer landed.** It names the removed `asgard-cli
+    status` twice in historical entries that are correct, so every customer
+    repository carried two warnings for them. The wiki's own index already said
+    why it does not belong: log is the provenance layer and *"an FDE looking for
+    an answer should never land there"*. `Corpus.All` treats every unlisted
+    document alike and these two are not alike - `index` is the map and has to
+    travel, `log` is for whoever maintains this repository. `wiki.Landing` is
+    that distinction; 51 files land rather than 52.
 
 ## Non-goals
 

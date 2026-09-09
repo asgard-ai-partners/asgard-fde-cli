@@ -214,3 +214,29 @@ func table(heading string) map[string]string {
 	}
 	return out
 }
+
+// Landing returns the pages that belong in a copy written into a customer
+// repository: every page, plus the index, and not the log.
+//
+// **The two unlisted documents are not alike**, which List cannot express and
+// All does not either. The index is the map and a copy without it has none.
+// The log is provenance - which commit of each source this corpus was read at -
+// and this page's own index says an FDE looking for an answer should never land
+// there. Writing it into a customer repository also carried its historical
+// entries, which name commands the tool has since removed and are correct to,
+// into a check that reads them as a repository pointing at a command that does
+// not exist.
+func Landing() ([]Page, error) {
+	all, err := corpus.All()
+	if err != nil {
+		return nil, err
+	}
+	out := make([]Page, 0, len(all))
+	for _, p := range all {
+		if p.Name == "log" {
+			continue
+		}
+		out = append(out, p)
+	}
+	return out, nil
+}
