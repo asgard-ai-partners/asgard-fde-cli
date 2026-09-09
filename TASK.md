@@ -304,6 +304,70 @@ landed document has to name the command rather than imply it.
     fields, without the cautions attached to them, breaks one fact one home.
   - **Everything under Build, Check and Deploy.** Repository views and actions.
 
+### The endgame: `wiki` and `usecase` stop being commands
+
+**Where this is going**: the material is on disk, `AGENTS.md` tells the agent to
+grep it, and the two reader commands are deleted. That is the llm-wiki shape -
+one tree, one index at its root, and links that are paths a reader can follow -
+and the landing is the first half of it.
+
+Nothing about that is blocked by taste. It is blocked by three things, in this
+order, and the first is the one that is not obvious.
+
+**1. A command-form pointer was chosen because it is independent of the
+layout.** `asgard-cli usecase write-path` means the same thing from anywhere. A
+path does not, and the two trees do not agree:
+
+    from a wiki page to that extract
+      in this repository   ../../usecase/extracts/write-path.md
+      as landed            ../usecase/write-path.md
+
+So pointers cannot simply become paths - they would be right in one tree and
+wrong in the other. Three ways out, and only the second reaches the endgame:
+
+  - Rewrite them to paths at export. The landed pages then differ from the
+    binary's copy, so nobody can diff the two to see what changed, and the
+    rewrite is a transformation with its own failure modes.
+  - **Make this repository's tree match the landed one** - one `corpus/` holding
+    `wiki/` and `usecase/` - so a relative path is correct in both. A real
+    refactor, and the tension goes away permanently rather than being managed.
+  - Teach the mapping once in a generated root index and leave the pointers as
+    commands. Cheapest, and it keeps a subprocess in the loop at the one place
+    the landing was supposed to remove it: the map.
+
+**2. `--links`, `--orphans` and `find`'s counterpart are all built on that
+pointer form.** `linkRe` is the basis of two of the four acceptance rules. Change
+the form and that machinery is rebuilt on the new one - mechanical, and to be
+done carefully, because it is what keeps the corpus honest and a mistake in it
+lapses silently rather than failing. The order is protected by a check, at least:
+change the form first and `--commands` reports every pointer left behind.
+
+**3. Deleting the readers removes the only way to read a whole document with no
+repository.** `find` prints excerpts - 86 lines for a search across all four
+parts, where one page is over 200 - and has no mode that prints a document
+whole. `asgard-cli wiki <page>` is that mode. So either `find` gains it, or one
+reader stays and is understood to be exactly that: the way to read one document
+in full, in a meeting, before any directory exists.
+
+That last point is the one that decides whether both readers go or one survives,
+and it is worth settling before the work rather than during it.
+
+The sequence, each step verifiable on its own and none of them leaving the tool
+worse if it stops there:
+
+  1. Move this repository's corpus to `corpus/{wiki,usecase}/`.
+  2. Convert the pointers to paths and rebuild `kb.Link` on them, with
+     `--links`, `--orphans` and the counterpart green on the new form.
+  3. Generate the root `index.md`, and hang `needs` and `brief` off it.
+  4. Give `find` a whole-document mode, or decide deliberately that one reader
+     is it.
+  5. Delete `wiki` and `usecase`. `--commands` confirms nothing still names
+     them.
+
+**Step 1 is the one to do early if it is going to happen at all.** It moves every
+document in the corpus, so it collides with any other edit to the material - and
+this repository's material changes most weeks.
+
 ### Three defects the first landing introduced, all fixed
 
 **All three were found by running `asgard-cli gate` inside a scaffolded
