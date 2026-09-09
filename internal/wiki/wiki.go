@@ -44,6 +44,10 @@ var corpus = kb.Corpus{
 // List returns every page, sorted by name.
 func List() ([]Page, error) { return corpus.List() }
 
+// All returns every page including the index and the log, for writing the wiki
+// out rather than listing it.
+func All() ([]Page, error) { return corpus.All() }
+
 // Read returns one page in full.
 func Read(name string) (string, error) { return corpus.Read(name) }
 

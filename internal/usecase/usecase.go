@@ -36,6 +36,10 @@ var corpus = kb.Corpus{
 // List returns every extract, sorted by name.
 func List() ([]Extract, error) { return corpus.List() }
 
+// All returns every extract including the README that explains how to read
+// one, for writing the extracts out rather than listing them.
+func All() ([]Extract, error) { return corpus.All() }
+
 // Read returns one extract in full.
 func Read(name string) (string, error) { return corpus.Read(name) }
 

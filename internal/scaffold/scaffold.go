@@ -247,7 +247,7 @@ func Write(root string, projects []string, force bool) ([]Result, error) {
 			}
 		}
 
-		content, err := render(j.source, j.data)
+		content, err := j.content()
 		if err != nil {
 			return nil, err
 		}
@@ -406,7 +406,7 @@ func InspectShipped(root string, projects []string) ([]Result, error) {
 		if !shipped(j.target) {
 			continue
 		}
-		content, err := render(j.source, j.data)
+		content, err := j.content()
 		if err != nil {
 			return nil, err
 		}
@@ -488,6 +488,20 @@ type job struct {
 	source string
 	target string
 	data   Data
+
+	// body is set when the contents come from outside the embedded tree. Such
+	// a job is copied verbatim - there is no template to render, and nothing in
+	// a wiki page varies by repository. See corpus.go.
+	body []byte
+}
+
+// content returns what to write, from the body when the job carries one and
+// from the template tree otherwise.
+func (j job) content() ([]byte, error) {
+	if j.body != nil {
+		return j.body, nil
+	}
+	return render(j.source, j.data)
 }
 
 // accumulators are the files this CLI's own commands append to. The spec
@@ -577,6 +591,15 @@ func plan(data Data) ([]job, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// The platform corpus is not in this package's embedded tree - go:embed
+	// cannot reach across a package - so it arrives as jobs carrying their
+	// bytes rather than a template path. See corpus.go.
+	corpus, err := corpusJobs()
+	if err != nil {
+		return nil, err
+	}
+	jobs = append(jobs, corpus...)
 
 	return jobs, nil
 }
@@ -716,5 +739,15 @@ func TemplateBodies() (map[string]string, error) {
 		out[strings.TrimPrefix(path, "templates/")] = string(raw)
 		return nil
 	})
-	return out, err
+	if err != nil {
+		return nil, err
+	}
+
+	// The corpus skill is a Go constant rather than a file in the tree, so the
+	// walk misses it while it names several commands - which is exactly what
+	// the command audit exists to catch. The pages and extracts it writes are
+	// not added: they are already audited as themselves.
+	out[filepath.ToSlash(filepath.Join(corpusSkillDir, "SKILL.md"))] = corpusSkill
+
+	return out, nil
 }

@@ -36,10 +36,25 @@ wiki is that assumption.
 **Do not repeat them.** Chart-writing cautions belong to `usecase` and field
 rules to the CRD; point at them instead.
 
-> These pages ship inside the binary and are never written into a customer
-> repository - the same reason `internal/usecase/extracts/` is not. A copy inside
-> one engagement goes stale where nobody is looking, while a stale page here is
-> fixed for every engagement in one release.
+> **These pages are the binary's copy, and `asgard-cli init` also writes them
+> into a repository** under `.agents/skills/asgard-platform/`, with the extracts
+> beside them. Edit them here; that copy is generated and the next `init`
+> replaces it.
+>
+> **This reverses what this paragraph used to say**, which was that they are
+> never written into a customer repository, because "a copy inside one engagement
+> goes stale where nobody is looking". That was true for as long as nothing could
+> see the staleness. `scaffold.Stamp` can: a digest and a CLI version **per
+> file**, so the report separates a repository that is behind from one somebody
+> edited from one written by a **newer** binary than the one now reading it - and
+> `--force` refuses that last case rather than downgrading it. The objection was
+> to an invisible stale copy, not to a copy.
+>
+> The reason to write it at all is that an agent in a customer repository finds
+> what it knows under `.agents/skills/`, and `grep -r` answers "which document
+> says this" without a subprocess. What that copy cannot do is translate a
+> query - so `aliases.md` is written beside it, and `internal/scaffold/corpus.go`
+> lists the four things `asgard-cli find` still does that a grep does not.
 
 ## Three layers
 

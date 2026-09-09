@@ -269,8 +269,8 @@ control is which cubes and dimensions the layer declares - see
 **`sampleQuestions` on the layer is not this field's counterpart either.** It is
 what Data Insight renders as the buttons under a layer's prompt box, it takes
 plain strings, and it is the one field in the chart that changes what a person
-sees before they type anything. `usecase mimir-dashboard` is where it is written
-up, because that is the shape whose consumer is a person.
+sees before they type anything. `asgard-cli usecase mimir-dashboard` is where
+it is written up, because that is the shape whose consumer is a person.
 
 ## The OLAP exception
 

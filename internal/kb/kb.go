@@ -467,7 +467,17 @@ func (c Corpus) parse(name string, data []byte) Doc {
 }
 
 // List returns every document in the corpus, sorted by name.
-func (c Corpus) List() ([]Doc, error) {
+func (c Corpus) List() ([]Doc, error) { return c.list(false) }
+
+// All returns every document, including the corpus's own bookkeeping - an
+// index, a log, a README. List hides those because somebody listing the
+// material does not want them; anything writing the corpus out needs them,
+// because an export missing its index has no map. `asgard-cli init` writes the
+// wiki and the extracts into a repository and hit exactly that: the shipped
+// SKILL.md told the reader to start at the index, which had not been written.
+func (c Corpus) All() ([]Doc, error) { return c.list(true) }
+
+func (c Corpus) list(bookkeeping bool) ([]Doc, error) {
 	refs, err := c.refs()
 	if err != nil {
 		return nil, err
@@ -475,7 +485,7 @@ func (c Corpus) List() ([]Doc, error) {
 
 	var out []Doc
 	for _, r := range refs {
-		if c.Unlisted[r.Name] {
+		if c.Unlisted[r.Name] && !bookkeeping {
 			continue
 		}
 		data, err := fs.ReadFile(c.FS, r.Path)
