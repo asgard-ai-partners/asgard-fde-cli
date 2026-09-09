@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/check"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/repo"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/version"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/work"
@@ -51,10 +52,15 @@ memory of today.
   2. The state I was in            REQUIRED, and it is what makes it a bug
                                    report rather than a complaint
      Somebody has to be able to stand where you stood. What the repo held, and
-     what the customer situation was in shape. The fastest way to give most of
-     it is to paste "asgard-cli project", "asgard-cli question" and
-     "asgard-cli check" from that moment - they describe the state better than a
-     sentence, and they are what a reader runs to reproduce it.
+     what the customer situation was in shape. Do not assemble this by hand -
+     --new collects it, and collects it safely. What a reader needs is the
+     version, what the charts declare, what "asgard-cli check" says and how much
+     is open; what they must never receive is the content of any of it.
+
+     **"asgard-cli question" and "asgard-cli request" are not pasteable.** Their
+     rows are the customer's own table names, column names and system names,
+     which is exactly what the rule below forbids. --new reports them as counts
+     for that reason, and a count carries everything a fix needs.
 
   3. What I ran, and what came back
      In order, with the real output pasted. Then what you expected instead. The
@@ -97,7 +103,14 @@ filled in and the rest marked TODO:
 otherwise entirely somebody's account of what happened, and the account is the
 part that can be wrong - a search someone remembers running, phrased differently
 from the one they ran. What --new puts in is the tool's own record: the version,
-what the charts declare, what is open, and every query that came back empty.
+what the charts declare, what "asgard-cli check" says, how many questions,
+requests and task specs are open, and every query that came back empty.
+
+**The search evidence appears only when there is some.** It is read from
+docs/.find-misses, which "asgard-cli find" writes when a query returns nothing,
+and a repository where every search found something has no such file - so
+section 3 arrives as a bare TODO and that is the correct output, not a bug. The
+line the report closes with names what was actually collected.
 
 **Read what it produced before filing it.** The misses are queries as they were
 typed, so they can carry the customer's words; the rule above about never
@@ -154,9 +167,10 @@ func writeReport(out io.Writer) error {
 		fmt.Fprintf(out, "%d open question(s), %d open request(s), %d open task spec(s).\n\n",
 			len(state.Questions), len(work.ActiveRequests(state.Requests)), len(work.ActiveTasks(state.Tasks)))
 	}
+	checked := writeCheck(out)
 
 	fmt.Fprintf(out, "## 3) What I ran, and what came back\n\n")
-	writeMisses(out)
+	misses := writeMisses(out)
 	fmt.Fprintf(out, "TODO - the rest, in order, with the real output pasted, then what you\nexpected instead. The gap between those two is usually the whole report.\n\n")
 
 	fmt.Fprintf(out, "## 4) Where the answer actually was\n\n"+
@@ -167,9 +181,57 @@ func writeReport(out io.Writer) error {
 	fmt.Fprintf(out, "## 5) What it cost\n\n"+
 		"TODO - twenty minutes, a wrong sentence to a customer, or nothing yet\nbecause you caught it. This decides what gets fixed first.\n\n")
 
-	fmt.Fprintf(out, "---\n\nWritten by `asgard-cli issue-report --new`. Section 2 and the search\n"+
-		"evidence in 3 are collected; the TODOs are not.\n")
+	// **What it says it collected has to be what it collected.** The old line
+	// claimed the search evidence unconditionally, and a repository where every
+	// `find` returned something has no misses file at all - so a reader saw a
+	// bare TODO under a sentence promising evidence, and went looking for a bug
+	// in the generator. Naming the parts is one line and removes that hunt.
+	collected := "the version"
+	if err == nil {
+		collected += ", what the charts declare, what is open"
+	}
+	if checked {
+		collected += ", the `check` report"
+	}
+	if misses {
+		collected += ", and the searches that came back empty"
+	}
+	fmt.Fprintf(out, "---\n\nWritten by `asgard-cli issue-report --new`. Collected: %s.\n"+
+		"The TODOs are not.\n", collected)
 	return nil
+}
+
+// writeCheck puts `asgard-cli check` into section 2, and reports whether it did.
+//
+// The help has always named `check` as one of the things worth pasting, and
+// --new has never included it. It is the most reproducible half of "the state I
+// was in": every other line of section 2 says what the repository holds, and
+// this is the only one that says whether what it holds is coherent.
+//
+// A failing check is the interesting case and must not stop the report - a
+// repository broken enough to fail it is a repository somebody is more likely
+// to be filing about, not less.
+func writeCheck(out io.Writer) bool {
+	root := repo.Root(".")
+	if root == "" {
+		return false
+	}
+	report, err := check.Run(root)
+	if err != nil {
+		return false
+	}
+	fmt.Fprintf(out, "`asgard-cli check` at that moment:\n\n```\n")
+	for _, f := range report.Warnings() {
+		fmt.Fprintf(out, "warn   %s\n", f.Message)
+	}
+	for _, f := range report.Errors() {
+		fmt.Fprintf(out, "error  %s\n", f.Message)
+	}
+	if report.OK() && len(report.Warnings()) == 0 {
+		fmt.Fprintf(out, "ok  structure is consistent (whole repo)\n")
+	}
+	fmt.Fprintf(out, "```\n\n")
+	return true
 }
 
 // writeMisses puts the recorded empty searches into the report.
@@ -178,14 +240,14 @@ func writeReport(out io.Writer) error {
 // what happened. A search that came back empty was witnessed by the tool, so it
 // is evidence rather than recollection - and it is the half of section 4 that
 // separates a missing page from an unfindable one.
-func writeMisses(out io.Writer) {
+func writeMisses(out io.Writer) bool {
 	root := repo.Root(".")
 	if root == "" {
-		return
+		return false
 	}
 	misses, err := work.Misses(root)
 	if err != nil || len(misses) == 0 {
-		return
+		return false
 	}
 	fmt.Fprintf(out, "Searches this engagement ran that the material did not answer, recorded by\n"+
 		"`asgard-cli find` at the time:\n\n```\n")
@@ -193,4 +255,5 @@ func writeMisses(out io.Writer) {
 		fmt.Fprintf(out, "%s  %-9s %s\n", m.Date, m.Kind, m.Query)
 	}
 	fmt.Fprintf(out, "```\n\n**Check these before filing** - a query carries whatever words were typed.\n\n")
+	return true
 }
