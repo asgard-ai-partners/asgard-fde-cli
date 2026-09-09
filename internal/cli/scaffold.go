@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/repo"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/scaffold"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/version"
 )
 
 // scaffoldRoot is where the skeleton goes.
@@ -183,4 +185,87 @@ func reportShipped(out io.Writer, paths []string, condition string) {
 	for _, p := range paths {
 		fmt.Fprintf(out, "  %s\n", p)
 	}
+}
+
+// warnIfShippedStale says so when the material this CLI ships into a
+// repository is not what this binary carries.
+//
+// **It is warnIfBehind's sibling, and it is the one that always fires.** That
+// one rides on a platform response, so it is silent on every command that
+// reached no platform - which is most of them, and all of them on a plane.
+// This one compares against the binary it is part of, so the only thing it
+// needs is a repository to be standing in.
+//
+// **A binary that can replace itself is why this cannot live in `init`.**
+// Nothing re-runs `init`: it is documented as the one command written for a
+// person, and a person runs it once, in an empty directory. With a self-update
+// the material moves between two commands, without anybody having run
+// anything - so the only thing that can report it is something already being
+// run, which is the argument warnIfBehind makes for the platform's half and it
+// holds harder here.
+//
+// **It says nothing about an edited file.** Somebody here changed shipped
+// material on purpose, and repeating that after every command is nagging about
+// a decision already taken. `gate` lists it, once, when asked.
+func warnIfShippedStale(cmd *cobra.Command) {
+	// `init`, `gate` and `skill` have each said it already, in more detail and
+	// with the remedy in context. Saying it again underneath them reads as a
+	// second, different problem.
+	for c := cmd; c != nil; c = c.Parent() {
+		switch c.Name() {
+		case "init", "gate", "skill":
+			return
+		}
+	}
+	// `repo.Root` and not `locateRepo`: that one finds the checkout by its
+	// `.git`, and whether the material this CLI shipped here is current has
+	// nothing to do with whether anybody has run `git init` yet - `asgard-cli
+	// init` deliberately writes the skeleton before there is a repository. A
+	// non-empty answer here is also the "is this the kind of repository that
+	// needs the material" test, because what it locates IS the declaration.
+	dir, err := os.Getwd()
+	if err != nil {
+		return
+	}
+	repoRoot := repo.Root(dir)
+	if repoRoot == "" {
+		return
+	}
+	projects, err := repo.Projects(repoRoot)
+	if err != nil {
+		return
+	}
+	results, err := scaffold.InspectShipped(repoRoot, projects)
+	if err != nil {
+		return
+	}
+
+	counts := map[scaffold.Status]int{}
+	for _, r := range results {
+		counts[r.Status]++
+	}
+
+	errOut := cmd.ErrOrStderr()
+	if n := counts[scaffold.Ahead]; n > 0 {
+		fmt.Fprintf(errOut, "\n%d file(s) here were written by a newer asgard-cli than this one (%s)\n"+
+			"    upgrade asgard-cli; this repository is ahead of the binary, not behind it\n",
+			n, version.Get().Version)
+	}
+
+	var parts []string
+	total := 0
+	for _, st := range []scaffold.Status{scaffold.Missing, scaffold.Retired, scaffold.Behind, scaffold.Stale} {
+		if n := counts[st]; n > 0 {
+			parts = append(parts, fmt.Sprintf("%d %s", n, st))
+			total += n
+		}
+	}
+	if total == 0 {
+		return
+	}
+	// Which files, and what to do about each, is the gate's to say: these four
+	// states are fixed in three different ways and a one-line remedy would be
+	// right about one of them.
+	fmt.Fprintf(errOut, "\n%d file(s) of what this CLI ships here are not what it carries now (%s)\n"+
+		"    asgard-cli gate\n", total, strings.Join(parts, ", "))
 }

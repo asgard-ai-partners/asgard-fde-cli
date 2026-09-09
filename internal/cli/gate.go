@@ -19,8 +19,11 @@ import (
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/pipelineconfig"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/platform"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/render"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/repo"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/scaffold"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/skills"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/tool"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/version"
 )
 
 // `asgard-cli gate` is the one command to run after changing anything.
@@ -103,6 +106,13 @@ What it runs, in order:
   tools    helm is on PATH. Without it the three chart steps cannot run, and
            they are reported as skipped rather than passed
   repo     the structural invariants a chart render cannot see
+  shipped  whether AGENTS.md and the design-time skills are still what this
+           binary carries. It is the one freshness check that is always
+           answerable: it compares against the binary rather than a platform,
+           so no session and no --offline can skip it. Two of its states warn
+           rather than fail - a shipped file somebody here changed on purpose,
+           and material written by a NEWER CLI than the one running, which is a
+           fact about the install rather than about the repository
   binding  whether .asgard-cli.yaml names a workspace and a pipeline that the
            platform still has. It is the step that catches a half-bound
            checkout - ` + "`workspace use`" + ` clears the pipeline line, and this goes
@@ -181,6 +191,7 @@ Exits non-zero if any step failed.`,
 			helmReady := steps[0].Status == stepPass
 
 			steps = append(steps, gateRepo(root, args))
+			steps = append(steps, gateShipped(root))
 			steps = append(steps, gateBinding(cmd, root, profile, offline))
 			steps = append(steps, gateSkills(cmd, profile, offline))
 			steps = append(steps, gateCharts(cmd, root, releases, helmReady)...)
@@ -454,6 +465,117 @@ func gateBinding(cmd *cobra.Command, root, profile string, offline bool) stepRes
 		res.Details = append(res.Details, fmt.Sprintf("      %-22s %-20s %s", p.PipelineId, p.Name, p.RepoFullName))
 	}
 	res.Remedy = "asgard-cli pipeline use <id>"
+	return res
+}
+
+// gateShipped asks whether the material this CLI ships into a repository is
+// still what this binary carries: AGENTS.md and the design-time skills.
+//
+// **It is the freshness step that cannot be turned off.** `skills` below needs
+// a session and skips on --offline, because the version it compares against is
+// the platform's. This one compares against the binary it is part of, so it
+// needs no network, no session and no binding - and it is answerable in exactly
+// the situations where the other is not.
+//
+// **It matters more, not less, once this binary can update itself.** The
+// platform's half moves when somebody publishes; this half moves when the
+// binary is replaced, which with a self-update happens between two commands and
+// is not something anybody ran. Until this step existed the only thing that
+// ever reported it was a re-run of `asgard-cli init` - a command documented as
+// the one written for a person, which nothing re-runs on a schedule.
+//
+// **Two of the states warn rather than fail.** `edited` is somebody here having
+// changed a shipped file, which the scaffolded AGENTS.md invites by shipping a
+// project list of TODO rows, and a gate that goes red on an engagement
+// answering one is a checker crying wolf - which this material has caused once
+// already. `ahead` is this binary being older than the material, which is a
+// fact about the install rather than a defect in the repository, and the
+// repository is what this command returns a verdict on. A warn is neither
+// hidden nor counted against the exit code.
+func gateShipped(root string) stepResult {
+	res := stepResult{Name: "shipped"}
+
+	projects, err := repo.Projects(root)
+	if err != nil {
+		res.Status = stepFail
+		res.Summary = err.Error()
+		return res
+	}
+	results, err := scaffold.InspectShipped(root, projects)
+	if err != nil {
+		res.Status = stepFail
+		res.Summary = err.Error()
+		return res
+	}
+
+	by := map[scaffold.Status][]string{}
+	for _, r := range results {
+		if r.Status != scaffold.Skipped {
+			by[r.Status] = append(by[r.Status], r.Path)
+		}
+	}
+	for _, st := range []scaffold.Status{
+		scaffold.Missing, scaffold.Retired, scaffold.Behind, scaffold.Stale,
+		scaffold.Edited, scaffold.Ahead, scaffold.Updated,
+	} {
+		for _, path := range by[st] {
+			// No column padding: printSteps sends every detail through wrapAt,
+			// which splits on strings.Fields and so collapses any run of
+			// spaces. One word then one path is what survives.
+			res.Details = append(res.Details, fmt.Sprintf("%s %s", st, path))
+		}
+	}
+
+	// Ordered by what the reader has to do about it, so the summary names the
+	// worst thing rather than the first.
+	switch {
+	case len(by[scaffold.Missing]) > 0:
+		res.Status = stepFail
+		res.Summary = fmt.Sprintf("%d shipped file(s) are not here, so an agent working here reads no copy of them",
+			len(by[scaffold.Missing]))
+		res.Remedy = "asgard-cli init"
+	case len(by[scaffold.Retired]) > 0:
+		res.Status = stepFail
+		res.Summary = fmt.Sprintf("%d file(s) were shipped here by an asgard-cli that carried them and this one does not",
+			len(by[scaffold.Retired]))
+		res.Remedy = "read them and delete them; nothing compares them against anything any more"
+	case len(by[scaffold.Behind]) > 0:
+		res.Status = stepFail
+		res.Summary = fmt.Sprintf("%d file(s) are older than what this CLI carries, and nobody here has touched them",
+			len(by[scaffold.Behind]))
+		res.Remedy = "asgard-cli init --force"
+	case len(by[scaffold.Stale]) > 0:
+		res.Status = stepFail
+		res.Summary = fmt.Sprintf("%d file(s) differ from what this CLI carries, and which way round is not knowable",
+			len(by[scaffold.Stale]))
+		res.Remedy = "asgard-cli init --force, after reading the diff"
+	}
+	if res.Status == stepFail {
+		return res
+	}
+
+	switch {
+	case len(by[scaffold.Ahead]) > 0:
+		res.Status = stepWarn
+		res.Summary = fmt.Sprintf("%d file(s) here were written by a NEWER asgard-cli than this one (%s)",
+			len(by[scaffold.Ahead]), version.Get().Version)
+		res.Remedy = "upgrade asgard-cli; the repository is fine and this binary is behind it"
+	case len(by[scaffold.Edited]) > 0:
+		res.Status = stepWarn
+		res.Summary = fmt.Sprintf("%d shipped file(s) were changed here; the rest is what this CLI carries",
+			len(by[scaffold.Edited]))
+	default:
+		res.Status = stepPass
+		writers, err := scaffold.Writers(root)
+		switch {
+		case err != nil:
+			res.Summary = "matches this CLI"
+		case len(writers) == 0:
+			res.Summary = "matches this CLI, which has not recorded writing any of it"
+		default:
+			res.Summary = fmt.Sprintf("matches this CLI, written by %s", strings.Join(writers, ", "))
+		}
+	}
 	return res
 }
 

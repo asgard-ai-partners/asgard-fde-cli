@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,7 +12,10 @@ import (
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/pipelineconfig"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/platform"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/repo"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/scaffold"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/skills"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/version"
 )
 
 func newSkillCmd() *cobra.Command {
@@ -26,6 +30,11 @@ what they default to. Those are not in this binary and must not be.
 
     asgard-cli skill status    what is here, and what the platform has
     asgard-cli skill update    write what the platform has
+
+` + "`status`" + ` also reports the OTHER half of the material in a repository - the
+skills this binary ships, which no platform is party to - because nobody asks
+the freshness question in halves. ` + "`update`" + ` does not touch that half: it is
+written by ` + "`asgard-cli init`" + ` and checked by ` + "`asgard-cli gate`" + `'s ` + "`shipped`" + ` step.
 
 The version is a number the platform declares and a person increments. It is
 not a digest of the material, deliberately: three upstreams feed it - a
@@ -100,7 +109,20 @@ about some other version of Asgard.
 
 Two versions that differ is not a warning about the past - the material was
 right when it was written. It means the server has moved since, and what an
-agent reads here now describes something else.`,
+agent reads here now describes something else.
+
+**With no session it still answers the half that needs no platform**, and says
+so on the platform line instead of failing. This help has always said the
+command exits 0; that was untrue in exactly the situations - a CI runner, an
+agent sandbox, a plane - where the local half is the only one available.
+
+**It reports two halves, because there are two.** Above is the platform's
+material and the version it declares. Below it is the material this CLI ships -
+AGENTS.md and the design-time skills - and which version of the binary wrote
+what is here. **The two version numbers are unrelated**, the remedies are
+different commands, and this used to answer only the first: somebody asking
+whether the material here was current got a confident answer about one half and
+no hint that the other existed. ` + "`asgard-cli gate`" + ` names the individual files.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			if err := checkFormat(format); err != nil {
@@ -115,13 +137,28 @@ agent reads here now describes something else.`,
 				return err
 			}
 
+			// **Not having a session is a state, not a failure.** It is the
+			// ordinary condition of a CI runner and of an agent sandbox, and
+			// this command's own help says it always exits 0 - which it did
+			// not, so the half of the answer that needs no platform was
+			// unreachable in exactly the places it is the only half available.
+			// `asgard-cli gate`'s skills step reaches the same conclusion for
+			// the same reason and calls it a skip.
+			var (
+				remote      *platform.DocsVersion
+				profileName string
+				unanswered  string
+			)
 			pc, err := resolveContext(cmd, contextOptions{Profile: profile})
-			if err != nil {
-				return err
-			}
-			remote, err := pc.Client.DocsVersionOnly(cmd.Context())
-			if err != nil {
-				return err
+			switch {
+			case err != nil:
+				unanswered = "no session, so the platform was not asked (`asgard-cli login`)"
+			default:
+				profileName = pc.Session.Profile.Name
+				remote, err = pc.Client.DocsVersionOnly(cmd.Context())
+				if err != nil {
+					unanswered = fmt.Sprintf("the platform did not answer: %v", err)
+				}
 			}
 
 			local := ""
@@ -132,63 +169,67 @@ agent reads here now describes something else.`,
 			}
 
 			out := cmd.OutOrStdout()
-			if format == formatJSON {
-				return writeJSON(out, map[string]any{
-					"directory":    root,
-					"local":        local,
-					"fetched_at":   fetchedAt,
-					"platform":     remote.Version,
-					"profile":      pc.Session.Profile.Name,
-					"platform_api": pc.Session.Profile.PlatformAPI,
-					"sources":      remote.Sources,
-					"current":      local != "" && local == remote.Version,
-				})
-			}
-
 			rel := root
 			if r, relErr := filepath.Rel(repoRoot, root); relErr == nil {
 				rel = r
 			}
-			fmt.Fprintf(out, "%-11s %s\n", "profile", pc.Session.Profile.Name)
-			fmt.Fprintf(out, "%-11s %s\n", "directory", rel)
-			fmt.Fprintf(out, "%-11s %s\n", "platform", remote.Version)
-			for _, s := range remote.Sources {
-				fmt.Fprintf(out, "%-11s   %-12s %s (%d)\n", "", s.Name, s.Digest, s.Records)
-			}
-			if local == "" {
-				fmt.Fprintf(out, "%-11s none\n", "here")
-				fmt.Fprintf(out, "\nNothing has been fetched into this repository, so an agent working here\n"+
-					"has no statement of what this server accepts.\n\n    asgard-cli skill update\n")
-				return nil
-			}
-			fmt.Fprintf(out, "%-11s %s", "here", local)
-			if fetchedAt != "" {
-				fmt.Fprintf(out, "  (fetched %s)", fetchedAt)
-			}
-			fmt.Fprintln(out)
 
-			if local != remote.Version {
-				if skills.Behind(local, remote.Version) {
-					fmt.Fprintf(out, "\nBehind: the platform has published a newer version of the material.\n\n    asgard-cli skill update\n")
-				} else {
-					fmt.Fprintf(out, "\nDifferent: this was not written from %s.\n"+
-						"A repository can hold material fetched from another platform - check the api line above.\n\n"+
-						"    asgard-cli skill update\n", pc.Session.Profile.Name)
+			if format == formatJSON {
+				record := map[string]any{
+					// The absolute path, as it has always been here: a reader
+					// of this JSON depends on the shape, and changing a value
+					// under it is the kind of change that is noticed by
+					// whatever breaks.
+					"directory":  root,
+					"local":      local,
+					"fetched_at": fetchedAt,
+					"shipped":    shippedStatus(repoRoot),
 				}
-				return nil
+				if unanswered != "" {
+					record["unanswered"] = unanswered
+				} else {
+					record["platform"] = remote.Version
+					record["profile"] = profileName
+					record["platform_api"] = pc.Session.Profile.PlatformAPI
+					record["sources"] = remote.Sources
+					record["current"] = local != "" && local == remote.Version
+				}
+				return writeJSON(out, record)
 			}
 
-			// Same version and different content is a state the declared
-			// version makes possible on purpose: somebody publishes a change
-			// and does not consider it worth telling everybody about. It still
-			// changes what an author reads, so it is worth saying here.
-			if moved := skills.MovedSources(stamp, sourceDigests(remote.Sources)); len(moved) > 0 {
-				fmt.Fprintf(out, "\nSame version, different material: %s moved since this was fetched.\n"+
-					"The version is declared rather than derived, so a change reaches you when you ask.\n\n"+
-					"    asgard-cli skill update\n", strings.Join(moved, ", "))
-				return nil
+			fmt.Fprintf(out, "%-11s %s\n", "directory", rel)
+			if unanswered != "" {
+				fmt.Fprintf(out, "%-11s %s\n", "platform", unanswered)
+				if local != "" {
+					fmt.Fprintf(out, "%-11s %s", "here", local)
+					if fetchedAt != "" {
+						fmt.Fprintf(out, "  (fetched %s)", fetchedAt)
+					}
+					fmt.Fprintln(out)
+				} else {
+					fmt.Fprintf(out, "%-11s none\n", "here")
+				}
+			} else {
+				fmt.Fprintf(out, "%-11s %s\n", "profile", profileName)
+				fmt.Fprintf(out, "%-11s %s\n", "platform", remote.Version)
+				for _, s := range remote.Sources {
+					fmt.Fprintf(out, "%-11s   %-12s %s (%d)\n", "", s.Name, s.Digest, s.Records)
+				}
+				if local == "" {
+					fmt.Fprintf(out, "%-11s none\n", "here")
+					fmt.Fprintf(out, "\nNothing has been fetched into this repository, so an agent working here\n"+
+						"has no statement of what this server accepts.\n\n    asgard-cli skill update\n")
+				} else {
+					fmt.Fprintf(out, "%-11s %s", "here", local)
+					if fetchedAt != "" {
+						fmt.Fprintf(out, "  (fetched %s)", fetchedAt)
+					}
+					fmt.Fprintln(out)
+					printPlatformVerdict(out, stamp, remote, profileName)
+				}
 			}
-			fmt.Fprintf(out, "\nCurrent.\n")
+
+			printShippedStatus(out, repoRoot)
 			return nil
 		},
 	}
@@ -197,6 +238,129 @@ agent reads here now describes something else.`,
 	cmd.Flags().StringVar(&dir, "dir", "", "skills directory, relative to the repository root; defaults to .agents/skills, or .claude/skills where that exists")
 	cmd.Flags().StringVar(&format, formatFlag, formatText, formatUsage)
 	return cmd
+}
+
+// printPlatformVerdict says what the two version numbers mean, and is the
+// paragraph that used to end the command.
+//
+// It stopped ending it when there was a second half to report. Each of these
+// was a `return nil` reached from a different branch, and reporting anything
+// after them meant they all had to stop being exits - which is the kind of
+// change that quietly drops a case, so they are all here, together, unaltered.
+func printPlatformVerdict(out io.Writer, stamp *skills.Stamp, remote *platform.DocsVersion, profileName string) {
+	local := stamp.Version
+	if local != remote.Version {
+		if skills.Behind(local, remote.Version) {
+			fmt.Fprintf(out, "\nBehind: the platform has published a newer version of the material.\n\n    asgard-cli skill update\n")
+			return
+		}
+		fmt.Fprintf(out, "\nDifferent: this was not written from %s.\n"+
+			"A repository can hold material fetched from another platform - check the api line above.\n\n"+
+			"    asgard-cli skill update\n", profileName)
+		return
+	}
+
+	// Same version and different content is a state the declared version makes
+	// possible on purpose: somebody publishes a change and does not consider
+	// it worth telling everybody about. It still changes what an author reads,
+	// so it is worth saying here.
+	if moved := skills.MovedSources(stamp, sourceDigests(remote.Sources)); len(moved) > 0 {
+		fmt.Fprintf(out, "\nSame version, different material: %s moved since this was fetched.\n"+
+			"The version is declared rather than derived, so a change reaches you when you ask.\n\n"+
+			"    asgard-cli skill update\n", strings.Join(moved, ", "))
+		return
+	}
+	fmt.Fprintf(out, "\nCurrent.\n")
+}
+
+// shippedStatus counts the states of the material this CLI ships into a
+// repository, for the half of `skill status` that needs no platform.
+//
+// **Both halves are reported by one command because nobody asks the question
+// in halves.** Somebody asking whether the material here is current does not
+// know that it has two authorities - and until this existed they got a
+// confident answer about one of them with no hint that the other was there.
+// They are two blocks rather than one verdict for the opposite reason: the
+// version numbers are unrelated, the remedies are different commands, and one
+// line covering both would be a claim neither authority made.
+func shippedStatus(repoRoot string) map[string]any {
+	out := map[string]any{"binary": version.Get().Version}
+
+	projects, err := repo.Projects(repoRoot)
+	if err != nil {
+		out["error"] = err.Error()
+		return out
+	}
+	results, err := scaffold.InspectShipped(repoRoot, projects)
+	if err != nil {
+		out["error"] = err.Error()
+		return out
+	}
+
+	// `Skipped` is Write's word for "there was nothing to do", and reading it
+	// back as a state of the material would say thirteen files were skipped
+	// when what is true is that thirteen files match. An inspection has its own
+	// vocabulary for the one status whose name only makes sense to a writer.
+	counts := map[string]int{}
+	matching, missing := 0, 0
+	for _, r := range results {
+		switch r.Status {
+		case scaffold.Skipped:
+			matching++
+		case scaffold.Missing:
+			missing++
+			counts[r.Status.String()]++
+		default:
+			counts[r.Status.String()]++
+		}
+	}
+	if matching > 0 {
+		counts["matches"] = matching
+	}
+	if writers, err := scaffold.Writers(repoRoot); err == nil && len(writers) > 0 {
+		out["written_by"] = writers
+	}
+	out["files"] = len(results)
+	out["states"] = counts
+	out["present"] = missing < len(results)
+	out["current"] = len(results) > 0 && matching == len(results)
+	return out
+}
+
+// printShippedStatus is the second block, and it says which authority it is
+// about in its first word - the two version numbers here are unrelated, and a
+// reader who takes one for the other has the wrong answer to both.
+func printShippedStatus(out io.Writer, repoRoot string) {
+	st := shippedStatus(repoRoot)
+	fmt.Fprintf(out, "\n%-11s AGENTS.md and the design-time skills, which come from this binary\n", "shipped")
+	fmt.Fprintf(out, "%-11s %s\n", "binary", st["binary"])
+	if msg, ok := st["error"].(string); ok {
+		fmt.Fprintf(out, "%-11s %s\n", "", msg)
+		return
+	}
+	if writers, ok := st["written_by"].([]string); ok {
+		fmt.Fprintf(out, "%-11s %s\n", "written by", strings.Join(writers, ", "))
+	}
+
+	if present, _ := st["present"].(bool); !present {
+		fmt.Fprintf(out, "\nNothing this CLI ships is here, so an agent working here has no contract\n"+
+			"and no design-time skills.\n\n    asgard-cli init\n")
+		return
+	}
+	if current, _ := st["current"].(bool); current {
+		fmt.Fprintf(out, "\nCurrent.\n")
+		return
+	}
+
+	counts, _ := st["states"].(map[string]int)
+	var parts []string
+	for _, name := range []string{"missing", "retired", "behind", "stale", "edited", "ahead", "updated"} {
+		if counts[name] > 0 {
+			parts = append(parts, fmt.Sprintf("%d %s", counts[name], name))
+		}
+	}
+	fmt.Fprintf(out, "\n%s. `asgard-cli gate` says which files, and what each one means.\n",
+		strings.Join(parts, ", "))
 }
 
 func newSkillUpdateCmd() *cobra.Command {
@@ -373,8 +537,41 @@ func runSkillUpdate(cmd *cobra.Command, opts skillUpdateOptions) error {
 		} else {
 			fmt.Fprintf(out, "\nWrote %d file(s) into %s. Commit them.\n", len(contents), rel)
 		}
+		noteShippedHalf(out, repoRoot)
 	}
 	return nil
+}
+
+// noteShippedHalf says when the material this command does NOT write needs
+// attention.
+//
+// **It reports rather than acts, and the line is the authority split.** This
+// command writes what the platform has, and the skills beside them come from
+// the binary - the long help above spends its length on why that boundary
+// exists, and a command that quietly refreshed both would erase it. What it can
+// do is stop somebody concluding, from a screen that says "already current",
+// that all the material here is.
+func noteShippedHalf(out io.Writer, repoRoot string) {
+	projects, err := repo.Projects(repoRoot)
+	if err != nil {
+		return
+	}
+	results, err := scaffold.InspectShipped(repoRoot, projects)
+	if err != nil || len(results) == 0 {
+		return
+	}
+	stale := 0
+	for _, r := range results {
+		switch r.Status {
+		case scaffold.Missing, scaffold.Retired, scaffold.Behind, scaffold.Stale:
+			stale++
+		}
+	}
+	if stale == 0 {
+		return
+	}
+	fmt.Fprintf(out, "\nThe other half of the material here does not come from a platform, and %d\n"+
+		"file(s) of it are not what this binary carries. `asgard-cli gate` says which.\n", stale)
 }
 
 // sourceDigests flattens the bundle's per-upstream digests for the stamp and

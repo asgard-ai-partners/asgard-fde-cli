@@ -158,6 +158,10 @@ const (
 	// longer ships it. It is reported and never removed: deleting a file from
 	// a customer's repository is not something a scaffold does on its own.
 	Retired
+	// Missing means a shipped file is not there at all. Only InspectShipped
+	// returns it - Write would have written it - and it means an agent working
+	// here is reading no copy of something this CLI ships.
+	Missing
 )
 
 func (s Status) String() string {
@@ -180,6 +184,8 @@ func (s Status) String() string {
 		return "edited"
 	case Retired:
 		return "retired"
+	case Missing:
+		return "missing"
 	default:
 		return "skipped"
 	}
@@ -362,6 +368,82 @@ func Write(root string, projects []string, force bool) ([]Result, error) {
 	}
 
 	return results, nil
+}
+
+// InspectShipped reports the state of the material this CLI ships into a
+// repository - AGENTS.md and the design-time skills - and writes nothing.
+//
+// **A check that changes what it checks is not a check**, which is why this is
+// not Write with a flag. Write merges managed regions, applies --force and
+// rewrites the record, and each of those is a write that whoever asked the
+// question did not ask for.
+//
+// It covers the shipped files only, and that is what makes it cheap enough to
+// run on the end of any command: fifteen renders and fifteen reads of an
+// embedded filesystem, no network, no session, no repository binding. **The
+// cheapness is the point.** The reference material's other half needs a
+// platform to compare against and skips when there is none; this half is
+// answerable everywhere, and once a binary can replace itself it is also the
+// half that moves without anybody asking - so the check that catches it has to
+// be the one nothing can turn off.
+func InspectShipped(root string, projects []string) ([]Result, error) {
+	jobs, err := plan(NewData(root, projects))
+	if err != nil {
+		return nil, err
+	}
+	stamp, err := ReadStamp(root)
+	if err != nil {
+		return nil, err
+	}
+	recorded := map[string]Entry{}
+	if stamp != nil {
+		recorded = stamp.Files
+	}
+	running := version.Get().Version
+
+	var out []Result
+	for _, j := range jobs {
+		if !shipped(j.target) {
+			continue
+		}
+		content, err := render(j.source, j.data)
+		if err != nil {
+			return nil, err
+		}
+		current, exists, err := readIfExists(filepath.Join(root, j.target))
+		if err != nil {
+			return nil, err
+		}
+		if !exists {
+			out = append(out, Result{Path: j.target, Status: Missing})
+			continue
+		}
+		out = append(out, Result{
+			Path:   j.target,
+			Status: classify(current, content, recorded[stampKey(j.target)], running),
+		})
+	}
+
+	retired, err := retiredFiles(root, recorded, jobs)
+	if err != nil {
+		return nil, err
+	}
+	for _, key := range retired {
+		out = append(out, Result{Path: filepath.FromSlash(key), Status: Retired})
+	}
+
+	sort.Slice(out, func(i, j int) bool { return out[i].Path < out[j].Path })
+	return out, nil
+}
+
+// Writers lists the CLI versions the record at root says wrote the material
+// here. It is empty when there is no record, which is not the same as none.
+func Writers(root string) ([]string, error) {
+	stamp, err := ReadStamp(root)
+	if err != nil {
+		return nil, err
+	}
+	return stamp.Writers(), nil
 }
 
 // retiredFiles are the paths the record says this CLI wrote and this binary no
