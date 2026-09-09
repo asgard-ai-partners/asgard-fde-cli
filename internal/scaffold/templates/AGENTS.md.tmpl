@@ -769,8 +769,14 @@ itself.
 Asgard kinds declare no status schema at all — a chart of a `DataConnector` and a `SemanticLayer`
 is one where no object can report anything, so presence really is all there is and the only
 verification left is to open the product and ask. Knowing that in one command beats discovering it
-by dumping YAML. What no command here can see is a Kubernetes Event, which is where a reconciler's
-complaint lands when the CR has nowhere to put it.
+by dumping YAML.
+
+**A Kubernetes Event is where a reconciler's complaint lands when the CR has nowhere to put it, and
+no command here will ever show you one.** That is deliberate: a release's deploy identity is scoped
+to `asgard-ai.com` so that it can only read back what it was allowed to create, and events are a
+core-group kind it never writes. Widening that identity for every release, permanently, to serve a
+diagnostic is not a trade this platform makes. Where a CR reports nothing, the verification is to
+open the product and use the thing.
 
 `pipeline manifest` reads live state and does not diff: comparing the cluster against the IaC
 source needs the source, and the source is here. Render locally and compare — live against the

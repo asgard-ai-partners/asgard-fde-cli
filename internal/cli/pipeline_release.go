@@ -587,9 +587,14 @@ A release that has never deployed has no manifest, and says so.`,
 // that cannot exist - which is the twenty minutes this flag exists to save.
 //
 // What it can never show is a reconciler's complaint that landed in a
-// Kubernetes Event instead. Events are a different API group, outside both this
-// payload and the release's own impersonated identity, so they need platform
-// work rather than a flag here.
+// Kubernetes Event instead, and that is a decision rather than a gap. Events
+// are a core-group resource, outside both this payload and the release's own
+// impersonated deploy identity - which is scoped to asgard-ai.com precisely so
+// that a release can only ever read back what it was allowed to create.
+// Reading events would mean granting every release, permanently, read on a
+// kind it never writes, to serve a diagnostic. That trade was refused. When a
+// CR has nowhere to put a complaint, the answer is the product, not a wider
+// credential.
 func writeObjectStatus(out io.Writer, o *platform.LiveObject) {
 	var doc struct {
 		Status map[string]any `yaml:"status"`
