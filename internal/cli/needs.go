@@ -96,6 +96,14 @@ of magnitude.`,
 			if format == formatJSON {
 				return writeJSON(out, found)
 			}
+			// One row per shape actually printed, so a scenario that landed on
+			// three of them says so. Not recorded for the bare listing, which
+			// is a table of contents rather than a page.
+			if len(args) > 0 {
+				for _, s := range found {
+					recallHere("needs", s.Name)
+				}
+			}
 			printNeeds(out, found)
 			return nil
 		},

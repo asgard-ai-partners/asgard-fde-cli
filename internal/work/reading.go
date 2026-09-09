@@ -49,6 +49,11 @@ func Recall(root, kind, name string) {
 	_, _ = f.WriteString(line)
 }
 
+// legacyGuideKind is what `asgard-cli guide` wrote before it was renamed from
+// `next --stage <name>`. Rows under it are read as `guide` and nothing writes
+// it any more.
+const legacyGuideKind = "stage"
+
 // Read is one page and how often it was opened.
 type Read struct {
 	Kind  string
@@ -71,10 +76,19 @@ func Readings(root string) ([]Read, error) {
 		if len(parts) != 3 {
 			continue
 		}
-		key := parts[1] + "/" + parts[2]
+		kind := parts[1]
+		if kind == legacyGuideKind {
+			// A log is a historical record and this file is committed, so
+			// every engagement scaffolded before `next --stage` became
+			// `guide` carries rows under the old name. Folding them here is
+			// what keeps six months of somebody else's reading answerable by
+			// the command name they would type today.
+			kind = "guide"
+		}
+		key := kind + "/" + parts[2]
 		r, ok := byKey[key]
 		if !ok {
-			r = &Read{Kind: parts[1], Name: parts[2], First: parts[0]}
+			r = &Read{Kind: kind, Name: parts[2], First: parts[0]}
 			byKey[key] = r
 		}
 		r.Count++

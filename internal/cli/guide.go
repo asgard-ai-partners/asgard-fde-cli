@@ -74,7 +74,12 @@ those parts empty.`,
 				if s, err := stage.Inspect(root); err == nil {
 					state = s
 				}
-				work.Recall(root, "stage", string(found.Name))
+				// The kind is the command somebody types, not the package the
+				// pages come from. This logged "stage" for years after `next
+				// --stage <name>` became `guide <name>`, so grepping the log
+				// for what a predecessor read, by the name they would have
+				// typed, missed every one of them.
+				work.Recall(root, "guide", string(found.Name))
 			}
 
 			prompt, err := found.Prompt(state)
