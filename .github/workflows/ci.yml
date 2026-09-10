@@ -31,6 +31,9 @@ jobs:
       - name: go vet
         run: go vet ./...
 
+      - name: go test
+        run: go test ./...
+
 
   material:
     # The corpus gates. **A flag that is not wired here is not enforced**, and

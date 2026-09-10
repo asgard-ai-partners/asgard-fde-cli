@@ -76,10 +76,9 @@ pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) -
 raw sources that are never vendored in, a corpus that is rewritten continuously,
 and a schema a person changes deliberately. `internal/corpus/wiki/README.md` states it
 for the wiki and is the longer version; these four rules apply to all four
-parts. All four hold as of 2026-09-04, and each has a command that says so -
-`find --unverified`, `audit-material --links`, `audit-material --orphans`. A
-rule that stops holding shows up there rather than in a list somebody has to
-maintain.
+parts. All four hold as of 2026-09-04, and each has a check that says so -
+`audit-material --unverified`, `--links`, `--orphans`. A rule that stops
+holding shows up there rather than in a list somebody has to maintain.
 
 **One schema.** A document opens with a `# ` title and a summary paragraph, and
 carries `**Checked:**` / `**Unchecked:**` - what it has been held against, and
@@ -143,12 +142,11 @@ one only the extracts.
 
 **The corpus carries one language because the mapping lives somewhere else, not
 because the reader translates.** `internal/corpus/aliases.md` is the mapping,
-It is applied to a query before searching, and the rewrite is
-printed so a reader can see what was searched. So the instruction to an agent is
-the opposite of what this paragraph used to imply: **give `find` the customer's
-own words.** Translating only after a search came back empty was tried and was
-worse: the table matched the row about the word itself. Product labels keep
-their own names (Managed Agent, Drive, Context Index are what the UI says).
+and it lands beside the material so it can be read before a grep rather than
+after one comes back empty. **Translate the customer's words, then search.**
+Translating only after a search failed was tried and was worse: the query
+matched the alias table's own row about the word. Product labels keep their own
+names (Managed Agent, Drive, Context Index are what the UI says).
 
 **An index is not a page and does not live among them.** That table was a
 section of `pages/glossary.md` until it was measured: because it lists every
@@ -259,41 +257,44 @@ emitting a map, so it carries a `platform` key.
 
 ## The gate
 
-There is no test suite - it was removed on 2026-09-02. What is left:
+**Prose and material carry almost all of the risk here, so the checks are
+aimed there.** A handful of Go tests cover parsing and matching rules where a
+wrong answer is silent; everything else is checked by reading what ships.
 
 ```bash
 go build ./...
 go vet ./...
 gofmt -l internal/ cmd/
+go test ./...
 asgard-cli audit-material --links
 asgard-cli audit-material --commands
+asgard-cli audit-material --bare
+asgard-cli audit-material --paths
 asgard-cli audit-material --urls   # needs the network
 ```
 
-<<<<<<< HEAD
+Everything above except `--urls` runs in CI. `--urls` does not: a third party's
+outage is not this repository's build failure, and a gate that only works
+online is one that fails on a plane.
+
 That is this repository's gate. **A customer repository's gate is one command,
 `asgard-cli gate`**, and the difference is deliberate: the thing an agent runs
 after every edit has to be one command whose definition lives in the binary,
 not a list in a markdown file that goes stale. This list is for the maintainer,
 who is editing the binary - and when a step is added to `gate`, nothing here
 needs changing, which is the point.
-=======
-`--links` and `--commands` run in CI (the `material` job). `--urls` does not: a
-third party's outage is not this repository's build failure.
->>>>>>> origin/feat/skills-from-platform
 
 `--urls` fetches every `docs.asgard-ai.com` link the material cites and fails on
-a 404. It is separate because it needs the network, and a gate that only works
-online is one that fails on a plane. A citation that already says the link 404s
-- a page marked `draft: true`, which asgard-docs does not publish - is reported
-and does not fail, so disclosing one is how you keep it.
+a 404. A citation that already says the link 404s - a page marked `draft: true`,
+which asgard-docs does not publish - is reported and does not fail, so
+disclosing one is how you keep it.
 
-`--links` resolves every pointer the material writes, in both forms - the paths
-`../wiki/<page>.md` and `../usecase/<name>.md`, and the invocations
-every kind - in prose and in
-the generator's own `Wiki:`, `Extract:` and `AlsoRead:` fields, and exits 1 on
-one that goes nowhere. It also fails a path whose target `init` does not write
-into a repository, because that one resolves here and not there.
+`--links` resolves every pointer the material writes - the paths
+`../wiki/<page>.md`, `../usecase/<name>.md` and the same for the other three
+kinds - in prose, in the templates, and in the generator's own `Wiki:`,
+`Extract:` and `AlsoRead:` fields, and exits 1 on one that goes nowhere. It
+also fails a path whose target `init` does not write into a repository,
+because that one resolves here and not there.
 **Run it after renaming or removing a page**, which is the only way to leave a
 dead pointer behind; it reads correctly and resolves to nothing, and the reader
 who follows it cannot tell that from a page they failed to find.
@@ -357,11 +358,11 @@ throwaway directory, for anything that touches a command.
 
 **Does it still work with no repository?**
 Half the job is answering a question, and that question gets asked in a meeting,
-before the engagement has a directory. `wiki`, `usecase`, `find`, `brief`, `size`
-and `guide` all answer outside one - reference material that requires an
-engagement is unavailable exactly when somebody is deciding whether to have one,
-and `asgard-cli init` is what somebody with no directory runs first - it needs
-no repository, no session and no network. A new command that calls `config.Find`
+before the engagement has a directory. `asgard-cli init` in an empty directory
+writes the whole corpus, and `asgard-cli size` and `asgard-cli guide` answer
+outside a repository too - reference material that requires an engagement is
+unavailable exactly when somebody is deciding whether to have one. None of
+those needs a repository, a session or a network. A new command that calls `config.Find`
 before it can say anything has quietly left that half. Run it in an empty
 directory.
 

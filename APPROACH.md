@@ -44,7 +44,7 @@ lands: a document that ships is a document that is checked.
 ## Pointers
 
 A cross-reference is parsed with the document into `kb.Link`, and everything
-downstream reads that one graph — `find`'s counterpart, `--links`, `--orphans`.
+downstream reads that one graph — `--links`, `--orphans`.
 **Every document pointer is a path**, because every kind is written into a
 repository:
 
@@ -86,6 +86,7 @@ correct here and there alike.
     audit-material --orphans    what nothing points at
     audit-material --bare       a document named with no way to reach it
     audit-material --commands   every command named exists
+    audit-material --paths      a landed document naming a file only we have
     audit-material --urls       every documentation link is live
     audit-material <term>       every line mentioning a term, prose and templates
 
@@ -98,11 +99,24 @@ suspects it.
 
 `--commands` is `--links` pointed at the tool: it resolves every
 `asgard-cli <command>` against the command tree this binary answers to — in the
-material, in the scaffold templates, and **in this package's own string
+material, in the scaffold templates, and **in this repository's own string
 literals**, which make the same claim and are the half a customer never sees
-until the tool prints one. `internal/cli/self.go` embeds the package and parses
-it, so a comment recording that a command was removed does not read as naming
-it.
+until the tool prints one. `selfsrc` embeds the source and `internal/cli/self.go`
+parses it, so a comment recording that a command was removed does not read as
+naming it.
+
+**A command reference is what is written as code**: backticked, fenced,
+indented, or inside a double-quoted span that is nothing but a command — the
+last because a Go raw string cannot hold a backtick, and the root help is one.
+Two things that form cannot see, so they are checked separately: a bare name
+with no `asgard-cli` in front of it, swept for over the closed set of removed
+names in `replacements`; and a path that is not a document pointer, which is
+`--paths`.
+
+`--paths` exists because these documents land in somebody else's repository,
+where "this repo" is theirs and `source/SOURCES.md` is not there. The rule is
+not "do not name a path" — provenance should name the file it came from — it is
+**name the repository the path is inside**, on the same line.
 
 `hack/check-tables.py` holds the gate's pinned tables against the generated
 CRDs; `hack/verify-references.sh` runs the gate over the reference deployments.
@@ -117,9 +131,9 @@ so the landed `SKILL.md` and `index.md` say them:
 **`aliases.md` is applied before searching, not after failing.** The corpus is
 English and a customer conversation usually is not, so a term taken from what
 somebody said matches nothing — which reads identically to a subject the
-material lacks. It holds two tables: words that *replace* a query term, and
-names that are *added* to it. `internal/cli/translate.go` is the same tables in
-code, for `needs`, which takes a scenario in the customer's words.
+material lacks. It holds two tables: words that *replace* a query term, because
+a Chinese term appears nowhere in an English corpus, and names that are *added*
+to it, because a product name may be written verbatim in a page.
 
 **`glossary.md`'s first table is the word with two senses here.** `payment` is
 billing between Asgard and the customer, and also the customer's own payment

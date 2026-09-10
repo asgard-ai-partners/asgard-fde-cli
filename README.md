@@ -52,30 +52,40 @@ Layout:
 ```
 cmd/asgard-cli/     main; signal handling and exit codes only
 internal/cli/       cobra command tree, one file per subcommand
+internal/corpus/    the material itself, in the layout a repository receives it
+internal/wiki/      serves the platform wiki and the alias tables beside it
+internal/usecase/   serves the deployment-shape extracts
+internal/needs/     what a shape has to be given by the customer
+internal/brief/     what one activity gets wrong, addressed by intent
+internal/stage/     the onboarding guidance, rendered against the repository
+internal/size/      the deployment shapes, counted off production
+internal/kb/        one implementation of listing, reading, provenance and the
+                    link graph, shared by every part of the material
+internal/scaffold/  writes the non-customer-specific tree, the design-time skills
+                    and the platform corpus, and keeps .asgard-scaffold.json
+internal/generate/  CR skeletons, wired to what the chart already declares
 internal/repo/      what a customer repository is made of, by looking at it
-internal/auth/      the OAuth flow and the credential store, which is the only file
-                    this CLI keeps outside a repository
 internal/work/      reads and writes the customer repo's own records of its work
                     (requests, task specs, open questions, decision records)
-internal/kb/        one implementation of listing, reading, scoring and provenance,
-                    shared by every part of the material
-internal/wiki/      the platform wiki, and the glossary's customer-vocabulary table
-internal/usecase/   the deployment-shape extracts
-internal/stage/     which stage a repo is at, derived and never stored, plus which
-                    guidance the repo's own state makes relevant
-internal/scaffold/  writes the non-customer-specific tree, and serves the skills in it
-internal/generate/  CR skeletons, wired to what the chart already declares
-internal/size/      the deployment shapes, counted off production
-internal/brief/     what one activity gets wrong, addressed by intent not by stage
 internal/check/     repository structure: indexes, dated names, links, orphan pages
 internal/gate/      the invariant checks on a rendered chart (xref, agent split, enums)
 internal/render/    renders a release's chart via helm, with placeholder asgard values
+internal/localenv/  the local environment file a chart's placeholders are filled from
+internal/auth/      the OAuth flow and the credential store, which is the only file
+                    this CLI keeps outside a repository
+internal/platform/  the platform API client
+internal/skills/    the platform's fetched reference material
 internal/binding/   reads and writes .asgard-cli.yaml, the checkout's platform binding
 internal/pipelineconfig/ reads .asgard-pipeline.yaml, the deployment declaration
 internal/chart/     reads a project's unrendered templates for (kind, name)
+internal/gitrepo/   the checkout's root and its remotes
 internal/tool/      resolves helm/kubectl/python3, and how to install one
+internal/browser/   opens a URL, or says it could not
 internal/version/   build information (injected by GoReleaser via ldflags)
+selfsrc.go          this repo's own Go source, embedded so the binary can audit
+                    the commands it prints
 ```
+
 
 To add a subcommand, write a `newXxxCmd()` in `internal/cli/` and register it
 through `addTo(cmd, group..., ...)` in `root.go`. The group is required - cobra
@@ -83,13 +93,13 @@ panics on a `GroupID` the parent does not have - so a command cannot be added
 without deciding where in the help it belongs.
 
 - [Goal.md](Goal.md) - what this tool is for, in four points.
-- [APPROACH.md](APPROACH.md) - how the mechanisms work: the corpus, the pointer
-  form, the audits, retrieval, what `init` writes, and what only the platform
-  can decide. Each with the failure it was built from.
+- [APPROACH.md](APPROACH.md) - how the main capabilities are implemented: the
+  corpus, the pointer form, the audits, retrieval, what `init` writes, and what
+  only the platform can decide.
 - [STRUCTURE.md](STRUCTURE.md) - what every directory is for, including the
   bodies of embedded material and which one a change belongs to.
-- [AGENTS.md](AGENTS.md) - the conventions this repo follows, and what the gate is
-  now that there is no test suite.
+- [AGENTS.md](AGENTS.md) - the conventions this repo follows, and what the gate
+  is.
 - [TASK.md](TASK.md) - where it stands, and what is not finished.
 
 ## Commands
@@ -199,18 +209,21 @@ anything. `gate` supplies that one file and nothing else.
 
 ### `guide`
 
-**`guide` reads one decision.** There is no command that says where the
-engagement is, and that is deliberate - the two that did are gone. `next`
-reported a position on a walk. `status` replaced it, reported the repository,
-and then named the guidance the shape of it raised: the same rungs, in the same
-order, with the numbers taken off. What the second one printed from files is now
-read by `project`, `question`, `request` and `task`, each from its own file.
+**`guide` reads one decision, against the repository you are in.** That is the
+whole reason it is still a command: the static half of each piece lands as a
+file like everything else, and what a command adds is this repository's own
+state - which projects exist, what is still open.
 
 ```bash
-asgard-cli guide                   # all the guidance
-`.agents/skills/asgard-platform/guide/requirements.md`      # one piece of it, any time
-grep "<terms>"          # reach any of it by subject
+asgard-cli guide                  # every piece of guidance, by name
+asgard-cli guide requirements     # one, read against this repo
+
+cat .agents/skills/asgard-platform/guide/requirements.md   # the static half
 ```
+
+**There is no command that says where the engagement is**, and that is
+deliberate. `project`, `question`, `request` and `task` each read one file back
+to you; none of them derives a position from the others.
 
 ```
   init           Start the onboarding
@@ -226,19 +239,11 @@ grep "<terms>"          # reach any of it by subject
   idle           Nothing in flight
 ```
 
-**None of these is a step you arrive at.** They were numbered once, and `next`
-derived "stage 4 of 9" from the earliest missing CR kind. That was wrong in both
-directions: it could name only one thing, so three of them were unreachable
-unless you already knew their names, and a position cannot be argued with, so an
-engagement working in a different order was told it was behind. An engagement
-that has already gathered every requirement has no stage at all, and the tool
-used to insist otherwise.
-
-Removing the numbers was not enough. `status` raised the same rungs from
-conditions instead - `!p.Has("DataConnector")` in a `switch`, so a chart missing
-two things was told about the first - which is a position with the arithmetic
-hidden. Nothing raises guidance now. It is reached by name with `guide` and by
-subject with `find`.
+**None of these is a step you arrive at.** An onboarding is not linear: three
+of the most expensive decisions in the engagement this was built from were
+made, built and reversed, and an engagement that has already gathered every
+requirement has no stage at all. So nothing here raises guidance at you. It is
+reached by name with `guide`, or by grepping `guide/` for the subject.
 
 **`read-path`, `entry-point` and `knowledge` print the wrong answer next to the
 right one.** Those are the three decisions this engagement got wrong once and
@@ -382,74 +387,50 @@ customer repository by `asgard-cli init`**, under one directory:
   guide/      which decision to make now, and what it costs to change later
 ```
 
-```bash
-cat .agents/skills/asgard-platform/wiki/agents.md
-grep -ril "allowlist" .agents/skills/asgard-platform/
-```
-
-**There were `asgard-cli wiki` and `asgard-cli usecase` commands and they are
-gone.** They read one document out of the binary, which is what `cat` does now
-that the documents are on disk. Nothing is lost with them: `--unverified` is
-`find --unverified`, which covers all five parts rather than one; `--conventions`
-is `wiki/README.md`; `--aliases` is `aliases.md`; and `--sources` was a view over
-each document's own Sources block, which is at the foot of the file.
-
-The trade is that reading a document now needs a repository. `asgard-cli init`
-in an empty directory is enough - it needs no account and touches no network -
-and `find` still answers with no repository at all.
-
 | | answers | written from |
 |---|---|---|
-| `wiki` | what the platform is, who each piece is for, and where the UI's names stop matching the resources a chart declares | the product documentation, [asgard-docs](https://github.com/asgard-ai-platform/asgard-docs), checked against the CRDs |
-| `usecase` | how one shape of deployment is assembled, field by field, and what a wrong value costs | deployments already in production |
+| `wiki/` | what the platform is, who each piece is for, and where the UI's names stop matching the resources a chart declares | the product documentation, [asgard-docs](https://github.com/asgard-ai-platform/asgard-docs), checked against the CRDs |
+| `usecase/` | how one shape of deployment is assembled, field by field, and what a wrong value costs | deployments already in production |
+| `needs/` | what to obtain from the customer before a shape can be built at all | the interview, the per-channel credential tables, and what an engagement found out too late |
+| `brief/` | what this activity gets wrong, before you do it | activities somebody has actually got wrong |
+| `guide/` | one decision, the obvious answer, and what reversing it costs | three decisions reversed in production |
 
 An extract assumes you already know the platform has that shape; a wiki page is
 where that assumption comes from. `asgard-cli add` prints one of each.
 
-**To look something up, grep the directory** - and read its `aliases.md` first
-if the question arrived in the customer's own words.
-
-The wiki's own conventions - its three layers, what a page must carry, and how it
-is kept from going stale as the platform moves - are in `wiki/README.md`.
-
-### Reading the material
-
-**There is no search command.** `asgard-cli init` writes every part into the
-repository and you read it with `cat` and `grep`:
+**There is no search command, and that is the design.** The documents are on
+disk, so `cat` and `grep` are the interface:
 
 ```bash
 grep -ril "allowlist" .agents/skills/asgard-platform/
 cat .agents/skills/asgard-platform/wiki/processors.md
 ```
 
-**Read `aliases.md` first if the question did not arrive in English.** The
-material is English and a customer conversation usually is not, so a term
-taken from what somebody actually said matches nothing - and that reads
-exactly like a subject the material does not cover.
+Two things a grep does not do for itself, so read them first:
 
-**Check `wiki/glossary.md` for the word you searched.** A result in the wrong
-sense reads exactly like an answer: `payment` is billing between Asgard and
-the customer, and also the customer's own payment gateway.
+**`aliases.md`, if the question did not arrive in English.** The material is
+English and a customer conversation usually is not, so a term taken from what
+somebody actually said matches nothing - and that reads exactly like a subject
+the material does not cover.
+
+**`wiki/glossary.md`, for the word you searched.** A result in the wrong sense
+reads exactly like an answer: `payment` is billing between Asgard and the
+customer, and also the customer's own payment gateway.
 
 **With no repository, run `asgard-cli init` in an empty directory.** It needs
-no account and touches no network, which is the point: the question gets
-asked in a meeting, before there is a directory.
-
-### `brief`, `size`, `reading`, `issue-report`
-
-Four ways in, none of them a position. None needs a
-repository except `reading`.
-
-**`brief`** answers "the thing I am about to do - where will I get it wrong",
-which no repository report can: the riskiest activity leaves no trace in one,
-because talking to a customer changes no file, and meetings happen at every
-stage.
+no account and touches no network, which is the point: the question gets asked
+in a meeting, before there is a directory.
 
 ```bash
-ls .agents/skills/asgard-platform/brief/
-`.agents/skills/asgard-platform/brief/customer-meeting.md`    # before any customer conversation
-`.agents/skills/asgard-platform/brief/write-chart.md`         # before authoring CRs
+mkdir -p /tmp/asgard && cd /tmp/asgard && asgard-cli init
 ```
+
+The wiki's own conventions - its three layers, what a page must carry, and how
+it is kept from going stale as the platform moves - are in `wiki/README.md`.
+
+### `size`, `issue-report`
+
+Two commands that read no repository.
 
 **`size`** is what one capability is made of before it is written - the first
 question a proposal is asked, and the basis of a quote. The counts come from
@@ -462,16 +443,14 @@ asgard-cli size                      # the shapes, and what each costs empty
 asgard-cli size flow-agent-single --databases 2 --queries 4
 ```
 
-**`reading`** reports which pages this engagement opened and which it never did.
-Every read of `wiki`, `usecase` and `guide` inside an engagement appends
-a line to `docs/.reading-log`. It records page names and nothing about the
-customer, so it is safe to commit - and worth committing, because six months
-later it says what the person before you knew. **The pages that cost the most
-are the right ones nobody opened.**
+**`issue-report`** is how a gap in this tool gets filed, and it is the only way
+what an engagement learned reaches the next one. The gap does not belong in the
+customer repository: a note in one engagement is a note one engagement has.
 
-**`issue-report`** is how a gap in this tool gets filed. The gap does not belong
-in the customer repository: a note in one engagement is a note one engagement
-has, and the next one starts over.
+```bash
+asgard-cli issue-report               # the URL, and what a report has to say
+asgard-cli issue-report --new         # a body with the evidence already in it
+```
 
 ### `check`
 
