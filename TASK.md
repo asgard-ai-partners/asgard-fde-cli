@@ -295,6 +295,22 @@ field against the CRD and match, but nothing there has run, and its
 `**Unchecked:**` line says so. The first customer on LINE is that page's first
 test.
 
+**A clone of asgard-docs, and one of asgard-kube, together.** Goal's first
+point names "which CR a UI name maps to" as one of four things this material
+owes an agent, and **there is one such table: `wiki/agents.md`, five rows,
+the agent family only.** Every other mapping is stated in the prose of
+whichever page discusses it - Data Source on `settings`, Drive on `knowledge`,
+MCP Server on `tools` - which a grep for the UI name does reach, and which
+nothing can check for completeness. A UI name with no CR stated anywhere is
+invisible.
+
+The table that would fix it cannot be written from a checkout: it needs the
+UI's own vocabulary from asgard-docs held against the kinds in asgard-kube,
+and inventing a row is worse than not having one. **Do not put it in
+`aliases.md`** - that file's rule is that every row is a term somebody
+actually searched for, and a bulk import of UI names is exactly the guess it
+forbids.
+
 **A clone of asgard-docs.** 69 published pages are cited by no wiki page. Two
 slices are worth reading and the rest is release notes and site plans:
 `developer-reference/processor`, because
