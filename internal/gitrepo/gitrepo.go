@@ -154,6 +154,36 @@ func OriginHost(ctx context.Context, dir string) string {
 	return RemoteHost(remote)
 }
 
+// Ignored reports whether path is excluded from this checkout by an ignore
+// rule, and whether that could be established at all.
+//
+// **Only git knows.** The rules are in the repository's own `.gitignore`, in
+// files under any directory above it, in `.git/info/exclude` and in a global
+// core.excludesFile - so a command that guesses by reading one file is wrong
+// for every repository that used any of the others, and a customer's checkout
+// is not ours to make assumptions about.
+//
+// It degrades like everything else here: no git, no checkout, or a git that
+// answers unexpectedly all come back known=false, and the caller says less
+// rather than something untrue.
+func Ignored(ctx context.Context, dir, path string) (ignored, known bool) {
+	cmd := exec.CommandContext(ctx, "git", "check-ignore", "-q", "--", path)
+	cmd.Dir = dir
+	err := cmd.Run()
+	if err == nil {
+		return true, true
+	}
+	// check-ignore is one of the few git commands whose exit code is the
+	// answer rather than a failure: 1 means "not ignored", and anything else -
+	// 128 for "not a repository", or no binary at all - means it did not
+	// answer.
+	var exitErr *exec.ExitError
+	if errors.As(err, &exitErr) && exitErr.ExitCode() == 1 {
+		return false, true
+	}
+	return false, false
+}
+
 // run executes one git command and returns its trimmed stdout.
 func run(ctx context.Context, dir string, args ...string) (string, error) {
 	cmd := exec.CommandContext(ctx, "git", args...)

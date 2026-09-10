@@ -69,6 +69,18 @@ type Stamp struct {
 //
 // dir is the repository root. An explicit override wins outright: an agent
 // working somewhere unusual should not have to move its files to satisfy this.
+//
+// **A root that already holds the material wins over one that merely exists**,
+// and that order is the whole of this function. The comment on Roots says a
+// repository that has chosen one should not acquire the other by running an
+// update, and picking the first directory that exists did not implement it:
+// `asgard-cli init` creates `.agents/skills` unconditionally, so a repository
+// that had fetched into `.claude/skills` - a checkout already using Claude
+// Code, where nothing had run `init` yet - silently changed which directory
+// the material was read from the moment somebody scaffolded it. Everything
+// fetched before that stayed on disk, in the directory the agent's own runtime
+// still looks in, describing whatever server it described in August, with
+// `skill status` reporting "none" and no command in the tool mentioning it.
 func Root(repoRoot, override string) string {
 	if override != "" {
 		if filepath.IsAbs(override) {
@@ -78,11 +90,57 @@ func Root(repoRoot, override string) string {
 	}
 	for _, candidate := range Roots {
 		full := filepath.Join(repoRoot, candidate)
+		if _, err := os.Stat(filepath.Join(full, StampName)); err == nil {
+			return full
+		}
+	}
+	for _, candidate := range Roots {
+		full := filepath.Join(repoRoot, candidate)
 		if info, err := os.Stat(full); err == nil && info.IsDir() {
 			return full
 		}
 	}
 	return filepath.Join(repoRoot, Roots[0])
+}
+
+// Elsewhere lists the candidate roots that hold fetched material and are not
+// the one in use, with the version each holds.
+//
+// **It is what notices a repository holding two copies.** One can only arise
+// now from a version of this CLI that chose its root by which directory
+// existed, or from somebody passing --dir - but the copy that is not in use is
+// read by an agent's runtime exactly as readily as the one that is, and until
+// this existed nothing in the tool said it was there. That is the same failure
+// as a skill this binary no longer ships: material nobody is comparing against
+// anything, in a directory nobody is looking at.
+//
+// inUse is the absolute path Root returned. A root that holds no record is not
+// reported: an empty `.claude/skills` is a repository that uses Claude Code,
+// not a second copy of anything.
+func Elsewhere(repoRoot, inUse string) []Other {
+	var out []Other
+	for _, candidate := range Roots {
+		full := filepath.Join(repoRoot, candidate)
+		if full == inUse {
+			continue
+		}
+		stamp, err := ReadStamp(full)
+		if err != nil || stamp == nil {
+			continue
+		}
+		out = append(out, Other{Dir: candidate, Version: stamp.Version, Files: len(stamp.Files)})
+	}
+	return out
+}
+
+// Other is one candidate root holding material that is not in use.
+type Other struct {
+	// Dir is the path relative to the repository root, as Roots spells it.
+	Dir string
+	// Version is what that copy's record says it is.
+	Version string
+	// Files is how many the record covers.
+	Files int
 }
 
 // ReadStamp reads the record in a skills directory. A missing one is not an
