@@ -24,8 +24,8 @@ Go structs into an in-memory FS and get the same treatment.
 | deployment extracts | `internal/usecase` over `internal/corpus/usecase/` | `usecase` |
 | what to obtain from a customer | `internal/needs` | `needs` |
 | what an activity gets wrong | `internal/brief` | `brief` |
-| stage guidance | `internal/stage` over `prompts/` | `guide` |
-| design-time skills | `internal/scaffold` over `templates/.agents/skills/` | — |
+| stage guidance | `internal/stage` over `internal/stage/prompts/` | `guide` |
+| design-time skills | `internal/scaffold` over `internal/scaffold/templates/.agents/skills/` | — |
 
 **Add material to one of these, not beside them.** A body with its own reader
 and its own parse drifts from the others and nothing mechanical notices. If new

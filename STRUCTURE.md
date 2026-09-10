@@ -257,7 +257,11 @@ server-side dry-run all pass a document the apiserver would reject or silently
 prune. `hack/README.md` is the procedure, and the PR template asks for its
 output.
 
-`hack/check-tables.py` is the other half: it holds the gate's pinned enum and
+`hack/check-doc-paths.py` holds every path this repository's own documents name
+against what is on disk - the mirror of `audit-material --paths`, which does the
+same for what lands in a customer's repository.
+
+`hack/check-tables.py` is the other half of the contract check: it holds the gate's pinned enum and
 constraint tables against the generated CRDs, so a table that has fallen behind
 the platform is reported rather than quietly warning about the wrong thing.
 `hack/verify-references.sh` runs the whole gate over the reference deployments.

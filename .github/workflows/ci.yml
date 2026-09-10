@@ -67,6 +67,9 @@ jobs:
       - name: every document says what it was held against
         run: go run ./cmd/asgard-cli audit-material --unverified
 
+      - name: this repo's own documents name no path that is gone
+        run: hack/check-doc-paths.py
+
 
   build:
     # Confirm before merging that every platform still builds and the

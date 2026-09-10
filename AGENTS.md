@@ -32,9 +32,8 @@ it cannot.
 It writes files into a *customer's* repository and never holds state of its
 own. The division: `Goal.md` is the goal, [TASK.md](TASK.md) is where it stands
 and what is missing, [README.md](README.md) is what the commands do,
-[APPROACH.md](APPROACH.md) is how the mechanisms work and what each was built
-from, and this file is how to change the code and the material without
-breaking it.
+[APPROACH.md](APPROACH.md) is how the main capabilities are implemented, and
+this file is how to change the code and the material without breaking it.
 
 **Most of the value is not code.** It is one corpus, and the first question when
 adding anything is which part it belongs to:
@@ -74,58 +73,78 @@ platform has that shape. `asgard-cli add <kind>` prints both, in that order.
 The shape is the [llm-wiki
 pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) -
 raw sources that are never vendored in, a corpus that is rewritten continuously,
-and a schema a person changes deliberately. `internal/corpus/wiki/README.md` states it
-for the wiki and is the longer version; these four rules apply to all four
-parts. All four hold as of 2026-09-04, and each has a check that says so -
-`audit-material --unverified`, `--links`, `--orphans`. A rule that stops
-holding shows up there rather than in a list somebody has to maintain.
+and a schema a person changes deliberately. `internal/corpus/wiki/README.md`
+states it for the wiki and is the longer version; the five rules below apply to
+every part, and each has a check that says so, so a rule that stops holding
+shows up in `asgard-cli gate` rather than in a list somebody has to maintain.
 
 **One schema.** A document opens with a `# ` title and a summary paragraph, and
 carries `**Checked:**` / `**Unchecked:**` - what it has been held against, and
-what it has not. `internal/kb` parses that and nothing else; a part of the corpus
-that needs its own reader, its own search and its own match type is a fifth thing
-that will drift. Do not add one. If new material does not fit `kb.Corpus`, that
-is a reason to change `kb`, not to write a second one.
+what it has not. `internal/kb` parses that and nothing else. A body of material
+that needs its own reader and its own parse is one that drifts from the rest
+with nothing mechanical noticing: if new material does not fit `kb.Corpus`,
+change `kb`. `Docs` and `ParseDoc` are the two hooks for a body that is not one
+`<name>.md` per document - a numbered prompt file, a skill directory with YAML
+frontmatter - and both still come out as `kb.Doc`.
+**Check: `audit-material --unverified`.**
 
-**A pointer is data, not prose**, and which of the two forms it takes depends on
-whether the target is written into a repository:
+**Every pointer is a path**, because every document lands:
 
-    ../wiki/<page>.md        a wiki page or an extract. `asgard-cli init`
-    ../usecase/<name>.md     writes both halves into a customer repository,
-                             and internal/corpus holds them in the same
-                             layout, so this resolves in both trees - `../`
-                             even from inside the half it points into
+    ../wiki/<page>.md      from a document inside one of the directories
+    wiki/<page>.md         from `aliases.md` or `index.md`, at the landed root
 
-    asgard-cli guide <name>      not written into a repository yet, so a
-    (none: every document lands)
+`internal/corpus/` holds the material in the layout a repository receives it, so
+one form resolves in both trees. It is written `../` even between two documents
+in the same directory, because a pointer that carries its own kind beats two
+forms that need to know where the reader is standing.
 
-**Every document is written into a repository, so every pointer in the
-material is a path.** `--links` refuses an invocation there. A help screen
-is not material - `brief` and `guide` are commands, and naming one is
-telling somebody to run it.
+Two ways of writing one that the gate refuses, and both read perfectly to a
+person:
 
-A pointer written any other way is invisible to the gate, and a bare page name
-is not a pointer at all: a reader cannot act on `write-path` without knowing
-which directory it is in or which command opens it. `--bare` reports one.
+- **an invocation.** The tool's name, a kind and a page name used to be how a
+  document pointed at a document, and a document pointing at a document points
+  at a file. It is not written here as an example, because `--commands` reads
+  this file and would resolve it - which is the check working. A help screen is
+  different: `guide` is a command, and naming it there is telling somebody to
+  run it.
+- **a name with no path.** `write-path` and `[`x`](x.md)` both resolve for
+  whoever is reading right now and are checked by nothing, so a renamed page
+  breaks them in silence. 141 were outside the graph at once, half of them in
+  the two indexes.
 
-**Guidance is retrieved by subject or by condition, never by position.** "You are
-at step 4" is a claim about a walk that no engagement actually performs. What a
-reader can act on is a claim about the repository in front of them, or about the
-thing they are about to do. The briefs in `.agents/skills/asgard-platform/brief/` exist for exactly
-that reason, and grep reaches every part by subject for the same one. **Anything reachable only by having arrived
-somewhere is unreachable**, and the measured version of that is in TASK.md: an
-engagement read the stage it was told it was in and what that stage pointed at,
-and never opened the page it spent a day needing.
+**Check: `audit-material --links` and `--bare`.**
+
+**Nothing points outward that a repository does not have.** These files land in
+somebody else's checkout, where "this repo" is theirs and `source/SOURCES.md`
+is not there. Citing a file in another repository is right - that is provenance
+- so the rule is to **name the repository on the same line**.
+**Check: `audit-material --paths`.**
+
+**Guidance is retrieved by subject, never by position.** "You are at step 4" is
+a claim about a walk no engagement performs, and a position cannot be argued
+with. What a reader can act on is a claim about the repository in front of them
+or about the thing they are about to do - which is what `brief/` is and why
+`guide` renders against this repository. **Anything reachable only by having
+arrived somewhere is unreachable**: an engagement read the stage it was told it
+was in, and what that stage pointed at, and never opened the page it spent a day
+needing. **Check: `audit-material --orphans`**, which is the same rule from the
+other end.
 
 **What an agent reads has to be parseable.** Column-aligned output is for the
-FDE, and it is not an interface. A command an agent acts on owes it a form that
-does not have to be recovered from `%-9s`.
+FDE and is not an interface; a command an agent acts on owes it a form that does
+not have to be recovered from `%-9s`. The material itself has no format flag,
+because it is whole documents on disk.
 
 ## Language
 
-**Go code, command output, error messages, command help, and this repo's own
-English documents are English.** That is `README.md`, `TASK.md`, this file, and
+**Go code, command output, error messages, command help, and every document
+this repository ships are English.** That is the whole corpus, plus
+`README.md`, `TASK.md`, `STRUCTURE.md`, `APPROACH.md`, this file and
 `source/SOURCES.md`.
+
+**Two documents here are Chinese on purpose.** `Goal.md` is the goal as its
+author states it, and `README.zh-TW.md` is the Chinese half of the README. Both
+are read by people rather than shipped to an engagement.
 
 ```go
 // Save writes cfg to path.
@@ -136,10 +155,6 @@ return fmt.Errorf("write %s: %w", path, err)
 `internal/scaffold/templates/`, because the generated repository is read by the
 customer's own engagement, in their language.
 
-`internal/wiki/` used to be the second. It is English now, and one language
-removes the split where a Chinese question reached only the wiki and an English
-one only the extracts.
-
 **The corpus carries one language because the mapping lives somewhere else, not
 because the reader translates.** `internal/corpus/aliases.md` is the mapping,
 and it lands beside the material so it can be read before a grep rather than
@@ -148,14 +163,16 @@ Translating only after a search failed was tried and was worse: the query
 matched the alias table's own row about the word. Product labels keep their own
 names (Managed Agent, Drive, Context Index are what the UI says).
 
-**An index is not a page and does not live among them.** That table was a
-section of `pages/glossary.md` until it was measured: because it lists every
-alias, it was reliably the one document carrying every term of a translated
-query, so a search for a subject returned the word list rather than the page.
-It sits beside the pages now, with `index.md`. Anything that
-catalogues the corpus goes there, and `audit-material --links` still reads it -
-`--orphans` deliberately does not, because a list that names every page makes
-every page look reached.
+**An index is not a page and does not live among them.** The alias table was a
+section of the glossary until it was measured: because it lists every alias, it
+was reliably the one document carrying every term of a translated query, so a
+search for a subject returned the word list rather than the page. `aliases.md`
+sits at `internal/corpus/`, above both halves, because it applies to both;
+`internal/corpus/wiki/index.md` is the wiki's own catalogue and stays with the
+pages it lists. Both are `Unlisted`, so `List()` hides them and `All()` does
+not. `audit-material --links` reads them - their rows carry pointers - and
+`--orphans` deliberately does not count them, because a list that names every
+page makes every page look reached.
 
 Do not "fix" the scaffold templates into English. Do not start a second exception
 without saying why it earns one.
@@ -194,8 +211,11 @@ A command that cannot explain itself is not finished:
 cobra gives every command a `--help` for free but does not stop it being empty,
 and nothing here checks. Read the `Long` of a neighbouring command and match it.
 
-To add a subcommand: write `newXxxCmd()` in `internal/cli/`, register it in the
-`cmd.AddCommand(...)` call in `root.go`.
+To add a subcommand: write `newXxxCmd()` in `internal/cli/`, and register it
+through `addTo(cmd, group..., ...)` in `root.go`. **Not `AddCommand`** - the
+group is required, cobra panics on a `GroupID` the parent does not have, and a
+command added the other way lands in "Additional Commands" where the next
+reader will see it and ask why.
 
 ## Every directory the scaffold writes must document itself
 
@@ -226,9 +246,10 @@ So, for **a directory whose name is ours to choose**:
 README is what makes the directory exist in a clone at all.
 
 The rule does not reach a directory whose shape somebody else decided.
-`.agents/skills/` and `plugins/asgard-fde/` are the agent-skill and Claude Code
-plugin layouts, `.claude-plugin/` holds a manifest with a schema, and
-`db-query/scripts/` holds the scripts its own `SKILL.md` documents. Naming what
+`.agents/skills/` and the Claude Code plugin under
+`internal/scaffold/templates/plugins/` are somebody else's layouts,
+`.claude-plugin/` holds a manifest with a schema, and `db-query/scripts/` holds
+the scripts its own `SKILL.md` documents. Naming what
 those are for is the external convention's job, and a README in each would be a
 second answer to a question already answered.
 
@@ -271,8 +292,15 @@ asgard-cli audit-material --commands
 asgard-cli audit-material --bare
 asgard-cli audit-material --paths
 asgard-cli audit-material --unverified
+hack/check-doc-paths.py
 asgard-cli audit-material --urls   # needs the network
 ```
+
+`--paths` and `check-doc-paths.py` are the same rule from the two sides. The
+audit reads what **lands** in a customer repository and fails on a path only we
+have; the script reads the documents that never land - Goal, README, AGENTS,
+STRUCTURE, APPROACH, TASK - where naming our own paths is the point, and fails
+when one of them is gone. It needs the checkout, which is why it is in `hack/`.
 
 Everything above except `--urls` runs in CI. `--urls` does not: a third party's
 outage is not this repository's build failure, and a gate that only works
@@ -437,30 +465,31 @@ A copy can only be wrong by being behind, so a rule built on one is a **warning*
 condition broken against every version, like a required key with no default, and
 that one may fail. Say which you are writing before you write it.
 
-## Two rules the material contradicted itself on
+## Four ways this material has contradicted itself
 
-Three self-contradictions have been found, all by somebody walking into one, and
-they come in two shapes.
+Every one was found by somebody walking into it. None is enforced by anything,
+which is the point of writing them down.
 
-**Opposite instructions in two pages.** Twice, both `wiki operations` against the
-interview stage - offering a VPN or a jump host as alternatives when there is one
-shape, and asking who approves a firewall change when filter 0 rejects exactly
-that. Both times the FDE followed the page in front of them.
+**1. Opposite instructions in two pages.** Twice, both
+`internal/corpus/wiki/operations.md` against the interview stage - offering a
+VPN or a jump host as alternatives when there is one shape, and asking who
+approves a firewall change when filter 0 rejects exactly that. Both times the
+FDE followed the page in front of them.
 
     anything that tells a reader to ask a customer something
     has to pass filter 0 first: does the answer change what we build?
 
-**One word, two meanings.** `sandbox` meant the platform's agent runtime and the
-customer's test environment, twenty lines apart in one section. Nothing
+**2. One word, two meanings.** `sandbox` meant the platform's agent runtime and
+the customer's test environment, twenty lines apart in one section. Nothing
 contradicted anything; the reader took the wrong sense.
 
-    `corpus/wiki/glossary.md` lists the terms that already mean something
-    specific. Check it before introducing a word, and before using one of
-    those for something else.
+    internal/corpus/wiki/glossary.md lists the terms that already mean
+    something specific. Check it before introducing a word, and before using
+    one of those for something else.
 
-**A third shape, and it is the one that scales worst.** An instruction that is
-right for one reader is copied by another. `wiki operations` says to get the name
-of whoever approves a firewall change - correct for tracking, wrong on a slide -
+**3. An instruction right for one reader, copied by another.** This is the one
+that scales worst. `internal/corpus/wiki/operations.md` says to get the name of
+whoever approves a firewall change - correct for tracking, wrong on a slide -
 and an FDE put it on one. Filter 0 says to ask who issues an account; same
 outcome. **Three of one deck's six worst questions were copied out of this
 material rather than reasoned into existence.**
@@ -475,8 +504,9 @@ anything, **the destination goes inside the imperative** - not beside it:
                                              that the name is for tracking
     yes   who issues the credential, for the tracking row
 
-**Adjacency was tried and it failed.** `wiki operations` had the boundary two
-lines above the instruction; an FDE read both sentences and copied only the
+**Adjacency was tried and it failed.**
+`internal/corpus/wiki/operations.md` had the boundary two lines above the
+instruction; an FDE read both sentences and copied only the
 imperative onto a customer slide. An imperative is the shape a reader scanning
 for "what do I do" hooks on, and prose beside one reads as elaboration rather
 than as a limit - especially when the imperative is short and bold and the
@@ -485,7 +515,7 @@ caveat is a paragraph.
 Embedded, the destination travels with the words. Removing it becomes a
 deliberate act, and that act is the judgement that was missing.
 
-**A fourth shape: handing work to another skill without its constraints.**
+**4. Handing work to another skill without its constraints.**
 `proposal-deck` said to load the typesetting skill and let it produce the file,
 and did not carry over that skill's own ordering requirement. An FDE arriving
 from this side did not know the requirement existed and worked in the opposite
@@ -498,19 +528,22 @@ it fails the same way** - follow the page and get hurt, find out by being hurt.
 That one was resolved by a decision rather than a repair - only the layout
 language is borrowed now, not the process - but the shape stands.
 
-**None of the four is enforced by anything.** They are conventions, and the
-record is that a convention catches this only after somebody has been caught by
-it. Issue #9 tracks whether any can be made mechanical. `hack/imperatives.py` is the
-first step and is deliberately not a detector: it lists every instruction in the
-material on one screen, because the cause is that no two opposing ones are ever
-in front of the same reader. Its first run found two instructions whose reader
-was wrong.
+**None of the four is enforced by anything**, and that is what separates them
+from the five rules above, each of which has a check. A convention catches this
+kind of thing only after somebody has been caught by it.
+
+What would help is not a detector - all four read correctly line by line - but
+putting every instruction in the material on one screen, because the cause is
+that no two opposing ones are ever in front of the same reader.
+`audit-material` with no flag is the closest thing: it lists every bold
+imperative across every part, and `--ask` narrows to the ones that tell a
+reader to ask a customer something, which is where filter 0 applies.
 
 ## Three questions the material has to keep answering
 
-The seven above are asked of a change. These three are asked of the tool, because
-they are what it is for, and each has been *nearly* true while missing something
-specific. None of them is settled by reading - run the check.
+The twelve above are asked of a change. These three are asked of the tool,
+because they are what it is for, and each has been *nearly* true while missing
+something specific. None of them is settled by reading - run the check.
 
 **Does what it generates still satisfy the contract?**
 
@@ -557,7 +590,8 @@ channel decided by assumption is a new BotProvider rather than an edit.
 grep -A3 'botProviderClass' ~/asgard-kube/crd/asgard-ai.com_botproviders.yaml | grep enum
 
 # whether the interview asks about each route
-`.agents/skills/asgard-platform/guide/requirements.md` | grep -in 'chat\|channel\|LINE\|other end\|API\|console'
+grep -in 'chat\|channel\|LINE\|other end\|API\|console' \
+    internal/stage/prompts/11-requirements.md
 ```
 
 The interview asked who was on the other end - the question deciding hub against
@@ -600,13 +634,14 @@ machine and wrong on every other:
 
 `asgard-kube` is read at two depths and they answer differently: `crd/` is the
 contract, and `pkg/apis/` is the Go types it is generated from, where the
-reasoning survives as comments. `wiki crd-rules` was written from the second.
+reasoning survives as comments. `internal/corpus/wiki/crd-rules.md` was written
+from the second.
 
 **`asgard-core` was cited by name six times and by URL nowhere**, including in
 `internal/gate/processors.go`, whose processor contract is extracted from its
 `ProcessorDefinitions`. That makes it a pinned copy of the platform's contract,
-so the rule below about which way a pinned copy can go stale applies to it - and
-`wiki platform-unknowns` P10 records that the list is **demonstrably
+so the rule above about which way a pinned copy can go stale applies to it - and
+`internal/corpus/wiki/platform-unknowns.md` P10 records that the list is **demonstrably
 incomplete**: `await` and `temperature` are set in five production deployments
 and appear in neither it nor the CRD. A gate rule built on treating it as
 complete called five of five correct charts wrong, and was deleted.
