@@ -82,7 +82,7 @@ func corpusJobs() ([]job, error) {
 	// the corpus directory; since the material moved to `internal/corpus` it is
 	// an unlisted document of the wiki half, so Landing carries it - and while
 	// both were here, two jobs wrote the same path.
-	aliases, err := wiki.Index()
+	aliases, err := wiki.Aliases()
 	if err != nil {
 		return nil, fmt.Errorf("read the alias index: %w", err)
 	}
@@ -377,31 +377,3 @@ It reports what is here against what the running binary carries, and replaces
 this directory outright when the version has moved. Read it as the authority
 over these files rather than anything written inside them.
 `
-
-// CorpusPath is where one document of the platform corpus lands in a
-// repository, as a path from its root.
-//
-// It is exported for `find`, which prints where a hit can be read. That used
-// to be an invocation - `asgard-cli wiki agents` - and became a path when the
-// two reader commands went: the documents are on disk now, so the honest
-// answer to "where do I read this" is the file.
-func CorpusPath(kind, name string) string {
-	return filepath.ToSlash(filepath.Join(corpusSkillDir, kind, name+".md"))
-}
-
-// CorpusOnDisk reports whether the platform corpus has been written into the
-// working directory.
-//
-// **A command that prints a path has to know whether that path is there.**
-// `find` names the file each hit lives in, which is right in a repository and
-// a dead end anywhere else - and answering a question before any repository
-// exists is the case `Goal.md` names first: "a tool that needs a directory
-// before you can ask it will not get asked." The answer is not another
-// command, because `asgard-cli init` already writes the whole corpus and an
-// agent can run it in an empty directory. The answer is saying so, which is
-// the same rule Goal's fourth point sets for issues: it has to come out of the
-// tool's own output rather than be worked out.
-func CorpusOnDisk(root string) bool {
-	info, err := os.Stat(filepath.Join(root, filepath.FromSlash(corpusSkillDir)))
-	return err == nil && info.IsDir()
-}

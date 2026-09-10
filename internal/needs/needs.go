@@ -112,16 +112,6 @@ func Shapes() []Shape {
 	return out
 }
 
-// Find returns one shape by name.
-func Find(name string) (Shape, bool) {
-	for _, s := range shapes {
-		if s.Name == name {
-			return s, true
-		}
-	}
-	return Shape{}, false
-}
-
 // Names lists the shapes that have a dependency list.
 func Names() []string {
 	out := make([]string, 0, len(shapes))
@@ -207,6 +197,3 @@ var corpus = func() kb.Corpus {
 
 // List returns every shape as a document.
 func List() ([]kb.Doc, error) { return corpus.List() }
-
-// Search finds shapes covering the given terms.
-func Search(query string) ([]kb.Match, error) { return corpus.Search(query) }

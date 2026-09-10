@@ -299,16 +299,6 @@ different documents - ` + "`proposal-deck`" + ` in ` + "`.agents/skills/`" + ` h
 	},
 }
 
-// Find returns an activity by name.
-func Find(name string) (Activity, bool) {
-	for _, a := range Activities {
-		if a.Name == name {
-			return a, true
-		}
-	}
-	return Activity{}, false
-}
-
 // Names lists the activities for an error message.
 func Names() []string {
 	out := make([]string, 0, len(Activities))
@@ -317,40 +307,6 @@ func Names() []string {
 	}
 	sort.Strings(out)
 	return out
-}
-
-// Render writes one activity's briefing.
-func (a Activity) Render(w interface{ Write([]byte) (int, error) }) {
-	fmt.Fprintf(w, "%s\n%s\n\n%s\n\n", a.Name, a.When, a.Lead)
-	for _, it := range a.Items {
-		fmt.Fprintf(w, "  %s\n", it.Subject)
-		fmt.Fprintf(w, "    said:  %s\n", it.Wrong)
-		fmt.Fprintf(w, "    true:  %s\n", wrap(it.Right, 68, "           "))
-		fmt.Fprintf(w, "    read:  %s\n\n", kb.Landed(landedPrefix, it.Where))
-	}
-	fmt.Fprintf(w, "%s\n", a.Close)
-}
-
-// wrap breaks a line at word boundaries, indenting continuations.
-func wrap(s string, width int, indent string) string {
-	words := strings.Fields(s)
-	if len(words) == 0 {
-		return s
-	}
-	var b strings.Builder
-	line := 0
-	for i, word := range words {
-		if line > 0 && line+1+len(word) > width {
-			b.WriteString("\n" + indent)
-			line = 0
-		} else if i > 0 {
-			b.WriteString(" ")
-			line++
-		}
-		b.WriteString(word)
-		line += len(word)
-	}
-	return b.String()
 }
 
 // ── Landing ───────────────────────────────────────────────────────────────
@@ -418,6 +374,3 @@ var corpus = func() kb.Corpus {
 
 // List returns every brief as a document.
 func List() ([]kb.Doc, error) { return corpus.List() }
-
-// Search finds briefs covering the given terms.
-func Search(query string) ([]kb.Match, error) { return corpus.Search(query) }

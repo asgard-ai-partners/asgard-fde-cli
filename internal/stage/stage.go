@@ -381,10 +381,6 @@ var overrideDir string
 // the embedded prompts.
 func SetOverrideDir(dir string) { overrideDir = dir }
 
-// OverrideDir reports what SetOverrideDir was given, so a command can say it is
-// not reading what it shipped with.
-func OverrideDir() string { return overrideDir }
-
 // readPrompt returns a prompt, preferring the override directory.
 //
 // A file that is present but unreadable is an error rather than a silent
@@ -485,14 +481,6 @@ func promptRefs() ([]kb.Ref, error) {
 // Docs returns every piece of guidance as a kb.Doc, so a caller listing the
 // whole corpus does not have to special-case this part of it.
 func Docs() ([]kb.Doc, error) { return corpus.List() }
-
-// Search finds guidance by subject, which is the way in. `asgard-cli guide
-// <name>` is the other, for a reader who already knows the name.
-//
-// It used to be a copy of kb.Corpus.Search, because a stage is not a file named
-// after itself and could not be a Corpus. Resolving the names is all that was
-// actually in the way.
-func Search(query string) ([]kb.Match, error) { return corpus.Search(query) }
 
 // ── Landing ───────────────────────────────────────────────────────────────
 

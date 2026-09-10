@@ -109,23 +109,6 @@ func (d Doc) Counterpart(kind string) string {
 // it being wrong, and different from it being right.
 func (d Doc) Verified() bool { return d.Checked != "" || d.Unchecked != "" }
 
-// Match is one document a search hit, with the lines that hit and how often.
-type Match struct {
-	Doc
-	Lines []string
-
-	// Score is how many lines mentioned a term. It orders the results, so the
-	// document that talks about the subject most comes first rather than the
-	// one whose name sorts earliest.
-	Score int
-
-	// Terms are the query terms this document actually contains. A caller needs
-	// them to say which half of a query landed: a search that quietly matched
-	// on one word of six reads as an answer to the whole question, and the
-	// reader acts on material about something else.
-	Terms []string
-}
-
 // Ref is one document's name and the file holding it. A corpus whose files are
 // not one `<name>.md` under Dir supplies these itself.
 type Ref struct {
@@ -156,18 +139,16 @@ type Corpus struct {
 	// title and a paragraph. Optional; Parse is the default.
 	ParseDoc func(name string, data []byte) Doc
 
-	// Scan builds the scanner for one document's body, when what is searched
-	// and what is quotable are not the same text. Optional.
-	Scan func(body string) Scanner
-
 	// Unlisted are files that belong to the corpus's own bookkeeping rather
 	// than being material about the subject - an index, a log, a README.
 	// Readable by name, absent from List.
 	Unlisted map[string]bool
 
-	// What names the material, for an error a reader can act on.
+	// What names the material, for an error a reader can act on. Command is
+	// how a reader lists it, which is a directory listing for everything that
+	// lands.
 	Noun    string // "extract", "wiki page"
-	Command string // "asgard-cli usecase", "asgard-cli wiki"
+	Command string // "ls .agents/skills/asgard-platform/usecase/"
 }
 
 // A pointer is how this material sends a reader to another document, and there
@@ -676,187 +657,4 @@ func (c Corpus) File(path string) (string, error) {
 		return "", fmt.Errorf("read %s: %w", path, err)
 	}
 	return string(data), nil
-}
-
-// Search finds documents covering the given terms. It is how somebody gets from
-// a customer's words to the material that covers them, without knowing what any
-// of it is called.
-//
-// All the terms first, then any of them. Requiring all of them is right when the
-// query is well aimed - an extra word should narrow - but it is the wrong answer
-// to a query that is a handful of words from a customer's document, where one
-// unknown word suppresses everything the other five would have found. So a query
-// that matches nothing outright falls back to the documents matching the most
-// terms, and Match.Terms records which ones, so the caller can say what did not
-// land rather than presenting a partial hit as a whole one.
-func (c Corpus) Search(query string) ([]Match, error) {
-	terms := Terms(query)
-	if len(terms) == 0 {
-		return nil, fmt.Errorf("search needs at least one term")
-	}
-
-	all, err := c.List()
-	if err != nil {
-		return nil, err
-	}
-
-	var matches []Match
-	for _, d := range all {
-		body, err := c.Read(d.Name)
-		if err != nil {
-			return nil, err
-		}
-		sc := Scanner{}
-		if c.Scan != nil {
-			sc = c.Scan(body)
-		}
-		h := sc.Scan(body, terms)
-		if !h.Found() {
-			continue
-		}
-		matches = append(matches, Match{Doc: d, Lines: h.Lines, Score: h.Score, Terms: h.Terms})
-	}
-
-	// A document carrying every term outranks one carrying more mentions of
-	// fewer, so the exact hit stays on top and the fallback only ever appears
-	// underneath it - or alone, when there was no exact hit at all.
-	Rank(matches, func(m Match) Hit { return Hit{Terms: m.Terms, Score: m.Score} })
-
-	// Once something matches every term, the partial matches are noise: they
-	// are what the fallback is for, and the fallback is not needed.
-	if len(matches) > 0 && len(matches[0].Terms) == len(terms) {
-		for i, m := range matches {
-			if len(m.Terms) < len(terms) {
-				return matches[:i], nil
-			}
-		}
-	}
-	return matches, nil
-}
-
-// Terms splits a query the way Search reads it.
-func Terms(query string) []string {
-	return strings.Fields(strings.ToLower(query))
-}
-
-// Covers reports whether the body covers one term. Short terms are held to a
-// word boundary: as a substring "ap" is inside "api", "apply" and "happen", so a
-// query naming an access point matched almost the whole corpus and the result
-// looked like an answer.
-func Covers(lowerBody, term string) bool {
-	if len(term) > 3 {
-		return strings.Contains(lowerBody, term)
-	}
-	for i := 0; ; {
-		j := strings.Index(lowerBody[i:], term)
-		if j < 0 {
-			return false
-		}
-		start := i + j
-		end := start + len(term)
-		if !wordByte(lowerBody, start-1) && !wordByte(lowerBody, end) {
-			return true
-		}
-		i = start + 1
-	}
-}
-
-// wordByte reports whether the byte at i is one a word can be made of, treating
-// anything outside the string as a boundary.
-func wordByte(s string, i int) bool {
-	if i < 0 || i >= len(s) {
-		return false
-	}
-	c := s[i]
-	return c == '_' || c >= 0x80 ||
-		(c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
-}
-
-// Hit is what one document's body gave a query: which terms it carries, a few
-// of the lines that carry them, and how often.
-type Hit struct {
-	Terms []string
-	Lines []string
-	Score int
-}
-
-// Found reports whether the body carried any term at all.
-func (h Hit) Found() bool { return len(h.Terms) > 0 }
-
-// Scan is the one implementation of "what did this document give the query".
-//
-// It exists because there were three. Corpus.Search had it, and so did
-// internal/stage and internal/scaffold, which hold material that is not a
-// Corpus - a stage has a number and a prompt template, a skill is a directory
-// with frontmatter - and so could not share the rest of this file. What they
-// share is the scoring, and three copies of it is the drift this package was
-// written to prevent, one level down from where it was prevented.
-//
-// Line selection is part of the contract, not a detail: at most three, and
-// nothing under 20 characters, because a bare field name quotes badly and says
-// less than a sentence.
-func Scan(body string, terms []string) Hit { return Scanner{}.Scan(body, terms) }
-
-// Scanner is Scan with the two things one corpus needs differently.
-//
-// A skill's SKILL.md is searched whole - its frontmatter carries the
-// description somebody queries on - but quoting a line out of that frontmatter,
-// or out of an unrendered `<< >>` placeholder, puts broken text in a result. So
-// what is matched and what is quotable are not always the same text.
-type Scanner struct {
-	// Quotable is the text shown lines are taken from, when it is not the
-	// whole body. Empty means the body itself.
-	Quotable string
-
-	// Keep drops a candidate line before it is shown. Nil keeps everything the
-	// length rule already allows.
-	Keep func(line string) bool
-}
-
-// Scan reports what body gave the query under this scanner's rules.
-func (sc Scanner) Scan(body string, terms []string) Hit {
-	var h Hit
-	lower := strings.ToLower(body)
-	for _, term := range terms {
-		if Covers(lower, term) {
-			h.Terms = append(h.Terms, term)
-		}
-	}
-	if len(h.Terms) == 0 {
-		return h
-	}
-
-	quotable := sc.Quotable
-	if quotable == "" {
-		quotable = body
-	}
-	for _, line := range strings.Split(quotable, "\n") {
-		lowerLine := strings.ToLower(line)
-		for _, term := range h.Terms {
-			if !Covers(lowerLine, term) {
-				continue
-			}
-			h.Score++
-			trimmed := strings.TrimSpace(line)
-			if len(h.Lines) < 3 && len(trimmed) > 20 && (sc.Keep == nil || sc.Keep(trimmed)) {
-				h.Lines = append(h.Lines, trimmed)
-			}
-			break
-		}
-	}
-	return h
-}
-
-// Rank orders matches the way every part of the corpus orders them: a document
-// carrying more of the query outranks one carrying more mentions of fewer, so
-// an exact hit stays above a partial one rather than being buried by a document
-// that repeats a single word.
-func Rank[T any](items []T, hit func(T) Hit) {
-	sort.SliceStable(items, func(i, j int) bool {
-		a, b := hit(items[i]), hit(items[j])
-		if len(a.Terms) != len(b.Terms) {
-			return len(a.Terms) > len(b.Terms)
-		}
-		return a.Score > b.Score
-	})
 }

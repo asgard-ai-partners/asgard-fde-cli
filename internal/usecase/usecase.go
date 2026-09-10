@@ -17,9 +17,6 @@ import (
 // Extract is one shape. It is kb.Doc under a name that reads at the call site.
 type Extract = kb.Doc
 
-// Match is one extract that matched a search, with the lines that matched.
-type Match = kb.Match
-
 var corpus = kb.Corpus{
 	FS:  corpusfs.FS,
 	Dir: "usecase",
@@ -38,9 +35,3 @@ func All() ([]Extract, error) { return corpus.All() }
 
 // Read returns one extract in full.
 func Read(name string) (string, error) { return corpus.Read(name) }
-
-// Index returns the README, which explains how the extracts are organised.
-func Index() (string, error) { return corpus.File("usecase/README.md") }
-
-// Search finds extracts mentioning all of the given terms.
-func Search(query string) ([]Match, error) { return corpus.Search(query) }

@@ -25,9 +25,6 @@ import (
 // Page is one wiki page. It is kb.Doc under a name that reads at the call site.
 type Page = kb.Doc
 
-// Match is one page that matched a search, with the lines that matched.
-type Match = kb.Match
-
 var corpus = kb.Corpus{
 	FS:  corpusfs.FS,
 	Dir: "wiki",
@@ -48,9 +45,6 @@ func All() ([]Page, error) { return corpus.All() }
 // Read returns one page in full.
 func Read(name string) (string, error) { return corpus.Read(name) }
 
-// Search finds pages mentioning all of the given terms.
-func Search(query string) ([]Match, error) { return corpus.Search(query) }
-
 // The two tables in aliases.md. Matched on the heading rather than on position,
 // so the file can be reordered.
 const (
@@ -60,8 +54,10 @@ const (
 	routedHeading  = "## Names it only routes"
 )
 
-// Index returns the alias index in full, for a reader.
-func Index() (string, error) { return corpus.File(aliasFile) }
+// Aliases returns `aliases.md` in full - the mapping from what a customer
+// said to what to search for. It was called Index, which is the one other
+// thing in this corpus it is not.
+func Aliases() (string, error) { return corpus.File(aliasFile) }
 
 // table reads one two-column table out of the index file.
 //

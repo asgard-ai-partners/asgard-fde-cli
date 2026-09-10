@@ -701,10 +701,10 @@ func (c *checker) checkQuestionNumbersUnique() error {
 // changed about half of them, dropped three and added six. None of it went
 // back, because nothing said it should.
 //
-// That matters more than an ordinary staleness because **`next` prints the
-// questions before anything else**. The next person to pick the repository up
-// reads the superseded file first, and walks into a meeting with questions
-// already abandoned. Worse, a judgement that was overturned survives there
+// That matters more than an ordinary staleness because the questions file is
+// what the next person picking the repository up reads first. They read the
+// superseded version, and walk into a meeting with questions already
+// abandoned. Worse, a judgement that was overturned survives there
 // looking considered - in that engagement, a security reasoning the deck had
 // corrected was still sitting in the file, argued well.
 //

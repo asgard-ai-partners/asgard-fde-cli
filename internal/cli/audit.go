@@ -324,7 +324,7 @@ func bookkeeping() []source {
 		links, _ := kb.Links(body)
 		out = append(out, source{label: label, name: name, body: body, links: links})
 	}
-	if body, err := wiki.Index(); err == nil {
+	if body, err := wiki.Aliases(); err == nil {
 		add("index", "aliases", body)
 	}
 	for _, name := range []string{"index"} {
@@ -494,7 +494,16 @@ maintainer can see.`,
 				return sweep(out, all, term)
 			}
 			if links {
-				all := append(sources, bookkeeping()...)
+				// **Templates carry pointers too**, and they are the half a
+				// customer's chart is built from: a CR skeleton sends the
+				// reader to the extract that explains the field it is about
+				// to ask them to fill in. A path there that goes nowhere is
+				// found in the customer's repository or not at all.
+				all, err := everything()
+				if err != nil {
+					return err
+				}
+				all = append(all, bookkeeping()...)
 				return checkLinks(out, append(all, helpText(cmd.Root())...))
 			}
 			if commands {
@@ -819,6 +828,13 @@ func checkLinks(out io.Writer, sources []source) error {
 		}
 	}
 	for _, s := range sources {
+		// A source that arrived without its graph gets one read here. The
+		// templates are the case: they are collected for the term sweep,
+		// which reads bodies, and a pointer in one was invisible to this
+		// until the day somebody followed it in a customer's chart.
+		if s.links == nil {
+			s.links, _ = kb.Links(s.body)
+		}
 		seen := map[string]bool{}
 		for _, l := range s.links {
 			key := l.Kind + "/" + l.Name
