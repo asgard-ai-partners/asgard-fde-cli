@@ -13,6 +13,10 @@ layer runs to hundreds of cubes.
 **Read the platform side first:** `../wiki/semantic-model.md` -
 what a Semantic Model is, how it is built, and its limits. This page assumes you have.
 
+**What this shape costs to get is `../needs/semantic-layer.md`** - what has to come
+from the customer before any of it can be built, and the answer that
+changes the plan is never the one nobody asked for.
+
 ## When this shape, and when not
 
 Use it when the audience is **internal and authenticated**, and the questions are

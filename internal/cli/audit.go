@@ -17,6 +17,7 @@ import (
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/brief"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/generate"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/kb"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/needs"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/scaffold"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/stage"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/usecase"
@@ -208,6 +209,17 @@ func material() ([]source, error) {
 			return nil, err
 		}
 		out = append(out, source{label: "stage", name: string(s.Name), body: body, links: links[string(s.Name)]})
+	}
+	// **The needs rows were claiming to be audited and were not.** The package
+	// comment says each row carries the document that owns it and that
+	// `--links` resolves those "the way it resolves every other pointer here" -
+	// which was true of the intent and false of the code: needs was in no
+	// source, so a From naming an extract that does not exist passed with 0
+	// dead. They are documents now, written into a repository as `needs/`, so
+	// they join the graph as themselves.
+	for _, d := range needs.Documents() {
+		links, _ := kb.Links(d.Body)
+		out = append(out, source{label: "needs", name: d.Name, body: d.Body, links: links})
 	}
 	skills, err := scaffold.Skills()
 	if err != nil {
@@ -580,6 +592,7 @@ func targets() (map[string]map[string]bool, error) {
 	known := map[string]map[string]bool{
 		"wiki":    {},
 		"usecase": {},
+		"needs":   {},
 		"brief":   {},
 		"guide":   {},
 	}
@@ -596,6 +609,9 @@ func targets() (map[string]map[string]bool, error) {
 	}
 	for _, e := range extracts {
 		known["usecase"][e.Name] = true
+	}
+	for _, n := range needs.Names() {
+		known["needs"][n] = true
 	}
 	for _, n := range brief.Names() {
 		known["brief"][n] = true
@@ -658,7 +674,7 @@ func checkOrphans(out io.Writer, sources []source) error {
 		"fix is a sentence in the document that should have sent a reader here.\n")
 
 	var total, orphaned int
-	for _, kind := range []string{"wiki", "usecase", "guide", "brief"} {
+	for _, kind := range []string{"wiki", "usecase", "needs", "guide", "brief"} {
 		names := make([]string, 0, len(known[kind]))
 		for n := range known[kind] {
 			names = append(names, n)
@@ -708,7 +724,10 @@ func checkLinks(out io.Writer, sources []source) error {
 	// here and went nowhere in the repository the material had been written
 	// into. Nothing saw it: `--links` resolves against the corpus, where log
 	// exists.
-	lands := map[string]map[string]bool{"wiki": {}, "usecase": {}}
+	lands := map[string]map[string]bool{"wiki": {}, "usecase": {}, "needs": {}}
+	for _, n := range needs.Names() {
+		lands["needs"][n] = true
+	}
 	landing, err := wiki.Landing()
 	if err != nil {
 		return err

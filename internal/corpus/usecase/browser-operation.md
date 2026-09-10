@@ -14,6 +14,10 @@ capability is a skill describing 88 pages plus everything the menu cannot see.
 **Read the platform side first:** `../wiki/agents.md` -
 what a Managed Agent and a Flow Agent each are, and which the audience decides. This page assumes you have.
 
+**What this shape costs to get is `../needs/browser-operation.md`** - what has to come
+from the customer before any of it can be built, and the answer that
+changes the plan is never the one nobody asked for.
+
 ## When this shape, and when not
 
 Take it **only after establishing there is no better route**:

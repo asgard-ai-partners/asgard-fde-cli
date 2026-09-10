@@ -16,7 +16,11 @@
 // fact is written.
 package needs
 
-import "sort"
+import (
+	"fmt"
+	"sort"
+	"strings"
+)
 
 // Item is one thing to obtain, and where the material says so.
 type Item struct {
@@ -121,5 +125,64 @@ func Names() []string {
 		out = append(out, s.Name)
 	}
 	sort.Strings(out)
+	return out
+}
+
+// ── Landing ───────────────────────────────────────────────────────────────
+//
+// `asgard-cli init` writes these shapes into a customer repository as files,
+// one per shape, so that an FDE's agent reaches a row by grepping for the word
+// the customer used - `allowlist`, `read-only`, `test environment` - rather
+// than by knowing this command exists.
+//
+// **One file per shape rather than one file for all seven**, because a grep hit
+// then carries which shape it belongs to. A row is only actionable with that:
+// "ask whether there is a test environment" means a different conversation for
+// a write path than for an external API.
+
+// Document renders one shape as the markdown that lands at `needs/<name>.md`.
+func (s Shape) Document() string {
+	var b strings.Builder
+	fmt.Fprintf(&b, "# %s: what to get from the customer\n\n", s.Name)
+	fmt.Fprintf(&b, "**%s**\n\n", s.What)
+	b.WriteString(intro)
+	for _, i := range s.Items {
+		fmt.Fprintf(&b, "\n## %s\n\n%s\n\nStated in %s.\n", i.Ask, i.Why, pointer(i.From))
+	}
+	return b.String()
+}
+
+// intro is on every shape rather than in one file they all point at: a reader
+// arrives here by grepping for a word in one row, and the rule that governs how
+// to ask is worth more at that moment than a pointer to it.
+const intro = `**This is theirs to provide, not ours to design.** Ask for exactly the thing
+named - offering options invites the other side to pick one that does not
+apply, and the week it takes to find that out is the week you were saving.
+`
+
+// pointer rewrites a From into the form a reader of the landed copy can act on.
+//
+// A wiki page and an extract are written into the repository, so a path is
+// what to give: `needs/` sits beside `wiki/` and `usecase/`, which is why it is
+// `../`. A guide and a brief are not written out yet, so they stay
+// invocations - the same rule the corpus itself follows, and the same one that
+// stops being needed when step 4 of TASK.md finishes.
+func pointer(from string) string {
+	for _, kind := range []string{"wiki", "usecase"} {
+		prefix := "asgard-cli " + kind + " "
+		if name, ok := strings.CutPrefix(from, prefix); ok {
+			return "`../" + kind + "/" + name + ".md`"
+		}
+	}
+	return "`" + from + "`"
+}
+
+// Documents renders every shape, for the export and for the audit that resolves
+// the pointers in them.
+func Documents() []struct{ Name, Body string } {
+	out := make([]struct{ Name, Body string }, 0, len(shapes))
+	for _, s := range Shapes() {
+		out = append(out, struct{ Name, Body string }{s.Name, s.Document()})
+	}
 	return out
 }

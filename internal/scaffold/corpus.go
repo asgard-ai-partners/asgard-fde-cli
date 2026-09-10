@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/kb"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/needs"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/usecase"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/wiki"
 )
@@ -85,6 +86,15 @@ func corpusJobs() ([]job, error) {
 	}
 	add("aliases.md", aliases)
 
+	// One file per shape, beside `wiki/` and `usecase/` so that the pointers in
+	// them are `../` like everything else. What is landed here is the whole of
+	// Goal's second point - what has to be obtained from the customer before a
+	// shape can be built - and until now it was 125 lines of Go that no grep
+	// could reach.
+	for _, d := range needs.Documents() {
+		add(filepath.Join("needs", d.Name+".md"), d.Body)
+	}
+
 	// The root index is generated from what actually landed, so it cannot
 	// disagree with the tree beside it. It is deliberately not a second copy
 	// of what `wiki/index.md` and `usecase/README.md` do - those group their
@@ -115,9 +125,13 @@ func corpusIndex(jobs []job) (string, error) {
 	for _, half := range []struct{ dir, what, guide string }{
 		{"wiki", "what the platform has, and which CR a UI name maps to", "wiki/index.md"},
 		{"usecase", "how one deployment shape is assembled, field by field", "usecase/README.md"},
+		{"needs", "what to get from the customer before a shape can be built", ""},
 	} {
-		fmt.Fprintf(&b, "\n## `%s/` - %s\n\nGrouped by the question each answers in [`%s`](%s), which is\nworth reading first. This is the flat list.\n\n| document | covers |\n|---|---|\n",
-			half.dir, half.what, half.guide, half.guide)
+		fmt.Fprintf(&b, "\n## `%s/` - %s\n\n", half.dir, half.what)
+		if half.guide != "" {
+			fmt.Fprintf(&b, "Grouped by the question each answers in [`%s`](%s), which is\nworth reading first. This is the flat list.\n\n", half.guide, half.guide)
+		}
+		b.WriteString("| document | covers |\n|---|---|\n")
 
 		prefix := filepath.Join(corpusSkillDir, half.dir) + string(filepath.Separator)
 		for _, j := range jobs {

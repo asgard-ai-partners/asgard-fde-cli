@@ -38,6 +38,10 @@ Re-checked 2026-09-03, and this is still the position.
 **Read the platform side first:** `../wiki/integration.md` -
 which credentials each chat platform needs, and who fills in what. This page assumes you have.
 
+**What this shape costs to get is `../needs/chat-channel.md`** - what has to come
+from the customer before any of it can be built, and the answer that
+changes the plan is never the one nobody asked for.
+
 ## When this shape, and when not
 
 Use it when **the customer's users already live on that platform**. A LINE

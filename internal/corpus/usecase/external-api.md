@@ -33,6 +33,10 @@ the channels in - if one exists, several external APIs collapse into one databas
 and the design gets simpler in every dimension. If nobody knows, that is an open
 question in `docs/open-questions.md`, not an assumption to design on.
 
+**What this shape costs to get is `../needs/external-api.md`** - what has to come
+from the customer before any of it can be built, and the answer that
+changes the plan is never the one nobody asked for.
+
 ## When this shape, and when not
 
 There are **two ways to reach an external API**, and the choice is not stylistic:

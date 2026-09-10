@@ -422,7 +422,13 @@ if it stops there:
      halves in one place as paths, the shape a pointer takes, and what is
      deliberately not there. `needs` and `brief` get their rows when step 4
      lands them; until then they are in its "what is not here" table.
-  4. Land `needs`, `brief`, and `guide`'s static half.
+  4. Land `needs`, `brief`, and `guide`'s static half. **`needs` is done** -
+     seven documents under `needs/`, one per shape so that a grep hit carries
+     which shape it belongs to, and each extract now points at its own. Making
+     them documents also fixed a claim the package had been making and not
+     keeping: its comment said `--links` resolved every `From`, and `needs` was
+     in no source at all, so a `From` naming an extract that does not exist
+     passed with 0 dead. `brief` and `guide` are what remain.
   5. Delete `wiki` and `usecase`. `--commands` confirms nothing still names
      them.
   6. Delete `find`, after the sense instruction has been given a release to be
