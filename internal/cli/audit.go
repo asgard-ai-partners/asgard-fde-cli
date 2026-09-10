@@ -340,12 +340,12 @@ func bookkeeping() []source {
 
 // helpText is every command's own help, as a link source.
 //
-// **It is a fifth body of material and it had never been checked.** Sixty-odd
-// pointers into the corpus live in Long and Short strings - `find` alone writes
-// sixteen - and a page renamed out from under one of them goes dead exactly the
-// way a page's own pointer does, with nothing to notice. It is also where an
-// agent is sent from before it has read anything, so a document reached only
-// from here is reached, which the orphan count was getting wrong.
+// **It is a body of material like any other.** Sixty-odd pointers into the
+// corpus live in Long and Short strings, and a page renamed out from under one
+// of them goes dead exactly the way a page's own pointer does. It is also
+// where an agent is sent from before it has read anything, so a document
+// reached only from here is reached, which the orphan count would otherwise
+// get wrong.
 //
 // It is not part of material(): the instruction audits count sentences somebody
 // wrote as guidance, and a usage string is not one.

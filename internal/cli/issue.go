@@ -173,11 +173,10 @@ func writeReport(out io.Writer) error {
 	fmt.Fprintf(out, "## 5) What it cost\n\n"+
 		"TODO - twenty minutes, a wrong sentence to a customer, or nothing yet\nbecause you caught it. This decides what gets fixed first.\n\n")
 
-	// **What it says it collected has to be what it collected.** The old line
-	// claimed the search evidence unconditionally, and a repository where every
-	// `find` returned something has no misses file at all - so a reader saw a
-	// bare TODO under a sentence promising evidence, and went looking for a bug
-	// in the generator. Naming the parts is one line and removes that hunt.
+	// **What it says it collected has to be what it collected.** A line
+	// claiming evidence the run did not gather leaves a reader looking at a
+	// bare TODO under a promise, hunting for a bug in the generator. Naming
+	// the parts is one line and removes that hunt.
 	collected := "the version"
 	if err == nil {
 		collected += ", what the charts declare, what is open"

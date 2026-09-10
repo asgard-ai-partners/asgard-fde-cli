@@ -118,9 +118,9 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 
 	cmd.SetVersionTemplate("{{.Name}} {{.Version}}\n")
 
-	// --template-dir is persistent because a prompt is read by `guide`, `find`
-	// and `audit-material` alike, and an override that applied to only one of
-	// them would make the three disagree about what the material says.
+	// --template-dir is persistent because a prompt is read by `guide`,
+	// `audit-material` and `init` alike, and an override that applied to only
+	// one of them would make the three disagree about what the material says.
 	var templateDir string
 	cmd.PersistentFlags().StringVar(&templateDir, "template-dir", "",
 		"read stage prompts from this directory instead of the embedded copies, per file; for iterating on prompt text")

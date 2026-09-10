@@ -357,8 +357,8 @@ func Documents() []struct{ Name, Body string } {
 }
 
 // corpus is the rendered documents behind one `kb.Corpus`, for the same reason
-// as in internal/needs: `find` reaches every body of material the same way,
-// and these have no files of their own.
+// as in internal/needs: every body of material is read the same way, and these
+// have no files of their own.
 var corpus = func() kb.Corpus {
 	files := fstest.MapFS{}
 	for _, d := range Documents() {

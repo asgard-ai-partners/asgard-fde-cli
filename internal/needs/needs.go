@@ -149,8 +149,8 @@ func (s Shape) Document() string {
 
 // provenance is the same on every shape, because it is the same claim: the
 // checking is per row rather than per document. Without it these read as
-// material nobody has held against anything, which `find --unverified` would
-// say and would be the wrong shape of true.
+// material nobody has held against anything, which `audit-material
+// --unverified` would say and would be the wrong shape of true.
 const provenance = `
 **Checked:** each row above names the document that owns its claim, and
 ` + "`asgard-cli audit-material --links`" + ` resolves those. That is the whole of the
@@ -178,10 +178,10 @@ func Documents() []struct{ Name, Body string } {
 	return out
 }
 
-// corpus is the rendered documents behind one `kb.Corpus`, so that `find`
-// reaches these the way it reaches every other body of material. They have no
-// files - each is rendered from the shapes above - so the FS is built from
-// them.
+// corpus is the rendered documents behind one `kb.Corpus`, so the audits and
+// the landing read these the way they read every other body of material. They
+// have no files - each is rendered from the shapes above - so the FS is built
+// from them.
 var corpus = func() kb.Corpus {
 	files := fstest.MapFS{}
 	for _, d := range Documents() {

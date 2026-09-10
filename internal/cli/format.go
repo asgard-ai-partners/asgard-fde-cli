@@ -21,9 +21,8 @@ var ErrSilent = errors.New("")
 //
 // Column-aligned output is for the FDE and is not an interface: an agent acting
 // on open questions should not have to recover them from a `%-9s`. The commands
-// an agent acts on carry this; the ones a person reads for prose do not, and
-// `wiki`, `usecase` and `brief` are already whole documents rather than
-// records.
+// an agent acts on carry this; the material does not, because it is whole
+// documents on disk rather than records.
 const (
 	formatFlag  = "format"
 	formatText  = "text"

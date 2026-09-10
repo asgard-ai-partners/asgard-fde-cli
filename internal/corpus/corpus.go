@@ -1,25 +1,20 @@
 // Package corpus holds the material itself, in the shape a repository receives
 // it.
 //
-// **The layout is the whole reason this package exists.** The wiki and the
-// extracts used to live under their own packages, at `internal/wiki/pages/` and
-// `internal/usecase/extracts/`, and `asgard-cli init` writes them into a
-// customer repository as `wiki/` and `usecase/` side by side. Those two trees
-// disagree about what a relative path means:
+// **The layout is the whole reason this package exists.** `asgard-cli init`
+// writes the wiki and the extracts into a customer repository as `wiki/` and
+// `usecase/` side by side, so a pointer written as a path resolves the same
+// way here and there:
 //
-//	from a wiki page to that extract
-//	  the old layout   ../../usecase/extracts/write-path.md
-//	  as landed        ../usecase/write-path.md
+//	from a wiki page to an extract   ../usecase/write-path.md
 //
-// So a pointer written as a path could be right in one tree and wrong in the
-// other, and that is why every pointer in this material is an invocation -
-// `asgard-cli usecase write-path` - which means the same thing from anywhere.
-// Layout independence was bought with a subprocess on every hop.
+// Held in two separate package directories, the same pointer would need a
+// different number of `../` in each tree, and the only form that survived both
+// was an invocation - which cost a subprocess on every hop and stopped being
+// possible when the reader commands went.
 //
-// One tree, matching the landed one, is what lets a pointer become a path that
-// resolves in both. That is the point of the move and nothing else: no document
-// changed, and go:embed cannot reach across a package, so the files have to sit
-// under whichever package embeds them.
+// go:embed cannot reach across a package, so the files sit under whichever
+// package embeds them: one tree, matching the landed one.
 //
 // `internal/wiki` and `internal/usecase` are still the way in. They hold the
 // two `kb.Corpus` values and everything that reads them; this package holds

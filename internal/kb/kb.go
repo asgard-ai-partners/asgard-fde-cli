@@ -58,13 +58,12 @@ type Doc struct {
 
 // Link is one document pointing a reader at another.
 //
-// It is recovered when the document is parsed, not when a result is printed.
-// That was two regular expressions at two points of use - one in `find` to name
-// a hit's counterpart, one in `audit-material --links` to check the same
-// pointer resolved - which could disagree about what a document pointed at, and
-// left the corpus with no link graph at all. Without one, the lint the pattern
-// asks for cannot be written: **material nothing points at is not read, and the
-// writer never finds out, because the file is there.**
+// It is recovered when the document is parsed, not when a reader is printed
+// one. A pointer read at the point of use is a second regular expression that
+// can disagree with the first about what a document points at, and leaves the
+// corpus with no link graph at all. Without one, the lint the pattern asks for
+// cannot be written: **material nothing points at is not read, and the writer
+// never finds out, because the file is there.**
 type Link struct {
 	Kind string // wiki, usecase, guide, brief
 	Name string
@@ -178,16 +177,15 @@ type Corpus struct {
 // The invocation form may wrap. This material is hard wrapped at about 78
 // columns, so a pointer near the right margin is split across two lines, and a
 // pattern expecting a single space did not see it - six real pointers were
-// invisible to both `find`'s counterpart and `--links`, reading perfectly to a
-// person the whole time. **Exactly one space, or a line break.** Not "any run
+// invisible to `--links` while reading perfectly to a person the whole time.
+// **Exactly one space, or a line break.** Not "any run
 // of whitespace": a help screen aligns its columns with spaces, so
 // `asgard-cli guide` followed by padding and the words "all of it" would
 // resolve to a document called "all". A path carries no internal whitespace, so
 // it has no equivalent problem.
 //
 // Both yield the same two groups - kind, then name - so everything downstream
-// reads one shape: kb.Link, Counterpart, --links, --orphans, and what `find`
-// prints.
+// reads one shape: kb.Link, --links and --orphans.
 // **What comes before the kind is not fixed, because the readers are not in
 // one place.** A document inside a directory writes `../wiki/x.md`;
 // `aliases.md` and the map sit at the root of the landed copy and write
