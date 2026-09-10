@@ -16,6 +16,7 @@ import (
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/binding"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/check"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/gate"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/gitrepo"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/pipelineconfig"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/platform"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/render"
@@ -591,17 +592,53 @@ func gateShipped(root string) stepResult {
 // is a gate that fails on a plane, and every other step here works offline.
 func gateSkills(cmd *cobra.Command, profile string, offline bool) stepResult {
 	res := stepResult{Name: "skills", Remedy: "asgard-cli skill update"}
+
+	// **Two of this step's facts need no platform, so they are established
+	// before --offline is honoured.** Which directory the material is read
+	// from, and whether git will carry it, are answerable from the checkout
+	// alone - and a repository holding two copies is the state where an agent
+	// is reading stale material right now, which is not a thing to defer to
+	// whenever somebody next runs this online.
+	root, repoRoot, err := skillRoot(cmd, "")
+	if err != nil {
+		res.Status = stepSkip
+		res.Summary = err.Error()
+		return res
+	}
+	if others := skills.Elsewhere(repoRoot, root); len(others) > 0 {
+		res.Status = stepFail
+		res.Summary = fmt.Sprintf("%d other directory(s) here also hold fetched material, and an agent's runtime reads them too",
+			len(others))
+		for _, o := range others {
+			res.Details = append(res.Details,
+				fmt.Sprintf("%s version %s, %d file(s), not the directory in use", o.Dir, o.Version, o.Files))
+		}
+		res.Remedy = "read the copy that is not in use and delete it, or `asgard-cli skill update --dir <it>`"
+		return res
+	}
+	// Appended to whatever this step concludes rather than deciding it: the
+	// material can be perfectly current and still be in a directory a clone
+	// will not receive, and those are two different things to fix.
+	ignoredNote := skillsDirIgnoredNote(cmd, repoRoot, root)
+
+	res = gateSkillsAgainstPlatform(cmd, profile, offline, root)
+	res.Details = appendNote(res.Details, ignoredNote)
+	return res
+}
+
+// gateSkillsAgainstPlatform is the half of the skills step that needs the
+// platform: which version it serves, against which version is here.
+//
+// Split out so the note about the directory can be appended to whatever this
+// concludes. It was a `defer` on the caller for one commit, which did nothing:
+// the return value is not named, so `return res` copies the struct before the
+// deferred append reaches it.
+func gateSkillsAgainstPlatform(cmd *cobra.Command, profile string, offline bool, root string) stepResult {
+	res := stepResult{Name: "skills", Remedy: "asgard-cli skill update"}
 	if offline {
 		res.Status = stepSkip
 		res.Summary = "--offline, so the platform was not asked"
 		res.Remedy = ""
-		return res
-	}
-
-	root, _, err := skillRoot(cmd, "")
-	if err != nil {
-		res.Status = stepSkip
-		res.Summary = err.Error()
 		return res
 	}
 	stamp, err := skills.ReadStamp(root)
@@ -654,6 +691,38 @@ func gateSkills(cmd *cobra.Command, profile string, offline bool) stepResult {
 	res.Summary = fmt.Sprintf("version %s, matching %s", stamp.Version, pc.Session.Profile.Name)
 	res.Remedy = ""
 	return res
+}
+
+// skillsDirIgnoredNote says when the directory the material lands in is
+// excluded from this checkout by an ignore rule.
+//
+// **The files are on disk so that a clone has them without a fetch.** An
+// ignore rule takes that away while every version number still reads as
+// current, and `.claude/` is a line a great many repositories already carry -
+// which is reachable here because `.claude/skills` is one of the two
+// directories the material can land in. It is a note rather than a verdict:
+// nothing about the material is wrong, and what has to change is a line in
+// somebody's `.gitignore` rather than anything this tool wrote.
+//
+// Empty when git cannot be asked, which is a checkout with no git, no
+// repository, or a git that answered unexpectedly. See gitrepo.Ignored.
+func skillsDirIgnoredNote(cmd *cobra.Command, repoRoot, root string) string {
+	ignored, known := gitrepo.Ignored(cmd.Context(), repoRoot, root)
+	if !known || !ignored {
+		return ""
+	}
+	rel := root
+	if r, err := filepath.Rel(repoRoot, root); err == nil {
+		rel = r
+	}
+	return fmt.Sprintf("an ignore rule excludes %s, so a fresh clone of this repository will not have any of it", rel)
+}
+
+func appendNote(details []string, note string) []string {
+	if note == "" {
+		return details
+	}
+	return append(details, note)
 }
 
 // gateCharts runs lint, render and verify over the releases, and reports them

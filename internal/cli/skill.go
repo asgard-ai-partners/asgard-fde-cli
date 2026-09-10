@@ -10,6 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/gitrepo"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/pipelineconfig"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/platform"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/repo"
@@ -59,6 +60,21 @@ will accept or reject the CR.
 The files land in ` + "`.agents/skills/`" + ` (or ` + "`.claude/skills/`" + ` where a repository
 already uses that), and they are meant to be committed: whoever clones the
 repository, and whatever agent works in it, then has them without a fetch.
+
+**Once fetched, they stay in the directory they were fetched into.** Which of
+the two it is is decided by where the record already is, not by which directory
+happens to exist - ` + "`asgard-cli init`" + ` creates ` + "`.agents/skills`" + ` whether or not
+anything has been fetched, and a repository that had fetched into
+` + "`.claude/skills`" + ` used to change directory the moment somebody scaffolded it,
+leaving everything it had fetched behind in the one an agent's runtime still
+reads. A copy sitting in the directory that is NOT in use is reported by
+` + "`skill status`" + ` and fails ` + "`asgard-cli gate`" + `, because nothing updates it and
+nothing else would ever mention it.
+
+**And "committed" is checked rather than asserted.** A great many repositories
+carry a ` + "`.claude/`" + ` line in their ` + "`.gitignore`" + `, which excludes one of the two
+directories - so where an ignore rule covers the material, that is said instead
+of telling somebody to commit what git will not take.
 
 They are generated and say so. **Do not edit them** - the next update overwrites
 them, and an edit is a claim about the server that the server did not make. An
@@ -184,6 +200,12 @@ no hint that the other existed. ` + "`asgard-cli gate`" + ` names the individual
 					"local":      local,
 					"fetched_at": fetchedAt,
 					"shipped":    shippedStatus(repoRoot),
+					// Which directory, and whether git will carry it, are
+					// facts about this checkout that no platform is party to -
+					// and both are things a reader of only the version number
+					// would get wrong.
+					"other_roots": otherRoots(repoRoot, root),
+					"ignored":     skillsDirIgnoredNote(cmd, repoRoot, root),
 				}
 				if unanswered != "" {
 					record["unanswered"] = unanswered
@@ -229,13 +251,19 @@ no hint that the other existed. ` + "`asgard-cli gate`" + ` names the individual
 				}
 			}
 
+			if note := skillsDirIgnoredNote(cmd, repoRoot, root); note != "" {
+				fmt.Fprintf(out, "\n%s.\nThe files are on disk so that a clone has them without a fetch, and an\n"+
+					"ignore rule takes that away while every version number above still reads\n"+
+					"as current.\n", strings.ToUpper(note[:1])+note[1:])
+			}
+			printOtherRoots(out, repoRoot, root)
 			printShippedStatus(out, repoRoot)
 			return nil
 		},
 	}
 
 	addProfileFlag(cmd, &profile)
-	cmd.Flags().StringVar(&dir, "dir", "", "skills directory, relative to the repository root; defaults to .agents/skills, or .claude/skills where that exists")
+	cmd.Flags().StringVar(&dir, "dir", "", "skills directory, relative to the repository root; defaults to wherever the material already is, else .agents/skills, else .claude/skills where that exists")
 	cmd.Flags().StringVar(&format, formatFlag, formatText, formatUsage)
 	return cmd
 }
@@ -407,7 +435,7 @@ that no longer hold.`,
 	}
 
 	addProfileFlag(cmd, &profile)
-	cmd.Flags().StringVar(&dir, "dir", "", "skills directory, relative to the repository root; defaults to .agents/skills, or .claude/skills where that exists")
+	cmd.Flags().StringVar(&dir, "dir", "", "skills directory, relative to the repository root; defaults to wherever the material already is, else .agents/skills, else .claude/skills where that exists")
 	cmd.Flags().BoolVar(&check, "check", false, "write nothing, and exit 1 if this repository is not holding what the platform has")
 	cmd.Flags().BoolVar(&force, "force", false, "overwrite a generated file that was edited here")
 	cmd.Flags().StringVar(&formatOut, formatFlag, formatText, formatUsage)
@@ -535,11 +563,68 @@ func runSkillUpdate(cmd *cobra.Command, opts skillUpdateOptions) error {
 		if changes == 0 {
 			fmt.Fprintf(out, "\nAlready current; the record beside them was refreshed.\n")
 		} else {
-			fmt.Fprintf(out, "\nWrote %d file(s) into %s. Commit them.\n", len(contents), rel)
+			fmt.Fprintf(out, "\nWrote %d file(s) into %s.%s\n", len(contents), rel, commitAdvice(cmd, repoRoot, root))
 		}
+		printOtherRoots(out, repoRoot, root)
 		noteShippedHalf(out, repoRoot)
 	}
 	return nil
+}
+
+// commitAdvice is the sentence after "Wrote N file(s) into <dir>".
+//
+// **"Commit them" is a claim about somebody else's repository**, and the whole
+// argument for these files being on disk rests on it: whoever clones the
+// repository has them without a fetch, and a change to them shows up in a diff.
+// A directory an ignore rule excludes breaks both halves of that while the
+// command congratulates itself, and `.claude/` is a line a great many
+// repositories already carry - so where the material can land in one, the one
+// thing this must not do is tell somebody to commit what git will not take.
+//
+// It asks git rather than reading a file, and says the ordinary thing when git
+// cannot be asked. See gitrepo.Ignored.
+func commitAdvice(cmd *cobra.Command, repoRoot, root string) string {
+	ignored, known := gitrepo.Ignored(cmd.Context(), repoRoot, root)
+	if !known || !ignored {
+		return " Commit them."
+	}
+	return "\n\nAn ignore rule excludes that directory, so git will not take them and a\n" +
+		"fresh clone will not have them - which is the entire reason they are written\n" +
+		"to disk rather than fetched on demand. Either commit the directory\n" +
+		"deliberately (`git add -f`) or fetch into one that is tracked:\n\n" +
+		"    asgard-cli skill update --dir .agents/skills"
+}
+
+// otherRoots is skills.Elsewhere as JSON, one object per copy that is not in
+// use. An empty list is the ordinary answer and is reported as one rather than
+// omitted, so a reader can tell "none" from "this version did not look".
+func otherRoots(repoRoot, inUse string) []map[string]any {
+	out := []map[string]any{}
+	for _, o := range skills.Elsewhere(repoRoot, inUse) {
+		out = append(out, map[string]any{"directory": o.Dir, "version": o.Version, "files": o.Files})
+	}
+	return out
+}
+
+// printOtherRoots says when a second copy of the material is sitting in the
+// other candidate directory.
+//
+// **An agent's runtime reads that directory too.** Which of the two is in use
+// is this tool's decision and no agent's, so a copy left in the other one is
+// not inert: it is loaded, it describes whichever server it described when it
+// was fetched, and nothing compares it against anything. See skills.Elsewhere
+// for how a repository ends up holding two.
+func printOtherRoots(out io.Writer, repoRoot, inUse string) {
+	others := skills.Elsewhere(repoRoot, inUse)
+	if len(others) == 0 {
+		return
+	}
+	for _, o := range others {
+		fmt.Fprintf(out, "\n%s also holds fetched material - version %s, %d file(s) - and is not the\n"+
+			"directory in use. An agent's runtime reads it as readily as this one, and nothing\n"+
+			"updates it. Read it and delete it, or point updates back at it with --dir %s.\n",
+			o.Dir, o.Version, o.Files, o.Dir)
+	}
 }
 
 // noteShippedHalf says when the material this command does NOT write needs

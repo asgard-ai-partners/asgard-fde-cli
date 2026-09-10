@@ -1,6 +1,11 @@
 package gitrepo
 
-import "testing"
+import (
+	"context"
+	"os"
+	"path/filepath"
+	"testing"
+)
 
 // The shapes a remote actually comes in, and the ones that must be refused.
 //
@@ -48,5 +53,41 @@ func TestFullNameAndHost(t *testing.T) {
 		if got := RemoteHost(c.url); got != c.wantHost {
 			t.Errorf("RemoteHost(%q) = %q, want %q", c.url, got, c.wantHost)
 		}
+	}
+}
+
+// Ignored has to tell three answers apart, and two of them arrive as a
+// non-zero exit status: git says "not ignored" by exiting 1 and "I could not
+// answer" by exiting 128. Reading either as an error - or as a yes - decides
+// whether `skill update` tells somebody to commit files git will not take.
+func TestIgnored(t *testing.T) {
+	repo := t.TempDir()
+	if _, err := run(context.Background(), repo, "init", "-q", "."); err != nil {
+		t.Skipf("no usable git here: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(repo, ".gitignore"), []byte(".claude/\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, c := range []struct {
+		path              string
+		wantIgnored, want bool
+	}{
+		// A directory line covers what is under it, which is the whole reason
+		// this asks git instead of matching the file's lines itself.
+		{path: ".claude/skills", wantIgnored: true, want: true},
+		{path: ".claude/skills/.asgard-docs.json", wantIgnored: true, want: true},
+		{path: ".agents/skills", wantIgnored: false, want: true},
+		{path: ".gitignore", wantIgnored: false, want: true},
+	} {
+		ignored, known := Ignored(context.Background(), repo, c.path)
+		if ignored != c.wantIgnored || known != c.want {
+			t.Errorf("Ignored(%s) = (%v, %v), want (%v, %v)", c.path, ignored, known, c.wantIgnored, c.want)
+		}
+	}
+
+	// Not a checkout at all: no answer, rather than a wrong one.
+	if ignored, known := Ignored(context.Background(), t.TempDir(), ".claude/skills"); ignored || known {
+		t.Errorf("outside a repository Ignored() = (%v, %v), want (false, false)", ignored, known)
 	}
 }
