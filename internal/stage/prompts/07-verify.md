@@ -97,5 +97,6 @@ enforces saying so, and the failure it guards against - a green gate that never
 reached a cluster - has happened once in the engagement this came from. Also
 unchecked: that these four in this order are the whole gate. They are the gate
 **this tool implements**; a deployment that fails for a reason none of them
-looks at is the case that would disprove it, and there has been one - see
-"A statement that shipped and was wrong" in TASK.md.
+looks at is the case that would disprove it, and there has been one: a chart
+that passed every step here and failed in the platform's own dry run, on a
+field the CRD prunes rather than rejects.

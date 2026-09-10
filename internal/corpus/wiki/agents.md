@@ -110,7 +110,6 @@ hub), `flow-agent-single` (anonymous, one job), `flow-agent-supervisor`
 - The two limits and the name mapping: checked 2026-09-02 against
   [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `15ded0f` -
   `BotProviderSpec.Entrypoint`, `AgentClass`, `SandboxBlueprintSpec.Agents`
-- TASK-007 to TASK-011: this repo's `source/FINDINGS.md`
 
 **Unchecked:** the name mapping and the two limits were held against the CRD and
 one deployment; the UI flows the product documentation describes were not held

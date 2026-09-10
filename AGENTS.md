@@ -389,11 +389,9 @@ being kept by something, changing the shape it keeps is the same change.
 
 **Does anything point at what you added?**
 Material nothing links to is not read, and the writer never finds out, because
-the file is there. The `find` command shipped with every routing document still
-sending readers to the two narrower commands it replaced - it worked, and nothing
-mentioned it outside its own source file. Writing something and pointing at it
-are separate acts; `source/FINDINGS.md` records this repo doing only the first,
-repeatedly. Grep for the name of what you added.
+the file is there. Writing something and pointing at it are separate acts, and
+only the first one feels like finishing. `audit-material --orphans` is the
+mechanical half; grep for the name of what you added is the other.
 
 **Is the claim verified, or asserted?**
 The wiki was described as covering its sources completely, in the repository, in

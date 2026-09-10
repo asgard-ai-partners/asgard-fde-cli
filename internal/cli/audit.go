@@ -371,7 +371,7 @@ func helpText(cmd *cobra.Command) []source {
 }
 
 func newAuditCmd() *cobra.Command {
-	var onlyAsk, onlyUnmarked, cross, links, commands, orphans, bareNames, urls, unverified bool
+	var onlyAsk, onlyUnmarked, cross, links, commands, orphans, bareNames, urls, unverified, paths bool
 	var term string
 
 	cmd := &cobra.Command{
@@ -400,6 +400,8 @@ a customer deck.
     asgard-cli audit-material --commands   resolve every command this material
                                            names, and exit 1 on one that does
                                            not exist
+    asgard-cli audit-material --paths      a landed document naming a path only
+                                           this repository has
     asgard-cli audit-material --unverified what says nothing about having been
                                            checked, across every body
     asgard-cli audit-material --orphans    documents nothing points at. The
@@ -439,6 +441,13 @@ out, because the file is there. The index is deliberately not counted: one
 engagement had ` + "`wiki operations`" + ` sitting in it under the title Connectivity while
 an FDE spent a day on connectivity and never opened it. It does not fail the
 build, because search answers for some of them.
+
+**--paths is --links for everything that is not a document pointer.** These
+files are written into a customer's repository, where "this repo" means theirs
+and ` + "`source/SOURCES.md`" + ` is not there. A wiki page cited it in a Sources
+block and another cited ` + "`APPROACH.md`" + `; both read perfectly here and neither
+resolves where they land. A path inside a repository has to name the repository
+it is inside, on the same line.
 
 **--urls is the one that needs the network**, which is why it is not in --links.
 Six of the 82 documentation links in this material were 404s when this was first
@@ -515,6 +524,9 @@ maintainer can see.`,
 			if unverified {
 				return checkUnverified(out)
 			}
+			if paths {
+				return checkPaths(out, append(sources, bookkeeping()...))
+			}
 			if orphans {
 				// Help counts as a pointer and the index does not. A command's
 				// help is read at the moment somebody is deciding what to run;
@@ -571,6 +583,7 @@ maintainer can see.`,
 	f.BoolVar(&bareNames, "bare", false, "documents named without the command that opens them, which nothing else can see; exits 1 on one")
 	f.BoolVar(&orphans, "orphans", false, "documents nothing else points at; the index does not count as a pointer")
 	f.BoolVar(&unverified, "unverified", false, "documents carrying no record of having been held against anything")
+	f.BoolVar(&paths, "paths", false, "a landed document naming a file only this repository has")
 	f.StringVar(&term, "term", "", "every line mentioning this word, templates included - for a rename")
 	f.BoolVar(&urls, "urls", false, "fetch every docs.asgard-ai.com link in the material; exits 1 on a 404. Needs the network")
 	return cmd
@@ -1011,6 +1024,60 @@ func findChild(node *cobra.Command, name string) *cobra.Command {
 		if c.Name() == name || slices.Contains(c.Aliases, name) {
 			return c
 		}
+	}
+	return nil
+}
+
+// ourFiles are paths that exist in this repository and are never written into
+// a customer's. A landed document naming one of them points at nothing.
+//
+// The material cites files in other repositories all the time and should: an
+// extract that says which asgard-core file a constant came from is doing
+// provenance properly. What separates the two is whether the line says which
+// repository. So the rule is not "do not name a path" - it is **name the
+// repository the path is inside**, and this reports the lines that do not.
+var ourFiles = regexp.MustCompile(`(?:^|[^A-Za-z0-9_./-])((?:source|hack|internal|cmd|prompts)/[A-Za-z0-9_./*-]+|(?:Goal|TASK|STRUCTURE|APPROACH)\.md|selfsrc\.go)`)
+
+// knownRepos are the repository names the material is allowed to cite a path
+// inside. **Add one when the material starts drawing on another repository**,
+// the same contract as `replacements`: the list is what makes this check able
+// to tell provenance from a dead pointer.
+var knownRepos = []string{
+	"asgard-fde-cli", "asgard-core", "asgard-kube", "asgard-docs",
+	"asgard-ai-partners", "asgard-ai-platform", "workflow-service",
+}
+
+// checkPaths reports a landed document naming a file only this repository has,
+// on a line that does not say which repository it is in.
+func checkPaths(out io.Writer, sources []source) error {
+	var found int
+	checked := 0
+	for _, s := range sources {
+		for i, line := range strings.Split(s.body, "\n") {
+			ms := ourFiles.FindAllStringSubmatch(line, -1)
+			if ms == nil {
+				continue
+			}
+			checked += len(ms)
+			named := false
+			for _, r := range knownRepos {
+				if strings.Contains(line, r) {
+					named = true
+					break
+				}
+			}
+			if named {
+				continue
+			}
+			for _, m := range ms {
+				found++
+				fmt.Fprintf(out, "unrooted  %s %s:%d -> `%s`\n", s.label, s.name, i+1, m[1])
+			}
+		}
+	}
+	fmt.Fprintf(out, "\n%d repository path(s) checked, %d naming no repository.\n", checked, found)
+	if found > 0 {
+		return fmt.Errorf("%d path(s) resolve only in this repository, and these documents land in somebody else's", found)
 	}
 	return nil
 }

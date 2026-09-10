@@ -1,10 +1,10 @@
 # TASK.md
 
 What this repo is for, and what needs something a checkout does not have.
-Nothing else - how it is built is [STRUCTURE.md](STRUCTURE.md), how to change it
-is [AGENTS.md](AGENTS.md), what the commands do is [README.md](README.md), and
-the defects it has produced and why nothing caught them are in
-`source/FINDINGS.md`.
+Nothing else - what it is for is [Goal.md](Goal.md), how the main capabilities
+are implemented is [APPROACH.md](APPROACH.md), what lives in which directory is
+[STRUCTURE.md](STRUCTURE.md), how to change it is [AGENTS.md](AGENTS.md), and
+what the commands do is [README.md](README.md).
 
 **There is one worklist here**, under "Landing the rest of the material", and it
 is there because somebody asked for that work. Everything else follows the older

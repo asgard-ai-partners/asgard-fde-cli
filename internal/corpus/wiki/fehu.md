@@ -95,8 +95,8 @@ Billing produces no CRs, so there is no extract for it.
 ## Sources
 
 - The product-line split on model choice, the billing units, and that Sindri and
-  Mimir cannot swap the LLM: the business-plan repository's
-  `source/materials/fundraising/pricing-reference.md`, read 2026-09-02.
+  Mimir cannot swap the LLM: an internal pricing reference, read 2026-09-02, not
+  published anywhere an engagement can reach.
   **Deliberately not copied**: the prices, the subscription tiers, and the
   one-off project fees
 

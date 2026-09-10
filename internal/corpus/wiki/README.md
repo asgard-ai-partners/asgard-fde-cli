@@ -44,8 +44,8 @@ field rules to the CRD; point at them instead.
 > The copy is there because an agent in a customer repository finds what it
 > knows under `.agents/skills/`, and `grep -r` answers "which document says
 > this" with no subprocess. What a copy cannot do is translate a query, so
-> `aliases.md` is written beside it - `APPROACH.md` in this repository has what
-> a grep cannot: it translates the customer's words into the material's.
+> `aliases.md` is written beside it, and it does what a grep cannot: it
+> translates the customer's words into the material's.
 >
 > **A copy is safe because staleness is visible.** `.asgard-scaffold.json`
 > records a digest and a CLI version per file, so a repository that is behind
@@ -164,7 +164,7 @@ source is product documentation describing a UI, much of which is in no chart at
 all (permissions, billing, the chat interface). Left unsaid, a reader assumes the
 two are equally reliable.
 
-Those markers are the same ones `internal/usecase` uses. The two bodies are read
+Those markers are the same ones `../usecase/` uses. The two bodies are read
 together and a reader should not have to learn where the provenance is written
 twice.
 

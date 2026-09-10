@@ -192,7 +192,8 @@ the shape without anyone reading a guide.
   `15ded0f` - `SyncerClass`, `SourceSetContextIndex`
 - The schedule ordering and the two switches: read off a deployment's own Drive
 - Preferring a Drive over `KnowledgeBase`: one deployment's migration, recorded
-  in this repo's `source/SOURCES.md`. Held against
+  in asgard-fde-cli's `source/SOURCES.md`, which is internal and does not ship.
+  Held against
   [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `15ded0f` on
   2026-09-02 - `knowledgebases`, `loaders`, `indexers` and `sources` all exist
   and none is marked deprecated - and against asgard-docs `f00e0ee`, which
