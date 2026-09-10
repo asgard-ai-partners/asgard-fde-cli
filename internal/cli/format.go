@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"io"
 	"strings"
-
-	"github.com/asgard-ai-partners/asgard-fde-cli/internal/kb"
 )
 
 // ErrSilent fails a command without a message.
@@ -48,39 +46,6 @@ func writeJSON(out io.Writer, v any) error {
 	enc := json.NewEncoder(out)
 	enc.SetIndent("", "  ")
 	return enc.Encode(v)
-}
-
-// printSources lists the documentation links a document cites, or every one in
-// the corpus when no document is named.
-//
-// It exists because an engagement did it by hand. Building a customer deck, an
-// agent opened each page it had used, read the Sources block at the foot, copied
-// nine URLs out and checked each one itself - and every part of that except the
-// checking is something the material already knows. A deck spans several pages,
-// so this takes no argument as well as one.
-func printSources(out io.Writer, docs []kb.Doc, read func(string) string, none string) {
-	total := 0
-	for _, d := range docs {
-		if len(d.Sources) == 0 {
-			continue
-		}
-		fmt.Fprintf(out, "%s\n", read(d.Name))
-		for _, u := range d.Sources {
-			fmt.Fprintf(out, "  %s\n", u)
-			total++
-		}
-		fmt.Fprintln(out)
-	}
-	if total == 0 {
-		fmt.Fprint(out, none)
-		return
-	}
-	fmt.Fprintf(out, "%d link(s). **These are what the page was written from, not a\n"+
-		"reading list for a customer** - a link that answers the question a customer\n"+
-		"asked is worth handing over, and the rest is our own provenance.\n\n"+
-		"`asgard-cli audit-material --urls` fetches every one of them and fails on a\n"+
-		"404; six were dead the first time it ran, four of them pages marked\n"+
-		"`draft: true`, which exist in a checkout and are not published.\n", total)
 }
 
 // wrapAt and truncate came from internal/cli/usecase.go, which was deleted with

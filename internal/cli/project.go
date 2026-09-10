@@ -36,14 +36,11 @@ A project is the unit of deployment: one Helm chart, one namespace per
 environment. An onboarding usually starts before the split is known, so projects
 are added as the engagement discovers them.
 
-**What is missing is arithmetic, not a step.** A shape asks for a set of CR
-kinds; this reports the ones the chart does not declare. It carries no claim
-about the order they get written in, and a project with a gap is not behind - a
-chart is built in whatever order the engagement finds the answers. Where no
-shape is declared, nothing is claimed at all: record one with
-` + "`asgard-cli project shape <slug> <shape>`" + `.
+**A chart with fewer kinds than another is not behind it.** A chart is built
+in whatever order the engagement finds the answers, so what this lists is what
+is declared and not a distance from anything.
 
-"Complete for its shape" is not "deployed". Whether a finished chart is waiting
+Declared is not deployed. Whether a finished chart is waiting
 for its first tag or has been live for a month is not a fact about files.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {

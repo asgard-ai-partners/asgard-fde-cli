@@ -491,14 +491,23 @@ maintainer can see.`,
 			if commands {
 				// everything(), not material(): a scaffolded README is where
 				// half of these are written, and it is the half a customer
-				// reads first. The log is deliberately not here - it is
-				// bookkeeping(), and naming a command that was removed is the
-				// one job it has.
+				// reads first.
 				all, err := everything()
 				if err != nil {
 					return err
 				}
-				return checkCommands(out, cmd.Root(), append(all, helpText(cmd.Root())...))
+				all = append(all, helpText(cmd.Root())...)
+
+				// **And this package's own strings**, which make the same
+				// claim as a document and were the half nothing checked.
+				strs, err := goStrings()
+				if err != nil {
+					return err
+				}
+				for name, body := range strs {
+					all = append(all, source{label: "source", name: name, body: body})
+				}
+				return checkCommands(out, cmd.Root(), all)
 			}
 			if bareNames {
 				return checkBare(out, append(sources, bookkeeping()...))

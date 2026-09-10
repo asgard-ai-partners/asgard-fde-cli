@@ -97,9 +97,12 @@ document reachable only from a list is reachable only by somebody who already
 suspects it.
 
 `--commands` is `--links` pointed at the tool: it resolves every
-`asgard-cli <command>` the material and the scaffold templates write against
-the command tree this binary answers to. It does **not** read this CLI's own Go
-strings — see TASK.md.
+`asgard-cli <command>` against the command tree this binary answers to — in the
+material, in the scaffold templates, and **in this package's own string
+literals**, which make the same claim and are the half a customer never sees
+until the tool prints one. `internal/cli/self.go` embeds the package and parses
+it, so a comment recording that a command was removed does not read as naming
+it.
 
 `hack/check-tables.py` holds the gate's pinned tables against the generated
 CRDs; `hack/verify-references.sh` runs the gate over the reference deployments.

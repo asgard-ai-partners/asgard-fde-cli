@@ -101,59 +101,6 @@ func EntityRows() []Entity {
 	return out
 }
 
-// Sense is a word that means one thing in this material, and what the other
-// sense is called instead.
-type Sense struct {
-	Word  string
-	Means string
-	Not   string
-}
-
-// Senses returns the words with one meaning here, from the glossary's first
-// table.
-//
-// **This is applied to a query, not only read by a person.** The table existed
-// for two years as prose on a page that nothing pointed at, and the failure it
-// describes went on happening: `find payment` returns Fehu, which is billing
-// between Asgard and the customer, to somebody asking about the customer's own
-// payment gateway. Nothing was wrong with the result and nothing was recorded -
-// a search that lands is not a miss - so the one mechanism that could have
-// caught it, the miss log, is blind to exactly this case.
-//
-// A missing or renamed table returns nothing rather than an error, for the same
-// reason Aliases does: this decorates a search, it does not gate one.
-func Senses() []Sense {
-	body, err := Read("glossary")
-	if err != nil {
-		return nil
-	}
-	// The first table only: what follows the next heading is prose about two
-	// words, and the customer-vocabulary index has moved out entirely.
-	if next := strings.Index(body, "\n## "); next >= 0 {
-		body = body[:next]
-	}
-
-	var out []Sense
-	for _, line := range strings.Split(body, "\n") {
-		line = strings.TrimSpace(line)
-		if !strings.HasPrefix(line, "|") {
-			continue
-		}
-		cols := strings.Split(strings.Trim(line, "|"), "|")
-		if len(cols) != 3 {
-			continue
-		}
-		word := strings.Trim(strings.TrimSpace(cols[0]), "*")
-		means := strings.TrimSpace(cols[1])
-		not := strings.TrimSpace(cols[2])
-		if word == "" || word == "word" || strings.HasPrefix(word, "-") {
-			continue
-		}
-		out = append(out, Sense{Word: word, Means: means, Not: not})
-	}
-	return out
-}
-
 // Index returns the alias index in full, for a reader.
 func Index() (string, error) { return corpus.File(aliasFile) }
 

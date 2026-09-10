@@ -26,17 +26,6 @@ func addProfileFlag(cmd *cobra.Command, target *string) {
 			auth.EnvProfile, auth.DefaultProfileName))
 }
 
-func joinNames(names []string) string {
-	out := ""
-	for i, n := range names {
-		if i > 0 {
-			out += ", "
-		}
-		out += n
-	}
-	return out
-}
-
 func newLoginCmd() *cobra.Command {
 	var (
 		profile   string

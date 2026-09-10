@@ -211,17 +211,6 @@ nothing else - it stays out of the repository, and the scaffold's `.gitignore`
 says so. It only has to live long enough for the issue to be filed; what reaches
 the next engagement is the fix in the next release.
 
-## `--commands` does not read this CLI's own Go strings
-
-It reads the material and the scaffold templates, so a string this binary
-prints can name a command it does not have and the audit passes. Fourteen did,
-after the reader commands were deleted. What found them was the repo-side
-check, which only sees what has already been written into a customer
-repository - later, and more expensive.
-
-Closing it means the audit reading `internal/cli/*.go`, which needs the
-package's own source embedded so the binary can check itself.
-
 ## Non-goals
 
 - **Not a workflow engine.** The tool reports what the repository contains and
