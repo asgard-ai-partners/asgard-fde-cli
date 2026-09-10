@@ -86,6 +86,12 @@ does not, which nothing else in a repository can notice.
 skeleton; files this tool writes into - the indexes, the open-questions table,
 the living spec - are preserved either way and reported.
 
+**In a file with a managed region it takes the region and nothing else.** The
+scaffolded AGENTS.md tells its reader that the half above the marker is theirs
+and is never overwritten, so a ` + "`--force`" + ` that took the file whole made that
+sentence untrue in the file the sentence is in. What ` + "`--force`" + ` is entitled to
+replace there is exactly what the CLI wrote.
+
 With ` + "`--yes`" + `, or when stdin is not a terminal, it asks nothing. That is the
 form for a re-run from an agent or from CI.`,
 		Args:    cobra.NoArgs,
