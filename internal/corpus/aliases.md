@@ -9,7 +9,7 @@ returned this table instead of `wiki/taiwan-channels.md`.
 
 `asgard-cli find` reads both tables below and applies them to a query before
 searching, printing what it actually searched for. Read it with
-`asgard-cli wiki --aliases`.
+this file.
 
 ## How a row gets here
 

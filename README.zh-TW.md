@@ -226,7 +226,7 @@ slug 會出現在 chart 渲染出來的物件名稱裡，所以要短：Kubernet
 
 ```bash
 asgard-cli guide                   # 全部的指引
-asgard-cli guide requirements      # 其中一份，隨時
+`.agents/skills/asgard-platform/guide/requirements.md`      # 其中一份，隨時
 asgard-cli find "<terms>"          # 依主題到達其中任何一份
 ```
 
@@ -326,12 +326,8 @@ asgard-cli add flowagent support --bot-class line --project site
 兩份參考語料，**編在 binary 裡而不是寫進客戶 repo**：一份放在某個 engagement 裡的副本會在沒人看的地方過期，而一頁放在這裡的過期內容，一次發版就替所有 engagement 修好了。
 
 ```bash
-asgard-cli wiki                       # 平台由什麼構成
-asgard-cli wiki agents
-asgard-cli wiki --conventions         # 這份 wiki 怎麼維護
-
-asgard-cli usecase                    # 每種部署形狀怎麼組起來
-asgard-cli usecase flow-agent-single
+cat .agents/skills/asgard-platform/wiki/agents.md
+grep -ril "allowlist" .agents/skills/asgard-platform/
 ```
 
 | | 回答什麼 | 寫自哪裡 |
@@ -361,7 +357,7 @@ This material is in English. "電商" was read as:
     commerce marketplace channel
 ```
 
-索引是 `asgard-cli wiki --aliases`，而且它**不是一頁**。它跟頁面並排放，因為一份放在被搜語料裡的索引會跟它指向的東西競爭：那張表列出所有別名，於是它可靠地命中翻譯後查詢的每一個詞，讀者拿到的是字表而不是頁面。
+索引是 `aliases.md`，而且它**不是一頁**。它跟頁面並排放，因為一份放在被搜語料裡的索引會跟它指向的東西競爭：那張表列出所有別名，於是它可靠地命中翻譯後查詢的每一個詞，讀者拿到的是字表而不是頁面。
 
 **一列「只是路由」的紀錄讀起來跟一列「有答案」的紀錄一模一樣**，所以 `find` 會講出來是哪一種：
 
@@ -371,7 +367,7 @@ $ asgard-cli find 綠界
 is what this material has - not material about the product.
 ```
 
-**一個詞在這份語料裡被佔用過，會在結果之前先被標出來，不是之後。** 一次什麼都沒找到的搜尋會被記錄下來並告知讀者；而一次找到**錯誤語意**的搜尋，看起來跟一個答案一模一樣，畫面上沒有任何一處是紅的。那張表是 `asgard-cli wiki glossary`，而且它是被套用在查詢上、不只是給人讀的。
+**一個詞在這份語料裡被佔用過，會在結果之前先被標出來，不是之後。** 一次什麼都沒找到的搜尋會被記錄下來並告知讀者；而一次找到**錯誤語意**的搜尋，看起來跟一個答案一模一樣，畫面上沒有任何一處是紅的。那張表是 `.agents/skills/asgard-platform/wiki/glossary.md`，而且它是被套用在查詢上、不只是給人讀的。
 
 **走進死路時它問一個問題，而不是猜。** 一次什麼都沒找到的搜尋會被記錄在 engagement 裡、寫進一個不進版控的檔 —— 一次查詢帶著的是客戶用的字。
 

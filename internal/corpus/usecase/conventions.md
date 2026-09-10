@@ -1,6 +1,6 @@
 # Conventions
 
-**Read the platform side first:** `asgard-cli wiki` - what the platform is made
+**Read the platform side first:** the pages in `../wiki/` - what the platform is made
 of, and who each piece is for. These conventions are how this repo writes it
 down; the wiki is what is being written down.
 

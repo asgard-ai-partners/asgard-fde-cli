@@ -68,7 +68,7 @@ whether the target is written into a repository:
     asgard-cli guide <name>      not written into a repository yet, so a
     asgard-cli brief <activity>  path to it would resolve nowhere
 
-`asgard-cli wiki log` is the exception on the path side: it is the one page
+`.agents/skills/asgard-platform/wiki/log.md` is the exception on the path side: it is the one page
 `init` does not write, so its pointer stays an invocation. **`--links` enforces
 that** - a path whose target does not land is reported dead - and it had to,
 because a path resolves here, where the corpus is whole, and goes nowhere in the
@@ -112,7 +112,7 @@ removes the split where a Chinese question reached only the wiki and an English
 one only the extracts.
 
 **The corpus carries one language because the mapping lives somewhere else, not
-because the reader translates.** `asgard-cli wiki --aliases` is the mapping,
+because the reader translates.** `internal/corpus/aliases.md` is the mapping,
 `asgard-cli find` applies it to a query before searching, and the rewrite is
 printed so a reader can see what was searched. So the instruction to an agent is
 the opposite of what this paragraph used to imply: **give `find` the customer's
@@ -527,7 +527,7 @@ channel decided by assumption is a new BotProvider rather than an edit.
 grep -A3 'botProviderClass' ~/asgard-kube/crd/asgard-ai.com_botproviders.yaml | grep enum
 
 # whether the interview asks about each route
-asgard-cli guide requirements | grep -in 'chat\|channel\|LINE\|other end\|API\|console'
+`.agents/skills/asgard-platform/guide/requirements.md` | grep -in 'chat\|channel\|LINE\|other end\|API\|console'
 ```
 
 The interview asked who was on the other end - the question deciding hub against

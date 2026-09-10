@@ -67,5 +67,5 @@ trap already visible.
 That is the CLI's highest-value output: **stages 4, 5 and 6 print the wrong
 answer next to the right one**, because the wrong one is what looks obvious.
 
-Stage prompts 4, 5 and 6 carry these; `asgard-cli wiki agents` and
+Stage prompts 4, 5 and 6 carry these; `internal/corpus/wiki/agents.md` and
 `usecase fixed-query-tools` / `knowledge-drive` cite them.

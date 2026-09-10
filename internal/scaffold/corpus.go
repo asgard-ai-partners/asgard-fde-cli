@@ -357,7 +357,7 @@ exceptions - both invocations, and both needing the ` + "`asgard-cli`" + ` binar
 
 | pointer | why it is not a file |
 |---|---|
-| ` + "`asgard-cli wiki log`" + ` | which commit of each source the material was read at. Provenance for whoever maintains the CLI, and an answer is never in it |
+| the wiki's ` + "`log`" + ` | which commit of each source the material was read at. It is not written here and there is no command for it either: it is provenance for whoever maintains the CLI, in that repository, and an answer to a question about the platform is never in it |
 | ` + "`asgard-cli guide <name>`" + ` | **half of it is here.** A guide renders this repository's own state into its guidance - which projects exist, what is still open - and that half cannot be a file, because a file would freeze one moment of it. The decisions are in ` + "`guide/`" + `; run the command for where this repository actually stands |
 
 The commands that answer the second one directly, when that is all you want:
@@ -378,3 +378,14 @@ It reports what is here against what the running binary carries, and replaces
 this directory outright when the version has moved. Read it as the authority
 over these files rather than anything written inside them.
 `
+
+// CorpusPath is where one document of the platform corpus lands in a
+// repository, as a path from its root.
+//
+// It is exported for `find`, which prints where a hit can be read. That used
+// to be an invocation - `asgard-cli wiki agents` - and became a path when the
+// two reader commands went: the documents are on disk now, so the honest
+// answer to "where do I read this" is the file.
+func CorpusPath(kind, name string) string {
+	return filepath.ToSlash(filepath.Join(corpusSkillDir, kind, name+".md"))
+}

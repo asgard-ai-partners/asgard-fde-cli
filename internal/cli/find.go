@@ -62,9 +62,10 @@ rewrite is printed. Terms with no entry are searched as they were, and any that
 land nowhere are named at the top of the results along with the word this
 material uses, if it has one. The table is on the glossary page:
 
-    asgard-cli wiki glossary
+    .agents/skills/asgard-platform/wiki/glossary.md
 
-To read one in full: "asgard-cli wiki <page>" or "asgard-cli usecase <name>".
+Every hit names the file it is in. They are written into the repository by
+"asgard-cli init", under .agents/skills/asgard-platform/.
 
 --format json emits each hit with the command that reads it in full, the
 counterpart it names, and the terms it actually carried - plus the query as
@@ -126,7 +127,7 @@ for one of the words.`,
 			// as an explanation and once as a search hit, reads as two
 			// findings and is one.
 			if reportSenses(out, query, search) {
-				found.drop("asgard-cli wiki glossary")
+				found.drop(".agents/skills/asgard-platform/wiki/glossary.md")
 			}
 			printResults(out, search, found)
 			return nil
@@ -171,7 +172,7 @@ func printUnverified(out io.Writer) error {
 	}
 
 	fmt.Fprintf(out, "For what a checked document says it has NOT been held against:\n"+
-		"`asgard-cli wiki --unverified`, `asgard-cli usecase --unverified`.\n")
+		"this flag, which covers all four parts at once.\n")
 	return nil
 }
 
@@ -263,25 +264,31 @@ type part struct {
 }
 
 func parts() []part {
+	corpus := func(kind string) func(string) string {
+		return func(n string) string { return scaffold.CorpusPath(kind, n) }
+	}
 	return []part{{
-		heading:     "PLATFORM - what the thing is (asgard-cli wiki <page>)",
+		heading:     "PLATFORM - what the thing is",
 		search:      wiki.Search,
 		list:        wiki.List,
-		read:        func(n string) string { return "asgard-cli wiki " + n },
+		read:        corpus("wiki"),
 		counterpart: "usecase",
-		opens:       func(n string) string { return "-> field level: asgard-cli usecase " + n },
+		opens:       func(n string) string { return "-> field level: " + scaffold.CorpusPath("usecase", n) },
+		showsPath:   true,
 	}, {
-		heading:     "SHAPES - how it is assembled (asgard-cli usecase <name>)",
+		heading:     "SHAPES - how it is assembled",
 		search:      usecase.Search,
 		list:        usecase.List,
-		read:        func(n string) string { return "asgard-cli usecase " + n },
+		read:        corpus("usecase"),
 		counterpart: "wiki",
-		opens:       func(n string) string { return "-> what it is:  asgard-cli wiki " + n },
+		opens:       func(n string) string { return "-> what it is:  " + scaffold.CorpusPath("wiki", n) },
+		showsPath:   true,
 	}, {
-		heading: "DECISIONS - what to weigh (asgard-cli guide <name>)",
-		search:  stage.Search,
-		list:    stage.Docs,
-		read:    func(n string) string { return "asgard-cli guide " + n },
+		heading:   "DECISIONS - what to weigh",
+		search:    stage.Search,
+		list:      stage.Docs,
+		read:      corpus("guide"),
+		showsPath: true,
 	}, {
 		heading:   "SKILLS - what the agent in the customer repo loads (.agents/skills/)",
 		search:    scaffold.Search,
@@ -449,13 +456,13 @@ func reportRouted(out io.Writer, query string) {
 		"answer to \"do we already integrate it\" is not in this tool.\n\n"+
 		"What is still the customer's to answer is which of four shapes it gives us,\n"+
 		"and that changes what gets built:\n\n"+
-		"  asgard-cli wiki taiwan-channels   the four, and what each one costs\n"+
+		"  .agents/skills/asgard-platform/wiki/taiwan-channels.md   the four, and what each one costs\n"+
 		"  asgard-cli question add \"which of the four shapes does %s give us\" \\\n"+
 		"      --ask \"<who at the customer>\"\n\n"+
 		"**Before writing a question down, put it through the interview's own test:\n"+
 		"imagine the most specific answer possible, then ask what you would do\n"+
 		"differently.** A perfect answer that changes nothing is not a question -\n"+
-		"`asgard-cli guide requirements` has the test and the shape of one that\n"+
+		"`.agents/skills/asgard-platform/guide/requirements.md` has the test and the shape of one that\n"+
 		"works.\n\n"+
 		"**And this is a gap worth filing**, because the next engagement asks the\n"+
 		"same thing and gets the same answer. What to write is\n"+
@@ -507,7 +514,7 @@ func reportSenses(out io.Writer, query, searched string) bool {
 		fmt.Fprintf(out, "  %-12s is     %s\n", h.Word, wrapAt(h.Means, 56, 22))
 		fmt.Fprintf(out, "  %-12s is not %s\n\n", "", wrapAt(h.Not, 56, 22))
 	}
-	fmt.Fprintf(out, "\n`asgard-cli wiki glossary` has the rest. **A result in the wrong sense reads\nexactly like an answer**, and nothing here can tell them apart.\n\n")
+	fmt.Fprintf(out, "\n`.agents/skills/asgard-platform/wiki/glossary.md` has the rest. **A result in the wrong sense reads\nexactly like an answer**, and nothing here can tell them apart.\n\n")
 	return true
 }
 
@@ -716,7 +723,7 @@ func nothingMatched(out io.Writer, query string) error {
 		"people's products - and what decides the work is not which product it is.\n"+
 		"It is which of four shapes the thing presents to us, and those differ in\n"+
 		"cost by more than an order of magnitude:\n\n"+
-		"  asgard-cli wiki taiwan-channels   the four, and what each one costs\n\n"+
+		"  .agents/skills/asgard-platform/wiki/taiwan-channels.md   the four, and what each one costs\n\n"+
 		"**That is a question for the customer, and not one this tool can answer.**\n"+
 		"The answer changes what gets built, so it belongs where somebody will\n"+
 		"answer it rather than in a decision made here:\n\n"+
@@ -731,13 +738,14 @@ func nothingMatched(out io.Writer, query string) error {
 		"neither is a question. What we need FROM them is ours to chase - a\n"+
 		"credential, an endpoint, a network path, a document, an account. How they\n"+
 		"staff a channel is theirs.\n\n"+
-		"  asgard-cli guide requirements   the test in full, and the shape of a\n"+
+		"  .agents/skills/asgard-platform/guide/requirements.md   the test in full, and the shape of a\n"+
 		"                                  question that works\n\n")
 
 	fmt.Fprintf(out, "**This search was recorded.** If the subject does exist here under another\n"+
 		"name, that is a missing row in the index rather than a missing page, and\n"+
 		"the two need different repairs:\n\n"+
-		"  asgard-cli wiki --aliases      the index, and the rule for adding a row\n"+
+		"  .agents/skills/asgard-platform/aliases.md   the index, and the rule for\n"+
+		"                                              adding a row\n"+
 		"  asgard-cli reading --misses    every search here that came back empty\n"+
 		"  asgard-cli issue-report --new  a report with this evidence already in it\n\n")
 

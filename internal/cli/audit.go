@@ -171,9 +171,19 @@ func sweep(out io.Writer, sources []source, term string) error {
 	return nil
 }
 
+// **The corpus's own bookkeeping is audited too, and for a long time it was
+// not.** `List` hides the wiki's index and README and the extracts' README,
+// which is right for somebody listing pages and wrong here: they are documents
+// this material ships, they carry pointers and they name commands. Five
+// references to the deleted `asgard-cli usecase` sat in those three files
+// while `--commands` reported 0 dead - and the check that found them was the
+// one this tool writes into a customer repository, which is a later and more
+// expensive place to find anything.
+//
+// So the source set is what lands, not what lists.
 func material() ([]source, error) {
 	var out []source
-	pages, err := wiki.List()
+	pages, err := wiki.Landing()
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +194,7 @@ func material() ([]source, error) {
 		}
 		out = append(out, source{label: "wiki", name: p.Name, body: body, links: p.Links})
 	}
-	extracts, err := usecase.List()
+	extracts, err := usecase.All()
 	if err != nil {
 		return nil, err
 	}

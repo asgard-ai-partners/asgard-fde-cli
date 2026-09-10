@@ -1,6 +1,6 @@
 # Index
 
-    asgard-cli wiki <page>
+    ../wiki/<page>.md
 
 ## Products and scope
 
@@ -143,14 +143,15 @@ came back into `processors` and the subtraction was only done in one place.
 Every page under `pages/` has a row above except `log`, which is deliberate: it
 is the provenance layer - what was read, when, and what it corrected - and an
 FDE looking for an answer should never land there. Reach it with
-`asgard-cli wiki log` when you want to know why a page says what it says -
-**an invocation and not a path, because it is the one page `asgard-cli init`
-does not write into a repository.**
+the wiki's `log`, in the CLI's own repository, when you want to know why a page
+says what it says. **It is the one page `asgard-cli init` does not write into a
+repository, and there is no command for it either** - it is provenance for
+whoever maintains the material, and an answer is never in it.
 
 **Adding a page means adding a row**, under the question it answers rather than
 at the end. The extracts index went a third out of date this way -
 eight of twenty-two written and never grouped - and nothing broke, because
-`asgard-cli usecase` listed them regardless. What was lost is the only thing an
+the directory listed them regardless. What was lost is the only thing an
 index is for: telling somebody which page answers their question when they do
 not already know its name.
 
@@ -158,7 +159,7 @@ not already know its name.
 
 | what you want | where |
 |---|---|
-| how a deployment shape is assembled, field by field | `asgard-cli usecase` |
+| how a deployment shape is assembled, field by field | `../usecase/` |
 | whether a CR field is legal or required | [asgard-kube's `crd/*.yaml`](https://github.com/asgard-ai-platform/asgard-kube/tree/main/crd) |
 | what this customer's systems look like | that customer repo's `docs/spec/` |
 | the original product documentation | [asgard-docs](https://github.com/asgard-ai-platform/asgard-docs), rendered at https://docs.asgard-ai.com |

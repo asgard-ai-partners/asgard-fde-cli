@@ -48,7 +48,7 @@ a reader asking about a subject was handed the word list instead of the page.
 It is now beside the pages rather than among them, which is where `index.md`
 and `log.md` already live:
 
-    asgard-cli wiki --aliases
+    aliases.md
 
 `asgard-cli find` applies it to a query before searching, so a question asked in
 the customer's own words reaches material written in English. **Add a row when a

@@ -56,7 +56,7 @@ before promising anything** - the line here is a reminder, not the reasoning.
 What it cannot tell you is which shape a system actually presents. That is the
 customer's answer, not this tool's: an open API with a test environment, an open
 API production-only, a data export, or only a web back office. The four are on
-` + "`asgard-cli wiki taiwan-channels`" + ` and they differ in cost by more than an order
+` + "`.agents/skills/asgard-platform/wiki/taiwan-channels.md`" + ` and they differ in cost by more than an order
 of magnitude.`,
 		Args: cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -135,7 +135,7 @@ func resolveNeeds(query string) ([]needs.Shape, []string, error) {
 	seen := map[string]bool{}
 
 	// **What the index already says, before any searching.** A row in
-	// `asgard-cli wiki --aliases` may carry a pointer - 客服 says "customer
+	// the alias index may carry a pointer - 客服 says "customer
 	// service, help desk - and `asgard-cli usecase chat-channel`" - and that
 	// pointer is somebody's recorded answer to this exact question. Searching
 	// the translated words instead ranked external-api above chat-channel for
@@ -245,7 +245,7 @@ func printNeeds(out io.Writer, found []needs.Shape) {
 	fmt.Fprintf(out, "**Which shape a system actually presents is the customer's answer, not this\n"+
 		"tool's.** An open API with a test environment, an open API production-only, a\n"+
 		"data export, or only a web back office - the four are on\n"+
-		"`asgard-cli wiki taiwan-channels` and they differ in cost by more than an\n"+
+		"`.agents/skills/asgard-platform/wiki/taiwan-channels.md` and they differ in cost by more than an\n"+
 		"order of magnitude.\n\n"+
 		"Write each answer down where it will be answered rather than remembered:\n\n"+
 		"    asgard-cli question add \"<what is still unknown>\" --ask \"<who at the customer>\"\n")

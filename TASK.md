@@ -12,7 +12,7 @@ rule: what could be done from a checkout has been, git log is the record of it,
 and what is left is under "What is not done" where every line names the thing it
 is waiting for. A finding that a reader
 needs lives on the document it concerns rather than here - `**Unchecked:**` on
-the page, a row on `asgard-cli wiki platform-unknowns`, a rule in AGENTS.md.
+the page, a row on `.agents/skills/asgard-platform/wiki/platform-unknowns.md`, a rule in AGENTS.md.
 
 ## Goal
 
@@ -27,7 +27,7 @@ version and this is the same list with what each one costs:
   2. **Be useful in a meeting**, which means naming the dependencies an
      integration scenario needs before somebody promises it. A credential, an
      endpoint, a network path, a test environment, an approver's queue - the
-     interview in `asgard-cli guide requirements` and the briefings in
+     interview in `.agents/skills/asgard-platform/guide/requirements.md` and the briefings in
      `asgard-cli brief` are this, and the riskiest activity in an engagement is
      the one that leaves no trace in a repository.
 
@@ -263,7 +263,7 @@ material - `wiki` is what the platform has, `usecase` is what to put in a field,
 and this is **which decision to make now and what it costs to change later**.
 
 **It is already being pointed at from material that has landed**: eight pointers
-across seven exported documents, six of them to `asgard-cli guide requirements`,
+across seven exported documents, six of them to `.agents/skills/asgard-platform/guide/requirements.md`,
 which is where filter 0 lives and which every `needs` row cites. Those resolve
 through the binary and not on disk - a dead pointer in a greppable corpus, the
 same class of defect as the missing index.
@@ -366,7 +366,7 @@ repository, and `init` in an empty directory is already that.
 #### What has to be true first
 
 **1. A command-form pointer was chosen because it does not depend on the
-layout.** `asgard-cli usecase write-path` means the same thing from anywhere. A
+layout.** `.agents/skills/asgard-platform/usecase/write-path.md` means the same thing from anywhere. A
 path does not, and the two trees disagree:
 
     from a wiki page to that extract
@@ -441,9 +441,9 @@ if it stops there:
 
      With all five kinds landing, **every document pointer in the material is a
      path** - 73 more converted, across the extracts, the pages and the stage
-     prompts. `asgard-cli wiki log` is the only invocation left.
-  5. Delete `wiki` and `usecase`. `--commands` confirms nothing still names
-     them. **Split into three, because the deletion is not the hard part:**
+     prompts. `.agents/skills/asgard-platform/wiki/log.md` is the only invocation left.
+  5. ~~Delete `wiki` and `usecase`.~~ **Done.** `--commands` confirms nothing
+     still names them. **Split into three, because the deletion is not the hard part:**
 
      - ~~The two `--search` flags.~~ **Done** - superseded twice, and the help
        said so itself.
@@ -459,15 +459,15 @@ if it stops there:
        repository's README, TASK and AGENTS - where a path into a customer
        repository would be wrong, and `internal/corpus/...` is the right
        target instead.
-     - Delete the commands.
+     - ~~Delete the commands.~~ **Done.**
 
      **Step 5 is coupled to step 6 and the sequence did not say so.** `find`
-     prints `-> field level: asgard-cli usecase external-api`, so deleting the
+     prints `-> field level: `.agents/skills/asgard-platform/usecase/external-api.md`, so deleting the
      commands while `find` survives leaves the tool naming something it does
      not have. `find`'s counterpart output has to move to the path form in the
      same change.
 
-     And `asgard-cli wiki log` goes with it. Log is the one page `init` does
+     And `.agents/skills/asgard-platform/wiki/log.md` goes with it. Log is the one page `init` does
      not write, so deleting the command makes it reachable only from this
      repository - which is where its reader already is, but the index sentence
      that points at it has to say so.
@@ -558,7 +558,7 @@ They are not carried here. Each lives where the person who can answer it will be
 standing:
 
   - **The platform's**, with who to ask and what each blocks -
-    `asgard-cli wiki platform-unknowns`. Five of them are also written into
+    `.agents/skills/asgard-platform/wiki/platform-unknowns.md`. Five of them are also written into
     every scaffolded `docs/open-questions.md`, because every engagement hits
     them.
   - **This engagement's** - `asgard-cli question`, which reads
@@ -575,7 +575,7 @@ could be done from one has been, and git log is the record.
 **A console login and an afternoon.** `console`, `sindri`, `mimir`, `fehu` and
 `settings` describe a UI, so their source is product documentation rather than a
 chart, and they are checked less deeply than the extracts by nature. Each says
-how far it got on its own `**Unchecked:**` line and `asgard-cli wiki --unverified`
+how far it got on its own `**Unchecked:**` line and `asgard-cli find --unverified`
 lists them. Two mechanical passes found nothing and a third was written and
 thrown away for calling correct material wrong. One person with access could
 settle all five.
@@ -583,8 +583,8 @@ settle all five.
 **A cluster.** Forty of the CRDs' 79 CEL rules are `self == oldSelf`, comparing a
 proposal against the object already on it. A render is one object with no
 history, so nothing offline can see them - `botProviderClass` is the one that
-bites, and `asgard-cli usecase chat-channel` documents it instead. The same
-applies to `asgard-cli guide verify` step 4: a step that cannot be run is not a
+bites, and `.agents/skills/asgard-platform/usecase/chat-channel.md` documents it instead. The same
+applies to `.agents/skills/asgard-platform/guide/verify.md` step 4: a step that cannot be run is not a
 step that passed.
 
 **A customer on a chat platform.** Every `BotProvider` across every reference
@@ -601,7 +601,7 @@ asgard-core's definitions and P10 says that list is demonstrably incomplete; and
 gets there agree with what this material tells an FDE to say.
 
 **An answer from the platform team.** The unknowns are on
-`asgard-cli wiki platform-unknowns`, with who to ask and what each blocks. P12 is
+`.agents/skills/asgard-platform/wiki/platform-unknowns.md`, with who to ask and what each blocks. P12 is
 the cheapest: three CRDs - `ImageGenerationModel`, `TranscriptionModel`,
 `SourceSetEditorServer` - exist in the contract and appear in no documentation
 and no material here, and nobody has asked whether they are meant to be reached

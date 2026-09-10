@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/kb"
 )
@@ -80,4 +81,43 @@ func printSources(out io.Writer, docs []kb.Doc, read func(string) string, none s
 		"`asgard-cli audit-material --urls` fetches every one of them and fails on a\n"+
 		"404; six were dead the first time it ran, four of them pages marked\n"+
 		"`draft: true`, which exist in a checkout and are not published.\n", total)
+}
+
+// wrapAt and truncate came from internal/cli/usecase.go, which was deleted with
+// the reader commands. They were never that command's: three other files
+// already used them, and text-shaping does not belong in a command file.
+
+// wrapAt breaks a provenance line so it stays readable in a terminal, indenting
+// continuations to line up under the first.
+func wrapAt(s string, width, indent int) string {
+	words := strings.Fields(s)
+	if len(words) == 0 {
+		return ""
+	}
+	var b strings.Builder
+	line := 0
+	for i, w := range words {
+		if i > 0 && line+1+len([]rune(w)) > width {
+			b.WriteString("\n" + strings.Repeat(" ", indent))
+			line = 0
+		} else if i > 0 {
+			b.WriteString(" ")
+			line++
+		}
+		b.WriteString(w)
+		line += len([]rune(w))
+	}
+	return b.String()
+}
+
+// truncate cuts to n runes, not n bytes. Slicing a string by byte splits a
+// multi-byte character in half and prints a replacement glyph, which the wiki
+// pages hit on every line because they are written in Chinese.
+func truncate(s string, n int) string {
+	s = strings.TrimSpace(s)
+	r := []rune(s)
+	if len(r) <= n {
+		return s
+	}
+	return strings.TrimSpace(string(r[:n])) + "..."
 }

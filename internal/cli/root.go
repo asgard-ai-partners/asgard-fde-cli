@@ -51,8 +51,8 @@ in Chinese if that is the language the question was asked in; the glossary
 carries the translation. **This works with no repository**, which is the point:
 the question gets asked in a meeting, before there is a directory.
 
-    asgard-cli wiki <page>     the platform
-    asgard-cli usecase <name>  one deployment shape, field by field
+and both halves of what it found are files in the repository, under
+    .agents/skills/asgard-platform/
     asgard-cli guide <name>    one decision, and how it has been got wrong
     asgard-cli brief <what>    the thing you are about to do
 
@@ -171,8 +171,6 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 
 	addTo(cmd, groupAsk,
 		newFindCmd(),
-		newWikiCmd(),
-		newUsecaseCmd(),
 		newBriefCmd(),
 		newNeedsCmd(),
 		newGuideCmd(),

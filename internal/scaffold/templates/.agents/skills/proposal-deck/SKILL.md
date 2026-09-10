@@ -116,7 +116,7 @@ both audiences is two proposals, or one with two phases - never one shape
 stretched over both. This repository records three decisions that were made the
 other way, built, and reversed, and all three were reversed by the audience.
 
-**Take a shape that already exists.** `asgard-cli usecase` lists the ones taken
+**Take a shape that already exists.** `../asgard-platform/usecase/` holds the ones taken
 from deployments in production, and each says what it costs to assemble. A
 proposal built on one of them can be estimated, because somebody has already
 paid for it. A proposal built on a shape nobody has assembled is an estimate of
@@ -526,7 +526,7 @@ The second of each pair is step 2 run conditionally, and it is the whole reason
 this deck works. **State the condition in the same sentence as the capability** - "given a
 read-only account on the CRM and a route to it, this becomes X" - so the customer
 sees the access request and the thing they get for it as one trade, which is what
-it is. `asgard-cli usecase` is where those shapes come from, so what you promise
+it is. `../asgard-platform/usecase/` is where those shapes come from, so what you promise
 is something somebody has already built.
 
 Two things this deck must still refuse, and they are the ones the shape tempts:
@@ -927,7 +927,7 @@ into their notes, delete it.
 
 The last two slides are the two filters made visible: what came out as deferred
 scope, with what has to be answered before it comes back, and the questions that
-are ours to chase rather than theirs - the ones `asgard-cli wiki
+are ours to chase rather than theirs - the ones `../asgard-platform/wiki/
 platform-unknowns` says nobody has settled. Both are written as sentences a
 reader outside this repository can follow, not as counts of rows.
 
@@ -1216,7 +1216,7 @@ asgard-kube `15ded0f` - `SkillSet`, `SourceSet` + `Syncer` + `contextIndex`,
 `BotProvider` -> `Workflow` -> `SandboxBlueprint`, an `Agent` mounting a
 `SemanticLayer`, and `requestConsent` on a gated tool all exist and mean what
 the right-hand column says. Every shape it tells a deck to take is one
-`asgard-cli usecase` assembles from a deployment in production, which is what
+`../asgard-platform/usecase/` assembles from a deployment in production, which is what
 makes an estimate on it an estimate rather than a guess.
 
 **Unchecked:** the whole argument about what persuades. The order a proposal

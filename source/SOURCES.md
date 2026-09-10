@@ -40,7 +40,7 @@ customer, and nothing under `internal/` may.
 | [asgard-freyr-skills](https://github.com/asgard-ai-platform/asgard-freyr-skills) | Freyr (runtime skills, a separate repo from the chart) |
 
 The demo generator and auto-post are Asgard's own rather than a customer engagement. **`Heimdall` is
-also the name of a product in the suite** (Media & PR AI, see `asgard-cli wiki
+also the name of a product in the suite** (Media & PR AI, see `internal/corpus/wiki/
 product-suite`) - the repo and the product are not the same thing, and an extract
 saying "Heimdall" without saying which is ambiguous.
 

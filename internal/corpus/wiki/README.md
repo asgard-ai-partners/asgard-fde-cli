@@ -2,10 +2,10 @@
 
     asgard-cli find <terms>         look something up - searches here AND the
                                     extracts, and names the counterpart it finds
-    asgard-cli wiki                 list every page
-    asgard-cli wiki <page>          read one
-    asgard-cli wiki --unverified    what each page has NOT been held against
-    asgard-cli wiki --conventions   this file
+    ../wiki/                        every page, as files
+    ../wiki/<page>.md               read one
+    index.md                        them grouped by the question each answers
+    asgard-cli find --unverified    what each has NOT been held against
 
 `find` is the way in when the question arrived in the customer's words - it
 translates them first. When you already have the term, `asgard-cli init` writes
@@ -28,7 +28,7 @@ How this differs from the other two bodies of material:
 | material | answers |
 |---|---|
 | this wiki | what the platform has, who it is for, which CR a UI name maps to |
-| `asgard-cli usecase` | how one deployment shape is assembled, field by field |
+| `../usecase/` | how one deployment shape is assembled, field by field |
 | [asgard-kube's `crd/*.yaml`](https://github.com/asgard-ai-platform/asgard-kube/tree/main/crd) | whether a field is legal, and whether it is required |
 
 Both of those assume the reader already knows the platform has the thing. This
@@ -125,7 +125,7 @@ generated README before meeting any of this.
 **--links and --orphans are two halves of one thing.** A pointer that goes nowhere is loud - the
 reader follows it and finds nothing. A document nothing points at is silent, and
 costs more: it is there, it is correct, and it is never read. The index does not
-count as a pointer in the second check, because `wiki operations` sat in
+count as a pointer in the second check, because `../wiki/operations.md` sat in
 `index.md` under the title Connectivity while an FDE spent a day on connectivity
 and never opened it.
 
@@ -213,7 +213,7 @@ Two files here are not pages and are not searched:
 | file | holds |
 |---|---|
 | `index.md` | the catalogue of pages, by subject, and what is not written yet |
-| `aliases.md` | what a customer says, and what to search for - `asgard-cli wiki --aliases` |
+| `aliases.md` | what a customer says, and what to search for |
 
 **An index inside the corpus competes with what it points at.** The alias table
 was a section of `pages/glossary.md`, and because it lists every alias it was

@@ -101,7 +101,7 @@ above were written:
 ## Keeping this list complete
 
 Eight of these were missing from it until 2026-09-03 - a third of the extracts,
-written and never grouped. `asgard-cli usecase` listed them the whole time, so
+written and never grouped. The directory listed them the whole time, so
 nothing broke; what was lost is the grouping, which is the part that answers
 "which shape is this" for somebody who does not already know the file name.
 

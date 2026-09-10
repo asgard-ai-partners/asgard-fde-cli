@@ -204,7 +204,7 @@ read by `project`, `question`, `request` and `task`, each from its own file.
 
 ```bash
 asgard-cli guide                   # all the guidance
-asgard-cli guide requirements      # one piece of it, any time
+`.agents/skills/asgard-platform/guide/requirements.md`      # one piece of it, any time
 asgard-cli find "<terms>"          # reach any of it by subject
 ```
 
@@ -335,8 +335,8 @@ created projects/erp/chart/app/templates/data_connector/dc-erp.yaml
 updated projects/erp/chart/app/values.yaml (added the values it reads)
 
 Next:
-  1. what it is:      asgard-cli wiki settings
-  2. how to build it: asgard-cli usecase semantic-layer
+  1. what it is:      .agents/skills/asgard-platform/wiki/settings.md
+  2. how to build it: .agents/skills/asgard-platform/usecase/semantic-layer.md
   3. fill in the TODOs
   4. verify:          asgard-cli check
                       asgard-cli verify
@@ -362,20 +362,37 @@ The two pointers it prints are in reading order and answer different questions -
 `wiki` says what the thing is, `usecase` says how it is assembled and assumes you
 already know the first.
 
-### `wiki`, `usecase`
+### The material, as files
 
-Two bodies of reference material, embedded in the binary rather than written into
-a customer repo: a copy in one engagement goes stale where nobody is looking,
-while a stale page here is fixed for every engagement in one release.
+Five bodies of reference material, compiled into the binary and **written into a
+customer repository by `asgard-cli init`**, under one directory:
+
+```
+.agents/skills/asgard-platform/
+  index.md    the map: all five, as paths, and what is deliberately absent
+  aliases.md  what a customer said -> what to search for
+  wiki/       what the platform has, and which CR a UI name maps to
+  usecase/    how ONE deployment shape is assembled, field by field
+  needs/      what to get from the customer before a shape can be built
+  brief/      what has actually been got wrong, before you do the thing
+  guide/      which decision to make now, and what it costs to change later
+```
 
 ```bash
-asgard-cli wiki                       # what the platform is made of
-asgard-cli wiki agents
-asgard-cli wiki --conventions         # how the wiki is maintained
-
-asgard-cli usecase                    # how each deployment shape is built
-asgard-cli usecase flow-agent-single
+cat .agents/skills/asgard-platform/wiki/agents.md
+grep -ril "allowlist" .agents/skills/asgard-platform/
 ```
+
+**There were `asgard-cli wiki` and `asgard-cli usecase` commands and they are
+gone.** They read one document out of the binary, which is what `cat` does now
+that the documents are on disk. Nothing is lost with them: `--unverified` is
+`find --unverified`, which covers all five parts rather than one; `--conventions`
+is `wiki/README.md`; `--aliases` is `aliases.md`; and `--sources` was a view over
+each document's own Sources block, which is at the foot of the file.
+
+The trade is that reading a document now needs a repository. `asgard-cli init`
+in an empty directory is enough - it needs no account and touches no network -
+and `find` still answers with no repository at all.
 
 | | answers | written from |
 |---|---|---|
@@ -385,14 +402,12 @@ asgard-cli usecase flow-agent-single
 An extract assumes you already know the platform has that shape; a wiki page is
 where that assumption comes from. `asgard-cli add` prints one of each.
 
-**To look something up, use [`find`](#find)**, which searches both and names the
-counterpart of whatever it hits. Each command had a `--search` for its own half;
-both went, superseded first by `find` and then by grep, once `asgard-cli init`
-began writing these documents into a repository.
+**To look something up in the customer's own words, use [`find`](#find)**: it
+translates them first, searches all five parts and names the counterpart of
+whatever it hits. When you already have the term, grep the directory.
 
 The wiki's own conventions - its three layers, what a page must carry, and how it
-is kept from going stale as the platform moves - are in `asgard-cli wiki
---conventions`.
+is kept from going stale as the platform moves - are in `wiki/README.md`.
 
 ### `find`
 
@@ -409,16 +424,16 @@ asgard-cli find schedule --format json   # each hit with the command that reads 
 ```
 
 ```
-PLATFORM - what the thing is (asgard-cli wiki <page>)
+PLATFORM - what the thing is
 
   automation         Trigger and API
                      Starts a conversation with an agent on a schedule.
-                     -> field level: asgard-cli usecase trigger
+                     -> field level: `.agents/skills/asgard-platform/usecase/trigger.md`
 
-SHAPES - how it is assembled (asgard-cli usecase <name>)
+SHAPES - how it is assembled
 
   trigger            Trigger
-                     -> what it is:  asgard-cli wiki automation
+                     -> what it is:  `.agents/skills/asgard-platform/wiki/automation.md`
 
 Read the platform side first; an extract assumes you have.
 ```
@@ -438,12 +453,12 @@ This material is in English. "電商" was read as:
 
     commerce marketplace channel
 
-PLATFORM - what the thing is (asgard-cli wiki <page>)
+PLATFORM - what the thing is
 
   taiwan-channels    The commerce channels a customer will name, and what we have
 ```
 
-The index is `asgard-cli wiki --aliases`, and it is **not a page**. It sits
+The index is `aliases.md`, and it is **not a page**. It sits
 beside the pages, with `index.md` and `log.md`, because an index inside a
 searched corpus competes with what it points at: the table lists every alias, so
 it reliably carried every term of a translated query and the reader got the word
@@ -471,7 +486,7 @@ is what this material has - not material about the product. Nobody has
 searched the reference deployments for it, and until somebody does, the
 answer to "do we already integrate it" is not in this tool.
 
-  asgard-cli wiki taiwan-channels   the four, and what each one costs
+  `.agents/skills/asgard-platform/wiki/taiwan-channels.md`   the four, and what each one costs
   asgard-cli question add "which of the four shapes does 綠界 give us" \
       --ask "<who at the customer>"
 ```
@@ -493,13 +508,14 @@ These results use a word that means one thing here, and it may not be
 the one that was asked about:
 
   payment      is     billing between Asgard and this customer - see
-                      `asgard-cli wiki fehu`
+                      `.agents/skills/asgard-platform/wiki/fehu.md`
                is not **the customer's own payment gateway**, which is an
-                      external system with side effects: `asgard-cli usecase
+                      external system with side effects:
+                      `.agents/skills/asgard-platform/usecase/
                       write-path` ...
 ```
 
-That table is `asgard-cli wiki glossary`, and it is applied to a query rather
+That table is `.agents/skills/asgard-platform/wiki/glossary.md`, and it is applied to a query rather
 than only read by a person. It existed as prose for a long time while the
 failure it describes went on happening.
 
@@ -541,8 +557,8 @@ stage.
 
 ```bash
 asgard-cli brief                     # the activities
-asgard-cli brief customer-meeting    # before any customer conversation
-asgard-cli brief write-chart         # before authoring CRs
+`.agents/skills/asgard-platform/brief/customer-meeting.md`    # before any customer conversation
+`.agents/skills/asgard-platform/brief/write-chart.md`         # before authoring CRs
 ```
 
 **`size`** is what one capability is made of before it is written - the first
@@ -686,7 +702,7 @@ MISSING helm               render a chart (asgard-cli render) and lint it
 ok    kubectl              v1.35.1
 ok    python3 (optional)   Python 3.14.7
 
-helm is not on PATH, and asgard-cli needs it to render a chart and lint it
+helm is not on PATH, and `.agents/skills/asgard-platform/needs/it.md` to render a chart and lint it
 
 Install it with:
 
