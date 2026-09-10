@@ -11,6 +11,10 @@ import (
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/repo"
 )
 
+// corpusDir is where `asgard-cli init` writes the material, and where the
+// next-step lines point now that no command reads a document.
+const corpusDir = ".agents/skills/asgard-platform"
+
 func newAddCmd() *cobra.Command {
 	var opts generate.Options
 	var layers []string
@@ -33,8 +37,9 @@ content is marked TODO. Read the matching shape first - "asgard-cli add" names
 it for each kind - because the decision comes before the YAML.
 
 The rules every generated CR already follows - naming, the display annotations,
-what goes in values and what stays in the template - are "asgard-cli usecase
-conventions". Read it before writing a CR by hand, or before changing one this
+what goes in values and what stays in the template - are in
+".agents/skills/asgard-platform/usecase/conventions.md".
+Read it before writing a CR by hand, or before changing one this
 wrote: what it generates is those conventions applied, and an edit that departs
 from them is the half a rendered chart still passes.
 
@@ -59,7 +64,7 @@ A flowagent serves your own front end unless --bot-class names a chat platform:
 That writes the channel's credential block and says what the channel costs -
 which credential keys have to be declared and set, and whether the class needs a connector pod.
 The field is immutable on the platform side, so it is worth getting right the
-first time. Read "asgard-cli usecase chat-channel" before choosing.
+first time. Read ".agents/skills/asgard-platform/usecase/chat-channel.md" before choosing.
 
 Run "asgard-cli add" with no arguments to list the kinds.`,
 		Args: cobra.MaximumNArgs(2),
@@ -70,8 +75,8 @@ Run "asgard-cli add" with no arguments to list the kinds.`,
 				fmt.Fprintf(out, "Kinds, in the order they are usually created:\n\n")
 				for _, k := range generate.Kinds {
 					fmt.Fprintf(out, "  %-14s %s\n", k.Name, k.Summary)
-					fmt.Fprintf(out, "  %-14s what it is:  asgard-cli wiki %s\n", "", k.Wiki)
-					fmt.Fprintf(out, "  %-14s how to build: asgard-cli usecase %s\n", "", k.Extract)
+					fmt.Fprintf(out, "  %-14s what it is:  %s/wiki/%s.md\n", "", corpusDir, k.Wiki)
+					fmt.Fprintf(out, "  %-14s how to build: %s/usecase/%s.md\n", "", corpusDir, k.Extract)
 					if len(k.Needs) > 0 {
 						fmt.Fprintf(out, "  %-14s needs: %s\n", "", strings.Join(k.Needs, ", "))
 					}
@@ -165,13 +170,13 @@ Run "asgard-cli add" with no arguments to list the kinds.`,
 			// the extract says how it is assembled and assumes you know the
 			// first. The listing prints the same pair.
 			fmt.Fprintf(out, "\nNext:\n")
-			fmt.Fprintf(out, "  1. what it is:      asgard-cli wiki %s\n", kind.Wiki)
-			fmt.Fprintf(out, "  2. how to build it: asgard-cli usecase %s\n", kind.Extract)
+			fmt.Fprintf(out, "  1. what it is:      %s/wiki/%s.md\n", corpusDir, kind.Wiki)
+			fmt.Fprintf(out, "  2. how to build it: %s/usecase/%s.md\n", corpusDir, kind.Extract)
 			// The mechanism extracts, where they apply. A reader who knows the
 			// shape and not how values cross between processors writes the
 			// silent failures back in.
 			for _, also := range kind.AlsoRead {
-				fmt.Fprintf(out, "     and:            asgard-cli usecase %s\n", also)
+				fmt.Fprintf(out, "     and:            %s/usecase/%s.md\n", corpusDir, also)
 			}
 			fmt.Fprint(out, `  3. fill in the TODOs
   4. verify:          asgard-cli check

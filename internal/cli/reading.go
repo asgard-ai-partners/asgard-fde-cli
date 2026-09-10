@@ -52,7 +52,7 @@ this engagement ran that the material did not answer. **A query that found
 nothing is the one part of a defect report nobody has to be believed about** -
 everything else is somebody's account of what happened, and this is the tool's
 own record that a search was run and the corpus had no answer. Each line is a
-candidate row for ` + "`asgard-cli wiki --aliases`" + `, or a page that does not exist.
+candidate row for the alias index, or a page that does not exist.
 
 That file is not committed, because a query carries whatever words the customer
 used. The reading log is, because it carries only page names of this tool.`,
@@ -175,7 +175,7 @@ func printMisses(out io.Writer, root string) error {
 	fmt.Fprintf(out, "\n  miss      nothing in the four bodies carried any term\n"+
 		"  unplaced  results came back, but these terms appeared in none of them\n\n"+
 		"**Each line is one of two different defects, and they need different\nrepairs.** If the subject exists under another name, the index is missing a\n"+
-		"row: `asgard-cli wiki --aliases` carries the rule for adding one. If it\ndoes not exist, the material is missing a page, and that is worth filing:\n\n"+
+		"row: the alias index carries the rule for adding one. If it\ndoes not exist, the material is missing a page, and that is worth filing:\n\n"+
 		"    asgard-cli issue-report --new\n\n"+
 		"This file is not committed - a query carries whatever words the customer\nused - so it lives only as long as this checkout. File what it shows.\n")
 	return nil

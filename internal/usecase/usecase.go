@@ -26,7 +26,7 @@ var corpus = kb.Corpus{
 	// README explains how to read an extract; it is not one.
 	Unlisted: map[string]bool{"README": true},
 	Noun:     "extract",
-	Command:  "asgard-cli usecase",
+	Command:  "ls .agents/skills/asgard-platform/usecase/",
 }
 
 // List returns every extract, sorted by name.

@@ -134,7 +134,8 @@ const missHeader = `# Searches this engagement ran that the material did not ans
 #   miss      nothing in the four bodies carried any term
 #   unplaced  results came back, but these terms appeared in none of them
 #
-# Each line is a candidate row for the index: asgard-cli wiki --aliases
+# Each line is a candidate row for the alias index, which asgard-cli init
+# writes to .agents/skills/asgard-platform/aliases.md
 `
 
 // Miss notes a search the material did not answer. Failures are ignored: a log

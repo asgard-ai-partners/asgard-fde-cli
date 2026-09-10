@@ -150,7 +150,7 @@ func printWaiting(out io.Writer, state stage.State) {
 	fmt.Fprintf(out, "\nThat is a normal state and not a gap. What is worth checking while it\nlasts:\n\n"+
 		"  - the questions that are **ours** rather than theirs - anything for the\n"+
 		"    platform team gets asked before the next meeting, not during it.\n"+
-		"    `asgard-cli wiki platform-unknowns`\n"+
+		"    `.agents/skills/asgard-platform/wiki/platform-unknowns.md`\n"+
 		"  - whether the meeting has something to take into it - the\n"+
 		"    `proposal-deck` skill in `.agents/skills/`\n"+
 		"  - whether each question names a person or a role. The ones that do not\n"+

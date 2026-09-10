@@ -238,7 +238,7 @@ func printNeeds(out io.Writer, found []needs.Shape) {
 		for _, it := range s.Items {
 			fmt.Fprintf(out, "  - %s\n", wrapAt(it.Ask, 72, 4))
 			fmt.Fprintf(out, "    %s\n", wrapAt(it.Why, 70, 4))
-			fmt.Fprintf(out, "    %s\n\n", it.From)
+			fmt.Fprintf(out, "    %s\n\n", kb.Landed(corpusDir+"/", it.From))
 		}
 	}
 

@@ -38,7 +38,7 @@ var corpus = kb.Corpus{
 	// to sit outside the corpus directory, so nothing had to exclude it.
 	Unlisted: map[string]bool{"index": true, "log": true, "README": true},
 	Noun:     "wiki page",
-	Command:  "asgard-cli wiki",
+	Command:  "ls .agents/skills/asgard-platform/wiki/",
 }
 
 // List returns every page, sorted by name.

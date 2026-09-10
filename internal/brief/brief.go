@@ -26,6 +26,11 @@ import (
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/kb"
 )
 
+// landedPrefix is where `asgard-cli init` writes the material, from the
+// repository root. The terminal is not inside one of the directories, so a
+// pointer printed there needs the whole path.
+const landedPrefix = ".agents/skills/asgard-platform/"
+
 // Item is one thing that gets got wrong, and where the right version lives.
 type Item struct {
 	Subject string
@@ -319,7 +324,7 @@ func (a Activity) Render(w interface{ Write([]byte) (int, error) }) {
 		fmt.Fprintf(w, "  %s\n", it.Subject)
 		fmt.Fprintf(w, "    said:  %s\n", it.Wrong)
 		fmt.Fprintf(w, "    true:  %s\n", wrap(it.Right, 68, "           "))
-		fmt.Fprintf(w, "    read:  %s\n\n", it.Where)
+		fmt.Fprintf(w, "    read:  %s\n\n", kb.Landed(landedPrefix, it.Where))
 	}
 	fmt.Fprintf(w, "%s\n", a.Close)
 }

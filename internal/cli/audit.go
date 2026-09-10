@@ -164,7 +164,7 @@ func sweep(out io.Writer, sources []source, term string) error {
 	}
 	fmt.Fprintf(out, "\n%q: %d line(s) in %d file(s).\n", term, hits, files)
 	if files == 0 {
-		fmt.Fprintf(out, "\nNothing mentions it. If you were checking before a rename, there is\nnothing to rename; if you expected hits, check the spelling against\n`asgard-cli wiki glossary`.\n")
+		fmt.Fprintf(out, "\nNothing mentions it. If you were checking before a rename, there is\nnothing to rename; if you expected hits, check the spelling against\n`.agents/skills/asgard-platform/wiki/glossary.md`.\n")
 		return nil
 	}
 	fmt.Fprintf(out, "\nA rename has to touch all of them. The templates are the half that a\nprose-only search misses, and the half a customer's repository is built\nfrom - a stale field there is written into every new chart.\n")
@@ -416,7 +416,7 @@ a customer deck.
 short enough for one sitting.
 
 **--links is the only part that fails.** Everything else here is for a person to
-read; this one resolves every ` + "`asgard-cli wiki <page>`" + `, ` + "`usecase <extract>`" + `,
+read; this one resolves every ` + "`../wiki/<page>.md`" + ` and ` + "`../usecase/<extract>.md`" + `,
 ` + "`brief <activity>`" + ` and ` + "`guide <name>`" + ` the material writes, and exits 1
 on one that resolves to nothing. A renamed page leaves the pointers to it
 behind, and nobody finds out until a reader follows one - which is the same
