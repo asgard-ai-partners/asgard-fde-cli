@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"text/template"
@@ -492,3 +493,73 @@ func Docs() ([]kb.Doc, error) { return corpus.List() }
 // after itself and could not be a Corpus. Resolving the names is all that was
 // actually in the way.
 func Search(query string) ([]kb.Match, error) { return corpus.Search(query) }
+
+// ── Landing ───────────────────────────────────────────────────────────────
+
+// stateAction matches a template action that renders this repository's own
+// state. The inline substitutions are not among them: a request id or a spec
+// slug is a value in an example, and an example with a placeholder in it is
+// still an example.
+var stateAction = regexp.MustCompile(`<<(if|with|range|else|end|printf)\b`)
+
+// inlineValues are the substitutions that become placeholders rather than
+// disappearing.
+var inlineValues = strings.NewReplacer(
+	"<<.RequestID>>", "<request-id>",
+	"<<.SpecSlug>>", "<spec-slug>",
+	"<<.Slug>>", "<slug>",
+	"<<.ID>>", "<id>",
+	"<<.Title>>", "<title>",
+	"<<.Summary>>", "<summary>",
+	"<<.References>>", "<n>",
+)
+
+// Static returns the half of a stage's guidance that does not depend on this
+// repository, as the markdown that lands at `guide/<name>.md`.
+//
+// **A guide is the one part of the material that is not a document but a view.**
+// It renders what the repository currently has - which projects exist, what is
+// still open - into the guidance, which is why it could not simply be written
+// out: verbatim it ships template syntax, and rendered it commits one moment of
+// a repository's state into a file that then goes stale against the directory
+// next door rather than against the binary, where nothing would detect it.
+//
+// So the split is by paragraph, and it is small: 10 paragraphs of 542 across
+// the ten stages. A paragraph carrying a state action goes; everything else
+// stays. Placeholders are substituted first, so a paragraph is not lost for
+// containing `<<.RequestID>>` in an example.
+//
+// **Three sentences had to be reworded in the source rather than dropped**,
+// because a state claim is not always a template action: "Projects exist but no
+// DataConnector does" is prose, and true only of the repository the command was
+// run in. They now say which repository the stage is for, which reads correctly
+// in both places.
+func (s Stage) Static() (string, error) {
+	body, err := readPrompt(s.promptF)
+	if err != nil {
+		return "", err
+	}
+	text := inlineValues.Replace(string(body))
+	var kept []string
+	for _, p := range strings.Split(text, "\n\n") {
+		if stateAction.MatchString(p) {
+			continue
+		}
+		kept = append(kept, p)
+	}
+	return strings.Join(kept, "\n\n"), nil
+}
+
+// StaticDocuments renders every stage's static half, for the export and for the
+// audit that resolves the pointers in them.
+func StaticDocuments() ([]struct{ Name, Body string }, error) {
+	var out []struct{ Name, Body string }
+	for _, s := range List() {
+		body, err := s.Static()
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, struct{ Name, Body string }{string(s.Name), body})
+	}
+	return out, nil
+}

@@ -10,7 +10,7 @@ is a decision, not code.<<else>>No request is open, so this page is being read o
 interview that decides how the work splits into projects, and it starts from
 something a customer asked for: `asgard-cli request add "<what they asked for>"`.
 
-The interview that produces one is `asgard-cli guide requirements`.<<end>>
+The interview that produces one is `../guide/requirements.md`.<<end>>
 
 A **project** is one Helm chart deployed to one namespace, and it always lives
 under this workspace at `projects/<slug>/` - `asgard-cli project add` puts it
@@ -40,7 +40,7 @@ It still lives under `projects/<slug>/` and still deploys to a namespace, so it
 is a project mechanically. What it is not is a project shaped like the rest of
 this: `entry-point` and `knowledge` have nothing to say about it, and `asgard-cli verify`
 will report an Agent with no capability only because there is no Agent.
-`asgard-cli usecase mimir-dashboard` is the shape.
+`../usecase/mimir-dashboard.md` is the shape.
 
 **A third question is not about the split at all, and gets missed for that
 reason: how many environments.** A project is one chart, and that chart normally
@@ -126,7 +126,7 @@ project; one system read by both audiences is read twice, through two shapes.
 
 A row wanting **write** is not a project decision but a warning: every write path
 needs its own spec and human approval, and the standing architecture is
-read-only. Note it and move on - `asgard-cli usecase write-path` is where the
+read-only. Note it and move on - `../usecase/write-path.md` is where the
 approval gate is described, when it comes to designing one.
 
 ## What to write down

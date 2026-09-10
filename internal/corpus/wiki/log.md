@@ -480,7 +480,7 @@ time, and editing removes exactly that.
   documents whose readers need them, and TASK.md's worklist is gone with them.
   **The interview is agent-shaped and so is whoever runs it** - every question
   after 2b assumes the deliverable is something you talk to, which cost one
-  proposal - now sits at question 2b in `asgard-cli guide requirements`. **A rule
+  proposal - now sits at question 2b in `../guide/requirements.md`. **A rule
   that produces a good artefact of one kind silently produces a bad one of
   another** - six `proposal-deck` defects passed the skill's own checks - is a
   question in AGENTS.md's "Before you say it is done"
@@ -917,7 +917,7 @@ time, and editing removes exactly that.
   matches more than twelve documents. Gated on the query being a sentence:
   "semantic layer" reaches 34 documents and is a perfectly good two-word lookup
 - `fix` 2026-09-07 seven documents were named without the command that opens
-  them - `` `guide projects` `` rather than `` `asgard-cli guide projects` `` -
+  them - `` `guide projects` `` rather than `` `../guide/projects.md` `` -
   and **a pointer written that way is invisible to everything**. `kb.Link` reads
   a pointer as an invocation on purpose, because a bare name is not actionable
   without knowing which command takes it; the cost is that dropping the prefix

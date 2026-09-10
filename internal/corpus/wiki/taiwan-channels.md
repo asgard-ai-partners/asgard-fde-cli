@@ -82,7 +82,7 @@ pricing four, ask the question that most often collapses them:
 An OMS, a middleware layer, a warehouse that consolidates the channels - which is
 what the Freyr deployment is, from the other side. If one exists, four
 integrations become one database and the estimate changes by an order of
-magnitude. `asgard-cli guide requirements` puts this at question 3 for the
+magnitude. `../guide/requirements.md` puts this at question 3 for the
 same reason.
 
 If nobody knows, that is an open question, not an assumption to price on.

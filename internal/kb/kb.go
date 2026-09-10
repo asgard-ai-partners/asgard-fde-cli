@@ -206,7 +206,7 @@ type Corpus struct {
 // Both yield the same two groups - kind, then name - so everything downstream
 // reads one shape: kb.Link, Counterpart, --links, --orphans, and what `find`
 // prints.
-var pathLinkRe = regexp.MustCompile(`\.\./(wiki|usecase|needs|brief)/([a-z0-9][a-z0-9-]*)\.md`)
+var pathLinkRe = regexp.MustCompile(`\.\./(wiki|usecase|needs|brief|guide)/([a-z0-9][a-z0-9-]*)\.md`)
 
 var linkRe = regexp.MustCompile(`asgard-cli(?: |[ \t]*\n[ \t]*)(wiki|usecase|brief|guide)(?: |[ \t]*\n[ \t]*)([a-z0-9][a-z0-9-]*)`)
 

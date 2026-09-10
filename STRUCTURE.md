@@ -38,9 +38,9 @@ keeps; below it are the checks, the material servers and the plumbing.
 | `check` | 1179 | repository structure: indexes, dated names, links, orphan pages |
 | `auth` | 1118 | the OAuth 2.0 + PKCE sign-in and the credential store, which is the only file this CLI keeps outside a repository |
 | `generate` | 714 | CR skeletons for ten kinds, wired to what the chart already declares |
-| `kb` | 695 | one implementation of listing, reading, scoring, provenance and the link graph, shared by every corpus |
-| `scaffold` | 1575 | writes the non-customer-specific tree, serves the design-time skills inside it, exports the wiki and the extracts as files under `.agents/skills/asgard-platform/`, and keeps `.asgard-scaffold.json` - the record of which CLI wrote the files this binary ships |
-| `stage` | 511 | the onboarding prompts, rendered against the repository's state |
+| `kb` | 759 | one implementation of listing, reading, scoring, provenance and the link graph, shared by every corpus |
+| `scaffold` | 1588 | writes the non-customer-specific tree, serves the design-time skills inside it, exports the wiki and the extracts as files under `.agents/skills/asgard-platform/`, and keeps `.asgard-scaffold.json` - the record of which CLI wrote the files this binary ships |
+| `stage` | 565 | the onboarding prompts, rendered against the repository's state |
 | `size` | 380 | the deployment shapes, counted off production, and what one costs before anything is added |
 | `tool` | 329 | resolves helm/kubectl/python3 and says how to install one |
 | `brief` | 395 | what one activity gets wrong, addressed by intent rather than by position |
@@ -102,7 +102,7 @@ is what `add` writes, not something anybody reads to decide.
 | `corpus/usecase/` | 22 | how one shape of deployment is assembled, field by field | English | yes |
 | `stage/prompts/` | 12 | what to weigh at one point in the work | English | yes |
 | `scaffold/templates/.agents/skills/` | 7 | what the agent in a customer repo loads to do one kind of work | mixed | yes |
-| `.agents/skills/asgard-platform/` | 63 | the wiki and the extracts written out so an agent can grep them, with a generated `index.md` mapping both halves as paths; from `scaffold/corpus.go`, not a template | md | yes |
+| `.agents/skills/asgard-platform/` | 73 | the wiki and the extracts written out so an agent can grep them, with a generated `index.md` mapping both halves as paths; from `scaffold/corpus.go`, not a template | md | yes |
 | `scaffold/templates/` | 45 | the part of a customer repo that is the same every time | mixed | the skills only |
 | `generate/templates/` | 12 | the CR skeletons `asgard-cli add` writes | English | no |
 

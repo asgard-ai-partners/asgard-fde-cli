@@ -143,7 +143,7 @@ warnings scattered through the extracts land:
 **`Allowed Cubes` is the field whose absence is the whole argument against
 mounting a layer for an anonymous audience** - without it, the model composes SQL
 over every cube, and the surface grows each time one is added. See
-`asgard-cli guide read-path`.
+`../guide/read-path.md`.
 
 **The safe field defaults off and the dangerous one defaults on.** In the
 definitions, `semanticLayer.allowQuery` defaults to **false** and

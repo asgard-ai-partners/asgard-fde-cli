@@ -68,7 +68,7 @@ Then the step that cannot be run here. Push, and read the plan back:
      matched, or the release was never created on the platform.
      `asgard-cli pipeline deliveries` says which.
 
-     **What this step is catching is written down.** `asgard-cli wiki crd-rules`
+     **What this step is catching is written down.** `../wiki/crd-rules.md`
      lists the CEL validations the apiserver evaluates, which `helm lint` does
      not run and a dry-run does not report faithfully - and the one rule the
      schema cannot express at all. Read it before deciding a red deploy is a
@@ -83,7 +83,7 @@ Done when: every step is green, and you have said which ones could not be run.
 
 Once every chart is complete, `asgard-cli project` says so for each of them
 rather than a next step. After that, new capability is added
-with the loop in `asgard-cli guide enhance`.
+with the loop in `../guide/enhance.md`.
 
 **Checked:** 2026-09-04 - each of the four steps names a command that exists and
 does what is said: `asgard-cli check` is structural, `asgard-cli verify` renders

@@ -1,7 +1,7 @@
 # Decide each project's entry point
 
-There is a read path but no way to reach it. **This is the second decision that
-gets answered wrong.**
+**This stage is a project with a read path and no way to reach it.** It is the
+second decision that gets answered wrong.
 
 Needing an entry point:
 <<range .Projects>><<if .NeedsEntryPoint>>  - <<.Slug>>
@@ -25,8 +25,8 @@ bind an Agent to it, which hands agents deliberately restricted to an API a
 second path into the database. **No gate catches that**: cross-reference
 checking validates references that exist, never one that should not.
 
-    asgard-cli guide read-path
-    asgard-cli usecase mimir-dashboard
+    ../guide/read-path.md
+    ../usecase/mimir-dashboard.md
 
 ## The decision
 
@@ -38,8 +38,8 @@ checking validates references that exist, never one that should not.
 ## Why the agent hub cannot serve a public widget
 
 The constraint is a field on the CRD and it is not this page's to state:
-`asgard-cli wiki agents` has what `BotProvider.entrypoint` takes, and
-`asgard-cli usecase agent-hub` has what that means for the shape. **The reason
+`../wiki/agents.md` has what `BotProvider.entrypoint` takes, and
+`../usecase/agent-hub.md` has what that means for the shape. **The reason
 it is a decision at all is that it cannot be configured around** - a public
 audience forces the second row of the table above, and no amount of
 configuration moves it.
@@ -51,15 +51,15 @@ configuration moves it.
 
 Read the shape before writing it:
 
-    asgard-cli usecase agent-hub
-    asgard-cli usecase flow-agent-single
-    asgard-cli usecase flow-agent-supervisor
+    ../usecase/agent-hub.md
+    ../usecase/flow-agent-single.md
+    ../usecase/flow-agent-supervisor.md
 
 If the audience already lives on LINE, Telegram, Discord or Slack, that decides
 it: those platforms reach a BotProvider and nothing else, so the agent hub is
 out. One field on the CR, and it is immutable after creation:
 
-    asgard-cli usecase chat-channel
+    ../usecase/chat-channel.md
 
 ## If it is the agent hub
 
@@ -75,7 +75,7 @@ agents, so the agent-published label decides whether an agent gets work.
 rather than the platform's** - the CRD's `sampleQuestions` has no minimum, so
 nothing on the cluster refuses one without them and `asgard-cli verify` does
 (R7). Knowing which of the two will stop you decides whether the fix is a chart
-edit or a conversation. `asgard-cli usecase agent-hub` has why two.
+edit or a conversation. `../usecase/agent-hub.md` has why two.
 
 prompt.task and prompt.format must be **byte-identical** across the agents in one
 chart. Agent CRs have no include mechanism, so shared text can only be

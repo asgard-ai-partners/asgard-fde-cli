@@ -9,6 +9,7 @@ import (
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/brief"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/kb"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/needs"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/stage"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/usecase"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/wiki"
 )
@@ -101,6 +102,17 @@ func corpusJobs() ([]job, error) {
 		add(filepath.Join("brief", d.Name+".md"), d.Body)
 	}
 
+	// The ten stages, minus the paragraphs that render this repository's own
+	// state - see stage.Static for what that split is and why a guide could not
+	// simply be written out.
+	guides, err := stage.StaticDocuments()
+	if err != nil {
+		return nil, fmt.Errorf("render the guides: %w", err)
+	}
+	for _, d := range guides {
+		add(filepath.Join("guide", d.Name+".md"), d.Body)
+	}
+
 	// The root index is generated from what actually landed, so it cannot
 	// disagree with the tree beside it. It is deliberately not a second copy
 	// of what `wiki/index.md` and `usecase/README.md` do - those group their
@@ -133,6 +145,7 @@ func corpusIndex(jobs []job) (string, error) {
 		{"usecase", "how one deployment shape is assembled, field by field", "usecase/README.md"},
 		{"needs", "what to get from the customer before a shape can be built", ""},
 		{"brief", "what has actually been got wrong, before you do the thing", ""},
+		{"guide", "which decision to make now, and what it costs to change later", ""},
 	} {
 		fmt.Fprintf(&b, "\n## `%s/` - %s\n\n", half.dir, half.what)
 		if half.guide != "" {
@@ -335,20 +348,20 @@ subject the material genuinely lacks.
 const corpusIndexTail = `
 ## What is not here
 
-Three kinds of pointer in these documents are **not** paths, because what they
-point at is not written into this repository. They are invocations, and they
-need the ` + "`asgard-cli`" + ` binary:
+Everything the material points at is a path you can follow, with two
+exceptions - both invocations, and both needing the ` + "`asgard-cli`" + ` binary:
 
-| pointer | what it is | why not here |
-|---|---|---|
-| ` + "`asgard-cli guide <name>`" + ` | the decision at each stage: the interview and its order, how the work splits into projects, each project's read path and entry point, deploy | it renders this repository's own state - which projects exist, what is still open - so a copy would freeze one moment of it |
-| ` + "`asgard-cli brief <activity>`" + ` | what has actually been got wrong before a customer meeting, a chart, a handover | not written out yet |
-| ` + "`asgard-cli wiki log`" + ` | which commit of each source this material was read at | provenance for whoever maintains the CLI. An answer is never in it |
+| pointer | why it is not a file |
+|---|---|
+| ` + "`asgard-cli wiki log`" + ` | which commit of each source the material was read at. Provenance for whoever maintains the CLI, and an answer is never in it |
+| ` + "`asgard-cli guide <name>`" + ` | **half of it is here.** A guide renders this repository's own state into its guidance - which projects exist, what is still open - and that half cannot be a file, because a file would freeze one moment of it. The decisions are in ` + "`guide/`" + `; run the command for where this repository actually stands |
 
-` + "`asgard-cli needs <scenario>`" + ` is the other one worth knowing and is not a
-document pointer at all: it says what has to be obtained from the customer
-before a shape can be built - a credential, an endpoint, a network path, an
-approval queue - with the document that owns each claim.
+The commands that answer the second one directly, when that is all you want:
+
+    asgard-cli project     what each chart declares, and still lacks
+    asgard-cli question    what nobody has answered yet
+    asgard-cli request     what the customer asked for
+    asgard-cli task        the open task specs
 
 ## Staleness
 

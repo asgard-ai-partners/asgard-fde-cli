@@ -185,7 +185,7 @@ Four more:
   produces the failure nobody can see, because nothing contradicts anything and
   the reader simply takes the wrong one.
 - **Anything telling a reader to ask a customer something has to pass filter 0.**
-  `asgard-cli guide requirements` carries it: does the answer change what
+  `../guide/requirements.md` carries it: does the answer change what
   we build? Two pages have told an FDE to ask a question that filter rejects, and
   both times they followed the page in front of them rather than the rule.
 - **Say which layer a statement comes from.** Product documentation describes

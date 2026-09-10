@@ -430,8 +430,18 @@ if it stops there:
      in no source at all, so a `From` naming an extract that does not exist
      passed with 0 dead. **`brief` is done too** - four documents under `brief/`, with the same gap
      found and closed: a `Where` naming a page that does not exist passed with
-     0 dead before they were documents. `guide` is what remains, and it is the
-     one that needs the static/live split rather than a serialiser.
+     0 dead before they were documents. **`guide` is done, and step 4 with it** - the ten
+     stages land as `guide/<name>.md`, minus the paragraphs that render this
+     repository's own state. The split is 10 paragraphs of 542, and three
+     sentences had to be reworded in the source rather than dropped, because a
+     state claim is not always a template action: "Projects exist but no
+     DataConnector does" is prose, true only of the repository the command was
+     run in. They now say which repository the stage is for, which reads
+     correctly in both places.
+
+     With all five kinds landing, **every document pointer in the material is a
+     path** - 73 more converted, across the extracts, the pages and the stage
+     prompts. `asgard-cli wiki log` is the only invocation left.
   5. Delete `wiki` and `usecase`. `--commands` confirms nothing still names
      them.
   6. Delete `find`, after the sense instruction has been given a release to be

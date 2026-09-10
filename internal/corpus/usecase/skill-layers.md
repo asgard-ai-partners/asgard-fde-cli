@@ -77,7 +77,7 @@ the skill's entry is not an action - it is disambiguation:
     confirming name the system, and state that the other side will not change
 
 **Any integration where two systems name the same thing differently needs this**,
-and most do. `asgard-cli guide requirements` calls the cross-system
+and most do. `../guide/requirements.md` calls the cross-system
 mapping a skill's job; this is what that looks like when written properly - a
 canonical table, plus a signpost to it from the other skill so a reader arriving
 from either side finds it.

@@ -9,8 +9,8 @@ If it is not, it is a phone call rather than an assumption Citations are
 available - the sources arrive on the completion event inside the message's
 `template` - but **only if the Workflow is built to return them**, and only if
 the front end reads that field. It is a decision made here, and retrofitting it
-means changing the workflow and the front end together. `asgard-cli wiki
-knowledge` has the shape.
+means changing the workflow and the front end together.
+`../wiki/knowledge.md` has the shape.
 
 **This is the third decision that gets answered wrong**, and it has one answer:
 
@@ -25,7 +25,7 @@ that built the other way and reversed.
 > An older chart containing one is a shape somebody chose before that, not
 > proof the mechanism is going away.
 
-    asgard-cli usecase knowledge-drive
+    ../usecase/knowledge-drive.md
 
 ## The shape
 

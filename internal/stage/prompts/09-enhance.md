@@ -9,8 +9,8 @@ SemanticLayer somebody trusts, and the next thing asked for is usually to *see*
 it - the same numbers every morning, without asking. That is Mimir, it needs no
 new CR beyond the model that already exists, and it is the cheapest thing this
 walk ever delivers. Check before designing an agent for it:
-`asgard-cli usecase mimir-dashboard`, and question 2b of
-`asgard-cli guide requirements`.
+`../usecase/mimir-dashboard.md`, and question 2b of
+`../guide/requirements.md`.
 
 This is the loop for adding one.
 
@@ -41,7 +41,7 @@ them is how a semantic layer ends up reachable from a public endpoint.
 
   - adds a `SemanticLayer` or `DataConnector`
   - widens which cubes an agent may query
-  - introduces a write path (`asgard-cli usecase write-path`)
+  - introduces a write path (`../usecase/write-path.md`)
 
 The databases are real, so those changes need to be reviewed before they are
 made, not after. Load the `spec-workflow` skill, then:
@@ -79,11 +79,11 @@ If it is a new system rather than a new question about an old one, wiring it up
 is the same work as the first time: introspect the real database, do not guess
 the schema.
 
-    asgard-cli guide data-sources
+    ../guide/data-sources.md
 
 ## 5. Gate, then deploy
 
-Run the full acceptance gate (`asgard-cli guide verify`). Then tag.
+Run the full acceptance gate (`../guide/verify.md`). Then tag.
 
 ## 6. Close the loop - this is the step that gets skipped
 

@@ -680,7 +680,7 @@ func checkOrphans(out io.Writer, sources []source) error {
 		"fix is a sentence in the document that should have sent a reader here.\n")
 
 	var total, orphaned int
-	for _, kind := range []string{"wiki", "usecase", "needs", "guide", "brief"} {
+	for _, kind := range []string{"wiki", "usecase", "needs", "brief", "guide"} {
 		names := make([]string, 0, len(known[kind]))
 		for n := range known[kind] {
 			names = append(names, n)
@@ -730,7 +730,10 @@ func checkLinks(out io.Writer, sources []source) error {
 	// here and went nowhere in the repository the material had been written
 	// into. Nothing saw it: `--links` resolves against the corpus, where log
 	// exists.
-	lands := map[string]map[string]bool{"wiki": {}, "usecase": {}, "needs": {}, "brief": {}}
+	lands := map[string]map[string]bool{"wiki": {}, "usecase": {}, "needs": {}, "brief": {}, "guide": {}}
+	for _, st := range stage.List() {
+		lands["guide"][string(st.Name)] = true
+	}
 	for _, n := range brief.Names() {
 		lands["brief"][n] = true
 	}
