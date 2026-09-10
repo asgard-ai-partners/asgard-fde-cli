@@ -132,7 +132,7 @@ has been settled yet and the first job is the three decisions below.
 
 **The riskiest thing in this engagement leaves no trace in this repository.**
 Talking to a customer changes no file, so nothing here and nothing derived from
-here prepares anybody for it. Every entry in `asgard-cli brief` is there because
+here prepares anybody for it. Every entry in `.agents/skills/asgard-platform/brief/` is there because
 somebody actually got it wrong - `write-chart` before touching a chart,
 `handover` before telling anyone it is live.
 
@@ -176,7 +176,7 @@ answer that looks obvious and is wrong.
 | command | when |
 |---|---|
 | `asgard-cli gate` | **after changing anything under a chart or `.asgard-pipeline.yaml`, and before pushing.** Everything this machine can check, in one command. A repository of custom resources has no compiler; this is the nearest thing to one, and it is one command so that it cannot go stale the way a checklist does |
-| `asgard-cli brief <what>` | **before a meeting, a chart change or a handover.** The activity you are about to do, and how it has been got wrong |
+| `.agents/skills/asgard-platform/brief/<what>.md` | **before a meeting, a chart change or a handover.** The activity you are about to do, and how it has been got wrong |
 | `asgard-cli question` | what nobody has answered yet, and who each is waiting on. **Read this before designing anything** |
 | `asgard-cli request`, `asgard-cli task` | what the customer asked for, and the task specs open against it |
 | `asgard-cli project` | what each chart declares, and what it still lacks. It reports no step, because there is none |

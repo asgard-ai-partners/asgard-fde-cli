@@ -7,7 +7,6 @@ import (
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/repo"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/stage"
-	"github.com/asgard-ai-partners/asgard-fde-cli/internal/work"
 )
 
 // newGuideCmd reads one piece of decision guidance.
@@ -80,7 +79,6 @@ those parts empty.`,
 				// --stage <name>` became `guide <name>`, so grepping the log
 				// for what a predecessor read, by the name they would have
 				// typed, missed every one of them.
-				work.Recall(root, "guide", string(found.Name))
 			}
 
 			prompt, err := found.Prompt(state)

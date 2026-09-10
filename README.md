@@ -446,7 +446,7 @@ because talking to a customer changes no file, and meetings happen at every
 stage.
 
 ```bash
-asgard-cli brief                     # the activities
+ls .agents/skills/asgard-platform/brief/
 `.agents/skills/asgard-platform/brief/customer-meeting.md`    # before any customer conversation
 `.agents/skills/asgard-platform/brief/write-chart.md`         # before authoring CRs
 ```

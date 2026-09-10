@@ -8,10 +8,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/check"
-	"github.com/asgard-ai-partners/asgard-fde-cli/internal/repo"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/stage"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/version"
-	"github.com/asgard-ai-partners/asgard-fde-cli/internal/work"
 )
 
 // NewRootCmd builds the root command. Every call returns a fresh tree so tests
@@ -23,14 +21,16 @@ func NewRootCmd() *cobra.Command {
 		Long: `asgard-cli is what an agent asks about integrating with Asgard, so that
 an FDE can walk into a customer's room with it.
 
-BEFORE A MEETING, run the one for what you are about to do:
+BEFORE A MEETING, read the one for what you are about to do:
 
-    asgard-cli needs <scenario>          what they have to give us before we start
-    asgard-cli brief customer-meeting    the five things said wrong to a customer
-    asgard-cli brief connect             before binding a checkout to the platform
-    asgard-cli brief write-chart         before touching a chart
-    asgard-cli brief handover            before telling anyone it is live
-    asgard-cli guide requirements        the interview, and what to ask for
+    .agents/skills/asgard-platform/
+      needs/<shape>.md           what they have to give us before we start
+      brief/customer-meeting.md  the five things said wrong to a customer
+      brief/connect.md           before binding a checkout to the platform
+      brief/write-chart.md       before touching a chart
+      brief/handover.md          before telling anyone it is live
+
+    asgard-cli guide requirements   the interview, and what to ask for
 
 **The riskiest thing in an engagement leaves no trace in a repository.** Talking
 to a customer changes no file, so nothing derived from what the repo contains can
@@ -64,11 +64,10 @@ before there is a directory, so that is the first thing to run:
 
     mkdir -p /tmp/asgard && cd /tmp/asgard && asgard-cli init
 
-Two of those stay commands as well, because they read the repository you are
-in as well as the material:
+One of those stays a command, because it reads the repository you are in as
+well as the material:
 
     asgard-cli guide <name>    one decision, against what this repo has
-    asgard-cli brief <what>    the thing you are about to do
 
 BUILDING - a chart of Asgard custom resources per project, each deployed to its
 own namespace:
@@ -184,11 +183,8 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 	)
 
 	addTo(cmd, groupAsk,
-		newBriefCmd(),
-		newNeedsCmd(),
 		newGuideCmd(),
 		newSizeCmd(),
-		newReadingCmd(),
 		newIssueCmd(),
 	)
 	addTo(cmd, groupBuild,
@@ -297,16 +293,4 @@ func commandNames(root *cobra.Command) []string {
 		out = append(out, c.Aliases...)
 	}
 	return out
-}
-
-// recallHere notes a page as opened, when the command was run inside an
-// engagement. Both `wiki` and `usecase` work with no repository at all - that
-// is deliberate, they are reference material - so this finds one if there is
-// one and does nothing if there is not.
-func recallHere(kind, name string) {
-	root := repo.Root(".")
-	if root == "" {
-		return
-	}
-	work.Recall(root, kind, name)
 }

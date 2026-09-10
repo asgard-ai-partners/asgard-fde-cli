@@ -98,7 +98,7 @@ whether the target is written into a repository:
                              even from inside the half it points into
 
     asgard-cli guide <name>      not written into a repository yet, so a
-    asgard-cli brief <activity>  path to it would resolve nowhere
+    (none: every document lands)
 
 **Every document is written into a repository, so every pointer in the
 material is a path.** `--links` refuses an invocation there. A help screen
@@ -112,9 +112,8 @@ which directory it is in or which command opens it. `--bare` reports one.
 **Guidance is retrieved by subject or by condition, never by position.** "You are
 at step 4" is a claim about a walk that no engagement actually performs. What a
 reader can act on is a claim about the repository in front of them, or about the
-thing they are about to do. `asgard-cli brief` was added for exactly this reason
-and its package comment is the argument; grep reaches all
-parts by subject for the same one. **Anything reachable only by having arrived
+thing they are about to do. The briefs in `.agents/skills/asgard-platform/brief/` exist for exactly
+that reason, and grep reaches every part by subject for the same one. **Anything reachable only by having arrived
 somewhere is unreachable**, and the measured version of that is in TASK.md: an
 engagement read the stage it was told it was in and what that stage pointed at,
 and never opened the page it spent a day needing.
@@ -291,7 +290,7 @@ and does not fail, so disclosing one is how you keep it.
 
 `--links` resolves every pointer the material writes, in both forms - the paths
 `../wiki/<page>.md` and `../usecase/<name>.md`, and the invocations
-`asgard-cli brief <activity>` and `asgard-cli guide <name>` - in prose and in
+every kind - in prose and in
 the generator's own `Wiki:`, `Extract:` and `AlsoRead:` fields, and exits 1 on
 one that goes nowhere. It also fails a path whose target `init` does not write
 into a repository, because that one resolves here and not there.

@@ -7,7 +7,7 @@ work on is the customer, so the only question left is what they want next.
 entry point:
 
 **Before picking the next thing up, one minute on what was never read.**
-`asgard-cli reading` lists the pages this engagement opened and the ones it did
+the material lists the pages this engagement opened and the ones it did
 not. Most of the second list is irrelevant and that is fine; the ones worth a
 look are those you would expect to be relevant - a page about the thing that took
 a day. Every expensive mistake found in this material so far was a page in that

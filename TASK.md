@@ -28,7 +28,7 @@ version and this is the same list with what each one costs:
      integration scenario needs before somebody promises it. A credential, an
      endpoint, a network path, a test environment, an approver's queue - the
      interview in `.agents/skills/asgard-platform/guide/requirements.md` and the briefings in
-     `asgard-cli brief` are this, and the riskiest activity in an engagement is
+     `.agents/skills/asgard-platform/brief/` are this, and the riskiest activity in an engagement is
      the one that leaves no trace in a repository.
 
   3. **Implement the IaC - the charts.** Skeletons for the CR kinds, the

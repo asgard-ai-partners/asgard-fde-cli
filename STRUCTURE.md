@@ -35,9 +35,9 @@ keeps; below it are the checks, the material servers and the plumbing.
 
 | package | go | what it holds |
 |---|---|---|
-| `cli` | 11912 | the cobra command tree, one file per subcommand, plus `root.go`, `repo.go`, `format.go` and `find.go` (which spans every corpus rather than serving one) |
+| `cli` | 11235 | the cobra command tree, one file per subcommand, plus `root.go`, `repo.go`, `format.go` and `find.go` (which spans every corpus rather than serving one) |
 | `gate` | 1976 | the invariant checks on a rendered chart - xref, agent split, deployability, enums, constraints, conditional CEL shapes |
-| `work` | 1678 | the customer repo's own records: requests, task specs, open questions, decisions, and the two reading logs |
+| `work` | 1509 | the customer repo's own records: requests, task specs, open questions, decisions, and the two reading logs |
 | `platform` | 1218 | the platform API client: workspaces, the whole `/v1/iac` surface, and `/v1/docs` |
 | `check` | 1179 | repository structure: indexes, dated names, links, orphan pages |
 | `auth` | 1118 | the OAuth 2.0 + PKCE sign-in and the credential store, which is the only file this CLI keeps outside a repository |
@@ -51,7 +51,7 @@ keeps; below it are the checks, the material servers and the plumbing.
 | `skills` | 268 | the platform's fetched reference material, and the record of which version is here |
 | `binding` | 224 | reads and writes `.asgard-cli.yaml`, the checkout's platform binding |
 | `corpus` | 39 | the material itself, in the layout a repository receives it: `wiki/` and `usecase/` side by side, so a pointer can become a path that resolves in both trees |
-| `wiki` | 166 | serves the platform wiki, and the two index tables beside it |
+| `wiki` | 109 | serves the platform wiki, and the two index tables beside it |
 | `render` | 206 | renders via `helm template`, with the reserved `asgard` block supplied as placeholders |
 | `repo` | 147 | what a customer repository is made of, by looking at it |
 | `pipelineconfig` | 147 | reads `.asgard-pipeline.yaml`, the deployment declaration |
