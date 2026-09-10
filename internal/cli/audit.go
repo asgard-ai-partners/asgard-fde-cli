@@ -1282,22 +1282,34 @@ func checkUnverified(out io.Writer) error {
 	fmt.Fprintf(out, "What carries no record of having been held against anything.\n\n"+
 		"Neither line present means UNKNOWN - not that the document is wrong, and\nnot that it is right.\n\n")
 
+	// **A body whose marker is one shared constant cannot fail this**, and
+	// counting it as passing overstates what was checked. `needs` and `brief`
+	// render every document from the same provenance string - honestly, and
+	// the string says what the checking is: a row is as good as the document
+	// it cites. So they are reported as what they are rather than as eleven
+	// documents that each said something.
 	bodies := []struct {
-		label string
-		list  func() ([]kb.Doc, error)
+		label     string
+		list      func() ([]kb.Doc, error)
+		perAuthor bool
 	}{
-		{"wiki", wiki.List},
-		{"usecase", usecase.List},
-		{"needs", needs.List},
-		{"brief", brief.List},
-		{"guide", stage.Docs},
-		{"skills", scaffold.List},
+		{"wiki", wiki.List, true},
+		{"usecase", usecase.List, true},
+		{"guide", stage.Docs, true},
+		{"skills", scaffold.List, true},
+		{"needs", needs.List, false},
+		{"brief", brief.List, false},
 	}
 	var total, bare int
 	for _, b := range bodies {
 		docs, err := b.list()
 		if err != nil {
 			return err
+		}
+		if !b.perAuthor {
+			fmt.Fprintf(out, "%-9s %d document(s), one shared marker - by construction, not a check\n",
+				b.label, len(docs))
+			continue
 		}
 		var unverified []string
 		for _, d := range docs {

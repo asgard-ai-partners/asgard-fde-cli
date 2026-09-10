@@ -90,9 +90,10 @@ correct here and there alike.
 
     audit-material --links      every pointer resolves, and a path's target lands
     audit-material --orphans    what nothing points at
-    audit-material --bare       a document named with no way to reach it
+    audit-material --bare       a document named with no path
     audit-material --commands   every command named exists
     audit-material --paths      a landed document naming a file only we have
+    audit-material --unverified a document with no record of what it was held against
     audit-material --urls       every documentation link is live
     audit-material <term>       every line mentioning a term, prose and templates
 
@@ -102,6 +103,19 @@ points at is silent, and costs more** — it is there, it is correct, and it is
 never read. An index does not count as a pointer in `--orphans`, because a
 document reachable only from a list is reachable only by somebody who already
 suspects it.
+
+**`--bare` is what keeps the graph complete, and the graph is only as good as
+it.** A reference written without a path — a same-directory markdown link, or a
+name on its own — resolves for a reader today and is checked by nothing, so a
+renamed page breaks it silently. 141 of them were outside the graph at once,
+half of them in the two indexes. The rule that makes the check safe is a
+hyphen: `agents` is a CR field and `verify` is a command, while a hyphenated
+token matching a document name has no other reading.
+
+`--unverified` reports two of the six bodies differently, and that is the point.
+`needs` and `brief` render every document from one shared provenance string, so
+the marker is there by construction and the check cannot fail on them. Counting
+eleven documents as having passed would say more than was done.
 
 `--commands` is `--links` pointed at the tool: it resolves every
 `asgard-cli <command>` against the command tree this binary answers to — in the
