@@ -416,7 +416,12 @@ if it stops there:
      target `init` does not write - the check exists because converting the
      `log` pointer produced a link that resolved here and went nowhere in a
      repository.
-  3. Generate the root `index.md`, and hang `needs` and `brief` off it.
+  3. ~~Generate the root `index.md`.~~ **Done** - built from the jobs that were
+     actually written rather than from the corpus, so it cannot name a document
+     the export skipped. It carries what the per-half indexes cannot: both
+     halves in one place as paths, the shape a pointer takes, and what is
+     deliberately not there. `needs` and `brief` get their rows when step 4
+     lands them; until then they are in its "what is not here" table.
   4. Land `needs`, `brief`, and `guide`'s static half.
   5. Delete `wiki` and `usecase`. `--commands` confirms nothing still names
      them.

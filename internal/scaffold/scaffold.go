@@ -789,6 +789,7 @@ func TemplateBodies() (map[string]string, error) {
 	// the command audit exists to catch. The pages and extracts it writes are
 	// not added: they are already audited as themselves.
 	out[filepath.ToSlash(filepath.Join(corpusSkillDir, "SKILL.md"))] = corpusSkill
+	out[filepath.ToSlash(filepath.Join(corpusSkillDir, "index.md"))] = corpusIndexHead + corpusIndexTail
 
 	return out, nil
 }

@@ -85,8 +85,58 @@ func corpusJobs() ([]job, error) {
 	}
 	add("aliases.md", aliases)
 
+	// The root index is generated from what actually landed, so it cannot
+	// disagree with the tree beside it. It is deliberately not a second copy
+	// of what `wiki/index.md` and `usecase/README.md` do - those group their
+	// documents by the question each answers, which is judgement and is worth
+	// reading. This carries what neither can: both halves in one place, as
+	// paths; the rule that turns a pointer into a path; and what is NOT here.
+	index, err := corpusIndex(jobs)
+	if err != nil {
+		return nil, err
+	}
+	add("index.md", index)
+
 	add("SKILL.md", corpusSkill)
 	return jobs, nil
+}
+
+// corpusIndex builds the map at the root of the landed copy.
+//
+// **It takes the jobs rather than the corpus** so that it lists what was
+// actually written. Reading the corpus again would let the two drift - and the
+// drift that matters is the one where the index names a document the export
+// skipped, which is the defect the missing wiki index and the landed `log`
+// pointer both were.
+func corpusIndex(jobs []job) (string, error) {
+	var b strings.Builder
+	b.WriteString(corpusIndexHead)
+
+	for _, half := range []struct{ dir, what, guide string }{
+		{"wiki", "what the platform has, and which CR a UI name maps to", "wiki/index.md"},
+		{"usecase", "how one deployment shape is assembled, field by field", "usecase/README.md"},
+	} {
+		fmt.Fprintf(&b, "\n## `%s/` - %s\n\nGrouped by the question each answers in [`%s`](%s), which is\nworth reading first. This is the flat list.\n\n| document | covers |\n|---|---|\n",
+			half.dir, half.what, half.guide, half.guide)
+
+		prefix := filepath.Join(corpusSkillDir, half.dir) + string(filepath.Separator)
+		for _, j := range jobs {
+			if !strings.HasPrefix(j.target, prefix) {
+				continue
+			}
+			rel := filepath.ToSlash(strings.TrimPrefix(j.target, filepath.Join(corpusSkillDir)+string(filepath.Separator)))
+			name := strings.TrimSuffix(filepath.Base(j.target), ".md")
+			doc := kb.Parse(name, j.body)
+			title := doc.Title
+			if title == "" {
+				title = name
+			}
+			fmt.Fprintf(&b, "| [`%s`](%s) | %s |\n", rel, rel, title)
+		}
+	}
+
+	b.WriteString(corpusIndexTail)
+	return b.String(), nil
 }
 
 // corpusSkill makes the directory discoverable and says what the exported form
@@ -107,9 +157,11 @@ those systems run on**; this is the missing half.
     usecase/    how ONE deployment shape is assembled, field by field
     aliases.md  what a customer said -> what to search for
 
-` + "`wiki/index.md`" + ` and ` + "`usecase/README.md`" + ` group their own documents by the question
-each answers, and ` + "`wiki/README.md`" + ` says what a page has to carry. Start at one of
-those rather than here.
+**[` + "`index.md`" + `](index.md) is the map** - both halves in one place as
+paths, the rule that turns a pointer into a path, and what is deliberately not
+here. Start there. ` + "`wiki/index.md`" + ` and ` + "`usecase/README.md`" + ` group their
+own documents by the question each answers, and ` + "`wiki/README.md`" + ` says what a
+page has to carry.
 
 **It is generated. Editing it is meaningless** - ` + "`asgard-cli init`" + ` writes it from
 the corpus inside that binary and the next run replaces it, so an edit is a
@@ -224,3 +276,67 @@ func replaceCorpus(root string, recorded map[string]Entry, running string) (bool
 	}
 	return true, nil
 }
+
+// corpusIndexHead and corpusIndexTail are the judgement around the generated
+// listing: what the two halves are, how a pointer becomes a path, and what is
+// not here. None of it varies per page, so none of it is derived - and nothing
+// in it carries a version or a count, for the reason at the top of this file.
+const corpusIndexHead = `# The Asgard platform: the map
+
+Two halves, side by side, and a pointer from one to the other is a path you can
+follow:
+
+    wiki/       what the platform has, and which CR a UI name maps to
+    usecase/    how ONE deployment shape is assembled, field by field
+    aliases.md  what a customer said -> what to search for
+
+**A pointer is a path, relative to the document it is written in**, and takes
+one of two shapes:
+
+    ../wiki/<name>.md        a wiki page
+    ../usecase/<name>.md     an extract
+
+Written with ` + "`../`" + ` even between two documents in the same directory, so that a
+pointer carries which half it points into. Following one is opening a file, and
+this lists everything a document points at:
+
+    grep -o '\.\./[a-z]*/[a-z0-9-]*\.md' wiki/agents.md
+
+The links in the tables below are relative to this file instead, because this
+file is the one directory up.
+
+**Read ` + "`aliases.md`" + ` first if the question did not arrive in English.** The corpus is
+English and a customer conversation usually is not, so a term taken from what
+somebody actually said matches nothing - and grep reports that identically to a
+subject the material genuinely lacks.
+`
+
+const corpusIndexTail = `
+## What is not here
+
+Three kinds of pointer in these documents are **not** paths, because what they
+point at is not written into this repository. They are invocations, and they
+need the ` + "`asgard-cli`" + ` binary:
+
+| pointer | what it is | why not here |
+|---|---|---|
+| ` + "`asgard-cli guide <name>`" + ` | the decision at each stage: the interview and its order, how the work splits into projects, each project's read path and entry point, deploy | it renders this repository's own state - which projects exist, what is still open - so a copy would freeze one moment of it |
+| ` + "`asgard-cli brief <activity>`" + ` | what has actually been got wrong before a customer meeting, a chart, a handover | not written out yet |
+| ` + "`asgard-cli wiki log`" + ` | which commit of each source this material was read at | provenance for whoever maintains the CLI. An answer is never in it |
+
+` + "`asgard-cli needs <scenario>`" + ` is the other one worth knowing and is not a
+document pointer at all: it says what has to be obtained from the customer
+before a shape can be built - a credential, an endpoint, a network path, an
+approval queue - with the document that owns each claim.
+
+## Staleness
+
+These files came from one binary. A newer one may carry different pages, and
+nothing in here can tell you which:
+
+    asgard-cli init
+
+It reports what is here against what the running binary carries, and replaces
+this directory outright when the version has moved. Read it as the authority
+over these files rather than anything written inside them.
+`

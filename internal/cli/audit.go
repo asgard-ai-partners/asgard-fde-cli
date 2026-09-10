@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"path"
 	"regexp"
 	"slices"
 	"sort"
@@ -81,6 +82,10 @@ func everything() ([]source, error) {
 	if err != nil {
 		return nil, err
 	}
+	skills, err := scaffold.Skills()
+	if err != nil {
+		return nil, err
+	}
 	crs, err := generate.TemplateBodies()
 	if err != nil {
 		return nil, err
@@ -95,10 +100,23 @@ func everything() ([]source, error) {
 	if err != nil {
 		return nil, err
 	}
+	// The design-time skills are already in material() as prose, and including
+	// them again would double every hit in them.
+	//
+	// **The prefix alone was too broad.** `.agents/skills/` also holds the
+	// platform corpus this CLI generates - `asgard-platform/SKILL.md` and its
+	// index - and those are in no other source, so skipping the whole prefix
+	// meant nothing audited them. It shipped a `SKILL.md` naming
+	// `asgard-cli scaffold`, a command this build does not answer to, and
+	// `--commands` reported 0 dead the whole time; the repo-side check found
+	// it, in a scaffolded repository, which is a later and more expensive
+	// place to find it. So the skip names the skills material() covered.
+	covered := map[string]bool{}
+	for _, sk := range skills {
+		covered[path.Dir(scaffold.Path(sk.Name))+"/"] = true
+	}
 	for name, body := range files {
-		// The skills are already in material() as prose; including them again
-		// would double every hit in them.
-		if strings.HasPrefix(name, ".agents/skills/") {
+		if covered[path.Dir(name)+"/"] {
 			continue
 		}
 		out = append(out, source{label: "scaffold", name: name, body: body})
