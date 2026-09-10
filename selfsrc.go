@@ -19,3 +19,21 @@ import "embed"
 
 //go:embed internal/*/*.go
 var Go embed.FS
+
+// Docs is this repository's own documentation - Goal, README, AGENTS,
+// STRUCTURE, APPROACH, TASK.
+//
+// **They are read by an agent working in this repository**, which is an
+// audience, and until this existed nothing held them to the standard the
+// shipped material is held to. STRUCTURE.md was sending a reader to
+// `asgard-cli scaffold` and README.md documented a command and a log file
+// that had both been deleted, while `--commands` reported 0 dead - because
+// these are read from a checkout rather than shipped, and the audit reads
+// what ships.
+//
+// They are still not material: they do not land anywhere, so `--paths` and
+// the provenance rules do not apply to them. What applies is that a command
+// they name has to exist.
+//
+//go:embed *.md
+var Docs embed.FS

@@ -257,9 +257,15 @@ server-side dry-run all pass a document the apiserver would reject or silently
 prune. `hack/README.md` is the procedure, and the PR template asks for its
 output.
 
-Not to be confused with `.agents/skills/db-query/scripts/`, which `asgard-cli
-scaffold` writes into a **customer** repo - that is the tool-chain for reading
-the customer's own source systems at design time.
+`hack/check-tables.py` is the other half: it holds the gate's pinned enum and
+constraint tables against the generated CRDs, so a table that has fallen behind
+the platform is reported rather than quietly warning about the wrong thing.
+`hack/verify-references.sh` runs the whole gate over the reference deployments.
+Neither ships in the binary - both need repositories that are not vendored in.
+
+Not to be confused with `.agents/skills/db-query/scripts/`, which
+`asgard-cli init` writes into a **customer** repo - that is the tool-chain for
+reading the customer's own source systems at design time.
 
 ## Reference material that is not in this repo
 

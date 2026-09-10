@@ -18,7 +18,7 @@
 # **A count is not a pass.** Read what the findings say. Three kinds turn up:
 # a rule that is wrong (fix the rule), a chart that is wrong (tell whoever owns
 # it), and a rule right for one shape applied to another (the expensive kind -
-# see R1b, and the exits mistake recorded in wiki log).
+# see R1b).
 set -uo pipefail
 
 parent="${1:-..}"

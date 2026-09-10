@@ -525,6 +525,17 @@ maintainer can see.`,
 				for name, body := range strs {
 					all = append(all, source{label: "source", name: name, body: body})
 				}
+
+				// **And this repository's own documentation.** An agent
+				// working here reads AGENTS.md before it reads anything else,
+				// and a command named there is one it is about to run.
+				docs, err := repoDocs()
+				if err != nil {
+					return err
+				}
+				for name, body := range docs {
+					all = append(all, source{label: "repo", name: name, body: body})
+				}
 				return checkCommands(out, cmd.Root(), all)
 			}
 			if bareNames {
@@ -895,6 +906,15 @@ func checkLinks(out io.Writer, sources []source) error {
 // It reads the templates as well as the prose, for the reason the term sweep
 // does: a scaffolded README is the half a prose-only search misses and the half
 // every new engagement is built from.
+// bareNamesCount is where a bare command name can only be a command: the
+// material an engagement reads and the help it is printed. Not `source`, not
+// `repo` - both talk about the packages those words also name.
+var bareNamesCount = map[string]bool{
+	"wiki": true, "usecase": true, "needs": true, "brief": true,
+	"stage": true, "skill": true, "scaffold": true, "template": true,
+	"help": true,
+}
+
 // removedNames is the single-word keys of `replacements`, which is the list a
 // removal is already required to update. Multi-word keys are left out: they
 // name a subcommand, and `asgard-cli project shape` is what the invocation
@@ -929,12 +949,15 @@ func checkCommands(out io.Writer, root *cobra.Command, sources []source) error {
 		// resolved through the same tree so a name later reinstated stops
 		// being reported without anybody remembering to take the row out.
 		//
-		// **Not over Go source.** That body is one string literal per line, so
-		// a directory name (`Dir: "needs"`) and a noun are indistinguishable
-		// from a claim. What a reader actually sees of those strings is the
-		// `help` source, which is rendered and is swept.
+		// **Only where a bare word can only be a command.** In Go source a
+		// body is one string literal per line, so `Dir: "needs"` is
+		// indistinguishable from a claim; in this repository's own
+		// documentation the same words are package names, and `| `brief` |`
+		// opens a row of a table about `internal/brief`. Both are swept for
+		// invocations, which are unambiguous, and the rendered `help` covers
+		// what a reader actually sees of those strings.
 		refs := kb.Invocations(s.body)
-		if s.label != "source" {
+		if bareNamesCount[s.label] {
 			refs = append(refs, kb.RemovedNames(s.body, removedNames())...)
 		}
 		for _, inv := range refs {

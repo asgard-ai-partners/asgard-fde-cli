@@ -354,7 +354,7 @@ around the template's sections, or read it first with
 Auditing material is not using the tool. `project add` left the repository with a
 project the config declared and the disk did not - `check` passed, `render`
 failed - and that survived a long review of the material because nobody had run
-`init`, `scaffold`, `project add`, `add` and `render` in sequence. Do that, in a
+`init`, `project add`, `add`, `check` and `render` in sequence. Do that, in a
 throwaway directory, for anything that touches a command.
 
 **Does it still work with no repository?**

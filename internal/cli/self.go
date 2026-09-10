@@ -94,3 +94,25 @@ func literalText(v string) string {
 	}
 	return strings.ReplaceAll(v, `\n`, "\n")
 }
+
+// repoDocs returns this repository's own documentation, keyed by file name.
+//
+// Not part of material(): these land nowhere, so the pointer and provenance
+// rules do not reach them. What does reach them is `--commands` - a command
+// named in AGENTS.md is a command an agent is about to run.
+func repoDocs() (map[string]string, error) {
+	out := map[string]string{}
+	entries, err := fs.Glob(selfsrc.Docs, "*.md")
+	if err != nil {
+		return nil, err
+	}
+	sort.Strings(entries)
+	for _, name := range entries {
+		body, err := selfsrc.Docs.ReadFile(name)
+		if err != nil {
+			return nil, err
+		}
+		out[name] = string(body)
+	}
+	return out, nil
+}

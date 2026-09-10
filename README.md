@@ -174,11 +174,6 @@ engagement's own answers as readily as over material that really was behind.
 It refuses to write into a home directory or a filesystem root. Forty-five files
 one directory up from where they were meant is the mistake worth a guard.
 
-**There is no separate `scaffold` command.** There used to be - it was this
-without the platform steps, back when `init` had platform steps. Once `init`
-stopped needing a session the two did the same thing, and two commands doing the
-same thing is a question that gets asked.
-
 It writes the part of a customer repo that is the same for every engagement:
 
 | | |
