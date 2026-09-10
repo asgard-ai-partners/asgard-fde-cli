@@ -263,6 +263,27 @@ func material() ([]source, error) {
 // document that carried the other route was deleted.
 var bare = regexp.MustCompile("`(wiki|usecase|guide|brief) ([a-z][a-z0-9-]*)`")
 
+// nameOnly matches a backticked token with no kind in front of it at all -
+// `flow-agent-single` rather than `usecase flow-agent-single`.
+//
+// **A hyphen is the whole test.** A single word that happens to be a document
+// name is usually not one: `agents` is a `SandboxBlueprint` field, `verify` is
+// a command, `tools` and `processors` are fields, and failing the build over
+// those would be failing it over correct prose. A hyphenated lower-case token
+// that exactly matches a document name has no other reading - there were 54 of
+// them, in 20 documents, and every check here was blind to all of them: not a
+// path, so `--links` skipped them; no kind, so `--bare` skipped them; and
+// `--orphans` counts neither.
+//
+// Two exemptions, both from what follows the token. The label of a markdown
+// link, because the link beside it carries the path and that is what gets
+// checked. And a design-time skill: those reference each other as
+// "`db-query` skill", which is the convention in that directory, and one skill
+// name - `knowledge-base` - is also the name of an extract. That collision is
+// real and is on `wiki/glossary.md`; what it must not do is make this check
+// rewrite a correct sentence.
+var nameOnly = regexp.MustCompile("`([a-z0-9]+(?:-[a-z0-9]+)+)`(\\]\\(| skill)?")
+
 // checkBare reports a document named without its command, where the name
 // resolves to a real document.
 //
@@ -288,21 +309,44 @@ func checkBare(out io.Writer, sources []source) error {
 			seen[key] = true
 			found = append(found, hit{s.label + " " + s.name, m[1], m[2]})
 		}
+		for _, m := range nameOnly.FindAllStringSubmatch(s.body, -1) {
+			// A markdown link label; the path is in the target beside it.
+			if m[2] != "" {
+				continue
+			}
+			name := m[1]
+			// A document naming itself in its own prose is not a pointer.
+			if name == s.name {
+				continue
+			}
+			for _, kind := range kb.Kinds {
+				if !known[kind][name] {
+					continue
+				}
+				key := kind + "/" + name
+				if seen[key] {
+					break
+				}
+				seen[key] = true
+				found = append(found, hit{s.label + " " + s.name, kind, name})
+				break
+			}
+		}
 	}
 
-	fmt.Fprintf(out, "Documents named without the command that opens them.\n\n"+
-		"**A pointer written this way is invisible.** `kb.Link` reads a pointer as an\n"+
-		"invocation on purpose - a bare name is not actionable, because a reader cannot\n"+
-		"follow it without knowing which command takes it - so `--links` never checks\n"+
-		"one and `--orphans` never counts one. Seven were in the material, and one was\n"+
-		"the only route to `asgard-cli guide projects`.\n\n")
+	fmt.Fprintf(out, "Documents named without a path.\n\n"+
+		"**A pointer written this way is invisible.** `kb.Link` reads a pointer as a\n"+
+		"path, because that is what a reader can follow - so a name written without\n"+
+		"one is checked by nothing: `--links` does not see it, and `--orphans` does\n"+
+		"not count it. A page renamed upstream leaves every one of them pointing at\n"+
+		"nothing, reading perfectly.\n\n")
 
 	for _, h := range found {
-		fmt.Fprintf(out, "bare  %s -> `%s %s` should be `asgard-cli %s %s`\n", h.where, h.kind, h.name, h.kind, h.name)
+		fmt.Fprintf(out, "bare  %s -> `%s` should be `../%s/%s.md`\n", h.where, h.name, h.kind, h.name)
 	}
 	fmt.Fprintf(out, "\n%d bare name(s).\n", len(found))
 	if len(found) > 0 {
-		return fmt.Errorf("%d document(s) named without a command", len(found))
+		return fmt.Errorf("%d document(s) named without a path", len(found))
 	}
 	return nil
 }
@@ -809,7 +853,14 @@ func checkLinks(out io.Writer, sources []source) error {
 		lands["usecase"][e.Name] = true
 	}
 
-	type dead struct{ where, kind, name, why string }
+	type dead struct {
+		where, kind, name, why string
+		// path records how the pointer was written, so the report shows the
+		// reader what to go and look at. It said `asgard-cli wiki <page>` for
+		// a pointer written as a path - naming a removed command, in the
+		// output of the check whose whole subject is naming things correctly.
+		path bool
+	}
 	var found []dead
 	checked := 0
 
@@ -855,7 +906,7 @@ func checkLinks(out io.Writer, sources []source) error {
 			seen[key] = true
 			checked++
 			if !known[l.Kind][l.Name] {
-				found = append(found, dead{where: s.label + " " + s.name, kind: l.Kind, name: l.Name})
+				found = append(found, dead{where: s.label + " " + s.name, kind: l.Kind, name: l.Name, path: l.Path})
 				continue
 			}
 			if l.Path && !lands[l.Kind][l.Name] {
@@ -874,11 +925,15 @@ func checkLinks(out io.Writer, sources []source) error {
 	}
 
 	for _, d := range found {
+		wrote := "`asgard-cli " + d.kind + " " + d.name + "`"
+		if d.path {
+			wrote = "`../" + d.kind + "/" + d.name + ".md`"
+		}
 		if d.why != "" {
 			fmt.Fprintf(out, "dead  %s -> `../%s/%s.md`: %s\n", d.where, d.kind, d.name, d.why)
 			continue
 		}
-		fmt.Fprintf(out, "dead  %s -> `asgard-cli %s %s`\n", d.where, d.kind, d.name)
+		fmt.Fprintf(out, "dead  %s -> %s\n", d.where, wrote)
 	}
 	fmt.Fprintf(out, "\n%d pointer(s) resolved, %d dead.\n", checked, len(found))
 	if len(found) > 0 {

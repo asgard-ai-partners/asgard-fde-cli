@@ -82,7 +82,7 @@ mechanism is `../usecase/per-turn-credentials.md`.
 ## Corresponding extracts
 
 The read/write separation is `../usecase/write-path.md`; the delegation
-topology is `flow-agent-supervisor` and `agent-hub`.
+topology is `../usecase/flow-agent-supervisor.md` and `../usecase/agent-hub.md`.
 
 ## Sources
 

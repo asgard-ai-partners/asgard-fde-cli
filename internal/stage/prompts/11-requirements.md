@@ -106,7 +106,7 @@ is about the output rather than the content:
 You get one interview. At that point you have read none of the build guidance,
 and **half
 of what you will say out loud is settled there**. So read them first - at least
-`data-sources`, `read-path`, `entry-point` and `knowledge`. An hour before the
+`../guide/data-sources.md`, `../guide/read-path.md`, `../guide/entry-point.md` and `../guide/knowledge.md`. An hour before the
 meeting is cheaper than a correction after it.
 
 ### Run `../brief/customer-meeting.md` before the meeting
@@ -1176,7 +1176,7 @@ the pages it points at. `botProviderClass` is immutable (`self == oldSelf`) and
 exactly one of [generic telegram line discord slack] must be present, so asking
 which channel in the same breath is a contract requirement rather than a
 courtesy. Two rows of the "obvious answer" table restated constraints the wiki
-and `read-path` own, and now point at them instead.
+and `../guide/read-path.md` own, and now point at them instead.
 
 **Unchecked:** filter 0, and everything downstream of it. "Does the answer change
 what we build" is this material's own test for whether a question is worth a

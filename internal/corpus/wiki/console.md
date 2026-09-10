@@ -55,7 +55,7 @@ Things that bite:
 - **Only Data Insight is purchase-based** (Purchase Named User); the other four
   invite directly.
 - The URL slug and the navigation label disagree: Studio is `platform`, Agent Hub
-  is `sindri`.
+  is `../wiki/sindri.md`.
 
 ### Bound to a resource, or bound to a product
 

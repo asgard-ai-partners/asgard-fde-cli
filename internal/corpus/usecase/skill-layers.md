@@ -2,7 +2,7 @@
 
 Nine runtime skills over one commerce middleware and one external commerce
 platform. It is the largest skill library here and the only one that answers the
-question `skill-set` does not: **what is a skill for, and when do you need
+question `../usecase/skill-set.md` does not: **what is a skill for, and when do you need
 another one.**
 
 **Seen in:** a middleware deployment whose agents carry no SemanticLayer at all -

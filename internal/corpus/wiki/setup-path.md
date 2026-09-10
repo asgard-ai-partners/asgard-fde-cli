@@ -16,10 +16,10 @@ place called **Data Source** and people put everything there.
 
 | what the customer handed over | where it goes |
 |---|---|
-| host, port, database, user, password | **Data Source**. Nine DB providers only - see [`settings.md`](settings.md) |
-| an OAuth app for Dropbox / Google Drive / OneDrive / Google Sheets | **Connection** - [`settings.md`](settings.md) |
+| host, port, database, user, password | **Data Source**. Nine DB providers only - see [`settings.md`](../wiki/settings.md) |
+| an OAuth app for Dropbox / Google Drive / OneDrive / Google Sheets | **Connection** - [`settings.md`](../wiki/settings.md) |
 | **an API key or token for an HTTP API** | **neither.** It is a tool's config, not a data source |
-| a chat platform's channel secret and access token | a `BotProvider` - [`integration.md`](integration.md) |
+| a chat platform's channel secret and access token | a `BotProvider` - [`integration.md`](../wiki/integration.md) |
 
 **An HTTP API has no home under Settings, and this surprises people.** Data
 Source takes nine database providers and nothing else; Connection is OAuth to
@@ -40,7 +40,7 @@ makes it worth doing in this order rather than starting from the agent.
 the table above. A Data Source has **Test Connection** on the form - use it
 before Save. This is also where a network path failure shows up first, and it is
 the failure that has nothing to do with the credential: see
-[`operations.md`](operations.md), because a hosted platform reaching an internal
+[`operations.md`](../wiki/operations.md), because a hosted platform reaching an internal
 system needs the customer's firewall opened first.
 
 **2. Turn access into something the agent can call.** Which one depends on what
@@ -48,12 +48,12 @@ the source is, and they are not interchangeable:
 
 | the source | what to build | page |
 |---|---|---|
-| a database the agent should query freely | a **Semantic Model** | [`semantic-model.md`](semantic-model.md) |
+| a database the agent should query freely | a **Semantic Model** | [`semantic-model.md`](../wiki/semantic-model.md) |
 | a database, but only a fixed set of answers | query tools in a Workflow | `../usecase/fixed-query-tools.md` |
 | an HTTP API | a Workflow with `http-request`, wrapped as an **MCP Server** | `../usecase/external-api.md` |
-| an existing MCP server somebody already wrote | **MCP Server**, From Existing | [`tools.md`](tools.md) |
-| documents, manuals, FAQs | a **Drive** with a Context Index | [`knowledge.md`](knowledge.md) |
-| how the customer's systems correspond, where their concepts do not line up - status codes, an id written three ways, a word that means two things | a **Skillset**. The row people forget, because it has no credential to ask for | [`tools.md`](tools.md) |
+| an existing MCP server somebody already wrote | **MCP Server**, From Existing | [`tools.md`](../wiki/tools.md) |
+| documents, manuals, FAQs | a **Drive** with a Context Index | [`knowledge.md`](../wiki/knowledge.md) |
+| how the customer's systems correspond, where their concepts do not line up - status codes, an id written three ways, a word that means two things | a **Skillset**. The row people forget, because it has no credential to ask for | [`tools.md`](../wiki/tools.md) |
 
 **New MCP Server has two entries and they lead to different work.** From
 Workflow asks only for Name and Description, then drops you into an empty
@@ -63,7 +63,7 @@ over STDIO (Asgard starts a local process with a Command, Arguments and
 Environment Variables) or Streamable HTTP (an endpoint already running).
 
 **3. Configure the agent.** A Managed Agent is where the pieces meet - see
-[`agents.md`](agents.md) for the fields. Two of them decide more than the rest:
+[`agents.md`](../wiki/agents.md) for the fields. Two of them decide more than the rest:
 
   - **Description** is not a self-introduction. It is the routing text the
     orchestrator reads to decide whether to delegate this question to this
@@ -90,7 +90,7 @@ What a user sees in Sindri is the Available Agents list on the home page, each
 card showing a name and a line about when to delegate to it - that line being the
 Description from step 3. The user does not have to pick the right agent: the
 selector defaults to Sindri, which routes on those descriptions. See
-[`sindri.md`](sindri.md).
+[`sindri.md`](../wiki/sindri.md).
 
 So the thing that makes an agent findable in the hub is not a publish action. It
 is having written the Description well two steps earlier.
@@ -98,7 +98,7 @@ is having written the Description well two steps earlier.
 **5. Only if someone outside has to reach it**, this is a different path, and
 this is where it stops being console work: a Flow Agent as the entry point, and a
 `BotProvider` for the channel. An anonymous visitor cannot authenticate to the
-hub at all. [`integration.md`](integration.md) has the four routes.
+hub at all. [`integration.md`](../wiki/integration.md) has the four routes.
 
 ## Console or chart - the same five steps either way
 
@@ -108,18 +108,18 @@ not the same is the count: a console object is often several CRs.
 
 | step | console | where the CRs are stated |
 |---|---|---|
-| 1 | Data Source | `DataConnector` - [`settings.md`](settings.md) |
-| 2 | Semantic Model | `SemanticLayer` - [`semantic-model.md`](semantic-model.md) |
-| 2 | MCP Server, query tool | a `Workflow` - [`tools.md`](tools.md) |
-| 2 | Drive | `SourceSet` (+ `Syncer`) - [`knowledge.md`](knowledge.md) |
-| 2 | Skillset | `SkillSet` + `SourceSet` + `Syncer` - [`tools.md`](tools.md) |
-| 3 | Managed Agent | one `Agent` - [`agents.md`](agents.md) |
-| 5 | Flow Agent | **three** CRs, not one - [`agents.md`](agents.md) |
+| 1 | Data Source | `DataConnector` - [`settings.md`](../wiki/settings.md) |
+| 2 | Semantic Model | `SemanticLayer` - [`semantic-model.md`](../wiki/semantic-model.md) |
+| 2 | MCP Server, query tool | a `Workflow` - [`tools.md`](../wiki/tools.md) |
+| 2 | Drive | `SourceSet` (+ `Syncer`) - [`knowledge.md`](../wiki/knowledge.md) |
+| 2 | Skillset | `SkillSet` + `SourceSet` + `Syncer` - [`tools.md`](../wiki/tools.md) |
+| 3 | Managed Agent | one `Agent` - [`agents.md`](../wiki/agents.md) |
+| 5 | Flow Agent | **three** CRs, not one - [`agents.md`](../wiki/agents.md) |
 
 **A console object is not one CR, and the names do not match.** There is no
 `FlowAgent` kind, no `KnowledgeDrive` and no `HttpTool` - those are
 `asgard-cli add` template names, and the CRs they write are in the column above.
-[`agents.md`](agents.md) has the full UI-to-CR table and is where that fact
+[`agents.md`](../wiki/agents.md) has the full UI-to-CR table and is where that fact
 lives; this one is only here so the order can be followed in a chart.
 
 **Connection is the exception in the other direction**: OAuth authorisation
@@ -132,7 +132,7 @@ documentation's screenshots usable in a handover deck.
 
 ## Screenshots, for a deck or a handover
 
-[`screenshots.md`](screenshots.md) is the index - every picture, what it shows,
+[`screenshots.md`](../wiki/screenshots.md) is the index - every picture, what it shows,
 and which situation it is for. It carries the setup path as its own section, so
 this is the short version. Fetch them from:
 
@@ -162,8 +162,8 @@ Agent」, which is the field doing its job in public.
 
 No single extract covers this path, because it is the order rather than a shape.
 The shapes it passes through are `../usecase/agent-hub.md`,
-`external-api`, `semantic-layer`, `fixed-query-tools`, `knowledge-drive` and
-`skill-set`.
+`../usecase/external-api.md`, `../usecase/semantic-layer.md`, `../usecase/fixed-query-tools.md`, `../usecase/knowledge-drive.md` and
+`../usecase/skill-set.md`.
 
 ## Sources
 

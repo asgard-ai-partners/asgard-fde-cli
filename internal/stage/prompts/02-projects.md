@@ -38,7 +38,7 @@ is built by the customer in the product rather than by us in a chart.
 
 It still lives under `projects/<slug>/` and still deploys to a namespace, so it
 is a project mechanically. What it is not is a project shaped like the rest of
-this: `entry-point` and `knowledge` have nothing to say about it, and `asgard-cli verify`
+this: `../guide/entry-point.md` and `../guide/knowledge.md` have nothing to say about it, and `asgard-cli verify`
 will report an Agent with no capability only because there is no Agent.
 `../usecase/mimir-dashboard.md` is the shape.
 
@@ -192,7 +192,7 @@ them, and asgard-cli check is green.
 them off production, the extracts in `../usecase/` assemble each), and the namespace
 pattern `asgard-<workspace>-<project>-<env>` is what this tool derives and what
 the platform consumes. **No CRD claim is made here**, deliberately: which CRs a
-project ends up with belongs to `read-path`, `entry-point` and the extracts.
+project ends up with belongs to `../guide/read-path.md`, `../guide/entry-point.md` and the extracts.
 
 **Unchecked:** the split rule itself - that a project follows the **audience**
 rather than the data or the system. That is the most consequential judgement in

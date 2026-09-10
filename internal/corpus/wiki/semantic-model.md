@@ -77,7 +77,7 @@ Mimir's Data Model button expands the current model's structure:
 For an anonymous public audience the answer is usually fixed zero-parameter query
 tools rather than a Semantic Model. The reasoning, and what `allowedCubes` does,
 is in `../usecase/fixed-query-tools.md`; the modelling itself is in
-`semantic-layer`, and opening a write path is in `write-path`.
+`../usecase/semantic-layer.md`, and opening a write path is in `../usecase/write-path.md`.
 
 ## Two join failures nothing local catches
 

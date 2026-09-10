@@ -169,8 +169,8 @@ together and a reader should not have to learn where the provenance is written
 twice.
 
 **A page with a corresponding chart shape must point at its extract**; a page
-without one must say so rather than leaving a blank. `console`, `fehu`,
-`operations` and `product-suite` say so, because billing, permissions and scoping
+without one must say so rather than leaving a blank. `../wiki/console.md`, `../wiki/fehu.md`,
+`../wiki/operations.md` and `../wiki/product-suite.md` say so, because billing, permissions and scoping
 produce no CRs at all - that is a decision, not an omission.
 
 Extracts point at a wiki page without exception: an extract assumes the reader
@@ -233,7 +233,7 @@ difference, because a set of results about a shape reads exactly like a set of
 results about the product that was asked for. **Moving a row up means somebody
 did the search.**
 
-The `glossary` page's one-meaning-here table is applied the same way. It sat as
+The `../wiki/glossary.md` page's one-meaning-here table is applied the same way. It sat as
 prose for a long time while the failure it describes went on happening: a search
 for `payment` returns Fehu, which is billing between Asgard and the customer,
 and nothing anywhere is red. **A grep for a word in that table has to be read

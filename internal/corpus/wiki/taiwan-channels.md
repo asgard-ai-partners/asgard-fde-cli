@@ -90,8 +90,8 @@ If nobody knows, that is an open question, not an assumption to price on.
 ## Corresponding extracts
 
 `../usecase/external-api.md` for an API integration's shape,
-`browser-operation` for a channel offering no API,
-`skill-layers` for how the SHOPLINE material is organised - it is the reference
+`../usecase/browser-operation.md` for a channel offering no API,
+`../usecase/skill-layers.md` for how the SHOPLINE material is organised - it is the reference
 for a channel skill at full size.
 
 ## Sources

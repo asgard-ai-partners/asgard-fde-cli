@@ -105,7 +105,7 @@ is the default now, so noise is what has to be asked for. See
 ## Knowledge Base
 
 `../usecase/knowledge-base.md` has the `KnowledgeBase` + `Loader` +
-`Indexer` + `Source` shape field by field, the way `knowledge-drive` has the
+`Indexer` + `Source` shape field by field, the way `../usecase/knowledge-drive.md` has the
 Drive one. Reading a chart that uses it is the case it exists for.
 
 For recognising older charts only. Creating one needs a Name and an Alias Name

@@ -18,10 +18,10 @@ and what the integration costs to maintain.
 
 | route | what you get | shape |
 |---|---|---|
-| **a database you can read** | the agent composes its own queries and joins across tables. Questions nobody thought to expose an endpoint for still work | `semantic-layer` |
-| **an HTTP API** | a fixed set of calls, but a real contract - reviewable, and gateable for writes | `external-api` |
-| **any other protocol** | the agent runs the client itself in its sandbox: SNMP, SSH, a vendor CLI, a database client. **Not limited to HTTP** | `external-api`, the sandbox half |
-| **only a web UI** | last resort. Brittle, slow, and verifying the agent did the right thing is hard | `browser-operation` |
+| **a database you can read** | the agent composes its own queries and joins across tables. Questions nobody thought to expose an endpoint for still work | `../usecase/semantic-layer.md` |
+| **an HTTP API** | a fixed set of calls, but a real contract - reviewable, and gateable for writes | `../usecase/external-api.md` |
+| **any other protocol** | the agent runs the client itself in its sandbox: SNMP, SSH, a vendor CLI, a database client. **Not limited to HTTP** | `../usecase/external-api.md`, the sandbox half |
+| **only a web UI** | last resort. Brittle, slow, and verifying the agent did the right thing is hard | `../usecase/browser-operation.md` |
 
 **"No API" does not mean "browser".** The sandbox is a real environment: if a
 client exists for the protocol, the agent can run it. A network device with SNMP

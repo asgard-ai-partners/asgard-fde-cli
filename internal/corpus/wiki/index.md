@@ -6,41 +6,41 @@
 
 | page | covers |
 |---|---|
-| [`product-suite`](product-suite.md) | the six products, what each is for and who uses it |
-| [`console`](console.md) | the two permission layers, five inconsistent pages, Workspace settings |
-| [`sindri`](sindri.md) | Project, delegation, the Sandbox and its files, the governance gate |
-| [`mimir`](mimir.md) | Thread, View, Dashboard, Knowledge |
-| [`fehu`](fehu.md) | billing and usage, how cost is broken down |
+| [`product-suite`](../wiki/product-suite.md) | the six products, what each is for and who uses it |
+| [`console`](../wiki/console.md) | the two permission layers, five inconsistent pages, Workspace settings |
+| [`sindri`](../wiki/sindri.md) | Project, delegation, the Sandbox and its files, the governance gate |
+| [`mimir`](../wiki/mimir.md) | Thread, View, Dashboard, Knowledge |
+| [`fehu`](../wiki/fehu.md) | billing and usage, how cost is broken down |
 
 ## While building
 
 | page | covers |
 |---|---|
-| [`setup-path`](setup-path.md) | the order: where a credential goes, what to build from it, why Sindri needs no import |
-| [`agents`](agents.md) | Flow Agent against Managed Agent, how to choose, UI-to-CR names |
-| [`knowledge`](knowledge.md) | Drive, Context Index, and how Knowledge Base differs |
-| [`semantic-model`](semantic-model.md) | the modelling flow, its limits, the Mimir side |
-| [`tools`](tools.md) | MCP Server, Skillset and Plugin; hook events |
-| [`automation`](automation.md) | Trigger and API, and why only cron is left |
-| [`processors`](processors.md) | what each of the 13 takes, and the fields that decide behaviour |
-| [`workflow`](workflow.md) | the 13 processors; Expression is JavaScript, Template is Handlebars |
-| [`settings`](settings.md) | Completion and Embedding Model, Data Source, Connection |
-| [`integration`](integration.md) | chat platforms, the two Applications pages, the architecture |
-| [`api`](api.md) | the endpoint and its actions, the SSE sequence, four patterns, the SDK |
-| [`crd-rules`](crd-rules.md) | the validations helm lint does not run, and the one the schema cannot express |
-| [`platform-unknowns`](platform-unknowns.md) | what no source answers, and who to ask |
-| [`coverage`](coverage.md) | how many deployments each CR shape was read from - which extracts rest on a sample of one |
+| [`setup-path`](../wiki/setup-path.md) | the order: where a credential goes, what to build from it, why Sindri needs no import |
+| [`agents`](../wiki/agents.md) | Flow Agent against Managed Agent, how to choose, UI-to-CR names |
+| [`knowledge`](../wiki/knowledge.md) | Drive, Context Index, and how Knowledge Base differs |
+| [`semantic-model`](../wiki/semantic-model.md) | the modelling flow, its limits, the Mimir side |
+| [`tools`](../wiki/tools.md) | MCP Server, Skillset and Plugin; hook events |
+| [`automation`](../wiki/automation.md) | Trigger and API, and why only cron is left |
+| [`processors`](../wiki/processors.md) | what each of the 13 takes, and the fields that decide behaviour |
+| [`workflow`](../wiki/workflow.md) | the 13 processors; Expression is JavaScript, Template is Handlebars |
+| [`settings`](../wiki/settings.md) | Completion and Embedding Model, Data Source, Connection |
+| [`integration`](../wiki/integration.md) | chat platforms, the two Applications pages, the architecture |
+| [`api`](../wiki/api.md) | the endpoint and its actions, the SSE sequence, four patterns, the SDK |
+| [`crd-rules`](../wiki/crd-rules.md) | the validations helm lint does not run, and the one the schema cannot express |
+| [`platform-unknowns`](../wiki/platform-unknowns.md) | what no source answers, and who to ask |
+| [`coverage`](../wiki/coverage.md) | how many deployments each CR shape was read from - which extracts rest on a sample of one |
 
 ## In practice
 
 | page | covers |
 |---|---|
-| [`operations`](operations.md) | Asgard's outbound IPs, checking model capability, vocabulary |
-| [`taiwan-channels`](taiwan-channels.md) | the commerce channels a customer will name, what SHOPLINE cost, and what we have not built |
-| [`glossary`](glossary.md) | words that mean one thing here, and what the other senses are called. **Check it for the word you searched**: a result in the wrong sense reads exactly like an answer |
-| [`what-they-read`](what-they-read.md) | the picture a customer arrives with, and the three places it is wrong |
-| [`case-studies`](case-studies.md) | the retail stockout from three angles, plus a Flow Agent help desk |
-| [`screenshots`](screenshots.md) | which picture answers which question, and the URL to fetch it from |
+| [`operations`](../wiki/operations.md) | Asgard's outbound IPs, checking model capability, vocabulary |
+| [`taiwan-channels`](../wiki/taiwan-channels.md) | the commerce channels a customer will name, what SHOPLINE cost, and what we have not built |
+| [`glossary`](../wiki/glossary.md) | words that mean one thing here, and what the other senses are called. **Check it for the word you searched**: a result in the wrong sense reads exactly like an answer |
+| [`what-they-read`](../wiki/what-they-read.md) | the picture a customer arrives with, and the three places it is wrong |
+| [`case-studies`](../wiki/case-studies.md) | the retail stockout from three angles, plus a Flow Agent help desk |
+| [`screenshots`](../wiki/screenshots.md) | which picture answers which question, and the URL to fetch it from |
 
 ## Known gaps between the documentation and the CRD
 
@@ -48,14 +48,14 @@ Each is written on the page it affects:
 
 | gap | page |
 |---|---|
-| the UI's Flow Agent is three CRs; `agentClass` has one value | `agents` |
-| the Drive Syncer UI offers five sources, the CRD supports ten | `knowledge` |
-| Knowledge Base and Drive both exist and which one new work should use | `knowledge` |
-| Connection's "For Trigger" group names removed trigger classes | `automation`, `settings` |
-| Semantic Model lists six data sources, the settings page nine (unexplained) | `semantic-model` |
-| the four `integration-with-asgard/` pages are `draft` and name an older UI | `integration` |
-| the glossary's Processor list does not match the current `ProcessorType` | `operations` |
-| `overview/asgard-features` is `draft` and links to removed paths | `product-suite` |
+| the UI's Flow Agent is three CRs; `agentClass` has one value | `../wiki/agents.md` |
+| the Drive Syncer UI offers five sources, the CRD supports ten | `../wiki/knowledge.md` |
+| Knowledge Base and Drive both exist and which one new work should use | `../wiki/knowledge.md` |
+| Connection's "For Trigger" group names removed trigger classes | `../wiki/automation.md`, `../wiki/settings.md` |
+| Semantic Model lists six data sources, the settings page nine (unexplained) | `../wiki/semantic-model.md` |
+| the four `integration-with-asgard/` pages are `draft` and name an older UI | `../wiki/integration.md` |
+| the glossary's Processor list does not match the current `ProcessorType` | `../wiki/operations.md` |
+| `overview/asgard-features` is `draft` and links to removed paths | `../wiki/product-suite.md` |
 
 ## Coverage
 
@@ -95,7 +95,7 @@ The sources this material is actually built from:
 |---|---|---|
 | asgard-docs | the product documentation | 81 / 162 cited; 69 published and unread; 29 deliberately excluded below |
 | asgard-kube `crd/` | the contract | read per page, per field, and dated on the page |
-| **asgard-kube `pkg/apis/`** | **the Go types the CRDs are generated from, with the reasoning as comments** | read once, 2026-09-02, for the validation rules - `crd-rules`. 134KB of declarations; what has been taken is the behavioural comments, not the field list |
+| **asgard-kube `pkg/apis/`** | **the Go types the CRDs are generated from, with the reasoning as comments** | read once, 2026-09-02, for the validation rules - `../wiki/crd-rules.md`. 134KB of declarations; what has been taken is the behavioural comments, not the field list |
 | **[asgard-core](https://github.com/asgard-ai-platform/asgard-core)** `internal/constants.go` | **the processor definitions the CRD is generated from** | read once, 2026-09-02, for the type list. Its per-processor config definitions are not carried anywhere |
 | **asgard-freyr-skills** | **nine runtime skills, incl. the SHOPLINE pair** | one page - `../usecase/skill-layers.md` |
 | **seven deployment charts** | **every shape the extracts describe** | see below |
@@ -104,7 +104,7 @@ The sources this material is actually built from:
 extract names no customer and no deployment - it says "seen in a deployment
 whose..." - so nothing here can be counted against the charts it came from. The
 inventory has to be run separately, over the charts, and its result is
-[`coverage`](coverage.md) - how many deployments each CR shape was actually read
+[`coverage`](../wiki/coverage.md) - how many deployments each CR shape was actually read
 from - rather than a number here.
 
 **Do not add a percentage back to this section** unless it names its denominator
@@ -118,7 +118,7 @@ lookup material; four of its pages are the expression language every processor
 field is written in, including where the ECMA5 limit actually applies - to
 `execute-script`'s engine, not to every Expression - and the variables in scope,
 one of which the documentation never mentions at all.
-They are now in [`processors`](processors.md). The message-template pages remain
+They are now in [`processors`](../wiki/processors.md). The message-template pages remain
 excluded, and that part of the judgement holds.
 
 **An exclusion is a judgement someone made once.** Recheck one before relying on

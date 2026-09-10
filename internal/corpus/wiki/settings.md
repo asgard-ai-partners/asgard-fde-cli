@@ -44,7 +44,7 @@ customer.
 
 **And it is only available on Odin.** Sindri and Mimir use the platform's
 designated models and the LLM cannot be swapped there - see
-[`fehu.md`](fehu.md). So a custom `CompletionModel` does not make a hub agent or
+[`fehu.md`](../wiki/fehu.md). So a custom `CompletionModel` does not make a hub agent or
 a dashboard use the customer's key, and "we will use our own model" has a
 different answer per product.
 
@@ -95,7 +95,7 @@ comes from `.Values.asgard.appSecretName` - a literal name in a template points 
 and nothing else, and Connection below is OAuth to five named services. A REST
 API with a key or a bearer token is configured on the tool that calls it - an
 `http-request` step in a Workflow, or an MCP Server's environment variables.
-[`setup-path.md`](setup-path.md) has the fork; `../usecase/external-api.md`
+[`setup-path.md`](../wiki/setup-path.md) has the fork; `../usecase/external-api.md`
 has the shape.
 
 ## Connection
@@ -117,7 +117,7 @@ actually be authorised are Dropbox, Google Drive, OneDrive, Google Sheets and
 OneDrive Workbook - five, not eleven.
 
 The "For Trigger" group is stale: the trigger classes it corresponds to were
-removed and only cron is left. See [`automation.md`](automation.md).
+removed and only cron is left. See [`automation.md`](../wiki/automation.md).
 
 ## Before writing the chart
 

@@ -17,8 +17,8 @@ rejection, not a replacement.
 
 | what | on |
 |---|---|
-| `botProviderClass` | `BotProvider` - see [`integration.md`](integration.md) |
-| `completionModelClass` | `CompletionModel` - see [`settings.md`](settings.md) |
+| `botProviderClass` | `BotProvider` - see [`integration.md`](../wiki/integration.md) |
+| `completionModelClass` | `CompletionModel` - see [`settings.md`](../wiki/settings.md) |
 | the indexer | a `Source`'s indexer |
 | `leaseId` | once set, on the resource that carries it |
 

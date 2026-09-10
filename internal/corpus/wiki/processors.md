@@ -168,7 +168,7 @@ when a failed tool call must not be retried - which is most writes.
 | `execute-script` | **Engine** | only `ECMA5` is supported, so the script body is not modern JavaScript - no `let`, no arrow functions, no template literals. **This applies to the script body only**; Expression fields elsewhere are ordinary JavaScript, and `../wiki/workflow.md` gives the evidence |
 | `http-request` | **Parse JSON** | off by default. On, `httpResponse` gains a `json` field. Off, the body is a string and every downstream expression has to parse it |
 | `validate-payload` | **Schema** (required), **File Requirements** | this is the entry contract of an automation tool - what the caller must supply, and which file types are accepted |
-| `query-database` | **SQL Type Arguments** | parameterised queries, supplied as extra keys rather than a static field. The alternative is string-building a query, which is the injection surface `fixed-query-tools` exists to remove. **The docs page for this processor is called `query-sql`** - see the naming table below |
+| `query-database` | **SQL Type Arguments** | parameterised queries, supplied as extra keys rather than a static field. The alternative is string-building a query, which is the injection surface `../usecase/fixed-query-tools.md` exists to remove. **The docs page for this processor is called `query-sql`** - see the naming table below |
 | `retrieve-knowledge` | **Similarity Threshold** (required) | there is no safe default to fall back on. Too high returns nothing and looks like an empty knowledge base |
 | `retrieve-knowledge` | **Filter Tags**, **Path Exists**, **Path Predicate** | retrieval can be scoped without splitting the knowledge base |
 | `generate-embedding` | **Result Field** (required) | where the vector lands. Every model processor that produces data names its own output field |
@@ -334,9 +334,9 @@ Two things worth knowing from their pages:
 ## Corresponding extracts
 
 `../usecase/external-api.md` uses `http-request` field by field;
-`workflow-chain` uses `router` and the entry/exit connection;
-`fixed-query-tools` uses `query-database`;
-`knowledge-drive` uses `retrieve-knowledge`.
+`../usecase/workflow-chain.md` uses `router` and the entry/exit connection;
+`../usecase/fixed-query-tools.md` uses `query-database`;
+`../usecase/knowledge-drive.md` uses `retrieve-knowledge`.
 
 ## Sources
 

@@ -46,7 +46,7 @@ connect a design to a cost:
 
 **A Loader and an Indexer are each several times a Project, per day.** With ten
 Loaders allowed per Workspace, the document path is the one where a design
-decision shows up on a bill - see [`knowledge.md`](knowledge.md), and count
+decision shows up on a bill - see [`knowledge.md`](../wiki/knowledge.md), and count
 sources rather than documents.
 
 **A processor is billed per node per day**, so a workflow's node count is a

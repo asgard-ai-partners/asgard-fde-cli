@@ -42,7 +42,7 @@ Management Console. An enabled agent serves immediately; a disabled one stops
 serving but keeps its configuration. **There is no publish step and nothing to
 import on the Sindri side** - what makes an agent findable there is the
 Description, because that is what the orchestrator routes on.
-[`setup-path.md`](setup-path.md) is the order this sits in.
+[`setup-path.md`](../wiki/setup-path.md) is the order this sits in.
 
 ## Flow Agent
 
@@ -98,8 +98,8 @@ Managed Agent - there is no other kind. The name suggests a pair of symmetric
 options and there is not one.
 
 For how each shape is assembled: `../usecase/agent-hub.md` (an internal
-hub), `flow-agent-single` (anonymous, one job), `flow-agent-supervisor`
-(anonymous, several specialists), `browser-operation` (giving one a browser).
+hub), `../usecase/flow-agent-single.md` (anonymous, one job), `../usecase/flow-agent-supervisor.md`
+(anonymous, several specialists), `../usecase/browser-operation.md` (giving one a browser).
 
 ## Sources
 

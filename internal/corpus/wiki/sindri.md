@@ -116,7 +116,7 @@ file other reference material however suits.
 ## Corresponding extracts
 
 Sindri only runs published agents and produces no CRs of its own. Building them
-is `../usecase/agent-hub.md` and `flow-agent-supervisor`.
+is `../usecase/agent-hub.md` and `../usecase/flow-agent-supervisor.md`.
 
 ## Sources
 

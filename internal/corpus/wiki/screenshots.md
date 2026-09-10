@@ -65,7 +65,7 @@ And the one that shows Description doing its job in public:
 
 ## For a handover: the setup path
 
-The order these belong in is [`setup-path.md`](setup-path.md). Use them when the
+The order these belong in is [`setup-path.md`](../wiki/setup-path.md). Use them when the
 audience is the people who will operate the thing - never in a proposal.
 
 | step | path | what it shows |
@@ -293,7 +293,7 @@ Not everything does, and assuming otherwise wastes a search:
     missing** - it is the channel a Taiwanese customer asks about first.
 
   - anything about handoff, pausing, or per-user counters, because the platform
-    does not have them - see [`integration.md`](integration.md)
+    does not have them - see [`integration.md`](../wiki/integration.md)
 
 ## Sources
 

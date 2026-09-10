@@ -107,7 +107,7 @@ integration. **Any line here that says "ask this in the meeting" should be run
 through filter 0 before it is followed.**
 
 The order the rest of the setup follows once the path is open is
-[`setup-path.md`](setup-path.md).
+[`setup-path.md`](../wiki/setup-path.md).
 
 ## Checking what a model supports
 
@@ -193,7 +193,7 @@ Connectivity and vocabulary produce no CRs, so there is no extract for them.
   - asgard-docs `f00e0ee`, marked `draft`
 - [Glossary](https://docs.asgard-ai.com/docs/help-community/glossary)
   - asgard-docs `f00e0ee`. Its Processor entry lists an older set of nodes and
-  does not match the current `ProcessorType`; take [`workflow.md`](workflow.md)
+  does not match the current `ProcessorType`; take [`workflow.md`](../wiki/workflow.md)
   as the current one
 
 **Unchecked:** the IPs and the model lists come from the product documentation

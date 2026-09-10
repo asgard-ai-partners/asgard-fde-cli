@@ -52,7 +52,7 @@ Description.
 
 "When an order arrives, do X" is this, not a Trigger: an external system calls
 in when something happens rather than us checking on a schedule. The shape is
-three stages and each is a processor - see [`processors`](processors.md):
+three stages and each is a processor - see [`processors`](../wiki/processors.md):
 
     the external system  ->  the endpoint
                                |

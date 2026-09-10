@@ -33,7 +33,7 @@ them.
 ## What Odin holds
 
 This layer maps to the CRs in a chart; see the name mapping in
-[`agents.md`](agents.md).
+[`agents.md`](../wiki/agents.md).
 
 | Odin feature | what it does |
 |---|---|

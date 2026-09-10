@@ -109,7 +109,7 @@ is attached to a conversation nobody is having.
 
 Inside the workflow the files arrive as `prevBlobs`, an array of Blob with
 `blobId`, `fileType`, `fileName`, `size` and `mime` - see
-[`processors.md`](processors.md). **Every one of those variables can be absent**,
+[`processors.md`](../wiki/processors.md). **Every one of those variables can be absent**,
 so each access is written defensively or throws on the turn somebody sends no
 file.
 
@@ -206,8 +206,8 @@ out of front-end code, version control and anywhere public.**
 
 ## Before writing the chart
 
-`../usecase/external-api.md` covers an HTTP tool, `api-oauth` the two-call
-token chain, and `workflow-chain` what passes between processors.
+`../usecase/external-api.md` covers an HTTP tool, `../usecase/api-oauth.md` the two-call
+token chain, and `../usecase/workflow-chain.md` what passes between processors.
 
 ## Sources
 
