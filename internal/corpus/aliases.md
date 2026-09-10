@@ -5,7 +5,7 @@ rather than in it, next to `index.md` and `log.md`, for the same reason those do
 - it is the wiki's own bookkeeping. Keeping it inside the corpus made it compete
 with what it points at: it lists every alias, so it was unusually likely to be
 the one document carrying every term of a translated query, and a search for 電商
-returned this table instead of `asgard-cli wiki taiwan-channels`.
+returned this table instead of `wiki/taiwan-channels.md`.
 
 `asgard-cli find` reads both tables below and applies them to a query before
 searching, printing what it actually searched for. Read it with
@@ -36,28 +36,28 @@ so keeping it in the query would only add a term that lands nowhere.
 | 原始碼 | source, repository |
 | 程式碼 | source |
 | 文件 | documentation, sources |
-| 電商 | commerce, marketplace, channel - and `asgard-cli wiki taiwan-channels` |
+| 電商 | commerce, marketplace, channel - and `wiki/taiwan-channels.md` |
 | 庫存 | inventory, stock |
 | 訂單 | order |
-| 客服 | customer service, help desk - and `asgard-cli usecase chat-channel` |
-| 權限 | permission, scope, console - and `asgard-cli wiki platform-unknowns` P1 |
-| 稽核 | audit, logging - and `asgard-cli wiki platform-unknowns` P2 |
-| 報表 | dashboard, report, view - and `asgard-cli usecase mimir-dashboard` |
-| 儀表板 | dashboard - and `asgard-cli usecase mimir-dashboard` |
+| 客服 | customer service, help desk - and `usecase/chat-channel.md` |
+| 權限 | permission, scope, console - and `wiki/platform-unknowns.md` P1 |
+| 稽核 | audit, logging - and `wiki/platform-unknowns.md` P2 |
+| 報表 | dashboard, report, view - and `usecase/mimir-dashboard.md` |
+| 儀表板 | dashboard - and `usecase/mimir-dashboard.md` |
 | 知識庫 | knowledge, drive, context index |
-| 白名單 | allowlist, outbound - and `asgard-cli wiki operations` |
+| 白名單 | allowlist, outbound - and `wiki/operations.md` |
 | 網路 | network, reachable, allowlist |
 | 排程 | schedule, trigger, cron |
-| 核准 | approval, consent, requestConsent - and `asgard-cli usecase write-path` |
-| 寫入 | write - and `asgard-cli usecase write-path` |
+| 核准 | approval, consent, requestConsent - and `usecase/write-path.md` |
+| 寫入 | write - and `usecase/write-path.md` |
 | 投影片 | deck, slides - and the proposal-deck design-time skill |
 | 簡報 | deck, slides - and the proposal-deck design-time skill |
-| 截圖 | screenshot - and `asgard-cli wiki screenshots` |
+| 截圖 | screenshot - and `wiki/screenshots.md` |
 | 語意層 | semantic layer |
 | 資料庫 | database, DataConnector |
 | 技能 | skill, SkillSet |
-| 價格 | cost, billing - and `asgard-cli wiki fehu` |
-| 計費 | billing - and `asgard-cli wiki fehu` |
+| 價格 | cost, billing - and `wiki/fehu.md` |
+| 計費 | billing - and `wiki/fehu.md` |
 
 ## Names the material covers
 
@@ -70,12 +70,12 @@ and that page is the best answer there is. Replacing the name would throw it awa
 
 | they said | also search for |
 |---|---|
-| shopline | commerce, marketplace, channel - and `asgard-cli wiki taiwan-channels` |
-| shopee | commerce, marketplace, channel - and `asgard-cli wiki taiwan-channels` |
-| 蝦皮 | commerce, marketplace, channel - and `asgard-cli wiki taiwan-channels` |
-| momo | commerce, marketplace, channel - and `asgard-cli wiki taiwan-channels` |
-| pchome | commerce, marketplace, channel - and `asgard-cli wiki taiwan-channels` |
-| coupang | commerce, marketplace, channel - and `asgard-cli wiki taiwan-channels` |
+| shopline | commerce, marketplace, channel - and `wiki/taiwan-channels.md` |
+| shopee | commerce, marketplace, channel - and `wiki/taiwan-channels.md` |
+| 蝦皮 | commerce, marketplace, channel - and `wiki/taiwan-channels.md` |
+| momo | commerce, marketplace, channel - and `wiki/taiwan-channels.md` |
+| pchome | commerce, marketplace, channel - and `wiki/taiwan-channels.md` |
+| coupang | commerce, marketplace, channel - and `wiki/taiwan-channels.md` |
 
 ## Names it only routes
 

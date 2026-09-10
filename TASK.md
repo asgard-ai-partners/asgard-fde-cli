@@ -449,8 +449,11 @@ if it stops there:
        said so itself.
      - Convert the ~180 remaining references. **This is the work**, and it is
        not a rename: the right replacement depends on where the text ends up.
-       A landed document wants `../wiki/x.md`; this repository's own README
-       cannot use one, because the path does not exist here.
+       Classified, and the landing half is **done** - `aliases.md`, the only
+       one of the 21 that needed it. What is left is the three groups that do
+       not land as they are: 22 in the scaffold templates, 61 in Go strings
+       and help, and 27 in this repository's own documentation, where a path
+       into a customer repository would be wrong.
      - Delete the commands.
 
      **Step 5 is coupled to step 6 and the sequence did not say so.** `find`

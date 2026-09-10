@@ -206,7 +206,16 @@ type Corpus struct {
 // Both yield the same two groups - kind, then name - so everything downstream
 // reads one shape: kb.Link, Counterpart, --links, --orphans, and what `find`
 // prints.
-var pathLinkRe = regexp.MustCompile(`\.\./(wiki|usecase|needs|brief|guide)/([a-z0-9][a-z0-9-]*)\.md`)
+// The `../` is optional because one document does not sit in a half.
+// `aliases.md` is at the root of the landed copy - it applies to both halves,
+// and is the first file to read when the question did not arrive in English -
+// so from there a page is `wiki/x.md` and not `../wiki/x.md`. Everything else
+// is one level down and writes the `../`.
+//
+// It stays this narrow deliberately: the name pattern is lower-case, so a
+// prose mention of `wiki/README.md` or a path under `internal/` does not
+// become a pointer.
+var pathLinkRe = regexp.MustCompile(`(?:\.\./)?(wiki|usecase|needs|brief|guide)/([a-z0-9][a-z0-9-]*)\.md`)
 
 var linkRe = regexp.MustCompile(`asgard-cli(?: |[ \t]*\n[ \t]*)(wiki|usecase|brief|guide)(?: |[ \t]*\n[ \t]*)([a-z0-9][a-z0-9-]*)`)
 

@@ -317,30 +317,34 @@ func replaceCorpus(root string, recorded map[string]Entry, running string) (bool
 // in it carries a version or a count, for the reason at the top of this file.
 const corpusIndexHead = `# The Asgard platform: the map
 
-Two halves, side by side, and a pointer from one to the other is a path you can
+Five kinds of document, and a pointer from one to another is a path you can
 follow:
 
     wiki/       what the platform has, and which CR a UI name maps to
     usecase/    how ONE deployment shape is assembled, field by field
+    needs/      what to get from the customer before a shape can be built
+    brief/      what has actually been got wrong, before you do the thing
+    guide/      which decision to make now, and what it costs to change later
     aliases.md  what a customer said -> what to search for
 
-**A pointer is a path, relative to the document it is written in**, and takes
-one of two shapes:
+They answer different questions and it is worth knowing which you have.
+"Can Asgard do X" is ` + "`wiki/`" + `; "what goes in this field" is ` + "`usecase/`" + `; "what do I
+have to ask them for" is ` + "`needs/`" + `; "where does this go wrong" is ` + "`brief/`" + `; and
+"which decision am I making" is ` + "`guide/`" + `.
 
-    ../wiki/<name>.md        a wiki page
-    ../usecase/<name>.md     an extract
+**A pointer is a path, relative to the document it is written in:**
+
+    ../wiki/<name>.md     from a document inside one of the directories
+    wiki/<name>.md        from ` + "`aliases.md`" + ` or this file, which are at the root
 
 Written with ` + "`../`" + ` even between two documents in the same directory, so that a
-pointer carries which half it points into. Following one is opening a file, and
+pointer carries which kind it points at. Following one is opening a file, and
 this lists everything a document points at:
 
     grep -o '\.\./[a-z]*/[a-z0-9-]*\.md' wiki/agents.md
 
-The links in the tables below are relative to this file instead, because this
-file is the one directory up.
-
-**Read ` + "`aliases.md`" + ` first if the question did not arrive in English.** The corpus is
-English and a customer conversation usually is not, so a term taken from what
+**Read ` + "`aliases.md`" + ` first if the question did not arrive in English.** The corpus
+is English and a customer conversation usually is not, so a term taken from what
 somebody actually said matches nothing - and grep reports that identically to a
 subject the material genuinely lacks.
 `
