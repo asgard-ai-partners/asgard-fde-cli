@@ -82,11 +82,15 @@ through `addTo(cmd, group..., ...)` in `root.go`. The group is required - cobra
 panics on a `GroupID` the parent does not have - so a command cannot be added
 without deciding where in the help it belongs.
 
-- [STRUCTURE.md](STRUCTURE.md) - what every directory is for, including the four
+- [Goal.md](Goal.md) - what this tool is for, in four points.
+- [APPROACH.md](APPROACH.md) - how the mechanisms work: the corpus, the pointer
+  form, the audits, retrieval, what `init` writes, and what only the platform
+  can decide. Each with the failure it was built from.
+- [STRUCTURE.md](STRUCTURE.md) - what every directory is for, including the
   bodies of embedded material and which one a change belongs to.
 - [AGENTS.md](AGENTS.md) - the conventions this repo follows, and what the gate is
   now that there is no test suite.
-- [TASK.md](TASK.md) - what this repo is for, and what is not finished.
+- [TASK.md](TASK.md) - where it stands, and what is not finished.
 
 ## Commands
 

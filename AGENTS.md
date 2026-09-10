@@ -31,8 +31,10 @@ it cannot.
 
 It writes files into a *customer's* repository and never holds state of its
 own. The division: `Goal.md` is the goal, [TASK.md](TASK.md) is where it stands
-and what is missing, [README.md](README.md) is what the commands do, and this
-file is how to change the code and the material without breaking it.
+and what is missing, [README.md](README.md) is what the commands do,
+[APPROACH.md](APPROACH.md) is how the mechanisms work and what each was built
+from, and this file is how to change the code and the material without
+breaking it.
 
 **Most of the value is not code.** It is one corpus, and the first question when
 adding anything is which part it belongs to:

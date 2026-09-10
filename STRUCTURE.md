@@ -4,6 +4,10 @@ What every directory in this repo is for. `README.md` is what the commands do,
 `AGENTS.md` is the rules for changing them, `TASK.md` is what the repo is for and
 what is unfinished. This file is the map.
 
+
+**How the mechanisms work, and the failure each was built from, is
+[APPROACH.md](APPROACH.md).** This file is where things live.
+
 ## The shape in one line
 
 A single Go binary that answers questions about integrating with Asgard, and

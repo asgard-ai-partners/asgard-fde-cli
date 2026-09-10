@@ -1,7 +1,7 @@
 # Asgard FDE CLI
 
 這個工具是為誰、做什麼。**只寫目標**——現況和還缺什麼在 `TASK.md`,指令怎麼用
-在 `README.md`,怎麼改在 `AGENTS.md`。
+在 `README.md`,主要功能怎麼實作的在 `APPROACH.md`,怎麼改在 `AGENTS.md`。
 
 讀者是 agent:一個 FDE 帶著它做 Asgard 的客戶導入,而它手上只有客戶的
 repository。那份 repository 描述客戶的系統,從不描述那些系統要跑在什麼平台上。
