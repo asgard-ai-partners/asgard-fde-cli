@@ -43,11 +43,13 @@ internal/cli/       cobra 指令樹，一個子指令一個檔
 internal/repo/      客戶 repo 由什麼構成 —— 用看的，不用存的
 internal/auth/      OAuth 流程與憑證儲存，那是這支 CLI 唯一放在 repo 外的檔案
 internal/work/      客戶 repo 自己的工作紀錄（request、task spec、open question、決議紀錄）
-internal/kb/        列出、讀取、評分、出處與連結圖的單一實作，所有語料共用
-internal/wiki/      平台 wiki，以及旁邊的客戶詞彙表
+internal/kb/        列出、讀取、出處與連結圖的單一實作，所有語料共用
+internal/corpus/    材料本身，用 repo 收到它時的版面擺放
+internal/wiki/      供應平台 wiki，以及旁邊的 aliases 兩張表
 internal/usecase/   部署形狀的擷取檔
-internal/stage/     onboarding 的提示文，對 repo 的狀態渲染
-internal/scaffold/  寫出非客戶特有的骨架，並供應裡面的 skill
+internal/needs/     一個形狀開工前要先跟客戶拿到什麼
+internal/stage/     onboarding 的指引，對 repo 的狀態渲染
+internal/scaffold/  寫出非客戶特有的骨架、design-time skill 與平台語料
 internal/generate/  CR 骨架，接上 chart 已經宣告的東西
 internal/size/      部署形狀，從 production 數出來的
 internal/brief/     一個活動會怎麼做錯，依意圖而非依位置編排
@@ -63,9 +65,11 @@ internal/version/   build 資訊（GoReleaser 用 ldflags 注入）
 
 要新增子指令：在 `internal/cli/` 寫一個 `newXxxCmd()`，並在 `root.go` 用 `addTo(cmd, group..., ...)` 註冊。**分組是必填的** —— cobra 對父層沒有的 `GroupID` 會 panic，所以一個指令不可能在沒決定它屬於哪一組的情況下被加進來。
 
-- [STRUCTURE.md](STRUCTURE.md) —— 每個目錄是做什麼的，包含四份內嵌語料以及一個改動屬於哪一份。
-- [AGENTS.md](AGENTS.md) —— 這個 repo 遵循的慣例，以及在沒有測試套件的情況下 gate 是什麼。
-- [TASK.md](TASK.md) —— 這個 repo 是為什麼存在的，以及還沒完成的部分。
+- [Goal.md](Goal.md) —— 這個工具是為誰、做什麼，四點。
+- [APPROACH.md](APPROACH.md) —— 主要功能怎麼實作的：語料、指標的形式、稽核、檢索、`init` 寫了什麼。
+- [STRUCTURE.md](STRUCTURE.md) —— 每個目錄是做什麼的，包含五份內嵌語料以及一個改動屬於哪一份。
+- [AGENTS.md](AGENTS.md) —— 這個 repo 遵循的慣例，以及 gate 是什麼。
+- [TASK.md](TASK.md) —— 目前走到哪裡，以及還沒完成的部分。
 
 ## Coding Agent 會怎麼用它
 
@@ -73,7 +77,7 @@ internal/version/   build 資訊（GoReleaser 用 ldflags 注入）
 
 **這支 CLI 有兩種讀者，而且兩種都不是「坐在終端機前打字的人」為主。**
 
-第一種是 **FDE 本人**，通常在客戶會議前後：`brief`、`guide`、`find`、`size`、`wiki`、`usecase` 都**不需要 repo、不需要網路、不需要登入**，因為那些問題是在會議室裡被問的，那時候還沒有目錄。
+第一種是 **FDE 本人**，通常在客戶會議前後：`asgard-cli init` 在空目錄就會把整份語料寫出來，`guide` 和 `size` 也一樣，都**不需要 repo、不需要網路、不需要登入**，因為那些問題是在會議室裡被問的，那時候還沒有目錄。
 
 第二種、也是設計時真正瞄準的，是**在客戶 repo 裡工作的 Coding Agent**。它的迴圈長這樣：
 
@@ -100,13 +104,17 @@ internal/version/   build 資訊（GoReleaser 用 ldflags 注入）
 
 ```
 Ask —— 平台是什麼、一個形狀怎麼組起來
-  find <terms>           一次搜四份語料，並交出對應的另一半
-  wiki [page]            平台由什麼構成，每一塊是給誰的
-  usecase [name]         一種部署形狀怎麼一個欄位一個欄位組起來
-  brief [what]           你正要做的事，前人在哪裡做錯過
-  guide [name]           一個決策的指引；不帶參數列出全部
+  這一半不是指令，是檔案。asgard-cli init 會把全部寫進
+  .agents/skills/asgard-platform/，用 cat 和 grep 讀：
+    wiki/       平台由什麼構成，每一塊是給誰的
+    usecase/    一種部署形狀怎麼一個欄位一個欄位組起來
+    needs/      這個形狀開工前要先跟客戶拿到什麼
+    brief/      你正要做的事，前人在哪裡做錯過
+    guide/      一個決策，以及反悔的代價
+    aliases.md  客戶說的話 -> 該搜什麼字
+
+  guide [name]           一個決策的指引，會對著這個 repo 的現況讀
   size [shape]           一個能力寫出來之前，它由什麼構成、要多少
-  reading                這個 engagement 讀過什麼、沒讀過什麼
   issue-report           這支工具哪裡錯了或不知道，怎麼回報
 
 Build —— 寫出 repo 與裡面的 CR
@@ -222,13 +230,16 @@ slug 會出現在 chart 渲染出來的物件名稱裡，所以要短：Kubernet
 
 ### `guide`
 
-**`guide` 讀一個決策。** 沒有任何指令會說「這個 engagement 走到哪裡」，而且那是刻意的 —— 曾經有兩個這樣的指令，都拿掉了。
+**`guide` 讀一個決策，而且是對著你所在的 repo 讀。** 它還是指令就只為了這個：每一份指引不需要 repo 的那一半跟其他材料一樣會落地成檔案，指令多出來的是這個 repo 自己的狀態 —— 有哪些 project、還有什麼沒回答。
 
 ```bash
-asgard-cli guide                   # 全部的指引
-`.agents/skills/asgard-platform/guide/requirements.md`      # 其中一份，隨時
-grep "<terms>"          # 依主題到達其中任何一份
+asgard-cli guide                  # 全部的指引，依名字
+asgard-cli guide requirements     # 其中一份，對著這個 repo 讀
+
+cat .agents/skills/asgard-platform/guide/requirements.md   # 不需要 repo 的那一半
 ```
+
+**沒有任何指令會說「這個 engagement 走到哪裡」**，而且那是刻意的。`project`、`question`、`request`、`task` 各讀一個檔案回來，沒有一個會從其他幾個推導出位置。
 
 ```
   init           開始 onboarding
@@ -244,9 +255,7 @@ grep "<terms>"          # 依主題到達其中任何一份
   idle           手上沒有進行中的事
 ```
 
-**這些沒有一個是「你會抵達的步驟」。** 它們曾經被編號，而 `next` 從「最早缺的那個 CR kind」推導出「stage 4 of 9」。那兩個方向都錯：它一次只能指名一件事，所以其中三個除非你已經知道名字否則到達不了；而一個位置是無法被反駁的，於是一個用不同順序在做事的 engagement 會被告知它落後了。
-
-拿掉編號還不夠。`status` 改成從條件升起同樣那些階梯 —— `switch` 裡的 `!p.Has("DataConnector")`，所以一份缺兩樣東西的 chart 只會被告知第一樣 —— 那是把算術藏起來的位置。**現在沒有任何東西會升起指引**，它只能用 `guide` 依名字、用 `find` 依主題到達。
+**這些沒有一個是「你會抵達的步驟」。** onboarding 不是線性的：這支工具是從一個 engagement 長出來的，而那個 engagement 裡最貴的三個決策都是做了、建了、又反轉的；一個已經把需求全部問完的 engagement 根本沒有所謂的階段。所以**沒有任何東西會把指引升起來丟給你**，只能用 `guide` 依名字，或者 grep `guide/` 依主題到達。
 
 **`read-path`、`entry-point`、`knowledge` 會把錯的答案印在對的答案旁邊。** 那是這個 engagement 曾經做錯又反轉的三個決策，而且每一次錯的那個都是看起來理所當然的那個。
 
@@ -321,51 +330,60 @@ asgard-cli add flowagent support --bot-class line --project site
 
 它會先讀 chart 再往裡面寫，所以它產出的引用指得到真的存在的東西：chart 裡只有一個 SemanticLayer 就掛上去、有好幾個就要求指名、有 SkillSet 才引用。第二個查詢工具不會重新產出第一個已經寫好的 Toolset。
 
-### `wiki`、`usecase`
+### 材料，作為檔案
 
-兩份參考語料，**編在 binary 裡而不是寫進客戶 repo**：一份放在某個 engagement 裡的副本會在沒人看的地方過期，而一頁放在這裡的過期內容，一次發版就替所有 engagement 修好了。
+五份參考語料，**編在 binary 裡，並由 `asgard-cli init` 寫進客戶 repo**：一份只放在某個 engagement 裡的副本會在沒人看的地方過期，而一頁放在這裡的過期內容，一次發版就替所有 engagement 修好了。
 
-```bash
-cat .agents/skills/asgard-platform/wiki/agents.md
-grep -ril "allowlist" .agents/skills/asgard-platform/
+```
+.agents/skills/asgard-platform/
+  index.md    地圖：五份都在，以及刻意沒有的東西
+  aliases.md  客戶說的話 -> 該搜什麼字
+  wiki/       平台有什麼，UI 上的名字對應哪個 CR
+  usecase/    一種部署形狀怎麼一個欄位一個欄位組起來
+  needs/      這個形狀開工前要先跟客戶拿到什麼
+  brief/      這件事情前人在哪裡做錯過
+  guide/      現在要做哪個決策，以及反悔的代價
 ```
 
 | | 回答什麼 | 寫自哪裡 |
 |---|---|---|
-| `wiki` | 平台是什麼、每一塊是給誰的、以及 UI 的名字從哪裡開始對不上 chart 宣告的資源 | 產品文件 [asgard-docs](https://github.com/asgard-ai-platform/asgard-docs)，對著 CRD 校過 |
-| `usecase` | 一種部署形狀怎麼一個欄位一個欄位組起來，以及填錯一個值的代價 | 已經在 production 跑的部署 |
+| `wiki/` | 平台是什麼、每一塊是給誰的、以及 UI 的名字從哪裡開始對不上 chart 宣告的資源 | 產品文件 [asgard-docs](https://github.com/asgard-ai-platform/asgard-docs)，對著 CRD 校過 |
+| `usecase/` | 一種部署形狀怎麼一個欄位一個欄位組起來，以及填錯一個值的代價 | 已經在 production 跑的部署 |
+| `needs/` | 這個形狀開工前一定要先從客戶那邊拿到什麼 | 訪談、各通道的憑證表，以及某個 engagement 太晚才發現的事 |
+| `brief/` | 你正要做的這件事，前人在哪裡做錯過 | 真的有人做錯過的活動 |
+| `guide/` | 一個決策、看起來對的那個答案，以及反悔的代價 | 三個在 production 被推翻過的決策 |
 
-**要查東西就 grep 那個目錄** —— 如果問題是用客戶的話問的,先讀它的 `aliases.md`。
-
-### 讀材料
-
-**沒有搜尋指令。** `asgard-cli init` 會把每一份材料寫進 repo,用 `cat` 和 `grep` 讀:
+**沒有搜尋指令，這是設計。** 文件就在磁碟上，`cat` 和 `grep` 就是介面：
 
 ```bash
 grep -ril "allowlist" .agents/skills/asgard-platform/
 cat .agents/skills/asgard-platform/wiki/processors.md
 ```
 
-**問題不是英文的話,先讀 `aliases.md`。** 材料是英文的而客戶對話通常不是,
-所以照客戶的用詞去搜會什麼都搜不到 —— 而那讀起來跟「這份材料沒有這個主題」一模一樣。
+有兩件事 grep 不會替你做，所以先讀：
 
-**搜到之後查一下 `wiki/glossary.md` 有沒有那個詞。** 拿到另一個意思的結果
-讀起來跟答案一模一樣:`payment` 是 Asgard 對客戶的計費,也是客戶自己的金流閘道。
+**`aliases.md`，如果問題不是用英文問的。** 材料是英文的而客戶對話通常不是，所以照客戶的用詞去搜會什麼都搜不到 —— 而那讀起來跟「這份材料沒有這個主題」一模一樣。
 
-**沒有 repo 的時候,在空目錄跑 `asgard-cli init` 就夠了** —— 不用帳號、不碰網路。
-這就是重點:問題是在會議裡問的,那時還沒有目錄。
+**`wiki/glossary.md`，查一下你搜的那個詞。** 拿到另一個意思的結果讀起來跟答案一模一樣：`payment` 是 Asgard 對客戶的計費，也是客戶自己的金流閘道。
 
-### `brief`、`size`、`reading`、`issue-report`
+**沒有 repo 的時候，在空目錄跑 `asgard-cli init` 就夠了** —— 不用帳號、不碰網路。這就是重點：問題是在會議裡問的，那時還沒有目錄。
 
-四個入口，沒有一個是位置。除了 `reading` 之外都不需要 repo。
+```bash
+mkdir -p /tmp/asgard && cd /tmp/asgard && asgard-cli init
+```
 
-**`brief`** 回答「我正要做的這件事 —— 我會在哪裡做錯」，那是任何 repo 報告都答不出來的：風險最高的活動在 repo 裡不留痕跡，因為**跟客戶講話不會改任何檔案**，而會議在每個階段都會發生。
+### `size`、`issue-report`
+
+兩個都不讀 repo。
 
 **`size`** 是一個能力被寫出來之前由什麼構成 —— 提案被問的第一個問題，也是報價的基礎。數字來自 production 的部署而不是推理，那在直覺答案錯的地方最重要：**flow-agent 那幾種形狀裡完全沒有 `Agent` CR。**
 
-**`reading`** 報告這個 engagement 開過哪些頁、以及從來沒開過哪些。它只記頁面名稱、不記任何關於客戶的東西，所以**可以安全地進版控** —— 而且值得，因為六個月後它會說出前一個人知道什麼。**代價最高的是那些對的、但沒人打開過的頁。**
+**`issue-report`** 是這支工具的缺口怎麼被回報，也是一個 engagement 學到的東西唯一能傳到下一個的路徑。那個缺口不屬於客戶 repo：寫在一個 engagement 裡的筆記，就只有那一個 engagement 有。
 
-**`issue-report`** 是這支工具的缺口怎麼被回報。那個缺口不屬於客戶 repo：寫在一個 engagement 裡的筆記，就只有那一個 engagement 有，下一個從頭開始。
+```bash
+asgard-cli issue-report               # 網址，以及一份報告要寫什麼
+asgard-cli issue-report --new         # 證據已經填好的 body
+```
 
 ### `check`
 
