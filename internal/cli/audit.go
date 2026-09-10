@@ -1228,5 +1228,12 @@ func checkUnverified(out io.Writer) error {
 		}
 	}
 	fmt.Fprintf(out, "\n%d of %d document(s) say nothing either way.\n", bare, total)
+	if bare > 0 {
+		return fmt.Errorf("%d document(s) carry no provenance marker, and the rule is that every one does", bare)
+	}
+	// A checker that finds nothing to check passes everything.
+	if total == 0 {
+		return fmt.Errorf("no document was read at all, so this checked nothing")
+	}
 	return nil
 }

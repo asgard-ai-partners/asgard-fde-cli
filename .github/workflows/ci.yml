@@ -64,6 +64,9 @@ jobs:
       - name: no landed document points at a file only this repository has
         run: go run ./cmd/asgard-cli audit-material --paths
 
+      - name: every document says what it was held against
+        run: go run ./cmd/asgard-cli audit-material --unverified
+
 
   build:
     # Confirm before merging that every platform still builds and the
