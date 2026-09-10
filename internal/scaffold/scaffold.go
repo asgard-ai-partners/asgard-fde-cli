@@ -113,7 +113,7 @@ func NewData(root string, projects []string) Data {
 	return Data{
 		Projects: out,
 		RepoName: filepath.Base(root),
-		SpecSlug: repo.SpecSlug,
+		SpecSlug: repo.SpecSlugIn(root),
 	}
 }
 

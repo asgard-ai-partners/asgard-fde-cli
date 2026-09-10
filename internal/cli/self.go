@@ -1,30 +1,26 @@
 package cli
 
 import (
-	"embed"
 	"go/ast"
 	"go/parser"
 	"go/token"
 	"io/fs"
 	"sort"
 	"strings"
+
+	selfsrc "github.com/asgard-ai-partners/asgard-fde-cli"
 )
 
-// This package's own source, so that `audit-material --commands` can check the
-// commands this binary *prints* as well as the ones the material names.
+// goStrings returns every string literal in this repository's Go source, keyed
+// by file.
 //
 // **A printed string makes the same claim a document does**: that this build
 // answers to what it names. The material and the scaffold templates are
-// checked; the CLI's own output was not, so `asgard-cli add` told every
-// engagement to run a command that had been deleted, in fourteen strings,
-// while the audit reported zero. What found them was the check this tool
-// writes into a customer repository - which only sees what has already been
-// written there, so it finds them one engagement later.
-//
-//go:embed *.go
-var selfSource embed.FS
-
-// goStrings returns every string literal in this package, keyed by file.
+// checked, and the tool's own output was not - so a renamed command left dead
+// names in the help, in `check`'s findings and in the generator's warnings,
+// and the only thing that caught one was the check written into a customer's
+// repository, an engagement later. The source is embedded at the module root;
+// see that package for why.
 //
 // **Parsed rather than grepped, so that comments are excluded.** A comment
 // recording that a command *was* removed must not read as naming it - the
@@ -40,13 +36,13 @@ var selfSource embed.FS
 // material does.
 func goStrings() (map[string]string, error) {
 	out := map[string]string{}
-	entries, err := fs.Glob(selfSource, "*.go")
+	entries, err := fs.Glob(selfsrc.Go, "internal/*/*.go")
 	if err != nil {
 		return nil, err
 	}
 	sort.Strings(entries)
 	for _, name := range entries {
-		src, err := selfSource.ReadFile(name)
+		src, err := selfsrc.Go.ReadFile(name)
 		if err != nil {
 			return nil, err
 		}

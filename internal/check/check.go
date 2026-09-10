@@ -1016,6 +1016,23 @@ func (c *checker) checkLivingSpec(specDir string) error {
 	if slugs == 0 {
 		c.warnf("docs/spec/ has no living spec yet; it should be docs/spec/<slug>/")
 	}
+	// **Two living-spec roots is the failure the four-layer split exists to
+	// prevent**, and the next reader cannot tell which is current. It is a
+	// warning rather than an error because `docs/spec/README.md` allows a
+	// second slug for a genuinely separate system - and it says that is rare,
+	// so the common cause is a rename left half-done.
+	if slugs > 1 {
+		roots := make([]string, 0, slugs)
+		for _, e := range entries {
+			if e.IsDir() {
+				roots = append(roots, "docs/spec/"+e.Name()+"/")
+			}
+		}
+		c.warnf("%d living specs: %s. `docs/spec/README.md` names the one in use, and says a second "+
+			"slug is only for a system with its own audience and lifecycle - so two is usually a rename "+
+			"that stopped halfway. Two indexes that disagree is what the layers exist to prevent, and "+
+			"nothing here can tell you which is current", slugs, strings.Join(roots, ", "))
+	}
 	return nil
 }
 
