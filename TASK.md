@@ -1,18 +1,17 @@
 # TASK.md
 
-What this repo is for, and what needs something a checkout does not have.
+Where this repo stands, and what needs something a checkout does not have.
 Nothing else - what it is for is [Goal.md](Goal.md), how the main capabilities
 are implemented is [APPROACH.md](APPROACH.md), what lives in which directory is
 [STRUCTURE.md](STRUCTURE.md), how to change it is [AGENTS.md](AGENTS.md), and
 what the commands do is [README.md](README.md).
 
-**There is one worklist here**, under "Landing the rest of the material", and it
-is there because somebody asked for that work. Everything else follows the older
-rule: what could be done from a checkout has been, git log is the record of it,
-and what is left is under "What is not done" where every line names the thing it
-is waiting for. A finding that a reader
-needs lives on the document it concerns rather than here - `**Unchecked:**` on
-the page, a row on `.agents/skills/asgard-platform/wiki/platform-unknowns.md`, a rule in AGENTS.md.
+**There is no worklist here.** What could be done from a checkout has been, and
+git log is the record of it. What is left is under "What is not done", where
+every line names the thing it is waiting for. A finding a reader needs lives on
+the document it concerns rather than here - `**Unchecked:**` on the page, a row
+on `.agents/skills/asgard-platform/wiki/platform-unknowns.md`, a rule in
+AGENTS.md.
 
 ## Goal
 
@@ -37,12 +36,12 @@ version and this is the same list with what each one costs:
      168 spec keys and `add` never mentions 52 of them, so what it writes is a
      correct starting point and not a chart.
 
-  4. **When the knowledge is not here, say where to file it.** A search that
-     came back empty is recorded, `asgard-cli issue-report --new` reads it back,
-     and `asgard-cli issue-report --new` writes the report with that evidence
-     already in it. The corpus is compiled into the binary, so an engagement
-     cannot write what it learns where it will be read - the issue is the only
-     path back, and it has to be two sentences rather than an essay.
+  4. **When the knowledge is not here, say where to file it.**
+     `asgard-cli issue-report` prints the repository URL and what a report has
+     to say; `--new` writes the body with what the tool already knows filled
+     in. The corpus is compiled into the binary, so an engagement cannot write
+     what it learns where it will be read - the issue is the only path back,
+     and it has to be two sentences rather than an essay.
 
 **The asking is the spine and the chart work hangs off it.** An FDE does not
 reach for this to be told what step they are on; they reach for it mid-sentence,
@@ -89,9 +88,10 @@ engagement is still a repository shaped like
 and roughly 90% of that repo's 916-line `AGENTS.md` is knowledge only the
 engagement can earn.
 
-**And it reports no position.** No command says where an engagement is. Guidance
-is reached by subject through `find` or by name through `guide`; the records are
-read by `project`, `question`, `request` and `task`, one file each.
+**And it reports no position.** No command says where an engagement is.
+Guidance is reached by name with `guide` or by grepping `guide/` for the
+subject; the records are read by `project`, `question`, `request` and `task`,
+one file each.
 
 ## The design of record: one corpus
 
@@ -118,9 +118,10 @@ What separates them is which one may be rewritten.
 touches, update the index, append to the log. Step "the pages it touches",
 plural, is the one that gets skipped.
 
-**query**: search the corpus first. An answer that needed three documents
-assembled on the spot is new knowledge - it goes into a document, or the next
-reader assembles it again.
+**query**: grep the corpus first, through `aliases.md` if the question did not
+arrive in English. An answer that needed three documents assembled on the spot
+is new knowledge - it goes into a document, or the next reader assembles it
+again.
 
 **lint**: contradictions, stale claims, orphans, dead pointers, and the fourth
 kind that only happens here - upstream moved and the corpus did not. Nothing
@@ -129,8 +130,8 @@ is why every document carries its sources.
 
 ### Four rules, and where each one stands
 
-These are the acceptance criteria for the work in the worklist below. Each is
-stated in AGENTS.md as a rule; what follows is how far the code holds it.
+Each is stated in AGENTS.md as a rule; what follows is how far the code holds
+it.
 
   - **One schema.** Held. Every document in all four bodies opens with a title
     and a summary and carries `**Checked:**` and `**Unchecked:**` -
@@ -148,39 +149,34 @@ stated in AGENTS.md as a rule; what follows is how far the code holds it.
 
   - **Links are data.** Held. Every document carries `kb.Doc.Links`, read when
     it is parsed, with the ones inside its counterpart section marked
-    deliberate. `find` names a hit's counterpart off that field and
-    `audit-material --links` resolves the same field, so the two can no longer
-    disagree about what a document points at - which they could, being two
-    regular expressions at two points of use. The lint that was impossible is
-    now `audit-material --orphans`, and its first run said **11 of 61 documents
-    are reached by no pointer**. The index deliberately does not count as one.
+    deliberate. Resolving a pointer at the point of use instead would be a
+    second regular expression that can disagree with the first about what a
+    document points at. The lint that was impossible is now
+    `audit-material --orphans`, and **0 of 67 documents are reached by no
+    pointer**. The index deliberately does not count as one.
 
-  - **Retrieval is by subject, never by position.** Held, and the rule is
-    narrower than it was: it used to say "by subject or by condition", and the
-    condition half was the ladder with the numbers off. Gone with it are
-    `stage.Current`, `stage.Relevant`, the numbering and "stage 4 of 9" - and,
-    since 2026-09-05, `stage.Gaps` too. It was arithmetic, subtracting what a
-    chart declares from what its **declared shape** asked for, and it was sound
-    arithmetic on an unsound input: the shape was a note of what somebody meant
-    to build, which is not something this tool can check. There is nowhere to
-    record one now. Nothing raises a document for a reader; `guide` names them
-    and `find` reaches them by subject.
+  - **Retrieval is by subject, never by position.** Held. Nothing raises a
+    document at a reader: there is no command that derives where an engagement
+    stands, because an onboarding is not linear and a position cannot be
+    argued with. `guide` names a piece of guidance; grep reaches any document
+    by subject.
 
-  - **Everything an agent reads has a parseable form.** Held. `find`,
-    `project`, `question`, `request`, `task`, `check` and `verify` take
-    `--format json`, and the last two are the pair that mattered most: they are
-    the gate an agent is trying to turn green, and in text a warning and a
-    failure differ by one word at the left margin while only one is fatal. A
-    JSON run that fails exits 1 and prints nothing to stderr, because the report
-    already says it failed and a second account of it is a second source for one
-    fact. `wiki` and `usecase` stay prose - they are whole documents.
+  - **Everything an agent reads has a parseable form.** Held. `project`,
+    `question`, `request`, `task`, `check` and `verify` take `--format json`,
+    and the last two are the pair that mattered most: they are the gate an
+    agent is trying to turn green, and in text a warning and a failure differ
+    by one word at the left margin while only one is fatal. A JSON run that
+    fails exits 1 and prints nothing to stderr, because the report already says
+    it failed and a second account of it is a second source for one fact. The
+    material has no format flag - it is whole documents on disk.
 
 ### What the pattern does not buy, and what is unsolved
 
-**No embeddings, no vector index.** The point of the pattern is that synthesis
-happens once, into a document, instead of on every query. A retrieval layer over
-un-synthesised material is the thing it replaces. Substring and term matching in
-`internal/kb` is sufficient and stays.
+**No embeddings, no vector index, and now no search command either.** The point
+of the pattern is that synthesis happens once, into a document, instead of on
+every query. `asgard-cli init` writes the documents into the repository and
+grep is the way in, which is one fewer thing to keep working than a scoring
+function was.
 
 **The write-back path runs through a person, and the person is at the far end.**
 In the original, a good answer becomes a new page. Here the corpus is compiled
@@ -188,8 +184,8 @@ into the binary - correctly, so that a stale document is fixed once for every
 engagement rather than rotting inside one - so an engagement that learns
 something cannot write it where it will be read. The loop that exists instead:
 
-    a search comes back empty   ->  `find` records it, in docs/.find-misses
-    the agent files it          ->  `issue-report --new`, with that evidence in
+    a grep comes back empty     ->  the agent has the gap in front of it
+    the agent files it          ->  `issue-report --new`, evidence filled in
     somebody ingests it here    ->  a page, or a row in the alias index
     the next release            ->  every engagement has it
 
@@ -250,10 +246,11 @@ the next engagement is the fix in the next release.
   local half of the loop is the native tools - `helm lint`, `helm template` - plus
   `verify`, which checks what a dry run passes and runtime still fails.
 
-**The offline rule now has a boundary rather than being absolute.** `wiki`,
-`usecase`, `find`, `brief`, `size` and `guide` answer with no network, no
-repository and no login, and that has to stay true: the question they answer is
-asked in a meeting, before there is an engagement to log in to. `login` and
+**The offline rule now has a boundary rather than being absolute.**
+`asgard-cli init` writes the whole corpus with no network, no repository and no
+login, and `size` and `guide` answer without one either. That has to stay true:
+the question they answer is asked in a meeting, before there is an engagement
+to log in to. `login` and
 `pipeline` are the exception, and they are an exception the first half must never
 acquire.
 
@@ -300,7 +297,8 @@ test.
 
 **A clone of asgard-docs.** 69 published pages are cited by no wiki page. Two
 slices are worth reading and the rest is release notes and site plans:
-`developer-reference/processor`, because `wiki processors` was written from
+`developer-reference/processor`, because
+`.agents/skills/asgard-platform/wiki/processors.md` was written from
 asgard-core's definitions and P10 says that list is demonstrably incomplete; and
 `help-community/faq`, because nothing has checked whether the answers a customer
 gets there agree with what this material tells an FDE to say.
