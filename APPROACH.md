@@ -10,13 +10,13 @@ Present tense. Why something changed is `git log`.
 
 ## The corpus
 
-Six bodies of material, one reader. `kb.Corpus` is that reader; four packages
-declare one, and `needs` and `brief` render documents from Go structs into the
-same shapes.
+Six bodies of material, one reader. `kb.Corpus` is that reader and all six
+declare one; `needs` and `brief` have no files, so they render documents from
+Go structs into an in-memory FS and get the same treatment.
 
     kb.Doc     Name, Title, Summary, Checked, Unchecked, Links, Sources
     kb.Link    Kind, Name, Path, Deliberate
-    kb.Corpus  FS, Dir, Unlisted, Noun, Command
+    kb.Corpus  FS, Dir, Docs, ParseDoc, Unlisted, Noun, Command
 
 | body | package | kind |
 |---|---|---|
@@ -27,19 +27,25 @@ same shapes.
 | stage guidance | `internal/stage` over `prompts/` | `guide` |
 | design-time skills | `internal/scaffold` over `templates/.agents/skills/` | — |
 
-**Add material to one of these, not beside them.** A body with its own reader,
-its own search and its own match type drifts from the others and nothing
-mechanical notices. If new material does not fit `kb.Corpus`, change `kb`.
+**Add material to one of these, not beside them.** A body with its own reader
+and its own parse drifts from the others and nothing mechanical notices. If new
+material does not fit `kb.Corpus`, change `kb`.
 
-Three questions, three answers, not interchangeable:
+`Docs` and `ParseDoc` are how a body that is not one `<name>.md` per document
+joins anyway: a stage is a numbered prompt file, a skill is a directory with
+YAML frontmatter. Both supply their own, and everything downstream reads
+`kb.Doc`.
+
+Two questions, and they are not interchangeable:
 
     List()      what a reader listing documents should see
-    All()       plus the corpus's own bookkeeping - an index, a log, a README
-    Landing()   what `asgard-cli init` writes into a repository
+    All()       plus the corpus's own bookkeeping - an index, a README
 
-`Unlisted` is what separates them. The wiki's index is bookkeeping that has to
-travel; its log is bookkeeping that must not. The audit's source set is what
-lands: a document that ships is a document that is checked.
+`Unlisted` is what separates them. `wiki.Landing()` - what `init` writes - is
+`All()`, because a map that does not travel with the material leaves the copy
+without one. The audit's source set is the same: **a document that ships is a
+document that is checked**, and using `List()` there once hid five dead
+references in the three files it skips.
 
 ## Pointers
 
@@ -131,15 +137,32 @@ so the landed `SKILL.md` and `index.md` say them:
 **`aliases.md` is applied before searching, not after failing.** The corpus is
 English and a customer conversation usually is not, so a term taken from what
 somebody said matches nothing — which reads identically to a subject the
-material lacks. It holds two tables: words that *replace* a query term, because
-a Chinese term appears nowhere in an English corpus, and names that are *added*
-to it, because a product name may be written verbatim in a page.
+material lacks. Three tables, and the difference between them is what a row
+does to the query:
+
+| table | the row | why |
+|---|---|---|
+| what a customer says | *replaces* the term | a Chinese term appears nowhere in an English corpus, so keeping it only adds a term that lands nowhere |
+| names the material covers | *adds* to the term | SHOPLINE is written verbatim in a page, and that page is the best answer there is |
+| names it only routes | *adds*, and says nothing answers it | the material does not name 綠界; what it has is the shape the thing belongs to |
+
+The third table is the one that earns its heading. **A row that routes reads
+exactly like a row that answers**, and a reader who cannot tell them apart
+takes results about a shape as results about the product they asked for. Moving
+a row up a table means somebody did the search and wrote down what came back.
 
 **`glossary.md`'s first table is the word with two senses here.** `payment` is
 billing between Asgard and the customer, and also the customer's own payment
 gateway. Both sets of results are correct and nothing contradicts anything, so
 the wrong one reads exactly like an answer — the failure a search cannot report,
 because it found something.
+
+**What makes that table reachable is that it contains the word.** A grep for
+`payment` returns `wiki/glossary.md` among its hits, by construction, for every
+word with a row — so the warning arrives in the same result set as the
+ambiguity rather than depending on the reader having read an instruction first.
+That is the whole of the mechanism, and it is the reason the table is a table of
+words rather than prose about them.
 
 When the material has no answer, `asgard-cli issue-report --new` writes the
 report with what the tool already knows filled in. That is the only way back
