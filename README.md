@@ -226,7 +226,6 @@ deliberate. `project`, `question`, `request` and `task` each read one file back
 to you; none of them derives a position from the others.
 
 ```
-  init           Start the onboarding
   requirements   Turn what the customer said into a request
   projects       Decide how the work splits into projects
   data-sources   Wire up the customer's databases

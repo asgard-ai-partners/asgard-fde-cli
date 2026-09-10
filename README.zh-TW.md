@@ -242,7 +242,6 @@ cat .agents/skills/asgard-platform/guide/requirements.md   # 不需要 repo 的�
 **沒有任何指令會說「這個 engagement 走到哪裡」**，而且那是刻意的。`project`、`question`、`request`、`task` 各讀一個檔案回來，沒有一個會從其他幾個推導出位置。
 
 ```
-  init           開始 onboarding
   requirements   把客戶說的話變成一個 request
   projects       決定工作怎麼切成 project
   data-sources   接上客戶的資料庫

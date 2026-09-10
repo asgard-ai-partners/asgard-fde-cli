@@ -174,11 +174,15 @@ func corpusIndex(jobs []job) (string, error) {
 }
 
 // corpusSkill makes the directory discoverable and says what the exported form
-// needs that the pages themselves do not carry. What the two halves are for is
-// in the READMEs written beside it, so it does not restate them.
+// needs that the pages themselves do not carry. What each half is for is in the
+// READMEs written beside it, so it does not restate them.
+//
+// **Every kind that lands is listed here.** Three of the five arrived after
+// this file was written and were not added to it, so an agent reading the one
+// document meant to introduce the directory was told about two of them.
 const corpusSkill = `---
 name: asgard-platform
-description: The Asgard platform as greppable files - what the platform has, which CR a UI name maps to, and how each deployment shape is assembled field by field. Use when writing or reading an Asgard CR or Helm chart, when a customer names something and you need to know what it maps to, or before answering any question about what the platform can do. Read aliases.md first when the question came in a language other than English.
+description: The Asgard platform as greppable files - what the platform has, which CR a UI name maps to, how each deployment shape is assembled field by field, what to get from the customer before one can be built, and where each has been got wrong before. Use when writing or reading an Asgard CR or Helm chart, when a customer names something and you need to know what it maps to, before a customer meeting, or before answering any question about what the platform can do. Read aliases.md first when the question came in a language other than English.
 ---
 
 # The Asgard platform, as files
@@ -189,48 +193,47 @@ those systems run on**; this is the missing half.
 
     wiki/       what the platform has, and which CR a UI name maps to
     usecase/    how ONE deployment shape is assembled, field by field
+    needs/      what to get from the customer before a shape can be built
+    brief/      what this activity gets wrong, before you do it
+    guide/      which decision to make now, and what reversing it costs
     aliases.md  what a customer said -> what to search for
 
-**[` + "`index.md`" + `](index.md) is the map** - both halves in one place as
-paths, the rule that turns a pointer into a path, and what is deliberately not
-here. Start there. ` + "`wiki/index.md`" + ` and ` + "`usecase/README.md`" + ` group their
-own documents by the question each answers, and ` + "`wiki/README.md`" + ` says what a
-page has to carry.
+**[` + "`index.md`" + `](index.md) is the map** - all five in one place as paths, the
+rule that turns a pointer into a path, and what is deliberately not here. Start
+there. ` + "`wiki/index.md`" + ` and ` + "`usecase/README.md`" + ` group their own documents by
+the question each answers, and ` + "`wiki/README.md`" + ` says what a page has to
+carry.
 
-**It is generated. Editing it is meaningless** - ` + "`asgard-cli init`" + ` writes it from
-the corpus inside that binary and the next run replaces it, so an edit is a
-claim about the platform that no other engagement sees. A page that is wrong is
-worth an issue:
-
-    asgard-cli issue-report --new
+**It is generated. Editing it is meaningless** - ` + "`asgard-cli init`" + ` writes it
+from the corpus inside that binary and the next run replaces it, so an edit is
+a claim about the platform that no other engagement sees.
 
 ## Grep it
 
-    grep -ril "<term>" wiki/ usecase/
+    grep -ril "<term>" .
     grep -n "<term>" wiki/processors.md
-
-**Read ` + "`aliases.md`" + ` first if the question did not arrive in English.** The corpus is
-English and a customer conversation usually is not, so a term taken from what
-somebody actually said matches nothing - and grep reports that identically to a
-subject the material genuinely lacks.
 
 ## Two things grep will not do for you
 
 **Read ` + "`aliases.md`" + ` before searching a question that arrived in another
 language.** The material is English; a term taken from what somebody actually
-said matches nothing, and that reads exactly like a subject the material does
-not cover. The file has two tables - words that replace a term, and names that
-are added to it.
+said matches nothing, and grep reports that identically to a subject the
+material genuinely lacks. The file has two tables - words that replace a term,
+and names that are added to it.
 
-**Check ` + "`wiki/glossary.md`" + ` for the word you searched.** A handful of words mean
-one thing here and something else to a customer. ` + "`payment`" + ` is billing between
-Asgard and the customer, and also the customer's own payment gateway: both sets
-of results are correct, nothing contradicts anything, and the wrong one reads
-exactly like an answer. **This is the failure a search cannot report**, because
-it found something.
+**Check ` + "`wiki/glossary.md`" + ` for the word you searched.** A handful of words
+mean one thing here and something else to a customer. ` + "`payment`" + ` is billing
+between Asgard and the customer, and also the customer's own payment gateway:
+both sets of results are correct, nothing contradicts anything, and the wrong
+one reads exactly like an answer. **This is the failure a search cannot
+report**, because it found something.
 
-**When the material has no answer, that is worth filing rather than working
-around:**
+## When the answer is not here
+
+A page that is wrong, and a question these files do not answer, are both worth
+filing rather than working around. **Nothing an engagement learns reaches the
+next one any other way** - this material is compiled into the binary, so a note
+in one repository is a note one repository has:
 
     asgard-cli issue-report --new
 
@@ -243,11 +246,11 @@ Nothing in this directory can tell you which:
 
 That compares what is here against the running binary and reports five states.
 **` + "`ahead`" + ` is the one worth knowing**: these files were written by a newer
-build of this CLI than the one you are running, so your binary is the stale half
-and ` + "`--force`" + ` would be a downgrade.
+build of this CLI than the one you are running, so your binary is the stale
+half and ` + "`--force`" + ` would be a downgrade.
 
-The platform's own reference material is a separate half with its own
-record - ` + "`asgard-cli skill status`" + ` - because a customer's server can be several
+The platform's own reference material is a separate half with its own record -
+` + "`asgard-cli skill status`" + ` - because a customer's server can be several
 versions from this CLI in either direction, and only the server can say what it
 accepts.
 `
