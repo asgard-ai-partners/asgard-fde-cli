@@ -415,7 +415,7 @@ is kept from going stale as the platform moves - are in `wiki/README.md`.
 
 ### `find`
 
-**The way in.** It searches all four parts of the material at once - the wiki,
+**The way in.** It searches every part of the material at once - the wiki,
 the extracts, the stage guidance and the design-time skills - because which of
 them holds an answer is usually not obvious before searching. It needs no
 repository.

@@ -65,10 +65,9 @@ nothing said they were about the same subject.
 to whoever will make it, afterwards and directly.
 
 **Find out who will make it, for the follow-up list in the engagement's `docs/open-questions.md`** - not for a slide. That
-phrasing is deliberate: an earlier version of this page said "get the name of
-whoever approves it" with the boundary in the paragraph above, and an FDE read
-both and copied only the imperative onto a customer deck. **A caveat beside an
-imperative reads as elaboration, not as a limit.** The destination has to be
+phrasing is deliberate, and so is where the boundary sits: **a caveat beside an
+imperative reads as elaboration, not as a limit**, so the limit is in the
+sentence rather than the paragraph. The destination has to be
 inside the instruction.
 
 **Nothing here records how these change.** They read as constants and there is no

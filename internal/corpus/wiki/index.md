@@ -59,15 +59,11 @@ Each is written on the page it affects:
 
 ## Coverage
 
-**The number this section used to report was 100%, and it was measuring one
-source out of nine.**
-
-**And the number that replaced it was also wrong.** It said 130 of 162 cited.
-130 was the *in-scope denominator* from a count taken on 2026-09-02 - "130 of
-130, complete for what is in scope" - restated a paragraph later as a count of
-citations. A recount the next day found 79 and went into `log.md`; this section
-was never updated, so the wiki reported half again as much coverage as it had
-for a day, in the section that exists to warn about exactly that.
+**A coverage number here names its denominator in the same sentence or it does
+not go here.** A percentage measured against one source out of nine reads as a
+statement about the material, and an in-scope denominator restated as a count
+of citations reads the same way. Both are the failure this section exists to
+warn about.
 
 Counted 2026-09-03 against a clone at `f00e0ee`, the commit this wiki records,
 by deriving each file's published URL (`slug:` where one is declared) and

@@ -253,9 +253,9 @@ listing files.
 Not everything does, and assuming otherwise wastes a search:
 
   - the chart, the CRs, the cluster - there is no UI for any of it
-  - **LINE: three images, and this page said two.** `integration/LINE` carries
-    three, hash-named rather than in a topic directory, which is why a survey of
-    the topic folders misses them. Counted and opened 2026-09-03:
+  - **LINE: three images.** `integration/LINE` carries them hash-named rather
+    than in a topic directory, which is why a survey of the topic folders
+    misses them. Counted and opened 2026-09-03:
 
         /img/docs/60e2492a66bf.png    the prerequisites
         /img/docs/f3563b5553dc.png    the integration dialog, LINE selected,
@@ -264,8 +264,8 @@ Not everything does, and assuming otherwise wastes a search:
                                       Webhook settings panel: Webhook URL,
                                       Verify, and the Use webhook toggle
 
-    **The third one is usable and this page used to say none of them were.** It
-    is not Asgard's console at all - it is LINE's, so Odin's redesign does not
+    **The third one is usable.** It is not Asgard's console at all - it is
+    LINE's, so Odin's redesign does not
     date it, and it carries a placeholder `https://example.com/webhook` rather
     than anyone's real endpoint. It is exactly the picture for explaining the
     half of the setup the customer does themselves: paste the Webhook URL we
@@ -314,9 +314,7 @@ them are referenced by any documentation page - the rest are orphaned assets
 from an older structure, and 204 of those sit under `user-guide/`, which no
 longer has pages. So the denominator that means anything is 168, not 679.
 
-This page names **113** of that 168 - it named 39 until 2026-09-03, when the
-rest of what the documentation actually uses was added below. Every one of the
-113 resolves at `https://docs.asgard-ai.com/img/docs/<path>`, exists in the
+This page names **113** of that 168. Every one of them resolves at `https://docs.asgard-ai.com/img/docs/<path>`, exists in the
 repository, and is referenced by a live page, so nothing here points at a
 missing file or at an orphan. **Coverage is 67% of the images the documentation
 uses**, and the paragraph that used to sit here said "roughly a hundred", which

@@ -30,9 +30,9 @@ point or BotProvider is written at all.
     both, different people    both - two deliveries over one model
 
 When the chart stops there, **say so in the chart, next to the layer.** There
-used to be a field for it - a "shape" recorded per project - and it is gone:
-this tool cannot check such a claim and has no business judging it, so the only
-place the answer belongs is where the next reader will be looking anyway.
+is no field for it, and there should not be: this tool cannot check such a
+claim and has no business judging it, so the only place the answer belongs is
+where the next reader will be looking anyway.
 
 `../usecase/mimir-dashboard.md` is the shape, including the trap: a later
 reader finds a SemanticLayer nothing references, assumes it is a missed

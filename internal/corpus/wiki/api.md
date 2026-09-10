@@ -235,10 +235,8 @@ token chain, and `workflow-chain` what passes between processors.
   under `developer-reference/api-doc/send-message/sse-response/` - one page per
   event, starting at
   [run-init](https://docs.asgard-ai.com/docs/developer-reference/api-doc/send-message/sse-response/run-init).
-  **The directory itself has no landing page and 404s**; this citation pointed
-  at it until 2026-09-03,
-  read 2026-09-02. They had not been read into this material before then - this
-  page had the event list and not the payloads
+  **The directory itself has no landing page and 404s**, so cite the pages
+  rather than the directory. Read 2026-09-02
 
 **Unchecked:** everything here comes from the product documentation; no actual
 integration was examined.

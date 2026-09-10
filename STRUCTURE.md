@@ -110,9 +110,10 @@ is what `add` writes, not something anybody reads to decide.
 | `scaffold/templates/` | 45 | the part of a customer repo that is the same every time | mixed | the skills only |
 | `generate/templates/` | 12 | the CR skeletons `asgard-cli add` writes | English | no |
 
-They are embedded rather than written into a customer repo because a copy in one
-engagement goes stale where nobody is looking, while a stale one here is fixed for
-every engagement in a single release.
+They are compiled into the binary and **also written into a customer
+repository** by `asgard-cli init`, under `.agents/skills/asgard-platform/`.
+That copy is generated and replaced when the binary's version moves; edit
+the originals here.
 
 **One fact, one home; everywhere else links.** A trap belonging to a CR template
 is not also explained in a wiki page.

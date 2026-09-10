@@ -1,237 +1,225 @@
 # How it is built
 
-**Why each mechanism is the way it is.** What the tool is for is
+**How the main capabilities are implemented.** What the tool is for is
 [Goal.md](Goal.md); where it stands is [TASK.md](TASK.md); what the commands do
 is [README.md](README.md); what lives in which directory is
-[STRUCTURE.md](STRUCTURE.md); and the rules for changing any of it are
-[AGENTS.md](AGENTS.md). This file is the layer none of those covers: the
-mechanisms the tool is actually made of, and the failure each one was built
-from.
+[STRUCTURE.md](STRUCTURE.md); the rules for changing it are
+[AGENTS.md](AGENTS.md).
 
-Read it before changing retrieval, the pointer form, the audits, or what `init`
-writes. Every one of those has a reason that is not visible from the code.
+Present tense. Why something changed is `git log`.
 
-## 1. One corpus abstraction, six bodies of material
+## The corpus
 
-`kb.Corpus` is the only reader. Four packages declare one -
-`internal/wiki`, `internal/usecase`, `internal/stage`, `internal/scaffold` -
-and `needs` and `brief` render documents from Go structs into the same shapes.
+Six bodies of material, one reader. `kb.Corpus` is that reader; four packages
+declare one, and `needs` and `brief` render documents from Go structs into the
+same shapes.
 
     kb.Doc     Name, Title, Summary, Checked, Unchecked, Links, Sources
     kb.Link    Kind, Name, Path, Deliberate
     kb.Corpus  FS, Dir, Unlisted, Noun, Command
 
-**The rule is that there is no second reader.** A body of material with its own
-reader, its own search and its own match type is a fifth thing that drifts, and
-this has already happened in small: `needs` and `brief` each grew a private
-copy of the rule that turns a recorded source into a pointer, and the copies
-disagreed about how many kinds existed - so the same `From` rendered as a path
-in one and an invocation in the other, months after the kind it named began
-landing. That rule is `kb.Landed` now, in one place, because **the set of kinds
-is a fact about the material.**
+| body | package | kind |
+|---|---|---|
+| wiki pages | `internal/wiki` over `internal/corpus/wiki/` | `wiki` |
+| deployment extracts | `internal/usecase` over `internal/corpus/usecase/` | `usecase` |
+| what to obtain from a customer | `internal/needs` | `needs` |
+| what an activity gets wrong | `internal/brief` | `brief` |
+| stage guidance | `internal/stage` over `prompts/` | `guide` |
+| design-time skills | `internal/scaffold` over `templates/.agents/skills/` | — |
 
-`Unlisted` is the corpus's own bookkeeping - an index, a log, a README.
-Readable by name, absent from a listing. Two things went wrong there and both
-are worth knowing: `List()` hid the index from the export, so the shipped
-`SKILL.md` pointed at a map that had not been written; and `material()` audited
-`List()`, so five references to a deleted command sat in the three unlisted
-files while the audit reported zero. **A listing decision is not an auditing
-decision and not an export decision** - `All`, `Landing` and `List` are three
-answers because there are three questions.
+**Add material to one of these, not beside them.** A body with its own reader,
+its own search and its own match type drifts from the others and nothing
+mechanical notices. If new material does not fit `kb.Corpus`, change `kb`.
 
-## 2. A pointer is data, and it has two forms
+Three questions, three answers, not interchangeable:
 
-A cross-reference is parsed when the document is parsed, not when a result is
-printed. Before that it was two regular expressions at two points of use - one
-in `find` to name a counterpart, one in the audit to check the same pointer -
-which could disagree, and left the corpus with no link graph at all. Without
-one the lint the whole design asks for cannot be written: **material nothing
-points at is not read, and the writer never finds out, because the file is
-there.**
+    List()      what a reader listing documents should see
+    All()       plus the corpus's own bookkeeping - an index, a log, a README
+    Landing()   what `asgard-cli init` writes into a repository
 
-Which form a pointer takes depends on whether its target is written into a
-repository:
+`Unlisted` is what separates them. The wiki's index is bookkeeping that has to
+travel; its log is bookkeeping that must not. The audit's source set is what
+lands: a document that ships is a document that is checked.
 
-    ../wiki/<name>.md            a document that lands
-    asgard-cli guide <name>      one that does not
+## Pointers
 
-Everything lands today except the wiki's `log`, so the second form is nearly
-gone. What decides the `../` is where the pointing document sits, and the
-readers are not in one place: a document inside a directory writes `../`,
-`aliases.md` and the map are at the root and write none, a design-time skill
-beside the corpus writes `../asgard-platform/`, and a file deeper in a
-customer repository writes the path from the root, because a chain of `../`
-from there is not something anybody should have to count. What is fixed is the
-tail - the kind, a lower-case name, `.md` - and the lower case is what keeps a
-prose mention of `wiki/README.md` from becoming a pointer.
+A cross-reference is parsed with the document into `kb.Link`, and everything
+downstream reads that one graph — `find`'s counterpart, `--links`, `--orphans`.
+Two forms:
 
-**Paths were bought with a repository move.** `asgard-cli usecase write-path`
-means the same thing from anywhere; a path does not. The two trees had to agree
-first, which is why `internal/corpus/` holds the material in the layout a
-repository receives it, and it is the only reason that package exists.
+    ../wiki/<name>.md            the target is written into a repository
+    asgard-cli wiki log          it is not
 
-**A path is a claim that the target lands**, and the audit enforces it. The
-wiki's `log` is deliberately not written into a repository, so converting its
-pointer produced a link that resolved perfectly here and went nowhere in the
-repository the material had been written into. Nothing saw it, because the
-audit resolves against the corpus, where log exists. `kb.Link.Path` and the
-check in `checkLinks` exist for that one case, and it has caught it twice.
+**A path is a claim that the target lands, and `--links` enforces it.** A path
+to something `init` does not write resolves here, where the corpus is whole,
+and goes nowhere in the repository the material was written into.
+`kb.Link.Path` records which form was used so the check can tell them apart.
+The wiki's `log` is the only document still on the second form.
 
-## 3. Four mechanical audits, each catching what the others cannot
+What precedes the kind depends on where the pointing document sits:
 
-    audit-material --links      every pointer resolves
+| written in | form |
+|---|---|
+| a document inside one of the directories | `../wiki/x.md` |
+| `aliases.md` or `index.md`, at the landed root | `wiki/x.md` |
+| a design-time skill beside the corpus | `../asgard-platform/wiki/x.md` |
+| deeper in a customer repository | `.agents/skills/asgard-platform/wiki/x.md` |
+
+So `pathLinkRe` fixes only the tail — the kind, a lower-case name, `.md`. The
+lower case is what stops a prose mention of `wiki/README.md` becoming a
+pointer.
+
+`kb.Landed(prefix, invocation)` converts one form to the other and is the only
+place that knows the set of kinds. `needs` and `brief` store invocations and
+call it when rendering: the stored value is an identity — *this claim belongs
+to that document* — and where the text comes out decides the form.
+
+**`internal/corpus/` exists so that a path resolves in both trees.** It holds
+the material in the layout a repository receives it, so `../usecase/x.md` is
+correct here and there alike.
+
+## The audits
+
+    audit-material --links      every pointer resolves, and a path's target lands
     audit-material --orphans    what nothing points at
-    audit-material --bare       a document named without a way to reach it
+    audit-material --bare       a document named with no way to reach it
     audit-material --commands   every command named exists
+    audit-material --urls       every documentation link is live
+    audit-material <term>       every line mentioning a term, prose and templates
 
-**`--links` and `--orphans` are two halves of one thing.** A pointer that goes
-nowhere is loud: the reader follows it and finds nothing. A document nothing
-points at is silent, and costs more - it is there, it is correct, and it is
-never read. The index deliberately does not count as a pointer in the second,
-because `wiki operations` sat in it under the title Connectivity while an FDE
-spent a day on connectivity and never opened it.
+`--links` and `--orphans` read the same graph from opposite ends. A dead
+pointer is loud: the reader follows it and finds nothing. **A document nothing
+points at is silent, and costs more** — it is there, it is correct, and it is
+never read. An index does not count as a pointer in `--orphans`, because a
+document reachable only from a list is reachable only by somebody who already
+suspects it.
 
-**`--commands` is `--links` pointed at the tool.** A document that tells
-somebody to run something makes a checkable claim, and six documents once named
-a command nobody had built. Its coverage is the thing to watch: it reads the
-material and the scaffold templates, and **not this CLI's own Go strings** - so
-when the reader commands were deleted, fourteen printed strings kept naming
-them and the audit reported zero dead. That is recorded in TASK.md rather than
-fixed here.
+`--commands` is `--links` pointed at the tool: it resolves every
+`asgard-cli <command>` the material and the scaffold templates write against
+the command tree this binary answers to. It does **not** read this CLI's own Go
+strings — see TASK.md.
 
-**A finding is not noise because it is inconvenient.** Thirty-six gate findings
-on production charts were dismissed as configuration once; reading them found
-that R1b was a real bug, counting a semantic layer and a Toolset as capability
-sources and not a SkillSet, so every subagent of a flow-agent supervisor was
-told it had none.
+`hack/check-tables.py` holds the gate's pinned tables against the generated
+CRDs; `hack/verify-references.sh` runs the gate over the reference deployments.
+Neither ships in the binary — both need repositories that are not vendored.
 
-## 4. Retrieval: translate, search, then warn
+## Retrieval
 
-`find` is the way in, and it does four things a grep cannot.
+`find` is the way in. Four things it does that a grep does not:
 
-**It translates the query.** The corpus is English and a customer conversation
-usually is not, so a term taken from what somebody actually said matches
-nothing - and a search that finds nothing reads exactly like a subject the
-material lacks. `internal/corpus/aliases.md` is two tables: words that replace
-the query term, and names that are added to it. A row gets there because
-somebody searched for it and it landed nowhere, which `find` records to
-`docs/.find-misses`; **that file is never committed**, because a query carries
+**Translate the query.** The corpus is English and a customer conversation
+usually is not, so a term taken from what somebody said matches nothing — which
+reads identically to a subject the material lacks. `internal/corpus/aliases.md`
+holds two tables: words that *replace* a query term, and names that are *added*
+to it. `find` prints what it actually searched for.
+
+**Warn on a word with two senses here.** `payment` is billing between Asgard
+and the customer, and also the customer's own payment gateway. Both hits are
+correct and nothing contradicts anything, so the reader takes the wrong one.
+The senses come from the glossary's first table and fire on a *successful*
+search — the case no miss log can see.
+
+**Name the counterpart** — the extract for a page, the page for an extract —
+from the link graph rather than from prose.
+
+**Record a query that landed nowhere**, to `docs/.find-misses`.
+`asgard-cli reading --misses` reads them back and `issue-report --new` turns
+one into a filed issue. **That file is never committed**: a query carries
 whatever words the customer used.
 
-**It warns on a word with two senses here.** `find payment` returns Fehu, which
-is billing between Asgard and the customer, to somebody asking about the
-customer's own payment gateway. Both hits are correct, nothing contradicts
-anything, and the reader takes the wrong one - which is the failure the miss log
-is blind to, because a search that lands is not a miss. The senses come from the
-glossary's first table and fire on success.
+No embeddings, no vector index. Synthesis happens once, into a document, rather
+than on every query — the [llm-wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)
+form, and the only reason for it.
 
-**It names the counterpart**, parsed from the documents rather than written in
-them, and **it records a dead query**, which is the entry to the issue path.
+## Landing
 
-**It reaches four of the six bodies.** `needs` and `brief` became documents
-after `parts()` was written and were never added, so `find allowlist` misses
-the row about Asgard's outbound addresses - the second point of Goal.md
-unreachable from the first. TASK.md has what the fix costs; the reason it is
-not one line is that `part` wants a search and a list over documents that have
-no files, because they are rendered from Go.
+`asgard-cli init` writes the material into `.agents/skills/asgard-platform/`,
+so an agent in a customer repository reaches it with `cat` and `grep`:
 
-No embeddings and no vector index. The synthesis happens once, into a document,
-rather than on every query - that is the whole of what
-[llm-wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)
-buys and the only reason the form was chosen.
+    index.md    generated from the jobs actually written
+    aliases.md  the alias index
+    wiki/ usecase/ needs/ brief/ guide/
 
-## 5. Landing: the corpus becomes files in the customer's repository
+`internal/scaffold/corpus.go` builds those as jobs in `scaffold`'s own plan, so
+they inherit the existing contract instead of getting rules of their own:
+`shipped()` covers the prefix, the stamp records them, `gate`'s `shipped` step
+checks them.
 
-`asgard-cli init` writes the material into
-`.agents/skills/asgard-platform/` - five kinds, a generated `index.md`, and the
-alias index - because that is where an agent working in a customer repository
-finds what it knows, and `grep` answers "which document says this" with no
-subprocess and no ranking pass.
+`guide` lands as its static half only. A stage renders this repository's own
+state — which projects exist, what is still open — and that half stays a
+command, because a file would freeze one moment of it. The split is by
+paragraph: placeholders are substituted first, then any paragraph still
+carrying a template action is dropped.
 
-**This reverses a rule, and the reason it stopped applying is the point.** The
-corpus said these pages are never written into a customer repository, because
-"a copy inside one engagement goes stale where nobody is looking". True for as
-long as nothing could see the staleness. `scaffold.Stamp` can: a digest and a
-CLI version **per file**, committed beside the material, so a report can tell a
-repository that is behind from one somebody edited from one written by a newer
-binary than the one now reading it - and `--force` refuses that last case
-rather than downgrading it. The objection was to an invisible stale copy, not
-to a copy.
+**Nothing written is interpolated.** Staleness is found by byte comparison, so
+a version string in a landed document would make every repository report behind
+on a release that touched no page.
 
-Five states follow from that record: `behind`, `edited`, `ahead`, `stale`,
-`retired`. `edited` is the one the record was built for - before it existed the
-report called an engagement's own answers "yours are older" and offered
-`--force`, which would have deleted them.
+### The record
 
-The corpus subtree has one rule of its own: **a version change replaces it
-outright.** It is the only delete this tool performs, and it is narrow -
-`replaceCorpus` requires that the stamp has records under that prefix, that
-some record's version differs, and that the path is a directory rather than a
-symlink. It is right there and nowhere else because the whole directory is
-generated, and because a page renamed upstream would otherwise leave both names
-on disk, where grep returns the old one with nothing marking it stale.
+`.asgard-scaffold.json` holds a digest and a CLI version **per file**,
+committed beside the material. A byte comparison says a file differs; only the
+record says which way round, which is what the five states report:
 
-**`AGENTS.md` is the file that is half ours.** It ships sections an engagement
-is told, in the file, to fill in. A managed region marks the half this CLI
-owns, and that region is replaced on every run even in a file somebody edited.
-Adding it introduced a data-loss bug worth remembering: the merge records a
-digest, the next run reads that as proof the whole file is ours, and the
-whole-file branch wrote away every answer above the marker. **A file with a
-managed region is never rewritten whole** - the record was not wrong, it just
-did not mean what the branch took it to mean.
+| state | meaning |
+|---|---|
+| `behind` | this binary is newer, nobody here edited it — `--force` takes it |
+| `edited` | somebody here changed it; `--force` would discard that |
+| `ahead` | written by a **newer** CLI than the one running; `--force` refuses |
+| `stale` | differs, and which way round is not knowable |
+| `retired` | this binary no longer ships it |
 
-Nothing written is interpolated. A version string in any landed document would
-change its bytes on every release, and staleness is found by byte comparison,
-so every repository in the world would report behind on a release that touched
-no page.
+### Two rules of its own
 
-## 6. Verification: the half a client can do
+**A version change replaces the corpus subtree outright.** It is the only
+delete the scaffold performs, and `replaceCorpus` requires all three: the stamp
+has records under that prefix, some record's version differs, and the path is a
+directory rather than a symlink. The whole directory is generated, and a page
+renamed upstream would otherwise leave both names on disk where grep returns
+the old one.
 
-`asgard-cli gate` runs everything this machine can check, in order: `tools`,
-`repo`, `shipped`, `binding`, `skills`, `lint`, `render`, `verify`. **A skip is
-not a pass**, and the two are printed differently, because two steps need the
-platform.
+**A file with a managed region is never rewritten whole.** `AGENTS.md` ships
+sections an engagement fills in; markers bound the half this CLI owns and only
+that half is replaced. The digest recorded after a merge says this CLI wrote
+those bytes — true, and not the same as having written all of them.
 
-`verify` reads the rendered CRs against each other and against tables pinned
-from the CRDs - enums in `internal/gate/enums.go`, field constraints in
-`constraints.go`. Both can go stale in one direction only, so both are
-warnings.
+## Verification
 
-**Those tables are keyed by kind and path, not by field name, and that was a
-bug.** A name is not a location: `Loader.spec.schedule` is an unconstrained
-string and was being held against `Trigger`'s cron pattern, so a production
-Loader running `00 09 * * *` was reported. Nine entries were over-broad with
-one shape - the constraint had been read off the runtime kind and applied to
-the authoring kind. `hack/check-tables.py` exists to hold the tables against
-the generated CRDs and could not see it, because it compared a name's
-*constrained* occurrences against each other and never counted the bare ones.
+`asgard-cli gate` runs, in order: `tools`, `repo`, `shipped`, `binding`,
+`skills`, `lint`, `render`, `verify`. Two steps need the platform, and **a skip
+is printed differently from a pass**.
 
-**It does not reproduce the platform's checks and must not.** Whether a CR is
-admitted is decided by an apiserver and no client is ever issued credentials
-for one, so a copy of those rules here would drift from the server the first
-time either changed while still missing the two that matter most: a field the
-CRD silently prunes, and a rejection only the apiserver can produce. Forty of
+`verify` reads rendered CRs against each other and against tables pinned from
+the CRDs — enums in `internal/gate/enums.go`, field constraints in
+`constraints.go`. Both can only go stale in the direction of the platform
+adding something, so both are warnings.
+
+**Those tables are keyed by kind and path, not by field name.** A json field
+name is not a location: `Loader.spec.schedule` is an unconstrained string while
+`Trigger.spec.cron.schedule` carries a pattern, and a table keyed on the name
+alone holds one against the other's rule.
+
+**It does not reproduce the platform's checks.** Whether a CR is admitted is an
+apiserver's decision and no client is issued cluster credentials, so a copy of
+those rules here would drift, and would still miss the two that matter: a field
+the CRD silently prunes, and a rejection only the apiserver produces. Forty of
 the seventy-nine CEL rules are `self == oldSelf`, comparing a proposal against
-the object already on the cluster; a render is one object with no history, so
-nothing offline can see them.
+the object already on the cluster — a render is one object with no history.
 
-A green gate means "worth pushing", never "this will deploy". The authority is
-the plan, and reading it back is
-`asgard-cli pipeline runs watch --release <name> --ref <tag>`.
+A green gate means *worth pushing*. The authority is the plan:
 
-## 7. Chart authoring
+    asgard-cli pipeline runs watch --release <name> --ref <tag>
 
-`asgard-cli add <kind> <name>` writes a CR skeleton into a project's chart -
-ten kinds, declared in `generate.Kinds`, each naming the wiki page and the
-extract that explain it. Those two names are pointers like any other and
-`--links` resolves them, which is the half a prose search cannot reach: a kind
-pointing at a renamed extract goes unnoticed until somebody runs `add` and
-follows it.
+## Chart authoring
 
-What the generator writes is the conventions applied - naming, the display
-annotations, what belongs in values and what stays in the template - so an edit
-that departs from them is the half a rendered chart still passes.
+`asgard-cli add <kind> <name>` writes a CR skeleton into a project's chart. Ten
+kinds in `generate.Kinds`, each naming the wiki page and the extract that
+explain it — those names are pointers like any other and `--links` resolves
+them, which is the half a prose search cannot reach.
 
-Deliberately out of scope, and Goal.md says why: the namespace and the
+What the generator writes is the conventions applied: naming, the display
+annotations, what belongs in `values.yaml` and what stays in the template.
+
+Out of scope deliberately, and Goal.md says why: the namespace and the
 environment id, which the platform injects as `.Values.asgard.*` on every run,
 and whether the thing deploys at all.

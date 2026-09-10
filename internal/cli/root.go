@@ -44,7 +44,7 @@ assembled field by field, and where each has been got wrong before:
 
     asgard-cli find <terms>
 
-That searches all four parts of the material at once - the platform wiki, the
+That searches every part of the material at once - the platform wiki, the
 deployment extracts, the guidance for each decision, and the skills the agent in
 a customer repo loads - and hands over the counterpart of whatever it finds. Ask
 in Chinese if that is the language the question was asked in; the glossary

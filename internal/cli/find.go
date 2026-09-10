@@ -9,7 +9,9 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/brief"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/kb"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/needs"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/repo"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/scaffold"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/stage"
@@ -26,7 +28,7 @@ func newFindCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "find <terms>",
-		Short: "Search all four parts of the corpus at once",
+		Short: "Search every part of the corpus at once",
 		Long: `Search the wiki, the extracts, the stage guidance and the skills together.
 
 Four parts answer different questions - what the platform has, how one shape is
@@ -137,7 +139,7 @@ for one of the words.`,
 
 	cmd.Flags().StringVar(&format, formatFlag, formatText, formatUsage)
 	cmd.Flags().BoolVar(&unverified, "unverified", false,
-		"list what carries no record of having been held against anything, across all four parts")
+		"list what carries no record of having been held against anything, across every part")
 
 	return cmd
 }
@@ -173,7 +175,7 @@ func printUnverified(out io.Writer) error {
 	}
 
 	fmt.Fprintf(out, "For what a checked document says it has NOT been held against:\n"+
-		"this flag, which covers all four parts at once.\n")
+		"this flag, which covers every part at once.\n")
 	return nil
 }
 
@@ -284,6 +286,18 @@ func parts() []part {
 		counterpart: "wiki",
 		opens:       func(n string) string { return "-> what it is:  " + scaffold.CorpusPath("wiki", n) },
 		showsPath:   true,
+	}, {
+		heading:   "WHAT TO GET - from the customer, before it can be built",
+		search:    needs.Search,
+		list:      needs.List,
+		read:      corpus("needs"),
+		showsPath: true,
+	}, {
+		heading:   "BEFORE YOU DO IT - what this activity gets wrong",
+		search:    brief.Search,
+		list:      brief.List,
+		read:      corpus("brief"),
+		showsPath: true,
 	}, {
 		heading:   "DECISIONS - what to weigh",
 		search:    stage.Search,
@@ -727,7 +741,7 @@ func translate(query string) string {
 // exists to serve. So it does not offer advice about phrasing - it hands over
 // the contents, which is what the reader would have to ask for next.
 func nothingMatched(out io.Writer, query string) error {
-	fmt.Fprintf(out, "No term in %q appears anywhere in the four bodies.\n\n"+
+	fmt.Fprintf(out, "No term in %q appears anywhere in the material.\n\n"+
 		"That usually means the subject is named differently here, not that it is\n"+
 		"absent. This material is in English, and it describes platform parts rather\n"+
 		"than a customer's systems: a marketplace integration is under whichever\n"+

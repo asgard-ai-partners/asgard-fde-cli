@@ -172,7 +172,7 @@ func printMisses(out io.Writer, root string) error {
 	for _, m := range misses {
 		fmt.Fprintf(out, "  %s  %-9s %s\n", m.Date, m.Kind, m.Query)
 	}
-	fmt.Fprintf(out, "\n  miss      nothing in the four bodies carried any term\n"+
+	fmt.Fprintf(out, "\n  miss      nothing in the material carried any term\n"+
 		"  unplaced  results came back, but these terms appeared in none of them\n\n"+
 		"**Each line is one of two different defects, and they need different\nrepairs.** If the subject exists under another name, the index is missing a\n"+
 		"row: the alias index carries the rule for adding one. If it\ndoes not exist, the material is missing a page, and that is worth filing:\n\n"+

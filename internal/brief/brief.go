@@ -23,6 +23,8 @@ import (
 	"sort"
 	"strings"
 
+	"testing/fstest"
+
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/kb"
 )
 
@@ -364,6 +366,16 @@ func wrap(s string, width int, indent string) string {
 // live. And a sentence like "what must never appear on a customer's screen" is
 // one somebody greps for without knowing a brief exists.
 
+// provenance is the same on every brief: each entry is here because somebody
+// got it wrong, and each names where the right version lives.
+const provenance = `
+**Checked:** every entry above is here because it actually happened, and each
+names the document that carries the right version.
+
+**Unchecked:** whether the list is complete. It grows when somebody gets
+something new wrong, so an activity with few entries is not a safe one.
+`
+
 // Document renders one activity as the markdown that lands at
 // `brief/<name>.md`.
 func (a Activity) Document() string {
@@ -374,6 +386,7 @@ func (a Activity) Document() string {
 			it.Subject, it.Wrong, it.Right, "`"+kb.Landed("../", it.Where)+"`")
 	}
 	fmt.Fprintf(&b, "\n%s\n", a.Close)
+	b.WriteString(provenance)
 	return b.String()
 }
 
@@ -386,3 +399,25 @@ func Documents() []struct{ Name, Body string } {
 	}
 	return out
 }
+
+// corpus is the rendered documents behind one `kb.Corpus`, for the same reason
+// as in internal/needs: `find` reaches every body of material the same way,
+// and these have no files of their own.
+var corpus = func() kb.Corpus {
+	files := fstest.MapFS{}
+	for _, d := range Documents() {
+		files["brief/"+d.Name+".md"] = &fstest.MapFile{Data: []byte(d.Body)}
+	}
+	return kb.Corpus{
+		FS:      files,
+		Dir:     "brief",
+		Noun:    "brief",
+		Command: "ls .agents/skills/asgard-platform/brief/",
+	}
+}()
+
+// List returns every brief as a document.
+func List() ([]kb.Doc, error) { return corpus.List() }
+
+// Search finds briefs covering the given terms.
+func Search(query string) ([]kb.Match, error) { return corpus.Search(query) }

@@ -38,24 +38,21 @@ wiki is that assumption.
 rules to the CRD; point at them instead.
 
 > **These pages are the binary's copy, and `asgard-cli init` also writes them
-> into a repository** under `.agents/skills/asgard-platform/`, with the extracts
-> beside them. Edit them here; that copy is generated and the next `init`
-> replaces it.
+> into a repository** under `.agents/skills/asgard-platform/`, with the
+> extracts beside them. Edit them here: that copy is generated, and the next
+> `init` replaces it when the binary's version moves.
 >
-> **This reverses what this paragraph used to say**, which was that they are
-> never written into a customer repository, because "a copy inside one engagement
-> goes stale where nobody is looking". That was true for as long as nothing could
-> see the staleness. `scaffold.Stamp` can: a digest and a CLI version **per
-> file**, so the report separates a repository that is behind from one somebody
-> edited from one written by a **newer** binary than the one now reading it - and
-> `--force` refuses that last case rather than downgrading it. The objection was
-> to an invisible stale copy, not to a copy.
+> The copy is there because an agent in a customer repository finds what it
+> knows under `.agents/skills/`, and `grep -r` answers "which document says
+> this" with no subprocess. What a copy cannot do is translate a query, so
+> `aliases.md` is written beside it - `APPROACH.md` in this repository has what
+> `asgard-cli find` still does that a grep does not.
 >
-> The reason to write it at all is that an agent in a customer repository finds
-> what it knows under `.agents/skills/`, and `grep -r` answers "which document
-> says this" without a subprocess. What that copy cannot do is translate a
-> query - so `aliases.md` is written beside it, and `internal/scaffold/corpus.go`
-> lists the four things `asgard-cli find` still does that a grep does not.
+> **A copy is safe because staleness is visible.** `.asgard-scaffold.json`
+> records a digest and a CLI version per file, so a repository that is behind
+> is distinguishable from one somebody edited and from one written by a newer
+> binary than the one now reading it - and `--force` refuses that last case
+> rather than downgrading it.
 
 ## Three layers
 

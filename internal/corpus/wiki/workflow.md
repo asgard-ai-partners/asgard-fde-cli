@@ -43,8 +43,8 @@ Expression is JavaScript, not CEL, and it is **not** restricted to ECMA5 -
 that limit is `execute-script`'s Engine field and applies to a script body, not
 to these. One shipped tenant chart evaluates
 `prevBlobs.map(b => b.blobId).join(',')`, which is the evidence;
-`../wiki/processors.md` carries the count behind it, and said the opposite of this
-page until 2026-09-03. `||`, `??`, `String()` and `encodeURIComponent` work, as
+`../wiki/processors.md` carries the count behind it. `||`, `??`, `String()`
+and `encodeURIComponent` work, as
 do built-in helpers such as `history(0, -1)` and `urlEncode(...)`.
 
 **`const` and `let` are a different question and the answer is don't.** No

@@ -100,10 +100,10 @@ above were written:
 
 ## Keeping this list complete
 
-Eight of these were missing from it until 2026-09-03 - a third of the extracts,
-written and never grouped. The directory listed them the whole time, so
-nothing broke; what was lost is the grouping, which is the part that answers
-"which shape is this" for somebody who does not already know the file name.
+**A new extract needs a row here.** The directory lists every file whatever
+happens, so nothing breaks when one is missing - what is lost is the grouping,
+which is the part that answers "which shape is this" for somebody who does not
+already know the file name.
 
 **Adding an extract means adding a row here**, under the question it answers
 rather than at the end. If it does not fit a group, the group list is what is

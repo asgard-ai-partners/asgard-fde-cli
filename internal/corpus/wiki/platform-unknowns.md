@@ -31,9 +31,9 @@ engagement starts with the answer rather than rediscovering it.
 
 ## Why this is not in the customer's repository
 
-It used to be, in `docs/open-questions.md`, and that was wrong for the reason
-this whole body of material is embedded rather than copied: a copy in one
-engagement goes stale where nobody is looking, while a stale one here is fixed
+These questions are the platform's, not one engagement's, so they do not belong
+in a customer's `docs/open-questions.md`: a copy in one engagement goes stale
+where nobody is looking, while a stale one here is fixed
 for every engagement in a single release. A repo that filed its first question in
 March and one that filed its first in September would have disagreed about this
 list forever, and the older one would have been the one still showing an answered

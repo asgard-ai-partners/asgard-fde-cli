@@ -135,7 +135,7 @@ type Ref struct {
 // Corpus is one body of material: where the files are, and which of them are
 // readable by name without appearing in a listing.
 //
-// Two fields are optional and exist because the four bodies do not agree at the
+// Two fields are optional and exist because the bodies do not agree at the
 // byte level and should not be forced to. A stage prompt is
 // `prompts/04-read-path.md` and is called `read-path`; a skill is
 // `<name>/SKILL.md` and carries YAML frontmatter, which is the Agent Skills

@@ -34,9 +34,9 @@ What `asgard-cli gate` runs, and what each step is for:
            nothing else**. That is what proves values.yaml declares a default
            for every .Values.* the chart itself owns; overlay an environment
            file and a missing default is masked until it nil-pointers for
-           somebody running plain helm template. Linting with no -f at all -
-           which this prompt used to say - fails on every chart that reads
-           .Values.asgard.*, and a chart must not declare that block.
+           somebody running plain helm template. Linting with no -f at all
+           fails on every chart that reads .Values.asgard.*, and a chart must
+           not declare that block.
 
   render   each release renders, with placeholder platform values.
 

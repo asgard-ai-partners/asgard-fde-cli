@@ -11,21 +11,18 @@ a non-200 or a network error and produces `prevError`, and `query-database`,
 `retrieve-knowledge`, `execute-script` and `push-message` all document one too.
 Draw the error branch.
 
-**This page said the opposite for part of one day**, and the story is worth more
-than the correction. `ProcessorDefinitions`' `StaticRelationships` lists five
-processors with a Failure relation and the rest with Success or nothing, and
-that was read as the contract. It is not: the same list gives `listen-message`
-no relationships at all, while every production chart continues from one, and it
-gives `http-request` Success only, while four production charts across two
+**`ProcessorDefinitions`' `StaticRelationships` is not the contract.** It lists
+five processors with a Failure relation and the rest with Success or nothing,
+and it is incomplete in both directions: it gives `listen-message` no
+relationships at all while every production chart continues from one, and
+`http-request` Success only while four production charts across two
 repositories route `failure` off it and the documentation describes that branch
 in full.
 
-So this is the **third** thing `ProcessorDefinitions` has turned out to be
-incomplete about - `await`, the config keys, and now the relationships. Treat it
-as what the definitions declare, never as what the platform accepts, and when
-the two disagree the deployed charts win. `asgard-cli verify` had a rule built
-on the relationship list for about an hour; it flagged four correct production
-charts and was deleted.
+That list is the third thing in `ProcessorDefinitions` to be incomplete -
+`await` and the config keys are the others. **Treat it as what the definitions
+declare, never as what the platform accepts**, and when the two disagree the
+deployed charts win. Do not build a check on it.
 
 ## Every field is one of three kinds of value
 
@@ -37,9 +34,7 @@ only that one is JavaScript and one is Handlebars:
     Template     Handlebars, for producing text. `{{#if prevMessage}}...{{/if}}`
 
 **The ECMA5 limit is `execute-script`'s Engine field, and does not reach the
-Expression fields.** This page previously said it did, and
-`../wiki/workflow.md` said the opposite; the deployed charts settle it.
-Across 520
+Expression fields.** The deployed charts settle it. Across 520
 `expression:` values in the reference charts exactly one uses an arrow function
 - `prevBlobs.map(b => b.blobId).join(',')`, in a shipped tenant chart - so
 arrow functions evaluate. What no chart uses anywhere is `const`, `let` or a
@@ -70,9 +65,9 @@ which is where the restriction bites, and where it belongs in your head.
     type FileType = 'BINARY' | 'IMAGE' | 'VIDEO' | 'AUDIO' | 'DOCUMENT'
 
 **`prevToolCalls` is undocumented and is the one that unlocks post-processing.**
-The documentation's variable page does not list it and neither did this page
-until 2026-09-03; it was found by reading a chart. Each entry carries the tool's
-name, the arguments it was called with, and its result:
+The documentation's variable page does not list it; it is in the charts. Each
+entry carries the tool's name, the arguments it was called with, and its
+result:
 
     prevToolCalls[i].toolName          the tool that was called
     prevToolCalls[i].parameter.<arg>   the arguments, by their own names

@@ -21,6 +21,8 @@ import (
 	"sort"
 	"strings"
 
+	"testing/fstest"
+
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/kb"
 )
 
@@ -151,8 +153,22 @@ func (s Shape) Document() string {
 	for _, i := range s.Items {
 		fmt.Fprintf(&b, "\n## %s\n\n%s\n\nStated in %s.\n", i.Ask, i.Why, "`"+kb.Landed("../", i.From)+"`")
 	}
+	b.WriteString(provenance)
 	return b.String()
 }
+
+// provenance is the same on every shape, because it is the same claim: the
+// checking is per row rather than per document. Without it these read as
+// material nobody has held against anything, which `find --unverified` would
+// say and would be the wrong shape of true.
+const provenance = `
+**Checked:** each row above names the document that owns its claim, and
+` + "`asgard-cli audit-material --links`" + ` resolves those. That is the whole of the
+checking: a row is as good as the document it cites.
+
+**Unchecked:** the list itself. Nothing holds it against a finished engagement,
+so a shape can be missing something every one of its rows is right about.
+`
 
 // intro is on every shape rather than in one file they all point at: a reader
 // arrives here by grepping for a word in one row, and the rule that governs how
@@ -171,3 +187,26 @@ func Documents() []struct{ Name, Body string } {
 	}
 	return out
 }
+
+// corpus is the rendered documents behind one `kb.Corpus`, so that `find`
+// reaches these the way it reaches every other body of material. They have no
+// files - each is rendered from the shapes above - so the FS is built from
+// them.
+var corpus = func() kb.Corpus {
+	files := fstest.MapFS{}
+	for _, d := range Documents() {
+		files["needs/"+d.Name+".md"] = &fstest.MapFile{Data: []byte(d.Body)}
+	}
+	return kb.Corpus{
+		FS:      files,
+		Dir:     "needs",
+		Noun:    "shape",
+		Command: "ls .agents/skills/asgard-platform/needs/",
+	}
+}()
+
+// List returns every shape as a document.
+func List() ([]kb.Doc, error) { return corpus.List() }
+
+// Search finds shapes covering the given terms.
+func Search(query string) ([]kb.Match, error) { return corpus.Search(query) }

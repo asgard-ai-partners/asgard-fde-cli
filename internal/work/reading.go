@@ -131,7 +131,7 @@ const missHeader = `# Searches this engagement ran that the material did not ans
 # customer's own words. The scaffold's .gitignore excludes this file.
 #
 # date	kind	query
-#   miss      nothing in the four bodies carried any term
+#   miss      nothing in the material carried any term
 #   unplaced  results came back, but these terms appeared in none of them
 #
 # Each line is a candidate row for the alias index, which asgard-cli init
