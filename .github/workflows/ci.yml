@@ -67,7 +67,7 @@ jobs:
       - name: every document says what it was held against
         run: go run ./cmd/asgard-cli audit-material --unverified
 
-      - name: this repo's own documents name no path that is gone
+      - name: this repo's own documents name no path or symbol that is gone
         run: hack/check-doc-paths.py
 
 

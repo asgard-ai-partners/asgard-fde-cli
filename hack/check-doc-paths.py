@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Every path this repository's own documents name has to exist.
+"""Every path and Go symbol this repository's own documents name has to exist.
 
 `audit-material --paths` is the mirror of this and runs the other way round:
 it reads the material that LANDS in a customer repository and fails on a path
@@ -47,8 +47,42 @@ def skip(p: str) -> bool:
             or p.startswith(("projects/", "docs/", "assets/")))
 
 
+# A Go symbol written `pkg.Symbol`. The docs cite these as the place a rule is
+# implemented, and a deleted one sends a reader looking for it: `config.Find`
+# outlived the whole `config` package, and `kb.Rank` outlived the search engine.
+SYMBOL = re.compile(r"`([a-z][a-z0-9]*)\.([A-Z][A-Za-z0-9_]*)`")
+
+
+def go_files(root: pathlib.Path):
+    return [f for f in root.rglob("*.go") if ".out" not in f.parts]
+
+
+def go_packages(root: pathlib.Path):
+    """The package names a `pkg.Symbol` reference could legitimately name:
+    every directory under internal/, plus the last segment of every import
+    path in the tree, plus the module root's own package.
+
+    A reference to a package outside that set names nothing - which is how
+    `config.Find` survived the deletion of the whole `config` package.
+    """
+    names = {d.name for d in (root / "internal").iterdir() if d.is_dir()}
+    names.add("selfsrc")
+    for f in go_files(root):
+        for line in f.read_text(errors="replace").split("\n"):
+            line = line.strip().strip("_ ").strip()
+            if line.startswith('"') and line.endswith('"'):
+                names.add(line.strip('"').split("/")[-1])
+    return names
+
+
+DECL = "func|type|var|const"
+
+
 def main() -> int:
     root = pathlib.Path(__file__).resolve().parent.parent
+    pkgs = go_packages(root)
+    internal = {d.name: d for d in (root / "internal").iterdir() if d.is_dir()}
+    internal["selfsrc"] = root
     bad = 0
     checked = 0
     for name in DOCS:
@@ -66,10 +100,30 @@ def main() -> int:
                 if not (root / p.rstrip("/")).exists():
                     print(f"gone  {name}:{i} -> `{p}`")
                     bad += 1
-    print(f"\n{checked} repository path(s) named, {bad} that are not there.")
+            for m in SYMBOL.finditer(line):
+                pkg, sym = m.group(1), m.group(2)
+                checked += 1
+                if pkg not in pkgs:
+                    print(f"gone  {name}:{i} -> `{pkg}.{sym}` (no such package)")
+                    bad += 1
+                    continue
+                if pkg not in internal:
+                    # Somebody else's package. Whether it has that symbol is
+                    # their business and their version's.
+                    continue
+                # **Resolved inside the package that owns it.** A search of the
+                # whole tree cannot tell `usecase.Index` from `strings.Index`,
+                # and passed the first for months after it was deleted.
+                own = "\n".join(f.read_text(errors="replace")
+                                for f in internal[pkg].glob("*.go"))
+                if not re.search(rf"\b(?:{DECL})\s+(?:\([^)]*\)\s*)?{re.escape(sym)}\b", own) \
+                        and not re.search(rf"^\t{re.escape(sym)}\s", own, re.M):
+                    print(f"gone  {name}:{i} -> `{pkg}.{sym}`")
+                    bad += 1
+    print(f"\n{checked} path(s) and symbol(s) named, {bad} that are not there.")
     if bad:
-        print("\nA document that names a file this repository does not have sends a\n"
-              "reader to look for it. Fix the path, or delete the sentence.")
+        print("\nA document that names a file or a symbol this repository does not have\n"
+              "sends a reader to look for it. Fix it, or delete the sentence.")
         return 1
     return 0
 

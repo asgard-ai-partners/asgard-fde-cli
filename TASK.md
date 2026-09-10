@@ -133,12 +133,14 @@ is why every document carries its sources.
 Each is stated in AGENTS.md as a rule; what follows is how far the code holds
 it.
 
-  - **One schema.** Held. Every document in all four bodies opens with a title
-    and a summary and carries `**Checked:**` and `**Unchecked:**` -
-    **0 of 25, 0 of 21, 0 of 12, 0 of 7** unverified. `kb.Scan` and `kb.Rank`
-    are the one scoring implementation and `kb.Ref` lets a corpus address files
-    that are not `dir/name.md`, which is how a prompt is reachable as
-    `read-path` and a skill as `<name>/SKILL.md`.
+  - **One schema.** Held. Every document opens with a title and a summary and
+    carries `**Checked:**` and `**Unchecked:**`, and `audit-material
+    --unverified` reports **0 of 63** across the four bodies where the marker
+    is written per document. It says so differently for `needs` and `brief`,
+    whose eleven documents share one provenance constant, because a check that
+    cannot fail should not report a pass. `kb.Ref` and `kb.ParseDoc` are what
+    let a body join without being one `dir/name.md` per document - a numbered
+    prompt file, a skill directory with YAML frontmatter.
 
     **It was closed by checking, not by writing the lines**, which is the whole
     of the distinction: the guidance and the skills were held against

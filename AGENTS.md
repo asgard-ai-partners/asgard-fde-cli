@@ -300,7 +300,13 @@ asgard-cli audit-material --urls   # needs the network
 audit reads what **lands** in a customer repository and fails on a path only we
 have; the script reads the documents that never land - Goal, README, AGENTS,
 STRUCTURE, APPROACH, TASK - where naming our own paths is the point, and fails
-when one of them is gone. It needs the checkout, which is why it is in `hack/`.
+when one of them is gone. It checks a package-qualified Go symbol the same way, and
+resolves it **inside the package that owns it** - a search of the whole tree
+cannot tell one package's Index from strings.Index, and it passed a reference
+to a symbol whose entire package had been deleted. **Do not write a deleted
+symbol in backticks**, even to explain that it is deleted: this check reads
+this file, and it will resolve it. It needs the checkout, which is why it is in
+`hack/`.
 
 Everything above except `--urls` runs in CI. `--urls` does not: a third party's
 outage is not this repository's build failure, and a gate that only works
@@ -391,9 +397,10 @@ before the engagement has a directory. `asgard-cli init` in an empty directory
 writes the whole corpus, and `asgard-cli size` and `asgard-cli guide` answer
 outside a repository too - reference material that requires an engagement is
 unavailable exactly when somebody is deciding whether to have one. None of
-those needs a repository, a session or a network. A new command that calls `config.Find`
-before it can say anything has quietly left that half. Run it in an empty
-directory.
+those needs a repository, a session or a network. A new command that resolves a
+profile, or reads the checkout's binding, before it can say anything has
+quietly left that half - `actingLocally` in `internal/cli/context.go` is the
+line where that starts. Run it in an empty directory.
 
 **Which kind of artefact is this recipe for, and what inverts for the others?**
 A rule that produces a good artefact of one kind silently produces a bad one of

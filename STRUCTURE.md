@@ -74,10 +74,11 @@ replaced with the one declaration at the repository root.
 **Why nothing decides when a chart is finished.** A shape is the one thing the
 files cannot say: a SemanticLayer with nothing mounted on it is either a
 finished Mimir deliverable or an agent nobody has written yet, and those are
-identical on disk. It used to be recorded per project so that `stage.Gaps` could
-subtract - and recording it meant treating somebody's note of intent as a
-specification this tool could check. Both are gone. `size` still counts the
-shapes off deployments in production, for a person to compare against.
+identical on disk. There is nowhere to record which one it is, deliberately:
+that record is somebody's note of intent, and subtracting a chart's contents
+from a note of intent is sound arithmetic on an input this tool cannot check.
+`asgard-cli size` counts the shapes off deployments in production, for a person
+to compare against.
 
 **To add a subcommand**: write `newXxxCmd()` in `internal/cli/` and register it
 through `addTo(cmd, group..., ...)` in `root.go`. The group is required - cobra
@@ -257,9 +258,12 @@ server-side dry-run all pass a document the apiserver would reject or silently
 prune. `hack/README.md` is the procedure, and the PR template asks for its
 output.
 
-`hack/check-doc-paths.py` holds every path this repository's own documents name
-against what is on disk - the mirror of `audit-material --paths`, which does the
-same for what lands in a customer's repository.
+`hack/check-doc-paths.py` holds every path and every package-qualified Go
+symbol this repository's own documents name against what is on disk - the
+mirror of `audit-material --paths`, which does the same for what lands in a
+customer's repository. A symbol resolves inside the package that owns it,
+because a search of the whole tree cannot tell one package's Index from
+another's.
 
 `hack/check-tables.py` is the other half of the contract check: it holds the gate's pinned enum and
 constraint tables against the generated CRDs, so a table that has fallen behind
