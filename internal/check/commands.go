@@ -148,8 +148,11 @@ func (c *checker) checkCommands() error {
 			instead = r
 		}
 		c.warnf("this repository's documents name `asgard-cli %s` %d time(s) and this build has no such command - %s. "+
-			"%s. `scaffold` never overwrites a file it has already written, which is right - you edit them - so a command "+
-			"renamed in the tool leaves this repository pointing at the old name and nothing else notices",
+			"%s. **Fix these by hand.** `asgard-cli init` will not: it never overwrites a file it has already "+
+			"written, which is right, because these are files an engagement edits - and `--force` is not the "+
+			"answer either, since it takes this binary's copy and discards what was written here. A command "+
+			"renamed in the tool leaves a repository pointing at the old name, and this warning is the only "+
+			"thing that notices",
 			n, len(where), strings.Join(where, ", "), instead)
 	}
 	return nil

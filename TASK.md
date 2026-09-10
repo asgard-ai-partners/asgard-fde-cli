@@ -1,16 +1,17 @@
 # TASK.md
 
-What this repo is for, and what needs something a checkout does not have.
-Nothing else - how it is built is [STRUCTURE.md](STRUCTURE.md), how to change it
-is [AGENTS.md](AGENTS.md), what the commands do is [README.md](README.md), and
-the defects it has produced and why nothing caught them are in
-`source/FINDINGS.md`.
+Where this repo stands, and what needs something a checkout does not have.
+Nothing else - what it is for is [Goal.md](Goal.md), how the main capabilities
+are implemented is [APPROACH.md](APPROACH.md), what lives in which directory is
+[STRUCTURE.md](STRUCTURE.md), how to change it is [AGENTS.md](AGENTS.md), and
+what the commands do is [README.md](README.md).
 
-**There is no worklist here any more.** What could be done from a checkout has
-been, and git log is the record of it; what is left is under "What is not done"
-and every line of it names the thing it is waiting for. A finding that a reader
-needs lives on the document it concerns rather than here - `**Unchecked:**` on
-the page, a row on `asgard-cli wiki platform-unknowns`, a rule in AGENTS.md.
+**There is no worklist here.** What could be done from a checkout has been, and
+git log is the record of it. What is left is under "What is not done", where
+every line names the thing it is waiting for. A finding a reader needs lives on
+the document it concerns rather than here - `**Unchecked:**` on the page, a row
+on `.agents/skills/asgard-platform/wiki/platform-unknowns.md`, a rule in
+AGENTS.md.
 
 ## Goal
 
@@ -25,8 +26,8 @@ version and this is the same list with what each one costs:
   2. **Be useful in a meeting**, which means naming the dependencies an
      integration scenario needs before somebody promises it. A credential, an
      endpoint, a network path, a test environment, an approver's queue - the
-     interview in `asgard-cli guide requirements` and the briefings in
-     `asgard-cli brief` are this, and the riskiest activity in an engagement is
+     interview in `.agents/skills/asgard-platform/guide/requirements.md` and the briefings in
+     `.agents/skills/asgard-platform/brief/` are this, and the riskiest activity in an engagement is
      the one that leaves no trace in a repository.
 
   3. **Implement the IaC - the charts.** Skeletons for the CR kinds, the
@@ -35,12 +36,12 @@ version and this is the same list with what each one costs:
      168 spec keys and `add` never mentions 52 of them, so what it writes is a
      correct starting point and not a chart.
 
-  4. **When the knowledge is not here, say where to file it.** A search that
-     came back empty is recorded, `asgard-cli reading --misses` reads it back,
-     and `asgard-cli issue-report --new` writes the report with that evidence
-     already in it. The corpus is compiled into the binary, so an engagement
-     cannot write what it learns where it will be read - the issue is the only
-     path back, and it has to be two sentences rather than an essay.
+  4. **When the knowledge is not here, say where to file it.**
+     `asgard-cli issue-report` prints the repository URL and what a report has
+     to say; `--new` writes the body with what the tool already knows filled
+     in. The corpus is compiled into the binary, so an engagement cannot write
+     what it learns where it will be read - the issue is the only path back,
+     and it has to be two sentences rather than an essay.
 
 **The asking is the spine and the chart work hangs off it.** An FDE does not
 reach for this to be told what step they are on; they reach for it mid-sentence,
@@ -87,17 +88,19 @@ engagement is still a repository shaped like
 and roughly 90% of that repo's 916-line `AGENTS.md` is knowledge only the
 engagement can earn.
 
-**And it reports no position.** No command says where an engagement is. Guidance
-is reached by subject through `find` or by name through `guide`; the records are
-read by `project`, `question`, `request` and `task`, one file each.
+**And it reports no position.** No command says where an engagement is.
+Guidance is reached by name with `guide` or by grepping `guide/` for the
+subject; the records are read by `project`, `question`, `request` and `task`,
+one file each.
 
-## The design of record: one corpus, four parts
+## The design of record: one corpus
 
-The target shape is the [llm-wiki
-pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f).
-`internal/wiki/` already implements it, deliberately and with the pattern named
-in its own `README.md`. **The work is to bring the other three bodies of
-material under the same schema, not to invent one.**
+The shape is the [llm-wiki
+pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f),
+and every body of material is under the same schema. How that is implemented
+is [APPROACH.md](APPROACH.md); the rules a document has to follow are
+[AGENTS.md](AGENTS.md). What is below is what the pattern buys and what it does
+not.
 
 ### Three layers
 
@@ -105,8 +108,8 @@ What separates them is which one may be rewritten.
 
 | layer | contents | may be edited |
 |---|---|---|
-| raw sources | asgard-docs, asgard-kube, the eight reference deployments | read-only, never vendored in; only the commit is recorded |
-| the corpus | `wiki/pages/`, `usecase/extracts/`, `stage/prompts/`, the scaffolded skills | rewritten continuously, and only ever describes the present |
+| raw sources | asgard-docs, asgard-kube, asgard-core, the reference deployments | read-only, never vendored in; only the commit is recorded |
+| the corpus | `corpus/wiki/`, `corpus/usecase/`, `stage/prompts/`, the scaffolded skills | rewritten continuously, and only ever describes the present |
 | the schema | `AGENTS.md`, and each corpus's own `README.md` | changed deliberately, by a person |
 
 ### Three operations
@@ -115,9 +118,10 @@ What separates them is which one may be rewritten.
 touches, update the index, append to the log. Step "the pages it touches",
 plural, is the one that gets skipped.
 
-**query**: search the corpus first. An answer that needed three documents
-assembled on the spot is new knowledge - it goes into a document, or the next
-reader assembles it again.
+**query**: grep the corpus first, through `aliases.md` if the question did not
+arrive in English. An answer that needed three documents assembled on the spot
+is new knowledge - it goes into a document, or the next reader assembles it
+again.
 
 **lint**: contradictions, stale claims, orphans, dead pointers, and the fourth
 kind that only happens here - upstream moved and the corpus did not. Nothing
@@ -126,15 +130,17 @@ is why every document carries its sources.
 
 ### Four rules, and where each one stands
 
-These are the acceptance criteria for the work in the worklist below. Each is
-stated in AGENTS.md as a rule; what follows is how far the code holds it.
+Each is stated in AGENTS.md as a rule; what follows is how far the code holds
+it.
 
-  - **One schema.** Held. Every document in all four bodies opens with a title
-    and a summary and carries `**Checked:**` and `**Unchecked:**` -
-    **0 of 25, 0 of 21, 0 of 12, 0 of 7** unverified. `kb.Scan` and `kb.Rank`
-    are the one scoring implementation and `kb.Ref` lets a corpus address files
-    that are not `dir/name.md`, which is how a prompt is reachable as
-    `read-path` and a skill as `<name>/SKILL.md`.
+  - **One schema.** Held. Every document opens with a title and a summary and
+    carries `**Checked:**` and `**Unchecked:**`, and `audit-material
+    --unverified` reports **0 of 63** across the four bodies where the marker
+    is written per document. It says so differently for `needs` and `brief`,
+    whose eleven documents share one provenance constant, because a check that
+    cannot fail should not report a pass. `kb.Ref` and `kb.ParseDoc` are what
+    let a body join without being one `dir/name.md` per document - a numbered
+    prompt file, a skill directory with YAML frontmatter.
 
     **It was closed by checking, not by writing the lines**, which is the whole
     of the distinction: the guidance and the skills were held against
@@ -145,39 +151,34 @@ stated in AGENTS.md as a rule; what follows is how far the code holds it.
 
   - **Links are data.** Held. Every document carries `kb.Doc.Links`, read when
     it is parsed, with the ones inside its counterpart section marked
-    deliberate. `find` names a hit's counterpart off that field and
-    `audit-material --links` resolves the same field, so the two can no longer
-    disagree about what a document points at - which they could, being two
-    regular expressions at two points of use. The lint that was impossible is
-    now `audit-material --orphans`, and its first run said **11 of 61 documents
-    are reached by no pointer**. The index deliberately does not count as one.
+    deliberate. Resolving a pointer at the point of use instead would be a
+    second regular expression that can disagree with the first about what a
+    document points at. The lint that was impossible is now
+    `audit-material --orphans`, and **0 of 67 documents are reached by no
+    pointer**. The index deliberately does not count as one.
 
-  - **Retrieval is by subject, never by position.** Held, and the rule is
-    narrower than it was: it used to say "by subject or by condition", and the
-    condition half was the ladder with the numbers off. Gone with it are
-    `stage.Current`, `stage.Relevant`, the numbering and "stage 4 of 9" - and,
-    since 2026-09-05, `stage.Gaps` too. It was arithmetic, subtracting what a
-    chart declares from what its **declared shape** asked for, and it was sound
-    arithmetic on an unsound input: the shape was a note of what somebody meant
-    to build, which is not something this tool can check. There is nowhere to
-    record one now. Nothing raises a document for a reader; `guide` names them
-    and `find` reaches them by subject.
+  - **Retrieval is by subject, never by position.** Held. Nothing raises a
+    document at a reader: there is no command that derives where an engagement
+    stands, because an onboarding is not linear and a position cannot be
+    argued with. `guide` names a piece of guidance; grep reaches any document
+    by subject.
 
-  - **Everything an agent reads has a parseable form.** Held. `find`,
-    `project`, `question`, `request`, `task`, `check` and `verify` take
-    `--format json`, and the last two are the pair that mattered most: they are
-    the gate an agent is trying to turn green, and in text a warning and a
-    failure differ by one word at the left margin while only one is fatal. A
-    JSON run that fails exits 1 and prints nothing to stderr, because the report
-    already says it failed and a second account of it is a second source for one
-    fact. `wiki` and `usecase` stay prose - they are whole documents.
+  - **Everything an agent reads has a parseable form.** Held. `project`,
+    `question`, `request`, `task`, `check` and `verify` take `--format json`,
+    and the last two are the pair that mattered most: they are the gate an
+    agent is trying to turn green, and in text a warning and a failure differ
+    by one word at the left margin while only one is fatal. A JSON run that
+    fails exits 1 and prints nothing to stderr, because the report already says
+    it failed and a second account of it is a second source for one fact. The
+    material has no format flag - it is whole documents on disk.
 
 ### What the pattern does not buy, and what is unsolved
 
-**No embeddings, no vector index.** The point of the pattern is that synthesis
-happens once, into a document, instead of on every query. A retrieval layer over
-un-synthesised material is the thing it replaces. Substring and term matching in
-`internal/kb` is sufficient and stays.
+**No embeddings, no vector index, and now no search command either.** The point
+of the pattern is that synthesis happens once, into a document, instead of on
+every query. `asgard-cli init` writes the documents into the repository and
+grep is the way in, which is one fewer thing to keep working than a scoring
+function was.
 
 **The write-back path runs through a person, and the person is at the far end.**
 In the original, a good answer becomes a new page. Here the corpus is compiled
@@ -185,8 +186,8 @@ into the binary - correctly, so that a stale document is fixed once for every
 engagement rather than rotting inside one - so an engagement that learns
 something cannot write it where it will be read. The loop that exists instead:
 
-    a search comes back empty   ->  `find` records it, in docs/.find-misses
-    the agent files it          ->  `issue-report --new`, with that evidence in
+    a grep comes back empty     ->  the agent has the gap in front of it
+    the agent files it          ->  `issue-report --new`, evidence filled in
     somebody ingests it here    ->  a page, or a row in the alias index
     the next release            ->  every engagement has it
 
@@ -247,10 +248,11 @@ the next engagement is the fix in the next release.
   local half of the loop is the native tools - `helm lint`, `helm template` - plus
   `verify`, which checks what a dry run passes and runtime still fails.
 
-**The offline rule now has a boundary rather than being absolute.** `wiki`,
-`usecase`, `find`, `brief`, `size` and `guide` answer with no network, no
-repository and no login, and that has to stay true: the question they answer is
-asked in a meeting, before there is an engagement to log in to. `login` and
+**The offline rule now has a boundary rather than being absolute.**
+`asgard-cli init` writes the whole corpus with no network, no repository and no
+login, and `size` and `guide` answer without one either. That has to stay true:
+the question they answer is asked in a meeting, before there is an engagement
+to log in to. `login` and
 `pipeline` are the exception, and they are an exception the first half must never
 acquire.
 
@@ -260,7 +262,7 @@ They are not carried here. Each lives where the person who can answer it will be
 standing:
 
   - **The platform's**, with who to ask and what each blocks -
-    `asgard-cli wiki platform-unknowns`. Five of them are also written into
+    `.agents/skills/asgard-platform/wiki/platform-unknowns.md`. Five of them are also written into
     every scaffolded `docs/open-questions.md`, because every engagement hits
     them.
   - **This engagement's** - `asgard-cli question`, which reads
@@ -277,7 +279,7 @@ could be done from one has been, and git log is the record.
 **A console login and an afternoon.** `console`, `sindri`, `mimir`, `fehu` and
 `settings` describe a UI, so their source is product documentation rather than a
 chart, and they are checked less deeply than the extracts by nature. Each says
-how far it got on its own `**Unchecked:**` line and `asgard-cli wiki --unverified`
+how far it got on its own `**Unchecked:**` line and `asgard-cli audit-material --unverified`
 lists them. Two mechanical passes found nothing and a third was written and
 thrown away for calling correct material wrong. One person with access could
 settle all five.
@@ -285,8 +287,8 @@ settle all five.
 **A cluster.** Forty of the CRDs' 79 CEL rules are `self == oldSelf`, comparing a
 proposal against the object already on it. A render is one object with no
 history, so nothing offline can see them - `botProviderClass` is the one that
-bites, and `asgard-cli usecase chat-channel` documents it instead. The same
-applies to `asgard-cli guide verify` step 4: a step that cannot be run is not a
+bites, and `.agents/skills/asgard-platform/usecase/chat-channel.md` documents it instead. The same
+applies to `.agents/skills/asgard-platform/guide/verify.md` step 4: a step that cannot be run is not a
 step that passed.
 
 **A customer on a chat platform.** Every `BotProvider` across every reference
@@ -295,15 +297,32 @@ field against the CRD and match, but nothing there has run, and its
 `**Unchecked:**` line says so. The first customer on LINE is that page's first
 test.
 
+**A clone of asgard-docs, and one of asgard-kube, together.** Goal's first
+point names "which CR a UI name maps to" as one of four things this material
+owes an agent, and **there is one such table: `wiki/agents.md`, five rows,
+the agent family only.** Every other mapping is stated in the prose of
+whichever page discusses it - Data Source on `settings`, Drive on `knowledge`,
+MCP Server on `tools` - which a grep for the UI name does reach, and which
+nothing can check for completeness. A UI name with no CR stated anywhere is
+invisible.
+
+The table that would fix it cannot be written from a checkout: it needs the
+UI's own vocabulary from asgard-docs held against the kinds in asgard-kube,
+and inventing a row is worse than not having one. **Do not put it in
+`aliases.md`** - that file's rule is that every row is a term somebody
+actually searched for, and a bulk import of UI names is exactly the guess it
+forbids.
+
 **A clone of asgard-docs.** 69 published pages are cited by no wiki page. Two
 slices are worth reading and the rest is release notes and site plans:
-`developer-reference/processor`, because `wiki processors` was written from
+`developer-reference/processor`, because
+`.agents/skills/asgard-platform/wiki/processors.md` was written from
 asgard-core's definitions and P10 says that list is demonstrably incomplete; and
 `help-community/faq`, because nothing has checked whether the answers a customer
 gets there agree with what this material tells an FDE to say.
 
 **An answer from the platform team.** The unknowns are on
-`asgard-cli wiki platform-unknowns`, with who to ask and what each blocks. P12 is
+`.agents/skills/asgard-platform/wiki/platform-unknowns.md`, with who to ask and what each blocks. P12 is
 the cheapest: three CRDs - `ImageGenerationModel`, `TranscriptionModel`,
 `SourceSetEditorServer` - exist in the contract and appear in no documentation
 and no material here, and nobody has asked whether they are meant to be reached

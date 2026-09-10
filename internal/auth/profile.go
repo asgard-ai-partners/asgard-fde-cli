@@ -12,10 +12,11 @@
 // accepted. So the binary sends none, and there is nothing in a release anybody
 // could lift a credential out of.
 //
-// Nothing here is reachable from the knowledge commands. `wiki`, `usecase`,
-// `find`, `brief`, `size` and `guide` answer with no network, no repository and
-// no login, and that has to stay true - the question they answer is asked in a
-// meeting, before there is an engagement to log in to.
+// Nothing here is reachable from the half of the tool that answers a question.
+// `asgard-cli init` writes the material and `asgard-cli guide` and
+// `asgard-cli size` read it, all with no network, no repository and no login,
+// and that has to stay true - the question they answer is asked in a meeting,
+// before there is an engagement to log in to.
 package auth
 
 import (
@@ -318,8 +319,8 @@ func retiredSettings() (string, bool) {
 // type instead.
 //
 // It is reached only from ResolveProfile, so the commands that answer with no
-// network and no login - `wiki`, `find`, `brief`, `guide`, `usecase`, `size` -
-// are unaffected, as they must be.
+// network and no login - `asgard-cli init`, `asgard-cli guide`,
+// `asgard-cli size` - are unaffected, as they must be.
 type ErrRetiredSettings struct {
 	Path string
 	Keys []string

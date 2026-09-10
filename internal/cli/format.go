@@ -5,8 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-
-	"github.com/asgard-ai-partners/asgard-fde-cli/internal/kb"
+	"strings"
 )
 
 // ErrSilent fails a command without a message.
@@ -22,9 +21,8 @@ var ErrSilent = errors.New("")
 //
 // Column-aligned output is for the FDE and is not an interface: an agent acting
 // on open questions should not have to recover them from a `%-9s`. The commands
-// an agent acts on carry this; the ones a person reads for prose do not, and
-// `wiki`, `usecase` and `brief` are already whole documents rather than
-// records.
+// an agent acts on carry this; the material does not, because it is whole
+// documents on disk rather than records.
 const (
 	formatFlag  = "format"
 	formatText  = "text"
@@ -49,35 +47,41 @@ func writeJSON(out io.Writer, v any) error {
 	return enc.Encode(v)
 }
 
-// printSources lists the documentation links a document cites, or every one in
-// the corpus when no document is named.
-//
-// It exists because an engagement did it by hand. Building a customer deck, an
-// agent opened each page it had used, read the Sources block at the foot, copied
-// nine URLs out and checked each one itself - and every part of that except the
-// checking is something the material already knows. A deck spans several pages,
-// so this takes no argument as well as one.
-func printSources(out io.Writer, docs []kb.Doc, read func(string) string, none string) {
-	total := 0
-	for _, d := range docs {
-		if len(d.Sources) == 0 {
-			continue
-		}
-		fmt.Fprintf(out, "%s\n", read(d.Name))
-		for _, u := range d.Sources {
-			fmt.Fprintf(out, "  %s\n", u)
-			total++
-		}
-		fmt.Fprintln(out)
+// wrapAt and truncate came from internal/cli/usecase.go, which was deleted with
+// the reader commands. They were never that command's: three other files
+// already used them, and text-shaping does not belong in a command file.
+
+// wrapAt breaks a provenance line so it stays readable in a terminal, indenting
+// continuations to line up under the first.
+func wrapAt(s string, width, indent int) string {
+	words := strings.Fields(s)
+	if len(words) == 0 {
+		return ""
 	}
-	if total == 0 {
-		fmt.Fprint(out, none)
-		return
+	var b strings.Builder
+	line := 0
+	for i, w := range words {
+		if i > 0 && line+1+len([]rune(w)) > width {
+			b.WriteString("\n" + strings.Repeat(" ", indent))
+			line = 0
+		} else if i > 0 {
+			b.WriteString(" ")
+			line++
+		}
+		b.WriteString(w)
+		line += len([]rune(w))
 	}
-	fmt.Fprintf(out, "%d link(s). **These are what the page was written from, not a\n"+
-		"reading list for a customer** - a link that answers the question a customer\n"+
-		"asked is worth handing over, and the rest is our own provenance.\n\n"+
-		"`asgard-cli audit-material --urls` fetches every one of them and fails on a\n"+
-		"404; six were dead the first time it ran, four of them pages marked\n"+
-		"`draft: true`, which exist in a checkout and are not published.\n", total)
+	return b.String()
+}
+
+// truncate cuts to n runes, not n bytes. Slicing a string by byte splits a
+// multi-byte character in half and prints a replacement glyph, which the wiki
+// pages hit on every line because they are written in Chinese.
+func truncate(s string, n int) string {
+	s = strings.TrimSpace(s)
+	r := []rune(s)
+	if len(r) <= n {
+		return s
+	}
+	return strings.TrimSpace(string(r[:n])) + "..."
 }

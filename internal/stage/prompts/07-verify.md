@@ -34,9 +34,9 @@ What `asgard-cli gate` runs, and what each step is for:
            nothing else**. That is what proves values.yaml declares a default
            for every .Values.* the chart itself owns; overlay an environment
            file and a missing default is masked until it nil-pointers for
-           somebody running plain helm template. Linting with no -f at all -
-           which this prompt used to say - fails on every chart that reads
-           .Values.asgard.*, and a chart must not declare that block.
+           somebody running plain helm template. Linting with no -f at all
+           fails on every chart that reads .Values.asgard.*, and a chart must
+           not declare that block.
 
   render   each release renders, with placeholder platform values.
 
@@ -68,7 +68,7 @@ Then the step that cannot be run here. Push, and read the plan back:
      matched, or the release was never created on the platform.
      `asgard-cli pipeline deliveries` says which.
 
-     **What this step is catching is written down.** `asgard-cli wiki crd-rules`
+     **What this step is catching is written down.** `../wiki/crd-rules.md`
      lists the CEL validations the apiserver evaluates, which `helm lint` does
      not run and a dry-run does not report faithfully - and the one rule the
      schema cannot express at all. Read it before deciding a red deploy is a
@@ -83,7 +83,7 @@ Done when: every step is green, and you have said which ones could not be run.
 
 Once every chart is complete, `asgard-cli project` says so for each of them
 rather than a next step. After that, new capability is added
-with the loop in `asgard-cli guide enhance`.
+with the loop in `../guide/enhance.md`.
 
 **Checked:** 2026-09-04 - each of the four steps names a command that exists and
 does what is said: `asgard-cli check` is structural, `asgard-cli verify` renders
@@ -97,5 +97,6 @@ enforces saying so, and the failure it guards against - a green gate that never
 reached a cluster - has happened once in the engagement this came from. Also
 unchecked: that these four in this order are the whole gate. They are the gate
 **this tool implements**; a deployment that fails for a reason none of them
-looks at is the case that would disprove it, and there has been one - see
-"A statement that shipped and was wrong" in TASK.md.
+looks at is the case that would disprove it, and there has been one: a chart
+that passed every step here and failed in the platform's own dry run, on a
+field the CRD prunes rather than rejects.

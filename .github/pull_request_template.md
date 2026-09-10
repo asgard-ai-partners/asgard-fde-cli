@@ -60,7 +60,7 @@
 
 <!--
   A fact lives in a template, an extract, a stage prompt and a wiki page, and a
-  diff usually touches one of them. `asgard-cli find <the thing>` finds the rest.
+  diff usually touches one of them. `grep <the thing>` finds the rest.
 
   Name the other copies you checked, or say the change has none.
 -->

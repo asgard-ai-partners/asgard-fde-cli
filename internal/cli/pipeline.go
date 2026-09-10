@@ -195,7 +195,7 @@ func needPipelineError(pc *platformContext, pipelines []*platform.Pipeline) erro
 	fmt.Fprintf(&b, "        bind to one of the above; committed, so nobody has to choose again\n\n")
 	fmt.Fprintf(&b, "    asgard-cli pipeline create --name <name> --connection <id> --repo <owner/name>\n")
 	fmt.Fprintf(&b, "        a new pipeline, for a repository none of the above is about\n")
-	fmt.Fprintf(&b, "\n`asgard-cli brief connect` is the walk this is one item of, and what each item\ncosts when it is guessed. --pipeline <id> names one for a single run.\n")
+	fmt.Fprintf(&b, "\n`.agents/skills/asgard-platform/brief/connect.md` is the walk this is one item of, and what each item\ncosts when it is guessed. --pipeline <id> names one for a single run.\n")
 	return fmt.Errorf("%s", b.String())
 }
 

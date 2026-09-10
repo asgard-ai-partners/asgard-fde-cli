@@ -16,7 +16,7 @@ import (
 // holding JSON, so the whole subagent shape rides inside it where no schema and
 // no CEL rule can see it. C1 walks the decoded document and would never reach
 // it. `gate/xref.go` parses that string for the reference check, and
-// `asgard-cli brief flow-agent` says why it is the one blueprint worth reading
+// the flow-agent supervisor extract says why it is the one blueprint worth reading
 // by hand.
 //
 // **`name`, `aliasName` and `key` are dropped.** The first two carry a

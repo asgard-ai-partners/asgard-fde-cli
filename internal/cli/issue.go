@@ -99,22 +99,15 @@ filled in and the rest marked TODO:
     asgard-cli issue-report --new > report.md
     asgard-cli issue-report --new | gh issue create --repo asgard-ai-partners/asgard-fde-cli --body-file -
 
-**Section 2 and the search evidence are collected, not narrated.** A report is
-otherwise entirely somebody's account of what happened, and the account is the
-part that can be wrong - a search someone remembers running, phrased differently
-from the one they ran. What --new puts in is the tool's own record: the version,
-what the charts declare, what "asgard-cli check" says, how many questions,
-requests and task specs are open, and every query that came back empty.
+**Section 2 is collected, not narrated.** A report is otherwise entirely
+somebody's account of what happened, and the account is the part that can be
+wrong. What --new puts in is the tool's own record: the version, what the
+charts declare, what "asgard-cli check" says, and how many questions, requests
+and task specs are open. The line the report closes with names what was
+actually collected.
 
-**The search evidence appears only when there is some.** It is read from
-docs/.find-misses, which "asgard-cli find" writes when a query returns nothing,
-and a repository where every search found something has no such file - so
-section 3 arrives as a bare TODO and that is the correct output, not a bug. The
-line the report closes with names what was actually collected.
-
-**Read what it produced before filing it.** The misses are queries as they were
-typed, so they can carry the customer's words; the rule above about never
-pasting their content applies to what this generated exactly as much as to what
+**Read what it produced before filing it.** The rule above about never pasting
+a customer's content applies to what this generated exactly as much as to what
 you write.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -127,14 +120,14 @@ you write.`,
 				"  gh issue create --repo %s\n\n", issueRepo)
 			fmt.Fprintf(out, "Paste this line so nobody has to ask:\n\n  asgard-cli %s\n\n",
 				version.Get().String())
-			fmt.Fprintf(out, "Or have the body written for you, with the state and the search\nevidence already in it:\n\n  asgard-cli issue-report --new\n\n")
+			fmt.Fprintf(out, "Or have the body written for you, with this repository's own\nstate already in it:\n\n  asgard-cli issue-report --new\n\n")
 			fmt.Fprintf(out, "What to put in it: `asgard-cli issue-report --help`.\n"+
 				"A worked example: https://github.com/%s/issues/9\n", issueRepo)
 			return nil
 		},
 	}
 
-	cmd.Flags().BoolVar(&draft, "new", false, "write the report body, with the state and the search evidence filled in")
+	cmd.Flags().BoolVar(&draft, "new", false, "write the report body, with this repository's own state filled in")
 
 	return cmd
 }
@@ -170,7 +163,6 @@ func writeReport(out io.Writer) error {
 	checked := writeCheck(out)
 
 	fmt.Fprintf(out, "## 3) What I ran, and what came back\n\n")
-	misses := writeMisses(out)
 	fmt.Fprintf(out, "TODO - the rest, in order, with the real output pasted, then what you\nexpected instead. The gap between those two is usually the whole report.\n\n")
 
 	fmt.Fprintf(out, "## 4) Where the answer actually was\n\n"+
@@ -181,20 +173,16 @@ func writeReport(out io.Writer) error {
 	fmt.Fprintf(out, "## 5) What it cost\n\n"+
 		"TODO - twenty minutes, a wrong sentence to a customer, or nothing yet\nbecause you caught it. This decides what gets fixed first.\n\n")
 
-	// **What it says it collected has to be what it collected.** The old line
-	// claimed the search evidence unconditionally, and a repository where every
-	// `find` returned something has no misses file at all - so a reader saw a
-	// bare TODO under a sentence promising evidence, and went looking for a bug
-	// in the generator. Naming the parts is one line and removes that hunt.
+	// **What it says it collected has to be what it collected.** A line
+	// claiming evidence the run did not gather leaves a reader looking at a
+	// bare TODO under a promise, hunting for a bug in the generator. Naming
+	// the parts is one line and removes that hunt.
 	collected := "the version"
 	if err == nil {
 		collected += ", what the charts declare, what is open"
 	}
 	if checked {
 		collected += ", the `check` report"
-	}
-	if misses {
-		collected += ", and the searches that came back empty"
 	}
 	fmt.Fprintf(out, "---\n\nWritten by `asgard-cli issue-report --new`. Collected: %s.\n"+
 		"The TODOs are not.\n", collected)
@@ -231,29 +219,5 @@ func writeCheck(out io.Writer) bool {
 		fmt.Fprintf(out, "ok  structure is consistent (whole repo)\n")
 	}
 	fmt.Fprintf(out, "```\n\n")
-	return true
-}
-
-// writeMisses puts the recorded empty searches into the report.
-//
-// This is the only part of a defect report that is not somebody's account of
-// what happened. A search that came back empty was witnessed by the tool, so it
-// is evidence rather than recollection - and it is the half of section 4 that
-// separates a missing page from an unfindable one.
-func writeMisses(out io.Writer) bool {
-	root := repo.Root(".")
-	if root == "" {
-		return false
-	}
-	misses, err := work.Misses(root)
-	if err != nil || len(misses) == 0 {
-		return false
-	}
-	fmt.Fprintf(out, "Searches this engagement ran that the material did not answer, recorded by\n"+
-		"`asgard-cli find` at the time:\n\n```\n")
-	for _, m := range misses {
-		fmt.Fprintf(out, "%s  %-9s %s\n", m.Date, m.Kind, m.Query)
-	}
-	fmt.Fprintf(out, "```\n\n**Check these before filing** - a query carries whatever words were typed.\n\n")
 	return true
 }

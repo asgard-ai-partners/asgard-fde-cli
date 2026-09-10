@@ -56,7 +56,7 @@ resource repeats it - **permissions do not inherit**, and nothing in a chart, in
 
     the symptom     "we deployed it and the customer says there is nothing there"
     the cause       not a chart problem, and looking for one wastes a day
-    the fix         `asgard-cli wiki console` - which page, and which scope
+    the fix         `../wiki/console.md` - which page, and which scope
 
 Two things to settle before the day it goes live rather than on it:
 
@@ -65,7 +65,7 @@ Two things to settle before the day it goes live rather than on it:
     introduction
   - **who should see each resource.** Not everyone, usually - and the Console is
     where that is decided, because the platform has no answer for scoping what a
-    caller may reach after they are in. `asgard-cli wiki platform-unknowns` P1
+    caller may reach after they are in. `../wiki/platform-unknowns.md` P1
 
 ## Deploying
 
@@ -148,7 +148,7 @@ that is enhancement**, and it has its own loop - which project a new capability
 belongs to, whether it needs a spec first, and the closing step that gets
 skipped:
 
-    asgard-cli guide enhance
+    ../guide/enhance.md
 
 A new capability for a **new audience** is a new project, and it walks stages
 3-8 again on its own.
@@ -156,7 +156,7 @@ A new capability for a **new audience** is a new project, and it walks stages
 **Between two pieces of work there is a state, and it is not a gap.** No request
 open, no task open, nothing missing from any chart: what moves the work on then
 is the customer, and the only question left to ask is what they want next.
-`asgard-cli guide idle` is that state, and being in it is not being behind.
+`../guide/idle.md` is that state, and being in it is not being behind.
 
 **Checked:** 2026-09-04 against the platform's own behaviour spec and against a
 real rollout on dev: a tag pushed to a bound repository produced a run within

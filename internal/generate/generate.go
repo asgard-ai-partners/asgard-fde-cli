@@ -248,7 +248,7 @@ triggers:
 			"The prompt lives on the workflow's processor. Several specialists means",
 			"  --supervisor, which writes the four-processor conversation loop three",
 			"  deployments share edge for edge, and then subagents on the blueprint -",
-			"  see asgard-cli usecase flow-agent-supervisor.",
+			"  see .agents/skills/asgard-platform/usecase/flow-agent-supervisor.md.",
 		},
 		Values: `
 # <<.DisplayName>>
@@ -458,12 +458,12 @@ func botClassNote(class string) string {
 	switch class {
 	case "line":
 		return "botProviderClass line: one LINE official account cannot host two bots, so replacing an existing one is a cutover - deploy with disabled: true first. " +
-			"Both of its keys come from the LINE Developers console for that channel, so somebody outside this repo has to fetch them. Read `asgard-cli usecase chat-channel`"
+			"Both of its keys come from the LINE Developers console for that channel, so somebody outside this repo has to fetch them. Read `.agents/skills/asgard-platform/usecase/chat-channel.md`"
 	case "telegram":
-		return "botProviderClass telegram: both of its keys come from BotFather, so somebody outside this repo has to fetch them before the first deploy. Read `asgard-cli usecase chat-channel`"
+		return "botProviderClass telegram: both of its keys come from BotFather, so somebody outside this repo has to fetch them before the first deploy. Read `.agents/skills/asgard-platform/usecase/chat-channel.md`"
 	case "discord", "slack":
 		return "botProviderClass " + class + ": the operator creates a Connector Pod for this class, because it holds an outbound WebSocket. " +
-			"Read `asgard-cli usecase chat-channel`"
+			"Read `.agents/skills/asgard-platform/usecase/chat-channel.md`"
 	default:
 		return ""
 	}
@@ -525,7 +525,7 @@ func Resolve(root string, kind Kind, opts Options) (Options, []string, error) {
 				"repository, so a SourceSet per bundle would clone it per bundle. It is\n"+
 				"not a knowledge Drive: that holds documents an agent reads, this holds\n"+
 				"skills it loads. If the chart has no store yet, create it with a git\n"+
-				"Syncer first. See `asgard-cli usecase plugin`",
+				"Syncer first. See `.agents/skills/asgard-platform/usecase/plugin.md`",
 			opts.Name, opts.Project)
 	}
 

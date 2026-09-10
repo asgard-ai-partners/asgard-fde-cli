@@ -1,7 +1,7 @@
 # Asgard FDE CLI
 
 這個工具是為誰、做什麼。**只寫目標**——現況和還缺什麼在 `TASK.md`,指令怎麼用
-在 `README.md`,怎麼改在 `AGENTS.md`。
+在 `README.md`,主要功能怎麼實作的在 `APPROACH.md`,怎麼改在 `AGENTS.md`。
 
 讀者是 agent:一個 FDE 帶著它做 Asgard 的客戶導入,而它手上只有客戶的
 repository。那份 repository 描述客戶的系統,從不描述那些系統要跑在什麼平台上。
@@ -32,12 +32,12 @@ endpoint、一條網路路徑、一個測試環境、某個人的核准佇列。
 一個問題值不值得佔客戶的時間。
 
 跟第一點的差別:第一點是「平台有什麼」,這一點是「這件事要先拿到什麼才做得
-起來」。`asgard-cli needs <場景>` 是這一點的指令:用客戶的話描述場景,它說出
-那個場景要先拿到什麼,每一條帶著擁有那個主張的文件。
+起來」。`.agents/skills/asgard-platform/needs/<場景>.md` 是這一點的落點:一個形狀一份,
+說出那個場景要先拿到什麼,每一條帶著擁有那個主張的文件。
 
 ## 3. 能夠實作 IaC,charts 的部分
 
-Asgard CR 的 Helm chart:`projects/<slug>/chart/`,一個 project 一份 chart。
+Asgard CR 的 Helm chart:`projects/<slug>/chart/app/`,一個 project 一份 chart。
 部署到哪裡不在 chart 裡:repo 根目錄一份 `.asgard-pipeline.yaml` 宣告有哪些
 Release,一個 Release 綁一份 chart 到一個 Platform Project(= 一個 namespace),
 由一條 tag 或 branch 規則觸發。

@@ -416,7 +416,7 @@ func (x *xref) checkSkillSet(d Doc) {
 			if shared {
 				x.warnf("SourceSet/%s is sliced by %d SkillSets (%s), each with its own searchPaths. That is the shared-skills-monorepo shape and the platform accepts it - "+
 					"what it costs is the UI, which cannot find a given skill set's git configuration, and `asgard-ai.com/skill-set-name` with it. "+
-					"Four reference deployments run this way and none has a Plugin, which is the only exemption `asgard-cli usecase skill-set` records. "+
+					"Four reference deployments run this way and none has a Plugin, which is the only exemption `.agents/skills/asgard-platform/usecase/skill-set.md` records. "+
 					"If that cost was not decided on purpose, each SkillSet wants its own SourceSet",
 					ref, len(owners), strings.Join(sortedOwners, ", "))
 			} else {
@@ -509,7 +509,7 @@ func (x *xref) checkSyncer(d Doc) {
 			if d.Labels[managedByKey] != managedBySkillSet {
 				sortedOwners := append([]string(nil), owners...)
 				sort.Strings(sortedOwners)
-				x.warnf("Syncer/%s feeds SourceSet/%s, which %d SkillSets slice (%s), so it carries no %s=%s and shows up in the general Syncer list. That follows from the shared-monorepo shape rather than being an omission - `asgard-cli usecase skill-set` has what the shape costs",
+				x.warnf("Syncer/%s feeds SourceSet/%s, which %d SkillSets slice (%s), so it carries no %s=%s and shows up in the general Syncer list. That follows from the shared-monorepo shape rather than being an omission - `.agents/skills/asgard-platform/usecase/skill-set.md` has what the shape costs",
 					d.Name, sourceSet, len(owners), strings.Join(sortedOwners, ", "), managedByKey, managedBySkillSet)
 			}
 			return

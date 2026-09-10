@@ -1,7 +1,7 @@
 # Decide each project's read path
 
-Data connectors exist but nothing reads through them yet. **This is the first of
-the three decisions that get answered wrong.**
+**This stage is a project whose connectors exist and nothing reads through
+them.** It is the first of the three decisions that get answered wrong.
 
 Needing a read path:
 <<range .Projects>><<if not (.Has "SemanticLayer" "Toolset")>>  - <<.Slug>>
@@ -30,18 +30,18 @@ point or BotProvider is written at all.
     both, different people    both - two deliveries over one model
 
 When the chart stops there, **say so in the chart, next to the layer.** There
-used to be a field for it - a "shape" recorded per project - and it is gone:
-this tool cannot check such a claim and has no business judging it, so the only
-place the answer belongs is where the next reader will be looking anyway.
+is no field for it, and there should not be: this tool cannot check such a
+claim and has no business judging it, so the only place the answer belongs is
+where the next reader will be looking anyway.
 
-`asgard-cli usecase mimir-dashboard` is the shape, including the trap: a later
+`../usecase/mimir-dashboard.md` is the shape, including the trap: a later
 reader finds a SemanticLayer nothing references, assumes it is a missed
 connection, and binds it to an Agent - which hands agents deliberately restricted
 to an API a second path into the database. **Nothing in the gate catches that**,
 because cross-reference checking validates references that exist, never one that
 should not. Say so in the chart, next to the layer.
 
-`asgard-cli guide requirements` asks this as question 2b, so the answer
+`../guide/requirements.md` asks this as question 2b, so the answer
 should already be in the request. If it is not, it was not asked - and the
 expensive version of this mistake is not choosing wrong, it is building the agent
 and finding out at the demo that they wanted a page that was already open.
@@ -87,7 +87,7 @@ knows who is talking and passes it through. If nothing in front knows, then the
 per-customer half genuinely cannot be built, and that is a question for the
 customer rather than a design to work around.
 
-    asgard-cli usecase per-turn-credentials
+    ../usecase/per-turn-credentials.md
 
 Read that before promising anything of the form "查我的...". It is also where the
 failure mode lives: a query that forgets to filter on the injected identity fails
@@ -95,13 +95,13 @@ on the anonymous path only, which is the path nobody tests.
 
 Read the shape before writing it:
 
-    asgard-cli usecase semantic-layer
-    asgard-cli usecase fixed-query-tools
+    ../usecase/semantic-layer.md
+    ../usecase/fixed-query-tools.md
 
 A fixed query tool is a Workflow, so read how a chain passes values between its
 processors before writing one - that is where the silent failures are:
 
-    asgard-cli usecase workflow-chain
+    ../usecase/workflow-chain.md
 
 ## If the answer is a semantic layer
 

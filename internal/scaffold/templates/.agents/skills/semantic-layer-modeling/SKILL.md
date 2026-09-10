@@ -97,7 +97,7 @@ spec:
     <carry: which column is the real>    # that returns a wrong answer or zero rows
     <key, which two "level" columns>     # if it is broken, and none of them is
     <are unrelated, what a status>       # visible in a schema dump. See
-    <code means>                         # `asgard-cli usecase semantic-layer`.
+    <code means>                         # `../asgard-platform/usecase/semantic-layer.md`.
   sampleQuestions:                       # optional; plain strings, NOT objects.
     - <一句這個層真的答得出來的問題>       # Data Insight renders each as a button
     - <再一句,換一個主題>                  # under the prompt box and sends it when

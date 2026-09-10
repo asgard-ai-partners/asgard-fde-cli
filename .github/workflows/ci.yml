@@ -31,15 +31,18 @@ jobs:
       - name: go vet
         run: go vet ./...
 
+      - name: go test
+        run: go test ./...
+
 
   material:
-    # The corpus gates. They existed as flags and were never wired here, which
-    # is how six documents came to name `asgard-cli pipeline deliveries` - a
-    # command nobody had built - and stayed that way until a person re-read a
-    # provenance line weeks later.
+    # The corpus gates. **A flag that is not wired here is not enforced**, and
+    # that is how six documents came to name a command nobody had built.
     #
     # --urls is deliberately not here: it fetches every docs.asgard-ai.com link
     # and a third party's outage is not this repository's build failure.
+    # --orphans is not here either, and on purpose: it does not fail, because
+    # a document reached only by search is still reached.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -54,6 +57,18 @@ jobs:
 
       - name: every command this material names exists
         run: go run ./cmd/asgard-cli audit-material --commands
+
+      - name: every document named has a way to reach it
+        run: go run ./cmd/asgard-cli audit-material --bare
+
+      - name: no landed document points at a file only this repository has
+        run: go run ./cmd/asgard-cli audit-material --paths
+
+      - name: every document says what it was held against
+        run: go run ./cmd/asgard-cli audit-material --unverified
+
+      - name: this repo's own documents name no path or symbol that is gone
+        run: hack/check-doc-paths.py
 
 
   build:

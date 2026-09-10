@@ -17,6 +17,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 
@@ -134,4 +135,56 @@ func ValidateSlug(field, s string) error {
 		return fmt.Errorf("%s %q must be lower-case letters, digits and hyphens, starting and ending with a letter or digit", field, s)
 	}
 	return nil
+}
+
+// SpecSlugIn returns the living-spec slug this repository actually uses.
+//
+// **The slug is a fact on disk, not a constant, once a repository exists.** An
+// engagement may rename `docs/spec/<slug>/`, and `docs/spec/README.md` names
+// the one in use - so a scaffolder that assumes the default writes a second
+// living-spec root beside the first and reports it as created. Two indexes
+// that disagree is the failure the whole four-layer split exists to prevent,
+// and the next reader cannot tell which is current.
+//
+// So: the directory that is there wins, and `SpecSlug` is only the default for
+// a repository that has none yet. Where more than one exists the repository is
+// already in the broken state - this prefers the default so the choice is
+// stable, and `check` reports the duplicate.
+func SpecSlugIn(root string) string {
+	entries, err := os.ReadDir(filepath.Join(root, "docs", "spec"))
+	if err != nil {
+		return SpecSlug
+	}
+	var found []string
+	for _, e := range entries {
+		if e.IsDir() {
+			found = append(found, e.Name())
+		}
+	}
+	switch {
+	case len(found) == 0:
+		return SpecSlug
+	case slices.Contains(found, SpecSlug):
+		return SpecSlug
+	default:
+		sort.Strings(found)
+		return found[0]
+	}
+}
+
+// SpecRoots returns every living-spec directory under `docs/spec/`. More than
+// one is a defect: see SpecSlugIn.
+func SpecRoots(root string) []string {
+	entries, err := os.ReadDir(filepath.Join(root, "docs", "spec"))
+	if err != nil {
+		return nil
+	}
+	var found []string
+	for _, e := range entries {
+		if e.IsDir() {
+			found = append(found, e.Name())
+		}
+	}
+	sort.Strings(found)
+	return found
 }

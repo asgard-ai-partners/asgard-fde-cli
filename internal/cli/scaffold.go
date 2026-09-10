@@ -50,6 +50,7 @@ func runScaffold(cmd *cobra.Command, root string, force bool) error {
 	out := cmd.OutOrStdout()
 	var created, overwritten, updated, skipped int
 	var preserved, stale, behind, ahead, edited, retired []string
+	var replaced string
 	for _, r := range results {
 		switch r.Status {
 		case scaffold.Created:
@@ -84,6 +85,9 @@ func runScaffold(cmd *cobra.Command, root string, force bool) error {
 		case scaffold.Retired:
 			retired = append(retired, r.Path)
 			fmt.Fprintf(out, "  retired      %s\n", r.Path)
+		case scaffold.Replaced:
+			replaced = r.Path
+			fmt.Fprintf(out, "  replaced     %s\n", r.Path)
 		default:
 			skipped++
 		}
@@ -111,6 +115,16 @@ func runScaffold(cmd *cobra.Command, root string, force bool) error {
 		}
 	}
 	fmt.Fprintf(out, " in %s\n", root)
+
+	// The one delete this tool performs, so it says so rather than letting the
+	// files underneath it read as ordinary creations. Nothing there is the
+	// engagement's: the directory is generated outright, and a page renamed
+	// upstream would otherwise leave both names on disk for grep to find.
+	if replaced != "" {
+		fmt.Fprintf(out, "\n%s came from another version of this CLI, so it was\n"+
+			"removed and written again. That directory is generated, and it is the\n"+
+			"only one this command deletes.\n", replaced)
+	}
 
 	// "already present" reads as "up to date", and that reading has been acted
 	// on: an agent re-ran scaffold after an upgrade, saw nothing to do, told

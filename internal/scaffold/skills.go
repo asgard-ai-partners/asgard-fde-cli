@@ -12,7 +12,7 @@ import (
 // Skill is one design-time skill the scaffold writes into a customer repo.
 //
 // They are searchable for the same reason the wiki is. An agent asked to build
-// a deck reaches for `asgard-cli find slides`, and until this existed the answer
+// a deck greps for slides, and until this existed the answer
 // was that nothing matched anywhere - while the skill that owns the whole
 // subject sat in the repository it was standing in. The material was there and
 // the tool's own way in did not reach it.
@@ -67,18 +67,8 @@ var corpus = kb.Corpus{
 	Dir:      skillRoot,
 	Docs:     skillRefs,
 	ParseDoc: parseSkill,
-	// The whole file is searched - the frontmatter's description is what a
-	// query often lands on - while quoted lines come from the body only, and
-	// never from a line still carrying an unrendered `<<...>>` placeholder,
-	// which reads as broken text in a result.
-	Scan: func(body string) kb.Scanner {
-		return kb.Scanner{
-			Quotable: skipFrontmatter(body),
-			Keep:     func(line string) bool { return !strings.Contains(line, "<<") },
-		}
-	},
-	Noun:    "skill",
-	Command: "asgard-cli find",
+	Noun:     "skill",
+	Command:  "ls .agents/skills/",
 }
 
 // skillRefs lists each skill directory and the SKILL.md inside it. The
@@ -138,9 +128,6 @@ func Path(name string) string { return ".agents/skills/" + name + "/SKILL.md" }
 
 // List returns every skill, sorted by name.
 func List() ([]kb.Doc, error) { return corpus.List() }
-
-// Search finds skills covering the given terms.
-func Search(query string) ([]kb.Match, error) { return corpus.Search(query) }
 
 // skipFrontmatter drops the leading --- block, so a search quotes the skill's
 // prose rather than the description it is already being shown beside.

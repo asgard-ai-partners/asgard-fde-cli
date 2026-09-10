@@ -175,7 +175,7 @@ func (c *Client) do(ctx context.Context, req request) error {
 	}
 	if !req.noWorkspace {
 		if c.workspace == "" {
-			return errors.New("no workspace selected; pass --workspace, or record one with `asgard-cli init --workspace-id`")
+			return errors.New("no workspace selected; pass --workspace, or record one with `asgard-cli workspace use <id>`")
 		}
 		httpReq.Header.Set(WorkspaceHeader, c.workspace)
 	}

@@ -58,16 +58,23 @@ type Doc struct {
 
 // Link is one document pointing a reader at another.
 //
-// It is recovered when the document is parsed, not when a result is printed.
-// That was two regular expressions at two points of use - one in `find` to name
-// a hit's counterpart, one in `audit-material --links` to check the same
-// pointer resolved - which could disagree about what a document pointed at, and
-// left the corpus with no link graph at all. Without one, the lint the pattern
-// asks for cannot be written: **material nothing points at is not read, and the
-// writer never finds out, because the file is there.**
+// It is recovered when the document is parsed, not when a reader is printed
+// one. A pointer read at the point of use is a second regular expression that
+// can disagree with the first about what a document points at, and leaves the
+// corpus with no link graph at all. Without one, the lint the pattern asks for
+// cannot be written: **material nothing points at is not read, and the writer
+// never finds out, because the file is there.**
 type Link struct {
 	Kind string // wiki, usecase, guide, brief
 	Name string
+
+	// Path marks a pointer written as a relative path rather than as an
+	// invocation: the difference between "follow this on disk" and "run this".
+	// Every document lands, so in the material a pointer is always a path, and
+	// `audit-material --links` refuses the other form. The field is what lets
+	// it tell them apart - a help screen may legitimately name `brief` or
+	// `guide`, which are commands.
+	Path bool
 
 	// Deliberate marks a link inside the section where the document names its
 	// counterpart on purpose, as against one mentioned in passing. Taking the
@@ -101,23 +108,6 @@ func (d Doc) Counterpart(kind string) string {
 // it being wrong, and different from it being right.
 func (d Doc) Verified() bool { return d.Checked != "" || d.Unchecked != "" }
 
-// Match is one document a search hit, with the lines that hit and how often.
-type Match struct {
-	Doc
-	Lines []string
-
-	// Score is how many lines mentioned a term. It orders the results, so the
-	// document that talks about the subject most comes first rather than the
-	// one whose name sorts earliest.
-	Score int
-
-	// Terms are the query terms this document actually contains. A caller needs
-	// them to say which half of a query landed: a search that quietly matched
-	// on one word of six reads as an answer to the whole question, and the
-	// reader acts on material about something else.
-	Terms []string
-}
-
 // Ref is one document's name and the file holding it. A corpus whose files are
 // not one `<name>.md` under Dir supplies these itself.
 type Ref struct {
@@ -128,7 +118,7 @@ type Ref struct {
 // Corpus is one body of material: where the files are, and which of them are
 // readable by name without appearing in a listing.
 //
-// Two fields are optional and exist because the four bodies do not agree at the
+// Two fields are optional and exist because the bodies do not agree at the
 // byte level and should not be forced to. A stage prompt is
 // `prompts/04-read-path.md` and is called `read-path`; a skill is
 // `<name>/SKILL.md` and carries YAML frontmatter, which is the Agent Skills
@@ -148,35 +138,74 @@ type Corpus struct {
 	// title and a paragraph. Optional; Parse is the default.
 	ParseDoc func(name string, data []byte) Doc
 
-	// Scan builds the scanner for one document's body, when what is searched
-	// and what is quotable are not the same text. Optional.
-	Scan func(body string) Scanner
-
 	// Unlisted are files that belong to the corpus's own bookkeeping rather
 	// than being material about the subject - an index, a log, a README.
 	// Readable by name, absent from List.
 	Unlisted map[string]bool
 
-	// What names the material, for an error a reader can act on.
+	// What names the material, for an error a reader can act on. Command is
+	// how a reader lists it, which is a directory listing for everything that
+	// lands.
 	Noun    string // "extract", "wiki page"
-	Command string // "asgard-cli usecase", "asgard-cli wiki"
+	Command string // "ls .agents/skills/asgard-platform/usecase/"
 }
 
-// linkRe matches the ways this material sends a reader to another document.
-// Every one of them is an invocation of this tool naming a document by name,
-// which is the only form a pointer takes here - a bare page name in prose is
-// not a pointer, because a reader cannot act on it without knowing which
-// command opens it.
-// A pointer may wrap. This material is hard wrapped at about 78 columns, so one
-// near the right margin is split across two lines, and a pattern expecting a
-// single space did not see it - six real pointers in the corpus were invisible
-// to both `find`'s counterpart and `--links`, reading perfectly to a person the
-// whole time.
-// **Exactly one space, or a line break.** Not "any run of whitespace": a help
-// screen aligns its columns with spaces, so `asgard-cli guide` followed by
-// padding and the words "all of it" resolves to a document called "all". One
-// space or one wrap is what prose actually writes.
-var linkRe = regexp.MustCompile(`asgard-cli(?: |[ \t]*\n[ \t]*)(wiki|usecase|brief|guide)(?: |[ \t]*\n[ \t]*)([a-z0-9][a-z0-9-]*)`)
+// A pointer is how this material sends a reader to another document, and there
+// are two forms because the two halves of the material are not in the same
+// place.
+//
+// **A path, for anything that lands.** `asgard-cli init` writes the wiki and
+// the extracts into a customer repository as `wiki/` and `usecase/` side by
+// side, and internal/corpus holds them in that same layout, so
+// `../usecase/write-path.md` resolves in both trees. It is written `../` even
+// from inside the half it points into - `../wiki/tools.md` from a wiki page
+// resolves back into `wiki/` - because one form that carries its own kind beats
+// two forms that need to know where the reader is standing. That is also what
+// lets this stay a function of the body alone.
+//
+// **An invocation, for anything that does not land yet.** `brief` and `guide`
+// are still only in the binary, so a path to them would resolve nowhere;
+// `asgard-cli guide requirements` is what a reader can act on. Those convert to
+// paths when they land - see the sequence in TASK.md - and until then a
+// document pointer is one form or the other depending on where its target
+// lives, which is a state to get out of rather than a design.
+//
+// **A bare page name is not a pointer in either form.** A reader cannot act on
+// `write-path` without knowing which command opens it or which directory it is
+// in, and `audit-material --bare` reports one.
+//
+// The invocation form may wrap. This material is hard wrapped at about 78
+// columns, so a pointer near the right margin is split across two lines, and a
+// pattern expecting a single space did not see it - six real pointers were
+// invisible to `--links` while reading perfectly to a person the whole time.
+// **Exactly one space, or a line break.** Not "any run
+// of whitespace": a help screen aligns its columns with spaces, so
+// `asgard-cli guide` followed by padding and the words "all of it" would
+// resolve to a document called "all". A path carries no internal whitespace, so
+// it has no equivalent problem.
+//
+// Both yield the same two groups - kind, then name - so everything downstream
+// reads one shape: kb.Link, --links and --orphans.
+// **What comes before the kind is not fixed, because the readers are not in
+// one place.** A document inside a directory writes `../wiki/x.md`;
+// `aliases.md` and the map sit at the root of the landed copy and write
+// `wiki/x.md`; a design-time skill beside the corpus writes
+// `../asgard-platform/wiki/x.md`; and a file deeper in a customer repository -
+// `docs/open-questions.md`, a plugin command - writes the path from the
+// repository root, because a chain of `../` from there is not something anybody
+// should have to count.
+//
+// What is fixed is the tail, and that is what makes it a pointer: the kind,
+// then a lower-case name, then `.md`. The name being lower-case is what keeps
+// a prose mention of `wiki/README.md` out.
+var pathLinkRe = regexp.MustCompile(`(?:[A-Za-z0-9_./-]*/)?(` + kinds + `)/([a-z0-9][a-z0-9-]*)\.md`)
+
+var linkRe = regexp.MustCompile(`asgard-cli(?: |[ \t]*\n[ \t]*)(` + kinds + `)(?: |[ \t]*\n[ \t]*)([a-z0-9][a-z0-9-]*)`)
+
+// kinds is Kinds as an alternation, so **the set lives in one place**. Written
+// out twice, the two drifted: the invocation pattern knew about four kinds and
+// the path pattern about five, months after the fifth began landing.
+var kinds = strings.Join(Kinds, "|")
 
 // counterpartSection is where a document states its counterparts on purpose.
 var counterpartSection = regexp.MustCompile(
@@ -209,23 +238,50 @@ func Links(body string) ([]Link, bool) {
 	named := false
 	if sec := counterpartSection.FindStringSubmatch(body); sec != nil {
 		named = true
-		for _, m := range linkRe.FindAllStringSubmatch(sec[1], -1) {
-			deliberate[m[1]+"/"+m[2]] = true
+		for _, m := range pointers(sec[1]) {
+			deliberate[m.key()] = true
 		}
 	}
 
 	var out []Link
 	seen := map[string]bool{}
-	for _, m := range linkRe.FindAllStringSubmatch(body, -1) {
-		key := m[1] + "/" + m[2]
-		if seen[key] {
+	for _, m := range pointers(body) {
+		if seen[m.key()] {
 			continue
 		}
-		seen[key] = true
-		out = append(out, Link{Kind: m[1], Name: m[2], Deliberate: deliberate[key]})
+		seen[m.key()] = true
+		out = append(out, Link{Kind: m.kind, Name: m.name, Path: m.path, Deliberate: deliberate[m.key()]})
 	}
 	return out, named
 }
+
+// Kinds are the document kinds a pointer can name, which is the same list
+// `asgard-cli init` writes into a repository. A kind here is a directory
+// there, and both pointer patterns are built from it.
+var Kinds = []string{"wiki", "usecase", "needs", "brief", "guide"}
+
+// pointers returns every pointer in s, in both forms, as {whole, kind, name}.
+//
+// Order matters for Deliberate but not for correctness: a document naming the
+// same target twice in one section is one link either way, and the dedupe in
+// Links keeps the first.
+func pointers(s string) []pointer {
+	var out []pointer
+	for _, m := range pathLinkRe.FindAllStringSubmatch(s, -1) {
+		out = append(out, pointer{kind: m[1], name: m[2], path: true})
+	}
+	for _, m := range linkRe.FindAllStringSubmatch(s, -1) {
+		out = append(out, pointer{kind: m[1], name: m[2]})
+	}
+	return out
+}
+
+type pointer struct {
+	kind, name string
+	path       bool
+}
+
+func (p pointer) key() string { return p.kind + "/" + p.name }
 
 // ── Command references ────────────────────────────────────────────────────
 //
@@ -338,9 +394,15 @@ func Invocations(body string) []Invocation {
 // codeSegments returns the parts of a line that are written as code.
 //
 // Inside a fence the whole line is. Outside one, it is what the backticks
-// enclose, plus the line itself when it begins with the tool's name - the
-// indented example form, which the help screens and the wiki both use and
-// which carries no backticks at all.
+// enclose, what a pair of double quotes encloses, plus the line itself when it
+// begins with the tool's name - the indented example form, which the help
+// screens and the wiki both use and which carries no backticks at all.
+//
+// **A double-quoted span counts because a Go raw string cannot hold a
+// backtick.** The root help is one, so every command it names is written
+// "asgard-cli init" rather than in backticks, and reading only backticks left
+// the tool's most-read screen out of the audit entirely. That is where a
+// pointer to a deleted command survived a sweep of the whole repository.
 func codeSegments(line string, inFence bool) []string {
 	if inFence {
 		return []string{line}
@@ -361,6 +423,63 @@ func codeSegments(line string, inFence bool) []string {
 	parts := strings.Split(line, "`")
 	for i := 1; i < len(parts); i += 2 {
 		out = append(out, parts[i])
+	}
+	// Double-quoted spans, and **only when the whole span is command-shaped**.
+	// A backtick is written around a command and nothing else, so its content
+	// needs no test. A double quote is written around anything: the plugin
+	// manifest's own description is one, and it opens "Slash commands over
+	// asgard-cli for this onboarding" - which resolved `for` against the
+	// command tree the first time this ran.
+	for i, part := range strings.Split(line, `"`) {
+		if i%2 == 1 && quotedCommand.MatchString(strings.TrimSpace(part)) {
+			out = append(out, part)
+		}
+	}
+	return out
+}
+
+// quotedCommand is what a double-quoted span has to look like to be read as
+// one: the tool's name or a bare command name, then nothing but lower-case
+// words, long flags and placeholders. A comma, a full stop or a capital is a
+// sentence, and a sentence in quotes is prose.
+var quotedCommand = regexp.MustCompile(`^(?:asgard-cli|[a-z][a-z0-9-]*)(?: [a-z][a-z0-9-]*| --[a-z][a-z0-9-]*| <[^>]+>)*$`)
+
+// Removed is a command name this build no longer answers to, swept for
+// wherever the material writes a bare one.
+//
+// **The invocation check cannot see a bare name.** It resolves what follows
+// `asgard-cli`, so a sentence reaching a command by name alone - guidance
+// "reached by subject through \"find\"" - claims a command exists and is
+// invisible to it. That line shipped in the root help.
+//
+// The set is closed, which is what makes this safe: only names somebody
+// deliberately removed are looked for, so no amount of ordinary English
+// triggers it. What is looked for is a code segment that is the name alone, or
+// the name with only flags after it. **Not the name with an argument**, because
+// `find docs -name '*.md*'` is the unix tool and correct.
+func RemovedNames(body string, removed []string) []Invocation {
+	if len(removed) == 0 {
+		return nil
+	}
+	re := regexp.MustCompile(`^(` + strings.Join(removed, "|") + `)((?: --[a-z][a-z0-9-]*)*)$`)
+	var out []Invocation
+	inFence := false
+	for i, line := range strings.Split(body, "\n") {
+		if fence.MatchString(line) {
+			inFence = !inFence
+			continue
+		}
+		for _, seg := range codeSegments(line, inFence) {
+			m := re.FindStringSubmatch(strings.TrimSpace(seg))
+			if m == nil {
+				continue
+			}
+			inv := Invocation{Words: []string{m[1]}, Line: i + 1}
+			for _, f := range flagRe.FindAllStringSubmatch(m[2], -1) {
+				inv.Flags = append(inv.Flags, f[1])
+			}
+			out = append(out, inv)
+		}
 	}
 	return out
 }
@@ -467,7 +586,17 @@ func (c Corpus) parse(name string, data []byte) Doc {
 }
 
 // List returns every document in the corpus, sorted by name.
-func (c Corpus) List() ([]Doc, error) {
+func (c Corpus) List() ([]Doc, error) { return c.list(false) }
+
+// All returns every document, including the corpus's own bookkeeping - an
+// index, a README. List hides those because somebody listing the material does
+// not want them; anything writing the corpus out needs them, because an export
+// missing its index has no map. `asgard-cli init` writes the wiki and the
+// extracts into a repository and hit exactly that: the shipped SKILL.md told
+// the reader to start at the index, which had not been written.
+func (c Corpus) All() ([]Doc, error) { return c.list(true) }
+
+func (c Corpus) list(bookkeeping bool) ([]Doc, error) {
 	refs, err := c.refs()
 	if err != nil {
 		return nil, err
@@ -475,7 +604,7 @@ func (c Corpus) List() ([]Doc, error) {
 
 	var out []Doc
 	for _, r := range refs {
-		if c.Unlisted[r.Name] {
+		if c.Unlisted[r.Name] && !bookkeeping {
 			continue
 		}
 		data, err := fs.ReadFile(c.FS, r.Path)
@@ -509,187 +638,4 @@ func (c Corpus) File(path string) (string, error) {
 		return "", fmt.Errorf("read %s: %w", path, err)
 	}
 	return string(data), nil
-}
-
-// Search finds documents covering the given terms. It is how somebody gets from
-// a customer's words to the material that covers them, without knowing what any
-// of it is called.
-//
-// All the terms first, then any of them. Requiring all of them is right when the
-// query is well aimed - an extra word should narrow - but it is the wrong answer
-// to a query that is a handful of words from a customer's document, where one
-// unknown word suppresses everything the other five would have found. So a query
-// that matches nothing outright falls back to the documents matching the most
-// terms, and Match.Terms records which ones, so the caller can say what did not
-// land rather than presenting a partial hit as a whole one.
-func (c Corpus) Search(query string) ([]Match, error) {
-	terms := Terms(query)
-	if len(terms) == 0 {
-		return nil, fmt.Errorf("search needs at least one term")
-	}
-
-	all, err := c.List()
-	if err != nil {
-		return nil, err
-	}
-
-	var matches []Match
-	for _, d := range all {
-		body, err := c.Read(d.Name)
-		if err != nil {
-			return nil, err
-		}
-		sc := Scanner{}
-		if c.Scan != nil {
-			sc = c.Scan(body)
-		}
-		h := sc.Scan(body, terms)
-		if !h.Found() {
-			continue
-		}
-		matches = append(matches, Match{Doc: d, Lines: h.Lines, Score: h.Score, Terms: h.Terms})
-	}
-
-	// A document carrying every term outranks one carrying more mentions of
-	// fewer, so the exact hit stays on top and the fallback only ever appears
-	// underneath it - or alone, when there was no exact hit at all.
-	Rank(matches, func(m Match) Hit { return Hit{Terms: m.Terms, Score: m.Score} })
-
-	// Once something matches every term, the partial matches are noise: they
-	// are what the fallback is for, and the fallback is not needed.
-	if len(matches) > 0 && len(matches[0].Terms) == len(terms) {
-		for i, m := range matches {
-			if len(m.Terms) < len(terms) {
-				return matches[:i], nil
-			}
-		}
-	}
-	return matches, nil
-}
-
-// Terms splits a query the way Search reads it.
-func Terms(query string) []string {
-	return strings.Fields(strings.ToLower(query))
-}
-
-// Covers reports whether the body covers one term. Short terms are held to a
-// word boundary: as a substring "ap" is inside "api", "apply" and "happen", so a
-// query naming an access point matched almost the whole corpus and the result
-// looked like an answer.
-func Covers(lowerBody, term string) bool {
-	if len(term) > 3 {
-		return strings.Contains(lowerBody, term)
-	}
-	for i := 0; ; {
-		j := strings.Index(lowerBody[i:], term)
-		if j < 0 {
-			return false
-		}
-		start := i + j
-		end := start + len(term)
-		if !wordByte(lowerBody, start-1) && !wordByte(lowerBody, end) {
-			return true
-		}
-		i = start + 1
-	}
-}
-
-// wordByte reports whether the byte at i is one a word can be made of, treating
-// anything outside the string as a boundary.
-func wordByte(s string, i int) bool {
-	if i < 0 || i >= len(s) {
-		return false
-	}
-	c := s[i]
-	return c == '_' || c >= 0x80 ||
-		(c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
-}
-
-// Hit is what one document's body gave a query: which terms it carries, a few
-// of the lines that carry them, and how often.
-type Hit struct {
-	Terms []string
-	Lines []string
-	Score int
-}
-
-// Found reports whether the body carried any term at all.
-func (h Hit) Found() bool { return len(h.Terms) > 0 }
-
-// Scan is the one implementation of "what did this document give the query".
-//
-// It exists because there were three. Corpus.Search had it, and so did
-// internal/stage and internal/scaffold, which hold material that is not a
-// Corpus - a stage has a number and a prompt template, a skill is a directory
-// with frontmatter - and so could not share the rest of this file. What they
-// share is the scoring, and three copies of it is the drift this package was
-// written to prevent, one level down from where it was prevented.
-//
-// Line selection is part of the contract, not a detail: at most three, and
-// nothing under 20 characters, because a bare field name quotes badly and says
-// less than a sentence.
-func Scan(body string, terms []string) Hit { return Scanner{}.Scan(body, terms) }
-
-// Scanner is Scan with the two things one corpus needs differently.
-//
-// A skill's SKILL.md is searched whole - its frontmatter carries the
-// description somebody queries on - but quoting a line out of that frontmatter,
-// or out of an unrendered `<< >>` placeholder, puts broken text in a result. So
-// what is matched and what is quotable are not always the same text.
-type Scanner struct {
-	// Quotable is the text shown lines are taken from, when it is not the
-	// whole body. Empty means the body itself.
-	Quotable string
-
-	// Keep drops a candidate line before it is shown. Nil keeps everything the
-	// length rule already allows.
-	Keep func(line string) bool
-}
-
-// Scan reports what body gave the query under this scanner's rules.
-func (sc Scanner) Scan(body string, terms []string) Hit {
-	var h Hit
-	lower := strings.ToLower(body)
-	for _, term := range terms {
-		if Covers(lower, term) {
-			h.Terms = append(h.Terms, term)
-		}
-	}
-	if len(h.Terms) == 0 {
-		return h
-	}
-
-	quotable := sc.Quotable
-	if quotable == "" {
-		quotable = body
-	}
-	for _, line := range strings.Split(quotable, "\n") {
-		lowerLine := strings.ToLower(line)
-		for _, term := range h.Terms {
-			if !Covers(lowerLine, term) {
-				continue
-			}
-			h.Score++
-			trimmed := strings.TrimSpace(line)
-			if len(h.Lines) < 3 && len(trimmed) > 20 && (sc.Keep == nil || sc.Keep(trimmed)) {
-				h.Lines = append(h.Lines, trimmed)
-			}
-			break
-		}
-	}
-	return h
-}
-
-// Rank orders matches the way every part of the corpus orders them: a document
-// carrying more of the query outranks one carrying more mentions of fewer, so
-// an exact hit stays above a partial one rather than being buried by a document
-// that repeats a single word.
-func Rank[T any](items []T, hit func(T) Hit) {
-	sort.SliceStable(items, func(i, j int) bool {
-		a, b := hit(items[i]), hit(items[j])
-		if len(a.Terms) != len(b.Terms) {
-			return len(a.Terms) > len(b.Terms)
-		}
-		return a.Score > b.Score
-	})
 }

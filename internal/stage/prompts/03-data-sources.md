@@ -1,6 +1,7 @@
 # Wire up the customer's databases
 
-Projects exist but no DataConnector does, so nothing can be read yet.
+**This stage is a project that has no DataConnector yet**, so nothing in it
+can be read.
 
 Missing a connector:
 <<range .Projects>><<if not (.Has "DataConnector")>>  - <<.Slug>>
@@ -17,21 +18,21 @@ status codes are read rather than extracted from somebody by questioning, and
 what arrives here is a design decision rather than a guess.
 
 If you are at this stage with no documentation, that is worth going back for
-before writing a connector. `asgard-cli guide requirements` has the full
+before writing a connector. `../guide/requirements.md` has the full
 ladder and why source code sits above a spec.
 
 ## Take the most capable route each system offers
 
     a database we can read   -> DataConnector + SemanticLayer
-                                asgard-cli usecase semantic-layer
+                                ../usecase/semantic-layer.md
     an API                   -> a Workflow with an http-request processor,
                                 or a skill teaching the agent to call it
-                                asgard-cli usecase external-api
-                                asgard-cli usecase api-oauth  (if it needs a token)
+                                ../usecase/external-api.md
+                                ../usecase/api-oauth.md  (if it needs a token)
     a screen only            -> last resort. Brittle and slow, and it breaks
                                 when the vendor changes their UI. Raise it as
                                 a question before designing around it.
-                                asgard-cli usecase browser-operation
+                                ../usecase/browser-operation.md
 
 **A system with both a database and an API: take the database** for reading. The
 agent composes its own queries, joins across tables, and is not limited to the
@@ -54,7 +55,7 @@ turned out to reference a column that does not exist, to sum to zero because of 
 missing filter, and to be wrong about where half the rows came from. None of that
 is visible in column names.
 
-    asgard-cli usecase semantic-layer
+    ../usecase/semantic-layer.md
 
 ## The steps
 

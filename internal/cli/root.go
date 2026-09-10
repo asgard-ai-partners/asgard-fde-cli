@@ -8,10 +8,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/check"
-	"github.com/asgard-ai-partners/asgard-fde-cli/internal/repo"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/stage"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/version"
-	"github.com/asgard-ai-partners/asgard-fde-cli/internal/work"
 )
 
 // NewRootCmd builds the root command. Every call returns a fresh tree so tests
@@ -23,38 +21,53 @@ func NewRootCmd() *cobra.Command {
 		Long: `asgard-cli is what an agent asks about integrating with Asgard, so that
 an FDE can walk into a customer's room with it.
 
-BEFORE A MEETING, run the one for what you are about to do:
+BEFORE A MEETING, read the one for what you are about to do:
 
-    asgard-cli needs <scenario>          what they have to give us before we start
-    asgard-cli brief customer-meeting    the five things said wrong to a customer
-    asgard-cli brief connect             before binding a checkout to the platform
-    asgard-cli brief write-chart         before touching a chart
-    asgard-cli brief handover            before telling anyone it is live
-    asgard-cli guide requirements        the interview, and what to ask for
+    .agents/skills/asgard-platform/
+      needs/<shape>.md           what they have to give us before we start
+      brief/customer-meeting.md  the five things said wrong to a customer
+      brief/connect.md           before binding a checkout to the platform
+      brief/write-chart.md       before touching a chart
+      brief/handover.md          before telling anyone it is live
+
+    asgard-cli guide requirements   the interview, and what to ask for
 
 **The riskiest thing in an engagement leaves no trace in a repository.** Talking
 to a customer changes no file, so nothing derived from what the repo contains can
-prepare anybody for it - and every entry in "brief" is there because somebody
+prepare anybody for it - and every entry under brief/ is there because somebody
 has actually got it wrong, not because it is important.
 
-It does two things after that, and they are reached differently.
-
 ASKING - what the platform has, which CR a UI name maps to, how one shape is
-assembled field by field, and where each has been got wrong before:
+assembled field by field, and where each has been got wrong before. **That is
+not a command: it is files.** "asgard-cli init" writes all of it into the
+repository, and you read it with cat and grep:
 
-    asgard-cli find <terms>
+    .agents/skills/asgard-platform/
+      index.md    the map, and what is deliberately not there
+      aliases.md  what a customer said -> what to search for
+      wiki/       what the platform has
+      usecase/    how one deployment shape is assembled, field by field
+      needs/      what to get from the customer before it can be built
+      brief/      what this activity gets wrong
+      guide/      which decision to make now
 
-That searches all four parts of the material at once - the platform wiki, the
-deployment extracts, the guidance for each decision, and the skills the agent in
-a customer repo loads - and hands over the counterpart of whatever it finds. Ask
-in Chinese if that is the language the question was asked in; the glossary
-carries the translation. **This works with no repository**, which is the point:
-the question gets asked in a meeting, before there is a directory.
+    grep -ril "<term>" .agents/skills/asgard-platform/
 
-    asgard-cli wiki <page>     the platform
-    asgard-cli usecase <name>  one deployment shape, field by field
-    asgard-cli guide <name>    one decision, and how it has been got wrong
-    asgard-cli brief <what>    the thing you are about to do
+**Read aliases.md first if the question did not arrive in English.** The
+material is English and a customer conversation usually is not, so a term
+taken from what somebody actually said matches nothing - and that reads
+exactly like a subject the material does not cover.
+
+**With no repository, "asgard-cli init" in an empty directory is enough.** It
+needs no account and touches no network. The question gets asked in a meeting,
+before there is a directory, so that is the first thing to run:
+
+    mkdir -p /tmp/asgard && cd /tmp/asgard && asgard-cli init
+
+One of those stays a command, because it reads the repository you are in as
+well as the material:
+
+    asgard-cli guide <name>    one decision, against what this repo has
 
 BUILDING - a chart of Asgard custom resources per project, each deployed to its
 own namespace:
@@ -68,13 +81,11 @@ own namespace:
     asgard-cli check         the structure; "verify" is the rendered chart
 
 Each of those four reads a file in the customer's repository back to you, and
-each takes ` + "`--format json`" + `. **None of them says where the engagement is.** There
-is no such command and there was: it derived one position from the earliest
-missing CR kind, and an onboarding is not linear - three of the most expensive
-decisions in the engagement this was built from were made, built and reversed.
-What replaced it is the records themselves, and guidance reached by subject
-through "find" or by name through "guide", without arriving anywhere to be
-handed it.
+each takes ` + "`--format json`" + `. **None of them says where the engagement is**, and
+there is no such command: an onboarding is not linear, so a single position
+derived from the earliest missing CR kind is a claim the repository cannot
+support. What answers "what now" is those records, plus guidance by name with
+"asgard-cli guide <name>" or by grep over the material.
 
 Work arrives as a request: one thing the customer wants that the agent cannot do
 today. "asgard-cli request add" opens one, and every status the engagement keeps
@@ -107,9 +118,9 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 
 	cmd.SetVersionTemplate("{{.Name}} {{.Version}}\n")
 
-	// --template-dir is persistent because a prompt is read by `guide`, `find`
-	// and `audit-material` alike, and an override that applied to only one of
-	// them would make the three disagree about what the material says.
+	// --template-dir is persistent because a prompt is read by `guide`,
+	// `audit-material` and `init` alike, and an override that applied to only
+	// one of them would make the three disagree about what the material says.
 	var templateDir string
 	cmd.PersistentFlags().StringVar(&templateDir, "template-dir", "",
 		"read stage prompts from this directory instead of the embedded copies, per file; for iterating on prompt text")
@@ -163,21 +174,15 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 	cobra.EnableCommandSorting = false
 
 	cmd.AddGroup(
-		&cobra.Group{ID: groupAsk, Title: "Ask - what the platform is, and how a shape is built:"},
+		&cobra.Group{ID: groupAsk, Title: "Ask - the platform itself is files under .agents/skills/; these are the rest:"},
 		&cobra.Group{ID: groupBuild, Title: "Build - write the repository and the CRs in it:"},
 		&cobra.Group{ID: groupCheck, Title: "Check - everything this machine can check:"},
 		&cobra.Group{ID: groupDeploy, Title: "Deploy - the platform, and what it knows:"},
 	)
 
 	addTo(cmd, groupAsk,
-		newFindCmd(),
-		newWikiCmd(),
-		newUsecaseCmd(),
-		newBriefCmd(),
-		newNeedsCmd(),
 		newGuideCmd(),
 		newSizeCmd(),
-		newReadingCmd(),
 		newIssueCmd(),
 	)
 	addTo(cmd, groupBuild,
@@ -234,6 +239,12 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 // what is this platform, how do I write the repository, is what I wrote sound,
 // and get it deployed. A command that fits none of them is a command whose
 // place in the tool has not been decided.
+//
+// **The first group is nearly empty and its heading says why.** Most of the
+// answer to "what is this platform" is files rather than commands, so what is
+// left under Ask is the three that are not: guidance read against this
+// repository, a count taken off production, and the way back when the files
+// have no answer.
 const (
 	groupAsk    = "ask"
 	groupBuild  = "build"
@@ -262,7 +273,26 @@ func addTo(parent *cobra.Command, group string, children ...*cobra.Command) {
 // gone has to find out what replaced it, and the first one to hit this had to
 // ask a maintainer. That is the answer living in a conversation instead of in
 // the binary.
+//
+// **It is also the closed set `audit-material --commands` sweeps for.** A bare
+// name in the material - guidance "reached by subject through find" - claims a
+// command exists without writing `asgard-cli` in front of it, so the
+// invocation check cannot see it. Looking for arbitrary bare words would fail
+// the build over English; looking only for names in this map cannot. So a row
+// missing here is two failures, not one: a customer told nothing, and a sweep
+// that stops looking.
 var replacements = map[string]string{
+	"find": "The material is files now. `asgard-cli init` writes it into " +
+		"`.agents/skills/asgard-platform/` and `grep -ril \"<term>\" .agents/skills/asgard-platform/` is the way in - " +
+		"read `aliases.md` there first if the question did not arrive in English",
+	"wiki":    "`cat .agents/skills/asgard-platform/wiki/<name>.md`, or grep the directory. `asgard-cli init` writes it, and needs no account and no network",
+	"usecase": "`cat .agents/skills/asgard-platform/usecase/<shape>.md`, or grep the directory",
+	"brief":   "`cat .agents/skills/asgard-platform/brief/<activity>.md` - the four are `customer-meeting`, `connect`, `write-chart` and `handover`",
+	"needs":   "`cat .agents/skills/asgard-platform/needs/<shape>.md`, one file per deployment shape",
+	"reading": "Gone with the reading list. What to read before an activity is `.agents/skills/asgard-platform/brief/<activity>.md`; " +
+		"what a document points at is in the document",
+	"scaffold": "Folded into `asgard-cli init`, which writes the skeleton and the material together. " +
+		"`--force` there is what re-takes a file this CLI owns",
 	"project shape": "Gone with `.asgard-config.json`. It recorded what a chart was being built to be, which is a claim about intent that nothing can verify - " +
 		"say it in the chart, next to whatever makes the project unusual, where the next reader is already looking. `asgard-cli size` still lists the shapes",
 	"next": "It derived a position from the earliest missing CR kind and there is no replacement for that, deliberately - an onboarding is not linear. " +
@@ -270,7 +300,7 @@ var replacements = map[string]string{
 		"`next --stage <name>` is `asgard-cli guide <name>`, and `next --list` is `asgard-cli guide` with no argument",
 	"status": "Where it meant \"what is still open\", `asgard-cli question`, `asgard-cli request` and `asgard-cli task`; " +
 		"where it meant \"what does each chart declare and still lack\", `asgard-cli project`. It also named the guidance the " +
-		"repository's shape made relevant, and nothing replaces that: read one with `asgard-cli guide <name>` or reach it by subject with `asgard-cli find`",
+		"repository's shape made relevant, and nothing replaces that: read one with `asgard-cli guide <name>` or grep the material in `.agents/skills/asgard-platform/`",
 }
 
 // commandNames returns every name and alias in the tree, one level deep.
@@ -286,16 +316,4 @@ func commandNames(root *cobra.Command) []string {
 		out = append(out, c.Aliases...)
 	}
 	return out
-}
-
-// recallHere notes a page as opened, when the command was run inside an
-// engagement. Both `wiki` and `usecase` work with no repository at all - that
-// is deliberate, they are reference material - so this finds one if there is
-// one and does nothing if there is not.
-func recallHere(kind, name string) {
-	root := repo.Root(".")
-	if root == "" {
-		return
-	}
-	work.Recall(root, kind, name)
 }

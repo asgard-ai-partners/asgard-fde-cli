@@ -701,10 +701,10 @@ func (c *checker) checkQuestionNumbersUnique() error {
 // changed about half of them, dropped three and added six. None of it went
 // back, because nothing said it should.
 //
-// That matters more than an ordinary staleness because **`next` prints the
-// questions before anything else**. The next person to pick the repository up
-// reads the superseded file first, and walks into a meeting with questions
-// already abandoned. Worse, a judgement that was overturned survives there
+// That matters more than an ordinary staleness because the questions file is
+// what the next person picking the repository up reads first. They read the
+// superseded version, and walk into a meeting with questions already
+// abandoned. Worse, a judgement that was overturned survives there
 // looking considered - in that engagement, a security reasoning the deck had
 // corrected was still sitting in the file, argued well.
 //
@@ -1015,6 +1015,23 @@ func (c *checker) checkLivingSpec(specDir string) error {
 	}
 	if slugs == 0 {
 		c.warnf("docs/spec/ has no living spec yet; it should be docs/spec/<slug>/")
+	}
+	// **Two living-spec roots is the failure the four-layer split exists to
+	// prevent**, and the next reader cannot tell which is current. It is a
+	// warning rather than an error because `docs/spec/README.md` allows a
+	// second slug for a genuinely separate system - and it says that is rare,
+	// so the common cause is a rename left half-done.
+	if slugs > 1 {
+		roots := make([]string, 0, slugs)
+		for _, e := range entries {
+			if e.IsDir() {
+				roots = append(roots, "docs/spec/"+e.Name()+"/")
+			}
+		}
+		c.warnf("%d living specs: %s. `docs/spec/README.md` names the one in use, and says a second "+
+			"slug is only for a system with its own audience and lifecycle - so two is usually a rename "+
+			"that stopped halfway. Two indexes that disagree is what the layers exist to prevent, and "+
+			"nothing here can tell you which is current", slugs, strings.Join(roots, ", "))
 	}
 	return nil
 }

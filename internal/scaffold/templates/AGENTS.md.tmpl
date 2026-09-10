@@ -27,6 +27,19 @@
 >   write path to a source system is a behaviour change that needs a spec.
 > - **Nothing is deployed from a laptop.** See Deploy / CI.
 
+<!-- asgard-cli:managed:start -->
+<!--
+  Everything below this marker is written by `asgard-cli init` and is replaced
+  on every run, even in a file somebody here has edited. It is the platform's
+  contract, not this engagement's - a correction to it belongs upstream in the
+  CLI, where every engagement gets it.
+
+  Everything ABOVE the marker is yours and is never overwritten: the project
+  descriptions, what the customer's systems are, and the invariants. That split
+  is why this file can be kept current without deleting the answers - see
+  `mergeManaged` and the AGENTS.md section of TASK.md.
+-->
+
 ## Where this repo is, and what to do first
 
 `asgard-cli init` wrote this repo. What exists is the platform contract (this
@@ -50,7 +63,7 @@ pipeline yet" and the `skills` step reports no session.
 **Read the checklist before running any of it:**
 
 ```bash
-asgard-cli brief connect
+`.agents/skills/asgard-platform/brief/connect.md`
 ```
 
 Every line of the walk below has a question in it that only the FDE can answer,
@@ -115,11 +128,11 @@ has been settled yet and the first job is the three decisions below.
 
 **Before any conversation with the customer, run the briefing for it:**
 
-    asgard-cli brief customer-meeting
+    `.agents/skills/asgard-platform/brief/customer-meeting.md`
 
 **The riskiest thing in this engagement leaves no trace in this repository.**
 Talking to a customer changes no file, so nothing here and nothing derived from
-here prepares anybody for it. Every entry in `asgard-cli brief` is there because
+here prepares anybody for it. Every entry in `.agents/skills/asgard-platform/brief/` is there because
 somebody actually got it wrong - `write-chart` before touching a chart,
 `handover` before telling anyone it is live.
 
@@ -134,7 +147,7 @@ reads one file back, and each takes `--format json`:
 **No command says where this engagement is, and none will.** There is no step
 you are on - one that already has every requirement is at no step at all. What
 the work is made of, below, is a map and not an order. `asgard-cli guide <name>`
-reads one piece of guidance at any time, and `asgard-cli find` reaches them by
+reads one piece of guidance at any time, and grep reaches them by
 subject.
 
 | name | the work | produces |
@@ -158,18 +171,21 @@ answer that looks obvious and is wrong.
 
 ### The CLI
 
-`asgard-cli` scaffolded this repo and stays useful afterwards:
+`asgard-cli` scaffolded this repo and stays useful afterwards. **Most of what
+it knows is files rather than commands** - the platform material is under
+`.agents/skills/asgard-platform/` and you read it with `cat` and `grep`. What
+stays a command is what reads *this repository*:
 
-| command | when |
+| what to run or open | when |
 |---|---|
 | `asgard-cli gate` | **after changing anything under a chart or `.asgard-pipeline.yaml`, and before pushing.** Everything this machine can check, in one command. A repository of custom resources has no compiler; this is the nearest thing to one, and it is one command so that it cannot go stale the way a checklist does |
-| `asgard-cli brief <what>` | **before a meeting, a chart change or a handover.** The activity you are about to do, and how it has been got wrong |
+| `.agents/skills/asgard-platform/brief/<what>.md` | **before a meeting, a chart change or a handover.** The activity you are about to do, and how it has been got wrong |
 | `asgard-cli question` | what nobody has answered yet, and who each is waiting on. **Read this before designing anything** |
 | `asgard-cli request`, `asgard-cli task` | what the customer asked for, and the task specs open against it |
 | `asgard-cli project` | what each chart declares, and what it still lacks. It reports no step, because there is none |
 | `asgard-cli guide <name>` | the guidance for one decision; `asgard-cli guide` lists it |
-| `asgard-cli find <terms>` | **start here for a question.** Searches the wiki, the shapes, the guidance and the skills together; ask in Chinese if that is the language it was asked in |
-| `asgard-cli usecase` | **before authoring any CR.** How each shape is built, taken from deployments already in production: when to use it, the skeleton, the fields that are not obvious, and what the mistake cost someone. `--search <terms>` finds a shape from what the customer asked for |
+| `grep -ril "<term>" .agents/skills/asgard-platform/` | **start here for a question.** The wiki, the shapes, what to get from the customer, the briefs and the guidance are all files there. Read its `aliases.md` first if the question was asked in another language |
+| `.agents/skills/asgard-platform/usecase/` | **before authoring any CR.** How each shape is built, taken from deployments already in production: when to use it, the skeleton, the fields that are not obvious, and what the mistake cost someone. The same documents are in `.agents/skills/asgard-platform/usecase/`, so grep finds a shape from what the customer asked for |
 | `asgard-cli check` | one step of `gate`, when that is the step you are fixing |
 | `asgard-cli local-env` | **somebody has to give you a credential.** Opens a form on 127.0.0.1 for them to type it into, and reports back which keys were filled - never the values. Re-read `.env` after it, since they can add keys |
 | `asgard-cli project add <slug>` | the engagement discovers a new project |
@@ -223,7 +239,7 @@ request the front end sends rather than as a tool argument the model fills in,
 and the query filters on it. The model still picks only *which question*, so the
 injection surface is still zero. Whatever sits in front is what knows who is
 talking; if nothing in front knows, the per-customer half cannot be built at all,
-and that is a question for the customer. See `asgard-cli usecase
+and that is a question for the customer. See `.agents/skills/asgard-platform/usecase/
 per-turn-credentials`, which also carries the failure mode - a query that forgets
 to filter on the injected identity fails on the anonymous path only, and that is
 the path nobody tests.
@@ -890,3 +906,5 @@ each decision that got settled.
 - `Toolset.tools[]` require `requestConsent` (bool); `Agent.managed.prompt` requires all of
   `persona`/`task`/`context`/`format`, and `managed.aliasName` + `managed.description` are required.
 - Render with `asgard-cli render` before committing template changes; there is no app to run.
+
+<!-- asgard-cli:managed:end -->

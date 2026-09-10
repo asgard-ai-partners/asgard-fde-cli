@@ -1,15 +1,15 @@
 # SOURCES.md
 
-Where the material in `internal/usecase/extracts/` came from.
+Where the material in `internal/corpus/usecase/` came from.
 
 > **Internal only.** This file lives outside `internal/`, so it cannot be embedded
 > even by accident.
-> `internal/usecase/extracts/` ships to every engagement, so those files name no customer
+> `internal/corpus/usecase/` ships to every engagement, so those files name no customer
 > and no deployment. This one exists so we can trace an extract back to the chart
 > it was taken from.
 
 Keep it that way: when adding an extract, put the customer-facing shape in
-`internal/usecase/extracts/` and the attribution here.
+`internal/corpus/usecase/` and the attribution here.
 
 ## The deployments read so far
 
@@ -40,7 +40,7 @@ customer, and nothing under `internal/` may.
 | [asgard-freyr-skills](https://github.com/asgard-ai-platform/asgard-freyr-skills) | Freyr (runtime skills, a separate repo from the chart) |
 
 The demo generator and auto-post are Asgard's own rather than a customer engagement. **`Heimdall` is
-also the name of a product in the suite** (Media & PR AI, see `asgard-cli wiki
+also the name of a product in the suite** (Media & PR AI, see `internal/corpus/wiki/
 product-suite`) - the repo and the product are not the same thing, and an extract
 saying "Heimdall" without saying which is ambiguous.
 
@@ -72,7 +72,7 @@ on.
 |---|---|---|---|
 | `config.expression` | "CEL 表達式" | **JavaScript**: arrow functions (26 occurrences), `const` (11), `String()` (7), `encodeURIComponent` (5), `??` (4), `JSON.stringify` (3) | CEL has none of those constructs. Counted across every chart in the deployments listed above, on 2026-09-01 |
 
-`internal/usecase/extracts/workflow-chain.md` states the corrected version and
+`internal/corpus/usecase/workflow-chain.md` states the corrected version and
 says the docs are wrong, because an agent handed "it is CEL" writes something
 that cannot work and has no way to find out why.
 
@@ -81,7 +81,7 @@ there is a reason to think otherwise. Record the reason when there is.
 
 ## Which file each kind's material came from
 
-Attribution for `internal/usecase/extracts/`, moved here from `TASK.md` because
+Attribution for `internal/corpus/usecase/`, moved here from `TASK.md` because
 this is the file that is allowed to name a deployment. Sizes are from when they
 were read, and are a rough guide to how much of the knowledge is in the header
 comments rather than the YAML.

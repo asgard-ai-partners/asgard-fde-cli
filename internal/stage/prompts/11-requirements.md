@@ -91,6 +91,7 @@ and six TODOs; an empty `requirements/requests/` before the interview is the
 correct state.
 
     asgard-cli question add "<what blocks it>" --ask "<who can answer>"
+
 <<else>>Nothing is recorded yet. After the interview, `asgard-cli request add`.
 <<end>><<end>>
 ## Read the later stages before this meeting, not after
@@ -105,10 +106,10 @@ is about the output rather than the content:
 You get one interview. At that point you have read none of the build guidance,
 and **half
 of what you will say out loud is settled there**. So read them first - at least
-`data-sources`, `read-path`, `entry-point` and `knowledge`. An hour before the
+`../guide/data-sources.md`, `../guide/read-path.md`, `../guide/entry-point.md` and `../guide/knowledge.md`. An hour before the
 meeting is cheaper than a correction after it.
 
-### Run `asgard-cli brief customer-meeting` before the meeting
+### Run `../brief/customer-meeting.md` before the meeting
 
 Not reading - running. It lists the five things that reach a customer wrong, and
 it lives there rather than here because meetings happen at any point: a briefing
@@ -195,7 +196,7 @@ vocabulary collects a no:
     no    given an API, we can integrate all five channels
     yes   given a read-only account on the CRM and a route to it, this becomes X
 
-**Claim nothing past `asgard-cli wiki platform-unknowns`.** What is on that list
+**Claim nothing past `../wiki/platform-unknowns.md`.** What is on that list
 is asked of the platform team **before** the meeting and answered aloud, never
 printed. Standing in front of a customer saying we do not know what our own
 product does is not honesty.
@@ -269,7 +270,7 @@ arrives believing their own staff will build workflows in Odin, carrying a
 vocabulary - Basic Function, Template - that maps to nothing in the product as
 documented anywhere else, and expecting Mimir to forecast.
 
-`asgard-cli wiki what-they-read` has the three and what is actually true. You
+`../wiki/what-they-read.md` has the three and what is actually true. You
 cannot correct a picture you have not seen, and describing the platform over the
 top of a different one produces a customer who nods and disagrees later.
 
@@ -321,14 +322,14 @@ the answer.
 
 Four products still have no shape to propose instead - Heimdall, Fehu, the
 Management Console as work in its own right, and Knowledge Base as distinct from
-a Drive - so if 2b lands on one of those, `asgard-cli wiki product-suite` is
+a Drive - so if 2b lands on one of those, `../wiki/product-suite.md` is
 what to reason from and there is no extract to lean on.
 
     look one thing up, in the moment     an agent
     watch the same numbers every day     a Dashboard - this is Mimir
     both, for different people           both, and they are separate deliveries
 
-`asgard-cli wiki product-suite` puts it plainly: **Mimir is often what the
+`../wiki/product-suite.md` puts it plainly: **Mimir is often what the
 customer actually wants.** "I want an AI that answers stock questions" is not a
 statement about an agent - it is a statement about stock questions, and the two
 products answer it differently. Glancing at a figure each morning is a
@@ -377,10 +378,10 @@ The mapping is mechanical, and each half of it has a page of its own, with the
 case that got it wrong. Read whichever the answer reaches; they are not steps
 and there is no order to arrive in:
 
-    the systems and how each is reached      asgard-cli guide data-sources
-    the read surface, per audience           asgard-cli guide read-path
-    the entry point, per audience            asgard-cli guide entry-point
-    where unstructured knowledge goes        asgard-cli guide knowledge
+    the systems and how each is reached      ../guide/data-sources.md
+    the read surface, per audience           ../guide/read-path.md
+    the entry point, per audience            ../guide/entry-point.md
+    where unstructured knowledge goes        ../guide/knowledge.md
 
 Read them **before** the meeting rather than when you arrive at the stage. They
 are written as build-time decisions, but every one of them is settled by an
@@ -425,8 +426,9 @@ integration from days into weeks by being discovered late:
 
     **Ask the customer for the person's name, for the row in
     `docs/open-questions.md`; do not put the addresses in your answer.** They go
-    to whoever makes the change, once, read fresh from `asgard-cli wiki
-    operations` - not into this repository, not onto a slide, not into a thread
+    to whoever makes the change, once, read fresh from
+    `../wiki/operations.md` - not into this repository, not onto a slide, not
+    into a thread
     that gets
     forwarded. They can change and a copy will not, and a stale allowlist is the
     customer's connection dropping. Coordinates in a committed record are the
@@ -502,7 +504,7 @@ them AES-256-GCM sealed in a column, with the key from its own environment,
 masked for display, and the whole boundary isolated behind one package that the
 build refuses to let other layers import. **If a requirement implies this, say
 so early**: it is the point at which the engagement stops being a chart and
-needs somewhere to run code. `asgard-cli usecase per-turn-credentials` is the
+needs somewhere to run code. `../usecase/per-turn-credentials.md` is the
 lighter alternative - the caller supplies the credential each turn and nothing
 is stored - and it is worth checking whether that is enough before agreeing to
 hold anything.
@@ -562,7 +564,7 @@ Whatever sits in that middle - a support desk, a helpdesk product, their own
 relay, or nothing at all - is what owns the conversation. The platform does not:
 there is no CR for handing over to a human, for pausing while a person replies,
 for resuming afterwards, or for counting how many questions one user has asked.
-`asgard-cli wiki integration` has the detail and the sources.
+`../wiki/integration.md` has the detail and the sources.
 
 So every requirement of this shape belongs to that middle layer, not to us:
 
@@ -577,7 +579,7 @@ unresolved**, so do not walk in saying it cannot be done. What is certain is tha
 LINE gives the bot no signal that a person has taken over, so the pause/resume
 state and the counters live outside the platform either way. Ask who owns the
 LINE Official Account and what their agents use today, and check LINE's current
-documentation for that account. See `asgard-cli wiki integration`.
+documentation for that account. See `../wiki/integration.md`.
 
 If the answer is "nothing", say so plainly rather than designing around it. The
 choice is theirs: put a desk in front, or drop the requirement. A proposal that
@@ -591,7 +593,7 @@ follow-up, can reach 30 steps.
 
 LINE also needs **two-way setup** - Asgard issues a webhook URL that somebody has
 to paste back into the LINE console and verify - so it needs an owner on their
-side, not just a credential. See `asgard-cli wiki integration`.
+side, not just a credential. See `../wiki/integration.md`.
 
 **3f. Listen for the sentences that are a skill.**
 
@@ -621,7 +623,7 @@ like a model ignoring instructions rather than a file in the wrong place.
 
 This is also the row a proposal forgets, because it is knowledge rather than a
 system: there is no credential to ask for, so it never comes up in the access
-conversation. `asgard-cli usecase skill-layers` is what one looks like at full
+conversation. `../usecase/skill-layers.md` is what one looks like at full
 size, and what its layers are for.
 
 **4. Is any of it unstructured?**
@@ -655,7 +657,7 @@ makes the agent paraphrase a figure it should have read.
 below" - that is a **webhook**, not a schedule, and the two get confused because
 both run with nobody watching:
 
-    their system calls us when it happens    a webhook. `asgard-cli wiki automation`
+    their system calls us when it happens    a webhook. `../wiki/automation.md`
     we look on a timer                       a Trigger, and always later than the event
 
 **The question that decides it is whether their system can call out at all.**
@@ -681,8 +683,8 @@ the core. So:
 **Do not let it be mocked silently.** A mocked send that returns success and
 writes "notified" into a log is worse than nothing - somebody later reads that
 log and believes people were told. If a mock is right for a test phase, say now
-that every summary will lead with "not actually sent". `asgard-cli wiki
-integration` has how one deployment does it.
+that every summary will lead with "not actually sent".
+`../wiki/integration.md` has how one deployment does it.
 
 **5. Is there anything it should change, and not just read?**
 
@@ -748,7 +750,7 @@ the rest into deferred scope rather than open questions.
 Not our fee - the platform's usage billing, which is a separate question and one
 a customer with a procurement process will ask before signing anything.
 
-`asgard-cli wiki fehu` has how it is broken down: by **Service** (Platform,
+`../wiki/fehu.md` has how it is broken down: by **Service** (Platform,
 Knowledge Base, Data Insight, Agent Hub, Heimdall) and by **Item** (Project
 Usage, Processor Usage, Seat), in units of Units-Days, GB-Days and Times.
 
@@ -756,7 +758,7 @@ Two things worth knowing before answering:
 
   - **the Workspace is the billing unit.** So how the work splits into projects
     and workspaces has a cost consequence, and the split is decided in
-    `asgard-cli guide projects` - before anybody has asked this question. Ask it now
+    `../guide/projects.md` - before anybody has asked this question. Ask it now
   - **a seat is a line item.** "Everyone in the company can use it" is a
     sentence with a price, and the customer usually has not connected the two
   - **only Odin lets them bring their own model.** Sindri and Mimir use the
@@ -785,12 +787,12 @@ A customer who wrote a test plan usually ends it with a list of things they want
 **us** to confirm - account permissions, whether a channel can do X, what we
 recommend for their existing system. Those have nowhere to live: the
 open-questions file is this engagement's own questions, and
-`asgard-cli wiki platform-unknowns` is what no source settles.
+`../wiki/platform-unknowns.md` is what no source settles.
 
 They go in `docs/open-questions.md`, in its own section, and the file the
 scaffold writes now has one.
 
-**Check each against `asgard-cli wiki platform-unknowns` before answering.** A
+**Check each against `../wiki/platform-unknowns.md` before answering.** A
 surprising share of what a customer asks us is already on that list, because
 they ask about the same things every engagement hits - what a given user is
 allowed to reach, what gets logged and for how long. When one matches:
@@ -930,8 +932,8 @@ hypothetical.
 
 | the obvious answer | what it turned out to be | why the obvious one failed |
 |---|---|---|
-| a public website should read through a **SemanticLayer**, like everything else | **five zero-parameter query tools** | a bound layer is arbitrary SQL over every cube, and the exposed surface grows by itself every time a table is added - `asgard-cli guide read-path` has why narrowing it is refused rather than forgotten |
-| a public website is reached through **the platform's agent hub**, like everything else | its **own BotProvider -> Workflow -> SandboxBlueprint** | an anonymous visitor cannot authenticate to the agent hub, and the field that would let them does not exist - `asgard-cli wiki agents` |
+| a public website should read through a **SemanticLayer**, like everything else | **five zero-parameter query tools** | a bound layer is arbitrary SQL over every cube, and the exposed surface grows by itself every time a table is added - `../guide/read-path.md` has why narrowing it is refused rather than forgotten |
+| a public website is reached through **the platform's agent hub**, like everything else | its **own BotProvider -> Workflow -> SandboxBlueprint** | an anonymous visitor cannot authenticate to the agent hub, and the field that would let them does not exist - `../wiki/agents.md` |
 | unstructured knowledge is a **KnowledgeBase** with Loaders and a retrieval workflow | a **SourceSet Drive with `contextIndex`** | the Loader-and-retrieval-workflow path was harder to keep correct than a Context Index over files. `KnowledgeBase` is still live and still shipping, so this one is experience rather than a platform rule |
 
 The pattern in all three: **"like everything else" is the wrong reason**, because
@@ -1067,8 +1069,8 @@ first delivery and there is nothing to defer.
 
 Getting this backwards costs more than a deferred feature: it is telling a
 customer their channel cannot recognise their own customers, on a slide, when it
-can. `asgard-cli guide read-path` has the mechanism and
-`asgard-cli usecase per-turn-credentials` has the shape - read one of them before
+can. `../guide/read-path.md` has the mechanism and
+`../usecase/per-turn-credentials.md` has the shape - read one of them before
 promising anything of the form 「查我的⋯」.
 
 **And when it is kept, it brings an acceptance criterion with it**, which belongs
@@ -1174,7 +1176,7 @@ the pages it points at. `botProviderClass` is immutable (`self == oldSelf`) and
 exactly one of [generic telegram line discord slack] must be present, so asking
 which channel in the same breath is a contract requirement rather than a
 courtesy. Two rows of the "obvious answer" table restated constraints the wiki
-and `read-path` own, and now point at them instead.
+and `../guide/read-path.md` own, and now point at them instead.
 
 **Unchecked:** filter 0, and everything downstream of it. "Does the answer change
 what we build" is this material's own test for whether a question is worth a

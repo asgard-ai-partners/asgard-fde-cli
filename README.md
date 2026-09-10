@@ -52,41 +52,55 @@ Layout:
 ```
 cmd/asgard-cli/     main; signal handling and exit codes only
 internal/cli/       cobra command tree, one file per subcommand
+internal/corpus/    the material itself, in the layout a repository receives it
+internal/wiki/      serves the platform wiki and the alias tables beside it
+internal/usecase/   serves the deployment-shape extracts
+internal/needs/     what a shape has to be given by the customer
+internal/brief/     what one activity gets wrong, addressed by intent
+internal/stage/     the onboarding guidance, rendered against the repository
+internal/size/      the deployment shapes, counted off production
+internal/kb/        one implementation of listing, reading, provenance and the
+                    link graph, shared by every part of the material
+internal/scaffold/  writes the non-customer-specific tree, the design-time skills
+                    and the platform corpus, and keeps .asgard-scaffold.json
+internal/generate/  CR skeletons, wired to what the chart already declares
 internal/repo/      what a customer repository is made of, by looking at it
-internal/auth/      the OAuth flow and the credential store, which is the only file
-                    this CLI keeps outside a repository
 internal/work/      reads and writes the customer repo's own records of its work
                     (requests, task specs, open questions, decision records)
-internal/kb/        one implementation of listing, reading, scoring and provenance,
-                    shared by every part of the material
-internal/wiki/      the platform wiki, and the glossary's customer-vocabulary table
-internal/usecase/   the deployment-shape extracts
-internal/stage/     which stage a repo is at, derived and never stored, plus which
-                    guidance the repo's own state makes relevant
-internal/scaffold/  writes the non-customer-specific tree, and serves the skills in it
-internal/generate/  CR skeletons, wired to what the chart already declares
-internal/size/      the deployment shapes, counted off production
-internal/brief/     what one activity gets wrong, addressed by intent not by stage
 internal/check/     repository structure: indexes, dated names, links, orphan pages
 internal/gate/      the invariant checks on a rendered chart (xref, agent split, enums)
 internal/render/    renders a release's chart via helm, with placeholder asgard values
+internal/localenv/  the local environment file a chart's placeholders are filled from
+internal/auth/      the OAuth flow and the credential store, which is the only file
+                    this CLI keeps outside a repository
+internal/platform/  the platform API client
+internal/skills/    the platform's fetched reference material
 internal/binding/   reads and writes .asgard-cli.yaml, the checkout's platform binding
 internal/pipelineconfig/ reads .asgard-pipeline.yaml, the deployment declaration
 internal/chart/     reads a project's unrendered templates for (kind, name)
+internal/gitrepo/   the checkout's root and its remotes
 internal/tool/      resolves helm/kubectl/python3, and how to install one
+internal/browser/   opens a URL, or says it could not
 internal/version/   build information (injected by GoReleaser via ldflags)
+selfsrc.go          this repo's own Go source, embedded so the binary can audit
+                    the commands it prints
 ```
+
 
 To add a subcommand, write a `newXxxCmd()` in `internal/cli/` and register it
 through `addTo(cmd, group..., ...)` in `root.go`. The group is required - cobra
 panics on a `GroupID` the parent does not have - so a command cannot be added
 without deciding where in the help it belongs.
 
-- [STRUCTURE.md](STRUCTURE.md) - what every directory is for, including the four
+- [Goal.md](Goal.md) - what this tool is for, in four points.
+- [APPROACH.md](APPROACH.md) - how the main capabilities are implemented: the
+  corpus, the pointer form, the audits, retrieval, what `init` writes, and what
+  only the platform can decide.
+- [STRUCTURE.md](STRUCTURE.md) - what every directory is for, including the
   bodies of embedded material and which one a change belongs to.
-- [AGENTS.md](AGENTS.md) - the conventions this repo follows, and what the gate is
-  now that there is no test suite.
-- [TASK.md](TASK.md) - what this repo is for, and what is not finished.
+- [AGENTS.md](AGENTS.md) - the conventions this repo follows, and what the gate
+  is.
+- [TASK.md](TASK.md) - where it stands, and what is not finished.
 
 ## Commands
 
@@ -160,11 +174,6 @@ engagement's own answers as readily as over material that really was behind.
 It refuses to write into a home directory or a filesystem root. Forty-five files
 one directory up from where they were meant is the mistake worth a guard.
 
-**There is no separate `scaffold` command.** There used to be - it was this
-without the platform steps, back when `init` had platform steps. Once `init`
-stopped needing a session the two did the same thing, and two commands doing the
-same thing is a question that gets asked.
-
 It writes the part of a customer repo that is the same for every engagement:
 
 | | |
@@ -172,7 +181,7 @@ It writes the part of a customer repo that is the same for every engagement:
 | `AGENTS.md` | the platform contract, with the customer-specific sections marked TODO |
 | `docs/` | the four-layer model (meeting-notes / decisions / living spec) and the SDD rules |
 | `requirements/` | the task and request indexes |
-| `.agents/skills/` | the seven design-time skills that hold for any Asgard, `db-query` among them; the ones describing a particular server come from `asgard-cli skill update` |
+| `.agents/skills/` | the seven design-time skills that hold for any Asgard, `db-query` among them, plus `asgard-platform/` - the wiki and the extracts as greppable files; the ones describing a particular server come from `asgard-cli skill update` |
 | `assets/` | the runtime-skill directory |
 | `.asgard-pipeline.yaml` | the deployment declaration, with one release per project to fill in |
 | `projects/<slug>/` | one chart skeleton per project |
@@ -195,21 +204,23 @@ anything. `gate` supplies that one file and nothing else.
 
 ### `guide`
 
-**`guide` reads one decision.** There is no command that says where the
-engagement is, and that is deliberate - the two that did are gone. `next`
-reported a position on a walk. `status` replaced it, reported the repository,
-and then named the guidance the shape of it raised: the same rungs, in the same
-order, with the numbers taken off. What the second one printed from files is now
-read by `project`, `question`, `request` and `task`, each from its own file.
+**`guide` reads one decision, against the repository you are in.** That is the
+whole reason it is still a command: the static half of each piece lands as a
+file like everything else, and what a command adds is this repository's own
+state - which projects exist, what is still open.
 
 ```bash
-asgard-cli guide                   # all the guidance
-asgard-cli guide requirements      # one piece of it, any time
-asgard-cli find "<terms>"          # reach any of it by subject
+asgard-cli guide                  # every piece of guidance, by name
+asgard-cli guide requirements     # one, read against this repo
+
+cat .agents/skills/asgard-platform/guide/requirements.md   # the static half
 ```
 
+**There is no command that says where the engagement is**, and that is
+deliberate. `project`, `question`, `request` and `task` each read one file back
+to you; none of them derives a position from the others.
+
 ```
-  init           Start the onboarding
   requirements   Turn what the customer said into a request
   projects       Decide how the work splits into projects
   data-sources   Wire up the customer's databases
@@ -222,19 +233,11 @@ asgard-cli find "<terms>"          # reach any of it by subject
   idle           Nothing in flight
 ```
 
-**None of these is a step you arrive at.** They were numbered once, and `next`
-derived "stage 4 of 9" from the earliest missing CR kind. That was wrong in both
-directions: it could name only one thing, so three of them were unreachable
-unless you already knew their names, and a position cannot be argued with, so an
-engagement working in a different order was told it was behind. An engagement
-that has already gathered every requirement has no stage at all, and the tool
-used to insist otherwise.
-
-Removing the numbers was not enough. `status` raised the same rungs from
-conditions instead - `!p.Has("DataConnector")` in a `switch`, so a chart missing
-two things was told about the first - which is a position with the arithmetic
-hidden. Nothing raises guidance now. It is reached by name with `guide` and by
-subject with `find`.
+**None of these is a step you arrive at.** An onboarding is not linear: three
+of the most expensive decisions in the engagement this was built from were
+made, built and reversed, and an engagement that has already gathered every
+requirement has no stage at all. So nothing here raises guidance at you. It is
+reached by name with `guide`, or by grepping `guide/` for the subject.
 
 **`read-path`, `entry-point` and `knowledge` print the wrong answer next to the
 right one.** Those are the three decisions this engagement got wrong once and
@@ -335,8 +338,8 @@ created projects/erp/chart/app/templates/data_connector/dc-erp.yaml
 updated projects/erp/chart/app/values.yaml (added the values it reads)
 
 Next:
-  1. what it is:      asgard-cli wiki settings
-  2. how to build it: asgard-cli usecase semantic-layer
+  1. what it is:      .agents/skills/asgard-platform/wiki/settings.md
+  2. how to build it: .agents/skills/asgard-platform/usecase/semantic-layer.md
   3. fill in the TODOs
   4. verify:          asgard-cli check
                       asgard-cli verify
@@ -362,189 +365,66 @@ The two pointers it prints are in reading order and answer different questions -
 `wiki` says what the thing is, `usecase` says how it is assembled and assumes you
 already know the first.
 
-### `wiki`, `usecase`
+### The material, as files
 
-Two bodies of reference material, embedded in the binary rather than written into
-a customer repo: a copy in one engagement goes stale where nobody is looking,
-while a stale page here is fixed for every engagement in one release.
+Five bodies of reference material, compiled into the binary and **written into a
+customer repository by `asgard-cli init`**, under one directory:
 
-```bash
-asgard-cli wiki                       # what the platform is made of
-asgard-cli wiki agents
-asgard-cli wiki --search "匿名 訪客"
-asgard-cli wiki --conventions         # how the wiki is maintained
-
-asgard-cli usecase                    # how each deployment shape is built
-asgard-cli usecase flow-agent-single
-asgard-cli usecase --search schedule
+```
+.agents/skills/asgard-platform/
+  index.md    the map: all five, as paths, and what is deliberately absent
+  aliases.md  what a customer said -> what to search for
+  wiki/       what the platform has, and which CR a UI name maps to
+  usecase/    how ONE deployment shape is assembled, field by field
+  needs/      what to get from the customer before a shape can be built
+  brief/      what has actually been got wrong, before you do the thing
+  guide/      which decision to make now, and what it costs to change later
 ```
 
 | | answers | written from |
 |---|---|---|
-| `wiki` | what the platform is, who each piece is for, and where the UI's names stop matching the resources a chart declares | the product documentation, [asgard-docs](https://github.com/asgard-ai-platform/asgard-docs), checked against the CRDs |
-| `usecase` | how one shape of deployment is assembled, field by field, and what a wrong value costs | deployments already in production |
+| `wiki/` | what the platform is, who each piece is for, and where the UI's names stop matching the resources a chart declares | the product documentation, [asgard-docs](https://github.com/asgard-ai-platform/asgard-docs), checked against the CRDs |
+| `usecase/` | how one shape of deployment is assembled, field by field, and what a wrong value costs | deployments already in production |
+| `needs/` | what to obtain from the customer before a shape can be built at all | the interview, the per-channel credential tables, and what an engagement found out too late |
+| `brief/` | what this activity gets wrong, before you do it | activities somebody has actually got wrong |
+| `guide/` | one decision, the obvious answer, and what reversing it costs | three decisions reversed in production |
 
 An extract assumes you already know the platform has that shape; a wiki page is
 where that assumption comes from. `asgard-cli add` prints one of each.
 
-**To look something up, use [`find`](#find)**, which searches both and names the
-counterpart of whatever it hits. `--search` on either command is the narrow form,
-for when you already know which half holds the answer.
-
-The wiki's own conventions - its three layers, what a page must carry, and how it
-is kept from going stale as the platform moves - are in `asgard-cli wiki
---conventions`.
-
-### `find`
-
-**The way in.** It searches all four parts of the material at once - the wiki,
-the extracts, the stage guidance and the design-time skills - because which of
-them holds an answer is usually not obvious before searching. It needs no
-repository.
+**There is no search command, and that is the design.** The documents are on
+disk, so `cat` and `grep` are the interface:
 
 ```bash
-asgard-cli find schedule
-asgard-cli find anonymous visitor
-asgard-cli find 儀表板                    # translated before the search runs
-asgard-cli find schedule --format json   # each hit with the command that reads it
+grep -ril "allowlist" .agents/skills/asgard-platform/
+cat .agents/skills/asgard-platform/wiki/processors.md
 ```
 
-```
-PLATFORM - what the thing is (asgard-cli wiki <page>)
+Two things a grep does not do for itself, so read them first:
 
-  automation         Trigger and API
-                     Starts a conversation with an agent on a schedule.
-                     -> field level: asgard-cli usecase trigger
+**`aliases.md`, if the question did not arrive in English.** The material is
+English and a customer conversation usually is not, so a term taken from what
+somebody actually said matches nothing - and that reads exactly like a subject
+the material does not cover.
 
-SHAPES - how it is assembled (asgard-cli usecase <name>)
+**`wiki/glossary.md`, for the word you searched.** A result in the wrong sense
+reads exactly like an answer: `payment` is billing between Asgard and the
+customer, and also the customer's own payment gateway.
 
-  trigger            Trigger
-                     -> what it is:  asgard-cli wiki automation
-
-Read the platform side first; an extract assumes you have.
-```
-
-It follows the link between the halves, so a hit in either hands over the other -
-in the order they should be read. Every term has to appear, so an extra word
-narrows rather than widens; when nothing carries them all the search widens and
-says which terms it could not place.
-
-**Ask in the language the question was asked in.** The material is English and a
-customer conversation is not, so the index is applied before the search runs and
-the rewrite is printed:
-
-```
-$ asgard-cli find 電商
-This material is in English. "電商" was read as:
-
-    commerce marketplace channel
-
-PLATFORM - what the thing is (asgard-cli wiki <page>)
-
-  taiwan-channels    The commerce channels a customer will name, and what we have
-```
-
-The index is `asgard-cli wiki --aliases`, and it is **not a page**. It sits
-beside the pages, with `index.md` and `log.md`, because an index inside a
-searched corpus competes with what it points at: the table lists every alias, so
-it reliably carried every term of a translated query and the reader got the word
-list rather than the page.
-
-It has three tables. An **alias** replaces the word - 電商 appears nowhere in an
-English corpus, so keeping it only adds a term that lands nowhere. An **entity**
-is *added* to the query, because the name may be written verbatim in a page and
-replacing it would throw away the best answer there is.
-
-The entities are split, and the split is the point:
-
-| table | means |
-|---|---|
-| names the material **covers** | somebody searched the deployments and recorded the answer. SHOPLINE, Shopee, momo, PChome, 蝦皮, Coupang |
-| names it only **routes** | nothing here names it. The row reaches the *shape* it belongs to, which is what the material has |
-
-**A row that routes reads exactly like a row that answers**, so `find` says
-which it was:
-
-```
-$ asgard-cli find 綠界
-**Nothing here names 綠界.** What follows is the shape it belongs to, which
-is what this material has - not material about the product. Nobody has
-searched the reference deployments for it, and until somebody does, the
-answer to "do we already integrate it" is not in this tool.
-
-  asgard-cli wiki taiwan-channels   the four, and what each one costs
-  asgard-cli question add "which of the four shapes does 綠界 give us" \
-      --ask "<who at the customer>"
-```
-
-and then returns `usecase external-api`, `usecase write-path`, `browser-operation`
-and the unknown that blocks a payment gateway on a public site - `wiki
-platform-unknowns` P8, who presses approve on an anonymous channel. **Moving a
-row from the second table to the first means somebody did the search**, and
-nothing else.
-
-**A word this material has taken is flagged before the results, not after.** A
-search that finds nothing is recorded and the reader is told so; a search that
-finds the *wrong sense* of a word looks exactly like an answer, and nothing is
-red anywhere:
-
-```
-$ asgard-cli find payment
-These results use a word that means one thing here, and it may not be
-the one that was asked about:
-
-  payment      is     billing between Asgard and this customer - see
-                      `asgard-cli wiki fehu`
-               is not **the customer's own payment gateway**, which is an
-                      external system with side effects: `asgard-cli usecase
-                      write-path` ...
-```
-
-That table is `asgard-cli wiki glossary`, and it is applied to a query rather
-than only read by a person. It existed as prose for a long time while the
-failure it describes went on happening.
-
-**A dead end asks a question instead of guessing.** When a query names a system
-this material has never had, the useful answer is not a phrasing hint - it is
-that the work is decided by which of four shapes the system presents, and that
-nobody here can answer it:
-
-```
-**That is a question for the customer, and not one this tool can answer.**
-
-  asgard-cli question add "which of the four shapes does <it> give us" \
-      --ask "<who at the customer>"
-```
-
-**A search that finds nothing is recorded**, in an engagement, to a file that is
-not committed - a query carries whatever words the customer used.
+**With no repository, run `asgard-cli init` in an empty directory.** It needs
+no account and touches no network, which is the point: the question gets asked
+in a meeting, before there is a directory.
 
 ```bash
-asgard-cli reading --misses      # what this engagement searched for and did not find
-asgard-cli issue-report --new    # the report, with that evidence already in it
+mkdir -p /tmp/asgard && cd /tmp/asgard && asgard-cli init
 ```
 
-That is the one part of a defect report nobody has to be believed about: the
-tool witnessed it. Each line is either a missing index row or a missing page,
-and the two need different fixes. A row is added when a search came back empty
-and the subject turned out to exist under another name; a row nobody has needed
-is a guess.
+The wiki's own conventions - its three layers, what a page must carry, and how
+it is kept from going stale as the platform moves - are in `wiki/README.md`.
 
-### `brief`, `size`, `reading`, `issue-report`
+### `size`, `issue-report`
 
-Four ways in, none of them a position. None needs a
-repository except `reading`.
-
-**`brief`** answers "the thing I am about to do - where will I get it wrong",
-which no repository report can: the riskiest activity leaves no trace in one,
-because talking to a customer changes no file, and meetings happen at every
-stage.
-
-```bash
-asgard-cli brief                     # the activities
-asgard-cli brief customer-meeting    # before any customer conversation
-asgard-cli brief write-chart         # before authoring CRs
-```
+Two commands that read no repository.
 
 **`size`** is what one capability is made of before it is written - the first
 question a proposal is asked, and the basis of a quote. The counts come from
@@ -557,16 +437,14 @@ asgard-cli size                      # the shapes, and what each costs empty
 asgard-cli size flow-agent-single --databases 2 --queries 4
 ```
 
-**`reading`** reports which pages this engagement opened and which it never did.
-Every read of `wiki`, `usecase` and `guide` inside an engagement appends
-a line to `docs/.reading-log`. It records page names and nothing about the
-customer, so it is safe to commit - and worth committing, because six months
-later it says what the person before you knew. **The pages that cost the most
-are the right ones nobody opened.**
+**`issue-report`** is how a gap in this tool gets filed, and it is the only way
+what an engagement learned reaches the next one. The gap does not belong in the
+customer repository: a note in one engagement is a note one engagement has.
 
-**`issue-report`** is how a gap in this tool gets filed. The gap does not belong
-in the customer repository: a note in one engagement is a note one engagement
-has, and the next one starts over.
+```bash
+asgard-cli issue-report               # the URL, and what a report has to say
+asgard-cli issue-report --new         # a body with the evidence already in it
+```
 
 ### `check`
 
@@ -687,7 +565,7 @@ MISSING helm               render a chart (asgard-cli render) and lint it
 ok    kubectl              v1.35.1
 ok    python3 (optional)   Python 3.14.7
 
-helm is not on PATH, and asgard-cli needs it to render a chart and lint it
+helm is not on PATH, and `.agents/skills/asgard-platform/needs/it.md` to render a chart and lint it
 
 Install it with:
 

@@ -325,7 +325,7 @@ var Docs = map[string]string{
 var NotACR = map[string]string{
 	"ConfigMap": "one per Workflow, holding the node positions its editor opens with.\n" +
 		"Not an Asgard CR and in no CRD, which is why it is the thing a count\n" +
-		"forgets - `asgard-cli wiki workflow`.",
+		"forgets - `.agents/skills/asgard-platform/wiki/workflow.md`.",
 }
 
 // Undocumented names the parts with no product documentation page at all, and
@@ -333,14 +333,14 @@ var NotACR = map[string]string{
 // technical documentation by name, so "there is no page for this" is an answer
 // somebody needs before the meeting rather than during it.
 var Undocumented = map[string]string{
-	"Toolset": "the approval gate. `asgard-cli usecase write-path` calls it the shape the\n" +
+	"Toolset": "the approval gate. `.agents/skills/asgard-platform/usecase/write-path.md` calls it the shape the\n" +
 		"platform is built around, and it has **no product documentation page** -\n" +
 		"not under Sindri, not under Odin. A proposal can show the dialog as a\n" +
-		"screenshot (`asgard-cli wiki screenshots`, and crop it first) and has\n" +
+		"screenshot (`.agents/skills/asgard-platform/wiki/screenshots.md`, and crop it first) and has\n" +
 		"nothing to link. This is the most commonly asked-about mechanism here, and\n" +
 		"the one hardest to explain in words.",
 	"BotProvider": "the channel. Which page applies depends on the channel, and for LINE\n" +
-		"the platform's own integration page is thin - `asgard-cli wiki integration`.",
+		"the platform's own integration page is thin - `.agents/skills/asgard-platform/wiki/integration.md`.",
 }
 
 // Sorted returns the CR counts in a fixed order.

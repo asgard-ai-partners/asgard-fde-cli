@@ -40,7 +40,7 @@ So form your own view of where things stand, and reach for the guidance by
 subject:
 
 ```bash
-asgard-cli find "<what you are actually deciding>"
+grep -ril "<what you are actually deciding>" ../asgard-platform/
 ```
 
 That searches the platform wiki, the deployment shapes, the decision guidance and
@@ -59,13 +59,13 @@ Not a sequence to follow - a map of what answers what.
 | what you are doing | where to look |
 |---|---|
 | **this checkout is not connected to a platform yet** - no `.asgard-cli.yaml`, or `asgard-cli gate` reports the binding step as skipped | `AGENTS.md`, "If this checkout is not connected to a platform yet". **This is the first job**, and `asgard-cli init` left it for you on purpose |
-| **about to talk to the customer** | `asgard-cli brief customer-meeting` - five things said wrong to a customer, each because somebody said it. The riskiest thing here leaves no trace in this repo, so nothing in the repo will remind you |
-| about to touch a chart, or hand it over | `asgard-cli brief write-chart`, `asgard-cli brief handover` |
+| **about to talk to the customer** | `../asgard-platform/brief/customer-meeting.md` - five things said wrong to a customer, each because somebody said it. The riskiest thing here leaves no trace in this repo, so nothing in the repo will remind you |
+| about to touch a chart, or hand it over | `../asgard-platform/brief/write-chart.md`, `../asgard-platform/brief/handover.md` |
 | anything, first | `asgard-cli question`, then `request`, `task` and `project` |
-| **the customer said something and you have to turn it into work** | `asgard-cli guide requirements` - the interview, then `asgard-cli request add "<their words>"` |
-| **looking something up** | `asgard-cli find "<the customer's words>"` - searches both bodies of reference material and hands you the other half |
-| **about to write a CR** | `asgard-cli usecase <shape>` - the skeleton and its traps |
-| what a thing on the platform even is | `asgard-cli wiki <page>` - read this before the extract, which assumes it |
+| **the customer said something and you have to turn it into work** | `../asgard-platform/guide/requirements.md` - the interview, then `asgard-cli request add "<their words>"` |
+| **looking something up** | `grep -ril "<term>" ../asgard-platform/` - and read `../asgard-platform/aliases.md` first if the question came in the customer's own words |
+| **about to write a CR** | `../asgard-platform/usecase/<shape>.md` - the skeleton and its traps |
+| what a thing on the platform even is | `../asgard-platform/wiki/<page>.md` - read this before the extract, which assumes it |
 | how to change this repo - layout, conventions, CRD traps | `AGENTS.md` |
 | what the system currently does | `docs/spec/<<.SpecSlug>>/` |
 | why something was decided | `docs/decisions/` |
@@ -91,8 +91,8 @@ follow from one question:
 An internal audience and a public one need different shapes, and that is not a
 preference: it follows from what the platform can and cannot do. Each of the
 three has an obvious answer that has already been proven wrong in production.
-`asgard-cli guide read-path`, `entry-point` and `knowledge` each state
-the reversal, and `next` raises them when this repository meets their condition;
+`../asgard-platform/guide/read-path.md`, `../asgard-platform/guide/entry-point.md`
+and `../asgard-platform/guide/knowledge.md` each state the reversal, and
 `AGENTS.md` has the same three under "The three decisions that get answered
 wrong".
 
@@ -136,6 +136,5 @@ the two mechanisms are separate, which is why the warning is at the top.
 **Unchecked:** the routing itself - which question should reach which command.
 That is one engagement's map of its own material, and its failure mode is
 silent: a reader sent to the wrong page reads a correct document and answers a
-different question. `asgard-cli reading` measures the half of that which is
-measurable, and `asgard-cli reading --misses` records the searches this material
-did not answer.
+different question. When the material has no answer at all, that is worth
+`asgard-cli issue-report --new` rather than a workaround.

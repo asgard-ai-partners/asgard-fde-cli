@@ -113,7 +113,7 @@ func NewData(root string, projects []string) Data {
 	return Data{
 		Projects: out,
 		RepoName: filepath.Base(root),
-		SpecSlug: repo.SpecSlug,
+		SpecSlug: repo.SpecSlugIn(root),
 	}
 }
 
@@ -157,7 +157,16 @@ const (
 	// Retired means the record says this CLI wrote the file and this binary no
 	// longer ships it. It is reported and never removed: deleting a file from
 	// a customer's repository is not something a scaffold does on its own.
+	//
+	// The exported corpus is the single exception, and it is a directory rather
+	// than a file - see Replaced and `replaceCorpus`.
 	Retired
+	// Replaced means the exported platform corpus was written by a different
+	// version of this CLI and the whole directory was removed before being
+	// written again. It is the one delete this tool performs, because that
+	// material is generated outright and a page renamed upstream would
+	// otherwise leave both names on disk.
+	Replaced
 	// Missing means a shipped file is not there at all. Only InspectShipped
 	// returns it - Write would have written it - and it means an agent working
 	// here is reading no copy of something this CLI ships.
@@ -172,6 +181,8 @@ func (s Status) String() string {
 		return "overwritten"
 	case Updated:
 		return "updated"
+	case Replaced:
+		return "replaced"
 	case Preserved:
 		return "preserved"
 	case Stale:
@@ -224,6 +235,15 @@ func Write(root string, projects []string, force bool) ([]Result, error) {
 	}
 	running := version.Get().Version
 
+	// Before anything is written: the exported corpus is replaced wholesale
+	// when this repository's copy came from another version of this CLI, so
+	// the loop below writes it fresh rather than merging into it. See
+	// replaceCorpus for why this one subtree is deleted and nothing else is.
+	replacedCorpus, err := replaceCorpus(root, recorded, running)
+	if err != nil {
+		return nil, err
+	}
+
 	// wrote becomes the new record. An entry is carried forward when a run
 	// leaves its file alone, because the record says what this CLI last wrote
 	// to a path and a run that wrote nothing there did not change that.
@@ -231,7 +251,10 @@ func Write(root string, projects []string, force bool) ([]Result, error) {
 	// edit into the record, and the next run could no longer see it.
 	wrote := map[string]Entry{}
 
-	results := make([]Result, 0, len(jobs))
+	results := make([]Result, 0, len(jobs)+1)
+	if replacedCorpus {
+		results = append(results, Result{Path: corpusSkillDir, Status: Replaced})
+	}
 	for _, j := range jobs {
 		target := filepath.Join(root, j.target)
 		key := stampKey(j.target)
@@ -247,7 +270,7 @@ func Write(root string, projects []string, force bool) ([]Result, error) {
 			}
 		}
 
-		content, err := render(j.source, j.data)
+		content, err := j.content()
 		if err != nil {
 			return nil, err
 		}
@@ -316,6 +339,24 @@ func Write(root string, projects []string, force bool) ([]Result, error) {
 			}
 			note(merged)
 			results = append(results, Result{Path: j.target, Status: Updated})
+			continue
+		}
+
+		// **A file with a managed region is never rewritten whole.** Only its
+		// region is this CLI's, so the branch below - which replaces the whole
+		// file when it is provably still what this CLI last wrote - would
+		// delete everything outside it. That is not hypothetical: the moment
+		// AGENTS.md gained a region, a second `init` in a repository whose
+		// TODO sections had been answered wrote those answers away. The merge
+		// above had already brought the region into step, so it reported
+		// nothing to do and this branch took the file instead.
+		//
+		// The digest recorded after a merge is what makes it look provable:
+		// the record then says this CLI wrote those exact bytes, which is true
+		// and does not mean it wrote all of them.
+		if managedRegion.Find(current) != nil {
+			keep()
+			results = append(results, Result{Path: j.target, Status: Skipped})
 			continue
 		}
 
@@ -406,7 +447,7 @@ func InspectShipped(root string, projects []string) ([]Result, error) {
 		if !shipped(j.target) {
 			continue
 		}
-		content, err := render(j.source, j.data)
+		content, err := j.content()
 		if err != nil {
 			return nil, err
 		}
@@ -488,6 +529,20 @@ type job struct {
 	source string
 	target string
 	data   Data
+
+	// body is set when the contents come from outside the embedded tree. Such
+	// a job is copied verbatim - there is no template to render, and nothing in
+	// a wiki page varies by repository. See corpus.go.
+	body []byte
+}
+
+// content returns what to write, from the body when the job carries one and
+// from the template tree otherwise.
+func (j job) content() ([]byte, error) {
+	if j.body != nil {
+		return j.body, nil
+	}
+	return render(j.source, j.data)
 }
 
 // accumulators are the files this CLI's own commands append to. The spec
@@ -577,6 +632,15 @@ func plan(data Data) ([]job, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// The platform corpus is not in this package's embedded tree - go:embed
+	// cannot reach across a package - so it arrives as jobs carrying their
+	// bytes rather than a template path. See corpus.go.
+	corpus, err := corpusJobs()
+	if err != nil {
+		return nil, err
+	}
+	jobs = append(jobs, corpus...)
 
 	return jobs, nil
 }
@@ -716,5 +780,16 @@ func TemplateBodies() (map[string]string, error) {
 		out[strings.TrimPrefix(path, "templates/")] = string(raw)
 		return nil
 	})
-	return out, err
+	if err != nil {
+		return nil, err
+	}
+
+	// The corpus skill is a Go constant rather than a file in the tree, so the
+	// walk misses it while it names several commands - which is exactly what
+	// the command audit exists to catch. The pages and extracts it writes are
+	// not added: they are already audited as themselves.
+	out[filepath.ToSlash(filepath.Join(corpusSkillDir, "SKILL.md"))] = corpusSkill
+	out[filepath.ToSlash(filepath.Join(corpusSkillDir, "index.md"))] = corpusIndexHead + corpusIndexTail
+
+	return out, nil
 }

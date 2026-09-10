@@ -25,7 +25,8 @@ metadata:
 spec:
 <<if .Supervisor>>  # The supervisor loop: four processors and five relationships, and **three
   # deployments have it edge for edge identical** - read off their prod values on
-  # 2026-09-04. `asgard-cli usecase flow-agent-supervisor` has why each edge is
+  # 2026-09-04. `.agents/skills/asgard-platform/usecase/flow-agent-supervisor.md`
+  # has why each edge is
   # where it is; this is that shape with the prompt left TODO.
   #
   # It has no exits and that is not an omission: 14 of the 17 Workflows across
@@ -66,7 +67,7 @@ spec:
         # Three deployments set these three identically. maxTokens and effort are
         # in the CRD; **`await` is in neither the CRD nor asgard-core's
         # ProcessorDefinitions** and is set in five production charts - see
-        # `asgard-cli wiki platform-unknowns` P10. It is here because those
+        # `.agents/skills/asgard-platform/wiki/platform-unknowns.md` P10. It is here because those
         # charts run, not because a source documents it.
         - name: maxTokens
           value: "60000"
