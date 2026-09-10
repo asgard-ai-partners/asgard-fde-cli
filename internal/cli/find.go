@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"io"
+	"os"
 	"sort"
 	"strings"
 
@@ -420,6 +421,28 @@ func printResults(out io.Writer, query string, r results) {
 
 	// The reading order is the same whichever half you landed in.
 	fmt.Fprintf(out, "Read the platform side first; an extract assumes you have.\n")
+
+	reportNotOnDisk(out)
+}
+
+// reportNotOnDisk says how to get the files when the paths above lead nowhere.
+//
+// Every hit names the file it lives in, which is an answer in a repository and
+// a dead end in an empty directory - and the empty directory is the case that
+// matters most, because the question gets asked in a meeting before any
+// repository exists. Printing a path and leaving the reader to discover that
+// `init` produces it is the failure Goal's fourth point describes for issues,
+// in a different place: **the tool has to say it.**
+func reportNotOnDisk(out io.Writer) {
+	wd, err := os.Getwd()
+	if err != nil || scaffold.CorpusOnDisk(wd) {
+		return
+	}
+	fmt.Fprintf(out, "\n**Those paths are not here yet.** They are files, and `asgard-cli init`\n"+
+		"writes all of them - it needs no account and touches no network, so an\n"+
+		"empty directory is enough:\n\n"+
+		"    mkdir -p /tmp/asgard && cd /tmp/asgard && asgard-cli init\n\n"+
+		"After that `cat` and `grep` reach every document this searched.\n")
 }
 
 // reportRouted says when a name in the query reached the shape it belongs to
