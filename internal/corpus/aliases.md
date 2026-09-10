@@ -1,6 +1,6 @@
 # The index: what a customer says, and what to search for
 
-**This is an index, not a page about the platform.** It lives beside `pages/`
+**This is an index, not a page about the platform.** It lives beside `wiki/`
 rather than in it, next to `index.md`, for the same reason that does
 - it is the wiki's own bookkeeping. Keeping it inside the corpus made it compete
 with what it points at: it lists every alias, so it was unusually likely to be

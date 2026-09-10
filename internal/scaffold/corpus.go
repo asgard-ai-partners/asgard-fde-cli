@@ -132,10 +132,9 @@ func corpusJobs() ([]job, error) {
 // corpusIndex builds the map at the root of the landed copy.
 //
 // **It takes the jobs rather than the corpus** so that it lists what was
-// actually written. Reading the corpus again would let the two drift - and the
+// actually written. Reading the corpus again would let the two drift, and the
 // drift that matters is the one where the index names a document the export
-// skipped, which is the defect the missing wiki index and the landed `log`
-// pointer both were.
+// skipped - a map to a file that is not there is worse than no map.
 func corpusIndex(jobs []job) (string, error) {
 	var b strings.Builder
 	b.WriteString(corpusIndexHead)
@@ -354,15 +353,14 @@ subject the material genuinely lacks.
 const corpusIndexTail = `
 ## What is not here
 
-Everything the material points at is a path you can follow, with two
-exceptions - both invocations, and both needing the ` + "`asgard-cli`" + ` binary:
+Everything the material points at is a path you can follow. There is one
+exception, and it needs the ` + "`asgard-cli`" + ` binary:
 
 | pointer | why it is not a file |
 |---|---|
-| the wiki's ` + "`log`" + ` | which commit of each source the material was read at. It is not written here and there is no command for it either: it is provenance for whoever maintains the CLI, in that repository, and an answer to a question about the platform is never in it |
 | ` + "`asgard-cli guide <name>`" + ` | **half of it is here.** A guide renders this repository's own state into its guidance - which projects exist, what is still open - and that half cannot be a file, because a file would freeze one moment of it. The decisions are in ` + "`guide/`" + `; run the command for where this repository actually stands |
 
-The commands that answer the second one directly, when that is all you want:
+The commands that answer that half directly, when it is all you want:
 
     asgard-cli project     what each chart declares, and still lacks
     asgard-cli question    what nobody has answered yet

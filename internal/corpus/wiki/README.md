@@ -66,7 +66,7 @@ block is the wiki's own.
 | layer | contents | may be edited |
 |---|---|---|
 | raw sources | asgard-docs and asgard-kube (URLs below) | read-only. Never copied in; only the commit is recorded |
-| the corpus | `pages/`, and the other three parts | rewritten continuously, and only ever describes the present |
+| the corpus | these pages, and the other four parts | rewritten continuously, and only ever describes the present |
 | the schema | `AGENTS.md`, and this file for what a page must carry | changed deliberately, by a person |
 
 Raw sources are not vendored, and the reason is not size. A copy stops tracking
@@ -191,7 +191,7 @@ Four more:
   both times they followed the page in front of them rather than the rule.
 - **Say which layer a statement comes from.** Product documentation describes
   objects in an interface, the CRD describes resources, and the vocabulary is not
-  one to one. Where they diverge, say so on the page - `pages/agents.md` has the
+  one to one. Where they diverge, say so on the page - `agents.md` has the
   table.
 - **Mark what is uncertain.** "The documentation does not say" is a useful entry;
   a guess is not.
@@ -216,10 +216,10 @@ Two files here are not pages and are not searched:
 | `aliases.md` | what a customer says, and what to search for |
 
 **An index inside the corpus competes with what it points at.** The alias table
-was a section of `pages/glossary.md`, and because it lists every alias it was
+was a section of `glossary.md`, and because it lists every alias it was
 reliably the one document carrying every term of a translated query: a search
-for a subject returned the word list rather than the page. It is beside the
-pages now, where `index.md` already was.
+for a subject returned the word list rather than the page. It sits one level up
+now, beside `index.md`.
 
 `aliases.md` is applied to a query before searching, and it carries the rule
 for adding a row: a search of yours came back empty and the subject turned out

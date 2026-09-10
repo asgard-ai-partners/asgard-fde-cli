@@ -136,13 +136,14 @@ came back into `processors` and the subtraction was only done in one place.
 
 ## Keeping this index complete
 
-Every page under `pages/` has a row above except `log`, which is deliberate: it
-is the provenance layer - what was read, when, and what it corrected - and an
-FDE looking for an answer should never land there. Reach it with
-the wiki's `log`, in the CLI's own repository, when you want to know why a page
-says what it says. **It is the one page `asgard-cli init` does not write into a
-repository, and there is no command for it either** - it is provenance for
-whoever maintains the material, and an answer is never in it.
+Every page in this directory has a row above.
+
+**Where a page's own provenance is: on the page.** Each one ends with a source
+block naming the rendered documentation page and the commit it was read at,
+plus an `**Unchecked:**` line. There is no separate log - one existed, and a
+running record of what was read when is a thing to maintain rather than a thing
+to answer from, so what survived is the per-page half that a reader actually
+follows.
 
 **Adding a page means adding a row**, under the question it answers rather than
 at the end. The extracts index went a third out of date this way -

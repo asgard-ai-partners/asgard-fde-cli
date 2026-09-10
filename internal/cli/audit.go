@@ -1075,7 +1075,14 @@ func findChild(node *cobra.Command, name string) *cobra.Command {
 // provenance properly. What separates the two is whether the line says which
 // repository. So the rule is not "do not name a path" - it is **name the
 // repository the path is inside**, and this reports the lines that do not.
-var ourFiles = regexp.MustCompile(`(?:^|[^A-Za-z0-9_./-])((?:source|hack|internal|cmd|prompts)/[A-Za-z0-9_./*-]+|(?:Goal|TASK|STRUCTURE|APPROACH)\.md|selfsrc\.go)`)
+//
+// `pages/` and `extracts/` are here for a different reason: they are the
+// layout this material used to have, and they resolve in neither tree now.
+// Five documents still described themselves in those terms, one of them the
+// file `SKILL.md` says to read first. A renamed directory leaves prose behind
+// exactly the way a renamed page leaves a pointer behind, and only one of the
+// two had a check.
+var ourFiles = regexp.MustCompile(`(?:^|[^A-Za-z0-9_./-])((?:source|hack|internal|cmd|prompts|pages|extracts)/[A-Za-z0-9_./*-]*|(?:Goal|TASK|STRUCTURE|APPROACH)\.md|selfsrc\.go)`)
 
 // knownRepos are the repository names the material is allowed to cite a path
 // inside. **Add one when the material starts drawing on another repository**,
