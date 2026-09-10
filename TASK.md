@@ -506,6 +506,29 @@ repository's own checks, and nothing in this repository's audits sees that.
     travel, `log` is for whoever maintains this repository. `wiki.Landing` is
     that distinction; 51 files land rather than 52.
 
+## `find` reaches four parts of six
+
+**`needs` and `brief` are documents now and `find` does not search them.** Its
+`parts()` table is the wiki, the extracts, the guides and the design-time
+skills - written when those were the whole corpus - so
+`asgard-cli find allowlist` misses `needs/semantic-layer.md`, which holds the
+row this material is proudest of: Asgard's four outbound addresses, and that
+the allowlist is the most expensive thing to discover in week three.
+
+That is Goal's second point being unreachable from Goal's first, which is the
+one relationship the four points are not allowed to lose - `find` is the way
+in, and two of the six things it should reach are invisible to it.
+
+The work is not the table. `part` wants a `search` and a `list` over
+`kb.Match` and `kb.Doc`, which `kb.Corpus` supplies from an `fs.FS`, and these
+two have no files - they are rendered from Go. Either `kb` grows a corpus over
+in-memory documents, or the two packages implement the pair directly with
+`kb.Terms`, `kb.Scan` and `kb.Rank`. The first is the one that stops this
+recurring for the next part that is not a directory.
+
+Both are also missing from the `--unverified` count, which says "all four
+parts" and means it.
+
 ## Non-goals
 
 - **Not a workflow engine.** The tool reports what the repository contains and

@@ -4,28 +4,58 @@ Rules for AI agents working in this repo. Human contributors follow the same one
 
 ## What this repo is
 
-A single Go binary, `asgard-cli`, that does two things for an FDE:
+**[Goal.md](Goal.md) is what this tool is for, and it is the one to read first.**
+Four points, and every one of them is a claim you can break by accident:
 
-  1. **Answers an agent's questions about integrating with Asgard** - what the
-     platform has, which CR a UI name maps to, how one shape is assembled field
-     by field, and where each has been got wrong before. This works with no
-     repository present, and has to keep working that way.
-  2. **Helps assemble a project's chart** - CR skeletons, the invariants a
-     rendered chart has to hold, and the judgement that goes with both.
+  1. **An agent can get the Asgard platform's knowledge** - what the platform
+     has, which CR a UI name maps to, how one shape is assembled field by
+     field, and where each has been got wrong before. **Offline, with no
+     repository**, because the question is asked in a meeting and a tool that
+     needs a directory first will not get asked.
+  2. **It is useful in a meeting**, naming what has to be obtained from the
+     customer before a shape can be built - a credential, an endpoint, a
+     network path, a test environment, an approval queue.
+  3. **It helps write the Helm charts**, and deliberately not the namespace,
+     the environment id, or whether the thing deploys.
+  4. **When the knowledge is missing, its own output says where to file that** -
+     out of the tool, not worked out by the agent.
 
-It writes files into a *customer's* repository and never holds state of its own.
-[TASK.md](TASK.md) states the goal in full and why it changed; this file is how
-to change the code and the material without breaking it.
+The four are not independent. Point 1 is the spine; 2 and 3 are the same
+knowledge coming out in a meeting and in a chart; 4 is the way back in when it
+is not there. **So the knowledge base is the product and the commands are not**,
+which is why most of this file is about the material.
 
-**Most of the value is not code.** It is one corpus in four parts, and the first
-question when adding anything is which part it belongs to:
+Read the four before changing anything that prints, because three of them are
+about what an agent can reach and the fourth is about what the tool says when
+it cannot.
+
+It writes files into a *customer's* repository and never holds state of its
+own. The division: `Goal.md` is the goal, [TASK.md](TASK.md) is where it stands
+and what is missing, [README.md](README.md) is what the commands do, and this
+file is how to change the code and the material without breaking it.
+
+**Most of the value is not code.** It is one corpus, and the first question when
+adding anything is which part it belongs to:
 
 | part | answers | lives in |
 |---|---|---|
 | wiki pages | what the platform is, and who each piece is for | `internal/corpus/wiki/` |
 | usecase extracts | how one shape of deployment is assembled, field by field | `internal/corpus/usecase/` |
+| needs | what to get from the customer before a shape can be built | `internal/needs/` |
+| briefs | what has actually been got wrong before one activity | `internal/brief/` |
 | stage prompts | what to weigh at one point in the work | `internal/stage/prompts/` |
 | scaffold templates | the part of a customer repo that is the same every time, including the skills the customer's agent loads | `internal/scaffold/templates/` |
+
+**Five of those six are written into a customer repository**, under
+`.agents/skills/asgard-platform/`, by `asgard-cli init` - the scaffold templates
+are the repository. So a change to any of them ships twice: into the binary,
+and into every repository that runs `init` after it. `internal/scaffold/corpus.go`
+is what writes them and `scaffold.replaceCorpus` is what replaces them when the
+version moves.
+
+`needs` and `brief` are Go rather than markdown because each row carries the
+document that owns its claim, and that pointer is checked; the markdown is
+rendered from them.
 
 [STRUCTURE.md](STRUCTURE.md) walks every directory.
 
