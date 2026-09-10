@@ -99,12 +99,12 @@ filled in and the rest marked TODO:
     asgard-cli issue-report --new > report.md
     asgard-cli issue-report --new | gh issue create --repo asgard-ai-partners/asgard-fde-cli --body-file -
 
-**Section 2 and the search evidence are collected, not narrated.** A report is
-otherwise entirely somebody's account of what happened, and the account is the
-part that can be wrong. What --new puts in is the tool's own record: the
-version, what the charts declare, what "asgard-cli check" says, and how many
-questions, requests and task specs are open. The line the report closes with
-names what was actually collected.
+**Section 2 is collected, not narrated.** A report is otherwise entirely
+somebody's account of what happened, and the account is the part that can be
+wrong. What --new puts in is the tool's own record: the version, what the
+charts declare, what "asgard-cli check" says, and how many questions, requests
+and task specs are open. The line the report closes with names what was
+actually collected.
 
 **Read what it produced before filing it.** The rule above about never pasting
 a customer's content applies to what this generated exactly as much as to what
@@ -120,14 +120,14 @@ you write.`,
 				"  gh issue create --repo %s\n\n", issueRepo)
 			fmt.Fprintf(out, "Paste this line so nobody has to ask:\n\n  asgard-cli %s\n\n",
 				version.Get().String())
-			fmt.Fprintf(out, "Or have the body written for you, with the state and the search\nevidence already in it:\n\n  asgard-cli issue-report --new\n\n")
+			fmt.Fprintf(out, "Or have the body written for you, with this repository's own\nstate already in it:\n\n  asgard-cli issue-report --new\n\n")
 			fmt.Fprintf(out, "What to put in it: `asgard-cli issue-report --help`.\n"+
 				"A worked example: https://github.com/%s/issues/9\n", issueRepo)
 			return nil
 		},
 	}
 
-	cmd.Flags().BoolVar(&draft, "new", false, "write the report body, with the state and the search evidence filled in")
+	cmd.Flags().BoolVar(&draft, "new", false, "write the report body, with this repository's own state filled in")
 
 	return cmd
 }

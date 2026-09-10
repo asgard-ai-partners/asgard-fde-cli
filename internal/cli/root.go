@@ -174,7 +174,7 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 	cobra.EnableCommandSorting = false
 
 	cmd.AddGroup(
-		&cobra.Group{ID: groupAsk, Title: "Ask - what the platform is, and how a shape is built:"},
+		&cobra.Group{ID: groupAsk, Title: "Ask - the platform itself is files under .agents/skills/; these are the rest:"},
 		&cobra.Group{ID: groupBuild, Title: "Build - write the repository and the CRs in it:"},
 		&cobra.Group{ID: groupCheck, Title: "Check - everything this machine can check:"},
 		&cobra.Group{ID: groupDeploy, Title: "Deploy - the platform, and what it knows:"},
@@ -239,6 +239,12 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 // what is this platform, how do I write the repository, is what I wrote sound,
 // and get it deployed. A command that fits none of them is a command whose
 // place in the tool has not been decided.
+//
+// **The first group is nearly empty and its heading says why.** Most of the
+// answer to "what is this platform" is files rather than commands, so what is
+// left under Ask is the three that are not: guidance read against this
+// repository, a count taken off production, and the way back when the files
+// have no answer.
 const (
 	groupAsk    = "ask"
 	groupBuild  = "build"

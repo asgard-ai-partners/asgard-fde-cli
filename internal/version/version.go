@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"runtime"
 	"runtime/debug"
+	"strings"
 )
 
 // GoReleaser injects these at build time with -ldflags -X. A plain `go build`
@@ -48,7 +49,11 @@ func Get() Info {
 				case "vcs.time":
 					info.Date = s.Value
 				case "vcs.modified":
-					if s.Value == "true" {
+					// Go's own pseudo-version already ends `+dirty` when it
+					// computed one from a modified tree, and appending to that
+					// printed `+dirty-dirty` - in `--version`, and in the line
+					// `issue-report` asks people to paste.
+					if s.Value == "true" && !strings.HasSuffix(info.Version, "dirty") {
 						info.Version += "-dirty"
 					}
 				}
