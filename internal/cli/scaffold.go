@@ -184,8 +184,10 @@ func runScaffold(cmd *cobra.Command, root string, force bool) error {
 		reportShipped(out, preserved, "preserved despite --force, because `asgard-cli` writes into them\n"+
 			"and they no longer match the template they started as:")
 		fmt.Fprintf(out, "\n--force discards local edits to the skeleton, and each of these stopped\n"+
-			"being skeleton the first time an `asgard-cli` command wrote to it. To reset\n"+
-			"one deliberately, delete it and run scaffold again.\n")
+			"being skeleton the first time an `asgard-cli` command wrote to it. A file with\n"+
+			"a managed region is the other way round: --force replaces the region and leaves\n"+
+			"what the engagement wrote around it. To reset one deliberately, delete it and\n"+
+			"run scaffold again.\n")
 	}
 
 	return nil

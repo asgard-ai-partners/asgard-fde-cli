@@ -1,6 +1,7 @@
 package scaffold
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -234,9 +235,35 @@ func releaseVersion(v string) ([3]int, bool) {
 // rec is what the record holds for the path, zero when it holds nothing.
 // running is this binary's own version.
 func classify(disk, rendered []byte, rec Entry, running string) Status {
-	if string(disk) == string(rendered) {
+	if bytes.Equal(disk, rendered) {
 		return Skipped
 	}
+
+	// **In a file with a managed region, the region is the shipped material.**
+	// Everything outside it is the engagement's, and this CLI never rewrites
+	// such a file whole: the moment AGENTS.md gained a region, taking it whole
+	// wrote away the answers somebody had filled into the TODO sections above
+	// the marker. So the comparison that decides this file's state is region
+	// against region, and a difference outside one is the engagement having
+	// written something - which is neither an edit to report nor a repository
+	// that is behind.
+	//
+	// **Both callers come through here, which is the point.** Write carried
+	// this rule and InspectShipped did not, so `asgard-cli init` reported
+	// nothing to do about AGENTS.md while `asgard-cli gate` reported that it
+	// would be updated - the same file, the same repository, two answers.
+	//
+	// A render that has no region while the file on disk does is left alone
+	// rather than taken whole: the marker is what the engagement's half exists
+	// behind, and a template that drops one is not a licence to delete what
+	// accumulated behind it.
+	if here := managedRegion.Find(disk); here != nil {
+		if want := managedRegion.Find(rendered); want != nil && !bytes.Equal(here, want) {
+			return Updated
+		}
+		return Skipped
+	}
+
 	if rec.Digest == "" {
 		// Nobody recorded writing this: a repository scaffolded before the
 		// record existed, or a file brought in by hand. It differs, and which

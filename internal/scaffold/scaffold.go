@@ -318,21 +318,19 @@ func Write(root string, projects []string, force bool) ([]Result, error) {
 			continue
 		}
 
-		if force {
-			if err := writeFile(target, content, executable(j.target)); err != nil {
-				return nil, err
-			}
-			note(content)
-			results = append(results, Result{Path: j.target, Status: Overwritten})
-			continue
-		}
-
 		// A managed region is derived from the config, so leaving it stale
 		// would put the file out of step with the repo - the project table in
 		// README.md is the case that matters, because the gate compares it
 		// against the directories on disk. It is tried before the states
 		// below: replacing one marked region is the narrower change, and it is
 		// the only one that can refresh a file somebody has also edited.
+		//
+		// **It is tried before --force rather than instead of it.** --force
+		// takes the newer shipped material, and in a file with a region the
+		// shipped material IS the region: the scaffolded AGENTS.md tells its
+		// reader in as many words that the half above the marker is theirs and
+		// is never overwritten, and --force taking the file whole made that
+		// sentence false in the very file the sentence is in.
 		if merged, updated := mergeManaged(current, content); updated {
 			if err := writeFile(target, merged, executable(j.target)); err != nil {
 				return nil, err
@@ -341,22 +339,20 @@ func Write(root string, projects []string, force bool) ([]Result, error) {
 			results = append(results, Result{Path: j.target, Status: Updated})
 			continue
 		}
-
-		// **A file with a managed region is never rewritten whole.** Only its
-		// region is this CLI's, so the branch below - which replaces the whole
-		// file when it is provably still what this CLI last wrote - would
-		// delete everything outside it. That is not hypothetical: the moment
-		// AGENTS.md gained a region, a second `init` in a repository whose
-		// TODO sections had been answered wrote those answers away. The merge
-		// above had already brought the region into step, so it reported
-		// nothing to do and this branch took the file instead.
-		//
-		// The digest recorded after a merge is what makes it look provable:
-		// the record then says this CLI wrote those exact bytes, which is true
-		// and does not mean it wrote all of them.
 		if managedRegion.Find(current) != nil {
+			// The region is already in step, and everything around it is the
+			// engagement's whatever --force says.
 			keep()
 			results = append(results, Result{Path: j.target, Status: Skipped})
+			continue
+		}
+
+		if force {
+			if err := writeFile(target, content, executable(j.target)); err != nil {
+				return nil, err
+			}
+			note(content)
+			results = append(results, Result{Path: j.target, Status: Overwritten})
 			continue
 		}
 
@@ -375,11 +371,20 @@ func Write(root string, projects []string, force bool) ([]Result, error) {
 			continue
 		}
 
-		if state == Skipped && isShipped {
+		if state == Skipped && isShipped && bytes.Equal(current, content) {
 			// Already what this binary carries. Recording it is how a
 			// repository scaffolded before the record existed joins the
 			// mechanism without --force: from the next run on, an edit to it
 			// can be told from a repository that is behind.
+			//
+			// **The equality is load-bearing.** A file with a managed region
+			// is Skipped once its region is in step, and what is on disk is
+			// then the merge - the engagement's half plus our region - not the
+			// render. Recording the render's digest for it would put a claim
+			// in the record that this CLI wrote bytes it did not, and the next
+			// run would read that claim, find the versions equal and take the
+			// file whole. Which is how the answers above the marker in
+			// AGENTS.md got written away once already.
 			note(content)
 		} else {
 			keep()

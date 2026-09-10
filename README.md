@@ -158,7 +158,10 @@ Run it again whenever this CLI has moved on or a project was added: existing
 files are left alone and reported as skipped. `--force` takes the newer shipped
 material, discarding local edits to the skeleton; files this tool writes into -
 the indexes, the open-questions table, the living spec - are preserved either
-way and reported. `--yes` asks nothing, which is also what happens when stdin is
+way and reported. In a file carrying an `asgard-cli:managed` region it replaces
+the region and nothing else, because that is the whole of what this CLI wrote
+there - the scaffolded `AGENTS.md` promises its reader as much about the half
+above the marker. `--yes` asks nothing, which is also what happens when stdin is
 not a terminal, so a re-run from an agent or from CI needs no interaction.
 
 **"Already present" is not "up to date"**, and the files this CLI ships are the
