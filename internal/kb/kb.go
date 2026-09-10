@@ -198,9 +198,14 @@ type Corpus struct {
 // What is fixed is the tail, and that is what makes it a pointer: the kind,
 // then a lower-case name, then `.md`. The name being lower-case is what keeps
 // a prose mention of `wiki/README.md` out.
-var pathLinkRe = regexp.MustCompile(`(?:[A-Za-z0-9_./-]*/)?(wiki|usecase|needs|brief|guide)/([a-z0-9][a-z0-9-]*)\.md`)
+var pathLinkRe = regexp.MustCompile(`(?:[A-Za-z0-9_./-]*/)?(` + kinds + `)/([a-z0-9][a-z0-9-]*)\.md`)
 
-var linkRe = regexp.MustCompile(`asgard-cli(?: |[ \t]*\n[ \t]*)(wiki|usecase|brief|guide)(?: |[ \t]*\n[ \t]*)([a-z0-9][a-z0-9-]*)`)
+var linkRe = regexp.MustCompile(`asgard-cli(?: |[ \t]*\n[ \t]*)(` + kinds + `)(?: |[ \t]*\n[ \t]*)([a-z0-9][a-z0-9-]*)`)
+
+// kinds is Kinds as an alternation, so **the set lives in one place**. Written
+// out twice, the two drifted: the invocation pattern knew about four kinds and
+// the path pattern about five, months after the fifth began landing.
+var kinds = strings.Join(Kinds, "|")
 
 // counterpartSection is where a document states its counterparts on purpose.
 var counterpartSection = regexp.MustCompile(
@@ -250,31 +255,9 @@ func Links(body string) ([]Link, bool) {
 	return out, named
 }
 
-// Landed rewrites an invocation into the pointer a reader of the landed copy
-// can act on: a path when the target is written into a repository, and the
-// invocation unchanged when it is not.
-//
-// **`prefix` is where the caller's own document sits**, because a path is
-// relative to the document holding it - `../` from inside one of the
-// directories, empty from the root.
-//
-// It lives here rather than in `needs` and `brief` because both were growing
-// their own copy of it, and the copies had already drifted: one knew about
-// three kinds and the other about two, so a `From` pointing at a guide
-// rendered as an invocation in one and a path in the other, months after
-// guides began landing. The set of kinds is a fact about the material.
-func Landed(prefix, invocation string) string {
-	for _, kind := range Kinds {
-		if name, ok := strings.CutPrefix(invocation, "asgard-cli "+kind+" "); ok {
-			return prefix + kind + "/" + name + ".md"
-		}
-	}
-	return invocation
-}
-
 // Kinds are the document kinds a pointer can name, which is the same list
 // `asgard-cli init` writes into a repository. A kind here is a directory
-// there.
+// there, and both pointer patterns are built from it.
 var Kinds = []string{"wiki", "usecase", "needs", "brief", "guide"}
 
 // pointers returns every pointer in s, in both forms, as {whole, kind, name}.

@@ -36,7 +36,9 @@ type Item struct {
 	// Why is what it changes, so somebody can drop it when it does not apply.
 	Why string `json:"why"`
 
-	// From is the document that owns this. A pointer, not a restatement.
+	// From is the document that owns this - a path, relative to the directory
+	// this shape lands in, so it resolves both in the corpus tree and in a
+	// repository. A pointer, not a restatement.
 	From string `json:"from"`
 }
 
@@ -51,57 +53,57 @@ var shapes = []Shape{{
 	Name: "semantic-layer",
 	What: "a database we can read, with an agent asking questions of it",
 	Items: []Item{
-		{Ask: "host, port, database or schema, and the account name", Why: "there is no connection without them", From: "asgard-cli guide requirements"},
-		{Ask: "**is that account read-only?** Ask explicitly", Why: "the one offered first usually is not, and finding out later means going back for a second credential", From: "asgard-cli guide requirements"},
-		{Ask: "**that Asgard's four outbound addresses go on their allowlist** - ask their network team for exactly that, not for \"a VPN, an allowlist or a jump host\"", Why: "Asgard is hosted and the agent runs in the platform's own cloud; there is nothing of ours to put on their network. **This is the single most expensive thing to discover in week three**, and it is a ticket, an approval and a window in most companies", From: "asgard-cli wiki operations"},
-		{Ask: "whether the allowlist change can be done, and roughly when", Why: "a date changes the plan. Do not ask who approves it - a name changes nothing we build", From: "asgard-cli guide requirements"},
-		{Ask: "a description of every cube, dimension and measure, in the customer's own words", Why: "the CRD requires a description on each, and it is what the model matches on - not the column name", From: "asgard-cli usecase semantic-layer"},
+		{Ask: "host, port, database or schema, and the account name", Why: "there is no connection without them", From: "../guide/requirements.md"},
+		{Ask: "**is that account read-only?** Ask explicitly", Why: "the one offered first usually is not, and finding out later means going back for a second credential", From: "../guide/requirements.md"},
+		{Ask: "**that Asgard's four outbound addresses go on their allowlist** - ask their network team for exactly that, not for \"a VPN, an allowlist or a jump host\"", Why: "Asgard is hosted and the agent runs in the platform's own cloud; there is nothing of ours to put on their network. **This is the single most expensive thing to discover in week three**, and it is a ticket, an approval and a window in most companies", From: "../wiki/operations.md"},
+		{Ask: "whether the allowlist change can be done, and roughly when", Why: "a date changes the plan. Do not ask who approves it - a name changes nothing we build", From: "../guide/requirements.md"},
+		{Ask: "a description of every cube, dimension and measure, in the customer's own words", Why: "the CRD requires a description on each, and it is what the model matches on - not the column name", From: "../usecase/semantic-layer.md"},
 	},
 }, {
 	Name: "external-api",
 	What: "a system with an HTTP API rather than a database",
 	Items: []Item{
-		{Ask: "the base URL, the auth scheme, and a credential for it", Why: "endpoints and non-secret settings become chart values; a token is a secret", From: "asgard-cli usecase external-api"},
-		{Ask: "**whether there is a test environment**, before designing a mock", Why: "writing into a real test environment proves the fields, the validation rules and the status codes; a mock proves none of them", From: "asgard-cli usecase write-path"},
-		{Ask: "if it is production-only, **whether they permit testing against it**", Why: "in the meeting, not assumed here - the answer decides whether the first delivery can be proved at all", From: "asgard-cli wiki taiwan-channels"},
-		{Ask: "the rate limit", Why: "it decides whether a Syncer can keep up, and whether a tool can be called per turn", From: "asgard-cli guide requirements"},
+		{Ask: "the base URL, the auth scheme, and a credential for it", Why: "endpoints and non-secret settings become chart values; a token is a secret", From: "../usecase/external-api.md"},
+		{Ask: "**whether there is a test environment**, before designing a mock", Why: "writing into a real test environment proves the fields, the validation rules and the status codes; a mock proves none of them", From: "../usecase/write-path.md"},
+		{Ask: "if it is production-only, **whether they permit testing against it**", Why: "in the meeting, not assumed here - the answer decides whether the first delivery can be proved at all", From: "../wiki/taiwan-channels.md"},
+		{Ask: "the rate limit", Why: "it decides whether a Syncer can keep up, and whether a tool can be called per turn", From: "../guide/requirements.md"},
 	},
 }, {
 	Name: "chat-channel",
 	What: "the agent reached from a chat platform the customer's users already use",
 	Items: []Item{
-		{Ask: "**which channel**, in the same breath as who is on the other end", Why: "`botProviderClass` is immutable once created, so changing it later is a new BotProvider rather than an edit", From: "asgard-cli guide requirements"},
-		{Ask: "LINE: Channel Secret and Channel Access Token — and somebody who can paste a Webhook URL back into the LINE Developers Console and enable Use webhook", Why: "**LINE is the only two-way setup**: Asgard produces a URL that has to go back. The rest only take credentials inward", From: "asgard-cli wiki integration"},
-		{Ask: "Slack: Client ID, Client Secret, Signing Secret and the permission scopes", Why: "a Slack app has to exist and subscribe to bot events", From: "asgard-cli wiki integration"},
-		{Ask: "Discord or Telegram: the Bot Token", Why: "Discord also needs the bot invited to the server; Telegram's comes from BotFather", From: "asgard-cli wiki integration"},
-		{Ask: "whether anything sits between the channel and us", Why: "an existing bot, a middleware, a support desk already on that channel - it changes the entry point", From: "asgard-cli guide requirements"},
+		{Ask: "**which channel**, in the same breath as who is on the other end", Why: "`botProviderClass` is immutable once created, so changing it later is a new BotProvider rather than an edit", From: "../guide/requirements.md"},
+		{Ask: "LINE: Channel Secret and Channel Access Token — and somebody who can paste a Webhook URL back into the LINE Developers Console and enable Use webhook", Why: "**LINE is the only two-way setup**: Asgard produces a URL that has to go back. The rest only take credentials inward", From: "../wiki/integration.md"},
+		{Ask: "Slack: Client ID, Client Secret, Signing Secret and the permission scopes", Why: "a Slack app has to exist and subscribe to bot events", From: "../wiki/integration.md"},
+		{Ask: "Discord or Telegram: the Bot Token", Why: "Discord also needs the bot invited to the server; Telegram's comes from BotFather", From: "../wiki/integration.md"},
+		{Ask: "whether anything sits between the channel and us", Why: "an existing bot, a middleware, a support desk already on that channel - it changes the entry point", From: "../guide/requirements.md"},
 	},
 }, {
 	Name: "knowledge-drive",
 	What: "documents the agent reads - manuals, FAQs, pages",
 	Items: []Item{
-		{Ask: "the documents themselves, or the place they live and access to it", Why: "a Drive syncs from somewhere; without the source there is nothing to index", From: "asgard-cli usecase knowledge-drive"},
-		{Ask: "who keeps them current, and how often they change", Why: "it decides the Syncer's schedule, and whether a stale answer is a real risk", From: "asgard-cli guide requirements"},
+		{Ask: "the documents themselves, or the place they live and access to it", Why: "a Drive syncs from somewhere; without the source there is nothing to index", From: "../usecase/knowledge-drive.md"},
+		{Ask: "who keeps them current, and how often they change", Why: "it decides the Syncer's schedule, and whether a stale answer is a real risk", From: "../guide/requirements.md"},
 	},
 }, {
 	Name: "write-path",
 	What: "the agent doing something rather than answering",
 	Items: []Item{
-		{Ask: "**whether there is a test environment**, first", Why: "reaching for a mock before asking loses the strongest version of the first delivery", From: "asgard-cli usecase write-path"},
-		{Ask: "who is on the other end when the gate stops for approval", Why: "on a public channel the person approving is the visitor, not staff - and what that looks like is a platform unknown", From: "asgard-cli wiki platform-unknowns"},
+		{Ask: "**whether there is a test environment**, first", Why: "reaching for a mock before asking loses the strongest version of the first delivery", From: "../usecase/write-path.md"},
+		{Ask: "who is on the other end when the gate stops for approval", Why: "on a public channel the person approving is the visitor, not staff - and what that looks like is a platform unknown", From: "../wiki/platform-unknowns.md"},
 	},
 }, {
 	Name: "browser-operation",
 	What: "a system with no database we can read and no API",
 	Items: []Item{
-		{Ask: "a login to the back office, and whether a non-production one exists", Why: "the whole shape is driving their UI; there is nothing else to reach", From: "asgard-cli usecase browser-operation"},
-		{Ask: "how many pages and operations actually matter", Why: "**SHOPLINE is what this costs: 88 page entry points mapped before the first useful call.** One back-office-only system among four sets the cost of the whole item", From: "asgard-cli wiki taiwan-channels"},
+		{Ask: "a login to the back office, and whether a non-production one exists", Why: "the whole shape is driving their UI; there is nothing else to reach", From: "../usecase/browser-operation.md"},
+		{Ask: "how many pages and operations actually matter", Why: "**SHOPLINE is what this costs: 88 page entry points mapped before the first useful call.** One back-office-only system among four sets the cost of the whole item", From: "../wiki/taiwan-channels.md"},
 	},
 }, {
 	Name: "skill-set",
 	What: "skills the deployed agent loads at runtime",
 	Items: []Item{
-		{Ask: "a git repository, and a token for it if it is private", Why: "a SkillSet syncs from a repo; a private one needs a PAT the platform can hold", From: "asgard-cli usecase skill-set"},
+		{Ask: "a git repository, and a token for it if it is private", Why: "a SkillSet syncs from a repo; a private one needs a PAT the platform can hold", From: "../usecase/skill-set.md"},
 	},
 }}
 
@@ -141,7 +143,7 @@ func (s Shape) Document() string {
 	fmt.Fprintf(&b, "**%s**\n\n", s.What)
 	b.WriteString(intro)
 	for _, i := range s.Items {
-		fmt.Fprintf(&b, "\n## %s\n\n%s\n\nStated in %s.\n", i.Ask, i.Why, "`"+kb.Landed("../", i.From)+"`")
+		fmt.Fprintf(&b, "\n## %s\n\n%s\n\nStated in %s.\n", i.Ask, i.Why, "`"+i.From+"`")
 	}
 	b.WriteString(provenance)
 	return b.String()

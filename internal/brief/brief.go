@@ -28,17 +28,14 @@ import (
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/kb"
 )
 
-// landedPrefix is where `asgard-cli init` writes the material, from the
-// repository root. The terminal is not inside one of the directories, so a
-// pointer printed there needs the whole path.
-const landedPrefix = ".agents/skills/asgard-platform/"
-
 // Item is one thing that gets got wrong, and where the right version lives.
 type Item struct {
 	Subject string
 	Wrong   string
 	Right   string
-	Where   string
+	// Where is the document that owns the right version - a path, relative to
+	// the directory this briefing lands in.
+	Where string
 }
 
 // Activity is something an FDE is about to do.
@@ -68,13 +65,13 @@ edited and re-rendered; a wrong sentence is in their notes.`,
 				"how we reach a system inside their network",
 				`"a VPN, an allowlist or a jump host - whichever suits you"`,
 				"One shape only: they add our outbound addresses to their allowlist. Asgard is hosted and the agent runs in a sandbox in that cloud, so there is nothing of ours to place on their network. Offering options gets one chosen that does not apply. **Ask who can change the firewall - do not hand out the addresses**",
-				"asgard-cli wiki operations",
+				"../wiki/operations.md",
 			},
 			{
 				"whether an anonymous channel knows who is asking",
 				`"it cannot tell who they are, so identity has to wait"`,
 				"An anonymous channel answers \"where is MY order\" perfectly well. The caller supplies identity server-side every turn; only the **model** supplies nothing. **LINE's webhook carries a userId.** Deferring this gives away something you already had",
-				"asgard-cli guide read-path",
+				"../guide/read-path.md",
 			},
 			{
 				"how many agents",
@@ -86,49 +83,49 @@ edited and re-rendered; a wrong sentence is in their notes.`,
 				"how an anonymous caller is identified",
 				`"they can give us their ticket number and we look it up"`,
 				"**A ticket number is not authentication.** They are usually sequential, so a lookup keyed on one alone lets anybody enumerate other people's cases. Any self-service query on a public channel has to say what identifies the person - and if the answer is a number they type, there is no answer yet",
-				"asgard-cli guide read-path",
+				"../guide/read-path.md",
 			},
 			{
 				"how a write is tested",
 				`"during the test, shall we really create the ticket or just draft it?"`,
 				"**Ask whether they have a test environment first.** That question assumes they only have production, and it gives away the strongest version of the first delivery: writing into a test system proves the fields, the validation rules and the status codes, and a mock proves none of them. A mock is the fallback when there is no test environment - or when they will not let us write to production, which is their call",
-				"asgard-cli usecase write-path",
+				"../usecase/write-path.md",
 			},
 			{
 				"whether it can do things, not only answer",
 				`"we would have to build an approval step for that"`,
 				"The approval gate is **what the platform is built around**. A write stops, names the tool, and nothing runs until a person allows it. It is not custom work",
-				"asgard-cli usecase write-path",
+				"../usecase/write-path.md",
 			},
 			{
 				"whether it can email or message people",
 				`"sure, we can have it send you a summary"`,
 				"**The platform sends nothing.** No SMTP, no mail toolset, nothing in the core. It can call an endpoint of theirs that sends mail - if they have one. Promising a notification without asking that first is promising something with no way to build it",
-				"asgard-cli wiki integration",
+				"../wiki/integration.md",
 			},
 			{
 				"what the agent can reach",
 				`"only the systems you connect to it"`,
 				"**Not true.** Every sandbox carries the coding CLI's own tools - web search and fetch among them - and no Toolset or blueprint setting removes them. The only control is an instruction in the prompt",
-				"asgard-cli wiki tools",
+				"../wiki/tools.md",
 			},
 			{
 				"whether they can use their own model or their own key",
 				`"yes, we can point it at your account"`,
 				"**Only on Odin.** Sindri and Mimir use the platform's designated models and the LLM cannot be swapped there. So the answer depends on which product the capability lands in - which is question 2b, decided before anyone thinks about billing. A customer with a model contract or a rule about where inference happens needs this while the shape is still open",
-				"asgard-cli wiki fehu",
+				"../wiki/fehu.md",
 			},
 			{
 				"whether they can have a specific model",
 				`"of course, we will configure that one"`,
 				"You can, and it costs something worth saying: a builtin tier is a **logical model backed by several providers with automatic failover**, and a custom `CompletionModel` is one provider, one key, one point of failure. A good reason - compliance, an existing contract, a model they tested against - is fine. A preference usually is not",
-				"asgard-cli wiki settings",
+				"../wiki/settings.md",
 			},
 			{
 				"what the limits are",
 				`"30 steps and 3 minutes per request is the limit"`,
 				"Those are **defaults**, raised by contacting sales or service@asgard-ai.com. And **do not quote the step count at all**: nothing defines what a step is, so the next question has no answer",
-				"asgard-cli wiki integration",
+				"../wiki/integration.md",
 			},
 		},
 		Close: `**A slide is not an agenda and not a tracking list.** "Who is
@@ -207,7 +204,7 @@ Read this as a checklist and carry an answer back for each line.`,
 				"how many releases the chart needs",
 				"one release, because the chart is one chart",
 				"**Usually one per environment.** `<slug>-dev` and `<slug>-prod` name the same chart directory, differ by `on.pattern`, and are each created against a **different** platform project - which is what gives them different namespaces. One release is the shape for a POC nobody will maintain, and worth recording as a decision rather than arriving at by not asking",
-				"asgard-cli guide projects",
+				"../guide/projects.md",
 			},
 		},
 		Close: `**Nothing here prompts.** These commands are run by an agent following a
@@ -227,43 +224,43 @@ built, and reversed. They are obvious in the same way again each time.`,
 				"the read surface for a public audience",
 				"a SemanticLayer, like everything else",
 				"Five zero-parameter query tools. A layer without `allowedCubes` is arbitrary SQL over every cube, and the surface grows by itself each time one is added",
-				"asgard-cli usecase fixed-query-tools",
+				"../usecase/fixed-query-tools.md",
 			},
 			{
 				"the entry point for an anonymous visitor",
 				"the platform's agent hub, like everything else",
 				"Its own BotProvider -> Workflow -> SandboxBlueprint. An anonymous visitor cannot authenticate to the hub, and `BotProvider.entrypoint` takes a Workflow, never an Agent",
-				"asgard-cli usecase flow-agent-single",
+				"../usecase/flow-agent-single.md",
 			},
 			{
 				"where unstructured knowledge goes",
 				"a KnowledgeBase with Loaders and a retrieval workflow",
 				"A SourceSet Drive with `contextIndex`. Both are live; the Drive is the recommendation for new work",
-				"asgard-cli usecase knowledge-drive",
+				"../usecase/knowledge-drive.md",
 			},
 			{
 				"a write inside a scheduled run",
 				"omitting `allowWrite` because it is read-only anyway",
 				"**The definitions give `allowWrite` a default of true and `allowQuery` a default of false** - the safe field is off by default and the dangerous one is on. So configuring a processor by adding only what you want produces a write path, and the rendered chart does not show it. Write `allowWrite: false` out on every entry that has a layer, and note that `query-database` carries the same pair",
-				"asgard-cli wiki processors",
+				"../wiki/processors.md",
 			},
 			{
 				"what an Expression may use",
 				"modern JavaScript",
 				"**ECMA5 only** - no `let`, no arrow functions, no optional chaining - in every field of every processor. Which is why every documented example is defensively written",
-				"asgard-cli wiki processors",
+				"../wiki/processors.md",
 			},
 			{
 				"a SandboxBlueprint's subagents",
 				"it deployed, so the blueprint is right",
 				"**Exactly one of `baseAgentName` or `aliasName`, and no CRD checks it** - the shape rides inside a JSON string where CEL cannot see it, so the controller enforces it at evaluation time. Both set, or neither, deploys green and fails the first time somebody talks to the agent. The only rule worth reading a blueprint by hand for",
-				"asgard-cli wiki crd-rules",
+				"../wiki/crd-rules.md",
 			},
 			{
 				"whether the chart is enough",
 				"a green render means it is done",
 				"A Workflow needs a `ConfigMap` of node positions or its editor opens as a pile, and `project-environment-id` or the editor opens blank. Neither is an Asgard CR, so nothing in the gate mentions them",
-				"asgard-cli wiki workflow",
+				"../wiki/workflow.md",
 			},
 		},
 		Close: `` + "`asgard-cli check`" + ` and ` + "`asgard-cli verify`" + ` catch the shape. None of the
@@ -279,19 +276,19 @@ not in this repository.`,
 				"why the customer says there is nothing there",
 				"a chart problem, so look at the chart",
 				"Building a resource does not make it visible. Somebody opens the **Management Console**, finds the product's page, uses *Manage Accounts in* and adds the people - **per resource, because permissions do not inherit**. Nothing in a chart, in `check`, in `verify` or in CD can see that it was skipped",
-				"asgard-cli wiki console",
+				"../wiki/console.md",
 			},
 			{
 				"what to walk them through",
 				"the chart, because that is what we built",
 				"The order from a credential to an agent somebody can talk to - and there is no Sindri step in it, because every Managed Agent is published there already",
-				"asgard-cli wiki setup-path",
+				"../wiki/setup-path.md",
 			},
 			{
 				"which screens to show",
 				"whatever is in the documentation",
 				"Two of the recommended images carry a `ts-` prefix and the build console's own navigation. **Crop first**, and open every one - nothing records when any was captured",
-				"asgard-cli wiki screenshots",
+				"../wiki/screenshots.md",
 			},
 		},
 		Close: `A handover deck may show the console; a proposal may not. They are
@@ -339,7 +336,7 @@ func (a Activity) Document() string {
 	fmt.Fprintf(&b, "# Before %s\n\n%s\n\n%s\n", a.Name, a.When, a.Lead)
 	for _, it := range a.Items {
 		fmt.Fprintf(&b, "\n## %s\n\n**Said:** %s\n\n**True:** %s\n\nRead %s.\n",
-			it.Subject, it.Wrong, it.Right, "`"+kb.Landed("../", it.Where)+"`")
+			it.Subject, it.Wrong, it.Right, "`"+it.Where+"`")
 	}
 	fmt.Fprintf(&b, "\n%s\n", a.Close)
 	b.WriteString(provenance)
