@@ -1,4 +1,4 @@
-// Package source carries this repository's own Go source, so the binary can
+// Package selfsrc carries this repository's own Go source, so the binary can
 // audit the commands it prints.
 //
 // **A string this tool prints makes the same claim a document does**: that
@@ -13,7 +13,7 @@
 // the packages that print are spread across `internal/`. The pattern is
 // `*.go` at one level deep, which is every package here and no material - the
 // corpus must not be embedded twice.
-package source
+package selfsrc
 
 import "embed"
 

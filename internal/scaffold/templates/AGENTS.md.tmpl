@@ -171,9 +171,12 @@ answer that looks obvious and is wrong.
 
 ### The CLI
 
-`asgard-cli` scaffolded this repo and stays useful afterwards:
+`asgard-cli` scaffolded this repo and stays useful afterwards. **Most of what
+it knows is files rather than commands** - the platform material is under
+`.agents/skills/asgard-platform/` and you read it with `cat` and `grep`. What
+stays a command is what reads *this repository*:
 
-| command | when |
+| what to run or open | when |
 |---|---|
 | `asgard-cli gate` | **after changing anything under a chart or `.asgard-pipeline.yaml`, and before pushing.** Everything this machine can check, in one command. A repository of custom resources has no compiler; this is the nearest thing to one, and it is one command so that it cannot go stale the way a checklist does |
 | `.agents/skills/asgard-platform/brief/<what>.md` | **before a meeting, a chart change or a handover.** The activity you are about to do, and how it has been got wrong |

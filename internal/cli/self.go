@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strings"
 
-	selfsrc "github.com/asgard-ai-partners/asgard-fde-cli"
+	"github.com/asgard-ai-partners/asgard-fde-cli"
 )
 
 // goStrings returns every string literal in this repository's Go source, keyed
@@ -46,25 +46,38 @@ func goStrings() (map[string]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		file, err := parser.ParseFile(token.NewFileSet(), name, src, 0)
+		fset := token.NewFileSet()
+		file, err := parser.ParseFile(fset, name, src, 0)
 		if err != nil {
 			// A file this build cannot parse is this build's problem, not the
 			// material's, and failing the audit for it would be the worst of
 			// both.
 			continue
 		}
-		var b strings.Builder
+		// **Each literal is written at the line it occupies in the file**, so
+		// a finding's line number opens the source. Concatenating them instead
+		// numbered the findings by literal, and `needs.go:11` pointed at a
+		// comment - a reader following it sees nothing wrong and concludes the
+		// checker is.
+		lines := make([]string, strings.Count(string(src), "\n")+1)
+		any := false
 		ast.Inspect(file, func(n ast.Node) bool {
 			lit, ok := n.(*ast.BasicLit)
 			if !ok || lit.Kind != token.STRING {
 				return true
 			}
-			b.WriteString(literalText(lit.Value))
-			b.WriteString("\n")
+			text := literalText(lit.Value)
+			// A raw string spans lines of its own; it starts at its first and
+			// carries the rest with it.
+			at := fset.Position(lit.Pos()).Line - 1
+			if at >= 0 && at < len(lines) {
+				lines[at] += text
+				any = true
+			}
 			return true
 		})
-		if b.Len() > 0 {
-			out[name] = b.String()
+		if any {
+			out[name] = strings.Join(lines, "\n")
 		}
 	}
 	return out, nil

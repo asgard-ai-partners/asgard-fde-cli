@@ -34,7 +34,7 @@ BEFORE A MEETING, read the one for what you are about to do:
 
 **The riskiest thing in an engagement leaves no trace in a repository.** Talking
 to a customer changes no file, so nothing derived from what the repo contains can
-prepare anybody for it - and every entry in "brief" is there because somebody
+prepare anybody for it - and every entry under brief/ is there because somebody
 has actually got it wrong, not because it is important.
 
 ASKING - what the platform has, which CR a UI name maps to, how one shape is
@@ -81,13 +81,11 @@ own namespace:
     asgard-cli check         the structure; "verify" is the rendered chart
 
 Each of those four reads a file in the customer's repository back to you, and
-each takes ` + "`--format json`" + `. **None of them says where the engagement is.** There
-is no such command and there was: it derived one position from the earliest
-missing CR kind, and an onboarding is not linear - three of the most expensive
-decisions in the engagement this was built from were made, built and reversed.
-What replaced it is the records themselves, and guidance reached by subject
-through "find" or by name through "guide", without arriving anywhere to be
-handed it.
+each takes ` + "`--format json`" + `. **None of them says where the engagement is**, and
+there is no such command: an onboarding is not linear, so a single position
+derived from the earliest missing CR kind is a claim the repository cannot
+support. What answers "what now" is those records, plus guidance by name with
+"asgard-cli guide <name>" or by grep over the material.
 
 Work arrives as a request: one thing the customer wants that the agent cannot do
 today. "asgard-cli request add" opens one, and every status the engagement keeps
@@ -269,7 +267,26 @@ func addTo(parent *cobra.Command, group string, children ...*cobra.Command) {
 // gone has to find out what replaced it, and the first one to hit this had to
 // ask a maintainer. That is the answer living in a conversation instead of in
 // the binary.
+//
+// **It is also the closed set `audit-material --commands` sweeps for.** A bare
+// name in the material - guidance "reached by subject through find" - claims a
+// command exists without writing `asgard-cli` in front of it, so the
+// invocation check cannot see it. Looking for arbitrary bare words would fail
+// the build over English; looking only for names in this map cannot. So a row
+// missing here is two failures, not one: a customer told nothing, and a sweep
+// that stops looking.
 var replacements = map[string]string{
+	"find": "The material is files now. `asgard-cli init` writes it into " +
+		"`.agents/skills/asgard-platform/` and `grep -ril \"<term>\" .agents/skills/asgard-platform/` is the way in - " +
+		"read `aliases.md` there first if the question did not arrive in English",
+	"wiki":    "`cat .agents/skills/asgard-platform/wiki/<name>.md`, or grep the directory. `asgard-cli init` writes it, and needs no account and no network",
+	"usecase": "`cat .agents/skills/asgard-platform/usecase/<shape>.md`, or grep the directory",
+	"brief":   "`cat .agents/skills/asgard-platform/brief/<activity>.md` - the four are `customer-meeting`, `connect`, `write-chart` and `handover`",
+	"needs":   "`cat .agents/skills/asgard-platform/needs/<shape>.md`, one file per deployment shape",
+	"reading": "Gone with the reading list. What to read before an activity is `.agents/skills/asgard-platform/brief/<activity>.md`; " +
+		"what a document points at is in the document",
+	"scaffold": "Folded into `asgard-cli init`, which writes the skeleton and the material together. " +
+		"`--force` there is what re-takes a file this CLI owns",
 	"project shape": "Gone with `.asgard-config.json`. It recorded what a chart was being built to be, which is a claim about intent that nothing can verify - " +
 		"say it in the chart, next to whatever makes the project unusual, where the next reader is already looking. `asgard-cli size` still lists the shapes",
 	"next": "It derived a position from the earliest missing CR kind and there is no replacement for that, deliberately - an onboarding is not linear. " +

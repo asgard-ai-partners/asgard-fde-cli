@@ -432,9 +432,15 @@ func Invocations(body string) []Invocation {
 // codeSegments returns the parts of a line that are written as code.
 //
 // Inside a fence the whole line is. Outside one, it is what the backticks
-// enclose, plus the line itself when it begins with the tool's name - the
-// indented example form, which the help screens and the wiki both use and
-// which carries no backticks at all.
+// enclose, what a pair of double quotes encloses, plus the line itself when it
+// begins with the tool's name - the indented example form, which the help
+// screens and the wiki both use and which carries no backticks at all.
+//
+// **A double-quoted span counts because a Go raw string cannot hold a
+// backtick.** The root help is one, so every command it names is written
+// "asgard-cli init" rather than in backticks, and reading only backticks left
+// the tool's most-read screen out of the audit entirely. That is where a
+// pointer to a deleted command survived a sweep of the whole repository.
 func codeSegments(line string, inFence bool) []string {
 	if inFence {
 		return []string{line}
@@ -455,6 +461,63 @@ func codeSegments(line string, inFence bool) []string {
 	parts := strings.Split(line, "`")
 	for i := 1; i < len(parts); i += 2 {
 		out = append(out, parts[i])
+	}
+	// Double-quoted spans, and **only when the whole span is command-shaped**.
+	// A backtick is written around a command and nothing else, so its content
+	// needs no test. A double quote is written around anything: the plugin
+	// manifest's own description is one, and it opens "Slash commands over
+	// asgard-cli for this onboarding" - which resolved `for` against the
+	// command tree the first time this ran.
+	for i, part := range strings.Split(line, `"`) {
+		if i%2 == 1 && quotedCommand.MatchString(strings.TrimSpace(part)) {
+			out = append(out, part)
+		}
+	}
+	return out
+}
+
+// quotedCommand is what a double-quoted span has to look like to be read as
+// one: the tool's name or a bare command name, then nothing but lower-case
+// words, long flags and placeholders. A comma, a full stop or a capital is a
+// sentence, and a sentence in quotes is prose.
+var quotedCommand = regexp.MustCompile(`^(?:asgard-cli|[a-z][a-z0-9-]*)(?: [a-z][a-z0-9-]*| --[a-z][a-z0-9-]*| <[^>]+>)*$`)
+
+// Removed is a command name this build no longer answers to, swept for
+// wherever the material writes a bare one.
+//
+// **The invocation check cannot see a bare name.** It resolves what follows
+// `asgard-cli`, so a sentence reaching a command by name alone - guidance
+// "reached by subject through \"find\"" - claims a command exists and is
+// invisible to it. That line shipped in the root help.
+//
+// The set is closed, which is what makes this safe: only names somebody
+// deliberately removed are looked for, so no amount of ordinary English
+// triggers it. What is looked for is a code segment that is the name alone, or
+// the name with only flags after it. **Not the name with an argument**, because
+// `find docs -name '*.md*'` is the unix tool and correct.
+func RemovedNames(body string, removed []string) []Invocation {
+	if len(removed) == 0 {
+		return nil
+	}
+	re := regexp.MustCompile(`^(` + strings.Join(removed, "|") + `)((?: --[a-z][a-z0-9-]*)*)$`)
+	var out []Invocation
+	inFence := false
+	for i, line := range strings.Split(body, "\n") {
+		if fence.MatchString(line) {
+			inFence = !inFence
+			continue
+		}
+		for _, seg := range codeSegments(line, inFence) {
+			m := re.FindStringSubmatch(strings.TrimSpace(seg))
+			if m == nil {
+				continue
+			}
+			inv := Invocation{Words: []string{m[1]}, Line: i + 1}
+			for _, f := range flagRe.FindAllStringSubmatch(m[2], -1) {
+				inv.Flags = append(inv.Flags, f[1])
+			}
+			out = append(out, inv)
+		}
 	}
 	return out
 }

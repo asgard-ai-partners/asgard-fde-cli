@@ -866,6 +866,21 @@ func checkLinks(out io.Writer, sources []source) error {
 // It reads the templates as well as the prose, for the reason the term sweep
 // does: a scaffolded README is the half a prose-only search misses and the half
 // every new engagement is built from.
+// removedNames is the single-word keys of `replacements`, which is the list a
+// removal is already required to update. Multi-word keys are left out: they
+// name a subcommand, and `asgard-cli project shape` is what the invocation
+// check already resolves.
+func removedNames() []string {
+	var out []string
+	for name := range replacements {
+		if !strings.Contains(name, " ") {
+			out = append(out, name)
+		}
+	}
+	sort.Strings(out)
+	return out
+}
+
 func checkCommands(out io.Writer, root *cobra.Command, sources []source) error {
 	type dead struct{ where, at, word string }
 	var found []dead
@@ -881,7 +896,19 @@ func checkCommands(out io.Writer, root *cobra.Command, sources []source) error {
 			seen[key] = true
 			found = append(found, dead{fmt.Sprintf("%s %s:%d", s.label, s.name, line), at, word})
 		}
-		for _, inv := range kb.Invocations(s.body) {
+		// A bare removed name claims the same thing an invocation does. It is
+		// resolved through the same tree so a name later reinstated stops
+		// being reported without anybody remembering to take the row out.
+		//
+		// **Not over Go source.** That body is one string literal per line, so
+		// a directory name (`Dir: "needs"`) and a noun are indistinguishable
+		// from a claim. What a reader actually sees of those strings is the
+		// `help` source, which is rendered and is swept.
+		refs := kb.Invocations(s.body)
+		if s.label != "source" {
+			refs = append(refs, kb.RemovedNames(s.body, removedNames())...)
+		}
+		for _, inv := range refs {
 			if len(inv.Words) == 0 {
 				continue
 			}

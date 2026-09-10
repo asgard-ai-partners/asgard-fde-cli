@@ -48,7 +48,7 @@ keeps; below it are the checks, the material servers and the plumbing.
 | `size` | 380 | the deployment shapes, counted off production, and what one costs before anything is added |
 | `tool` | 329 | resolves helm/kubectl/python3 and says how to install one |
 | `brief` | 423 | what one activity gets wrong, addressed by intent rather than by position |
-| `skills` | 268 | the platform's fetched reference material, and the record of which version is here |
+| `skills` | 268 | the platform's fetched reference material, and the record of which version is here. **Not the design-time skills** - those are `scaffold/templates/.agents/skills/`, and the two are different halves that happen to land in the same directory |
 | `binding` | 224 | reads and writes `.asgard-cli.yaml`, the checkout's platform binding |
 | `corpus` | 39 | the material itself, in the layout a repository receives it: `wiki/` and `usecase/` side by side, so a pointer can become a path that resolves in both trees |
 | `wiki` | 109 | serves the platform wiki, and the two index tables beside it |
@@ -57,6 +57,7 @@ keeps; below it are the checks, the material servers and the plumbing.
 | `pipelineconfig` | 147 | reads `.asgard-pipeline.yaml`, the deployment declaration |
 | `gitrepo` | 120 | the checkout's root and its remotes, read and never compared to anything |
 | `chart` | 117 | reads a project's **unrendered** templates for (kind, name) |
+| `selfsrc` (module root) | 21 | this repository's own Go source, embedded so the binary can audit the commands it prints. At the root because `go:embed` only reaches downward |
 | `version` | 73 | build information, injected by GoReleaser via ldflags |
 | `usecase` | 46 | serves the deployment-shape extracts |
 | `needs` | 212 | what a shape has to be given by the customer, as seven documents written into a repository beside the extracts |

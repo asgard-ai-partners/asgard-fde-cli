@@ -33,8 +33,8 @@ How this differs from the other two bodies of material:
 Both of those assume the reader already knows the platform has the thing. This
 wiki is that assumption.
 
-**Do not repeat them.** Chart-writing cautions belong to `usecase` and field
-rules to the CRD; point at them instead.
+**Do not repeat them.** Chart-writing cautions belong to `../usecase/` and
+field rules to the CRD; point at them instead.
 
 > **These pages are the binary's copy, and `asgard-cli init` also writes them
 > into a repository** under `.agents/skills/asgard-platform/`, with the
@@ -159,7 +159,7 @@ reader can open beats a path only somebody with the clone can.
 
 **Every page also ends with an `**Unchecked:**` line**, saying which parts of it
 were never held against a real deployment. The wiki is checked less deeply than
-`usecase` by nature - an extract has a chart to compare against, while the wiki's
+`../usecase/` by nature - an extract has a chart to compare against, while the wiki's
 source is product documentation describing a UI, much of which is in no chart at
 all (permissions, billing, the chat interface). Left unsaid, a reader assumes the
 two are equally reliable.
@@ -236,7 +236,9 @@ did the search.**
 The `glossary` page's one-meaning-here table is applied the same way. It sat as
 prose for a long time while the failure it describes went on happening: a search
 for `payment` returns Fehu, which is billing between Asgard and the customer,
-and nothing anywhere is red. `find` prints both senses above the results.
+and nothing anywhere is red. **A grep for a word in that table has to be read
+against both senses**, which is why the table is at the top of the page rather
+than in the body.
 
 ## Coverage
 
