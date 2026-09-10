@@ -449,11 +449,16 @@ if it stops there:
        said so itself.
      - Convert the ~180 remaining references. **This is the work**, and it is
        not a rename: the right replacement depends on where the text ends up.
-       Classified, and the landing half is **done** - `aliases.md`, the only
-       one of the 21 that needed it. What is left is the three groups that do
-       not land as they are: 22 in the scaffold templates, 61 in Go strings
-       and help, and 27 in this repository's own documentation, where a path
-       into a customer repository would be wrong.
+       Classified into four groups by where the text ends up. **Everything
+       that lands is done**: the alias index, 36 in the scaffold templates,
+       and the prose and `Where`/`From` values in `needs` and `brief`.
+
+       What is left is the two groups that are **help text describing the
+       commands**, and they move with the deletion rather than before it,
+       because they are correct today: the CLI's own help and output, and this
+       repository's README, TASK and AGENTS - where a path into a customer
+       repository would be wrong, and `internal/corpus/...` is the right
+       target instead.
      - Delete the commands.
 
      **Step 5 is coupled to step 6 and the sequence did not say so.** `find`

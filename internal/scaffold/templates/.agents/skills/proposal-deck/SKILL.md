@@ -123,13 +123,13 @@ paid for it. A proposal built on a shape nobody has assembled is an estimate of
 a guess.
 
 **For what one looks like end to end, take a worked one rather than inventing a
-scenario.** `asgard-cli wiki case-studies` has one event described from three
+scenario.** `../asgard-platform/wiki/case-studies.md` has one event described from three
 angles, which is where the division of work between the three products stops
 being abstract - and a scenario written from it is one somebody has already
 checked, rather than one this deck is the first test of.
 
 **If they ask to see it working and we have none of their systems**, that is a
-shape too, and it has been built: `asgard-cli usecase demo-generation` - no
+shape too, and it has been built: `../asgard-platform/usecase/demo-generation.md` - no
 data, no credentials, and still a real deployment rather than a slide. Decide
 whether the deck is promising one before writing a slide that implies it.
 
@@ -141,8 +141,8 @@ they want to **ask** in the moment is an agent. Many customers want both, and
 they are two deliveries over one Semantic Model, not one delivery.
 
 A proposal that answers "we want to see stock across all our channels" with an
-agent has answered a question they did not ask. `asgard-cli wiki mimir` is the
-product; `asgard-cli wiki product-suite` is the fork.
+agent has answered a question they did not ask. `../asgard-platform/wiki/mimir.md` is the
+product; `../asgard-platform/wiki/product-suite.md` is the fork.
 
 Then, what their answers turn into - and it is not one row per system:
 
@@ -180,7 +180,7 @@ counter-intuitive:
 It goes to `assets/skills/<name>/SKILL.md` and is synced to the platform. In
 `references/` it is invisible to the running agent, and the failure then looks
 like a model ignoring instructions rather than a file in the wrong place -
-`asgard-cli guide requirements` has the full rule.
+`../asgard-platform/guide/requirements.md` has the full rule.
 
 An integration across several channels that proposes only the connections has
 proposed half of it.
@@ -263,7 +263,7 @@ that can be delivered; scope left open is a proposal that grows until it fails.
 | **theirs** - how their CRM is read, which network their devices are on, whether a channel has an API | **yes**, and it is most of the deck | only they can answer. Listing it asks for their help |
 | **ours** - whether the platform can scope what a user may reach, what it logs and for how long | **no** | it is our product. "We do not know what we can do" is not honesty, it is not having prepared |
 
-`asgard-cli wiki platform-unknowns` is the second kind, and its own instruction
+`../asgard-platform/wiki/platform-unknowns.md` is the second kind, and its own instruction
 is **ask the platform team when a requirement touches one** - before the meeting.
 Printing that list onto a slide does the opposite of what the page says, and
 announces that we have not read our own product.
@@ -314,7 +314,7 @@ Four sources of it, in the order they actually happen:
 **1. A capability the platform does not have.** The list is not a matter of
 judgement - it is written down:
 
-    asgard-cli wiki platform-unknowns
+    `../asgard-platform/wiki/platform-unknowns.md`
 
 Check every claim on slides 4, 5 and 6 against it. Anything that appears there
 belongs on **slide 9, phrased as a question**, and never on 4 or 6. The two that
@@ -375,7 +375,7 @@ or an allowlist or a jump host".** Asgard is hosted and the agent runs in a
 sandbox in that cloud, so there is nothing of ours to place on their network and
 the other two options do not apply. A slide offering three invites their network
 team to pick the wrong one, and that is discovered a week later.
-`asgard-cli wiki operations` has the addresses; hand them over in the meeting.
+`../asgard-platform/wiki/operations.md` has the addresses; hand them over in the meeting.
 
 **Two names for one thing is worse than a clumsy name.** If a phrase here is
 wrong for a customer's industry, change it once and use the changed one
@@ -456,7 +456,7 @@ matters. The pass is one question, asked page by page: 這一頁哪裡看得出�
 | what it asks for | answers and access | a yes | nothing - it explains |
 | may show a console screen | no | no | **yes - it is the point** |
 | may name platform parts | no | no | the ones they will click |
-| built from | open questions, and step 2 run **conditionally** | steps 1-3 | the same, plus `asgard-cli wiki setup-path` |
+| built from | open questions, and step 2 run **conditionally** | steps 1-3 | the same, plus `../asgard-platform/wiki/setup-path.md` |
 
 Ask which one you are making before writing a slide. "Show them how the agent
 gets set up" in a proposal is a request for slide 5 - the interaction - not for
@@ -535,7 +535,7 @@ Two things this deck must still refuse, and they are the ones the shape tempts:
     "Given an API, we can integrate all five channels" is a claim about five
     APIs nobody has seen. Name the condition per system, not once for the slide
   - **A question the platform cannot answer stays a question.**
-    `asgard-cli wiki platform-unknowns` does not become answerable by being
+    `../asgard-platform/wiki/platform-unknowns.md` does not become answerable by being
     written as a conditional
 
 What it does not have is a phase plan with dates. That is the proposal, and it
@@ -738,7 +738,7 @@ fires then. Use it when re-reading a page, and see the review section above.
 you would do differently.** "Ming issues it" and "Ming spends five hours a
 day on it" are perfect answers that change nothing. **Three of the six were copied out of this material**, not reasoned into
 existence - from filter 0 saying to ask who issues an account, from
-`asgard-cli wiki operations` saying to get the name of whoever approves a change, and from
+`../asgard-platform/wiki/operations.md` saying to get the name of whoever approves a change, and from
 the LINE integration needing an owner on their side. All three instructions are
 correct **for tracking**. None is slide content, and each now says so where it
 stands, because somebody copying reads one place and not the canonical one.
@@ -837,7 +837,7 @@ it as a clean scope cut.
 anybody enumerate other people's cases, and it is not authentication. **Any
 self-service query on an anonymous channel has to say what identifies the
 person.** If the answer is "a number they type", that is not an answer -
-`asgard-cli guide read-path` has what a real one looks like, and it
+`../asgard-platform/guide/read-path.md` has what a real one looks like, and it
 carries the failure mode: a query that forgets to filter on the injected
 identity fails only on the anonymous path, which is the path nobody tests.
 
@@ -933,7 +933,7 @@ reader outside this repository can follow, not as counts of rows.
 
 ### What a handover deck actually walks through
 
-`asgard-cli wiki setup-path` is the order, written for exactly this: where a
+`../asgard-platform/wiki/setup-path.md` is the order, written for exactly this: where a
 credential goes, what gets built from it, the agent's configuration, and why
 there is no import step on the Sindri side. Two things on that page save a
 handover deck from being wrong:
@@ -962,7 +962,7 @@ product documentation and are fetched by URL:
 
     https://docs.asgard-ai.com/img/docs/<path>
 
-**`asgard-cli wiki screenshots` is the index** - every picture, what it shows,
+**`../asgard-platform/wiki/screenshots.md` is the index** - every picture, what it shows,
 and which situation it is for. Read it rather than browsing the docs site: it is
 grouped by what you are trying to say, which the documentation is not.
 
@@ -975,7 +975,7 @@ question to a completed action, and the third of them is the approval dialog -
 which is the only way anybody has found to explain the governance gate on a slide
 without a paragraph.
 
-**A handover wants the setup path**, and `asgard-cli wiki setup-path` is the
+**A handover wants the setup path**, and `../asgard-platform/wiki/setup-path.md` is the
 narration for it. `agent-hub-managed-agent/create.png` is the one screen most
 handovers need.
 
@@ -1036,7 +1036,7 @@ second the moment anyone else opens the deck.
   ticket, given to the person making the change - not on a slide, not in the
   repository, not in a mail thread that gets forwarded. They can change, and a
   copy will not; a stale allowlist is the customer's connection dropping.
-  `asgard-cli wiki operations` is the source to read them from each time. What
+  `../asgard-platform/wiki/operations.md` is the source to read them from each time. What
   goes in the deck is the request - 把這四個位址加進防火牆白名單 - and never
   the values.
 - **A capability nobody has verified.** If it is not in `references/`, in a
@@ -1045,7 +1045,7 @@ second the moment anyone else opens the deck.
   about the words you type: an approval dialog naming `ts-wms` and
   `create_transfer_order`, or a console screenshot with the whole build-platform
   navigation down its left edge, breaks it exactly as a slide title would. Crop
-  before using; `asgard-cli wiki screenshots` marks the ones known to need it.
+  before using; `../asgard-platform/wiki/screenshots.md` marks the ones known to need it.
 - **Precision we do not have.** "Around 10 minutes, from your own figures" beats
   "11.4 minutes" when 11.4 came from one afternoon's sample.
 
@@ -1192,7 +1192,7 @@ Ten questions, and the last five are the ones that get skipped:
    meeting and is answered out loud, never printed.
 7. Is there a decision record for the shape, written before the deck?
 8. Has every claim on slides 4, 5 and 6 been held against
-   `asgard-cli wiki platform-unknowns`? Anything on that list is a slide 9
+   `../asgard-platform/wiki/platform-unknowns.md`? Anything on that list is a slide 9
    question, not a feature.
 9. Read slide 4 aloud to someone who does not work here. Do they repeat it back
    correctly? That is the whole plain-language test, and it takes a minute.
@@ -1203,7 +1203,7 @@ Ten questions, and the last five are the ones that get skipped:
     subject could have been dropped. Most should be the document instead.
 10. If it shows a console screen: was every screenshot opened, is it current,
     and is this a handover rather than a proposal? A proposal showing admin
-    screens has usually skipped `asgard-cli wiki screenshots`, where the
+    screens has usually skipped `../asgard-platform/wiki/screenshots.md`, where the
     customer-facing set is.
 
 Then file it: write `README.md` beside the deck saying who it was for, what

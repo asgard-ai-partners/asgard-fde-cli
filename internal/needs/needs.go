@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/kb"
 )
 
 // Item is one thing to obtain, and where the material says so.
@@ -147,7 +149,7 @@ func (s Shape) Document() string {
 	fmt.Fprintf(&b, "**%s**\n\n", s.What)
 	b.WriteString(intro)
 	for _, i := range s.Items {
-		fmt.Fprintf(&b, "\n## %s\n\n%s\n\nStated in %s.\n", i.Ask, i.Why, pointer(i.From))
+		fmt.Fprintf(&b, "\n## %s\n\n%s\n\nStated in %s.\n", i.Ask, i.Why, "`"+kb.Landed("../", i.From)+"`")
 	}
 	return b.String()
 }
@@ -159,23 +161,6 @@ const intro = `**This is theirs to provide, not ours to design.** Ask for exactl
 named - offering options invites the other side to pick one that does not
 apply, and the week it takes to find that out is the week you were saving.
 `
-
-// pointer rewrites a From into the form a reader of the landed copy can act on.
-//
-// A wiki page and an extract are written into the repository, so a path is
-// what to give: `needs/` sits beside `wiki/` and `usecase/`, which is why it is
-// `../`. A guide and a brief are not written out yet, so they stay
-// invocations - the same rule the corpus itself follows, and the same one that
-// stops being needed when step 4 of TASK.md finishes.
-func pointer(from string) string {
-	for _, kind := range []string{"wiki", "usecase"} {
-		prefix := "asgard-cli " + kind + " "
-		if name, ok := strings.CutPrefix(from, prefix); ok {
-			return "`../" + kind + "/" + name + ".md`"
-		}
-	}
-	return "`" + from + "`"
-}
 
 // Documents renders every shape, for the export and for the audit that resolves
 // the pointers in them.

@@ -206,16 +206,19 @@ type Corpus struct {
 // Both yield the same two groups - kind, then name - so everything downstream
 // reads one shape: kb.Link, Counterpart, --links, --orphans, and what `find`
 // prints.
-// The `../` is optional because one document does not sit in a half.
-// `aliases.md` is at the root of the landed copy - it applies to both halves,
-// and is the first file to read when the question did not arrive in English -
-// so from there a page is `wiki/x.md` and not `../wiki/x.md`. Everything else
-// is one level down and writes the `../`.
+// **What comes before the kind is not fixed, because the readers are not in
+// one place.** A document inside a directory writes `../wiki/x.md`;
+// `aliases.md` and the map sit at the root of the landed copy and write
+// `wiki/x.md`; a design-time skill beside the corpus writes
+// `../asgard-platform/wiki/x.md`; and a file deeper in a customer repository -
+// `docs/open-questions.md`, a plugin command - writes the path from the
+// repository root, because a chain of `../` from there is not something anybody
+// should have to count.
 //
-// It stays this narrow deliberately: the name pattern is lower-case, so a
-// prose mention of `wiki/README.md` or a path under `internal/` does not
-// become a pointer.
-var pathLinkRe = regexp.MustCompile(`(?:\.\./)?(wiki|usecase|needs|brief|guide)/([a-z0-9][a-z0-9-]*)\.md`)
+// What is fixed is the tail, and that is what makes it a pointer: the kind,
+// then a lower-case name, then `.md`. The name being lower-case is what keeps
+// a prose mention of `wiki/README.md` out.
+var pathLinkRe = regexp.MustCompile(`(?:[A-Za-z0-9_./-]*/)?(wiki|usecase|needs|brief|guide)/([a-z0-9][a-z0-9-]*)\.md`)
 
 var linkRe = regexp.MustCompile(`asgard-cli(?: |[ \t]*\n[ \t]*)(wiki|usecase|brief|guide)(?: |[ \t]*\n[ \t]*)([a-z0-9][a-z0-9-]*)`)
 
@@ -266,6 +269,33 @@ func Links(body string) ([]Link, bool) {
 	}
 	return out, named
 }
+
+// Landed rewrites an invocation into the pointer a reader of the landed copy
+// can act on: a path when the target is written into a repository, and the
+// invocation unchanged when it is not.
+//
+// **`prefix` is where the caller's own document sits**, because a path is
+// relative to the document holding it - `../` from inside one of the
+// directories, empty from the root.
+//
+// It lives here rather than in `needs` and `brief` because both were growing
+// their own copy of it, and the copies had already drifted: one knew about
+// three kinds and the other about two, so a `From` pointing at a guide
+// rendered as an invocation in one and a path in the other, months after
+// guides began landing. The set of kinds is a fact about the material.
+func Landed(prefix, invocation string) string {
+	for _, kind := range Kinds {
+		if name, ok := strings.CutPrefix(invocation, "asgard-cli "+kind+" "); ok {
+			return prefix + kind + "/" + name + ".md"
+		}
+	}
+	return invocation
+}
+
+// Kinds are the document kinds a pointer can name, which is the same list
+// `asgard-cli init` writes into a repository. A kind here is a directory
+// there.
+var Kinds = []string{"wiki", "usecase", "needs", "brief", "guide"}
 
 // pointers returns every pointer in s, in both forms, as {whole, kind, name}.
 //

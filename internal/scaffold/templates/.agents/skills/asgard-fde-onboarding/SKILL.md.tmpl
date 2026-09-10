@@ -59,10 +59,10 @@ Not a sequence to follow - a map of what answers what.
 | what you are doing | where to look |
 |---|---|
 | **this checkout is not connected to a platform yet** - no `.asgard-cli.yaml`, or `asgard-cli gate` reports the binding step as skipped | `AGENTS.md`, "If this checkout is not connected to a platform yet". **This is the first job**, and `asgard-cli init` left it for you on purpose |
-| **about to talk to the customer** | `asgard-cli brief customer-meeting` - five things said wrong to a customer, each because somebody said it. The riskiest thing here leaves no trace in this repo, so nothing in the repo will remind you |
-| about to touch a chart, or hand it over | `asgard-cli brief write-chart`, `asgard-cli brief handover` |
+| **about to talk to the customer** | `../asgard-platform/brief/customer-meeting.md` - five things said wrong to a customer, each because somebody said it. The riskiest thing here leaves no trace in this repo, so nothing in the repo will remind you |
+| about to touch a chart, or hand it over | `../asgard-platform/brief/write-chart.md`, `../asgard-platform/brief/handover.md` |
 | anything, first | `asgard-cli question`, then `request`, `task` and `project` |
-| **the customer said something and you have to turn it into work** | `asgard-cli guide requirements` - the interview, then `asgard-cli request add "<their words>"` |
+| **the customer said something and you have to turn it into work** | `../asgard-platform/guide/requirements.md` - the interview, then `asgard-cli request add "<their words>"` |
 | **looking something up** | `asgard-cli find "<the customer's words>"` - searches both bodies of reference material and hands you the other half |
 | **about to write a CR** | `asgard-cli usecase <shape>` - the skeleton and its traps |
 | what a thing on the platform even is | `asgard-cli wiki <page>` - read this before the extract, which assumes it |
@@ -91,7 +91,7 @@ follow from one question:
 An internal audience and a public one need different shapes, and that is not a
 preference: it follows from what the platform can and cannot do. Each of the
 three has an obvious answer that has already been proven wrong in production.
-`asgard-cli guide read-path`, `entry-point` and `knowledge` each state
+`../asgard-platform/guide/read-path.md`, `entry-point` and `knowledge` each state
 the reversal, and `next` raises them when this repository meets their condition;
 `AGENTS.md` has the same three under "The three decisions that get answered
 wrong".

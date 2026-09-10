@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/kb"
 )
 
 // Item is one thing that gets got wrong, and where the right version lives.
@@ -133,11 +135,11 @@ out of this tool's own material.
 **Ask what they have already read**, before describing anything. The
 product site tells them Odin is for non-technical staff, gives them a vocabulary
 - Basic Function, Template - that maps to nothing here, and says Mimir simulates
-the future. ` + "`asgard-cli wiki what-they-read`" + ` has the three, and it costs
+the future. ` + "`../wiki/what-they-read.md`" + ` has the three, and it costs
 one sentence to find out which of them you are correcting.
 
 **Before the meeting, not during it:** anything on
-` + "`asgard-cli wiki platform-unknowns`" + ` that this engagement touches is ours to
+` + "`../wiki/platform-unknowns.md`" + ` that this engagement touches is ours to
 chase, not theirs to hear about. Standing in front of a customer saying we do
 not know what our own product does is not honesty.
 
@@ -364,24 +366,10 @@ func (a Activity) Document() string {
 	fmt.Fprintf(&b, "# Before %s\n\n%s\n\n%s\n", a.Name, a.When, a.Lead)
 	for _, it := range a.Items {
 		fmt.Fprintf(&b, "\n## %s\n\n**Said:** %s\n\n**True:** %s\n\nRead %s.\n",
-			it.Subject, it.Wrong, it.Right, pointer(it.Where))
+			it.Subject, it.Wrong, it.Right, "`"+kb.Landed("../", it.Where)+"`")
 	}
 	fmt.Fprintf(&b, "\n%s\n", a.Close)
 	return b.String()
-}
-
-// pointer rewrites a Where into the form a reader of the landed copy can act
-// on: a path for the two halves that are written into a repository, and the
-// invocation unchanged for everything else - a guide, a brief, or a command
-// like `asgard-cli workspace list`, which is not a document pointer at all.
-func pointer(where string) string {
-	for _, kind := range []string{"wiki", "usecase", "needs"} {
-		prefix := "asgard-cli " + kind + " "
-		if name, ok := strings.CutPrefix(where, prefix); ok {
-			return "`../" + kind + "/" + name + ".md`"
-		}
-	}
-	return "`" + where + "`"
 }
 
 // Documents renders every activity, for the export and for the audit that

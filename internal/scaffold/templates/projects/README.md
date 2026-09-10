@@ -22,5 +22,5 @@ branch 規則觸發,一份 chart 可以有好幾個 Release。namespace 從 `.Va
 ## 怎麼切
 
 切分依**受眾**,不依整齊。內部可驗證的呼叫端與匿名訪客需要不同的入口形狀與讀取路徑,
-那兩者無法共用,所以他們不能是同一個 project。詳見 `asgard-cli guide projects`
+那兩者無法共用,所以他們不能是同一個 project。詳見 `.agents/skills/asgard-platform/guide/projects.md`
 與根目錄 `AGENTS.md` 的「The three decisions that get answered wrong」。
