@@ -7,8 +7,9 @@
     asgard-cli wiki --unverified    what each page has NOT been held against
     asgard-cli wiki --conventions   this file
 
-`find` is the way in. `wiki --search` exists for when you already know the answer
-is on the platform side rather than in a deployment shape.
+`find` is the way in when the question arrived in the customer's words - it
+translates them first. When you already have the term, `asgard-cli init` writes
+these pages into a repository as files, and grep is the way in there.
 
 What the Asgard platform is made of, and who each piece is for.
 

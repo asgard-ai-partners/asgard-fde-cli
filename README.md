@@ -371,12 +371,10 @@ while a stale page here is fixed for every engagement in one release.
 ```bash
 asgard-cli wiki                       # what the platform is made of
 asgard-cli wiki agents
-asgard-cli wiki --search "匿名 訪客"
 asgard-cli wiki --conventions         # how the wiki is maintained
 
 asgard-cli usecase                    # how each deployment shape is built
 asgard-cli usecase flow-agent-single
-asgard-cli usecase --search schedule
 ```
 
 | | answers | written from |
@@ -388,8 +386,9 @@ An extract assumes you already know the platform has that shape; a wiki page is
 where that assumption comes from. `asgard-cli add` prints one of each.
 
 **To look something up, use [`find`](#find)**, which searches both and names the
-counterpart of whatever it hits. `--search` on either command is the narrow form,
-for when you already know which half holds the answer.
+counterpart of whatever it hits. Each command had a `--search` for its own half;
+both went, superseded first by `find` and then by grep, once `asgard-cli init`
+began writing these documents into a repository.
 
 The wiki's own conventions - its three layers, what a page must carry, and how it
 is kept from going stale as the platform moves - are in `asgard-cli wiki

@@ -328,12 +328,10 @@ asgard-cli add flowagent support --bot-class line --project site
 ```bash
 asgard-cli wiki                       # 平台由什麼構成
 asgard-cli wiki agents
-asgard-cli wiki --search "匿名 訪客"
 asgard-cli wiki --conventions         # 這份 wiki 怎麼維護
 
 asgard-cli usecase                    # 每種部署形狀怎麼組起來
 asgard-cli usecase flow-agent-single
-asgard-cli usecase --search schedule
 ```
 
 | | 回答什麼 | 寫自哪裡 |

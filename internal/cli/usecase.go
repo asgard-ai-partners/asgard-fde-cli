@@ -12,7 +12,6 @@ import (
 
 func newUsecaseCmd() *cobra.Command {
 	var (
-		search     string
 		unverified bool
 		sources    bool
 	)
@@ -40,12 +39,14 @@ that for every shape at once; it is worth reading before a first engagement.
 With no arguments it lists the shapes. Naming one prints it in full.
 
     asgard-cli usecase flow-agent-supervisor
-    asgard-cli usecase --search schedule      # this half only
 
 **To look something up, use "asgard-cli find" instead.** It searches this and the
 wiki together and names the counterpart of whatever it finds, which is what you
-want when you know the requirement but not which half holds the answer. --search
-here is the narrow form, for when you already know it is a deployment shape.`,
+want when you know the requirement but not which half holds the answer.
+
+There was a --search here that searched this half alone, and it went for the
+reason the wiki's did: "find" superseded it, and grep superseded it again once
+these extracts started being written into a repository.`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			out := cmd.OutOrStdout()
@@ -93,27 +94,6 @@ Weight a claim by that, and re-check before betting a deployment on one.
 				return nil
 			}
 
-			if search != "" {
-				matches, err := usecase.Search(search)
-				if err != nil {
-					return err
-				}
-				if len(matches) == 0 {
-					fmt.Fprintf(out, "Nothing matched %q. List every shape with `asgard-cli usecase`.\n", search)
-					return nil
-				}
-				fmt.Fprintf(out, "%d shape(s) mention %q:\n\n", len(matches), search)
-				for _, m := range matches {
-					fmt.Fprintf(out, "  %s\n    %s\n", m.Name, m.Title)
-					for _, line := range m.Lines {
-						fmt.Fprintf(out, "      %s\n", truncate(line, 96))
-					}
-					fmt.Fprintln(out)
-				}
-				fmt.Fprintf(out, "Read one with `asgard-cli usecase <name>`.\n")
-				return nil
-			}
-
 			if len(args) == 1 {
 				content, err := usecase.Read(args[0])
 				recallHere("usecase", args[0])
@@ -152,7 +132,6 @@ For what the platform is and who each piece is for, "asgard-cli wiki".
 		},
 	}
 
-	cmd.Flags().StringVar(&search, "search", "", "search this half only; \"asgard-cli find\" searches both")
 	cmd.Flags().BoolVar(&sources, "sources", false, "print the documentation links an extract cites; every extract with no argument")
 	cmd.Flags().BoolVar(&unverified, "unverified", false,
 		"list only what has NOT been held against a real deployment, and what about each is unchecked")

@@ -443,7 +443,26 @@ if it stops there:
      path** - 73 more converted, across the extracts, the pages and the stage
      prompts. `asgard-cli wiki log` is the only invocation left.
   5. Delete `wiki` and `usecase`. `--commands` confirms nothing still names
-     them.
+     them. **Split into three, because the deletion is not the hard part:**
+
+     - ~~The two `--search` flags.~~ **Done** - superseded twice, and the help
+       said so itself.
+     - Convert the ~180 remaining references. **This is the work**, and it is
+       not a rename: the right replacement depends on where the text ends up.
+       A landed document wants `../wiki/x.md`; this repository's own README
+       cannot use one, because the path does not exist here.
+     - Delete the commands.
+
+     **Step 5 is coupled to step 6 and the sequence did not say so.** `find`
+     prints `-> field level: asgard-cli usecase external-api`, so deleting the
+     commands while `find` survives leaves the tool naming something it does
+     not have. `find`'s counterpart output has to move to the path form in the
+     same change.
+
+     And `asgard-cli wiki log` goes with it. Log is the one page `init` does
+     not write, so deleting the command makes it reachable only from this
+     repository - which is where its reader already is, but the index sentence
+     that points at it has to say so.
   6. Delete `find`, after the sense instruction has been given a release to be
      wrong in.
 

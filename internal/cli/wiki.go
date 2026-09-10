@@ -11,7 +11,6 @@ import (
 
 func newWikiCmd() *cobra.Command {
 	var (
-		search      string
 		conventions bool
 		unverified  bool
 		aliases     bool
@@ -37,11 +36,14 @@ comes from, so they deliberately do not repeat what an extract already covers.
 With no arguments it lists the pages. Naming one prints it in full.
 
     asgard-cli wiki agents
-    asgard-cli wiki --search dashboard        # this half only
 
 **To look something up, use "asgard-cli find" instead.** It searches this and the
-extracts together and names the counterpart of whatever it finds. --search here
-is the narrow form, for when you already know the answer is on the platform side.
+extracts together and names the counterpart of whatever it finds.
+
+There was a --search here that searched this half alone. It went because it was
+superseded twice: "find" already did it better, and once "asgard-cli init"
+started writing these pages into a repository, grep did it without a
+subprocess.
 
 --conventions prints how the wiki is maintained: where its sources are, what a
 page has to carry, and how it is kept from going stale as the platform moves.
@@ -114,27 +116,6 @@ deeply than "asgard-cli usecase" and each says how far it got.
 				return nil
 			}
 
-			if search != "" {
-				matches, err := wiki.Search(search)
-				if err != nil {
-					return err
-				}
-				if len(matches) == 0 {
-					fmt.Fprintf(out, "Nothing matched %q. List every page with `asgard-cli wiki`.\n", search)
-					return nil
-				}
-				fmt.Fprintf(out, "%d page(s) mention %q:\n\n", len(matches), search)
-				for _, m := range matches {
-					fmt.Fprintf(out, "  %s\n    %s\n", m.Name, m.Title)
-					for _, line := range m.Lines {
-						fmt.Fprintf(out, "      %s\n", truncate(line, 96))
-					}
-					fmt.Fprintln(out)
-				}
-				fmt.Fprintf(out, "Read one with `asgard-cli wiki <page>`.\n")
-				return nil
-			}
-
 			if len(args) == 1 {
 				text, err := wiki.Read(args[0])
 				recallHere("wiki", args[0])
@@ -167,7 +148,6 @@ For how the wiki is maintained, "asgard-cli wiki --conventions".
 		},
 	}
 
-	cmd.Flags().StringVar(&search, "search", "", "search this half only; \"asgard-cli find\" searches both")
 	cmd.Flags().BoolVar(&conventions, "conventions", false, "print how the wiki is maintained and where its sources are")
 	cmd.Flags().BoolVar(&aliases, "aliases", false, "print the index: what a customer says, and what to search for")
 	cmd.Flags().BoolVar(&sources, "sources", false, "print the documentation links a page cites; every page with no argument")
