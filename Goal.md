@@ -37,7 +37,7 @@ endpoint、一條網路路徑、一個測試環境、某個人的核准佇列。
 
 ## 3. 能夠實作 IaC,charts 的部分
 
-Asgard CR 的 Helm chart:`projects/<slug>/chart/`,一個 project 一份 chart。
+Asgard CR 的 Helm chart:`projects/<slug>/chart/app/`,一個 project 一份 chart。
 部署到哪裡不在 chart 裡:repo 根目錄一份 `.asgard-pipeline.yaml` 宣告有哪些
 Release,一個 Release 綁一份 chart 到一個 Platform Project(= 一個 namespace),
 由一條 tag 或 branch 規則觸發。
