@@ -113,7 +113,7 @@ which directory it is in or which command opens it. `--bare` reports one.
 at step 4" is a claim about a walk that no engagement actually performs. What a
 reader can act on is a claim about the repository in front of them, or about the
 thing they are about to do. `asgard-cli brief` was added for exactly this reason
-and its package comment is the argument; `asgard-cli find` searches all four
+and its package comment is the argument; grep reaches all
 parts by subject for the same one. **Anything reachable only by having arrived
 somewhere is unreachable**, and the measured version of that is in TASK.md: an
 engagement read the stage it was told it was in and what that stage pointed at,
@@ -144,7 +144,7 @@ one only the extracts.
 
 **The corpus carries one language because the mapping lives somewhere else, not
 because the reader translates.** `internal/corpus/aliases.md` is the mapping,
-`asgard-cli find` applies it to a query before searching, and the rewrite is
+It is applied to a query before searching, and the rewrite is
 printed so a reader can see what was searched. So the instruction to an agent is
 the opposite of what this paragraph used to imply: **give `find` the customer's
 own words.** Translating only after a search came back empty was tried and was
@@ -381,7 +381,7 @@ its author could read. Say which kind a recipe is for.
 A trap lives in a template, an extract, a stage prompt and a wiki page, and only
 one of them is in your diff. Changing `allowWrite` in a template while an extract
 still teaches the old value leaves the repository disagreeing with itself.
-`asgard-cli find <the thing>` finds the other copies.
+A term sweep - `asgard-cli audit-material <term>` - finds the other copies.
 
 **Did you break the thing that was enforcing it?**
 Renumbering the request template's sections silently broke `work.go`, which

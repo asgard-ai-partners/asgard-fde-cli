@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"io"
 	"sort"
 
 	"github.com/spf13/cobra"
@@ -17,8 +16,6 @@ import (
 )
 
 func newReadingCmd() *cobra.Command {
-	var misses bool
-
 	cmd := &cobra.Command{
 		Use:   "reading",
 		Short: "Which pages this engagement opened, and which it never did",
@@ -47,25 +44,15 @@ before you knew.
 
 What it cannot see is a page opened and misread. That still needs a person.
 
---misses is the other half, and it is the more actionable one: every search
-this engagement ran that the material did not answer. **A query that found
-nothing is the one part of a defect report nobody has to be believed about** -
-everything else is somebody's account of what happened, and this is the tool's
-own record that a search was run and the corpus had no answer. Each line is a
-candidate row for the alias index, or a page that does not exist.
-
-That file is not committed, because a query carries whatever words the customer
-used. The reading log is, because it carries only page names of this tool.`,
+**When the material has no answer, that is worth filing rather than working
+around.** ` + "`asgard-cli issue-report --new`" + ` writes the report with what the tool
+knows already filled in.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			out := cmd.OutOrStdout()
 			root := repo.Root(".")
 			if root == "" {
 				return errNotInRepo()
-			}
-
-			if misses {
-				return printMisses(out, root)
 			}
 
 			reads, err := work.Readings(root)
@@ -148,8 +135,6 @@ used. The reading log is, because it carries only page names of this tool.`,
 		},
 	}
 
-	cmd.Flags().BoolVar(&misses, "misses", false, "searches this engagement ran that the material did not answer")
-
 	return cmd
 }
 
@@ -157,26 +142,3 @@ used. The reading log is, because it carries only page names of this tool.`,
 //
 // In the order they happened, not collapsed by count: a run of misses on one
 // afternoon is one subject somebody could not reach, and a frequency table
-// would hide exactly that.
-func printMisses(out io.Writer, root string) error {
-	misses, err := work.Misses(root)
-	if err != nil {
-		return err
-	}
-	if len(misses) == 0 {
-		fmt.Fprintf(out, "Nothing recorded in %s.\n\nEither every search here landed, or none has been run inside this\nrepository - `asgard-cli find` records a miss only when it is run in one.\n", work.MissLog)
-		return nil
-	}
-
-	fmt.Fprintf(out, "%d search(es) the material did not answer, from %s:\n\n", len(misses), work.MissLog)
-	for _, m := range misses {
-		fmt.Fprintf(out, "  %s  %-9s %s\n", m.Date, m.Kind, m.Query)
-	}
-	fmt.Fprintf(out, "\n  miss      nothing in the material carried any term\n"+
-		"  unplaced  results came back, but these terms appeared in none of them\n\n"+
-		"**Each line is one of two different defects, and they need different\nrepairs.** If the subject exists under another name, the index is missing a\n"+
-		"row: the alias index carries the rule for adding one. If it\ndoes not exist, the material is missing a page, and that is worth filing:\n\n"+
-		"    asgard-cli issue-report --new\n\n"+
-		"This file is not committed - a query carries whatever words the customer\nused - so it lives only as long as this checkout. File what it shows.\n")
-	return nil
-}

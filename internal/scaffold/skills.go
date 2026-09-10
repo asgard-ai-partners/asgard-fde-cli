@@ -12,7 +12,7 @@ import (
 // Skill is one design-time skill the scaffold writes into a customer repo.
 //
 // They are searchable for the same reason the wiki is. An agent asked to build
-// a deck reaches for `asgard-cli find slides`, and until this existed the answer
+// a deck greps for slides, and until this existed the answer
 // was that nothing matched anywhere - while the skill that owns the whole
 // subject sat in the repository it was standing in. The material was there and
 // the tool's own way in did not reach it.
@@ -78,7 +78,7 @@ var corpus = kb.Corpus{
 		}
 	},
 	Noun:    "skill",
-	Command: "asgard-cli find",
+	Command: "ls .agents/skills/",
 }
 
 // skillRefs lists each skill directory and the SKILL.md inside it. The

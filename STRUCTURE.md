@@ -35,7 +35,7 @@ keeps; below it are the checks, the material servers and the plumbing.
 
 | package | go | what it holds |
 |---|---|---|
-| `cli` | 12513 | the cobra command tree, one file per subcommand, plus `root.go`, `repo.go`, `format.go` and `find.go` (which spans every corpus rather than serving one) |
+| `cli` | 11961 | the cobra command tree, one file per subcommand, plus `root.go`, `repo.go`, `format.go` and `find.go` (which spans every corpus rather than serving one) |
 | `gate` | 1976 | the invariant checks on a rendered chart - xref, agent split, deployability, enums, constraints, conditional CEL shapes |
 | `work` | 1678 | the customer repo's own records: requests, task specs, open questions, decisions, and the two reading logs |
 | `platform` | 1218 | the platform API client: workspaces, the whole `/v1/iac` surface, and `/v1/docs` |
@@ -94,9 +94,9 @@ templates as text rather than rendering them.
 Most of this repo's value is not code. It is compiled into the binary, and the
 first question when adding anything is which part it belongs to.
 
-**Four of these are one corpus** - `asgard-cli find` searches them together and
+**Four of these are one corpus** - grep reaches them together and
 they share one schema: a `# ` title, a summary, and `**Checked:**` /
-`**Unchecked:**`. `asgard-cli find --unverified` is the check, and it is 0 of 25,
+`**Unchecked:**`. `asgard-cli audit-material --unverified` is the check, and it is 0 of 25,
 0 of 21, 0 of 12, 0 of 7. The fifth, `generate/templates/`, is not searched: it
 is what `add` writes, not something anybody reads to decide.
 
@@ -157,7 +157,7 @@ table lists every alias, so it carried every term of any translated query and
 was reliably the one document matching all of them: `find 電商` returned the word
 list rather than `taiwan-channels`. It is beside the pages now.
 
-`asgard-cli find` applies it to a query before searching, so the question can be
+It is applied to a query before searching, so the question can be
 asked in the customer's own words. Two tables, and they behave differently on
 purpose: an **alias** replaces the word, because a Chinese term appears nowhere
 in an English corpus and keeping it only adds a term that lands nowhere; an
@@ -166,7 +166,7 @@ may be written verbatim in a page and replacing it would throw away the best
 answer there is.
 
 Rows come from searches that came back empty. `find` records those in an
-engagement, `asgard-cli reading --misses` reads them back, and
+engagement, `asgard-cli issue-report --new` reads them back, and
 `issue-report --new` puts them in a report. A row nobody has needed is a guess.
 
 ### The link graph

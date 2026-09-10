@@ -40,7 +40,7 @@ So form your own view of where things stand, and reach for the guidance by
 subject:
 
 ```bash
-asgard-cli find "<what you are actually deciding>"
+grep -ril "<what you are actually deciding>" ../asgard-platform/
 ```
 
 That searches the platform wiki, the deployment shapes, the decision guidance and
@@ -63,7 +63,7 @@ Not a sequence to follow - a map of what answers what.
 | about to touch a chart, or hand it over | `../asgard-platform/brief/write-chart.md`, `../asgard-platform/brief/handover.md` |
 | anything, first | `asgard-cli question`, then `request`, `task` and `project` |
 | **the customer said something and you have to turn it into work** | `../asgard-platform/guide/requirements.md` - the interview, then `asgard-cli request add "<their words>"` |
-| **looking something up** | `asgard-cli find "<the customer's words>"` - searches both bodies of reference material and hands you the other half |
+| **looking something up** | `grep -ril "<term>" ../asgard-platform/` - and read `../asgard-platform/aliases.md` first if the question came in the customer's own words |
 | **about to write a CR** | `../asgard-platform/usecase/<shape>.md` - the skeleton and its traps |
 | what a thing on the platform even is | `../asgard-platform/wiki/<page>.md` - read this before the extract, which assumes it |
 | how to change this repo - layout, conventions, CRD traps | `AGENTS.md` |
@@ -137,5 +137,5 @@ the two mechanisms are separate, which is why the warning is at the top.
 That is one engagement's map of its own material, and its failure mode is
 silent: a reader sent to the wrong page reads a correct document and answers a
 different question. `asgard-cli reading` measures the half of that which is
-measurable, and `asgard-cli reading --misses` records the searches this material
-did not answer.
+measurable. When the material has no answer at all, that is worth
+`asgard-cli issue-report --new` rather than a workaround.

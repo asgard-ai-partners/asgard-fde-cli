@@ -107,27 +107,26 @@ Neither ships in the binary — both need repositories that are not vendored.
 
 ## Retrieval
 
-`find` is the way in. Four things it does that a grep does not:
+**There is no search command.** `asgard-cli init` writes the material into the
+repository and `grep` is the way in. Two things a grep does not do for itself,
+so the landed `SKILL.md` and `index.md` say them:
 
-**Translate the query.** The corpus is English and a customer conversation
-usually is not, so a term taken from what somebody said matches nothing — which
-reads identically to a subject the material lacks. `internal/corpus/aliases.md`
-holds two tables: words that *replace* a query term, and names that are *added*
-to it. `find` prints what it actually searched for.
+**`aliases.md` is applied before searching, not after failing.** The corpus is
+English and a customer conversation usually is not, so a term taken from what
+somebody said matches nothing — which reads identically to a subject the
+material lacks. It holds two tables: words that *replace* a query term, and
+names that are *added* to it. `internal/cli/translate.go` is the same tables in
+code, for `needs`, which takes a scenario in the customer's words.
 
-**Warn on a word with two senses here.** `payment` is billing between Asgard
-and the customer, and also the customer's own payment gateway. Both hits are
-correct and nothing contradicts anything, so the reader takes the wrong one.
-The senses come from the glossary's first table and fire on a *successful*
-search — the case no miss log can see.
+**`glossary.md`'s first table is the word with two senses here.** `payment` is
+billing between Asgard and the customer, and also the customer's own payment
+gateway. Both sets of results are correct and nothing contradicts anything, so
+the wrong one reads exactly like an answer — the failure a search cannot report,
+because it found something.
 
-**Name the counterpart** — the extract for a page, the page for an extract —
-from the link graph rather than from prose.
-
-**Record a query that landed nowhere**, to `docs/.find-misses`.
-`asgard-cli reading --misses` reads them back and `issue-report --new` turns
-one into a filed issue. **That file is never committed**: a query carries
-whatever words the customer used.
+When the material has no answer, `asgard-cli issue-report --new` writes the
+report with what the tool already knows filled in. That is the only way back
+in, and it is Goal's fourth point.
 
 No embeddings, no vector index. Synthesis happens once, into a document, rather
 than on every query — the [llm-wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)

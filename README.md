@@ -209,7 +209,7 @@ read by `project`, `question`, `request` and `task`, each from its own file.
 ```bash
 asgard-cli guide                   # all the guidance
 `.agents/skills/asgard-platform/guide/requirements.md`      # one piece of it, any time
-asgard-cli find "<terms>"          # reach any of it by subject
+grep "<terms>"          # reach any of it by subject
 ```
 
 ```
@@ -406,148 +406,34 @@ and `find` still answers with no repository at all.
 An extract assumes you already know the platform has that shape; a wiki page is
 where that assumption comes from. `asgard-cli add` prints one of each.
 
-**To look something up in the customer's own words, use [`find`](#find)**: it
-translates them first, searches all five parts and names the counterpart of
-whatever it hits. When you already have the term, grep the directory.
+**To look something up, grep the directory** - and read its `aliases.md` first
+if the question arrived in the customer's own words.
 
 The wiki's own conventions - its three layers, what a page must carry, and how it
 is kept from going stale as the platform moves - are in `wiki/README.md`.
 
-### `find`
+### Reading the material
 
-**The way in.** It searches every part of the material at once - the wiki,
-the extracts, the stage guidance and the design-time skills - because which of
-them holds an answer is usually not obvious before searching. It needs no
-repository.
+**There is no search command.** `asgard-cli init` writes every part into the
+repository and you read it with `cat` and `grep`:
 
 ```bash
-asgard-cli find schedule
-asgard-cli find anonymous visitor
-asgard-cli find 儀表板                    # translated before the search runs
-asgard-cli find schedule --format json   # each hit with the command that reads it
+grep -ril "allowlist" .agents/skills/asgard-platform/
+cat .agents/skills/asgard-platform/wiki/processors.md
 ```
 
-```
-PLATFORM - what the thing is
+**Read `aliases.md` first if the question did not arrive in English.** The
+material is English and a customer conversation usually is not, so a term
+taken from what somebody actually said matches nothing - and that reads
+exactly like a subject the material does not cover.
 
-  automation         Trigger and API
-                     Starts a conversation with an agent on a schedule.
-                     -> field level: `.agents/skills/asgard-platform/usecase/trigger.md`
+**Check `wiki/glossary.md` for the word you searched.** A result in the wrong
+sense reads exactly like an answer: `payment` is billing between Asgard and
+the customer, and also the customer's own payment gateway.
 
-SHAPES - how it is assembled
-
-  trigger            Trigger
-                     -> what it is:  `.agents/skills/asgard-platform/wiki/automation.md`
-
-Read the platform side first; an extract assumes you have.
-```
-
-It follows the link between the halves, so a hit in either hands over the other -
-in the order they should be read. Every term has to appear, so an extra word
-narrows rather than widens; when nothing carries them all the search widens and
-says which terms it could not place.
-
-**Ask in the language the question was asked in.** The material is English and a
-customer conversation is not, so the index is applied before the search runs and
-the rewrite is printed:
-
-```
-$ asgard-cli find 電商
-This material is in English. "電商" was read as:
-
-    commerce marketplace channel
-
-PLATFORM - what the thing is
-
-  taiwan-channels    The commerce channels a customer will name, and what we have
-```
-
-The index is `aliases.md`, and it is **not a page**. It sits
-beside the pages, with `index.md`, because an index inside a
-searched corpus competes with what it points at: the table lists every alias, so
-it reliably carried every term of a translated query and the reader got the word
-list rather than the page.
-
-It has three tables. An **alias** replaces the word - 電商 appears nowhere in an
-English corpus, so keeping it only adds a term that lands nowhere. An **entity**
-is *added* to the query, because the name may be written verbatim in a page and
-replacing it would throw away the best answer there is.
-
-The entities are split, and the split is the point:
-
-| table | means |
-|---|---|
-| names the material **covers** | somebody searched the deployments and recorded the answer. SHOPLINE, Shopee, momo, PChome, 蝦皮, Coupang |
-| names it only **routes** | nothing here names it. The row reaches the *shape* it belongs to, which is what the material has |
-
-**A row that routes reads exactly like a row that answers**, so `find` says
-which it was:
-
-```
-$ asgard-cli find 綠界
-**Nothing here names 綠界.** What follows is the shape it belongs to, which
-is what this material has - not material about the product. Nobody has
-searched the reference deployments for it, and until somebody does, the
-answer to "do we already integrate it" is not in this tool.
-
-  `.agents/skills/asgard-platform/wiki/taiwan-channels.md`   the four, and what each one costs
-  asgard-cli question add "which of the four shapes does 綠界 give us" \
-      --ask "<who at the customer>"
-```
-
-and then returns `usecase external-api`, `usecase write-path`, `browser-operation`
-and the unknown that blocks a payment gateway on a public site - `wiki
-platform-unknowns` P8, who presses approve on an anonymous channel. **Moving a
-row from the second table to the first means somebody did the search**, and
-nothing else.
-
-**A word this material has taken is flagged before the results, not after.** A
-search that finds nothing is recorded and the reader is told so; a search that
-finds the *wrong sense* of a word looks exactly like an answer, and nothing is
-red anywhere:
-
-```
-$ asgard-cli find payment
-These results use a word that means one thing here, and it may not be
-the one that was asked about:
-
-  payment      is     billing between Asgard and this customer - see
-                      `.agents/skills/asgard-platform/wiki/fehu.md`
-               is not **the customer's own payment gateway**, which is an
-                      external system with side effects:
-                      `.agents/skills/asgard-platform/usecase/
-                      write-path` ...
-```
-
-That table is `.agents/skills/asgard-platform/wiki/glossary.md`, and it is applied to a query rather
-than only read by a person. It existed as prose for a long time while the
-failure it describes went on happening.
-
-**A dead end asks a question instead of guessing.** When a query names a system
-this material has never had, the useful answer is not a phrasing hint - it is
-that the work is decided by which of four shapes the system presents, and that
-nobody here can answer it:
-
-```
-**That is a question for the customer, and not one this tool can answer.**
-
-  asgard-cli question add "which of the four shapes does <it> give us" \
-      --ask "<who at the customer>"
-```
-
-**A search that finds nothing is recorded**, in an engagement, to a file that is
-not committed - a query carries whatever words the customer used.
-
-```bash
-asgard-cli reading --misses      # what this engagement searched for and did not find
-asgard-cli issue-report --new    # the report, with that evidence already in it
-```
-
-That is the one part of a defect report nobody has to be believed about: the
-tool witnessed it. Each line is either a missing index row or a missing page,
-and the two need different fixes. A row is added when a search came back empty
-and the subject turned out to exist under another name; a row nobody has needed
-is a guess.
+**With no repository, run `asgard-cli init` in an empty directory.** It needs
+no account and touches no network, which is the point: the question gets
+asked in a meeting, before there is a directory.
 
 ### `brief`, `size`, `reading`, `issue-report`
 

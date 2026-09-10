@@ -1,15 +1,14 @@
 # Asgard platform wiki
 
-    asgard-cli find <terms>         look something up - searches here AND the
-                                    extracts, and names the counterpart it finds
-    ../wiki/                        every page, as files
-    ../wiki/<page>.md               read one
-    index.md                        them grouped by the question each answers
-    asgard-cli find --unverified    what each has NOT been held against
+    ../wiki/            every page, as files
+    ../wiki/<page>.md   read one
+    index.md            them grouped by the question each answers
+    ../aliases.md       what a customer said -> what to search for
 
-`find` is the way in when the question arrived in the customer's words - it
-translates them first. When you already have the term, `asgard-cli init` writes
-these pages into a repository as files, and grep is the way in there.
+**Read `../aliases.md` first if the question did not arrive in English**, then
+grep. The material is English and a customer conversation usually is not, so a
+term taken from what somebody actually said matches nothing - which reads
+exactly like a subject this wiki does not cover.
 
 What the Asgard platform is made of, and who each piece is for.
 
@@ -46,7 +45,7 @@ rules to the CRD; point at them instead.
 > knows under `.agents/skills/`, and `grep -r` answers "which document says
 > this" with no subprocess. What a copy cannot do is translate a query, so
 > `aliases.md` is written beside it - `APPROACH.md` in this repository has what
-> `asgard-cli find` still does that a grep does not.
+> a grep cannot: it translates the customer's words into the material's.
 >
 > **A copy is safe because staleness is visible.** `.asgard-scaffold.json`
 > records a digest and a CLI version per file, so a repository that is behind
@@ -181,7 +180,7 @@ Four more:
 
 - **One fact, one home; everywhere else links.** Turn a paragraph you were about
   to copy into a link.
-- **One word, one meaning.** `pages/glossary.md` lists the terms that already
+- **One word, one meaning.** `../wiki/glossary.md` lists the terms that already
   mean something specific here. Check it before introducing a word, and before
   using one of those for something else - a word with two senses in one body
   produces the failure nobody can see, because nothing contradicts anything and
@@ -198,9 +197,9 @@ Four more:
   a guess is not.
 - **English.** The sources are zh-TW and the pages are not. The corpus carries
   one language because **the mapping lives somewhere else** - the alias table on
-  `pages/glossary.md`, which `asgard-cli find` applies to a query before
+  `glossary.md`, which is applied to a query before
   searching, printing what it actually searched for. It is not because the
-  reader translates first: `asgard-cli find` asks to be given the customer's own
+  reader translates first: a query is given in the customer's own
   words, and translating only after a search came back empty was measurably
   worse - the glossary carries the table, so a Chinese term matched the row
   about itself and the reader got the word list instead of the answer. Product
@@ -222,15 +221,14 @@ reliably the one document carrying every term of a translated query: a search
 for a subject returned the word list rather than the page. It is beside the
 pages now, where `index.md` already was.
 
-`asgard-cli find` applies `aliases.md` to a query before searching and prints
-what it searched for. Rows come from searches that came back empty -
-`asgard-cli reading --misses` in an engagement is the list - and that file
-carries the rule.
+`aliases.md` is applied to a query before searching, and it carries the rule
+for adding a row: a search of yours came back empty and the subject turned out
+to exist under another name.
 
 **A row that routes is not a row that answers**, and the index says which it is.
 A name under "names the material covers" was searched for against the reference
 deployments and the answer written down; one under "names it only routes"
-reaches the shape the thing belongs to and nothing more. `find` prints the
+reaches the shape the thing belongs to and nothing more. The table prints the
 difference, because a set of results about a shape reads exactly like a set of
 results about the product that was asked for. **Moving a row up means somebody
 did the search.**

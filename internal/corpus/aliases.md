@@ -7,17 +7,17 @@ with what it points at: it lists every alias, so it was unusually likely to be
 the one document carrying every term of a translated query, and a search for 電商
 returned this table instead of `wiki/taiwan-channels.md`.
 
-`asgard-cli find` reads both tables below and applies them to a query before
-searching, printing what it actually searched for. Read it with
-this file.
+**Apply both tables below to a query before searching.** A term with a row here
+will not match the material as the customer said it.
 
 ## How a row gets here
 
 **Every row is a term somebody searched for.** Add one when a search of yours
 came back empty and the subject turned out to exist under another name; that is
-the only test, and **a row nobody has needed is a guess.** `asgard-cli find`
-records the queries that landed nowhere - `asgard-cli reading --misses` reads
-them back, and that list is where new rows come from.
+the only test, and **a row nobody has needed is a guess.** When a search of
+yours lands nowhere and the subject turns out to exist under another name,
+that is a row - and worth `asgard-cli issue-report --new` so every engagement
+gets it.
 
 Point a row at a page where one page answers it: the pointer is checked by
 `asgard-cli audit-material --links`, which a bare word would not be.
@@ -79,7 +79,7 @@ and that page is the best answer there is. Replacing the name would throw it awa
 
 ## Names it only routes
 
-**Nothing here names these, and `asgard-cli find` says so.** The row exists
+**Nothing here names these.** The row exists
 because somebody searched for it and the search was recorded; what it routes to
 is **the shape the thing belongs to**, which is what this material actually has.
 

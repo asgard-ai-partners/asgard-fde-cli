@@ -227,7 +227,7 @@ slug 會出現在 chart 渲染出來的物件名稱裡，所以要短：Kubernet
 ```bash
 asgard-cli guide                   # 全部的指引
 `.agents/skills/asgard-platform/guide/requirements.md`      # 其中一份，隨時
-asgard-cli find "<terms>"          # 依主題到達其中任何一份
+grep "<terms>"          # 依主題到達其中任何一份
 ```
 
 ```
@@ -335,46 +335,25 @@ grep -ril "allowlist" .agents/skills/asgard-platform/
 | `wiki` | 平台是什麼、每一塊是給誰的、以及 UI 的名字從哪裡開始對不上 chart 宣告的資源 | 產品文件 [asgard-docs](https://github.com/asgard-ai-platform/asgard-docs)，對著 CRD 校過 |
 | `usecase` | 一種部署形狀怎麼一個欄位一個欄位組起來，以及填錯一個值的代價 | 已經在 production 跑的部署 |
 
-**要查東西請用 [`find`](#find)**，它同時搜兩邊並指出命中那一邊的對應另一半。
+**要查東西就 grep 那個目錄** —— 如果問題是用客戶的話問的,先讀它的 `aliases.md`。
 
-### `find`
+### 讀材料
 
-**這是入口。** 它一次搜四份語料 —— wiki、擷取檔、階段指引、設計期 skill —— 因為答案在哪一份，通常在搜之前並不明顯。它**不需要 repo**。
-
-```bash
-asgard-cli find schedule
-asgard-cli find anonymous visitor
-asgard-cli find 儀表板                    # 搜尋前先翻譯
-asgard-cli find schedule --format json
-```
-
-**用問題被問出來的那個語言去問。** 語料是英文的，而跟客戶的對話不是，所以索引會在搜尋前套用，而且會把改寫印出來：
-
-```
-$ asgard-cli find 電商
-This material is in English. "電商" was read as:
-
-    commerce marketplace channel
-```
-
-索引是 `aliases.md`，而且它**不是一頁**。它跟頁面並排放，因為一份放在被搜語料裡的索引會跟它指向的東西競爭：那張表列出所有別名，於是它可靠地命中翻譯後查詢的每一個詞，讀者拿到的是字表而不是頁面。
-
-**一列「只是路由」的紀錄讀起來跟一列「有答案」的紀錄一模一樣**，所以 `find` 會講出來是哪一種：
-
-```
-$ asgard-cli find 綠界
-**Nothing here names 綠界.** What follows is the shape it belongs to, which
-is what this material has - not material about the product.
-```
-
-**一個詞在這份語料裡被佔用過，會在結果之前先被標出來，不是之後。** 一次什麼都沒找到的搜尋會被記錄下來並告知讀者；而一次找到**錯誤語意**的搜尋，看起來跟一個答案一模一樣，畫面上沒有任何一處是紅的。那張表是 `.agents/skills/asgard-platform/wiki/glossary.md`，而且它是被套用在查詢上、不只是給人讀的。
-
-**走進死路時它問一個問題，而不是猜。** 一次什麼都沒找到的搜尋會被記錄在 engagement 裡、寫進一個不進版控的檔 —— 一次查詢帶著的是客戶用的字。
+**沒有搜尋指令。** `asgard-cli init` 會把每一份材料寫進 repo,用 `cat` 和 `grep` 讀:
 
 ```bash
-asgard-cli reading --misses      # 這個 engagement 搜過但沒找到的
-asgard-cli issue-report --new    # 缺陷回報，證據已經在裡面了
+grep -ril "allowlist" .agents/skills/asgard-platform/
+cat .agents/skills/asgard-platform/wiki/processors.md
 ```
+
+**問題不是英文的話,先讀 `aliases.md`。** 材料是英文的而客戶對話通常不是,
+所以照客戶的用詞去搜會什麼都搜不到 —— 而那讀起來跟「這份材料沒有這個主題」一模一樣。
+
+**搜到之後查一下 `wiki/glossary.md` 有沒有那個詞。** 拿到另一個意思的結果
+讀起來跟答案一模一樣:`payment` 是 Asgard 對客戶的計費,也是客戶自己的金流閘道。
+
+**沒有 repo 的時候,在空目錄跑 `asgard-cli init` 就夠了** —— 不用帳號、不碰網路。
+這就是重點:問題是在會議裡問的,那時還沒有目錄。
 
 ### `brief`、`size`、`reading`、`issue-report`
 

@@ -371,7 +371,7 @@ func helpText(cmd *cobra.Command) []source {
 }
 
 func newAuditCmd() *cobra.Command {
-	var onlyAsk, onlyUnmarked, cross, links, commands, orphans, bareNames, urls bool
+	var onlyAsk, onlyUnmarked, cross, links, commands, orphans, bareNames, urls, unverified bool
 	var term string
 
 	cmd := &cobra.Command{
@@ -400,6 +400,8 @@ a customer deck.
     asgard-cli audit-material --commands   resolve every command this material
                                            names, and exit 1 on one that does
                                            not exist
+    asgard-cli audit-material --unverified what says nothing about having been
+                                           checked, across every body
     asgard-cli audit-material --orphans    documents nothing points at. The
                                            index does not count as a pointer
     asgard-cli audit-material --bare       documents named without the command
@@ -501,6 +503,9 @@ maintainer can see.`,
 			if bareNames {
 				return checkBare(out, append(sources, bookkeeping()...))
 			}
+			if unverified {
+				return checkUnverified(out)
+			}
 			if orphans {
 				// Help counts as a pointer and the index does not. A command's
 				// help is read at the moment somebody is deciding what to run;
@@ -556,6 +561,7 @@ maintainer can see.`,
 	f.BoolVar(&commands, "commands", false, "resolve every `asgard-cli <command>` this material names, against the command tree; exits 1 on one that does not exist")
 	f.BoolVar(&bareNames, "bare", false, "documents named without the command that opens them, which nothing else can see; exits 1 on one")
 	f.BoolVar(&orphans, "orphans", false, "documents nothing else points at; the index does not count as a pointer")
+	f.BoolVar(&unverified, "unverified", false, "documents carrying no record of having been held against anything")
 	f.StringVar(&term, "term", "", "every line mentioning this word, templates included - for a rename")
 	f.BoolVar(&urls, "urls", false, "fetch every docs.asgard-ai.com link in the material; exits 1 on a 404. Needs the network")
 	return cmd
@@ -1059,5 +1065,49 @@ func checkURLs(ctx context.Context, out io.Writer, sources []source) error {
 		fmt.Fprintf(out, "\nA 404 here is usually one of two things: a directory URL with no landing\npage, or a page marked `draft: true`, which asgard-docs does not publish. For\na draft, keep the citation and say the link 404s - the file is readable in a\ncheckout, and the content behind it is still where the material came from.\n")
 		return fmt.Errorf("%d documentation link(s) are dead", dead)
 	}
+	return nil
+}
+
+// checkUnverified lists what says nothing about having been checked.
+//
+// A document carrying neither a Checked nor an Unchecked line is UNKNOWN, not
+// fine - see kb.Doc.Verified. **Do not close it by writing the lines.** An
+// `Unchecked:` line written to satisfy a listing converts UNKNOWN into a
+// claim, which is worse than the silence it replaces.
+func checkUnverified(out io.Writer) error {
+	fmt.Fprintf(out, "What carries no record of having been held against anything.\n\n"+
+		"Neither line present means UNKNOWN - not that the document is wrong, and\nnot that it is right.\n\n")
+
+	bodies := []struct {
+		label string
+		list  func() ([]kb.Doc, error)
+	}{
+		{"wiki", wiki.List},
+		{"usecase", usecase.List},
+		{"needs", needs.List},
+		{"brief", brief.List},
+		{"guide", stage.Docs},
+		{"skills", scaffold.List},
+	}
+	var total, bare int
+	for _, b := range bodies {
+		docs, err := b.list()
+		if err != nil {
+			return err
+		}
+		var unverified []string
+		for _, d := range docs {
+			if !d.Verified() {
+				unverified = append(unverified, d.Name)
+			}
+		}
+		total += len(docs)
+		bare += len(unverified)
+		fmt.Fprintf(out, "%-9s %d of %d\n", b.label, len(unverified), len(docs))
+		for _, n := range unverified {
+			fmt.Fprintf(out, "    %s\n", n)
+		}
+	}
+	fmt.Fprintf(out, "\n%d of %d document(s) say nothing either way.\n", bare, total)
 	return nil
 }

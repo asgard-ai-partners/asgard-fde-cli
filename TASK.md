@@ -38,7 +38,7 @@ version and this is the same list with what each one costs:
      correct starting point and not a chart.
 
   4. **When the knowledge is not here, say where to file it.** A search that
-     came back empty is recorded, `asgard-cli reading --misses` reads it back,
+     came back empty is recorded, `asgard-cli issue-report --new` reads it back,
      and `asgard-cli issue-report --new` writes the report with that evidence
      already in it. The corpus is compiled into the binary, so an engagement
      cannot write what it learns where it will be read - the issue is the only
@@ -211,29 +211,16 @@ nothing else - it stays out of the repository, and the scaffold's `.gitignore`
 says so. It only has to live long enough for the issue to be filed; what reaches
 the next engagement is the fix in the next release.
 
-## What is left of the landing
+## `--commands` does not read this CLI's own Go strings
 
-`asgard-cli init` writes every part of the material into a customer repository
-under `.agents/skills/asgard-platform/`, and `find` searches all of it. Two
-things remain.
+It reads the material and the scaffold templates, so a string this binary
+prints can name a command it does not have and the audit passes. Fourteen did,
+after the reader commands were deleted. What found them was the repo-side
+check, which only sees what has already been written into a customer
+repository - later, and more expensive.
 
-**Delete `find`.** The target is that static knowledge is read from files and
-nothing reads it for you. Three of the four things `find` does have equivalents
-once the material is on disk - the counterpart is a path in the document, and
-translation and dead-query recording become instructions in `SKILL.md`. The
-fourth does not: the sense warning fires on a *successful* search, which is the
-failure nothing else can see, and a landed glossary only helps a reader who
-opens it.
-
-That is testable rather than arguable. Land the instruction, leave it a
-release, and see whether the `payment` mistake recurs - Fehu's billing returned
-to somebody asking about a customer's payment gateway.
-
-**`--commands` does not read this CLI's own Go strings.** It reads the material
-and the scaffold templates, so a printed string naming a command this build
-does not have passes. Fourteen did. The check that found them was the
-repo-side one, which only sees what has been written into a repository - later,
-and more expensive.
+Closing it means the audit reading `internal/cli/*.go`, which needs the
+package's own source embedded so the binary can check itself.
 
 ## Non-goals
 
@@ -304,7 +291,7 @@ could be done from one has been, and git log is the record.
 **A console login and an afternoon.** `console`, `sindri`, `mimir`, `fehu` and
 `settings` describe a UI, so their source is product documentation rather than a
 chart, and they are checked less deeply than the extracts by nature. Each says
-how far it got on its own `**Unchecked:**` line and `asgard-cli find --unverified`
+how far it got on its own `**Unchecked:**` line and `asgard-cli audit-material --unverified`
 lists them. Two mechanical passes found nothing and a third was written and
 thrown away for calling correct material wrong. One person with access could
 settle all five.

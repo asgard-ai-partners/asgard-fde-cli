@@ -30,14 +30,15 @@ as many times as it is useful.
 
     asgard-cli guide                 all of it
     asgard-cli guide read-path       one
-    asgard-cli find <terms>          reach any of it by subject, alongside the
+    grep -ril "<term>" .agents/skills/asgard-platform/
+                                     reach any of it by subject, alongside the
                                      wiki, the extracts and the skills
 
 Nothing raises one of these for you. There was a command that did - it read the
 repository, matched its shape against a fixed set of conditions and named the
 guidance each raised - and it was the walk with the numbers taken off: the
 conditions were the old rungs, in the old order. What replaced it is this list,
-and ` + "`asgard-cli find`" + `.
+and by grepping the material.
 
 Guidance that names actual projects and requests is rendered against the
 repository when there is one. Read outside a repository it still reads, with

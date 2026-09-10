@@ -214,26 +214,25 @@ English and a customer conversation usually is not, so a term taken from what
 somebody actually said matches nothing - and grep reports that identically to a
 subject the material genuinely lacks.
 
-## What grep does not do
+## Two things grep will not do for you
 
-` + "`asgard-cli find <terms>`" + ` searches the same material. Shell out to it when any of
-these matters:
+**Read ` + "`aliases.md`" + ` before searching a question that arrived in another
+language.** The material is English; a term taken from what somebody actually
+said matches nothing, and that reads exactly like a subject the material does
+not cover. The file has two tables - words that replace a term, and names that
+are added to it.
 
-- **It translates the query** using ` + "`aliases.md`" + ` and prints what it searched for.
-  This is the one that decides whether a customer's word lands at all.
-- **It warns about a word with two senses here.** ` + "`payment`" + ` matches both the
-  billing between Asgard and this customer and the customer's own payment
-  gateway. Both hits are correct and nothing contradicts anything, so a reader
-  who cannot tell them apart takes the wrong one - a failure grep cannot
-  surface, because it looks like a successful search.
-- **It names the counterpart** of what it found: the extract for a page, the page
-  for an extract. That is parsed from the documents, not written in them.
-- **It records a query that landed nowhere**, and ` + "`asgard-cli reading --misses`" + `
-  reads those back. A grep that finds nothing is silent, so the gap reaches
-  nobody who could fill it.
+**Check ` + "`wiki/glossary.md`" + ` for the word you searched.** A handful of words mean
+one thing here and something else to a customer. ` + "`payment`" + ` is billing between
+Asgard and the customer, and also the customer's own payment gateway: both sets
+of results are correct, nothing contradicts anything, and the wrong one reads
+exactly like an answer. **This is the failure a search cannot report**, because
+it found something.
 
-You know the term, you want every mention, you want to read a whole page: grep
-is the better tool and needs no subprocess.
+**When the material has no answer, that is worth filing rather than working
+around:**
+
+    asgard-cli issue-report --new
 
 ## Staleness
 

@@ -147,7 +147,7 @@ reads one file back, and each takes `--format json`:
 **No command says where this engagement is, and none will.** There is no step
 you are on - one that already has every requirement is at no step at all. What
 the work is made of, below, is a map and not an order. `asgard-cli guide <name>`
-reads one piece of guidance at any time, and `asgard-cli find` reaches them by
+reads one piece of guidance at any time, and grep reaches them by
 subject.
 
 | name | the work | produces |
@@ -181,7 +181,7 @@ answer that looks obvious and is wrong.
 | `asgard-cli request`, `asgard-cli task` | what the customer asked for, and the task specs open against it |
 | `asgard-cli project` | what each chart declares, and what it still lacks. It reports no step, because there is none |
 | `asgard-cli guide <name>` | the guidance for one decision; `asgard-cli guide` lists it |
-| `asgard-cli find <terms>` | **start here for a question.** Searches the wiki, the shapes, the guidance and the skills together; ask in Chinese if that is the language it was asked in |
+| `grep -ril "<term>" .agents/skills/asgard-platform/` | **start here for a question.** The wiki, the shapes, what to get from the customer, the briefs and the guidance are all files there. Read its `aliases.md` first if the question was asked in another language |
 | `.agents/skills/asgard-platform/usecase/` | **before authoring any CR.** How each shape is built, taken from deployments already in production: when to use it, the skeleton, the fields that are not obvious, and what the mistake cost someone. The same documents are in `.agents/skills/asgard-platform/usecase/`, so grep finds a shape from what the customer asked for |
 | `asgard-cli check` | one step of `gate`, when that is the step you are fixing |
 | `asgard-cli local-env` | **somebody has to give you a credential.** Opens a form on 127.0.0.1 for them to type it into, and reports back which keys were filled - never the values. Re-read `.env` after it, since they can add keys |

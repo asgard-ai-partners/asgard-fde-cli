@@ -256,10 +256,11 @@ func printNeeds(out io.Writer, found []needs.Shape) {
 // shapes are few enough to read.
 func noShapeMatched(out io.Writer, query string) error {
 	fmt.Fprintf(out, "No shape here matched %q.\n\n"+
-		"That is usually the subject being named differently rather than absent -\n"+
-		"`asgard-cli find %s` searches every part of the material and translates\n"+
-		"from the customer's words first. The shapes that carry a dependency list:\n\n",
-		query, query)
+		"That is usually the subject being named differently rather than absent.\n"+
+		"Grep the material at `.agents/skills/asgard-platform/`, reading its\n"+
+		"`aliases.md` first - it translates the customer's words into the ones\n"+
+		"this material uses. The shapes that carry a dependency list:\n\n",
+		query)
 
 	names := needs.Names()
 	sort.Strings(names)

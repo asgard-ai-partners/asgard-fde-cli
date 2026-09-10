@@ -50,7 +50,7 @@ already lives:
 
     aliases.md
 
-`asgard-cli find` applies it to a query before searching, so a question asked in
+Apply it to a query before searching, so a question asked in
 the customer's own words reaches material written in English. **Add a row when a
 search of yours came back empty and the subject turned out to exist under
 another name** - that is the only test, and the rules are on that page.

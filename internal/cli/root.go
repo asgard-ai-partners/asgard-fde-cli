@@ -37,23 +37,37 @@ to a customer changes no file, so nothing derived from what the repo contains ca
 prepare anybody for it - and every entry in "brief" is there because somebody
 has actually got it wrong, not because it is important.
 
-It does two things after that, and they are reached differently.
-
 ASKING - what the platform has, which CR a UI name maps to, how one shape is
-assembled field by field, and where each has been got wrong before:
+assembled field by field, and where each has been got wrong before. **That is
+not a command: it is files.** "asgard-cli init" writes all of it into the
+repository, and you read it with cat and grep:
 
-    asgard-cli find <terms>
-
-That searches every part of the material at once - the platform wiki, the
-deployment extracts, the guidance for each decision, and the skills the agent in
-a customer repo loads - and hands over the counterpart of whatever it finds. Ask
-in Chinese if that is the language the question was asked in; the glossary
-carries the translation. **This works with no repository**, which is the point:
-the question gets asked in a meeting, before there is a directory.
-
-and both halves of what it found are files in the repository, under
     .agents/skills/asgard-platform/
-    asgard-cli guide <name>    one decision, and how it has been got wrong
+      index.md    the map, and what is deliberately not there
+      aliases.md  what a customer said -> what to search for
+      wiki/       what the platform has
+      usecase/    how one deployment shape is assembled, field by field
+      needs/      what to get from the customer before it can be built
+      brief/      what this activity gets wrong
+      guide/      which decision to make now
+
+    grep -ril "<term>" .agents/skills/asgard-platform/
+
+**Read aliases.md first if the question did not arrive in English.** The
+material is English and a customer conversation usually is not, so a term
+taken from what somebody actually said matches nothing - and that reads
+exactly like a subject the material does not cover.
+
+**With no repository, "asgard-cli init" in an empty directory is enough.** It
+needs no account and touches no network. The question gets asked in a meeting,
+before there is a directory, so that is the first thing to run:
+
+    mkdir -p /tmp/asgard && cd /tmp/asgard && asgard-cli init
+
+Two of those stay commands as well, because they read the repository you are
+in as well as the material:
+
+    asgard-cli guide <name>    one decision, against what this repo has
     asgard-cli brief <what>    the thing you are about to do
 
 BUILDING - a chart of Asgard custom resources per project, each deployed to its
@@ -170,7 +184,6 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 	)
 
 	addTo(cmd, groupAsk,
-		newFindCmd(),
 		newBriefCmd(),
 		newNeedsCmd(),
 		newGuideCmd(),
@@ -268,7 +281,7 @@ var replacements = map[string]string{
 		"`next --stage <name>` is `asgard-cli guide <name>`, and `next --list` is `asgard-cli guide` with no argument",
 	"status": "Where it meant \"what is still open\", `asgard-cli question`, `asgard-cli request` and `asgard-cli task`; " +
 		"where it meant \"what does each chart declare and still lack\", `asgard-cli project`. It also named the guidance the " +
-		"repository's shape made relevant, and nothing replaces that: read one with `asgard-cli guide <name>` or reach it by subject with `asgard-cli find`",
+		"repository's shape made relevant, and nothing replaces that: read one with `asgard-cli guide <name>` or grep the material in `.agents/skills/asgard-platform/`",
 }
 
 // commandNames returns every name and alias in the tree, one level deep.
