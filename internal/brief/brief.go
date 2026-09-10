@@ -343,3 +343,53 @@ func wrap(s string, width int, indent string) string {
 	}
 	return b.String()
 }
+
+// ── Landing ───────────────────────────────────────────────────────────────
+//
+// `asgard-cli init` writes these into a customer repository as `brief/`, one
+// file per activity.
+//
+// **A brief is read by name before an activity rather than found by a word**,
+// so landing it wins less than landing `needs` does - and it is worth being
+// honest about which of the two the grep argument actually carries. What earns
+// it a place is that two of the four are read from inside the repository:
+// `write-chart` before touching a CR, `handover` before telling anyone it is
+// live. And a sentence like "what must never appear on a customer's screen" is
+// one somebody greps for without knowing a brief exists.
+
+// Document renders one activity as the markdown that lands at
+// `brief/<name>.md`.
+func (a Activity) Document() string {
+	var b strings.Builder
+	fmt.Fprintf(&b, "# Before %s\n\n%s\n\n%s\n", a.Name, a.When, a.Lead)
+	for _, it := range a.Items {
+		fmt.Fprintf(&b, "\n## %s\n\n**Said:** %s\n\n**True:** %s\n\nRead %s.\n",
+			it.Subject, it.Wrong, it.Right, pointer(it.Where))
+	}
+	fmt.Fprintf(&b, "\n%s\n", a.Close)
+	return b.String()
+}
+
+// pointer rewrites a Where into the form a reader of the landed copy can act
+// on: a path for the two halves that are written into a repository, and the
+// invocation unchanged for everything else - a guide, a brief, or a command
+// like `asgard-cli workspace list`, which is not a document pointer at all.
+func pointer(where string) string {
+	for _, kind := range []string{"wiki", "usecase", "needs"} {
+		prefix := "asgard-cli " + kind + " "
+		if name, ok := strings.CutPrefix(where, prefix); ok {
+			return "`../" + kind + "/" + name + ".md`"
+		}
+	}
+	return "`" + where + "`"
+}
+
+// Documents renders every activity, for the export and for the audit that
+// resolves the pointers in them.
+func Documents() []struct{ Name, Body string } {
+	out := make([]struct{ Name, Body string }, 0, len(Activities))
+	for _, a := range Activities {
+		out = append(out, struct{ Name, Body string }{a.Name, a.Document()})
+	}
+	return out
+}

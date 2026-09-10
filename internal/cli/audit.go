@@ -221,6 +221,12 @@ func material() ([]source, error) {
 		links, _ := kb.Links(d.Body)
 		out = append(out, source{label: "needs", name: d.Name, body: d.Body, links: links})
 	}
+	// Same for the briefs, and the same gap: a `Where` naming a page that does
+	// not exist passed with 0 dead until they became documents.
+	for _, d := range brief.Documents() {
+		links, _ := kb.Links(d.Body)
+		out = append(out, source{label: "brief", name: d.Name, body: d.Body, links: links})
+	}
 	skills, err := scaffold.Skills()
 	if err != nil {
 		return nil, err
@@ -724,7 +730,10 @@ func checkLinks(out io.Writer, sources []source) error {
 	// here and went nowhere in the repository the material had been written
 	// into. Nothing saw it: `--links` resolves against the corpus, where log
 	// exists.
-	lands := map[string]map[string]bool{"wiki": {}, "usecase": {}, "needs": {}}
+	lands := map[string]map[string]bool{"wiki": {}, "usecase": {}, "needs": {}, "brief": {}}
+	for _, n := range brief.Names() {
+		lands["brief"][n] = true
+	}
 	for _, n := range needs.Names() {
 		lands["needs"][n] = true
 	}

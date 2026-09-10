@@ -428,7 +428,10 @@ if it stops there:
      them documents also fixed a claim the package had been making and not
      keeping: its comment said `--links` resolved every `From`, and `needs` was
      in no source at all, so a `From` naming an extract that does not exist
-     passed with 0 dead. `brief` and `guide` are what remain.
+     passed with 0 dead. **`brief` is done too** - four documents under `brief/`, with the same gap
+     found and closed: a `Where` naming a page that does not exist passed with
+     0 dead before they were documents. `guide` is what remains, and it is the
+     one that needs the static/live split rather than a serialiser.
   5. Delete `wiki` and `usecase`. `--commands` confirms nothing still names
      them.
   6. Delete `find`, after the sense instruction has been given a release to be

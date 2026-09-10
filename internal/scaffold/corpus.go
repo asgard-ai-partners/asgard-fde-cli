@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/brief"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/kb"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/needs"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/usecase"
@@ -95,6 +96,11 @@ func corpusJobs() ([]job, error) {
 		add(filepath.Join("needs", d.Name+".md"), d.Body)
 	}
 
+	// Four activities, beside the rest for the same reason.
+	for _, d := range brief.Documents() {
+		add(filepath.Join("brief", d.Name+".md"), d.Body)
+	}
+
 	// The root index is generated from what actually landed, so it cannot
 	// disagree with the tree beside it. It is deliberately not a second copy
 	// of what `wiki/index.md` and `usecase/README.md` do - those group their
@@ -126,6 +132,7 @@ func corpusIndex(jobs []job) (string, error) {
 		{"wiki", "what the platform has, and which CR a UI name maps to", "wiki/index.md"},
 		{"usecase", "how one deployment shape is assembled, field by field", "usecase/README.md"},
 		{"needs", "what to get from the customer before a shape can be built", ""},
+		{"brief", "what has actually been got wrong, before you do the thing", ""},
 	} {
 		fmt.Fprintf(&b, "\n## `%s/` - %s\n\n", half.dir, half.what)
 		if half.guide != "" {
