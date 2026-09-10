@@ -46,7 +46,7 @@ rewritten into, so it was reliably the one document matching a whole query, and
 a reader asking about a subject was handed the word list instead of the page.
 
 It is now beside the pages rather than among them, which is where `index.md`
-and `log.md` already live:
+already lives:
 
     aliases.md
 

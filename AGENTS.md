@@ -100,11 +100,10 @@ whether the target is written into a repository:
     asgard-cli guide <name>      not written into a repository yet, so a
     asgard-cli brief <activity>  path to it would resolve nowhere
 
-`.agents/skills/asgard-platform/wiki/log.md` is the exception on the path side: it is the one page
-`init` does not write, so its pointer stays an invocation. **`--links` enforces
-that** - a path whose target does not land is reported dead - and it had to,
-because a path resolves here, where the corpus is whole, and goes nowhere in the
-repository the material was written into.
+**Every document is written into a repository, so every pointer in the
+material is a path.** `--links` refuses an invocation there. A help screen
+is not material - `brief` and `guide` are commands, and naming one is
+telling somebody to run it.
 
 A pointer written any other way is invisible to the gate, and a bare page name
 is not a pointer at all: a reader cannot act on `write-path` without knowing
@@ -156,7 +155,7 @@ their own names (Managed Agent, Drive, Context Index are what the UI says).
 section of `pages/glossary.md` until it was measured: because it lists every
 alias, it was reliably the one document carrying every term of a translated
 query, so a search for a subject returned the word list rather than the page.
-It sits beside `pages/` now, with `index.md` and `log.md`. Anything that
+It sits beside the pages now, with `index.md`. Anything that
 catalogues the corpus goes there, and `audit-material --links` still reads it -
 `--orphans` deliberately does not, because a list that names every page makes
 every page look reached.

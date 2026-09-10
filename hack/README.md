@@ -66,7 +66,7 @@ up and they need opposite responses:
     a rule that is wrong             fix the rule - R1b was this
     a chart that is wrong            tell whoever owns it
     a rule right for one shape,      the expensive kind. See R1b, and the
-    applied to another               `exits` mistake in `asgard-cli wiki log`
+    applied to another               a rule right for one shape, wrong for the next
 
 And `--rendered` loses the owning repository's configuration - `olapOnlyLayers`
 and any sampleQuestions exemption are in its `.asgard-config.json` and its

@@ -1,7 +1,7 @@
 # The index: what a customer says, and what to search for
 
 **This is an index, not a page about the platform.** It lives beside `pages/`
-rather than in it, next to `index.md` and `log.md`, for the same reason those do
+rather than in it, next to `index.md`, for the same reason that does
 - it is the wiki's own bookkeeping. Keeping it inside the corpus made it compete
 with what it points at: it lists every alias, so it was unusually likely to be
 the one document carrying every term of a translated query, and a search for 電商

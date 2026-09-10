@@ -463,7 +463,7 @@ PLATFORM - what the thing is
 ```
 
 The index is `aliases.md`, and it is **not a page**. It sits
-beside the pages, with `index.md` and `log.md`, because an index inside a
+beside the pages, with `index.md`, because an index inside a
 searched corpus competes with what it points at: the table lists every alias, so
 it reliably carried every term of a translated query and the reader got the word
 list rather than the page.

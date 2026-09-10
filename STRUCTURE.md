@@ -35,23 +35,23 @@ keeps; below it are the checks, the material servers and the plumbing.
 
 | package | go | what it holds |
 |---|---|---|
-| `cli` | 12467 | the cobra command tree, one file per subcommand, plus `root.go`, `repo.go`, `format.go` and `find.go` (which spans every corpus rather than serving one) |
+| `cli` | 12513 | the cobra command tree, one file per subcommand, plus `root.go`, `repo.go`, `format.go` and `find.go` (which spans every corpus rather than serving one) |
 | `gate` | 1976 | the invariant checks on a rendered chart - xref, agent split, deployability, enums, constraints, conditional CEL shapes |
 | `work` | 1678 | the customer repo's own records: requests, task specs, open questions, decisions, and the two reading logs |
 | `platform` | 1218 | the platform API client: workspaces, the whole `/v1/iac` surface, and `/v1/docs` |
 | `check` | 1179 | repository structure: indexes, dated names, links, orphan pages |
 | `auth` | 1118 | the OAuth 2.0 + PKCE sign-in and the credential store, which is the only file this CLI keeps outside a repository |
 | `generate` | 714 | CR skeletons for ten kinds, wired to what the chart already declares |
-| `kb` | 798 | one implementation of listing, reading, scoring, provenance and the link graph, shared by every corpus |
+| `kb` | 799 | one implementation of listing, reading, scoring, provenance and the link graph, shared by every corpus |
 | `scaffold` | 1603 | writes the non-customer-specific tree, serves the design-time skills inside it, exports the wiki and the extracts as files under `.agents/skills/asgard-platform/`, and keeps `.asgard-scaffold.json` - the record of which CLI wrote the files this binary ships |
 | `stage` | 565 | the onboarding prompts, rendered against the repository's state |
 | `size` | 380 | the deployment shapes, counted off production, and what one costs before anything is added |
 | `tool` | 329 | resolves helm/kubectl/python3 and says how to install one |
-| `brief` | 395 | what one activity gets wrong, addressed by intent rather than by position |
+| `brief` | 423 | what one activity gets wrong, addressed by intent rather than by position |
 | `skills` | 268 | the platform's fetched reference material, and the record of which version is here |
 | `binding` | 224 | reads and writes `.asgard-cli.yaml`, the checkout's platform binding |
 | `corpus` | 39 | the material itself, in the layout a repository receives it: `wiki/` and `usecase/` side by side, so a pointer can become a path that resolves in both trees |
-| `wiki` | 242 | serves the platform wiki, and the two index tables beside it |
+| `wiki` | 219 | serves the platform wiki, and the two index tables beside it |
 | `render` | 206 | renders via `helm template`, with the reserved `asgard` block supplied as placeholders |
 | `repo` | 147 | what a customer repository is made of, by looking at it |
 | `pipelineconfig` | 147 | reads `.asgard-pipeline.yaml`, the deployment declaration |
@@ -59,7 +59,7 @@ keeps; below it are the checks, the material servers and the plumbing.
 | `chart` | 117 | reads a project's **unrendered** templates for (kind, name) |
 | `version` | 73 | build information, injected by GoReleaser via ldflags |
 | `usecase` | 46 | serves the deployment-shape extracts |
-| `needs` | 188 | what a shape has to be given by the customer, as seven documents written into a repository beside the extracts |
+| `needs` | 212 | what a shape has to be given by the customer, as seven documents written into a repository beside the extracts |
 | `browser` | 39 | opens a URL, or says it could not |
 
 **Two packages this table used to list are gone.** `config` held
@@ -102,7 +102,7 @@ is what `add` writes, not something anybody reads to decide.
 
 | where | files | answers | language | searched |
 |---|---|---|---|---|
-| `corpus/wiki/` | 28 | what the platform is, and who each piece is for | English | yes |
+| `corpus/wiki/` | 27 | what the platform is, and who each piece is for | English | yes |
 | `corpus/usecase/` | 22 | how one shape of deployment is assembled, field by field | English | yes |
 | `stage/prompts/` | 12 | what to weigh at one point in the work | English | yes |
 | `scaffold/templates/.agents/skills/` | 7 | what the agent in a customer repo loads to do one kind of work | mixed | yes |
@@ -148,7 +148,7 @@ than placeholders.
 
 ### The index, and why it is not a page
 
-`corpus/wiki/index.md`, `corpus/wiki/log.md` and `corpus/aliases.md` are the corpus's own
+`corpus/wiki/index.md` and `corpus/aliases.md` are the corpus's own
 bookkeeping. The first two were always unlisted; the third used to be a section
 of `corpus/wiki/glossary.md` and was moved for a measured reason.
 
@@ -188,7 +188,7 @@ Both are reference material and they answer different questions. The reading ord
 is wiki first: an extract assumes you already know the platform has that shape.
 
 `corpus/wiki/README.md` is the schema - the three layers, what a page must carry, and
-how it is kept from going stale. `corpus/wiki/index.md` and `log.md` are its
+how it is kept from going stale. `corpus/wiki/index.md` is its
 bookkeeping rather than pages about the platform, so they are readable by name
 but not listed.
 

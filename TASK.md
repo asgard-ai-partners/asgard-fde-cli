@@ -93,13 +93,14 @@ engagement can earn.
 is reached by subject through `find` or by name through `guide`; the records are
 read by `project`, `question`, `request` and `task`, one file each.
 
-## The design of record: one corpus, four parts
+## The design of record: one corpus
 
-The target shape is the [llm-wiki
-pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f).
-`internal/wiki/` already implements it, deliberately and with the pattern named
-in its own `README.md`. **The work is to bring the other three bodies of
-material under the same schema, not to invent one.**
+The shape is the [llm-wiki
+pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f),
+and every body of material is under the same schema. How that is implemented
+is [APPROACH.md](APPROACH.md); the rules a document has to follow are
+[AGENTS.md](AGENTS.md). What is below is what the pattern buys and what it does
+not.
 
 ### Three layers
 
@@ -107,7 +108,7 @@ What separates them is which one may be rewritten.
 
 | layer | contents | may be edited |
 |---|---|---|
-| raw sources | asgard-docs, asgard-kube, the eight reference deployments | read-only, never vendored in; only the commit is recorded |
+| raw sources | asgard-docs, asgard-kube, asgard-core, the reference deployments | read-only, never vendored in; only the commit is recorded |
 | the corpus | `corpus/wiki/`, `corpus/usecase/`, `stage/prompts/`, the scaffolded skills | rewritten continuously, and only ever describes the present |
 | the schema | `AGENTS.md`, and each corpus's own `README.md` | changed deliberately, by a person |
 
@@ -210,301 +211,29 @@ nothing else - it stays out of the repository, and the scaffold's `.gitignore`
 says so. It only has to live long enough for the issue to be filed; what reaches
 the next engagement is the fix in the next release.
 
-## Landing the rest of the material
+## What is left of the landing
 
-**The test is grep, and it is the only test.** `asgard-cli init` writes the wiki
-and the extracts into `.agents/skills/asgard-platform/` so that an agent in a
-customer repository can find a document by a word rather than by a subprocess
-and a ranking pass. What else belongs there is decided by asking whether that
-retrieval gets better - not by whether the material is valuable.
+`asgard-cli init` writes every part of the material into a customer repository
+under `.agents/skills/asgard-platform/`, and `find` searches all of it. Two
+things remain.
 
-Three things follow from the test, and they rule as much out as in:
+**Delete `find`.** The target is that static knowledge is read from files and
+nothing reads it for you. Three of the four things `find` does have equivalents
+once the material is on disk - the counterpart is a path in the document, and
+translation and dead-query recording become instructions in `SKILL.md`. The
+fourth does not: the sense warning fires on a *successful* search, which is the
+failure nothing else can see, and a landed glossary only helps a reader who
+opens it.
 
-  - **Static, or it cannot be a file.** Anything rendered from the repository's
-    own state freezes one moment into a committed file, and nothing detects that
-    kind of staleness: it is not behind the binary, it is behind the directory
-    next door.
-  - **Found by a word, not by a name.** A document somebody is told to read is
-    already reachable; one they arrive at carrying a term is what grep is for.
-  - **Read while working in this repository.** Material for a meeting held before
-    the repository exists is served by the binary, which is where it has to be.
+That is testable rather than arguable. Land the instruction, leave it a
+release, and see whether the `payment` mistake recurs - Fehu's billing returned
+to somebody asking about a customer's payment gateway.
 
-`asgard-cli find` searches four parts of the material. **Two have landed** - the
-wiki and the extracts - and the two below have not.
-
-### 1. `needs` - do this first
-
-Seven shapes, about thirty rows, each with what to ask, why, and the document
-that owns the claim. **Fully static**, no repository dependency, and `Item`
-already carries json tags, so serialising it is the small part.
-
-It passes the test outright: `allowlist`, `read-only`, `test environment`,
-`Channel Access Token` are words an FDE arrives with, and the answer is one row
-plus its source. Today it is 125 lines of Go that no grep can reach, and it is
-the command Goal's second point names.
-
-### 2. `brief` - same shape, nearly as cheap
-
-Four briefs, 28 recorded ways to get something wrong. **Static** - `Render`
-takes a writer and no data.
-
-It passes the test less cleanly, and the reason is worth keeping: a brief is read
-**by name before an activity**, not found by a word, so landing it wins less than
-`needs` does. What earns it a place is that two of the four - `write-chart` and
-`handover` - are read while inside the repository, and a phrase like "what must
-never appear on a customer's screen" is one somebody would grep for.
-
-### 3. `guide` - the most valuable, and the only one that needs designing
-
-Ten documents, 2313 lines: the interview and its order, how the work splits into
-projects, each project's read path and entry point, where knowledge lives, deploy,
-and adding a capability to something already live. It is the third kind of
-material - `wiki` is what the platform has, `usecase` is what to put in a field,
-and this is **which decision to make now and what it costs to change later**.
-
-**It is already being pointed at from material that has landed**: eight pointers
-across seven exported documents, six of them to `.agents/skills/asgard-platform/guide/requirements.md`,
-which is where filter 0 lives and which every `needs` row cites. Those resolve
-through the binary and not on disk - a dead pointer in a greppable corpus, the
-same class of defect as the missing index.
-
-**It cannot be exported as it stands, and this is the real work.** 56 template
-sites across the ten files, of two kinds:
-
-    repository state   <<range .Projects>>, <<.RequestID>>, <<with .Requests>>,
-                       <<if not (.Has "DataConnector")>>, <<.Status>>
-    a placeholder      <<.SpecSlug>> in an example path
-
-Dumped verbatim it ships files full of `<<range .Projects>>`; rendered, it commits
-one moment's repository state. So each document has to be **split into its static
-half and its live half** - the decision knowledge becomes a file, and "here is
-what your repository currently has" stays a command.
-
-Two of the ten need no split at all: `06-knowledge.md` and `07-verify.md` have
-zero template sites and could land today.
-
-**The live half is not `gate`'s to serve.** `gate` answers whether the repository
-is in a state to go on; the inventory the prompts interpolate is three other
-commands, and the tool already says so in its own words - the repo check's
-message for a document naming the removed `status` reads: *where it meant "what
-is still open", `asgard-cli question`, `asgard-cli request` and `asgard-cli
-task`; where it meant "what does each chart declare and still lack",
-`asgard-cli project`.* That mapping is the one the split should use, and a
-landed document has to name the command rather than imply it.
-
-### Ruled out, with the reason
-
-  - **`gate` and `check` rule explanations.** Exported, the next rule change
-    makes the file a lie, and nobody greps for a rule - it finds you, and the
-    message it prints carries its own reasoning.
-  - **`size`.** A calculator, not a document: `--databases 2 --queries 4`. Grep
-    does no arithmetic, and its shape table is worthless without the sum.
-  - **`generate`'s twelve CR templates.** 16 of the 21 extracts already carry a
-    `## The skeleton`, and the extracts have landed. A second copy of the same
-    fields, without the cautions attached to them, breaks one fact one home.
-  - **Everything under Build, Check and Deploy.** Repository views and actions.
-
-### The target state: static knowledge lives in the repository, and nothing reads it for you
-
-**Stated by the FDE, and it is a removal rather than a reduction.** Everything
-that is not dynamic is static knowledge, it **has to** be on disk in the
-customer's repository, and it is read there - by grep, by an agent, by a person.
-`wiki`, `usecase` and eventually `find` stop being commands. The binary's job
-narrows to writing the material out and keeping it current.
-
-Two kinds of thing stay dynamic, and only these two:
-
-    the repository's own state    which projects exist, what each chart
-                                  declares and lacks, what is still open
-                                  -> `project`, `question`, `request`, `task`
-    the platform's own contract   what THIS customer's server accepts, which
-                                  can be several versions from this binary in
-                                  either direction
-                                  -> `skill status` / `skill update`
-
-**Updating the landed material is the software's own update path**, not a
-separate fetch: a new binary carries new pages, and `init` replaces the
-directory because the stamp says the version moved. That mechanism exists -
-`replaceCorpus` - so the update story for landed knowledge is "upgrade the CLI
-and re-run init", with nothing to remember.
-
-#### `find` is to be removed, and printing how to search is an acceptable end
-
-The four things it does that a grep cannot do not survive as one category once
-the material has landed. **Three of the four are driven by data that lands with
-it**: `aliases.md` for translation, `glossary.md` for the senses.
-
-    naming the counterpart   dissolves. Once pointers are paths, the
-                             counterpart IS a path in the document and grep
-                             has it for free
-    translating the query    becomes an instruction - read aliases.md, then
-                             grep. SKILL.md already says so
-    recording a dead query   becomes an instruction - run issue-report when
-                             the search finds nothing
-    warning on a word with   has no equivalent. It fires on a SUCCESSFUL
-    two senses here          search, which is the failure nothing else can
-                             see, and a landed glossary only helps a reader
-                             who thought to open it
-
-So the one thing lost is a mechanism becoming an instruction, and **the
-difference is whether it still works when nobody follows it.** That argument
-proves too much if taken alone - by it, every command stays - and the counter is
-that an instruction in a loaded skill is cheaper than a command and is followed
-reasonably well.
-
-**It is testable rather than arguable.** The payment mistake is on record:
-`find payment` returned Fehu's billing to somebody asking about a customer's
-payment gateway. Land the material, write the instruction, and see whether it
-recurs.
-
-**A `find` that only prints how to search is accepted as an end state** - and
-worth being precise about, because such a thing is a document rather than a
-command. If its output is guidance, that guidance is `SKILL.md`, which already
-lands. The only thing the command form would add is reachability with no
-repository, and `init` in an empty directory is already that.
-
-#### What has to be true first
-
-**1. A command-form pointer was chosen because it does not depend on the
-layout.** `.agents/skills/asgard-platform/usecase/write-path.md` means the same thing from anywhere. A
-path does not, and the two trees disagree:
-
-    from a wiki page to that extract
-      before the move      ../../usecase/extracts/write-path.md
-      as landed            ../usecase/write-path.md
-
-Three ways out, and only the second reaches the target:
-
-  - Rewrite them to paths at export. The landed pages then differ from the
-    binary's copy, so nobody can diff the two, and the rewrite has its own
-    failure modes.
-  - **Make this repository's tree match the landed one** - one `corpus/` holding
-    `wiki/` and `usecase/` - so a relative path is correct in both.
-  - Teach the mapping in a generated root index and leave the pointers as
-    commands. Cheapest, and it keeps a subprocess at the one place the landing
-    was meant to remove it: the map.
-
-**2. `--links`, `--orphans` and the counterpart are built on that pointer
-form.** `linkRe` is the basis of two of the four acceptance rules, so changing
-the form rebuilds that machinery - mechanical, and a mistake in it lapses
-silently rather than failing. The order is protected: change the form first and
-`--commands` reports every pointer left behind.
-
-**3. Reading a whole document is not a blocker.** It was written here as one and
-it is not: the full text lands, so `cat` reads it, and with no repository `init`
-in an empty directory produces the same files. The cost is 51 files and a
-skeleton to read one page - ergonomics, not a missing capability. `find` prints
-excerpts only, and that stops mattering once the documents are on disk.
-
-**The corpus stays embedded in the binary either way.** `init` needs it to write
-anything out, so removing `find` removes a search implementation, not the
-material.
-
-The sequence, each step verifiable alone and none of them leaving the tool worse
-if it stops there:
-
-  1. ~~Move this repository's corpus to `corpus/{wiki,usecase}/`.~~ **Done** -
-     `internal/corpus` holds the material now, in the layout a repository
-     receives it, and `internal/wiki` and `internal/usecase` are the way in
-     rather than the place. No document changed.
-  2. ~~Convert the pointers to paths and rebuild `kb.Link` on them.~~ **Done** -
-     121 pointers between the wiki and the extracts are now
-     `../wiki/<page>.md` and `../usecase/<name>.md`, which resolve in this tree
-     and in a repository alike. The 8 pointing at `guide` stay invocations
-     until step 4 lands it, and `wiki log` stays one permanently. `kb.Link`
-     records which form a pointer took, and `--links` fails a path whose
-     target `init` does not write - the check exists because converting the
-     `log` pointer produced a link that resolved here and went nowhere in a
-     repository.
-  3. ~~Generate the root `index.md`.~~ **Done** - built from the jobs that were
-     actually written rather than from the corpus, so it cannot name a document
-     the export skipped. It carries what the per-half indexes cannot: both
-     halves in one place as paths, the shape a pointer takes, and what is
-     deliberately not there. `needs` and `brief` get their rows when step 4
-     lands them; until then they are in its "what is not here" table.
-  4. Land `needs`, `brief`, and `guide`'s static half. **`needs` is done** -
-     seven documents under `needs/`, one per shape so that a grep hit carries
-     which shape it belongs to, and each extract now points at its own. Making
-     them documents also fixed a claim the package had been making and not
-     keeping: its comment said `--links` resolved every `From`, and `needs` was
-     in no source at all, so a `From` naming an extract that does not exist
-     passed with 0 dead. **`brief` is done too** - four documents under `brief/`, with the same gap
-     found and closed: a `Where` naming a page that does not exist passed with
-     0 dead before they were documents. **`guide` is done, and step 4 with it** - the ten
-     stages land as `guide/<name>.md`, minus the paragraphs that render this
-     repository's own state. The split is 10 paragraphs of 542, and three
-     sentences had to be reworded in the source rather than dropped, because a
-     state claim is not always a template action: "Projects exist but no
-     DataConnector does" is prose, true only of the repository the command was
-     run in. They now say which repository the stage is for, which reads
-     correctly in both places.
-
-     With all five kinds landing, **every document pointer in the material is a
-     path** - 73 more converted, across the extracts, the pages and the stage
-     prompts. `.agents/skills/asgard-platform/wiki/log.md` is the only invocation left.
-  5. ~~Delete `wiki` and `usecase`.~~ **Done.** `--commands` confirms nothing
-     still names them. **Split into three, because the deletion is not the hard part:**
-
-     - ~~The two `--search` flags.~~ **Done** - superseded twice, and the help
-       said so itself.
-     - Convert the ~180 remaining references. **This is the work**, and it is
-       not a rename: the right replacement depends on where the text ends up.
-       Classified into four groups by where the text ends up. **Everything
-       that lands is done**: the alias index, 36 in the scaffold templates,
-       and the prose and `Where`/`From` values in `needs` and `brief`.
-
-       What is left is the two groups that are **help text describing the
-       commands**, and they move with the deletion rather than before it,
-       because they are correct today: the CLI's own help and output, and this
-       repository's README, TASK and AGENTS - where a path into a customer
-       repository would be wrong, and `internal/corpus/...` is the right
-       target instead.
-     - ~~Delete the commands.~~ **Done.**
-
-     **Step 5 is coupled to step 6 and the sequence did not say so.** `find`
-     prints `-> field level: `.agents/skills/asgard-platform/usecase/external-api.md`, so deleting the
-     commands while `find` survives leaves the tool naming something it does
-     not have. `find`'s counterpart output has to move to the path form in the
-     same change.
-
-     And `.agents/skills/asgard-platform/wiki/log.md` goes with it. Log is the one page `init` does
-     not write, so deleting the command makes it reachable only from this
-     repository - which is where its reader already is, but the index sentence
-     that points at it has to say so.
-  6. Delete `find`, after the sense instruction has been given a release to be
-     wrong in.
-
-**Steps 1 and 2 were the ones to do early**, because between them they touch
-every document in the corpus and so collide with any other edit to material that
-changes most weeks. What is left does not: steps 3 and 4 add files, and 5 and 6
-remove commands.
-
-**Two forms coexist until step 4**, which is a state to get out of rather than a
-design. `brief` and `guide` are invocations because a path to them would resolve
-nowhere; landing them is what makes the form uniform.
-
-### Three defects the first landing introduced, all fixed
-
-**All three were found by running `asgard-cli gate` inside a scaffolded
-repository** - the check that should have been run before that commit and was
-not. Landing material into a customer repository makes it subject to that
-repository's own checks, and nothing in this repository's audits sees that.
-
-  - The exported `SKILL.md` named `asgard-cli scaffold`, which this build has no
-    such command for - it is `init`. One word, and the exact failure `2bce648`
-    was written about.
-  - It also read "a newer **asgard-cli than** the one you are running", and the
-    repo check takes `asgard-cli` plus the next word in prose as a command name.
-    Prose naming the tool rather than invoking it now says "this CLI", which is
-    the corpus's own convention.
-  - **`wiki/log.md` is no longer landed.** It names the removed `asgard-cli
-    status` twice in historical entries that are correct, so every customer
-    repository carried two warnings for them. The wiki's own index already said
-    why it does not belong: log is the provenance layer and *"an FDE looking for
-    an answer should never land there"*. `Corpus.All` treats every unlisted
-    document alike and these two are not alike - `index` is the map and has to
-    travel, `log` is for whoever maintains this repository. `wiki.Landing` is
-    that distinction; 51 files land rather than 52.
+**`--commands` does not read this CLI's own Go strings.** It reads the material
+and the scaffold templates, so a printed string naming a command this build
+does not have passes. Fourteen did. The check that found them was the
+repo-side one, which only sees what has been written into a repository - later,
+and more expensive.
 
 ## Non-goals
 

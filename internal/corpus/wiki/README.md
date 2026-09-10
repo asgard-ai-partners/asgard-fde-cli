@@ -93,16 +93,20 @@ Neither lives in this repository. `git pull` before writing against them.
 ### ingest - a new source arrives
 
 1. Read it, and confirm the reading with the person before writing
-2. Write or rewrite the matching page under `pages/`
+2. Write or rewrite the matching page under `wiki/`
 3. Update `index.md`
 4. **Update the other pages it touches**
-5. Append a line to `log.md`
 
 Step 4 is the one that gets skipped.
 
+**The commit you read a source at goes in the page's own source block**, which
+is where a reader checking a claim already is. There is no separate ledger:
+one would be a second copy of what every page already carries, and it would go
+stale in the direction that matters, because nothing points at it.
+
 ### query - answering a question
 
-Search `pages/` first. If an answer needs three pages assembled on the spot, that
+Search `wiki/` first. If an answer needs three pages assembled on the spot, that
 assembly is new knowledge: write it into a page, or the next reader repeats it.
 
 ### lint - the audit
@@ -216,7 +220,7 @@ Two files here are not pages and are not searched:
 was a section of `pages/glossary.md`, and because it lists every alias it was
 reliably the one document carrying every term of a translated query: a search
 for a subject returned the word list rather than the page. It is beside the
-pages now, where `index.md` and `log.md` already were.
+pages now, where `index.md` already was.
 
 `asgard-cli find` applies `aliases.md` to a query before searching and prints
 what it searched for. Rows come from searches that came back empty -

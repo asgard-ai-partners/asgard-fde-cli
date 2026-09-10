@@ -70,10 +70,11 @@ type Link struct {
 	Name string
 
 	// Path marks a pointer written as a relative path rather than as an
-	// invocation. It is the difference between "follow this on disk" and "run
-	// this" - and a path is a claim that the target is written into a
-	// repository, which `audit-material --links` checks. `wiki log` is the one
-	// that is not: it stays an invocation because init does not land it.
+	// invocation: the difference between "follow this on disk" and "run this".
+	// Every document lands, so in the material a pointer is always a path, and
+	// `audit-material --links` refuses the other form. The field is what lets
+	// it tell them apart - a help screen may legitimately name `brief` or
+	// `guide`, which are commands.
 	Path bool
 
 	// Deliberate marks a link inside the section where the document names its

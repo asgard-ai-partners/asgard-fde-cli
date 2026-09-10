@@ -45,16 +45,18 @@ lands: a document that ships is a document that is checked.
 
 A cross-reference is parsed with the document into `kb.Link`, and everything
 downstream reads that one graph — `find`'s counterpart, `--links`, `--orphans`.
-Two forms:
+**Every document pointer is a path**, because every kind is written into a
+repository:
 
-    ../wiki/<name>.md            the target is written into a repository
-    asgard-cli wiki log          it is not
+    ../wiki/<name>.md
 
-**A path is a claim that the target lands, and `--links` enforces it.** A path
-to something `init` does not write resolves here, where the corpus is whole,
-and goes nowhere in the repository the material was written into.
-`kb.Link.Path` records which form was used so the check can tell them apart.
-The wiki's `log` is the only document still on the second form.
+`--links` enforces both directions. A path whose target `init` does not write
+resolves here, where the corpus is whole, and goes nowhere in the repository
+the material was written into. And a pointer written as an invocation is
+refused in the material, because a document pointing at a document points at a
+file — `kb.Link.Path` is what tells the two apart. A help screen is not
+material: `brief` and `guide` are commands, and naming one there is telling
+somebody to run it.
 
 What precedes the kind depends on where the pointing document sits:
 

@@ -279,9 +279,6 @@ func checkBare(out io.Writer, sources []source) error {
 	type hit struct{ where, kind, name string }
 	var found []hit
 	for _, s := range sources {
-		if strings.HasSuffix(s.name, "log") {
-			continue
-		}
 		seen := map[string]bool{}
 		for _, m := range bare.FindAllStringSubmatch(s.body, -1) {
 			key := m[1] + "/" + m[2]
@@ -330,7 +327,7 @@ func bookkeeping() []source {
 	if body, err := wiki.Index(); err == nil {
 		add("index", "aliases", body)
 	}
-	for _, name := range []string{"index", "log"} {
+	for _, name := range []string{"index"} {
 		if body, err := wiki.Read(name); err == nil {
 			add("index", "wiki "+name, body)
 		}
@@ -724,31 +721,30 @@ func checkLinks(out io.Writer, sources []source) error {
 	// the searches are real invocations and would otherwise read as dead.
 	for _, extra := range []struct{ kind, name string }{
 		{"wiki", "index"},
-		{"wiki", "log"},
 		{"wiki", "README"},
 		{"usecase", "index"},
 	} {
 		known[extra.kind][extra.name] = true
 	}
 
-	// **A pointer written as a path is a claim that the target lands.** The
-	// two forms are not interchangeable: an invocation resolves through this
-	// binary and works anywhere, while `../wiki/log.md` in a repository is a
-	// file that has to be there. `wiki log` is the one page `init` does not
-	// write - the wiki's index says an FDE should never land on the provenance
-	// layer - and converting its pointer to a path made a link that resolved
-	// here and went nowhere in the repository the material had been written
-	// into. Nothing saw it: `--links` resolves against the corpus, where log
-	// exists.
+	// **Every document pointer is a path**, because every kind is written into
+	// a repository. A path is a claim that the target is there, so it is
+	// checked against what `init` writes rather than against the corpus, which
+	// is whole here and not there.
+	//
+	// The invocation form is refused **in the material**: a document that
+	// points at another document points at a file. A help screen is different
+	// - `brief` and `guide` are commands, and a help screen naming one is
+	// telling somebody to run it.
 	lands := map[string]map[string]bool{"wiki": {}, "usecase": {}, "needs": {}, "brief": {}, "guide": {}}
-	for _, st := range stage.List() {
-		lands["guide"][string(st.Name)] = true
+	for _, n := range needs.Names() {
+		lands["needs"][n] = true
 	}
 	for _, n := range brief.Names() {
 		lands["brief"][n] = true
 	}
-	for _, n := range needs.Names() {
-		lands["needs"][n] = true
+	for _, st := range stage.List() {
+		lands["guide"][string(st.Name)] = true
 	}
 	landing, err := wiki.Landing()
 	if err != nil {
@@ -809,7 +805,15 @@ func checkLinks(out io.Writer, sources []source) error {
 			}
 			if l.Path && !lands[l.Kind][l.Name] {
 				found = append(found, dead{where: s.label + " " + s.name, kind: l.Kind, name: l.Name,
-					why: "written as a path, and `asgard-cli init` does not write that document into a repository - use the invocation"})
+					why: "written as a path, and `asgard-cli init` does not write that document into a repository"})
+				continue
+			}
+			// Only in the material. `brief` and `guide` are still commands, so
+			// a help screen naming one is an invocation on purpose - it is
+			// telling somebody to run it, not pointing at a document.
+			if !l.Path && s.label != "help" {
+				found = append(found, dead{where: s.label + " " + s.name, kind: l.Kind, name: l.Name,
+					why: "written as an invocation; every document lands, so a pointer is a path - `../" + l.Kind + "/" + l.Name + ".md`"})
 			}
 		}
 	}
