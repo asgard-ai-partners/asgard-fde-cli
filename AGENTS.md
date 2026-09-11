@@ -412,6 +412,7 @@ judgement:
 | every documentation URL being live | `--urls` (needs the network) |
 | the pinned enum and constraint tables against the CRDs | `hack/check-tables.py` (needs `$ASGARD_KUBE`) |
 | the four numbers in the coverage row | `hack/check-coverage.py` (needs `$ASGARD_DOCS`) |
+| **every count this material asserts about a reference deployment's own documents** - the 88-row page ledger, the 160-row operation ledger, the 14 API domains - recomputed, and a claim whose wording has drifted out of every pattern fails rather than passes | `hack/check-counts.py` (needs `$ASGARD_DEPLOYMENTS`) |
 | **`wiki/processors.md`'s two tables against the two repositories they distil** - the thirteen processors' outputs, required keys and defaults against asgard-core's `ProcessorDefinitions`, and the editor palette's author and platform keys against asgard-docs' per-page metadata | `hack/check-processors.py` (needs `$ASGARD_CORE` and `$ASGARD_DOCS`) |
 | every path and package-qualified Go symbol this repository's own documents name | `hack/check-doc-paths.py` |
 | generated CRs and the extracts' skeletons against the CRD schemas | `hack/validate-crs.py` (needs `$ASGARD_KUBE`) |

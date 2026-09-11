@@ -11,6 +11,7 @@ environment variable per source, and a default that is one person's layout:
     hack/check-tables.py       the pinned gate tables against the CRDs
     hack/check-coverage.py     the wiki's coverage row against the docs tree
     hack/check-processors.py   wiki/processors.md's two tables against their owners
+    hack/check-counts.py       counts this material asserts about a deployment
 
     ASGARD_KUBE          the CRDs, the platform contract
     ASGARD_DOCS          the product documentation
@@ -148,6 +149,22 @@ Run it after regenerating a table and whenever asgard-kube moves. A field it
 reports as absent from the CRD is not automatically a bug - `baseAgentName`
 lives inside a JSON string rather than in the schema - but it is always
 something to explain rather than leave.
+
+## Recomputing a count that came out of somebody else's document
+
+    hack/check-counts.py           against the clones as they stand
+    hack/check-counts.py --dump    print what upstream counts, and stop
+
+**A number copied out of a document that states its own count is the cheapest
+thing in this material to get wrong, and the most expensive to notice**: nothing
+about "88" reads differently from "93". A pass that set out to recount SHOPLINE's
+back-office map took a figure off a different tally and wrote it into seven
+places, where it sat for a week looking exactly as authoritative as the truth.
+
+So each of those counts is recomputed from the clone, and every place this
+material states one has to agree. **A claim whose wording has drifted out of
+every pattern is a failure rather than a pass** - that is how a count stops
+being checked without anybody deciding to stop checking it.
 
 ## Re-walking the processor definitions
 

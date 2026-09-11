@@ -5,7 +5,7 @@ appliance with only a web console, a vendor back office, an internal tool nobody
 has an integration for.
 
 **Seen in:** a deployment operating a commerce platform's back office, where the
-capability is a skill describing 93 pages plus everything the menu cannot see.
+capability is a skill describing 88 pages plus everything the menu cannot see.
 
 **Checked:** 2026-09-02 against the reference set it describes - the four map files exist with those names - and the CRD.
 

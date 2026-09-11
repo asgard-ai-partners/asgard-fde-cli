@@ -98,7 +98,7 @@ var shapes = []Shape{{
 	What: "a system with no database we can read and no API",
 	Items: []Item{
 		{Ask: "a login to the back office, and whether a non-production one exists", Why: "the whole shape is driving their UI; there is nothing else to reach", From: "../usecase/browser-operation.md"},
-		{Ask: "how many pages and operations actually matter", Why: "**SHOPLINE is what this costs: 93 menu-level page entry points mapped before the first useful call, and a second map for everything below them.** One back-office-only system among four sets the cost of the whole item", From: "../wiki/taiwan-channels.md"},
+		{Ask: "how many pages and operations actually matter", Why: "**SHOPLINE is what this costs: 88 menu-level page entry points mapped before the first useful call, and a second map for everything below them.** One back-office-only system among four sets the cost of the whole item", From: "../wiki/taiwan-channels.md"},
 	},
 }, {
 	Name: "skill-set",
