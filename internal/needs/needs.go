@@ -67,6 +67,7 @@ var shapes = []Shape{{
 		{Ask: "**whether there is a test environment**, before designing a mock", Why: "writing into a real test environment proves the fields, the validation rules and the status codes; a mock proves none of them", From: "../usecase/write-path.md"},
 		{Ask: "if it is production-only, **whether they permit testing against it**", Why: "in the meeting, not assumed here - the answer decides whether the first delivery can be proved at all", From: "../wiki/taiwan-channels.md"},
 		{Ask: "the rate limit", Why: "it decides whether a Syncer can keep up, and whether a tool can be called per turn", From: "../guide/requirements.md"},
+		{Ask: "**if the system is email — an HTTP mail API and a key for it, plus a sender address already verified with that provider.** Not SMTP credentials", Why: "the platform's only outbound call is HTTPS, so a username, a password and an SMTP host **cannot be used at all** - and that is what gets handed over when you ask for mail access. The verification is their IT's to do, on their schedule, and an unverified sender is refused outright", From: "../wiki/integration.md"},
 	},
 }, {
 	Name: "chat-channel",

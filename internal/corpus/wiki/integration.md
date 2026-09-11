@@ -167,6 +167,51 @@ common things a customer asks for, and the answer is not "yes, of course".
     they have an HTTP endpoint that sends mail   an external-api call
     they have no endpoint                        it cannot be built yet
 
+**And SMTP credentials are not an endpoint.** The platform's only outbound
+capability is `http-request`, which speaks HTTPS; SMTP is a multi-round protocol
+on its own TCP port and a Workflow has no way to speak it. So a username, a
+password and `smtp.<host>:587` cannot be used at all - **not "with more work",
+at all** - and that is the shape of credential a customer hands over when asked
+for mail access. One deployment asked for a mail API, was told which one, and
+received SMTP credentials for it; they are different authentication mechanisms
+and not interchangeable.
+
+**The reason to say no is that we cannot speak it, and nothing else.** "SMTP
+basic auth is being switched off soon" is a tempting second argument and it is
+**not true**: Microsoft has deferred that three times, the current schedule
+turns it off by default at the end of 2026 with administrators able to turn it
+back on, and no final removal date is announced. A deployment put the deferral
+correction into its own record for exactly this reason - the next person reaches
+for the same wrong argument.
+
+### So mail means a provider with an HTTP API
+
+Two shapes, and the cost difference is worth raising in the meeting:
+
+| | a single-call API | a token-first API |
+|---|---|---|
+| HTTP calls per mail | 1 | 2 - fetch a token, then send |
+| processors | send, respond | get-token, send, respond |
+| secrets to hold | 1 | 3 |
+
+**The sender has to be verified with the provider**, per address or per domain,
+or the send is refused outright - and that verification is the customer's IT to
+do, on their schedule. Ask for it in the same breath as the API key.
+
+Three details read off a working send, each of which looks like a bug when it
+bites:
+
+  - **success can be a 2xx that is not 200, with an empty body.** Test the
+    status as a range rather than `== 200`, and set `parseJson: false` - there
+    is no JSON to parse and every run leaves a parse warning otherwise
+  - **turn the provider's click tracking off.** It rewrites every link in the
+    mail to its own tracking domain, and an internal notification arriving with
+    an unfamiliar redirect domain in it reads as phishing
+  - **on `http-request`, every config key that is not `url`, `method`, `body` or
+    `parseJson` is sent as an HTTP header** - which is how the API key and the
+    content type get there, and `../wiki/processors.md` has the rest of what an
+    extra key means per processor
+
 **A deployment that mocks it owes a disclosure**, and this is worth copying. One
 does: `wf-send-mail` is a single `push-message` returning
 `{ok: true, mocked: true, to, subject, body}`, so the whole pipeline runs and
@@ -200,6 +245,15 @@ order not placed.
 - [Applications overview](https://docs.asgard-ai.com/docs/product-suite/odin/features/applications-overview)
   and [Customized Integration](https://docs.asgard-ai.com/docs/product-suite/odin/features/applications-customized-integration)
   - asgard-docs `f00e0ee`
+- **That SMTP cannot be reached at all, and what a real mail send costs**: read
+  2026-09-11 off `unitech-e-asgard-kube`, which asked for a mail API, received
+  SMTP credentials for it, and wrote down why neither route worked. The
+  single-call shape, the empty-bodied 202, the click-tracking rewrite and the
+  verified-sender requirement are from that deployment's own working send; the
+  deferral correction is recorded in its living spec. **That an extra config key
+  on `http-request` is sent as an HTTP header** was then confirmed at asgard-core
+  `623ceb5`, asgard-core `internal/processor/task/http_request.go`, which is also
+  where the value having to be a string comes from
 - `botProviderClass` being immutable: checked against
   [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `cbd8d70` -
   `BotProviderSpec`

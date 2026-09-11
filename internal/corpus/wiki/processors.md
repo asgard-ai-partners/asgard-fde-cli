@@ -268,6 +268,32 @@ context variables you are setting, and on `router` they are the cases, with a
 dynamic output per case and the static `Else` for what matches none. This is why
 neither has a static field list to look up.
 
+### What an extra key means, per processor
+
+"Takes extra keys" is not one mechanism. Each processor reads them its own way,
+and **the key name is the parameter** - so a typo is not an error, it is a
+different parameter or a silently ignored one.
+
+| processor | an extra key is | the shape |
+|---|---|---|
+| `update-context` | a context variable you are setting | the key **is** the variable name |
+| `router` | a branch | the key is the branch name, the value a boolean or an expression returning one. An unknown value type fails the step |
+| `http-request` | an **HTTP header** | the key is the header name. **The value must be a string** or the step fails - a number written bare is a failure at run time, not at render |
+| `query-database` | one SQL placeholder | `sql.args.<n>.type` **and** `sql.args.<n>.value`, both, numbered **from 1** |
+| `retrieve-knowledge` | one JSON-path filter | `path.<n>.exists` or `path.<n>.predicate`, each series numbered **from 0** and counted independently |
+| `validate-payload` | one file requirement | `file.<n>.type`, `file.<n>.alias`, numbered **from 0** |
+| `llm-completion` | **nothing.** It declares dynamic config and no code reads it | an extra key here is accepted and ignored |
+
+**The numbered ones stop at the first gap.** Each is a loop that breaks the
+moment an index is missing, so `sql.args.1.*` and `sql.args.3.*` with no `2`
+sends **one** argument, not two - and nothing says so. The same holds for a
+`file.0.type` with no `file.0.alias` where the alias series is read separately,
+and for `path.<n>.*`. Renumber after deleting one.
+
+**Two of them start at 0 and one starts at 1.** There is no rule behind it to
+remember; it is per processor, and getting it wrong on `query-database` means an
+argument list that is silently empty.
+
 **Extra keys are also where `sqlTypeArguments` lives.** The documentation gives
 `query-sql` a **SQL Type Arguments** field for the `$1`, `$2` placeholders, and
 there is no such static key - the parameters are dynamic config on the
@@ -512,6 +538,13 @@ Two things worth knowing from their pages:
   - and it is **incomplete**: checked against five rendered production charts,
   where `await` appears on the streaming processor in all five and is declared
   nowhere in it
+- **What an extra key means, per processor**: read 2026-09-11 at asgard-core
+  `623ceb5` off the task implementations themselves - one file per processor
+  under asgard-core `internal/processor/task/`. The definitions say only
+  *whether* a processor takes dynamic config; the key shapes, the two different
+  starting indices and the break-at-the-first-gap behaviour are in the loops that
+  read them, and nowhere else. `llm-completion` declaring dynamic config that no
+  code reads was found the same way
 - The Failure outputs: **the documentation**, one page per processor, after the
   type definitions were found to disagree with four production charts. Checked
   2026-09-03 across `api-http-request`, `query-sql`, `query-retrieve-knowledge`,

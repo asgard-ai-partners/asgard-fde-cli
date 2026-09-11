@@ -347,8 +347,24 @@ def main() -> int:
                         bad.append(f"{name} `{k}`: asgard-docs records it as an author key "
                                    f"and the page's author cell does not name it")
 
+    # ── the extra-key table ──────────────────────────────────────────────
+    #
+    # What a dynamic key MEANS is not in the definitions - it is in the loop
+    # that reads it, one file per processor in asgard-core. So this checks only
+    # the thing the definitions can answer: that every processor accepting
+    # dynamic config has a row saying what its keys are for. A processor that
+    # becomes dynamic and gets no row is an author writing keys into a void,
+    # which `llm-completion` already does.
+    etable = rows(page, "| processor | an extra key is | the shape |")
+    for name, d in sorted(defs.items()):
+        if d["dynamic"] and name not in etable:
+            bad.append(f"{name} accepts dynamic config and has no row saying what an extra key means there")
+    for name in sorted(etable):
+        if name in defs and not defs[name]["dynamic"]:
+            bad.append(f"the extra-key table has a row for {name}, which asgard-core does not accept dynamic config on")
+
     print(f"processors: {len(defs)} definitions, {len(table)} rows in the definitions table, "
-          f"{len(ptable)} in the palette table")
+          f"{len(ptable)} in the palette table, {len(etable)} in the extra-key table")
     print(f"  asgard-core {commit(core) or '?'}, asgard-docs {commit(docs) or '?'}, "
           f"asgard-kube {commit(kube) or '?'}")
     for b in bad:
