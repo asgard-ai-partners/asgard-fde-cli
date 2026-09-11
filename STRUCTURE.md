@@ -258,6 +258,14 @@ server-side dry-run all pass a document the apiserver would reject or silently
 prune. `hack/README.md` is the procedure, and the PR template asks for its
 output.
 
+`hack/sources.py` is where the upstream clones are: one environment variable
+per source, resolved from the shell, then `.env`, then a default that is one
+person's layout. `.env.example` is the template - **`.env.template` would be
+gitignored**, because the rule is `.env.*` with `!.env.example` carved out.
+Running it prints what each resolves to and how far behind it is, and nothing
+here clones or pulls: a script that fetched would turn "read at this commit"
+into "read at whatever was there when the script ran".
+
 `hack/check-doc-paths.py` holds every path and every package-qualified Go
 symbol named by this repository's own documents - the seven at the root, plus
 this directory's README and scripts - against what is on disk - the
@@ -278,8 +286,10 @@ reading the customer's own source systems at design time.
 
 ## Reference material that is not in this repo
 
-Read-only, never vendored in. **The URL is the source of truth; where you clone it
-is not.**
+Read-only, never vendored in. **The URL is the source of truth; where you clone
+it is not** - so where you cloned it is an environment variable, not a path in
+a script: `ASGARD_KUBE`, `ASGARD_DOCS`, `ASGARD_CORE`, `ASGARD_DEPLOYMENTS`.
+`hack/sources.py` prints what each resolves to and how far behind it is.
 
 | what | source of truth |
 |---|---|

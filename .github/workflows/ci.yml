@@ -73,6 +73,11 @@ jobs:
       - name: this repo's own documents name no path or symbol that is gone
         run: hack/check-doc-paths.py
 
+      # check-tables.py and verify-references.sh are deliberately absent: both
+      # need a clone of somebody else's repository, and one of those is
+      # private. They are in the maintainer's gate, in AGENTS.md, and
+      # `hack/sources.py` says when one is due.
+
 
   build:
     # Confirm before merging that every platform still builds and the

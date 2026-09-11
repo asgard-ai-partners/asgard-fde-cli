@@ -8,9 +8,10 @@ because Kubernetes' own condition schema uses the same field name, and the
 entry sat in the enum table for a day before this check existed.
 
 **Run it whenever asgard-kube moves**, and move the read markers in
-`internal/gate` in the same change. Point it at the checkout:
+`internal/gate` in the same change. With no argument it takes `$ASGARD_KUBE`,
+which `hack/sources.py` resolves:
 
-    hack/check-tables.py ~/projects/asgard/asgard-kube/crd
+    hack/check-tables.py
 
 That is the whole ritual now. It was three lines of shell, so it did not get
 run: the tables went eight upstream commits unchecked, and in that window the
@@ -84,9 +85,15 @@ def as_json(src: pathlib.Path) -> pathlib.Path:
 
 
 def main():
-    if len(sys.argv) != 2:
-        sys.exit("usage: check-tables.py <asgard-kube/crd, as yaml or as json>")
-    enums, cons = crd_properties(as_json(pathlib.Path(sys.argv[1])))
+    if len(sys.argv) > 2:
+        sys.exit("usage: check-tables.py [asgard-kube/crd]   (default: $ASGARD_KUBE/crd)")
+    if len(sys.argv) == 2:
+        crd = pathlib.Path(sys.argv[1])
+    else:
+        sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+        from sources import resolve
+        crd = resolve("kube") / "crd"
+    enums, cons = crd_properties(as_json(crd))
     problems = []
 
     src = pathlib.Path("internal/gate/enums.go").read_text()

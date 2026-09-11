@@ -294,7 +294,7 @@ asgard-cli audit-material --paths
 asgard-cli audit-material --unverified
 asgard-cli audit-material --sources
 hack/check-doc-paths.py
-hack/check-tables.py ~/asgard-kube/crd   # needs the clone
+hack/check-tables.py                     # needs $ASGARD_KUBE
 asgard-cli audit-material --urls   # needs the network
 ```
 
@@ -681,9 +681,17 @@ Which customer each belongs to, and how the extracts refer to one without naming
 it, is in `source/SOURCES.md` - the one file here allowed to make that link, and
 the reason it sits outside `internal/`.
 
-Clone them wherever you like. Pull before relying on any of them, and **record
-the commit you read** in whatever you write - a copy taken into this repo stops
-tracking upstream and then reads exactly like a current one.
+Clone them wherever you like and point an environment variable at each:
+`ASGARD_KUBE`, `ASGARD_DOCS`, `ASGARD_CORE`, and `ASGARD_DEPLOYMENTS` for the
+directory holding the deployment clones. `hack/sources.py` prints what they
+resolve to and how far behind each one is.
+
+Pull before relying on any of them, and **record the commit you read** in
+whatever you write - a copy taken into this repo stops tracking upstream and
+then reads exactly like a current one. `asgard-cli audit-material --sources`
+holds every recorded commit against every other; **nothing can tell you a
+recorded commit has gone stale**, which is what `sources.py` is for and why it
+reads the clone rather than fetching it.
 
 ## Put generated files in `.out/`
 

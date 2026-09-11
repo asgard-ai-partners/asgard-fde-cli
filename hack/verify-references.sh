@@ -21,7 +21,9 @@
 # see R1b).
 set -uo pipefail
 
-parent="${1:-..}"
+# The reference deployment clones. $ASGARD_DEPLOYMENTS is the one place that
+# says where they are; `hack/sources.py` prints what it resolves to.
+parent="${1:-${ASGARD_DEPLOYMENTS:-$HOME/projects/asgard}}"
 cli="${ASGARD_CLI:-asgard-cli}"
 command -v helm >/dev/null || { echo "helm is not on PATH; the gate renders with it" >&2; exit 1; }
 command -v "$cli" >/dev/null || { echo "$cli is not on PATH; set ASGARD_CLI to a built binary" >&2; exit 1; }

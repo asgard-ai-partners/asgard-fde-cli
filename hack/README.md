@@ -1,5 +1,24 @@
 # hack/
 
+## Where the upstream clones are
+
+Every check here needs one, and **the paths used to be written into the scripts
+and into this file** - true on one machine, wrong on every other, and the
+reason `check-tables.py` went eight upstream commits without being run. One
+environment variable per source, and a default that is one person's layout:
+
+    hack/sources.py          what each one resolves to, and how far behind it is
+
+    ASGARD_KUBE          the CRDs, the platform contract
+    ASGARD_DOCS          the product documentation
+    ASGARD_CORE          the processor definitions the CRDs come from
+    ASGARD_DEPLOYMENTS   the directory holding the reference deployment clones
+
+**Nothing here clones or pulls.** A script that fetched would turn "read at this
+commit" into "read at whatever was there when the script ran", which is the one
+thing the provenance rule exists to prevent. `git -C <path> pull` is the
+reader's act, and `sources.py` tells you when it is due.
+
 This repository's own tooling. Not shipped, not embedded, and not the same thing
 as `.agents/skills/db-query/scripts/`, which `asgard-cli init` writes into a
 customer repo - that one reads the customer's own source systems, and is
