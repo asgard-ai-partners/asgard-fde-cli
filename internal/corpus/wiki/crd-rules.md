@@ -81,6 +81,30 @@ Every one of those renders, lints and passes a server-side dry-run, and is
 refused at apply. Run over the six reference deployments - 107 CRs - the check
 reports nothing, which is what a rule the platform already enforces should do.
 
+## An undeclared field is pruned, and a dry run says success
+
+**This is the one that breaks a release after everything passed.** A CRD
+discards a field its schema does not declare, silently:
+
+    kubectl apply --dry-run=server     reports success, field already discarded
+    helm's server-side apply, in CD    fails with `field not declared in schema`
+
+So the two are not the same check, and the cheap one answers a different
+question. **`crd/dry-run-rejected` is "will it be accepted"; `crd/unknown-field`
+is "will it be kept."** The platform's plan report runs both; nothing local
+runs the second, because pruning is an apiserver behaviour and no client is
+issued cluster credentials.
+
+It has happened. `Toolset.spec.instruction` was removed from the CRD and added
+back by hand; the chart passed **25 of 25 dry runs** and the deploy failed.
+`../usecase/write-path.md` and `../usecase/fixed-query-tools.md` both carry it
+against the field they concern.
+
+**So a green local gate is not evidence a field survives.** `asgard-cli gate`
+says as much, and the authority is the plan:
+
+    asgard-cli pipeline runs watch --release <name> --ref <tag>
+
 ## The one the schema cannot enforce
 
 **A `SandboxBlueprint`'s subagent must set exactly one of `baseAgentName` or
@@ -104,8 +128,12 @@ blueprint by hand for.
   - asgard-kube `cbd8d70`
 - The generated CRDs carry the same rules without the reasoning:
   [asgard-kube `crd/`](https://github.com/asgard-ai-platform/asgard-kube/tree/main/crd)
+- The pruning behaviour, and the release it broke after 25 of 25 dry runs: read
+  off the two extracts that carry it against the field they concern,
+  `../usecase/write-path.md` and `../usecase/fixed-query-tools.md`, which took
+  it from a deployment. The two plan-report codes are the platform's own
 
-**Unchecked:** none of these has been seen to fire. They are read off the
+**Unchecked:** none of the CEL rules has been seen to fire. They are read off the
 declarations rather than from a deployment that hit one, so what is confirmed is
 that the rule exists and what it says - not what the failure looks like in CD.
 The evaluation-time one is the exception worth treating as urgent anyway, since
