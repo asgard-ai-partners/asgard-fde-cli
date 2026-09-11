@@ -11,6 +11,15 @@ Where the material in `internal/corpus/usecase/` came from.
 Keep it that way: when adding an extract, put the customer-facing shape in
 `internal/corpus/usecase/` and the attribution here.
 
+**Record the commit you read.** The rows below do not have one - they predate
+the rule, and it is the same gap `internal/corpus/wiki/README.md` records
+against asgard-core. A chart moves, and an extract taken from one six months
+ago cannot be held against anything without knowing which version it described.
+The wiki side already does this: 58 citations name one asgard-docs commit and
+19 name one asgard-kube commit, and `asgard-cli audit-material --sources`
+fails when they stop agreeing. Nothing here is checkable until these rows carry
+the same thing.
+
 ## The deployments read so far
 
 | deployment | shape it demonstrates | CR files | referred to in extracts as |

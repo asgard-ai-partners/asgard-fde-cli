@@ -415,7 +415,7 @@ func helpText(cmd *cobra.Command) []source {
 }
 
 func newAuditCmd() *cobra.Command {
-	var onlyAsk, onlyUnmarked, cross, links, commands, orphans, bareNames, urls, unverified, paths bool
+	var onlyAsk, onlyUnmarked, cross, links, commands, orphans, bareNames, urls, unverified, paths, srcCommits bool
 	var term string
 
 	cmd := &cobra.Command{
@@ -446,6 +446,8 @@ a customer deck.
                                            not exist
     asgard-cli audit-material --paths      a landed document naming a path only
                                            this repository has
+    asgard-cli audit-material --sources    one upstream, one commit: every
+                                           citation of a source agrees
     asgard-cli audit-material --unverified what says nothing about having been
                                            checked, across every body
     asgard-cli audit-material --orphans    documents nothing points at. The
@@ -591,6 +593,28 @@ maintainer can see.`,
 			if paths {
 				return checkPaths(out, append(sources, bookkeeping()...))
 			}
+			if srcCommits {
+				every, err := everything()
+				if err != nil {
+					return err
+				}
+				every = append(every, bookkeeping()...)
+				strs, err := goStrings()
+				if err != nil {
+					return err
+				}
+				for name, body := range strs {
+					every = append(every, source{label: "source", name: name, body: body})
+				}
+				docs, err := repoDocs()
+				if err != nil {
+					return err
+				}
+				for name, body := range docs {
+					every = append(every, source{label: "repo", name: name, body: body})
+				}
+				return checkSources(out, every)
+			}
 			if orphans {
 				// Help counts as a pointer and the index does not. A command's
 				// help is read at the moment somebody is deciding what to run;
@@ -648,6 +672,7 @@ maintainer can see.`,
 	f.BoolVar(&orphans, "orphans", false, "documents nothing else points at; the index does not count as a pointer")
 	f.BoolVar(&unverified, "unverified", false, "documents carrying no record of having been held against anything")
 	f.BoolVar(&paths, "paths", false, "a landed document naming a file only this repository has")
+	f.BoolVar(&srcCommits, "sources", false, "every citation of one upstream names the same commit")
 	f.StringVar(&term, "term", "", "every line mentioning this word, templates included - for a rename")
 	f.BoolVar(&urls, "urls", false, "fetch every docs.asgard-ai.com link in the material; exits 1 on a 404. Needs the network")
 	return cmd
@@ -1118,6 +1143,88 @@ func findChild(node *cobra.Command, name string) *cobra.Command {
 		if c.Name() == name || slices.Contains(c.Aliases, name) {
 			return c
 		}
+	}
+	return nil
+}
+
+// sourceCommit matches a provenance citation: an upstream repository and the
+// commit it was read at.
+//
+// **The commit is the version number of one moment of synthesis**, and it is
+// written by hand in three unrelated mechanisms - a page's Sources block, a
+// pinned table's `const ...Read` in `internal/gate`, and the raw-sources table
+// in `internal/corpus/wiki/README.md`. 37 places name one asgard-kube commit
+// and 23 name one asgard-docs commit. Re-reading a source means changing all
+// of them, and updating the gate's constants while leaving the pages is a
+// corpus that claims two different readings of the same upstream with nothing
+// to say which is true.
+var sourceCommit = regexp.MustCompile(`\b(asgard-[a-z0-9-]+)\s+` + "`?" + `([0-9a-f]{7,12})` + "`?")
+
+// checkSources reports an upstream cited at more than one commit.
+//
+// It does not ask whether a commit is current - nothing inside this repository
+// can, which is why every page records one at all. It asks the question that
+// is answerable here: do we agree with ourselves about what we read.
+func checkSources(out io.Writer, srcs []source) error {
+	type site struct{ where, commit string }
+	seen := map[string][]site{}
+	var order []string
+	for _, s := range srcs {
+		for i, line := range strings.Split(s.body, "\n") {
+			for _, m := range sourceCommit.FindAllStringSubmatch(line, -1) {
+				repo, commit := m[1], m[2]
+				if _, ok := seen[repo]; !ok {
+					order = append(order, repo)
+				}
+				seen[repo] = append(seen[repo],
+					site{fmt.Sprintf("%s %s:%d", s.label, s.name, i+1), commit})
+			}
+		}
+	}
+	sort.Strings(order)
+
+	disagree := 0
+	for _, repo := range order {
+		commits := map[string][]string{}
+		for _, si := range seen[repo] {
+			// A longer hash of the same commit is the same commit.
+			key := si.commit
+			for k := range commits {
+				if strings.HasPrefix(k, key) || strings.HasPrefix(key, k) {
+					key = k
+					break
+				}
+			}
+			commits[key] = append(commits[key], si.where)
+		}
+		var keys []string
+		for k := range commits {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		if len(keys) == 1 {
+			fmt.Fprintf(out, "%-16s %s  (%d citation(s))\n", repo, keys[0], len(commits[keys[0]]))
+			continue
+		}
+		disagree++
+		fmt.Fprintf(out, "%-16s **%d different commits**\n", repo, len(keys))
+		for _, k := range keys {
+			fmt.Fprintf(out, "    %s  %d citation(s)\n", k, len(commits[k]))
+			for _, w := range commits[k][:min(4, len(commits[k]))] {
+				fmt.Fprintf(out, "        %s\n", w)
+			}
+			if len(commits[k]) > 4 {
+				fmt.Fprintf(out, "        ... and %d more\n", len(commits[k])-4)
+			}
+		}
+	}
+
+	fmt.Fprintf(out, "\n%d upstream(s) cited, %d cited at more than one commit.\n", len(order), disagree)
+	if disagree > 0 {
+		return fmt.Errorf("%d upstream(s) are cited at more than one commit, so the material disagrees with itself about what was read", disagree)
+	}
+	if len(order) == 0 {
+		return fmt.Errorf("no provenance citation found at all, so this checked nothing")
 	}
 	return nil
 }

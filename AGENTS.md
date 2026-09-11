@@ -292,6 +292,7 @@ asgard-cli audit-material --commands
 asgard-cli audit-material --bare
 asgard-cli audit-material --paths
 asgard-cli audit-material --unverified
+asgard-cli audit-material --sources
 hack/check-doc-paths.py
 asgard-cli audit-material --urls   # needs the network
 ```
