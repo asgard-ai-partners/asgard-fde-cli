@@ -2,13 +2,17 @@
 
 A word that means two things inside one body of material produces the failure
 that is hardest to see: nothing contradicts anything, and the reader takes the
-wrong sense. It has happened - **"sandbox" meant the platform's agent runtime in
-one paragraph and the customer's test environment twenty lines later**, in the
-same section, and an FDE read the second as the first.
+wrong sense. **"sandbox" is the pair to know** - the platform's agent runtime,
+and the customer's test environment - and a paragraph using both without
+saying which is where an FDE reads the second as the first.
 
 So each of these has one meaning here, and the other senses have their own words.
 **Check this page before introducing a term, and before using one of these for
 something else.**
+
+**And grep it for the word you searched.** The table contains the word, so a
+search for an ambiguous term returns this page in the same result set as the
+ambiguity - which is why the senses are a table rather than prose about them.
 
 | word | means, here | not |
 |---|---|---|

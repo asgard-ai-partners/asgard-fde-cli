@@ -41,10 +41,8 @@ DOCS = ["Goal.md", "README.md", "README.zh-TW.md", "AGENTS.md", "STRUCTURE.md",
 # under it. Trailing `/` is a directory reference and is checked as one.
 #
 # **Backticks are not required.** The gate section writes its commands inside a
-# fenced block, where a path carries none - and that is where the first version
-# of this script failed to see `hack/imperatives.py`, the reference it was
-# written for. So the match is on the shape of the path, anchored to a
-# directory this repository owns, wherever it appears.
+# fenced block, where a path carries none, so the match is on the shape of the
+# path - anchored to a directory this repository owns - wherever it appears.
 PATH = re.compile(
     r"(?:^|[^A-Za-z0-9_./`-])"
     r"((?:source|hack|internal|cmd|prompts|projects|docs|assets|plugins|\.github)/"

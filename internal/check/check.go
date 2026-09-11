@@ -310,7 +310,7 @@ func namesAnEnvironment(s string) bool {
 // platform project — which is what gives them different namespaces. One release
 // is right for a POC nobody will maintain, and for nothing else.
 //
-// Nothing used to say so. Every prompt around a release was singular, which
+// Nothing else says so. Every prompt around a release reads as singular, which
 // reads as a 1:1:1 chart-to-release-to-platform-project mapping, and an agent
 // onboarding a repository takes the prompts literally: the reported case wrote
 // a lone release with the pattern `dev-\d+\.\d+\.\d+` — naming a dev
@@ -720,11 +720,9 @@ func (c *checker) checkQuestionsFollowTheDeck() error {
 	// The newest date the questions themselves record - a row's raised date, or
 	// the date an answer was written next to it.
 	//
-	// **Not the file's modification time.** That was the first version, and any
-	// edit to the file silenced this: the one that did was a command rename in
-	// the prose, made for an unrelated reason, and a meeting's answers were
-	// never written back while the gate said ok. A date inside a row moves only
-	// when somebody works the questions.
+	// **Not the file's modification time**, which any edit silences - including
+	// one that touches only the prose. A date inside a row moves only when
+	// somebody works the questions.
 	body, err := os.ReadFile(questions)
 	if err != nil {
 		return err

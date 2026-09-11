@@ -35,7 +35,7 @@ import (
 // was an AGENTS.md section, a stage prompt and whatever an agent happened to
 // remember. Every one of those is a place the list can go stale, and one of
 // them did: the scaffolded gate described four steps, the fourth of which ran a
-// python script that had been deleted a month earlier.
+// python script that no longer existed.
 //
 // An agent working in a compiled language does not have this problem. Whatever
 // it changed, it knows to run the build, and the build is one command whose
@@ -100,7 +100,7 @@ compiler is one command whose definition lives with the code. Nothing here was
 missing before - ` + "`check`" + `, ` + "`helm lint`" + `, ` + "`render`" + `, ` + "`verify`" + ` and the reference
 material's freshness all existed - but the only thing that assembled them was
 prose, and prose goes stale. The gate this replaces described four steps, and
-the fourth ran a script that had been deleted a month earlier.
+the fourth ran a script that no longer existed.
 
 What it runs, in order:
 

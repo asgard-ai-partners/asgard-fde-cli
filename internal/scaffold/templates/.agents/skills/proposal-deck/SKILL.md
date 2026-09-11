@@ -78,11 +78,9 @@ the deck had corrected was sitting in the file, written well.
 `asgard-cli check` warns when a file under `docs/meeting-notes/` is dated after
 **the newest date inside the questions' own rows** - a raised date, or the date
 an answer was written beside one. Deliberately not the questions file's
-timestamp: that was the first version of this check, and any edit to the file
-silenced it. The edit that did was a command rename in the prose, made for an
-unrelated reason, while a meeting's answers were never written back and the
-gate said ok. **So reformatting the file does not clear this warning, and
-answering a question does.**
+timestamp, which any edit silences - including one that touches only the prose.
+**So reformatting the file does not clear this warning, and answering a
+question does.**
 
 **Not** `docs/spec/` and **not** `projects/*/chart/`. Those describe our
 implementation. A customer looking at a slide made from a chart sees a diagram of

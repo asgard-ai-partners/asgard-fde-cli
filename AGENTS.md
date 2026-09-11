@@ -355,12 +355,6 @@ exits 1 on one that does not exist. **It reads what is embedded**, which is what
 an engagement gets; this file, `README.md` and `STRUCTURE.md` are not in it,
 because they are read from a checkout rather than shipped.
 
-It exists because that failure shipped. `asgard-cli pipeline deliveries` was
-named in six documents - the verification skill, a scaffolded `AGENTS.md` and
-`README`, two stage prompts - as the one place a push that produced no run
-explains itself, and no such command had ever been built. A person re-reading a
-provenance line found it, weeks later.
-
 None of those sees a wrong string in an embedded template, a pointer that
 resolves to the wrong page rather than to none, or a generated CR the apiserver
 would reject. **So exercise the change by hand**, against a scratch repository

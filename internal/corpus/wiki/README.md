@@ -245,12 +245,12 @@ difference, because a set of results about a shape reads exactly like a set of
 results about the product that was asked for. **Moving a row up means somebody
 did the search.**
 
-The `../wiki/glossary.md` page's one-meaning-here table is applied the same way. It sat as
-prose for a long time while the failure it describes went on happening: a search
-for `payment` returns Fehu, which is billing between Asgard and the customer,
-and nothing anywhere is red. **A grep for a word in that table has to be read
-against both senses**, which is why the table is at the top of the page rather
-than in the body.
+The `../wiki/glossary.md` page's one-meaning-here table is applied the same way,
+and it is a table rather than prose for a mechanical reason: **the table
+contains the word**, so a grep for `payment` returns the glossary in the same
+result set as the ambiguity. Nothing anywhere goes red - `payment` is billing
+between Asgard and the customer and also the customer's own gateway, and both
+sets of results are correct.
 
 ## Coverage
 
