@@ -96,7 +96,7 @@ def main() -> int:
         # the number, and a rewrap that put "The corpus is" inside the bold
         # stopped it matching - which this reported as an unchecked claim, which
         # is what it is for.
-        claim = re.search(r"(\d+) documents and ([\d,]+)\s*\n?\s*words",
+        claim = re.search(r"(\d+) documents and (?:over\s+)?([\d,]+)\s*\n?\s*words",
                           (ROOT / "TASK.md").read_text())
         if claim is None:
             bad.append("1: TASK.md states no `**<n> documents and <n> words**` claim, so the "
@@ -107,9 +107,18 @@ def main() -> int:
             if len(kinded) != docs:
                 bad.append(f"1: TASK.md says {docs} documents and {len(kinded)} landed "
                            f"across {', '.join(KINDS)}")
-            if round(got_words, -3) != words:
-                bad.append(f"1: TASK.md says {words:,} words and the landed corpus has "
-                           f"{got_words:,}, which rounds to {round(got_words, -3):,}")
+            # **The word count is a floor, not an equality.** Every edit to the
+            # material moves it, so an exact figure fails on the ordinary act of
+            # writing a paragraph - which teaches whoever hits it to stop
+            # believing this check rather than to fix the number. A floor fails
+            # on the thing worth failing on: material that has gone missing.
+            if got_words < words:
+                bad.append(f"1: TASK.md says over {words:,} words and the landed corpus has "
+                           f"{got_words:,}. Material has gone rather than grown.")
+            elif got_words > words + 10000:
+                bad.append(f"1: TASK.md says over {words:,} words and the landed corpus has "
+                           f"{got_words:,}, which is far enough past it that the figure "
+                           f"understates the material. Raise it.")
 
         # Retrieval: grep is the way in, so a grep has to find things.
         body = "\n".join(p.read_text(errors="replace") for p in landed)

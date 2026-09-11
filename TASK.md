@@ -67,7 +67,7 @@ to verify but the person who claims it.**
 
 Two numbers, and each is here because a check reads this file for it.
 
-**The corpus is 70 documents and 100,000 words** - 27 wiki pages, 22 extracts,
+**The corpus is 70 documents and over 100,000 words** - 27 wiki pages, 22 extracts,
 10 guides, 7 needs lists and 4 briefings, as `asgard-cli init` lands them.
 `hack/check-goal.py` counts them in the tree it builds, which is the only place
 the figure is true of anything.
@@ -124,6 +124,21 @@ not the same answer.
     nothing rendered reads it; and **reading or writing
     `platformMainEnvironmentId`**, which exists only after tf-asgard has created
     the namespace and so belongs to the generated repo's values files.
+  - **A Homebrew tap and a Scoop bucket**, decided against 2026-09-06 while the
+    audience is internal. A tap is a **second repository that whoever installs
+    has to be able to read**, and this one is private: making the tap private
+    too means every user runs `brew tap` against a repo needing credentials,
+    which is more setup than the `gh release download` line the release notes
+    already give them, for a smaller audience than a tap exists to serve.
+    `.goreleaser.yaml` carries the configuration commented out, in the
+    `homebrew_casks` shape rather than the deprecated `brews` one, and the two
+    steps it needs. **Going public is what makes this worth revisiting**, and it
+    is then the first thing to.
+  - **Pinning a helm major version.** Answered by warning instead: Homebrew and
+    scoop both ship Helm 4 while the scaffolded gate and skills were written for
+    3, and `template` and `lint` both still exist - so `doctor` reports the major
+    as a note and says to check that CI uses the same one. A pin would fail an
+    install that works.
 
 **The offline rule has a boundary rather than being absolute.** `init` writes
 the whole corpus with no network, no repository and no login, and `size` and
@@ -178,7 +193,3 @@ the cheapest: three CRDs - `ImageGenerationModel`, `TranscriptionModel`,
 and no material here, and nobody has asked whether they are meant to be reached
 for.
 
-**A decision from the FDE**, deferred deliberately: the Homebrew tap and Scoop
-bucket, which are a repository and a secret away; Linux packaging beyond nfpm's
-defaults; whether the helm major version should be pinned; and whether the EKS
-cluster names are customer-specific.
