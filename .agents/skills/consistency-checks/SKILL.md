@@ -25,7 +25,16 @@ consistent, point at real files, name real commands, and describe the platform
 wrongly. That gap is where every defect found by reading has come from, and no
 amount of running checks closes it.
 
-So a claim about this repository says which of the two it rests on.
+**And consistency is not capability.** Every check above can pass while the
+tool has stopped doing what `Goal.md` says it is for: make `asgard-cli init`
+require a session and the corpus is still consistent, every pointer still
+resolves, and Goal's first point is gone. `hack/check-goal.py` is the one
+check here that runs the tool the way Goal describes - in a temporary
+directory with no network, no account and no git repository - and it is the
+only one that writes files.
+
+So a claim about this repository says which of the three it rests on: a
+consistency check, a capability check, or somebody's reading.
 
 ## Write the list into TASK.md first
 
@@ -109,6 +118,7 @@ embedded, so a check run against an older binary is checking an older corpus.
 
     go build ./... && go vet ./... && gofmt -l . && go test ./...
     hack/check-pass-list.py                  this list against the binary and hack/
+    hack/check-goal.py                       Goal.md's four points, against the binary
 
 **4. The network, last, because it is the only one that needs it:**
 
@@ -132,6 +142,7 @@ tells you whether the clones are stale.
 | `validate-crs` | whether the CR does what the page says it does |
 | `check-coverage` | whether the pages behind the numbers say anything true. It counts them |
 | `check-pass-list` | **whether any check passed.** It holds the list against the binary and `hack/`, and a verdict is not in its reach |
+| `check-goal` | whether the material is any good. It asks whether the capability is there - the corpus lands, a grep finds things, a chart gets written, the issue route is printed - never whether what landed is right |
 | `sources.py` | whether a reading happened. It compares a recorded reading with its clone and reports staleness; the reading itself is nobody's to verify but whoever claims it |
 | `--orphans`, `--crossref`, `--ask`, `--unmarked`, no flag | nothing - they do not fail. They are listings for a person |
 

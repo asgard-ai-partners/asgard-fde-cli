@@ -78,6 +78,9 @@ jobs:
           go build -o .out/asgard-cli ./cmd/asgard-cli
           hack/check-pass-list.py
 
+      - name: Goal.md's four points, against the binary
+        run: hack/check-goal.py
+
       # check-tables.py and verify-references.sh are deliberately absent: both
       # need a clone of somebody else's repository, and one of those is
       # private. They are in the maintainer's gate, in AGENTS.md, and

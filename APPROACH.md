@@ -163,6 +163,12 @@ where "this repo" is theirs and `source/SOURCES.md` is not there. The rule is
 not "do not name a path" — provenance should name the file it came from — it is
 **name the repository the path is inside**, on the same line.
 
+**The audits check the material and not the capability**, and the difference
+has teeth: `asgard-cli init` could come to require a session with every audit
+still green. `hack/check-goal.py` is the other side - it runs the tool in a
+temporary directory with no network, no account and no repository, and holds
+Goal.md's four points against what happens.
+
 `hack/check-tables.py` holds the gate's pinned tables against the generated
 CRDs; `hack/verify-references.sh` runs the gate over the reference deployments.
 Neither ships in the binary — both need repositories that are not vendored.

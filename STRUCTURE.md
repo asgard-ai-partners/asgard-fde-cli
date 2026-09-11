@@ -283,6 +283,14 @@ customer's repository. A symbol resolves inside the package that owns it,
 because a search of the whole tree cannot tell one package's Index from
 another's.
 
+`hack/check-goal.py` is the only check here that is not a consistency check.
+It scaffolds a repository in a temporary directory with no network, no account
+and no git repository, and holds `Goal.md`'s four points against what the
+binary does: the corpus lands with all five kinds, a grep finds things in it,
+the `needs/` files and the deck's rules are there, a chart gets written and
+passes `check`, and `issue-report` prints the URL. Every other check can pass
+while one of those has gone.
+
 `hack/check-pass-list.py` holds `TASK.md`'s consistency pass against the
 binary's own flags and this directory's own contents, so the written list
 cannot be missing a check - and refuses this repository's maintenance skill

@@ -36,6 +36,7 @@ exit code, today, not a word somebody typed.
 | `hack/check-doc-paths.py`, `hack/check-coverage.py`, `hack/check-tables.py`, `hack/check-pass-list.py` | the ones that read this repository, and the coverage row's clone |
 | `hack/sources.py`, `hack/extract-crs.py`, `hack/validate-crs.py`, `hack/verify-references.sh` | the ones that need a clone of somebody else's repository |
 | `go build ./...`, `go vet ./...`, `gofmt -l .`, `go test ./...` | the compiler's half |
+| `hack/check-goal.py` | **the capability, not the material.** Goal.md's four points held against the binary, in a temporary directory with no network, no account and no git repository |
 
 **Two are not checks and have no pass or fail.** `--orphans`, `--crossref`,
 `--ask`, `--unmarked` and `audit-material` with no flag are listings for a

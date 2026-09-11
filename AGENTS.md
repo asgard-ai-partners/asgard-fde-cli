@@ -416,6 +416,7 @@ judgement:
 | generated CRs and the extracts' skeletons against the CRD schemas | `hack/validate-crs.py` (needs `$ASGARD_KUBE`) |
 | the gate over the reference charts | `hack/verify-references.sh` (needs the clones) |
 | build, vet, gofmt, tests | CI |
+| **Goal.md's four points, against the binary** - the corpus landing offline with no repository, a grep finding things in it, the needs files and the deck's rules, a chart being written and passing `check`, and the issue route coming out of the tool's own output | `hack/check-goal.py` |
 | `TASK.md`'s pass naming every check this repository has, and this repository's own skill never appearing in a scaffolded tree | `hack/check-pass-list.py` |
 | whether a reading `TASK.md` records has gone behind the clone it was held against | `hack/sources.py` |
 
