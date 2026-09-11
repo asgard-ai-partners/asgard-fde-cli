@@ -178,3 +178,54 @@ lists, and `sourceSetMounts` is a **JSON string** the controller unmarshals.
 
 **Every config value is a string**, including booleans: `parseJson` is `"true"`,
 a suspend label is `"true"`, not `true`.
+
+## Where a sandbox mount may go, and where it kills the agent
+
+Four rules, and the first one has taken a deployment's every conversation down.
+
+**Never mount anything under the agent's `~/.claude`.** kubelet creates a
+mount's missing **parent** directory as `root:root` before the container starts,
+the sandbox runs as uid 1000, and `~/.claude` is the one directory the CLI driver
+**must** write - its appended-system-prompt seed file lands there. So a
+read-only mount at `~/.claude/anything` makes the driver die at start-up, and
+the symptom looks nothing like a mount: the conversation fails with the driver
+never coming ready. The platform solves this for its own nested mounts by giving
+the parent (`<home>/local-plugin`) its own fsGroup-owned emptyDir, and **there
+is no such volume for `~/.claude`**.
+
+**The sandbox working directory is where it does work.** `/work` is the
+sandbox's home for the channel, `/work/.claude` does not exist on a fresh
+sandbox, and a project-level skills directory under it is discovered the same way
+- so `/work/.claude/skills/<name>` is a mount that both lands and loads.
+
+**`sourceSetMounts` is the only mechanism that takes a `subPath`.** A SkillSet
+always mounts its **whole** SourceSet - the controller joins the volume path with
+an empty member sub - and its `searchPaths` are static. So a SkillSet cannot
+expose part of a store, and using one to carry per-customer or per-brand files
+puts **every** tenant's files in **every** sandbox. Per-tenant isolation is
+`sourceSetMounts` with a `subPath`, or it does not exist.
+
+**Skill discovery has two chains and they do not meet.** A SkillSet reaches the
+agent through the environment's skill-set JSON and the runtime plugin allowlist;
+a `sourceSetMounts` mount is on neither, and is found only by being a directory
+inside a skills directory. Mounted anywhere else it is a readable file nothing
+loads, which reads as "the skill did not work" rather than as a mount in the
+wrong place.
+
+### What the CRD checks here, and what it does not
+
+| field | validated as | what that leaves to you |
+|---|---|---|
+| `sourceSetMounts[].mountPath` | `^/.+` | **nothing else.** No traversal check, no character rule. A mountPath built from a name a customer chose is a path-traversal surface, and two entries resolving to the same mountPath are deduped **first-wins**, silently dropping one |
+| `sourceSetMounts[].subPath` | rejected if absolute, or containing `.`, `..` or a double slash | a rejected one takes the **whole Sandbox** not-ready with `InvalidSourceSetMountSubPath`, which stops every conversation - far worse than skipping one entry. So validate in the expression and **skip** a bad entry rather than repairing it |
+| `credentialMounts[].mountPath` | `^/.+`, and it is a **directory** | the token lands in it as `access_token`. A single-file mount would need a `subPath`, and kubelet never refreshes those - the token would be a one-time copy taken at pod start, which is the whole thing this field exists to avoid |
+
+**Checked:** 2026-09-11 against asgard-core `623ceb5` - its
+asgard-core `internal/bpoperator/reconciler/sb_reconciler.go` for the mount
+construction, the subPath validation and the local-plugin emptyDir, and
+asgard-core `internal/processor/clidriver/options.go` for the seed file the
+driver writes - and against asgard-kube `cbd8d70`, its asgard-kube
+`pkg/apis/asgard/v1alpha1/types.go` for the three patterns and the directory
+rule. The `~/.claude` failure was reported by a
+deployment that had hit it in production, and the mechanism was then re-read in
+the platform source rather than taken from the report.
