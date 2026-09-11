@@ -1,18 +1,27 @@
 ---
-description: The acceptance gate, in order. Run before every tag.
+description: The acceptance gate. One command, before every tag.
 ---
 
-Four steps, and the order matters - each one is cheap and rules out a class the
-next one cannot see.
-
 ```bash
-asgard-cli check              # 1. structure: does the repository hold together
-asgard-cli verify             # 2 and 3: render every project, then the
-                              #    invariants a render cannot see
+asgard-cli gate
 ```
 
-Step 4 needs a cluster and is not in this repo - `.agents/skills/asgard-platform/guide/verify.md`
-says what it is.
+**One command, not a list.** A repository of CRs has no compiler, and the thing
+an agent runs after every edit has to be one command whose definition lives in
+the binary - a list in a file like this one goes stale, and this file carried a
+four-step one after the gate had eight steps.
+
+It runs, in order: `tools`, `repo`, `shipped`, `binding`, `skills`, `lint`,
+`render`, `verify`. **A skip is printed differently from a pass** - two steps
+need the platform, and a step that did not run is not a step that passed.
+
+What it cannot reach needs a cluster, and
+`.agents/skills/asgard-platform/guide/verify.md` says what that is. The
+authority is the plan:
+
+```bash
+asgard-cli pipeline runs watch --release <name> --ref <tag>
+```
 
 **Read the warnings, do not just check the exit code.** A warning here is a
 condition that is correct now and fatal once somebody tags, which is exactly the
