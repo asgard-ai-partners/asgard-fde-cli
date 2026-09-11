@@ -48,12 +48,23 @@ The Syncer writes to **`destinationPath: "git/"`**, trailing slash included, and
 a searchPath is then `git/skills/pdf/`. **The SourceSet declares no members** -
 the paths its Syncers write to are the whole truth about what is in it.
 
+**`destinationPath`, `statePath` and `sourceSetName` are immutable**, along with
+the repository location for every syncerClass. So a Syncer is never repointed:
+"sync from there instead" is a new Syncer and a deleted one, the apiserver
+refuses the edit, and the cursor does not come with it.
+`../wiki/crd-rules.md` lists all 21 of the Syncer's immutable fields.
+
 > **Two older shapes you will find in charts that have not been touched
 > recently.** Neither is worth copying, and the first one will not even apply:
 >
 > - **`members:` on the SourceSet, with `destinationMemberKey` / `stateMemberKey`
->   on the Syncer.** The member registry is gone; the fields are now
->   `destinationPath` and `statePath`.
+>   on the Syncer.** The two halves are not in the same state. `members:` is
+>   **gone from the SourceSet** - its spec carries `apiKey`, `contextIndex` and
+>   `labels` and nothing else - so a chart setting it loses the field silently.
+>   The Syncer's two key fields **still exist**, marked deprecated and kept "so
+>   pre-rename Syncer objects stay readable during the transition", so one set
+>   there does apply. Write `destinationPath` and `statePath`; the old pair is
+>   readable, not usable.
 > - **One SourceSet shared across several skill sets**, sliced apart with
 >   searchPaths, *for a skill set that is its own unit*. Changed away from on
 >   2026-08-28: it leaves the Platform UI

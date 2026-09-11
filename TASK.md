@@ -155,12 +155,14 @@ lists them. Two mechanical passes found nothing and a third was written and
 thrown away for calling correct material wrong. One person with access could
 settle all five.
 
-**A cluster.** 41 of the CRDs' 231 enforced CEL rules are `self == oldSelf`, comparing a
-proposal against the object already on it. A render is one object with no
-history, so nothing offline can see them - `botProviderClass` is the one that
-bites, and `.agents/skills/asgard-platform/usecase/chat-channel.md` documents it instead. The same
-applies to `.agents/skills/asgard-platform/guide/verify.md` step 4: a step that cannot be run is not a
-step that passed.
+**A cluster.** 41 of the CRDs' 231 enforced CEL rules are `self == oldSelf`,
+comparing a proposal against the object already on it, so nothing offline can
+say a chart will be refused at apply. **Which fields they are is written down
+now** - all 40, in `.agents/skills/asgard-platform/wiki/crd-rules.md`, and
+`hack/check-tables.py` holds that list against the CRDs. What still needs a
+cluster is watching one of them fire, and
+`.agents/skills/asgard-platform/guide/verify.md` step 4 with it: a step that
+cannot be run is not a step that passed.
 
 **A customer on a chat platform.** Every `BotProvider` across every reference
 deployment is `generic`. `chat-channel`'s credential blocks were checked field by
@@ -168,29 +170,6 @@ field against the CRD and match, but nothing there has run, and its
 `**Unchecked:**` line says so. The first customer on LINE is that page's first
 test.
 
-**A clone of asgard-docs, and one of asgard-kube, together.** Goal's first
-point names "which CR a UI name maps to" as one of four things this material
-owes an agent, and **there is one such table: `wiki/agents.md`, five rows,
-the agent family only.** Every other mapping is stated in the prose of
-whichever page discusses it - Data Source on `settings`, Drive on `knowledge`,
-MCP Server on `tools` - which a grep for the UI name does reach, and which
-nothing can check for completeness. A UI name with no CR stated anywhere is
-invisible.
-
-The table that would fix it cannot be written from a checkout: it needs the
-UI's own vocabulary from asgard-docs held against the kinds in asgard-kube,
-and inventing a row is worse than not having one. **Do not put it in
-`aliases.md`** - that file's rule is that every row is a term somebody
-actually searched for, and a bulk import of UI names is exactly the guess it
-forbids.
-
-**A clone of asgard-docs, and a reader for one slice of it.** 85 pages are
-cited by no wiki page at `f00e0ee`, 81 at the clone's HEAD, and
-`hack/check-coverage.py` computes both. Almost all of it is release notes and
-site plans. **The one slice worth reading is `help-community/faq`**, because
-nothing has checked whether the answers a customer gets there agree with what
-this material tells an FDE to say - and a customer quoting their own
-documentation back is the one disagreement that cannot be argued with.
 
 **An answer from the platform team.** The unknowns are on
 `.agents/skills/asgard-platform/wiki/platform-unknowns.md`, with who to ask and what each blocks. P12 is

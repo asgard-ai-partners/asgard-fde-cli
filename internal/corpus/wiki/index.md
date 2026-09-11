@@ -42,6 +42,55 @@
 | [`case-studies`](../wiki/case-studies.md) | the retail stockout from three angles, plus a Flow Agent help desk |
 | [`screenshots`](../wiki/screenshots.md) | which picture answers which question, and the URL to fetch it from |
 
+## Every UI name, and the CR it is
+
+**Goal's first point owes an agent this table and there was one row family of
+it - the agent pages.** Every other mapping was stated in the prose of whichever
+page discusses the feature, which a grep for the UI name does reach and which
+nothing could check for completeness. **A UI name with no CR stated anywhere is
+invisible**, and that is what this closes.
+
+Read it as "the customer said X, so the chart writes Y". The page column is
+where the judgement is; this table is only the name.
+
+| the UI calls it | the chart writes | and the page is |
+|---|---|---|
+| Agent Hub > Flow Agent | `Workflow` + `SandboxBlueprint` + `BotProvider`, and **no `Agent`** | `../usecase/flow-agent-single.md` |
+| Agent Hub > Managed Agent | `Agent` | `../wiki/agents.md` |
+| Agent Hub > Configuration > Models | **no CR of its own** - it selects `CompletionModel`s that already exist | `../wiki/settings.md` |
+| Agent Hub > Configuration > Global Directory | a read-only `SourceSet`, mounted through `SandboxBlueprint.extraDirectories` | `../usecase/conventions.md` |
+| Applications (Data Insight & Agent Hub) | **no CR** - a listing of what is already published | `../wiki/integration.md` |
+| Applications > Customized Integration | `BotProvider` | `../usecase/chat-channel.md` |
+| Automation > API | `Workflow`, with the `automation_tool` workflow-set type | `../wiki/automation.md` |
+| Automation > Trigger | `Trigger`, plus the `Workflow` it enters | `../usecase/trigger.md` |
+| Data Insight > Semantic Model | `SemanticLayer` | `../usecase/semantic-layer.md` |
+| Drive | `SourceSet`, one `Syncer` per source | `../usecase/knowledge-drive.md` |
+| Drive > Context Index | `Indexer`, and three CRs the reconciler derives from `spec.contextIndex` | `../wiki/knowledge.md` |
+| Knowledge Base | `KnowledgeBase`; a `Loader` per Auto Load source, a `Source` per item | `../usecase/knowledge-base.md` |
+| MCP Servers | `Toolset` | `../wiki/tools.md` |
+| Plugins | `Plugin` | `../usecase/plugin.md` |
+| Skillsets | `SkillSet` + its own `SourceSet` + the `Syncer` that fills it | `../usecase/skill-set.md` |
+| Settings > Completion Model | `CompletionModel` | `../wiki/settings.md` |
+| Settings > Embedding Model | `EmbeddingModel` | `../wiki/settings.md` |
+| Settings > Data Source | `DataConnector` | `../wiki/settings.md` |
+| Settings > Connection | `OAuthProvider` + `OAuthCredential`. **Not Data Source**: this is third-party OAuth, where Data Source is a credential you type | `../wiki/settings.md` |
+
+**Four kinds are in the contract and are nobody's to create.** `Sandbox` is the
+runtime object a blueprint produces, so a chart never writes one;
+`ImageGenerationModel`, `TranscriptionModel` and `SourceSetEditorServer` have no
+UI page, no documentation and no material - `../wiki/platform-unknowns.md` P12
+is the open question about whether they are meant to be reached for at all.
+
+**Checked:** 2026-09-11, the UI's own vocabulary from asgard-docs `f00e0ee` -
+the sixteen pages under `product-suite/odin/features/` - held against the 24
+kinds in asgard-kube `cbd8d70` `crd/`. Each row's CR is the one that page says
+gets created, or the one the extract in the third column writes.
+
+**Unchecked:** Mimir's and Sindri's own pages are not in it. Their features
+(Thread, View, Dashboard, My Chat, Directory) are reached rather than authored,
+so a chart writes nothing for them - but nobody has confirmed that a Mimir View
+leaves no CR behind.
+
 ## Known gaps between the documentation and the CRD
 
 Each is written on the page it affects:
@@ -93,10 +142,10 @@ The sources this material is actually built from:
 
 | source | what it holds | state |
 |---|---|---|
-| asgard-docs | the product documentation | 77 / 162 cited at `f00e0ee`; 85 published and unread; 28 deliberately excluded below. **Computed, not counted** - `hack/check-coverage.py` in asgard-fde-cli recomputes it and fails when this row drifts |
+| asgard-docs | the product documentation | 77 / 162 cited at `f00e0ee`; 85 published and uncited; 28 deliberately excluded below. **Computed, not counted** - `hack/check-coverage.py` in asgard-fde-cli recomputes it and fails when this row drifts |
 | asgard-kube `crd/` | the contract | read per page, per field, and dated on the page |
 | **asgard-kube `pkg/apis/`** | **the Go types the CRDs are generated from, with the reasoning as comments** | read once, 2026-09-02, for the validation rules - `../wiki/crd-rules.md`. 134KB of declarations; what has been taken is the behavioural comments, not the field list |
-| **[asgard-core](https://github.com/asgard-ai-platform/asgard-core)** `internal/constants.go` | **the processor definitions the CRD is generated from** | read once, 2026-09-02, for the type list. Its per-processor config definitions are not carried anywhere |
+| **[asgard-core](https://github.com/asgard-ai-platform/asgard-core)** `internal/constants.go` | **the processor definitions the CRD is generated from** | walked 2026-09-03 at `5da86c6` and re-walked 2026-09-11 at `623ceb5`. Every processor's required keys, defaults and declared outputs are in `../wiki/processors.md`, and asgard-fde-cli's `hack/check-processors.py` is what holds that table against the literal |
 | **asgard-freyr-skills** | **nine runtime skills, incl. the SHOPLINE pair** | one page - `../usecase/skill-layers.md`. The eighth reference repository, and the only one with no CRs |
 | **seven deployments** | **every shape the extracts describe** | 19 charts between them; `../wiki/coverage.md` counts per deployment and says why |
 
@@ -144,6 +193,16 @@ directory being deleted, which is not something this material can notice.
 158 pages at `23409b3` against 162 at `f00e0ee`, with the same 77 cited.
 asgard-fde-cli's `hack/check-coverage.py --head` prints both, and the difference
 is the size of what re-reading would cover rather than a defect.
+
+**"Uncited" is not "unread", and the gap is two families.** 15 of the 85 are
+the per-processor reference pages and 11 more are the SSE event pages under
+`developer-reference/api-doc/send-message/sse-response/`, both of which this
+material points at **by URL pattern rather than by link** - `../wiki/processors.md`
+gives the pattern and one example, `api.md` says "one page per event" and links
+one. That is deliberate: 26 links to pages whose content is a field table would
+be 26 things to keep resolving. A further 14 are the excluded message-template
+shapes. **So the number is a measure of how much is linked, not of how much has
+been read**, and it is worth knowing which before treating it as a backlog.
 
 **The numerator read 71 for a week, and the reason was the checker rather than
 the material.** A live URL is not always the file path under `docs/`: four

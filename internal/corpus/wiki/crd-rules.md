@@ -72,8 +72,54 @@ had the marker count written down as the CRDs' own for a week.
 
 **41 of the enforced rules are exactly `self == oldSelf`** - 40 of the markers -
 and they compare a proposed object against the one already on the cluster, so a
-render, which is one object with no history, cannot see any of them.
-`botProviderClass` is the one that bites; `../usecase/chat-channel.md` says why.
+render, which is one object with no history, cannot see any of them. Nothing
+offline can tell you a chart will be refused at apply. **What can be said
+offline is which fields they are**, and that is the useful half:
+
+### Which fields are chosen once
+
+**Every resource's class is immutable.** `agentClass`, `botProviderClass`,
+`completionModelClass`, `dataConnectorClass`, `embeddingModelClass`,
+`imageGenerationModelClass`, `knowledgeBaseClass`, `loaderClass`,
+`sourceClass`, `syncerClass`, `transcriptionModelClass` - eleven of them, one
+per kind that has a class. So `botProviderClass` is not a special case, it is
+the instance of this rule an FDE meets first: **changing what kind of thing a
+resource is means a new resource with a new name**, and the old one's references
+have to move.
+
+**The Syncer is where this costs the most: 21 of the 40.** Not just
+`syncerClass` but **where it reads from and where it writes to**:
+
+    sourceSetName            which store it fills
+    destinationPath          the path inside that store
+    statePath                where it keeps its cursor
+    ftp.host  ftp.remotePath
+    sftp.host sftp.remotePath
+    smb.host  smb.remotePath
+    dropbox.folderPath       and its oAuthCredentialName
+    googleDrive.folderId     and its oAuthCredentialName
+    oneDrive.folderId oneDrive.folderPath  and its oAuthCredentialName
+    bot.botProviderName
+    database.columns
+
+**So a Syncer is not repointed, it is replaced.** "Sync from this folder
+instead" is a new Syncer and a deleted one, not an edit - and the cursor goes
+with it, so the new one re-reads from the beginning unless `statePath` is
+handed over deliberately. `../usecase/skill-set.md` writes one; nothing in
+that page said this.
+
+**The Loader is the same shape, smaller.** `knowledgeBaseName` is immutable, so
+a Loader cannot be pointed at a different knowledge base, along with its
+`loaderClass`, its Drive folder ids and its credential names.
+
+**And one that reads like a typo and is not:** `Indexer.spec.xlsx` is immutable.
+Whether a Drive's index treats spreadsheets as tables is decided when the
+Indexer is created.
+
+**Checked:** 2026-09-11, by walking every `self == oldSelf` rule in asgard-kube
+`cbd8d70` `crd/` back to the property that carries it - 40 properties across
+twelve kinds. The count of rules is 41 because one kind carries the same rule
+at two paths.
 
 The rest are two families, and `asgard-cli verify` checks both as of
 2026-09-04:

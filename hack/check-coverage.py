@@ -7,6 +7,11 @@ decide whether an absence means "not covered" or "not there", **so a wrong
 denominator makes the material read better than it is** - and the two easiest
 to confuse are the number of LINKS it writes and the number of PAGES there are.
 
+**"Uncited" is not "unread" either.** 26 of the uncited pages are two families
+this material points at by URL pattern rather than by link - the per-processor
+reference and the SSE event pages - so this number measures how much is linked.
+Treating it as a reading backlog overstates the backlog by those 26.
+
 So it is computed rather than counted. The page names the commit it was
 measured at, and this measures at that same commit - `git ls-tree` on the
 clone, so pulling does not change the answer.
@@ -37,7 +42,7 @@ EXCLUDED = re.compile(r"asgard-builtin/message-template|help-community/release-n
 # The row this checks, and the four numbers in it.
 ROW = re.compile(
     r"\|\s*asgard-docs\s*\|[^|]*\|\s*(\d+)\s*/\s*(\d+)\s*cited at `([0-9a-f]{7,})`"
-    r";\s*(\d+)\s*published and unread;\s*(\d+)\s*deliberately excluded")
+    r";\s*(\d+)\s*published and uncited;\s*(\d+)\s*deliberately excluded")
 
 
 def pages(docs: pathlib.Path, ref: str) -> set:
@@ -227,13 +232,13 @@ def main() -> int:
     m = ROW.search(text)
     if not m:
         sys.exit("the asgard-docs row in internal/corpus/wiki/index.md does not match the shape\n"
-                 "this checks: `<cited> / <total> cited at `<commit>`; <n> published and unread;\n"
+                 "this checks: `<cited> / <total> cited at `<commit>`; <n> published and uncited;\n"
                  "<n> deliberately excluded`. Keep the shape or update this script.")
     claim = (int(m.group(1)), int(m.group(2)), int(m.group(4)), int(m.group(5)))
     ref = m.group(3)
 
     got = measure(docs, ref)
-    names = ("cited", "total", "unread", "excluded")
+    names = ("cited", "total", "uncited", "excluded")
     print(f"at {ref}, the commit the page names:")
     bad = 0
     for name, c, g in zip(names, claim, got):

@@ -155,6 +155,16 @@ reason and against the same trap: 79 is the `XValidation` markers in the Go
 types, 231 is what the generator emits from them, and this material had the
 marker count written down as the CRDs' own for a week.
 
+**And every immutable field.** 41 of the enforced rules are `self == oldSelf`,
+carried on 40 kind-and-property pairs across twelve kinds, and nothing offline
+can tell you a chart will be refused at apply - but **which fields they are** is
+computable, and an immutable field nobody has written down is one an FDE meets
+after the tag is pushed. So this checks that `wiki/crd-rules.md` names all
+eleven class fields, states the Syncer's 21 and the total, and that no immutable
+Syncer field is missing from the corpus. Pairs rather than distinct paths:
+`bot.botProviderName` is immutable on the Loader and on the Syncer, and those
+are two fields somebody can be refused on.
+
 ## How far the generated chart is from a real one
 
     hack/spec-key-gap.py             recompute, and check TASK.md's claim

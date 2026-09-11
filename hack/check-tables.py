@@ -95,6 +95,98 @@ CEL_CLAIMS = [
 ]
 
 
+def immutable(crd: pathlib.Path) -> dict:
+    """Every property carrying `self == oldSelf`, by kind.
+
+    **The rule count and the property count are not the same number**, because
+    one kind can carry the rule at two paths - which is why `wiki/crd-rules.md`
+    states 41 rules and 40 properties and says so.
+    """
+    out = {}
+    for f in sorted(crd.glob("*.yaml")):
+        doc = json.loads(subprocess.run(["yq", "-o=json", "-I=0", "."], stdin=open(f),
+                                        capture_output=True, text=True).stdout)
+        kind = doc["spec"]["names"]["kind"]
+        found = set()
+
+        def walk(node, path):
+            if not isinstance(node, dict):
+                return
+            for rule in (node.get("x-kubernetes-validations") or []):
+                if rule.get("rule", "").strip() == "self == oldSelf":
+                    found.add(path or "<spec>")
+            for k, v in (node.get("properties") or {}).items():
+                walk(v, f"{path}.{k}" if path else k)
+            if "items" in node:
+                walk(node["items"], path + "[]")
+
+        spec = doc["spec"]["versions"][0]["schema"]["openAPIV3Schema"].get(
+            "properties", {}).get("spec", {})
+        walk(spec, "")
+        if found:
+            out[kind] = found
+    return out
+
+
+def check_immutable(crd: pathlib.Path) -> list:
+    """Every immutable field the material names, and the count it states.
+
+    An immutable field nobody has written down is one an FDE meets at apply
+    time, after the tag is pushed - so this reports the ones no page names, as
+    information rather than a failure: the page is deliberately a summary and
+    names the families plus the Syncer's whole list.
+    """
+    root = pathlib.Path(__file__).resolve().parent.parent
+    page = (root / "internal/corpus/wiki/crd-rules.md").read_text()
+    corpus = "\n".join(f.read_text(errors="replace")
+                       for f in (root / "internal/corpus").rglob("*.md"))
+    bykind = immutable(crd)
+    props = {p for v in bykind.values() for p in v}
+    # **Pairs, not distinct paths.** `bot.botProviderName` is immutable on the
+    # Loader and on the Syncer, and those are two fields somebody can be
+    # refused on - counting the path once says 33 where the answer is 40.
+    pairs = sum(len(v) for v in bykind.values())
+    out = []
+
+    for pattern, want, what in (
+        (r"(\d+) of the enforced rules are exactly", None, "oldSelf rules"),
+        (r"(\d+) properties across\s*\n?\s*twelve kinds", pairs, "immutable properties"),
+        (r"eleven of them, one\s*\n?per kind that has a class",
+         None, "class fields"),
+        (r"the Syncer is where this costs the most: (\d+) of the \d+",
+         len(bykind.get("Syncer", ())), "Syncer immutable fields"),
+        (r"costs the most: \d+ of the (\d+)", pairs, "immutable properties"),
+    ):
+        m = re.search(pattern, page, re.I)
+        if m is None:
+            out.append(f"internal/corpus/wiki/crd-rules.md states no {what} the way this "
+                       f"check reads it, so {want if want is not None else 'that claim'} "
+                       f"is going unchecked")
+            continue
+        if want is not None and m.group(1) and int(m.group(1)) != want:
+            out.append(f"internal/corpus/wiki/crd-rules.md says {m.group(1)} {what}, "
+                       f"and the CRDs have {want}")
+
+    classes = sorted(p for p in props if p.endswith("Class"))
+    named = [c for c in classes if f"`{c}`" in page]
+    if len(named) != len(classes):
+        out.append("crd-rules.md does not name every immutable class field: missing "
+                   + ", ".join(c for c in classes if c not in named))
+    if len(bykind) != 12:
+        out.append(f"{len(bykind)} kinds carry an immutable field and the page says twelve")
+
+    # The Syncer's list is written out in full, so every one of its fields has
+    # to be somewhere in the corpus - that is the list an FDE reads before
+    # believing a Syncer can be edited.
+    # Matched on the leaf as well as the path: the page writes a shared
+    # credential field once as "and its oAuthCredentialName" rather than three
+    # times with its prefix, which is how it should read.
+    for f in sorted(bykind.get("Syncer", ())):
+        if f not in corpus and f.rsplit(".", 1)[-1] not in corpus:
+            out.append(f"Syncer.{f} is immutable and no page in the corpus names it")
+    return out
+
+
 def cel_counts(crd: pathlib.Path, kube: pathlib.Path) -> dict:
     """How many CEL rules there are, on both sides of the generator."""
     rules = []
@@ -162,6 +254,8 @@ def main():
             problems.append(f"constraint {name}: no CRD property constrains it")
         elif len(cons[name]) > 1:
             problems.append(f"constraint {name}: {len(cons[name])} different constraint sets in the CRDs, so one table entry cannot be right")
+
+    problems += check_immutable(crd)
 
     kube = crd.parent
     if (kube / "pkg/apis/asgard/v1alpha1/types.go").is_file():
