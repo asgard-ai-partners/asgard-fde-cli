@@ -46,9 +46,15 @@ absence.
 **Then run `hack/check-pass-list.py`, because a list derived from a document
 is only as complete as that document.** It reads the binary's own flags and
 `hack/`'s own contents rather than another list, and fails on a check the pass
-does not name. The first run found eight: `--ask`, `--unmarked`, `--term`,
-`extract-crs.py`, and all four Go steps - the inventory did not have them
-either, so the derivation was faithful to a source with holes in it.
+does not name - `--ask`, `--unmarked`, `--term`, `extract-crs.py` and all four
+Go steps were absent from the inventory too, so deriving faithfully produced
+the same holes.
+
+**The prose surfaces carry a slug, in both documents.** They are the group
+that cannot be discovered from the binary, so they are the group that drifts;
+comparing their wording drifts with them, because each list words a surface
+for its own context. `check-pass-list.py` compares the slugs, both ways, so
+a surface in one list and not the other is reported rather than assumed.
 
 ## Then run them, most-volatile first
 

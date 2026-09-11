@@ -38,6 +38,7 @@ Last filled in **2026-09-11**, against asgard-kube `cbd8d70`, asgard-docs
 | the asgard-kube diff since the recorded commit | fixed; the cron `schedule` pattern was deleted upstream and still enforced here |
 | the asgard-docs diff since the recorded commit | fixed; a new Flow Agent's default flow, `effort`'s three states, the SDK client's methods |
 | the asgard-core diff since the recorded commit | fixed; the card tools and the result-set file were in no page |
+| `deployment-diffs`  the eight deployment clones' diffs since the extracts were written from them | **not read.** `hack/sources.py` says how far each is behind; reading the diff is a different act, and five were behind by up to 84 commits when the counts in those extracts turned out to be stale |
 
 ### The material - moves when somebody edits it
 
@@ -61,12 +62,13 @@ Last filled in **2026-09-11**, against asgard-kube `cbd8d70`, asgard-docs
 
 | item | state |
 |---|---|
-| the 22 extracts against the charts they came from | read 2026-09-11; six numbers and one field name were wrong |
-| the 27 wiki pages against asgard-docs | the `f00e0ee..23409b3` diff was read; **the prose that diff did not touch still stands at its own reading** |
-| the 10 stage prompts' guidance, as opposed to their command claims | **not read** |
-| the 7 design-time skills' prose, as opposed to their command and path claims | **not read** - 2,255 lines, of which `proposal-deck` is 1,232 |
-| `wiki/processors.md`'s table, by re-walking asgard-core's `ProcessorDefinitions` | **not re-walked**; the file is unchanged since it was read, which is not the same thing |
-| the 14 packages' help against their behaviour | read 2026-09-11 |
+| `extracts-vs-charts`  the 22 extracts against the charts they came from | read 2026-09-11; six numbers and one field name were wrong |
+| `wiki-vs-docs`  the 27 wiki pages against asgard-docs | the `f00e0ee..23409b3` diff was read; **the prose that diff did not touch still stands at its own reading** |
+| `stage-prompts`  the 10 stage prompts' guidance, as opposed to their command claims | **not read** |
+| `design-time-skills`  the 7 design-time skills' prose, as opposed to their command and path claims | **not read** - 2,255 lines, of which `proposal-deck` is 1,232 |
+| `processors-rewalk`  `wiki/processors.md`'s table, by re-walking asgard-core's `ProcessorDefinitions` | **not re-walked**; the file is unchanged since it was read, which is not the same thing |
+| `packages-help`  the 14 packages' help against their behaviour | read 2026-09-11 |
+| `flag-usage`  every flag's usage text against what the flag does | read 2026-09-11, all 81; none registered and unread |
 
 ## Goal
 

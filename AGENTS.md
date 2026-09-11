@@ -434,12 +434,19 @@ produced every finding, so it carries a date:
 
 | surface | last read, and how |
 |---|---|
-| the 22 extracts' prose against the charts they came from | 2026-09-11, every field name against the pulled clones and the CRDs, every count by rendering all 19 charts |
-| the 27 wiki pages' prose against asgard-docs | 2026-09-11. The whole `f00e0ee..23409b3` diff was read - 27 files under `docs/`, of which 5 are deleted plans and 19 are processor and SDK pages - and what it changed is in `../wiki/processors.md`, `api.md`, `usecase/flow-agent-single.md`, `case-studies.md` and `screenshots.md`. The prose not touched by that diff still stands at its own reading |
-| the 10 stage prompts | 2026-09-11, for what they claim another command does; not for their guidance |
-| the 7 design-time skills' prose | 2026-09-11, for command and path claims only |
-| every flag's usage text against what the flag does | 2026-09-11, all 81 |
-| `internal/localenv`, `platform`, `auth`, `work`, `skills`, `gitrepo`, `render`, `binding`, `chart`, `tool`, `browser`, `version`, `pipelineconfig`, `repo` | 2026-09-11, read end to end - about 7,300 lines. Every claim in a doc comment or a help screen that could be checked was: the loopback server's token, Host check and CSP; that `add` runs with no helm on PATH; that `doctor` reports a missing optional without failing; that a secret's value never comes back; that `profile show` prints where each field came from; every literal repository path each package emits, against a scaffolded tree |
+| `extracts-vs-charts`  the 22 extracts against the charts they came from | 2026-09-11, every field name against the pulled clones and the CRDs, every count by rendering all 19 charts |
+| `wiki-vs-docs`  the 27 wiki pages against asgard-docs | 2026-09-11. The whole `f00e0ee..23409b3` diff was read - 27 files under `docs/`, of which 5 are deleted plans and 19 are processor and SDK pages - and what it changed is in `../wiki/processors.md`, `api.md`, `usecase/flow-agent-single.md`, `case-studies.md` and `screenshots.md`. The prose not touched by that diff still stands at its own reading |
+| `stage-prompts`  the 10 stage prompts | 2026-09-11, for what they claim another command does; not for their guidance |
+| `design-time-skills`  the 7 design-time skills' prose | 2026-09-11, for command and path claims only |
+| `flag-usage`  every flag's usage text against what the flag does | 2026-09-11, all 81 |
+| `processors-rewalk`  `wiki/processors.md`'s table, by re-walking asgard-core's `ProcessorDefinitions` | **not re-walked.** The file is unchanged since it was read, which is not the same thing |
+| `deployment-diffs`  the eight deployment clones' diffs since the extracts were written from them | **not read.** How far behind each is comes from `hack/sources.py`; the diff is a different act |
+| `packages-help`  `internal/localenv`, `platform`, `auth`, `work`, `skills`, `gitrepo`, `render`, `binding`, `chart`, `tool`, `browser`, `version`, `pipelineconfig`, `repo` | 2026-09-11, read end to end - about 7,300 lines. Every claim in a doc comment or a help screen that could be checked was: the loopback server's token, Host check and CSP; that `add` runs with no helm on PATH; that `doctor` reports a missing optional without failing; that a secret's value never comes back; that `profile show` prints where each field came from; every literal repository path each package emits, against a scaffolded tree |
+
+**Every row in the third group carries a slug**, and `TASK.md`'s pass carries
+the same slug for the same surface. `hack/check-pass-list.py` compares the
+slugs in both directions, because the two are worded for their own context and
+comparing their prose drifts with them.
 
 **Add a row when you add a surface, and move one up when you write its
 check.** A surface that is in none of the three groups is one nobody has

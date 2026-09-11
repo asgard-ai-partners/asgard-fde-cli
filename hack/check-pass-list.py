@@ -77,6 +77,23 @@ def main() -> int:
         if step not in section:
             missing.append(step)
 
+    # **The prose surfaces correspond by key, not by wording.** They are
+    # derived rather than discovered, so the two lists drift - and comparing
+    # their prose drifts with them: the same surface is worded for its own
+    # context and filed under the group that suits it. Each row carries a
+    # slug, and only the slugs are compared.
+    def keys(text, heading):
+        sec = text[text.index(heading):]
+        return set(re.findall(r"^\| `([a-z][a-z0-9-]*-[a-z0-9-]+)`", sec, re.M))
+
+    agents = (ROOT / "AGENTS.md").read_text()
+    inventory = keys(agents, "**Checked by nothing, and verified by reading.**")
+    listed = keys(section, "## The consistency pass")
+    for k in sorted(inventory - listed):
+        missing.append(f"prose surface `{k}` is in AGENTS.md's inventory and not in the pass")
+    for k in sorted(listed - inventory):
+        missing.append(f"prose surface `{k}` is in the pass and not in AGENTS.md's inventory")
+
     # The maintenance skill must not be in the scaffolded tree.
     shipped = ROOT / "internal/scaffold/templates/.agents/skills"
     ours = {d.name for d in (ROOT / ".agents/skills").iterdir() if d.is_dir()} \
@@ -84,7 +101,10 @@ def main() -> int:
     leaked = sorted(n for n in ours if (shipped / n).exists())
 
     for m in missing:
-        print(f"unlisted  {m} is a check here and TASK.md's pass does not name it")
+        if m.startswith("prose surface"):
+            print(f"adrift    {m}")
+        else:
+            print(f"unlisted  {m} is a check here and TASK.md's pass does not name it")
     for n in leaked:
         print(f"leaked    .agents/skills/{n} is also in the scaffolded tree, so it ships")
 
