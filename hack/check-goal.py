@@ -91,7 +91,12 @@ def main() -> int:
         # so it is counted here rather than trusted, whitespace-separated and
         # rounded to the nearest thousand.
         kinded = [p for k in KINDS for p in (tree / CORPUS / k).glob("*.md")]
-        claim = re.search(r"\*\*(\d+) documents and ([\d,]+)\s*\n?words\*\*",
+        # Matched on the words rather than on the markup around them: the first
+        # version of this pattern required the bold to open immediately before
+        # the number, and a rewrap that put "The corpus is" inside the bold
+        # stopped it matching - which this reported as an unchecked claim, which
+        # is what it is for.
+        claim = re.search(r"(\d+) documents and ([\d,]+)\s*\n?\s*words",
                           (ROOT / "TASK.md").read_text())
         if claim is None:
             bad.append("1: TASK.md states no `**<n> documents and <n> words**` claim, so the "

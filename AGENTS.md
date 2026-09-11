@@ -398,6 +398,26 @@ is this table.** Every defect found by reading rather than by a check came from
 a surface in the third group. So a claim that something is done says which
 group it was in.
 
+### Never report a pass as green while `TASK.md` has work in it
+
+**Do not answer "all green", or anything that reads as it, while `TASK.md`
+carries an unfinished item.** Report the checks as what they are - a list of
+exit codes - and then say what is still open, by name.
+
+The reason is not modesty. Green means every check this repository has passes,
+and the surfaces that produce the defects are the ones with no check: **17 were
+found by reading in a single pass during which everything was green**, among
+them a table saying a required field had a default it does not have, a count of
+88 written as 93 in seven places, and a pair of numbers no method could
+reproduce. So a green run is evidence about the checks and almost none about
+the material, and reporting it as a verdict on the repository tells the reader
+the opposite of what it means.
+
+**`TASK.md` is where that is read from.** "What is not done" is the list, every
+line names what it is waiting for, and "The consistency pass" is the scope of
+the current pass. If either has an entry, the answer is "the checks pass and
+these are open", never "green".
+
 **Mechanical, and fails the build.** Run them and the answer is not a
 judgement:
 
