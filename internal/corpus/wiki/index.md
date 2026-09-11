@@ -97,8 +97,8 @@ The sources this material is actually built from:
 | asgard-kube `crd/` | the contract | read per page, per field, and dated on the page |
 | **asgard-kube `pkg/apis/`** | **the Go types the CRDs are generated from, with the reasoning as comments** | read once, 2026-09-02, for the validation rules - `../wiki/crd-rules.md`. 134KB of declarations; what has been taken is the behavioural comments, not the field list |
 | **[asgard-core](https://github.com/asgard-ai-platform/asgard-core)** `internal/constants.go` | **the processor definitions the CRD is generated from** | read once, 2026-09-02, for the type list. Its per-processor config definitions are not carried anywhere |
-| **asgard-freyr-skills** | **nine runtime skills, incl. the SHOPLINE pair** | one page - `../usecase/skill-layers.md` |
-| **seven deployment charts** | **every shape the extracts describe** | see below |
+| **asgard-freyr-skills** | **nine runtime skills, incl. the SHOPLINE pair** | one page - `../usecase/skill-layers.md`. The eighth reference repository, and the only one with no CRs |
+| **seven deployments** | **every shape the extracts describe** | 19 charts between them; `../wiki/coverage.md` counts per deployment and says why |
 
 **Deployment coverage cannot be measured from this material, by design.** An
 extract names no customer and no deployment - it says "seen in a deployment

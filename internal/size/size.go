@@ -80,7 +80,12 @@ var Shapes = []Shape{
 		Name:     "mimir-dashboard",
 		Audience: "internal - people who watch numbers rather than ask questions",
 		Base:     map[string]int{},
-		SeenIn:   "a finance deployment: 3 SemanticLayers, no Agent, no entry point",
+		// **Not a whole deployment.** Every chart read for this set has an
+		// entry point somewhere; what was counted is the read surface on its
+		// own - layers with no Agent bound to them - which is what a Mimir
+		// deliverable is. Naming a deployment here read as "that chart has no
+		// Agent", and the finance one has three and a supervisor.
+		SeenIn: "the read surface of a finance deployment: 3 SemanticLayers with no Agent bound to them",
 		Note: "**No entry point and no agent.** The customer reaches it through the\n" +
 			"product, so the chart is the read surface and nothing else. Views and\n" +
 			"Dashboards are built by them, in Mimir, and are not chart work at all -\n" +
