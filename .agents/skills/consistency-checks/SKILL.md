@@ -1,6 +1,6 @@
 ---
 name: consistency-checks
-description: How to check this repository's material for consistency, and what consistency checking cannot answer. Every mechanical check in one order with what each one is blind to, the method for holding prose against the upstream it came from, the claim shapes that rot, and the rule that ends the loop - compute a number rather than copy one. Use before saying anything here is correct, after changing any document, after pulling an upstream clone, and when a reading of this material turned out to be wrong.
+description: How to check this repository's material for consistency, and what consistency checking cannot answer. Writing the pass's scope into TASK.md before running anything, running most-volatile first because upstream moves without anyone here touching it, what each check is blind to, the method for holding prose against the upstream it came from, and the two rules that end the loop - compute a number rather than copy one, and record no verdict a program could have produced. Use before saying anything here is correct, after changing any document, after pulling an upstream clone, and when a reading of this material turned out to be wrong.
 ---
 
 # Checking this material
@@ -16,9 +16,9 @@ one is blind to, and how to do the part no check does.
 
 **Almost every check here is a consistency check.** It asks whether two things
 inside this repository agree - a pointer against the file it names, a command
-against the command tree, a number against a measurement. Three ask something
+against the command tree, a number against a measurement. Four ask something
 harder, and they need a clone: `hack/check-tables.py`, `hack/validate-crs.py`,
-`hack/check-coverage.py`.
+`hack/check-coverage.py` and `hack/sources.py`.
 
 **Nothing checks whether a sentence is true.** A page can be internally
 consistent, point at real files, name real commands, and describe the platform
@@ -30,8 +30,11 @@ So a claim about this repository says which of the two it rests on.
 ## Write the list into TASK.md first
 
 **A consistency pass begins by writing down every item, before running any of
-them.** `TASK.md` has a section for it - "The consistency pass" - and the skill
-fills it in: every check, every surface, its group, and its state.
+them.** `TASK.md` has a section for it - "The consistency pass" - and it holds
+two different things:
+
+    every check this repository has      by name, and nothing else
+    every surface no check reaches       what the reading was held against
 
 That order is the point. A pass that runs checks and reports what they said
 discovers its own scope as it goes, which is how a surface nobody had listed
@@ -63,6 +66,12 @@ that cannot be discovered from the binary, so they are the group that drifts;
 comparing their wording drifts with them, because each list words a surface
 for its own context. `check-pass-list.py` compares the slugs, both ways, so
 a surface in one list and not the other is reported rather than assumed.
+
+**And know what that check cannot do.** It verifies that the list is
+complete - never that anything on it passed. A table whose cells are verdicts
+is a table CI validates the shape of and not the content, which is how a
+complete list of unverifiable claims comes to read like assurance. That is why
+the mechanical rows carry no state at all.
 
 ## Then run them, most-volatile first
 
@@ -121,8 +130,24 @@ tells you whether the clones are stale.
 | `--sources` | whether a recorded commit is current. Nothing inside this repository can know that; `hack/sources.py` reads the clones |
 | `check-tables` | a constraint the CRD expresses in CEL rather than in the schema |
 | `validate-crs` | whether the CR does what the page says it does |
+| `check-coverage` | whether the pages behind the numbers say anything true. It counts them |
+| `check-pass-list` | **whether any check passed.** It holds the list against the binary and `hack/`, and a verdict is not in its reach |
+| `sources.py` | whether a reading happened. It compares a recorded reading with its clone and reports staleness; the reading itself is nobody's to verify but whoever claims it |
 | `--orphans`, `--crossref`, `--ask`, `--unmarked`, no flag | nothing - they do not fail. They are listings for a person |
-| `--term` | nothing, until somebody runs it. It is the sweep for a renamed platform field, and it is the only check here that needs to be told what to look for |
+
+## The one that is a query rather than a check
+
+    asgard-cli audit-material --term <field>
+
+**Run it when a platform field is renamed or retired**, and only then. It has
+no pass or fail - it answers a question somebody asks it - so it is here and
+not in `TASK.md`'s pass, which lists checks that can be run and answered
+without being told what to look for.
+
+It reads the templates as well as the prose. A renamed field is taught in
+three places - a template that writes it, an extract that explains it, a
+prompt that mentions it - and fixing one leaves the other two teaching a field
+that no longer exists.
 
 ## Holding prose against its source
 
@@ -163,6 +188,12 @@ says chart-writing cautions belong to the extracts and field rules to the CRD.
 Most of what has been wrong here was this repository restating something
 another repository owns.
 
+**The same rule applies to a check's own result.** `ok` written beside
+`--links` is a copied number wearing a different hat: a script produces it, so
+prose must not. What a document may record about a check is its name; what it
+may record about a reading is what the reading was held against. Anything
+else is a claim nothing can hold against anything.
+
 ## When a reading turns out to be wrong
 
 Fix the claim, then ask the second question: **would a check have caught it?**
@@ -181,6 +212,8 @@ and this file is in the set both read. The ordering claim is checkable too:
 `hack/sources.py` reports how far each clone is behind, which is the measure
 of what moves without anyone here touching it.
 
-**Unchecked:** whether this order is the best one. It is cheapest-first and
-each step rules out a class the next cannot see, which is a design rather than
-a measurement.
+**Unchecked:** whether most-volatile-first is the best order. That upstream
+moves most is measured - `hack/sources.py` reports it - but that running it
+first finds more, sooner, is a design rather than a measurement. What is
+settled is that cheapest-first was the wrong principle: it optimised for the
+time of whoever runs the pass.
