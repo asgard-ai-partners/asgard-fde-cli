@@ -84,6 +84,28 @@ def main() -> int:
         if len(landed) < 60:
             bad.append(f"1: only {len(landed)} corpus documents landed; the corpus is not a handful of files")
 
+        # **TASK.md's "N documents and M words" is the claim this material makes
+        # about its own value**, and a floor of 60 does not hold it. The landed
+        # tree is the only place the number is true of anything - the input tree
+        # has neither the rendered `needs` shapes nor the briefings as files -
+        # so it is counted here rather than trusted, whitespace-separated and
+        # rounded to the nearest thousand.
+        kinded = [p for k in KINDS for p in (tree / CORPUS / k).glob("*.md")]
+        claim = re.search(r"\*\*(\d+) documents and ([\d,]+)\s*\n?words\*\*",
+                          (ROOT / "TASK.md").read_text())
+        if claim is None:
+            bad.append("1: TASK.md states no `**<n> documents and <n> words**` claim, so the "
+                       "one number this material gives for its own size is unchecked")
+        else:
+            docs, words = int(claim.group(1)), int(claim.group(2).replace(",", ""))
+            got_words = sum(len(p.read_text(errors="replace").split()) for p in kinded)
+            if len(kinded) != docs:
+                bad.append(f"1: TASK.md says {docs} documents and {len(kinded)} landed "
+                           f"across {', '.join(KINDS)}")
+            if round(got_words, -3) != words:
+                bad.append(f"1: TASK.md says {words:,} words and the landed corpus has "
+                           f"{got_words:,}, which rounds to {round(got_words, -3):,}")
+
         # Retrieval: grep is the way in, so a grep has to find things.
         body = "\n".join(p.read_text(errors="replace") for p in landed)
         for term in GREPS:

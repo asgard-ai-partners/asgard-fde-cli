@@ -419,7 +419,7 @@ judgement:
 | the gate over the reference charts | `hack/verify-references.sh` (needs the clones) |
 | **how much of a production chart `add` never writes** - the number behind "the chart half is the least finished", rendered on both sides rather than quoted | `hack/spec-key-gap.py` (needs the clones, helm and a built binary) |
 | build, vet, gofmt, tests | CI |
-| **Goal.md's four points, against the binary** - the corpus landing offline with no repository, a grep finding things in it, the needs files and the deck's rules, a chart being written and passing `check`, and the issue route coming out of the tool's own output | `hack/check-goal.py` |
+| **Goal.md's four points, against the binary** - the corpus landing offline with no repository, **its size as TASK.md states it**, a grep finding things in it, the needs files and the deck's rules, a chart being written and passing `check`, and the issue route coming out of the tool's own output | `hack/check-goal.py` |
 | `TASK.md`'s pass naming every check this repository has, and this repository's own skill never appearing in a scaffolded tree | `hack/check-pass-list.py` |
 | whether a reading `TASK.md` records has gone behind the clone it was held against | `hack/sources.py` |
 

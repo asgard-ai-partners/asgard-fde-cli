@@ -112,9 +112,15 @@ ask it will not ask it.
 
 ### Which is why the knowledge base is the product
 
-The value here is not the command surface. It is 68 documents and 87,000 words
-that exist nowhere else, and **the whole of the engineering problem is making
-them searchable by an agent.**
+The value here is not the command surface. It is **70 documents and 99,000
+words** that exist nowhere else - 27 wiki pages, 22 extracts, 10 guides, 7 needs
+lists and 4 briefings, as `asgard-cli init` lands them - and **the whole of the
+engineering problem is making them searchable by an agent.**
+
+It said 68 and 87,000 until 2026-09-11, when both were recounted off a landed
+tree rather than carried forward. `hack/check-goal.py` counts them there now,
+whitespace-separated and rounded to the nearest thousand, because the tree it
+already builds is the only place this number is true of anything.
 
 That is a different requirement from making them readable. An agent finds a
 document by following a pointer or by matching a term, reads what it is given,
