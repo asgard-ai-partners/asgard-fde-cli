@@ -205,10 +205,11 @@ default** - omitting one of those is a silent choice rather than an error.
 
 **This table is a subset of what a chart may set, not the contract.** `await`,
 described above and set in five separate production deployments, is in neither
-`ProcessorDefinitions` nor the CRD; `temperature` is documented on the streaming
-processor and is not in the definitions either. So a key missing from the row
-below is not a key you may not use - read the row as "these are declared", and
-the documentation as the wider set. `asgard-cli verify` reflects this: it fails
+`ProcessorDefinitions` nor the CRD; `temperature` is the same. So a key missing
+from the row below is not a key you may not use - read the row as "these are
+declared". **The wider set is the editor palette**, and it is a table of its
+own: "What the editor lets an author set" below, which has both of those keys
+and says which keys are the platform's rather than yours. `asgard-cli verify` reflects this: it fails
 on a **required** key with no default, because that is broken against any
 version, and does not complain about a key it has never heard of.
 
@@ -220,11 +221,11 @@ version, and does not complain about a key it has never heard of.
 | `listen-message` | none | no | *none* |
 | `llm-completion` | Success + Failure | **yes** | `completionModel` `prompt` `outputSchema` |
 | `llm-query-database` | Success + Failure | no | `semanticLayer` `query` `resultField` `completionModel` `maxTokens` |
-| `push-message` | Success | no | `message` ="" `flush` =false `isDebug` =false |
+| `push-message` | Success | no | `message` ="" `flush` =false `isDebug` =false **(the platform's)** |
 | `query-database` | Success | **yes** | `dataConnector` `sql` `resultField` |
 | `retrieve-knowledge` | Success | **yes** | `knowledgeBases` `textQuery` `similarityThreshold` `resultField` `sampleK` =20 |
 | `router` | Else | **yes**, + branches | *none* |
-| `stream-llm-completion-message` | Success + Failure | no | `completionModel` `isDebug` =false |
+| `stream-llm-completion-message` | Success + Failure | no | `completionModel` `isDebug` =false **(the platform's)** |
 | `update-context` | Success | **yes** | *none* |
 | `validate-payload` | Success + Failure | **yes** | `schema` ="" |
 
@@ -243,6 +244,74 @@ not mean the documentation is wrong.
 **One documented default is not in the definitions.** The `query-sql` page says
 `ResultField` 預設值為 `result`; the definition makes `resultField` required with
 no default at all. Write it out.
+
+## What the editor lets an author set, which is a third source
+
+**Three sources describe a processor's configuration and they do not agree.**
+The CRD enum says which types exist; `ProcessorDefinitions` in asgard-core says
+which keys are declared; and the **editor palette** says which keys an author
+can actually set in the builder. asgard-docs added a page per processor on
+2026-09-09, each one verified against the palette rather than only against the
+code, and states why the code alone is not enough: the definitions "omit the
+section a `has_dynamic_config` processor generates, and list keys the editor
+hides".
+
+The table below is the palette's view. **`author` is what somebody filling in a
+node sees; `platform` is set for them and is not theirs to write.**
+
+| type | author sets | platform sets | dynamic | scope |
+|---|---|---|---|---|
+| `execute-script` | `engine` `script` | - | no | general |
+| `update-context` | *none* | - | **yes** | general |
+| `http-request` | `url` `method` `parseJson` `body` | - | **yes** | general |
+| `router` | one per branch | - | **yes** | general |
+| `listen-message` | *none* | - | no | general |
+| `push-message` | `message` `template` `flush` `payload` | `isDebug` | no | **bot, automation_tool** |
+| `validate-payload` | `schema` `path` | - | no | **automation_tool** |
+| `generate-embedding` | `embeddingModel` `input` `resultField` | - | no | general |
+| `llm-completion` | `completionModel` `prompt` `outputSchema` `maxTokens` `temperature` `effort` `toolsets` `semanticLayers` `openai.webSearch.enabled` `openai.webSearch.searchContextSize` `sandboxBlueprint` | `blobs` `semanticLayer` `semanticLayer.allowQuery` `semanticLayer.allowWrite` `semanticLayer.allowedCubes` | no | general |
+| `stream-llm-completion-message` | the same, plus `input` `await` `semanticLayers.dataVisualization`, minus `outputSchema` | the same, plus `isDebug` | no | general |
+| `query-database` | `dataConnector` `sql` `resultField` | `allowWrite` `allowedTables` | **yes** | general |
+| `retrieve-knowledge` | `knowledgeBases` `textQuery` `similarityThreshold` `resultField` `filterTags` `sampleK` | - | **yes** | general |
+| `llm-query-database` | `semanticLayer` `query` `resultField` `completionModel` `maxTokens` `temperature` | - | no | **not in the palette** |
+
+Four things in it that are not anywhere else:
+
+**`await` and `temperature` are author keys on the streaming processor.** They
+are set in five production deployments and appear in neither the definitions nor
+the CRD, which is why this page used to say no source described them. The
+palette is that source. **A key absent from the definitions is not a key you may
+not use**, and now there is somewhere to check rather than a guess.
+
+**`llm-query-database` is in the CRD and in the definitions and not in the
+builder.** An author cannot add it from the editor; a chart can still declare
+it. Nothing says whether that is deliberate.
+
+**A processor is scoped to a kind of workflow set.** `validate-payload` is
+`automation_tool` only, `push-message` is `bot` and `automation_tool`, and
+everything else is `general`. So `push-message` is the same CRD type reached
+from two different places, which is why the documentation has two pages for it -
+`message-push` and `automation-tool-response`.
+
+**`isDebug`, `allowWrite`, `allowedTables` and the `semanticLayer.*` keys are
+the platform's, not the author's.** The definitions list `isDebug` as a
+required key with a default of false, which reads as something to write out; the
+palette says the platform sets it. The same holds for the per-layer permissions
+- see "Where `allowedCubes` and `allowWrite` actually live" above, which the
+palette confirms from the other side.
+
+**The definitions under-report Failure branches**, and the palette agrees with
+the documentation against them: `execute-script`, `http-request`,
+`push-message`, `query-database` and `retrieve-knowledge` all have one. The row
+in the table above this section says Success alone for several of those, because
+it was extracted from the definitions. Read the definitions as declared, not as
+complete.
+
+**For a field's meaning, read the page rather than this one.** Each carries the
+property panel as a screenshot, every field's default, and a worked example -
+`https://docs.asgard-ai.com/docs/developer-reference/processor/<name>`, where
+`<name>` is the documentation's name and not the chart's. The mismatch is the
+section below.
 
 ## The documentation's names are not the chart's names
 
@@ -347,14 +416,22 @@ Two things worth knowing from their pages:
   - asgard-docs `f00e0ee`. That section was listed here as deliberately not
   covered, on the grounds that lookup material only goes stale - a judgement made
   before anyone noticed the ECMA5 limit lives in it
-- The fifteen pages under `developer-reference/processor/`, whose landing page
-  is
+- The pages under `developer-reference/processor/`, whose landing page is
   [introduction](https://docs.asgard-ai.com/docs/developer-reference/processor/introduction)
   - **the bare directory URL 404s**, and this citation pointed at it until
   2026-09-03
-  - asgard-docs `f00e0ee`. **None of them had been read into this material
-  before 2026-09-02**, which is why `workflow.md` carried a type table and
-  nothing below it
+  - asgard-docs `f00e0ee` for the prose. **None of them had been read into this
+  material before 2026-09-02**, which is why `workflow.md` carried a type table
+  and nothing below it
+- The editor palette per processor - which keys are the author's, which the
+  platform sets, which types accept dynamic config, and which workflow-set
+  types each is scoped to: **asgard-docs `23409b3`**, read 2026-09-11 from the
+  seventeen `metadata.json` files under
+  `content-generator/services/developer-reference/docs/processor/`. Those
+  record the palette as a third source beside the CRD enum and asgard-core's
+  definitions, and the pages are verified against it rather than only against
+  the code. **This is the only part of this page read at that commit** - the
+  prose above it is still at `f00e0ee`
 - `ProcessorDefinitions` in asgard-core `internal/constants.go`: the per-key
   `IsRequired` and `DefaultValue` the documentation does not carry, the
   Success/Failure declarations, and which processors take arbitrary extra keys.

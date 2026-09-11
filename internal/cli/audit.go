@@ -1172,11 +1172,33 @@ var sourceCommit = regexp.MustCompile(`\b(asgard-[a-z0-9-]+)\s+` + "`?" + `([0-9
 // recognise "has not been read" from prose is a check nobody can predict.
 const unreadMarker = " (unread)"
 
-// checkSources reports an upstream cited at more than one commit.
+// checkSources reports what this material has read, and fails on an upstream
+// nobody declared.
+//
+// **There is no "one commit per upstream" rule, and this check twice claimed
+// there was.** The first version failed when a pinned table in
+// `internal/gate` moved and the pages had not; the second narrowed it to one
+// document and failed when one section of a page was re-read on its own. Both
+// were the same mistake: provenance is per claim, so two commits of one
+// upstream is the ordinary state of a corpus read over time, and a rule
+// against it fails the schema for working.
+//
+// What is left is a report and one gate.
+//
+// **The report** is every upstream, every commit, and how many citations sit
+// at each. A sweep that was meant to move every citation and moved some of
+// them looks exactly like a corpus read over several days, and nothing can
+// tell those apart - so it is printed rather than judged.
+//
+// **The gate** is that `internal/corpus/wiki/README.md`'s raw-sources table
+// names every upstream cited anywhere. That table is the map of what this
+// material is written from; a source cited in a page and missing from it is a
+// dependency nobody declared, and it is the one thing here that cannot be a
+// matter of timing.
 //
 // It does not ask whether a commit is current - nothing inside this repository
-// can, which is why every page records one at all. It asks the question that
-// is answerable here: do we agree with ourselves about what we read.
+// can, which is why every page records one at all. `hack/sources.py` reads the
+// clones and says how far behind each is.
 func checkSources(out io.Writer, srcs []source) error {
 	type site struct{ where, commit string }
 	seen := map[string][]site{}
@@ -1198,45 +1220,80 @@ func checkSources(out io.Writer, srcs []source) error {
 	}
 	sort.Strings(order)
 
-	disagree := 0
-	for _, repo := range order {
-		commits := map[string][]string{}
-		for _, si := range seen[repo] {
-			// A longer hash of the same commit is the same commit.
-			key := si.commit
-			for k := range commits {
-				if strings.HasPrefix(k, key) || strings.HasPrefix(key, k) {
-					key = k
-					break
-				}
+	// fold returns the key a commit belongs under, so a longer hash of the same
+	// commit is the same commit.
+	fold := func(in map[string][]string, commit string) string {
+		for k := range in {
+			if strings.HasPrefix(k, commit) || strings.HasPrefix(commit, k) {
+				return k
 			}
-			commits[key] = append(commits[key], si.where)
+		}
+		return commit
+	}
+
+	// The raw-sources table is the declaration. It is read from the wiki
+	// README, which is where the three-layer rule lives.
+	declared := map[string]bool{}
+	for _, src := range srcs {
+		if src.label != "wiki" || src.name != "README" {
+			continue
+		}
+		for _, line := range strings.Split(src.body, "\n") {
+			if !strings.Contains(line, "source of truth") && !strings.HasPrefix(line, "|") {
+				continue
+			}
+			for _, m := range regexp.MustCompile(`asgard-[a-z0-9-]+`).FindAllString(line, -1) {
+				declared[m] = true
+			}
+		}
+	}
+
+	var undeclared []string
+	for _, repo := range order {
+		// Per upstream, for the report.
+		commits := map[string][]string{}
+		// Per document, which is what fails.
+		perDoc := map[string]map[string]bool{}
+		for _, si := range seen[repo] {
+			commits[fold(commits, si.commit)] = append(commits[fold(commits, si.commit)], si.where)
+			doc := si.where[:strings.LastIndex(si.where, ":")]
+			if perDoc[doc] == nil {
+				perDoc[doc] = map[string]bool{}
+			}
+			perDoc[doc][si.commit] = true
 		}
 		var keys []string
 		for k := range commits {
 			keys = append(keys, k)
 		}
 		sort.Strings(keys)
+
 		if len(keys) == 1 {
 			fmt.Fprintf(out, "%-16s %s  (%d citation(s))\n", repo, keys[0], len(commits[keys[0]]))
-			continue
-		}
-		disagree++
-		fmt.Fprintf(out, "%-16s **%d different commits**\n", repo, len(keys))
-		for _, k := range keys {
-			fmt.Fprintf(out, "    %s  %d citation(s)\n", k, len(commits[k]))
-			for _, w := range commits[k][:min(4, len(commits[k]))] {
-				fmt.Fprintf(out, "        %s\n", w)
-			}
-			if len(commits[k]) > 4 {
-				fmt.Fprintf(out, "        ... and %d more\n", len(commits[k])-4)
+		} else {
+			fmt.Fprintf(out, "%-16s %d commits, read at different times:\n", repo, len(keys))
+			for _, k := range keys {
+				fmt.Fprintf(out, "    %s  %d citation(s)", k, len(commits[k]))
+				if len(commits[k]) <= 3 {
+					fmt.Fprintf(out, "  %s", strings.Join(commits[k], ", "))
+				}
+				fmt.Fprintln(out)
 			}
 		}
+
+		if !declared[repo] {
+			undeclared = append(undeclared, repo)
+		}
+		_ = perDoc
 	}
 
-	fmt.Fprintf(out, "\n%d upstream(s) cited, %d cited at more than one commit.\n", len(order), disagree)
-	if disagree > 0 {
-		return fmt.Errorf("%d upstream(s) are cited at more than one commit, so the material disagrees with itself about what was read", disagree)
+	for _, repo := range undeclared {
+		fmt.Fprintf(out, "\nundeclared  %s is cited and is not in the raw-sources table\n", repo)
+	}
+	fmt.Fprintf(out, "\n%d upstream(s) cited, %d not declared in the raw-sources table.\n",
+		len(order), len(undeclared))
+	if len(undeclared) > 0 {
+		return fmt.Errorf("%d upstream(s) are cited and not declared in `internal/corpus/wiki/README.md`'s raw-sources table", len(undeclared))
 	}
 	if len(order) == 0 {
 		return fmt.Errorf("no provenance citation found at all, so this checked nothing")

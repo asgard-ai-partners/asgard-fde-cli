@@ -94,7 +94,8 @@ correct here and there alike.
     audit-material --commands   every command named exists
     audit-material --paths      a landed document naming a file only we have
     audit-material --unverified a document with no record of what it was held against
-    audit-material --sources    every citation of one upstream names one commit
+    audit-material --sources    what has been read, at which commits, and
+                                whether every upstream is declared
     audit-material --urls       every documentation link is live
     audit-material <term>       every line mentioning a term, prose and templates
 
@@ -118,15 +119,28 @@ token matching a document name has no other reading.
 the marker is there by construction and the check cannot fail on them. Counting
 eleven documents as having passed would say more than was done.
 
-**`--sources` is the version number of one moment of synthesis, held against
-itself.** A page's Sources block, a pinned table's `const` in `internal/gate`
-and the raw-sources table in the wiki README are three unrelated mechanisms
-carrying the same fact: 58 citations name one asgard-docs commit and 19 name
-one asgard-kube commit. Re-reading a source means changing all of them, and
-changing the gate's constants while leaving the pages is a corpus claiming two
-readings of one upstream with nothing to say which is true. It does not ask
-whether a commit is current - **nothing inside this repository can**, which is
-why the commit is recorded at all - only whether we agree with ourselves.
+**`--sources` is the version number of every moment of synthesis, collected.**
+A page's Sources block, a pinned table's `const` in `internal/gate` and the
+raw-sources table in the wiki README all carry one: which commit of which
+upstream a claim was read at.
+
+**It does not require them to agree, and twice it did.** The first version
+failed when a pinned table moved and the pages had not; the second narrowed
+that to one document and failed when one section of a page was re-read on its
+own. Both were the same error - provenance is per claim, so two commits of one
+upstream is the ordinary state of a corpus read over time, and a rule against
+it fails the schema for working.
+
+So what it prints is the spread, which is the useful thing: a sweep that was
+meant to move every citation and moved some of them looks exactly like a corpus
+read over several days, and nothing can tell those apart. What it **fails** on
+is an upstream cited somewhere and missing from the raw-sources table - a
+dependency nobody declared, which is the one thing here that cannot be a matter
+of timing.
+
+It does not ask whether a commit is current: **nothing inside this repository
+can**, which is why the commit is recorded at all. `hack/sources.py` reads the
+clones and says how far behind each is.
 
 `--commands` is `--links` pointed at the tool: it resolves every
 `asgard-cli <command>` against the command tree this binary answers to — in the
