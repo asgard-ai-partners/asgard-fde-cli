@@ -60,6 +60,12 @@ holds the pinned tables against asgard-kube.
 
 ## The deployments read so far
 
+**Both columns below are counted at the commit in the table above**, which is
+why `auto-post` says 28 Plugin CRs where `internal/corpus/usecase/plugin.md`
+says 29: that page recounted at `edb0ad0` and says so. Neither is stale - they
+are counts of different commits, and `hack/check-counts.py` holds both against
+the clone.
+
 | deployment | shape it demonstrates | CR files | referred to in extracts as |
 |---|---|---|---|
 | unitech-e | agent hub (5 agents / 6 semantic layers) **and** a single-agent flow agent; trigger; knowledge drive. Its AGENTS.md is the most recently maintained of the set | 37 | "a later one", "a deployment with an internal hub and a public widget" |
