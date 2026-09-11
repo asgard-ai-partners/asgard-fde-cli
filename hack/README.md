@@ -8,6 +8,8 @@ reason `check-tables.py` went eight upstream commits without being run. One
 environment variable per source, and a default that is one person's layout:
 
     hack/sources.py          what each one resolves to, and how far behind it is
+    hack/check-tables.py     the pinned gate tables against the CRDs
+    hack/check-coverage.py   the wiki's coverage row against the docs tree
 
     ASGARD_KUBE          the CRDs, the platform contract
     ASGARD_DOCS          the product documentation

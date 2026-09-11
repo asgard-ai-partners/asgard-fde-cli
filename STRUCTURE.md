@@ -274,6 +274,11 @@ customer's repository. A symbol resolves inside the package that owns it,
 because a search of the whole tree cannot tell one package's Index from
 another's.
 
+`hack/check-coverage.py` recomputes the asgard-docs coverage row in
+`internal/corpus/wiki/index.md` and fails when the page drifts from it. Three
+of that row's four numbers were hand-counted and wrong, including a fraction
+whose numerator counted links and whose denominator counted pages.
+
 `hack/check-tables.py` is the other half of the contract check: it holds the gate's pinned enum and
 constraint tables against the generated CRDs, so a table that has fallen behind
 the platform is reported rather than quietly warning about the wrong thing.

@@ -295,6 +295,7 @@ asgard-cli audit-material --unverified
 asgard-cli audit-material --sources
 hack/check-doc-paths.py
 hack/check-tables.py                     # needs $ASGARD_KUBE
+hack/check-coverage.py                   # needs $ASGARD_DOCS
 asgard-cli audit-material --urls   # needs the network
 ```
 

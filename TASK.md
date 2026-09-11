@@ -336,7 +336,8 @@ second is the only source for `browser-operation`. Re-reading an extract
 against a current clone is the only way to find out whether it still describes
 that chart.
 
-**A clone of asgard-docs.** 69 published pages are cited by no wiki page. Two
+**A clone of asgard-docs.** 87 pages are cited by no wiki page at `f00e0ee`,
+83 at the clone's HEAD - `hack/check-coverage.py` computes both. Two
 slices are worth reading and the rest is release notes and site plans:
 `developer-reference/processor`, because
 `.agents/skills/asgard-platform/wiki/processors.md` was written from

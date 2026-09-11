@@ -315,8 +315,11 @@ section below.
 
 ## The documentation's names are not the chart's names
 
-Fifteen pages sit under `developer-reference/processor`, plus an introduction.
-The CRD enum has thirteen types. They do not line up, and the mismatches are
+Sixteen pages sit under `developer-reference/processor` as of asgard-docs
+`23409b3`, plus an introduction - fifteen at `f00e0ee`. **The new one is
+`query-llm-database`**, which is the one type that is documented and is not in
+the editor palette: a chart can declare it, an author cannot add it from the
+builder. The CRD enum has thirteen types. They do not line up, and the mismatches are
 each a place where searching for what you read finds nothing:
 
 | the page is called | the chart writes |

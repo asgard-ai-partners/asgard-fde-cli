@@ -93,7 +93,7 @@ The sources this material is actually built from:
 
 | source | what it holds | state |
 |---|---|---|
-| asgard-docs | the product documentation | 81 / 162 cited; 69 published and unread; 29 deliberately excluded below |
+| asgard-docs | the product documentation | 75 / 162 cited at `f00e0ee`; 87 published and unread; 28 deliberately excluded below. **Computed, not counted** - `hack/check-coverage.py` in asgard-fde-cli recomputes it and fails when this row drifts |
 | asgard-kube `crd/` | the contract | read per page, per field, and dated on the page |
 | **asgard-kube `pkg/apis/`** | **the Go types the CRDs are generated from, with the reasoning as comments** | read once, 2026-09-02, for the validation rules - `../wiki/crd-rules.md`. 134KB of declarations; what has been taken is the behavioural comments, not the field list |
 | **[asgard-core](https://github.com/asgard-ai-platform/asgard-core)** `internal/constants.go` | **the processor definitions the CRD is generated from** | read once, 2026-09-02, for the type list. Its per-processor config definitions are not carried anywhere |
@@ -111,6 +111,11 @@ from - rather than a number here.
 in the same sentence. The one that was here did not, and it is the reason this
 pass found four bodies of material nobody had opened.
 
+**And do not count by hand.** The row above said "81 / 162" for a long time:
+81 was the number of LINKS this material writes and 162 the number of PAGES,
+which is two denominators in one fraction, and it read as better coverage than
+75 of 162 is. The unread figure beside it, 69, matched no reading at all.
+
 ## Deliberately not covered
 
 **One row of this table was wrong.** `asgard-builtin/` was excluded whole as
@@ -125,10 +130,17 @@ excluded, and that part of the judgement holds.
 it, particularly if it excludes a whole directory - that is the shape of an
 exclusion nobody has looked inside.
 
-**29 files, not the 32 this page used to claim.** Four `asgard-builtin` pages
-came back into `processors` and the subtraction was only done in one place.
+**28 files at `f00e0ee`, and the count is computed** - it was 29 by hand, and
+before that 32, because four `asgard-builtin` pages came back into
+`../wiki/processors.md` and the subtraction was done in one place and not the
+other. asgard-fde-cli's `hack/check-coverage.py` counts it now.
 
-| excluded | count | why |
+**`superpowers/` no longer exists upstream.** Those five pages are gone from
+asgard-docs as of `23409b3`, so at the clone's HEAD the excluded set is 23 and
+not 28 - a row that excludes a directory can stop being an exclusion by the
+directory being deleted, which is not something this material can notice.
+
+| excluded | count at `f00e0ee` | why |
 |---|---|---|
 | `developer-reference/asgard-builtin/message-template-*` | 14 | Message template shapes - button, carousel, image, video, location. Genuinely lookup material, and per-channel. Read the source when writing one |
 | `help-community/release-notes/` | 10 | historical, and does not describe the present |
