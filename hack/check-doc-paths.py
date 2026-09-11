@@ -23,8 +23,21 @@ import pathlib
 import re
 import sys
 
+# The seven root documents, plus this directory's own - `hack/README.md` and the
+# scripts, which tell somebody what to run and had the last stale reference:
+# `verify-references.sh` described where an exemption lives in a file deleted
+# from all four reference repositories.
+#
+# **This file is not in the list.** It names the deleted symbols it was written
+# to catch, in the paragraphs explaining why it resolves a symbol inside its own
+# package - so checking itself reports six findings, all of them its own
+# subject. Same reason `internal/cli/self.go` parses Go source instead of
+# grepping it: a note recording that something was removed must not read as
+# naming it.
 DOCS = ["Goal.md", "README.md", "README.zh-TW.md", "AGENTS.md", "STRUCTURE.md",
-        "APPROACH.md", "TASK.md"]
+        "APPROACH.md", "TASK.md",
+        "hack/README.md", "hack/check-tables.py",
+        "hack/validate-crs.py", "hack/extract-crs.py", "hack/verify-references.sh"]
 
 # A path inside this repository: a directory we own, then a file or a directory
 # under it. Trailing `/` is a directory reference and is checked as one.

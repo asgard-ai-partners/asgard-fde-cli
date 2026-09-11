@@ -11,14 +11,41 @@ Where the material in `internal/corpus/usecase/` came from.
 Keep it that way: when adding an extract, put the customer-facing shape in
 `internal/corpus/usecase/` and the attribution here.
 
-**Record the commit you read.** The rows below do not have one - they predate
-the rule, and it is the same gap `internal/corpus/wiki/README.md` records
-against asgard-core. A chart moves, and an extract taken from one six months
-ago cannot be held against anything without knowing which version it described.
-The wiki side already does this: 58 citations name one asgard-docs commit and
-19 name one asgard-kube commit, and `asgard-cli audit-material --sources`
-fails when they stop agreeing. Nothing here is checkable until these rows carry
-the same thing.
+**Record the commit you read.** The wiki side has always done this; this file
+had no commit for any of the eight, which made "which version of that chart
+did this extract describe" unanswerable. It is answerable now, and the answer
+below was reconstructed rather than recorded at the time: every clone's HEAD
+is dated **before** the extracts were written (2026-09-02 onward), so what was
+read is what each clone holds.
+
+## What each clone held when its extracts were written
+
+Read 2026-09-11. **The right-hand column is the reason this table matters**: a
+chart moves, and an extract is a description of one version of one chart.
+
+| deployment | read at | since then |
+|---|---|---|
+| unitech-e-asgard-kube | `223a59a` (2026-09-01) | 26 commits behind `80b16a5`, 2026-09-10 |
+| xxentria-asgard-kube | `57e4b4c` (2026-09-01) | current |
+| finance-ai-asgard-kube | `3a4ce84` (2026-09-01) | current |
+| buy123-asgard-kube | `08dac8f` (2026-08-31) | current |
+| asgard-freyr-kube | `0594f68` (2026-08-24) | **84 commits behind** `f4c2fcf`, 2026-09-11 |
+| asgard-auto-post-kube | `d11b802` (2026-09-01) | 7 commits behind `edb0ad0`, 2026-09-11 |
+| asgard-industry-demo-generator | `718cc0e` (2026-08-26) | 6 commits behind `262d369`, 2026-09-01 |
+| asgard-freyr-skills | `e0b3fe3` (2026-09-01) | **48 commits behind** `a5c84c6`, 2026-09-07 |
+
+**The two that are furthest behind are the two that matter most for one
+extract each.** `asgard-freyr-skills` is the only source for
+`internal/corpus/usecase/browser-operation.md`, and `asgard-freyr-kube` is
+where `agents.expression` and the sandbox hooks were read. An extract resting
+on a sample of one, 48 or 84 commits stale, is the shape
+`internal/corpus/wiki/coverage.md` exists to make visible.
+
+**These are not in `asgard-cli audit-material --sources`.** That check reads
+what is embedded in the binary, and this file deliberately is not - it is the
+only one that names a customer. Holding these rows against the clones is a
+thing somebody does here, with the clones, the way `hack/check-tables.py`
+holds the pinned tables against asgard-kube.
 
 ## The deployments read so far
 

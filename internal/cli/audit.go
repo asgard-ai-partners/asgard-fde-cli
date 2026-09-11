@@ -1158,7 +1158,19 @@ func findChild(node *cobra.Command, name string) *cobra.Command {
 // of them, and updating the gate's constants while leaving the pages is a
 // corpus that claims two different readings of the same upstream with nothing
 // to say which is true.
-var sourceCommit = regexp.MustCompile(`\b(asgard-[a-z0-9-]+)\s+` + "`?" + `([0-9a-f]{7,12})` + "`?")
+var sourceCommit = regexp.MustCompile(`\b(asgard-[a-z0-9-]+)\s+` + "`?" + `([0-9a-f]{7,12})` + "`?" + `(\s*\(unread\))?`)
+
+// unreadMarker is how the material names a commit it has NOT read.
+//
+// **Saying "upstream has moved and nobody has read it" is not a citation**, and
+// it is worth saying: asgard-docs moved 286 files while this corpus was cited
+// at the older commit, and the useful record is that the gap exists rather than
+// silence. Without a way to write that, the only options were to bump 58
+// hashes - claiming a reading nobody did - or to leave the fact out.
+//
+// A literal marker rather than a phrase, because a keyword list that tries to
+// recognise "has not been read" from prose is a check nobody can predict.
+const unreadMarker = " (unread)"
 
 // checkSources reports an upstream cited at more than one commit.
 //
@@ -1173,6 +1185,9 @@ func checkSources(out io.Writer, srcs []source) error {
 		for i, line := range strings.Split(s.body, "\n") {
 			for _, m := range sourceCommit.FindAllStringSubmatch(line, -1) {
 				repo, commit := m[1], m[2]
+				if m[3] != "" {
+					continue
+				}
 				if _, ok := seen[repo]; !ok {
 					order = append(order, repo)
 				}

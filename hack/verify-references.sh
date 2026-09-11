@@ -61,8 +61,10 @@ done
 echo
 echo "$charts chart(s), $total finding(s)."
 echo
-echo "**--rendered loses the repository's own configuration** - olapOnlyLayers and"
-echo "any sampleQuestions exemption live in .asgard-config.json and the generated"
-echo "repo's scripts, so R10, R11 and R7 can report something the owning repo has"
-echo "already answered. That is a reason to read a finding, not to discount one:"
-echo "R1b was dismissed as exactly this kind of noise once, and it was a bug."
+echo "**--rendered sees a chart with nothing around it** - R7, R10 and R11 ask"
+echo "questions whose answer can be in the owning repo rather than in the CR, and"
+echo "there is nowhere to record one any more: .asgard-config.json held"
+echo "olapOnlyLayers and the sampleQuestions exemption, and it is gone from all"
+echo "four reference repos. So a finding here may be answered somewhere this run"
+echo "cannot see. That is a reason to read a finding, not to discount one: R1b"
+echo "was dismissed as exactly this kind of noise once, and it was a bug."

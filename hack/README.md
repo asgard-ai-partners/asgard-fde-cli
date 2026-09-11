@@ -68,11 +68,13 @@ up and they need opposite responses:
     a rule right for one shape,      the expensive kind. See R1b, and the
     applied to another               a rule right for one shape, wrong for the next
 
-And `--rendered` loses the owning repository's configuration - `olapOnlyLayers`
-and any sampleQuestions exemption are in its `.asgard-config.json` and its
-scripts - so R7, R10 and R11 can report something that repo has already
-answered. **That is a reason to read a finding, not to discount one.** It was
-used to discount R1b once, and R1b was a bug.
+And `--rendered` sees a chart with nothing around it. R7, R10 and R11 ask
+questions whose answer can live in the owning repository rather than in the CR,
+and there is nowhere to record one now: `.asgard-config.json` held
+`olapOnlyLayers` and the sampleQuestions exemption, and none of the four
+reference repos still carries it. So a finding may be answered somewhere this
+run cannot see. **That is a reason to read a finding, not to discount one.** It
+was used to discount R1b once, and R1b was a bug.
 
 ## Checking a change against the CRDs
 

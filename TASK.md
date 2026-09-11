@@ -313,6 +313,29 @@ and inventing a row is worse than not having one. **Do not put it in
 actually searched for, and a bulk import of UI names is exactly the guess it
 forbids.
 
+**A clone of asgard-docs, first.** It has moved to asgard-docs `23409b3` (unread),
+dated 2026-09-09, and this material is cited at `f00e0ee` (2026-08-31) in 58
+places. Four commits,
+286 files, and the substantive one is
+`docs(processor): sync processor reference with asgard-core constants.go`:
+**17 new per-processor reference pages**, each verified against the editor's
+property panel as well as the code. Those answer P10 - see
+`.agents/skills/asgard-platform/wiki/platform-unknowns.md` - and
+`wiki/processors.md` was written from asgard-core's definitions without them.
+
+**The citations were deliberately not moved.** A diff is a real reading when
+it is small; 286 files is the case where it is not, and bumping 58 hashes
+would claim a reading nobody did. asgard-kube moved in the same pass and its
+citations did move, because that diff was four commits with one change
+reaching a page.
+
+**The eight reference deployment clones, pulled.** `source/SOURCES.md` now
+records what each held when its extracts were written, and five have moved
+since: `asgard-freyr-kube` by 84 commits and `asgard-freyr-skills` by 48. The
+second is the only source for `browser-operation`. Re-reading an extract
+against a current clone is the only way to find out whether it still describes
+that chart.
+
 **A clone of asgard-docs.** 69 published pages are cited by no wiki page. Two
 slices are worth reading and the rest is release notes and site plans:
 `developer-reference/processor`, because

@@ -259,7 +259,8 @@ prune. `hack/README.md` is the procedure, and the PR template asks for its
 output.
 
 `hack/check-doc-paths.py` holds every path and every package-qualified Go
-symbol this repository's own documents name against what is on disk - the
+symbol named by this repository's own documents - the seven at the root, plus
+this directory's README and scripts - against what is on disk - the
 mirror of `audit-material --paths`, which does the same for what lands in a
 customer's repository. A symbol resolves inside the package that owns it,
 because a search of the whole tree cannot tell one package's Index from
