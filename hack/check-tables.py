@@ -78,6 +78,62 @@ def as_json(src: pathlib.Path) -> pathlib.Path:
     return out
 
 
+# Every place this repository states how many CEL rules there are. **Two numbers
+# that are easy to write for each other**: 79 is the `XValidation` markers in
+# asgard-kube's Go types, 231 is what the generator emits from them, because one
+# marker on a struct several kinds embed lands in every CRD that embeds it. This
+# material had the marker count written down as the CRDs' own for a week, which
+# is the exact confusion this whole file exists to catch - the Go types are the
+# source and the generated CRDs are the contract.
+CEL_CLAIMS = [
+    (r"(\d+) CEL rules written and (\d+) enforced", ("markers", "rules")),
+    (r"(\d+) of the CRDs' (\d+) enforced CEL rules", ("oldself_rules", "rules")),
+    (r"(\d+) of the CRDs' (\d+) enforced CEL rules are exactly", ("oldself_rules", "rules")),
+    (r"(\d+) of the enforced rules are exactly `self == oldSelf`", ("oldself_rules",)),
+    (r"(\d+) of the (\d+) `XValidation` markers", ("oldself_markers", "markers")),
+    (r"(\d+) rule instances, (\d+) of them distinct", ("rules", "distinct")),
+]
+
+
+def cel_counts(crd: pathlib.Path, kube: pathlib.Path) -> dict:
+    """How many CEL rules there are, on both sides of the generator."""
+    rules = []
+    for f in sorted(crd.glob("*.yaml")):
+        rules += [r.strip() for r in re.findall(r'^\s*-?\s*rule:\s*(.*)$', f.read_text(), re.M)]
+    types = (kube / "pkg/apis/asgard/v1alpha1/types.go").read_text()
+    return {
+        "rules": len(rules),
+        "distinct": len({r for r in rules}),
+        "oldself_rules": len([r for r in rules if r.strip('"\'') == "self == oldSelf"]),
+        "markers": len(re.findall(r"XValidation:rule=", types)),
+        "oldself_markers": len(re.findall(r'XValidation:rule=`?"?self == oldSelf', types)),
+    }
+
+
+def check_cel(crd: pathlib.Path, kube: pathlib.Path) -> list:
+    counts = cel_counts(crd, kube)
+    root = pathlib.Path(__file__).resolve().parent.parent
+    bodies = []
+    for pat in ("internal/corpus/**/*.md", "internal/gate/*.go", "TASK.md", "AGENTS.md"):
+        for f in root.glob(pat):
+            bodies.append((f.relative_to(root), f.read_text(errors="replace")))
+    out, seen = [], 0
+    for pattern, names in CEL_CLAIMS:
+        for path, text in bodies:
+            for m in re.finditer(pattern, text):
+                seen += 1
+                for i, name in enumerate(names, start=1):
+                    if int(m.group(i)) != counts[name]:
+                        line = text[:m.start()].count("\n") + 1
+                        out.append(f"{path}:{line} says {m.group(i)} for {name}, "
+                                   f"and asgard-kube has {counts[name]}")
+    if seen == 0:
+        out.append("no CEL-rule claim matches any pattern in CEL_CLAIMS, so "
+                   f"{counts['rules']} enforced rules and {counts['markers']} markers "
+                   "are going unchecked")
+    return out
+
+
 def main():
     if len(sys.argv) > 2:
         sys.exit("usage: check-tables.py [asgard-kube/crd]   (default: $ASGARD_KUBE/crd)")
@@ -106,6 +162,12 @@ def main():
             problems.append(f"constraint {name}: no CRD property constrains it")
         elif len(cons[name]) > 1:
             problems.append(f"constraint {name}: {len(cons[name])} different constraint sets in the CRDs, so one table entry cannot be right")
+
+    kube = crd.parent
+    if (kube / "pkg/apis/asgard/v1alpha1/types.go").is_file():
+        problems += check_cel(crd, kube)
+    else:
+        print(f"  (the CEL counts need the Go types beside {crd}; skipped)")
 
     for p in problems:
         print(f"  {p}")

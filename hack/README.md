@@ -150,6 +150,11 @@ reports as absent from the CRD is not automatically a bug - `baseAgentName`
 lives inside a JSON string rather than in the schema - but it is always
 something to explain rather than leave.
 
+**It also holds every CEL-rule count this repository states**, for the same
+reason and against the same trap: 79 is the `XValidation` markers in the Go
+types, 231 is what the generator emits from them, and this material had the
+marker count written down as the CRDs' own for a week.
+
 ## Recomputing a count that came out of somebody else's document
 
     hack/check-counts.py           against the clones as they stand

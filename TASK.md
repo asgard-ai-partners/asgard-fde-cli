@@ -335,7 +335,7 @@ lists them. Two mechanical passes found nothing and a third was written and
 thrown away for calling correct material wrong. One person with access could
 settle all five.
 
-**A cluster.** Forty of the CRDs' 79 CEL rules are `self == oldSelf`, comparing a
+**A cluster.** 41 of the CRDs' 231 enforced CEL rules are `self == oldSelf`, comparing a
 proposal against the object already on it. A render is one object with no
 history, so nothing offline can see them - `botProviderClass` is the one that
 bites, and `.agents/skills/asgard-platform/usecase/chat-channel.md` documents it instead. The same

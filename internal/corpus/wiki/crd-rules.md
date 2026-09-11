@@ -62,10 +62,18 @@ thing to come back and fix when that model is retired.
 
 ## Which of them a render can be held against
 
-The CRDs carry 79 CEL rules. **Forty are `self == oldSelf`** - they compare a
-proposed object against the one already on the cluster, so a render, which is
-one object with no history, cannot see them. `botProviderClass` is the one that
-bites; `../usecase/chat-channel.md` says why.
+**There are 79 CEL rules written and 231 enforced, and the difference is not a
+rounding.** 79 is the number of `XValidation` markers in asgard-kube's Go
+types; the generated CRDs carry 231 rule instances, 52 of them distinct,
+because one marker on a struct several kinds embed lands in every CRD that
+embeds it. **Hold a render against the CRDs and not against the markers** - the
+generated schema is the contract, the Go types are its source, and this material
+had the marker count written down as the CRDs' own for a week.
+
+**41 of the enforced rules are exactly `self == oldSelf`** - 40 of the markers -
+and they compare a proposed object against the one already on the cluster, so a
+render, which is one object with no history, cannot see any of them.
+`botProviderClass` is the one that bites; `../usecase/chat-channel.md` says why.
 
 The rest are two families, and `asgard-cli verify` checks both as of
 2026-09-04:
