@@ -70,6 +70,16 @@ def files_in(path: pathlib.Path) -> int:
     return len(sorted(p for p in path.iterdir() if p.suffix == ".md"))
 
 
+def charts_in(path: pathlib.Path) -> int:
+    """Chart directories under one clone, or under all of them.
+
+    A vendored subchart under `charts/` is not one of ours and is excluded - it
+    would inflate the sample-size floor this count exists to state without
+    adding an arrangement anybody here read.
+    """
+    return len([p for p in path.rglob("Chart.yaml") if "/charts/" not in str(p)])
+
+
 def kind_count(kind: str):
     """How many CRs of one kind a clone holds at one commit.
 
@@ -111,6 +121,25 @@ COUNTS = [
             r"costs: (\d+) pages",
             r"costs: (\d+) menu-level page entry points",
         ],
+    },
+    {
+        "slug": "deployment-charts",
+        "clone": "",
+        "of": "",
+        "how": charts_in,
+        "what": "charts across the reference deployments",
+        "says": [r"(\d+) charts\s+in all", r"(\d+) charts between them"],
+        "only": ["unitech-e-asgard-kube", "xxentria-asgard-kube", "finance-ai-asgard-kube",
+                 "buy123-asgard-kube", "asgard-freyr-kube", "asgard-auto-post-kube",
+                 "asgard-industry-demo-generator", "asgard-freyr-skills"],
+    },
+    {
+        "slug": "demo-generator-industries",
+        "clone": "asgard-industry-demo-generator",
+        "of": ".",
+        "how": charts_in,
+        "what": "industry charts in the demo generator",
+        "says": [r"(\d+) industries"],
     },
     {
         "slug": "shopline-operations",
@@ -222,6 +251,33 @@ def main() -> int:
     counted = 0
 
     for row in COUNTS:
+        if row.get("only"):
+            missing = [n for n in row["only"] if not (base / n).is_dir()]
+            if missing:
+                bad.append(f"{row['slug']}: {', '.join(missing)} not under {base}, "
+                           f"so this count would be short by however many charts they hold")
+                continue
+            want = sum(row["how"](base / n) for n in row["only"])
+            counted += 1
+            if args.dump:
+                print(f"{row['slug']:<22} {want:>4}  {row['what']}")
+                print(f"{'':<22}       {len(row['only'])} clone(s) under {base}")
+                continue
+            found = 0
+            for path, text in docs:
+                for pattern in row["says"]:
+                    for m in re.finditer(pattern, text):
+                        found += 1
+                        if int(m.group(1)) != want:
+                            rel = path.relative_to(ROOT)
+                            line = text[:m.start()].count("\n") + 1
+                            bad.append(f"{rel}:{line} says {m.group(1)} {row['what']}, "
+                                       f"and the clones hold {want}")
+            if found == 0:
+                bad.append(f"{row['slug']}: no claim matches any of its patterns, so a count "
+                           f"of {want} is going unchecked")
+            continue
+
         clone = base / row["clone"]
         target = clone / row["of"]
         if not target.exists():
