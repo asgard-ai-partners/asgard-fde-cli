@@ -71,9 +71,11 @@ The agent uses that credential to read that customer's own orders and writes a
 reply back into the same conversation within seconds. A human agent can step into
 the same thread at any point.
 
-The Flow Agent corresponds to a `wf-customer-service` Workflow with four nodes:
-Entry, Init (setting up context), Agent (the LLM stream reply) and Listen, with
-Agent falling through to Error.
+The Flow Agent corresponds to a `wf-customer-service` Workflow with five nodes:
+Entry, Init (setting up context), Agent (the LLM stream reply), Listen, and a
+push on the Agent node's Failure branch. **That is the shape a new Flow Agent
+is created with** - see `../usecase/flow-agent-single.md` - so this chart is
+the default flow edited rather than one built from nothing.
 
 The short-lived scoped credential is the part worth noticing: it lets the agent
 read "this customer's own" data rather than granting it the order database. That

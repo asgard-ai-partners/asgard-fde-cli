@@ -54,7 +54,7 @@ For a customer-service shape rather than an internal one:
 
 | path | what it shows |
 |---|---|
-| `retail-ai-customer-service/21-flow-agent-canvas.png` | the four-node flow: Entry, Init, Agent, Listen, with an error branch |
+| `retail-ai-customer-service/21-flow-agent-canvas.png` | the five-node default flow: Entry, Init, Agent, Listen, and a push on Agent's Failure branch |
 | `retail-ai-customer-service/23-agent-node-open.png` | the prompt deciding what a **logged-out** visitor is told, versus a logged-in one |
 
 And the one that shows Description doing its job in public:

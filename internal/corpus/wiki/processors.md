@@ -161,6 +161,39 @@ The chart keys are `semanticLayer.allowQuery`, `semanticLayer.allowWrite` and
 the model to decide whether to retry, rather than failing the step. Off is right
 when a failed tool call must not be retried - which is most writes.
 
+## `effort` fails the turn when the model does not take it
+
+The reasoning-effort field takes `low`, `medium`, `high`, `xhigh`, `max`, or
+`auto` to leave it to the model. It sets thinking depth and token spend
+together, so a higher level is slower and costs more.
+
+**Sending a level a model does not support fails that turn outright** - not a
+degraded answer, a failure. Some models do not accept the parameter at all: a
+non-reasoning model like `gpt-4.1-mini` rejects it, and the speed-oriented
+Haiku class is the other to know.
+
+**Omitting the field is not the same as disabling it, and that is the trap.**
+There are three states, not two:
+
+    a level          `--effort <level>` is sent
+    the field absent no `--effort` is sent - **and the driver treats a model id
+                     it does not recognise as supporting effort, so it supplies
+                     a level of its own, on the high side**
+    `disabled`       no `--effort`, and the spawn declares the capability as
+                     unsupported, so nothing is supplied
+
+So a chart on a non-reasoning model must write `disabled` explicitly. Leaving
+the field out is how one deployment's token spend went up without anyone
+changing a prompt. `effort` is per model rather than per chart: switching
+`completionModelName` can turn a working chart into one that fails on every
+turn, or one that quietly buys reasoning nobody asked for.
+
+**`input` on `stream-llm-completion-message` is normally left empty.** Empty
+means the processor uses what the pipe handed it - `prevMessage` in context,
+which is what the user actually said. Set it only when the input has been
+worked on first: a summary prepended, or the question rewritten into something
+clearer.
+
 ## Fields that decide something and look like detail
 
 | processor | field | what it decides |
@@ -423,6 +456,15 @@ Two things worth knowing from their pages:
   [introduction](https://docs.asgard-ai.com/docs/developer-reference/processor/introduction)
   - **the bare directory URL 404s**; cite the introduction, not the directory
   - asgard-docs `f00e0ee` for the prose
+- `effort`'s levels, that an unsupported one fails the turn, and that an empty
+  `input` falls back to `prevMessage`: asgard-docs `23409b3`
+  `docs/developer-reference/processor/model-llm-completion.mdx` and
+  `model-stream-llm-completion.mdx`, read 2026-09-11
+- **The three states of `effort`, and that omitting it is not disabling it**:
+  read 2026-09-11 off a deployment that carries `defaultEffort: "disabled"`
+  with the reasoning in its own values file, which cites
+  asgard-core `internal/processor/clidriver/options.go`. **This is the one part of it seen
+  to fire** - that deployment's token spend was the symptom
 - The editor palette per processor - which keys are the author's, which the
   platform sets, which types accept dynamic config, and which workflow-set
   types each is scoped to: **asgard-docs `23409b3`**, read 2026-09-11 from the

@@ -148,6 +148,29 @@ This label and the workflow-set labels answer different questions and neither
 substitutes for the other: the set labels decide whether the bot **exists** in the
 UI, this one decides **which list** it lands in.
 
+## A new Flow Agent is not blank
+
+**It ships a runnable default flow**, and authoring these five nodes by hand is
+redoing work the product already did:
+
+| node, as the canvas labels it | processor | what it is for |
+|---|---|---|
+| `main` | - | the entry |
+| Init | `update-context` | initialise variables. Empty by default: the place to put fixed values |
+| Agent Stream Message | `stream-llm-completion-message` | call the model and stream the reply. The body of the conversation |
+| Listen Message | `listen-message` | wait for the next user message, which is what makes it a loop |
+| Push Error Message | `push-message` | **on the Agent node's Failure branch.** The default already handles a model error |
+
+So the work is editing that flow: the prompt on the Agent node, what Init sets,
+and whatever the shape needs beyond the loop. The node menu behind **Next Step
+-> Add Target Node** groups everything else as Flow, Message, Model, Action,
+Query and API.
+
+Beside the flow, the workflow-set page carries **Sandbox** for trying a run and
+**Release** for publishing a version. A published Flow Agent can be embedded in
+a site or wired to Telegram, Slack, LINE, Discord or Sindri - the channel is
+`../usecase/chat-channel.md`, and `botProviderClass` is immutable once created.
+
 ## Fields that are not obvious
 
 **The prompt lives on the processor**, in the `stream-llm-completion-message`

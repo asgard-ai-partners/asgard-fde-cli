@@ -417,7 +417,7 @@ produced every finding, so it carries a date:
 | surface | last read, and how |
 |---|---|
 | the 22 extracts' prose against the charts they came from | 2026-09-11, every field name against the pulled clones and the CRDs, every count by rendering all 19 charts |
-| the 27 wiki pages' prose against asgard-docs | the prose stands at `f00e0ee`; the 17 processor pages were read at `23409b3` on 2026-09-11, and **the rest have not been re-read** |
+| the 27 wiki pages' prose against asgard-docs | 2026-09-11. The whole `f00e0ee..23409b3` diff was read - 27 files under `docs/`, of which 5 are deleted plans and 19 are processor and SDK pages - and what it changed is in `../wiki/processors.md`, `api.md`, `usecase/flow-agent-single.md`, `case-studies.md` and `screenshots.md`. The prose not touched by that diff still stands at its own reading |
 | the 10 stage prompts | 2026-09-11, for what they claim another command does; not for their guidance |
 | the 7 design-time skills' prose | 2026-09-11, for command and path claims only |
 | every flag's usage text against what the flag does | 2026-09-11, all 81 |
