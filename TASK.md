@@ -46,7 +46,16 @@ Last filled in **2026-09-11**, against asgard-kube `cbd8d70`, asgard-docs
 | `--links`, `--bare`, `--commands`, `--paths`, `--unverified`, `--sources` | ok |
 | `hack/check-doc-paths.py` | ok |
 | `--urls` | ok, 0 dead and no disclosed exceptions |
-| `--orphans`, `--crossref`, `audit-material` with no flag | read, not run for a verdict; `--crossref`'s 43 sentences were opened one at a time |
+| `--orphans`, `--crossref`, and `audit-material` with no flag, `--ask` and `--unmarked` | read, not run for a verdict; `--crossref`'s 43 sentences were opened one at a time, and `--ask` narrowed the 162 imperatives to the 30 that tell a reader to ask a customer |
+| `--term <field>` after a rename | not run - **nothing was renamed in this pass.** It is the sweep to run when a platform field changes name, and it reads the templates as well as the prose |
+
+### The code
+
+| item | state |
+|---|---|
+| `go build ./...`, `go vet ./...`, `gofmt -l .`, `go test ./...` | ok |
+| `hack/check-pass-list.py` - this list against the binary and `hack/` | ok |
+| `hack/extract-crs.py` - pulls the CRs out of the extracts for `validate-crs.py` | ok, 22 documents, 0 unparseable |
 
 ### Prose - no check reaches it
 

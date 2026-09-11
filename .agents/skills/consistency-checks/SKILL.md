@@ -43,6 +43,13 @@ mechanical one - and mark each item `ok`, `fixed`, `needs a clone` or
 `not read`. An item nobody looked at says so; that is more useful than its
 absence.
 
+**Then run `hack/check-pass-list.py`, because a list derived from a document
+is only as complete as that document.** It reads the binary's own flags and
+`hack/`'s own contents rather than another list, and fails on a check the pass
+does not name. The first run found eight: `--ask`, `--unmarked`, `--term`,
+`extract-crs.py`, and all four Go steps - the inventory did not have them
+either, so the derivation was faithful to a source with holes in it.
+
 ## Then run them, most-volatile first
 
 **Not cheapest first.** Cheap-first optimises for the time of whoever is
@@ -55,6 +62,7 @@ asgard-docs and it moved 286 files in nine days.
     hack/sources.py                          what each clone is, and how far behind
     hack/check-tables.py                     the pinned tables against the CRDs
     hack/check-coverage.py                   the coverage row against the docs tree
+    hack/extract-crs.py                      pulls the CRs out of the extracts, for the next line
     hack/validate-crs.py                     generated CRs and extracts against the schemas
     hack/verify-references.sh                the gate over the reference charts
 
@@ -76,6 +84,7 @@ embedded, so a check run against an older binary is checking an older corpus.
 **3. The code, which the compiler already mostly holds:**
 
     go build ./... && go vet ./... && gofmt -l . && go test ./...
+    hack/check-pass-list.py                  this list against the binary and hack/
 
 **4. The network, last, because it is the only one that needs it:**
 
@@ -97,7 +106,8 @@ tells you whether the clones are stale.
 | `--sources` | whether a recorded commit is current. Nothing inside this repository can know that; `hack/sources.py` reads the clones |
 | `check-tables` | a constraint the CRD expresses in CEL rather than in the schema |
 | `validate-crs` | whether the CR does what the page says it does |
-| `--orphans`, `--crossref` | nothing - they do not fail. They are listings for a person |
+| `--orphans`, `--crossref`, `--ask`, `--unmarked`, no flag | nothing - they do not fail. They are listings for a person |
+| `--term` | nothing, until somebody runs it. It is the sweep for a renamed platform field, and it is the only check here that needs to be told what to look for |
 
 ## Holding prose against its source
 

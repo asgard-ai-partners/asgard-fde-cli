@@ -283,6 +283,12 @@ customer's repository. A symbol resolves inside the package that owns it,
 because a search of the whole tree cannot tell one package's Index from
 another's.
 
+`hack/check-pass-list.py` holds `TASK.md`'s consistency pass against the
+binary's own flags and this directory's own contents, so the written list
+cannot be missing a check - and refuses this repository's maintenance skill
+appearing in the scaffolded tree, because the two `.agents/skills/`
+directories have the same name and only one of them ships.
+
 `hack/check-coverage.py` recomputes the asgard-docs coverage row in
 `internal/corpus/wiki/index.md` and fails when the page drifts from it. That
 row is the material's own claim about how complete it is, and the two things

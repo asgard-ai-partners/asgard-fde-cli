@@ -416,6 +416,7 @@ judgement:
 | generated CRs and the extracts' skeletons against the CRD schemas | `hack/validate-crs.py` (needs `$ASGARD_KUBE`) |
 | the gate over the reference charts | `hack/verify-references.sh` (needs the clones) |
 | build, vet, gofmt, tests | CI |
+| `TASK.md`'s pass naming every check this repository has, and this repository's own skill never appearing in a scaffolded tree | `hack/check-pass-list.py` |
 
 **Reported, and deliberately not enforced.** Each needs a person to read it,
 and a green build says nothing about them:
@@ -424,7 +425,8 @@ and a green build says nothing about them:
 |---|---|
 | `--orphans` | a document reached only by search is still reached |
 | `--crossref` | a sentence describing another command reads correctly alone; only opening that command settles it |
-| `audit-material` with no flag | every bold imperative on one screen, because the failure is two opposing ones never being in front of the same reader |
+| `audit-material` with no flag, `--ask`, `--unmarked` | every bold imperative on one screen, because the failure is two opposing ones never being in front of the same reader. `--ask` narrows to the ones telling a reader to ask a customer, which is where filter 0 applies |
+| `--term <field>` | the sweep for a renamed platform field, across prose and templates. It cannot fail on its own: it only answers a question somebody asks it |
 | `hack/sources.py` | how far each clone is behind, which is information rather than a verdict |
 
 **Checked by nothing, and verified by reading.** This is the group that has
