@@ -22,6 +22,9 @@ script ran", which is the one thing the provenance rule exists to prevent.
     from sources import resolve
     kube = resolve("kube")          # exits with a usable message if absent
     docs = resolve("docs", need=False)   # None if absent
+
+    hack/sources.py              what each source resolves to, and what is stale
+    hack/sources.py --extracts   how far each extract's source chart has moved
 """
 
 import os
@@ -121,7 +124,7 @@ def behind(path: pathlib.Path) -> str:
 READINGS = {
     "extracts-vs-charts": "deployments",
     "wiki-vs-docs": "docs",
-    "processors-rewalk": "core",
+    "processors-vs-palette": "docs",
 }
 
 
@@ -152,6 +155,41 @@ def stale() -> list:
     return out
 
 
+def extracts() -> list:
+    """Each extract's source chart, and how far the clone has moved since.
+
+    **`source/SOURCES.md` used to carry these numbers as prose, and both of the
+    two that were not zero had rotted within nine days.** One named a commit the
+    clone had already moved past; the other reported six commits of drift on a
+    clone sitting exactly where the extract was read. Written-down distances
+    between two moving things are the one shape of claim that cannot hold, so
+    that column points here instead.
+
+    Read, never fetched: this is the clone as it stands, which is what a reader
+    would open. `git -C <path> pull` first if the answer matters.
+    """
+    doc = (pathlib.Path(__file__).resolve().parent.parent / "source/SOURCES.md").read_text()
+    base = resolve("deployments", need=False)
+    out = []
+    for name, at in re.findall(r"^\|\s*([a-z0-9-]+)\s*\|\s*`([0-9a-f]{7,})`", doc, re.M):
+        if base is None or not (base / name / ".git").exists():
+            out.append((name, at, None, "no clone"))
+            continue
+        p = base / name
+        n = subprocess.run(["git", "-C", str(p), "rev-list", "--count", f"{at}..HEAD"],
+                           capture_output=True, text=True)
+        head = subprocess.run(["git", "-C", str(p), "log", "-1", "--format=%h %ad", "--date=short"],
+                              capture_output=True, text=True).stdout.strip()
+        if n.returncode != 0:
+            # The recorded commit is not in this clone. Either it was never
+            # fetched or the branch was rewritten, and both mean the extract's
+            # source cannot be opened - which is worse than being behind.
+            out.append((name, at, None, "not in the clone"))
+            continue
+        out.append((name, at, int(n.stdout.strip()), head))
+    return out
+
+
 def reference_deployments() -> list:
     """The eight reference deployments, read off `source/SOURCES.md`.
 
@@ -172,6 +210,22 @@ def behind_of(path: pathlib.Path) -> str:
 
 def main() -> int:
     """Print what each source resolves to, which is the thing to run first."""
+    if "--extracts" in sys.argv:
+        rows = extracts()
+        width = max(len(n) for n, _, _, _ in rows)
+        print("Each extract's source chart, as the clone stands. Nothing here pulls.\n")
+        for name, at, n, head in rows:
+            if n is None:
+                print(f"  {name:<{width}}  read at {at}  -- {head}")
+            elif n == 0:
+                print(f"  {name:<{width}}  read at {at}  unmoved")
+            else:
+                print(f"  {name:<{width}}  read at {at}  {n} commit(s) since, now at {head}")
+        moved = [n for _, _, c, n in rows if c]
+        print(f"\n{len(moved)} of {len(rows)} have moved since the extracts were written from them.")
+        print("An extract describes one version of one chart; that is the size of the re-read.")
+        return 0
+
     width = max(len(e) for e, _, _ in SOURCES.values())
     for name, (env, _, what) in SOURCES.items():
         p = resolve(name, need=False)

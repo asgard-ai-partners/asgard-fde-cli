@@ -139,6 +139,12 @@ asgard-docs as of `23409b3`, so at the clone's HEAD the excluded set is 23 and
 not 28 - a row that excludes a directory can stop being an exclusion by the
 directory being deleted, which is not something this material can notice.
 
+**The denominator moved by four rather than five**, because
+`developer-reference/processor/query-llm-database` arrived in the same span:
+158 pages at `23409b3` against 162 at `f00e0ee`, with the same 71 cited.
+asgard-fde-cli's `hack/check-coverage.py --head` prints both, and the difference
+is the size of what re-reading would cover rather than a defect.
+
 | excluded | count at `f00e0ee` | why |
 |---|---|---|
 | `developer-reference/asgard-builtin/message-template-*` | 14 | Message template shapes - button, carousel, image, video, location. Genuinely lookup material, and per-channel. Read the source when writing one |

@@ -60,6 +60,46 @@ the paths its Syncers write to are the whole truth about what is in it.
 >   unable to find a skill set's git config, so it renders as a skill set with no
 >   source - a UI failure, not a runtime one, which is why it survives unnoticed.
 
+### A store somebody writes into needs its own, with no Syncer on it
+
+**A SourceSet with a Syncer is not a place to write.** Every run of a git Syncer
+re-fills the paths it owns, so a file put there by anything else is overwritten
+or removed on the next sync - and a Syncer on a 30-minute schedule makes that a
+silent loss rather than a visible conflict. So a store that both a Syncer and
+somebody else writes into cannot be one SourceSet, however much the contents
+look alike.
+
+The shape read off a running deployment is two SourceSets with the same skills
+in them for different reasons:
+
+    ss-git-repos        members filled by Syncers from git. Read-only in
+                        practice, whatever the CRD allows
+    ss-brand-skills     no members, **no Syncer**, written through the Edge
+                        Server's SourceSet volume API at a path the writer
+                        chooses - there, `brands/<brand>/skills/<skill>/<rev>/`
+
+**The revision directory is the other half of it.** Each write goes to a new
+`<rev>/`, so a path is written once and afterwards only read or deleted; the
+parent directories are created by the write itself, which is why that SourceSet
+declares no members either. Without that, two writers land on one path and the
+reader gets whichever finished last.
+
+And **the name is load-bearing** in a way a chart rename does not warn about:
+the service writing into it holds the SourceSet name in its own configuration,
+so renaming the CR silently breaks every route that writes to it.
+
+**Checked:** read 2026-09-11 off `asgard-freyr-kube`'s
+`source_set/brand_skills.yaml`, whose own comment forbids reusing the
+Syncer-backed SourceSet and cites that deployment's `asgard-freyr-api` TASK-183
+D183-6 for the requirement.
+
+**Unchecked:** the mechanism. The Syncer implementation is in neither
+asgard-kube nor asgard-core, so nothing here confirms *how* a synced path treats
+a file it did not write - one deployment's chart comment is the whole of the
+evidence. Treat it as a constraint that deployment hit rather than a documented
+platform rule, and if a customer's design depends on writing into a synced
+store, ask the platform team rather than this page.
+
 ### The one place a shared store is right
 
 A **Plugin bundle** is the exception, and it is deliberate rather than a chart

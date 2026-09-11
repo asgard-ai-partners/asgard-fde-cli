@@ -35,6 +35,61 @@ goes. Maps to `toolsetClass: workflow-tooling`.
 With STDIO, Asgard starts a local process and talks to it over standard
 input/output. With Streamable HTTP it connects to an endpoint already running.
 
+## Consent, and the two things about it that were believed wrong
+
+**`requestConsent` is a field on the Toolset, per tool** - `spec.tools[].requestConsent` -
+and not on the Workflow the tool wraps. A Workflow has no say in whether calling
+it stops to ask; that decision lives one level up, in the Toolset that exposes
+it. So a chart author looking for the gate in the Workflow will not find it, and
+adding a second entry to a Toolset silently inherits nothing.
+
+**A `workflow-tooling` Toolset does defer.** The belief that it could not - that
+the class itself was a second, independent reason a tool never stopped to ask -
+was wrong, and one deployment carried it in a comment for a week. The mechanism,
+read at asgard-core `623ceb5`:
+
+    asgard-core internal/constants.go
+                                   the built-in safe list "only governs asgard
+                                   domain tools; mcp__<toolset>__* honor
+                                   RequestConsent"
+    processor/driverloop           a toolset's tools reach the CLI as
+                                   `mcp__<toolset>__<tool>`, so they carry the
+                                   prefix consent gates on
+    bpcontroller/server            only a tool with `!RequestConsent` enters
+                                   `AllowedToolRefs`
+    processor/consentpolicy        an `mcp__` tool that is not in that list is
+                                   returned as **defer**
+
+So the single switch is that one field. Everything the agent's own sandbox runs -
+Bash, Read, Edit, Grep - is auto-allowed before consent is considered at all,
+because those are not Asgard tools.
+
+**An `mcp-server` Toolset cannot ask for consent at all.** There is nowhere to
+write it: `requestConsent` exists only on `tools[]`, and asgard-kube's CEL rule
+requires `tools` to be **empty** for that class. A design that plans to gate an
+external MCP server's calls per tool does not work, and the CRD refuses it
+rather than ignoring it.
+
+**One bypass exists and is not a chart field.** `bypass_tool_call_consent` is a
+query parameter on the Edge Server's bot-provider endpoint, defaulting to false,
+and it treats every tool call in that one request as consented. It is a caller's
+switch, so a relay in front of the platform decides whether it is reachable at
+all - which is the thing to ask about before promising that a gate cannot be
+skipped.
+
+**Checked:** read 2026-09-11 against asgard-core `623ceb5` - its
+`internal/constants.go`, asgard-core `internal/processor/consentpolicy/consentpolicy.go`,
+asgard-core `internal/bpcontroller/server/bp_controller.go` and asgard-core
+`internal/edgeserver/handler/bot_provider.go` - and against asgard-kube
+`cbd8d70`, its `pkg/apis/asgard/v1alpha1/types.go`. The correction came from a deployment
+chart that had traced it line by line; every step of it was re-read here rather
+than taken on trust.
+
+**Unchecked:** what the dialog looks like to the person answering, on a channel
+that is not Sindri. `../wiki/platform-unknowns.md` P8 is that question and it is
+still open - the deployment above produced its first real consent card in a
+staff-facing dashboard, which is the case that was never in doubt.
+
 ## Skillset
 
 A reusable set of skills an agent loads at run time.

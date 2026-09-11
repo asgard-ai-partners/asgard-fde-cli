@@ -82,6 +82,10 @@ written into the sandbox by a hook, never baked into the skill.
     Toolset  ts-<name>
       tools[] -> (workflow, entry), requestConsent per tool
 
+**The gate is that field and nothing else** - not the Toolset's class, and not
+anything in the Workflow. `../wiki/tools.md` has why, and why an `mcp-server`
+Toolset cannot carry one at all.
+
 ## Generate it
 
     asgard-cli add httptool <name> --toolset ts-<name>

@@ -23,22 +23,33 @@ read is what each clone holds.
 Read 2026-09-11. **The right-hand column is the reason this table matters**: a
 chart moves, and an extract is a description of one version of one chart.
 
-| deployment | read at | since then |
-|---|---|---|
-| unitech-e-asgard-kube | `223a59a` (2026-09-01) | 26 commits behind `80b16a5`, 2026-09-10 |
-| xxentria-asgard-kube | `57e4b4c` (2026-09-01) | current |
-| finance-ai-asgard-kube | `3a4ce84` (2026-09-01) | current |
-| buy123-asgard-kube | `08dac8f` (2026-08-31) | current |
-| asgard-freyr-kube | `0594f68` (2026-08-24) | **84 commits behind** `f4c2fcf`, 2026-09-11 |
-| asgard-auto-post-kube | `d11b802` (2026-09-01) | 7 commits behind `edb0ad0`, 2026-09-11 |
-| asgard-industry-demo-generator | `718cc0e` (2026-08-26) | 6 commits behind `262d369`, 2026-09-01 |
-| asgard-freyr-skills | `e0b3fe3` (2026-09-01) | **48 commits behind** `a5c84c6`, 2026-09-07 |
+| deployment | read at |
+|---|---|
+| unitech-e-asgard-kube | `223a59a` (2026-09-01) |
+| xxentria-asgard-kube | `57e4b4c` (2026-09-01) |
+| finance-ai-asgard-kube | `3a4ce84` (2026-09-01) |
+| buy123-asgard-kube | `08dac8f` (2026-08-31) |
+| asgard-freyr-kube | `0594f68` (2026-08-24) |
+| asgard-auto-post-kube | `d11b802` (2026-09-01) |
+| asgard-industry-demo-generator | `718cc0e` (2026-08-26) |
+| asgard-freyr-skills | `e0b3fe3` (2026-09-01) |
 
-**The two that are furthest behind are the two that matter most for one
-extract each.** `asgard-freyr-skills` is the only source for
+**How far each has moved since is computed, not written here:**
+
+    hack/sources.py --extracts
+
+There used to be a third column with those distances in it, and **both of the
+two non-zero rows had rotted within nine days.** One named a commit the clone
+had already moved past; the other reported six commits of drift against a clone
+sitting exactly where the extract was read. A distance between two things that
+both move is the one shape of claim that cannot be written down and stay true -
+the left-hand column can, because a commit is fixed.
+
+**The two furthest along are the two that matter most for one extract each.**
+`asgard-freyr-skills` is the only source for
 `internal/corpus/usecase/browser-operation.md`, and `asgard-freyr-kube` is
-where `agents.expression` and the sandbox hooks were read. An extract resting
-on a sample of one, 48 or 84 commits stale, is the shape
+where `agents.expression` and the sandbox hooks were read. An extract resting on
+a sample of one, dozens of commits back, is the shape
 `internal/corpus/wiki/coverage.md` exists to make visible.
 
 **These are not in `asgard-cli audit-material --sources`.** That check reads
