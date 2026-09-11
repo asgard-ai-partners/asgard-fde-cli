@@ -18,6 +18,8 @@ question gets asked in a meeting, before there is a directory. `Goal.md` states
 the goal; this file is the map.
 
 ```
+CLAUDE.md             @AGENTS.md, so the rules load without being asked for
+.agents/skills/       this repo's own maintenance skills, not the ones that ship
 cmd/asgard-cli/       main; signal handling and exit codes only
 internal/             every package, none exported
 source/               internal notes that must never ship

@@ -32,7 +32,7 @@ import sys
 # grepping it: a note recording that something was removed must not read as
 # naming it.
 DOCS = ["Goal.md", "README.md", "README.zh-TW.md", "AGENTS.md", "STRUCTURE.md",
-        "APPROACH.md", "TASK.md",
+        "APPROACH.md", "TASK.md", "CLAUDE.md",
         "hack/README.md", "hack/check-tables.py", "hack/sources.py",
         "hack/validate-crs.py", "hack/extract-crs.py", "hack/verify-references.sh",
         ".env.example", ".agents/skills/consistency-checks/SKILL.md"]

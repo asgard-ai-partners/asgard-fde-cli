@@ -32,8 +32,17 @@ it cannot.
 It writes files into a *customer's* repository and never holds state of its
 own. The division: `Goal.md` is the goal, [TASK.md](TASK.md) is where it stands
 and what is missing, [README.md](README.md) is what the commands do,
-[APPROACH.md](APPROACH.md) is how the main capabilities are implemented, and
-this file is how to change the code and the material without breaking it.
+[APPROACH.md](APPROACH.md) is how the main capabilities are implemented,
+[STRUCTURE.md](STRUCTURE.md) is what lives in which directory, and this file is
+how to change the code and the material without breaking it.
+
+**Before saying anything here is correct, load
+`.agents/skills/consistency-checks/SKILL.md`.** It is the method: what to run,
+in what order, what each check is blind to, and how to do the part no check
+does. **A pass writes its whole scope into `TASK.md` before running anything**,
+because a pass that discovers its own scope as it goes finds a surface nobody
+listed in the middle and reports it as news. The inventory of what covers what
+is "What is checked, and what is not", below.
 
 **Most of the value is not code.** It is one corpus, and the first question when
 adding anything is which part it belongs to:
