@@ -13,6 +13,8 @@ clone, so pulling does not change the answer.
 
     hack/check-coverage.py          measures at the commit the page names
     hack/check-coverage.py --head   also measures at the clone's HEAD
+    hack/check-coverage.py --drift  which cited pages have changed since the
+                                    commit the citing document names
 
 Needs $ASGARD_DOCS. See hack/sources.py.
 """
@@ -57,7 +59,56 @@ def pages(docs: pathlib.Path, ref: str) -> set:
     return got
 
 
-def cited_slugs() -> set:
+SLUG = re.compile(r'^slug:\s*(\S+)', re.M)
+
+
+def url_index(docs: pathlib.Path, ref: str) -> dict:
+    """Live URL path -> page path, for every page at one commit.
+
+    **A page's URL is its `slug:` frontmatter when it declares one**, and 14 of
+    the 158 pages do. Matching a cited URL against the file path instead drops
+    every one of them: four channel pages are `integration/LINE.mdx` served at
+    `/integration/line`, eight processor pages are named for their family and
+    served under the builder's name - `flow-entry.mdx` at `processor/entry` -
+    and `product-suite/index.mdx` is served at `product-suite`.
+
+    That undercount is why the coverage row read 71 rather than 77 for a week,
+    and why it is worth reading the frontmatter rather than guessing at case and
+    `index`, which is what the first fix here did.
+    """
+    out = {}
+    for path in pages(docs, ref):
+        for ext in (".mdx", ".md"):
+            got = subprocess.run(["git", "-C", str(docs), "show", f"{ref}:docs/{path}{ext}"],
+                                 capture_output=True, text=True)
+            if got.returncode == 0:
+                m = SLUG.search(got.stdout[:1500])
+                if m:
+                    url = m.group(1).strip().lstrip("/")
+                    if url.startswith("docs/"):
+                        url = url[len("docs/"):]
+                elif path.endswith("/index"):
+                    # A directory's index page is served at the directory, with
+                    # no `index` in the URL, whether or not it says so.
+                    url = path[: -len("/index")]
+                else:
+                    url = path
+                out[url.rstrip("/")] = path
+                break
+    return out
+
+
+def resolve_slug(slug: str, index: dict) -> str:
+    """The page a cited URL names, or "" when it names no page.
+
+    A miss here means "not a page" - a screenshot under `img/`, or a directory
+    with no index, which is the 404 `../wiki/processors.md` warns about - and
+    never "spelled differently".
+    """
+    return index.get(slug.rstrip("/"), "")
+
+
+def cited_slugs(index: dict = None) -> set:
     """Every docs.asgard-ai.com page the material links to, as a slug."""
     bodies = []
     for pat in ("internal/corpus/**/*.md", "internal/stage/prompts/*.md",
@@ -71,18 +122,107 @@ def cited_slugs() -> set:
     out = set()
     for u in urls:
         s = u.split("docs.asgard-ai.com/", 1)[1]
-        out.add(s[len("docs/"):] if s.startswith("docs/") else s)
+        slug = s[len("docs/"):] if s.startswith("docs/") else s
+        if slug.startswith("img/"):
+            continue
+        out.add(resolve_slug(slug, index) if index else slug)
+    out.discard("")
     return out
+
+
+def cited_with_commit() -> dict:
+    """Each cited docs slug, and the commits the citing documents name beside it.
+
+    **A citation's commit is on the page that cites it, not on the link.** A
+    wiki page's Sources section reads "- [thing](url) - asgard-docs `f00e0ee`",
+    so the commit governs the block it sits in rather than any one URL, and the
+    nearest one above a link is the one that applies. This takes every commit
+    named anywhere in the same document, which over-collects rather than
+    under-collects: a page citing two commits reports drift against the older,
+    and reporting a re-read as drift is the cheap mistake here.
+    """
+    out = {}
+    for pat in ("internal/corpus/**/*.md", "internal/stage/prompts/*.md",
+                "internal/scaffold/templates/**/SKILL.md*"):
+        for f in ROOT.glob(pat):
+            body = f.read_text(errors="replace")
+            refs = set(re.findall(r"asgard-docs `([0-9a-f]{7,})`", body))
+            if not refs:
+                continue
+            for u in re.findall(r"https://docs\.asgard-ai\.com/[A-Za-z0-9/_.#-]*[A-Za-z0-9/_-]", body):
+                slug = u.split("#")[0].rstrip("/").split("docs.asgard-ai.com/", 1)[1]
+                slug = slug[len("docs/"):] if slug.startswith("docs/") else slug
+                if slug.startswith("img/"):
+                    continue
+                out.setdefault(slug, {}).setdefault(f.relative_to(ROOT), set()).update(refs)
+    return out
+
+
+def moved(docs: pathlib.Path, slug: str, since: str) -> str:
+    """What happened to one page between a commit and the clone's HEAD.
+
+    The slug is resolved the way `cited_slugs` resolves it - case, and a
+    directory's index - so "gone" means gone rather than spelled differently.
+    """
+    slug = resolve_slug(slug, url_index(docs, "HEAD")) or slug
+    for ext in (".mdx", ".md"):
+        path = f"docs/{slug}{ext}"
+        out = subprocess.run(["git", "-C", str(docs), "log", "--format=%h", f"{since}..HEAD",
+                              "--", path], capture_output=True, text=True)
+        if out.returncode != 0:
+            return "?"
+        commits = [c for c in out.stdout.split() if c]
+        exists = subprocess.run(["git", "-C", str(docs), "cat-file", "-e", f"HEAD:{path}"],
+                                capture_output=True).returncode == 0
+        if commits or exists:
+            if not exists:
+                return "deleted"
+            return f"{len(commits)} commit(s)" if commits else ""
+    return "not a page at HEAD"
+
+
+def drift(docs: pathlib.Path) -> int:
+    """Which cited pages have changed since the commit the citing document names.
+
+    **This is the checkable half of "the wiki against asgard-docs".** Whether
+    somebody read a page is theirs to claim; whether the page has changed under
+    the reading is a fact, and this is the list of readings that would have to be
+    redone to make the wiki current. It is a report, not a verdict - a page
+    changing does not make the prose wrong, it makes it unconfirmed.
+    """
+    cited = cited_with_commit()
+    rows = []
+    for slug in sorted(cited):
+        for doc, refs in sorted(cited[slug].items()):
+            since = sorted(refs)[0] if len(refs) == 1 else min(refs, key=lambda r: age(docs, r))
+            what = moved(docs, slug, since)
+            if what and what != "?":
+                rows.append((str(doc), slug, since, what))
+    width = max((len(r[0]) for r in rows), default=0)
+    for doc, slug, since, what in rows:
+        print(f"  {doc:<{width}}  {slug}  since {since}: {what}")
+    print(f"\n{len(rows)} cited page(s) have moved since the commit the citing document names.")
+    print("A page changing does not make the prose wrong - it makes it unconfirmed, and\n"
+          "this is the size of the re-read.")
+    return 0
+
+
+def age(docs: pathlib.Path, ref: str) -> int:
+    out = subprocess.run(["git", "-C", str(docs), "log", "-1", "--format=%ct", ref],
+                         capture_output=True, text=True)
+    return int(out.stdout.strip()) if out.returncode == 0 and out.stdout.strip() else 0
 
 
 def measure(docs: pathlib.Path, ref: str):
     P = pages(docs, ref)
-    cited = cited_slugs() & P
+    cited = cited_slugs(url_index(docs, ref)) & P
     return len(cited), len(P), len(P) - len(cited), len([p for p in P if EXCLUDED.search(p)])
 
 
 def main() -> int:
     docs = resolve("docs")
+    if "--drift" in sys.argv:
+        return drift(docs)
     text = INDEX.read_text()
     m = ROW.search(text)
     if not m:

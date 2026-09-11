@@ -397,11 +397,40 @@ each a place where searching for what you read finds nothing:
 | the page is called | the chart writes |
 |---|---|
 | SQL, at `processor/query-sql` | `query-database` |
-| Entry, at `processor/flow-entry` | *not a processor* - `spec.entries` |
-| Exit, at `processor/flow-exit` | *not a processor* - `spec.exits` |
+| Entry, at `processor/entry` | *not a processor* - `spec.entries` |
+| Exit, at `processor/exit` | *not a processor* - `spec.exits` |
 | Response, at `processor/automation-tool-response` | `push-message`. **There is no `response` type** - an Automation Tool's final output is the same processor a bot replies with, scoped to `automation_tool` |
 | LLM Database, at `processor/query-llm-database` | `llm-query-database` - **the two words are swapped**, so the page and the type do not find each other |
 | MCP Servers, the field label on both LLM processors | `toolsets`, a comma-separated list of Toolset names |
+
+### And a page has a third name: the file it is in
+
+**Half the processor pages are served at a URL that is not their file name.**
+Eight of the sixteen declare a `slug:` in their frontmatter, so
+`flow-entry.mdx` answers at `processor/entry`, `message-push.mdx` at
+`processor/push-message`, `model-stream-llm-completion.mdx` at
+`processor/stream-llm-completion`. The file is named for the processor's family
+and the URL for the builder's label.
+
+Which matters twice. **A link built from a file name 404s**, and that is how
+the Entry row in the table above got a URL with `flow-` on the front of it,
+written while correcting something else on the same line. And **a grep of the
+docs repository finds the family name**, so searching it for `entry` finds a
+file called something else.
+
+The documentation's own index page links by URL and gets them right. Its
+category headings are the node menu's, which is a fourth naming of the same
+thirteen things and the one an author actually sees:
+
+    流程控制    Entry, Exit, Router
+    Message     Push Message, Listen Message
+    Model       LLM Completion, Stream LLM Completion Message, Generate Embedding
+    Action      Update Context, Execute Script
+    Query       SQL, Retrieve Knowledge
+    API         HTTP 請求
+    Automation Tool   Validate Payload, Response - **not in the Flow Agent
+                menu at all**, only in an Automation Tool workflow
+    CRD only    LLM Query Database
 
 **`llm-query-database` got its page on 2026-09-09 and is still the one type
 the editor will not add.** It

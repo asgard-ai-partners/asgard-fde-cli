@@ -55,7 +55,7 @@ to verify but the person who claims it.**
 | surface | read against | when |
 |---|---|---|
 | `extracts-vs-charts` the 22 extracts against the charts they came from | the eight clones as pulled | 2026-09-11 |
-| `wiki-vs-docs` the 27 wiki pages against asgard-docs | the `f00e0ee..23409b3` diff only; **the prose that diff did not touch stands at its own earlier reading** | 2026-09-11 |
+| `wiki-vs-docs` the 27 wiki pages against asgard-docs | **the pages whose citations have moved, which `hack/check-coverage.py --drift` names** - 5 of them, all read; the prose citing a page that has not moved stands at its own earlier reading | 2026-09-11 |
 | `packages-help` the 14 packages' help against their behaviour | the working tree | 2026-09-11 |
 | `flag-usage` every flag's usage text against what the flag does | the working tree, all 81 | 2026-09-11 |
 | `processors-vs-palette` `wiki/processors.md`'s prose, as opposed to its two tables, which `hack/check-processors.py` now holds against asgard-core and asgard-docs | the two clones as pulled | 2026-09-11 |

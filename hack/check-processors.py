@@ -169,6 +169,30 @@ def definitions(core_dir: pathlib.Path, kube_dir: pathlib.Path) -> list:
     return out
 
 
+SLUG = re.compile(r'^slug:\s*(\S+)', re.M)
+
+
+def doc_urls(docs: pathlib.Path) -> set:
+    """Every URL path the processor documentation answers at.
+
+    **A page's URL is its `slug:` frontmatter, not its file name**, and eight of
+    the sixteen processor pages differ: `flow-entry.mdx` answers at
+    `processor/entry`. So a path written from a file listing 404s, which is a
+    mistake this check exists because somebody made - twice, in opposite
+    directions, in the same table.
+    """
+    out = set()
+    for f in sorted((docs / "docs/developer-reference/processor").glob("*.md*")):
+        path = f"developer-reference/processor/{f.name.rsplit('.', 1)[0]}"
+        m = SLUG.search(f.read_text(errors="replace")[:1500])
+        if m:
+            url = m.group(1).strip().lstrip("/")
+            out.add(url[len("docs/"):] if url.startswith("docs/") else url)
+        else:
+            out.add(path)
+    return out
+
+
 def palette(docs: pathlib.Path) -> dict:
     """The editor palette per processor type, from asgard-docs' metadata.
 
@@ -346,6 +370,22 @@ def main() -> int:
                     if k not in said_author and "one per branch" not in author_cell and author_cell != "*none*":
                         bad.append(f"{name} `{k}`: asgard-docs records it as an author key "
                                    f"and the page's author cell does not name it")
+
+    # ── the documentation paths this page writes ─────────────────────────
+    #
+    # Written as `processor/<name>` in prose rather than as a link, so
+    # `audit-material --urls` never fetches them and nothing else would notice.
+    live = doc_urls(docs)
+    for m in re.finditer(r'`(processor/[a-z0-9-]+)`', page):
+        named = "developer-reference/" + m.group(1)
+        if named not in live:
+            line = page[:m.start()].count("\n") + 1
+            # The one deliberate exception is the bare directory, which the page
+            # cites in a sentence saying it 404s.
+            if m.group(1) == "processor":
+                continue
+            bad.append(f"internal/corpus/wiki/processors.md:{line} writes `{m.group(1)}`, "
+                       f"which asgard-docs serves no page at")
 
     # ── the extra-key table ──────────────────────────────────────────────
     #

@@ -411,9 +411,9 @@ judgement:
 | every upstream cited being declared in the raw-sources table | `--sources` |
 | every documentation URL being live | `--urls` (needs the network) |
 | the pinned enum and constraint tables against the CRDs | `hack/check-tables.py` (needs `$ASGARD_KUBE`) |
-| the four numbers in the coverage row | `hack/check-coverage.py` (needs `$ASGARD_DOCS`) |
+| the four numbers in the coverage row, measured at the commit the row names and with a page's URL taken from its `slug:` frontmatter | `hack/check-coverage.py` (needs `$ASGARD_DOCS`) |
 | **every count this material asserts about a reference deployment** - the 88-row page ledger, the 160-row operation ledger, the 14 API domains, the Plugin and SkillSet counts at the commit each claim names, and `source/SOURCES.md`'s CR-file column at each deployment's read commit - recomputed, and a claim whose wording has drifted out of every pattern fails rather than passes | `hack/check-counts.py` (needs `$ASGARD_DEPLOYMENTS`) |
-| **`wiki/processors.md`'s two tables against the two repositories they distil** - the thirteen processors' outputs, required keys and defaults against asgard-core's `ProcessorDefinitions`, and the editor palette's author and platform keys against asgard-docs' per-page metadata | `hack/check-processors.py` (needs `$ASGARD_CORE` and `$ASGARD_DOCS`) |
+| **`wiki/processors.md`'s two tables against the two repositories they distil** - the thirteen processors' outputs, required keys and defaults against asgard-core's `ProcessorDefinitions`, the editor palette's author and platform keys against asgard-docs' per-page metadata, that a processor accepting dynamic config says what its keys are for, and that every `processor/<name>` written in prose resolves against asgard-docs' `slug:` frontmatter rather than its file name | `hack/check-processors.py` (needs `$ASGARD_CORE` and `$ASGARD_DOCS`) |
 | every path and package-qualified Go symbol this repository's own documents name | `hack/check-doc-paths.py` |
 | generated CRs and the extracts' skeletons against the CRD schemas | `hack/validate-crs.py` (needs `$ASGARD_KUBE`) |
 | the gate over the reference charts | `hack/verify-references.sh` (needs the clones) |
@@ -447,7 +447,7 @@ source and a date and not a word.
 | surface | last read, and how |
 |---|---|
 | `extracts-vs-charts`  the 22 extracts against the charts they came from | 2026-09-11, every field name against the pulled clones and the CRDs, every count by rendering all 19 charts |
-| `wiki-vs-docs`  the 27 wiki pages against asgard-docs | 2026-09-11. The whole `f00e0ee..23409b3` diff was read - 27 files under `docs/`, of which 5 are deleted plans and 19 are processor and SDK pages - and what it changed is in `../wiki/processors.md`, `api.md`, `usecase/flow-agent-single.md`, `case-studies.md` and `screenshots.md`. The prose not touched by that diff still stands at its own reading |
+| `wiki-vs-docs`  the 27 wiki pages against asgard-docs | 2026-09-11, and **the scope is computed now**: `hack/check-coverage.py --drift` lists every cited page that has moved since the commit the citing document names, which was 5 pages - the expression introduction, the processor introduction, the SDK page, the flow-agent feature page and one directory URL that is deliberately not a page. All five were read; what they changed is in `../wiki/processors.md` and `integration.md`. The prose citing a page that has not moved stands at its own reading |
 | `stage-prompts`  the 10 stage prompts | 2026-09-11, for what they claim another command does; not for their guidance |
 | `design-time-skills`  the 7 design-time skills' prose | 2026-09-11, for command and path claims only |
 | `flag-usage`  every flag's usage text against what the flag does | 2026-09-11, all 81 |

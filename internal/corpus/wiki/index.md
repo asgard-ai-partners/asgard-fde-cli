@@ -93,7 +93,7 @@ The sources this material is actually built from:
 
 | source | what it holds | state |
 |---|---|---|
-| asgard-docs | the product documentation | 71 / 162 cited at `f00e0ee`; 91 published and unread; 28 deliberately excluded below. **Computed, not counted** - `hack/check-coverage.py` in asgard-fde-cli recomputes it and fails when this row drifts |
+| asgard-docs | the product documentation | 77 / 162 cited at `f00e0ee`; 85 published and unread; 28 deliberately excluded below. **Computed, not counted** - `hack/check-coverage.py` in asgard-fde-cli recomputes it and fails when this row drifts |
 | asgard-kube `crd/` | the contract | read per page, per field, and dated on the page |
 | **asgard-kube `pkg/apis/`** | **the Go types the CRDs are generated from, with the reasoning as comments** | read once, 2026-09-02, for the validation rules - `../wiki/crd-rules.md`. 134KB of declarations; what has been taken is the behavioural comments, not the field list |
 | **[asgard-core](https://github.com/asgard-ai-platform/asgard-core)** `internal/constants.go` | **the processor definitions the CRD is generated from** | read once, 2026-09-02, for the type list. Its per-processor config definitions are not carried anywhere |
@@ -141,9 +141,18 @@ directory being deleted, which is not something this material can notice.
 
 **The denominator moved by four rather than five**, because
 `developer-reference/processor/query-llm-database` arrived in the same span:
-158 pages at `23409b3` against 162 at `f00e0ee`, with the same 71 cited.
+158 pages at `23409b3` against 162 at `f00e0ee`, with the same 77 cited.
 asgard-fde-cli's `hack/check-coverage.py --head` prints both, and the difference
 is the size of what re-reading would cover rather than a defect.
+
+**The numerator read 71 for a week, and the reason was the checker rather than
+the material.** A live URL is not always the file path under `docs/`: four
+channel pages are served from capitalised files - `integration/line` from
+`integration/LINE.mdx` - and two more are a directory's `index.mdx` reached
+without the `index`. Matched literally, those six citations counted as unread, so
+**the row understated its own coverage** - the safe direction to be wrong in, and
+still wrong. Computing a number does not make it right; it makes it
+re-derivable, which is how this was found.
 
 | excluded | count at `f00e0ee` | why |
 |---|---|---|
