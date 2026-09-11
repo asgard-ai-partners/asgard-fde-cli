@@ -421,7 +421,7 @@ produced every finding, so it carries a date:
 | the 10 stage prompts | 2026-09-11, for what they claim another command does; not for their guidance |
 | the 7 design-time skills' prose | 2026-09-11, for command and path claims only |
 | every flag's usage text against what the flag does | 2026-09-11, all 81 |
-| **`internal/localenv`, `platform`, `auth`, `work`, `skills`, `gitrepo`, `render`, `binding`, `chart`, `tool`, `browser`, `version`, `pipelineconfig`, `repo`** | **never read end to end - about 7,300 lines.** Their string literals are in `--commands` and any symbol a document names is in `check-doc-paths.py`; nothing checks that their help describes what they do |
+| `internal/localenv`, `platform`, `auth`, `work`, `skills`, `gitrepo`, `render`, `binding`, `chart`, `tool`, `browser`, `version`, `pipelineconfig`, `repo` | 2026-09-11, read end to end - about 7,300 lines. Every claim in a doc comment or a help screen that could be checked was: the loopback server's token, Host check and CSP; that `add` runs with no helm on PATH; that `doctor` reports a missing optional without failing; that a secret's value never comes back; that `profile show` prints where each field came from; every literal repository path each package emits, against a scaffolded tree |
 
 **Add a row when you add a surface, and move one up when you write its
 check.** A surface that is in none of the three groups is one nobody has

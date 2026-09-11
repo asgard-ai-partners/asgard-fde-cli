@@ -85,14 +85,21 @@ func printRequests(out io.Writer, state stage.State) {
 	}
 
 	fmt.Fprintf(out, "Open requests, from %s:\n", work.RequestIndex)
+	untargeted := 0
 	for _, r := range requests {
 		target := r.Project
 		if target == "" {
 			target = "no project yet"
+			untargeted++
 		}
 		fmt.Fprintf(out, "  %-9s %-10s %-16s %s\n", r.ID, r.Status, target, r.Title)
 	}
-	fmt.Fprintf(out, "\nA request with no project named has not had its audience decided:\n`asgard-cli request target <request-id> <project>`.\n")
+	// **Only when a row needs it.** A remedy printed under a list where every
+	// request already names a project tells the reader to do something they
+	// have done, and the next line they skim is the one that mattered.
+	if untargeted > 0 {
+		fmt.Fprintf(out, "\nA request with no project named has not had its audience decided:\n`asgard-cli request target <request-id> <project>`.\n")
+	}
 }
 
 func newRequestAddCmd() *cobra.Command {

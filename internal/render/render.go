@@ -1,8 +1,8 @@
 // Package render renders a release's chart with the native helm binary.
 //
-// It replaces common/render.sh, and the reason was Windows: that script is bash
-// with BASH_SOURCE and set -euo pipefail and shells out to yq, none of which
-// runs there without WSL, while helm has a native Windows build.
+// **The native binary, not a shell wrapper.** helm ships a Windows build; a
+// bash script with `BASH_SOURCE`, `set -euo pipefail` and a shell-out to yq
+// does not run there without WSL.
 //
 // WHAT IT RENDERS IS NOT WHAT WILL DEPLOY, and the distinction matters enough
 // that the command says so every time. A run's plan renders on the platform,
