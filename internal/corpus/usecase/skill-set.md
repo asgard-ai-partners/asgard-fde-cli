@@ -63,10 +63,10 @@ the paths its Syncers write to are the whole truth about what is in it.
 ### The one place a shared store is right
 
 A **Plugin bundle** is the exception, and it is deliberate rather than a chart
-that was never updated. A deployment carrying 28 Plugins keeps one
+that was never updated. A deployment carrying 29 Plugins keeps one
 `ss-skill-repos` and lets each bundle's SkillSet slice it with `searchPaths`,
-because the skills all live in one repository and 28 SourceSets over the same
-repository would be 28 clones of it.
+because the skills all live in one repository and one SourceSet per bundle
+would be 29 clones of it.
 
 That shape accepts the UI cost knowingly: those SkillSets carry no
 `skill-set-name` annotation and no `managed-by` label, so they are not presented

@@ -78,8 +78,9 @@ The rest are two families, and `asgard-cli verify` checks both as of
                                 the block named after it
 
 Every one of those renders, lints and passes a server-side dry-run, and is
-refused at apply. Run over the six reference deployments - 107 CRs - the check
-reports nothing, which is what a rule the platform already enforces should do.
+refused at apply. Run over the six renderable reference charts - 119 CRs as of
+2026-09-11 - the check reports nothing on either family, which is what a rule
+the platform already enforces should do.
 
 ## An undeclared field is pruned, and a dry run says success
 

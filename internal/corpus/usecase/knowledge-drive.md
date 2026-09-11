@@ -36,7 +36,9 @@ machine roughly, how do I choose, how do I fix it"; a query answers "how many,
 which ones, what is the phone number".
 
 **Prefer this over `KnowledgeBase` for new work, but know what that claim
-rests on.** `KnowledgeBase`, `Loader`, `Indexer` and `Source` are all live CRDs,
+rests on.** `KnowledgeBase`, `Loader`, `Indexer` and `Source` are all live CRDs
+- though `Indexer` appears in no reference deployment at all, so what is said
+about it here is read off the schema and nothing else -
 none carries a deprecation marker, and the console ships the feature with its
 own documented UI. What happened is narrower: one engagement built knowledge on
 `KnowledgeBase` + `Loader` + a retrieval workflow and moved it to a Drive with a

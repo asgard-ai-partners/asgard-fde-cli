@@ -114,7 +114,7 @@ type xref struct {
 	// bundledSkillSets are the SkillSets a Plugin carries. They are exempt from
 	// the one-SourceSet-each rule: a chart of bundles shares one skill store on
 	// purpose, because the skills live in one repository and a store per bundle
-	// would clone it per bundle. A deployment with 28 Plugins has exactly one
+	// would clone it per bundle. A deployment with 29 Plugins has exactly one
 	// store. Those SkillSets are the Plugin's implementation rather than
 	// something a person picks in the UI, so the UI cost the rule protects
 	// against is one the shape accepts knowingly.

@@ -28,10 +28,16 @@ runtime skills and no CRs at all - it is the only source for
 | **Trigger** | **1 of 7** | one internal-audience project, and one instance of it |
 | **Plugin** | **1 of 7** | auto-post, which has 28 |
 | **KnowledgeBase / Loader / Source** | **1 of 7** | auto-post only |
+| **Indexer** | **0 of 7** | a live CRD in no reference deployment. `../usecase/knowledge-drive.md` names it because the contract has it; nothing here has seen one configured |
 
 **The three at 7 of 7 are the entry point**, which is the one thing every
 deployment has. **The three at 1 of 7 are the thin samples**, and the sections
-below are about them.
+below are about them. **`Indexer` at 0 of 7 is thinner still**: the material
+names it because the CRD does, and nobody here has seen one in a chart - read
+anything this material says about it as read off the schema.
+
+Every other kind in the rendered charts is named somewhere in this material,
+which is the check in the other direction.
 
 ## What that means for the extracts
 

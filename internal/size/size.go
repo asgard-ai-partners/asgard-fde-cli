@@ -236,7 +236,7 @@ func warnings(s Shape, in Inputs) []string {
 		out = append(out, fmt.Sprintf(
 			"%d system(s) with only a web console. **The CR count is not the cost here.**\n"+
 				"Browser operation needs every page and every dialog the menu does not show\n"+
-				"written down first - one existing case runs to 88 pages. Quote this\n"+
+				"written down first - one existing case runs to 93 pages. Quote this\n"+
 				"separately or not at all, and say so.", in.Consoles))
 	}
 	if in.Writes > 0 && in.Schedules > 0 {

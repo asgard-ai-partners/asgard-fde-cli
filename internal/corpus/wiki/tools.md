@@ -181,7 +181,7 @@ repair to make when guidance seems to be missing.
 - Hook events, the SkillSet trio and the shared-store exception: checked
   2026-09-02 against [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube)
   `cbd8d70` - `SandboxHookEvent`, `PluginSpec` - and against a deployment
-  carrying 28 Plugins
+  carrying 29 Plugins
 - The card tools, the file/folder distinction, the working-directory rule and
   the result-set file: read 2026-09-11 from
   asgard-core `623ceb50` `internal/constants.go` - `BuiltinToolCallSafeList`,

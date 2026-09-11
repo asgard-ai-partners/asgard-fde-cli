@@ -8,6 +8,9 @@ mechanism that carries the token between them is not obvious.
 built and held behind a mock for days before anyone let it send.
 
 **Checked:** 2026-09-02 against token usage in two deployments, and the CRD.
+The mock-then-real rollout and the override list were re-read 2026-09-11
+against the chart they came from, at `80b16a5` - the field is
+`overrideRecipients`, a list, and this page had it singular.
 
 **Unchecked:** the two-call client-credentials shape itself. The deployments read tokens supplied per turn rather than fetching them - see per-turn-credentials - so this page's own shape is less exercised than it looks.
 
@@ -229,9 +232,21 @@ mock for days**, with the mock's contract - entry name, `tooling.name`,
 reviewable: who would have been mailed, and what the message said. Switching was
 changing one `entrypoint`.
 
-It also kept an `overrideRecipient` value: set it and every message is redirected
-to one address with the intended recipient in the subject. That verifies routing
-without involving anyone real.
+It also kept an `overrideRecipients` **list**: non-empty and every message goes
+to those addresses instead of the real one, so routing is verifiable without
+involving anyone. Emptying it is the irreversible step that turns the feature
+on, and the two environments empty it at different times - dev keeps an
+engineer in it indefinitely, prod empties it at go-live.
+
+**It is a chart value, not a CR field.** The workflow reads it as a config
+entry - `join "," .Values.mail.overrideRecipients` - so what reaches the
+processor is one comma-joined string, and an empty list is an empty string
+meaning "no override". Do not look for it in the CRD.
+
+**Not the same thing as a BCC list.** An override *redirects*, temporarily; a
+BCC leaves the real recipient receiving and adds a silent copy, permanently.
+One deployment carries both, and confusing them sends mail to a customer that
+was meant to go nowhere.
 
 **Configs are evaluated when the tool is called, not when the chart is applied.**
 So the unfinished real workflow could sit in the chart referencing a secret key

@@ -6,7 +6,7 @@ A named bundle of capabilities that a blueprint loads by name - and can pick
 **Seen in:** a content-generation deployment with 28 of them, split into domain
 knowledge (`pg-med-*`, `pg-biz-*`, `pg-pr-*`) and writing style (`pg-style-*`).
 
-**Checked:** 2026-09-02 against a deployment carrying 28 Plugins, all sharing one skill store, and the CRD.
+**Checked:** 2026-09-02, recounted 2026-09-11 against that deployment at `edb0ad0`: **29 Plugins and 29 SkillSets**, every one naming `ss-skill-repos`, and the CRD. The count moves as the deployment grows; what does not is one store for all of them.
 
 **Unchecked:** how to divide capability into bundles. The naming IS the taxonomy, and no deployment's taxonomy has been reviewed here. That deployment is also the only one of eight that declares a `Plugin` at all (`../wiki/coverage.md`), so there is no second arrangement to tell the shape from its choices.
 
@@ -53,7 +53,7 @@ Every Plugin's SkillSet points at **one** `ss-skill-repos`, not at a SourceSet o
 its own. That is the opposite of the 1:1:1 rule in
 `../usecase/skill-set.md`, and it is deliberate: the skills live in one
 repository, so a SourceSet per bundle would clone the same repository once per
-bundle. The deployment with 28 Plugins has exactly one.
+bundle. The deployment with 29 has exactly one.
 
 The cost is paid on the UI side and paid knowingly - these SkillSets carry no
 `skill-set-name` annotation and no `managed-by: skill-set` label, so the platform

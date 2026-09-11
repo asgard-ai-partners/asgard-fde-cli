@@ -20,15 +20,18 @@ email are readable and not writable - there is no merchant write endpoint. What
 the API can write is Merchant Metafields, the store-level custom fields.
 Changing the store's own details means the back office.
 
-**The back office is mapped, not browsed.** 88 page entry points, all 88
+**The back office is mapped, not browsed.** 93 L1 page entry points - counted
+2026-09-11 off `shopline-backoffice/references/page-map.md` in
+asgard-freyr-skills, which is menu-level pages only; tabs, dialogs and nested
+apps are a second map beside it -, all 88
 declared for whether anything deeper sits under them; 160 rows of operations
 covering in-page tabs, dialogs, editor panels and apps inside an iframe; 14
 API domains recorded. The discipline is **API first** - where a contract was
 observed the skill calls the back office's own API rather than opening a
 browser, and browser operation is the fallback rather than the method.
 
-That 88-page map is the one `../usecase/browser-operation.md` refers to when
-it says a capability was "a skill describing 88 pages plus everything the menu
+That 93-page map is the one `../usecase/browser-operation.md` refers to when
+it says a capability was "a skill describing 93 pages plus everything the menu
 cannot see". This is that skill.
 
 **The token mechanism is decided and landed.** It is written up in the skill's
@@ -58,7 +61,7 @@ would be stale before it was useful. What does not change is the ladder:
                                           rather than assuming
     a data export only            a Syncer over files, not a live integration
     only a web back office        browser operation - and SHOPLINE is what that
-                                  costs: 88 pages before the first useful call
+                                  costs: 93 pages before the first useful call
 
 **"Sandbox" means the platform's own here.** A customer's test environment is
 called that, everywhere, because the agent runs in a sandbox the platform starts
