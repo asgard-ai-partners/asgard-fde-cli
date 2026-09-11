@@ -411,7 +411,7 @@ func helpText(cmd *cobra.Command) []source {
 }
 
 func newAuditCmd() *cobra.Command {
-	var onlyAsk, onlyUnmarked, cross, links, commands, orphans, bareNames, urls, unverified, paths, srcCommits bool
+	var onlyAsk, onlyUnmarked, cross, links, commands, orphans, bareNames, urls, unverified, unchecked, paths, srcCommits bool
 	var term string
 
 	cmd := &cobra.Command{
@@ -592,6 +592,9 @@ maintainer can see.`,
 			if unverified {
 				return checkUnverified(out)
 			}
+			if unchecked {
+				return listUnchecked(out)
+			}
 			if paths {
 				return checkPaths(out, append(sources, bookkeeping()...))
 			}
@@ -677,6 +680,7 @@ maintainer can see.`,
 	f.BoolVar(&bareNames, "bare", false, "documents named without the command that opens them, which nothing else can see; exits 1 on one")
 	f.BoolVar(&orphans, "orphans", false, "documents nothing else points at; the index does not count as a pointer")
 	f.BoolVar(&unverified, "unverified", false, "documents carrying no record of having been held against anything")
+	f.BoolVar(&unchecked, "unchecked", false, "what each document says it has NOT been held against; a listing, not a check")
 	f.BoolVar(&paths, "paths", false, "a landed document naming a file only this repository has")
 	f.BoolVar(&srcCommits, "sources", false, "every citation of one upstream names the same commit")
 	f.StringVar(&term, "term", "", "every line mentioning this word, templates included - for a rename")
@@ -1435,6 +1439,61 @@ func checkURLs(ctx context.Context, out io.Writer, sources []source) error {
 // fine - see kb.Doc.Verified. **Do not close it by writing the lines.** An
 // `Unchecked:` line written to satisfy a listing converts UNKNOWN into a
 // claim, which is worse than the silence it replaces.
+// listUnchecked prints what every document says it has NOT been held against.
+//
+// **`--unverified` reports the documents carrying no marker; this reports what
+// the markers say.** Those are opposite questions and only the first had an
+// answer: a page whose `**Unchecked:**` line names a whole surface passed
+// `--unverified` and nothing put that surface in front of a reader.
+//
+// It exists because the alternative was a section in `TASK.md` listing what is
+// blocked and on what, maintained by hand, and every line of it was a second
+// copy of an `**Unchecked:**` marker on the page where a reader actually meets
+// it. Four of those rows survived after the thing they described was done. **A
+// list that can be generated should not be written down** - the same rule this
+// material applies to a count.
+//
+// No pass or fail. Every document is expected to have something it has not been
+// held against, and a corpus where nothing did would be one that had stopped
+// saying so.
+func listUnchecked(out io.Writer) error {
+	fmt.Fprintf(out, "What each document says it has NOT been held against.\n\n"+
+		"**This is a listing, not a check.** Every document is expected to have\n"+
+		"one; a corpus where nothing did would be one that had stopped saying so.\n"+
+		"`--unverified` is the check beside it, and it asks the opposite question:\n"+
+		"which documents carry no marker at all.\n\n")
+
+	bodies := []struct {
+		label string
+		list  func() ([]kb.Doc, error)
+	}{
+		{"wiki", wiki.List},
+		{"usecase", usecase.List},
+		{"guide", stage.Docs},
+		{"skills", scaffold.List},
+		{"needs", needs.List},
+		{"brief", brief.List},
+	}
+	total, said := 0, 0
+	for _, b := range bodies {
+		docs, err := b.list()
+		if err != nil {
+			return err
+		}
+		for _, d := range docs {
+			total++
+			if d.Unchecked == "" {
+				continue
+			}
+			said++
+			fmt.Fprintf(out, "%s %s\n    %s\n\n", b.label, d.Name, wrapAt(d.Unchecked, 72, 4))
+		}
+	}
+	fmt.Fprintf(out, "%d of %d document(s) name something they have not been held against.\n",
+		said, total)
+	return nil
+}
+
 func checkUnverified(out io.Writer) error {
 	fmt.Fprintf(out, "What carries no record of having been held against anything.\n\n"+
 		"Neither line present means UNKNOWN - not that the document is wrong, and\nnot that it is right.\n\n")

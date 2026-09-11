@@ -155,6 +155,7 @@ tells you whether the clones are stale.
 | `check-pass-list` | **whether any check passed.** It holds the list against the binary and `hack/`, and a verdict is not in its reach |
 | `check-goal` | whether the material is any good. It asks whether the capability is there - the corpus lands, a grep finds things, a chart gets written, the issue route is printed - never whether what landed is right |
 | `sources.py` | whether a reading happened. It compares a recorded reading with its clone and reports staleness; the reading itself is nobody's to verify but whoever claims it |
+| `--unchecked` | nothing - it does not fail. It prints what every document says it has **not** been held against, which is where the blocked list comes from now instead of a section in `TASK.md` that had to be maintained |
 | `--orphans`, `--crossref`, `--ask`, `--unmarked`, no flag | nothing - they do not fail. They are listings for a person |
 
 ## The one that is a query rather than a check
@@ -176,7 +177,12 @@ that no longer exists.
 The part no check does. It is linear in the prose, so do it by claim rather
 than by document.
 
-1. **`hack/sources.py`** first. A reading held against a stale clone proves
+0. **`asgard-cli audit-material --unchecked`** first, because it is the scope.
+   Every document names the surface it has not been held against, and reading
+   those 74 lines is how you find out what a pass is for before spending it.
+   **This replaced a hand-written list**, four of whose entries outlived the
+   thing they described.
+1. **`hack/sources.py`** next. A reading held against a stale clone proves
    nothing, and five of the eight deployment clones have been behind by tens
    of commits at once. `git -C <path> pull` before reading.
 2. **Let `--drift` set the scope rather than the diff.**

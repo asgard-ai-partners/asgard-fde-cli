@@ -451,6 +451,7 @@ and a green build says nothing about them:
 | `--orphans` | a document reached only by search is still reached |
 | `--crossref` | a sentence describing another command reads correctly alone; only opening that command settles it |
 | `audit-material` with no flag, `--ask`, `--unmarked` | every bold imperative on one screen, because the failure is two opposing ones never being in front of the same reader. `--ask` narrows to the ones telling a reader to ask a customer, which is where filter 0 applies |
+| `--unchecked` | **what every document says it has NOT been held against**, which is the opposite question to `--unverified` and the only one that had no answer: a page whose marker names a whole surface passed the check and nothing put that surface in front of a reader. Every document is expected to have one, so it cannot fail - and it is what `TASK.md` reads its blocked list out of instead of keeping one |
 | `--term <field>` | the sweep for a renamed platform field, across prose and templates. It cannot fail on its own: it only answers a question somebody asks it |
 | `hack/sources.py` | how far each clone is behind, which is information rather than a verdict |
 

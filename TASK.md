@@ -38,11 +38,13 @@ exit code, today, not a word somebody typed.
 | `go build ./...`, `go vet ./...`, `gofmt -l .`, `go test ./...` | the compiler's half |
 | `hack/check-goal.py` | **the capability, not the material.** Goal.md's four points held against the binary, in a temporary directory with no network, no account and no git repository |
 
-**Two are not checks and have no pass or fail.** `--orphans`, `--crossref`,
-`--ask`, `--unmarked` and `audit-material` with no flag are listings for a
-person to read, and `--term <field>` is a query: it answers a question somebody
-asks it after renaming a platform field, and it is in
-`.agents/skills/consistency-checks/SKILL.md` for that reason rather than here.
+**Some of them are not checks and have no pass or fail.** `--orphans`,
+`--crossref`, `--ask`, `--unmarked`, `--unchecked` and `audit-material` with no
+flag are listings for a person to read - `--unchecked` is the one that replaced
+this file's hand-written list of what is blocked - and `--term <field>` is a
+query: it answers a question somebody asks it after renaming a platform field,
+and it is in `.agents/skills/consistency-checks/SKILL.md` for that reason rather
+than here.
 
 ### What no check reaches
 
@@ -158,38 +160,28 @@ under "What is not done" below.
 
 ## What is not done
 
-Everything here needs something this repository does not have. A line is here
-because it cannot be done from a checkout, not because nobody got to it - what
-could be done from one has been, and git log is the record.
+**Not listed here. It is read out of the material:**
 
-**A console login and an afternoon.** `console`, `sindri`, `mimir`, `fehu` and
-`settings` describe a UI, so their source is product documentation rather than a
-chart, and they are checked less deeply than the extracts by nature. Each says
-how far it got on its own `**Unchecked:**` line and `asgard-cli audit-material --unverified`
-lists them. Two mechanical passes found nothing and a third was written and
-thrown away for calling correct material wrong. One person with access could
-settle all five.
+    asgard-cli audit-material --unchecked
 
-**A cluster.** 41 of the CRDs' 231 enforced CEL rules are `self == oldSelf`,
-comparing a proposal against the object already on it, so nothing offline can
-say a chart will be refused at apply. **Which fields they are is written down
-now** - all 40, in `.agents/skills/asgard-platform/wiki/crd-rules.md`, and
-`hack/check-tables.py` holds that list against the CRDs. What still needs a
-cluster is watching one of them fire, and
-`.agents/skills/asgard-platform/guide/verify.md` step 4 with it: a step that
-cannot be run is not a step that passed.
+Every document carries an `**Unchecked:**` marker naming the surface it has not
+been held against, and that listing prints all 74 of them. **This section used
+to be a hand-maintained copy of those markers**, and four of its entries
+outlived the thing they described - two claimed they needed clones this machine
+has, one named a decision that had been made and recorded, and one named
+something that appears nowhere in this repository. A list that can be generated
+is not written down, the same rule this file applies to a count.
 
-**A customer on a chat platform.** Every `BotProvider` across every reference
-deployment is `generic`. `chat-channel`'s credential blocks were checked field by
-field against the CRD and match, but nothing there has run, and its
-`**Unchecked:**` line says so. The first customer on LINE is that page's first
-test.
+What is left, when you read it, needs one of four things nobody here can
+produce: **a console login** for the five pages whose source is a UI,
+**a cluster** to watch one of the 40 immutable fields actually be refused,
+**a first customer on a chat platform** - `usecase/chat-channel.md` says why it
+is that page's first test - and **an answer from the platform team** on the
+three CRDs in `wiki/platform-unknowns.md` P12 that have no documentation
+anywhere.
 
-
-**An answer from the platform team.** The unknowns are on
-`.agents/skills/asgard-platform/wiki/platform-unknowns.md`, with who to ask and what each blocks. P12 is
-the cheapest: three CRDs - `ImageGenerationModel`, `TranscriptionModel`,
-`SourceSetEditorServer` - exist in the contract and appear in no documentation
-and no material here, and nobody has asked whether they are meant to be reached
-for.
-
+**None of them blocks an engagement**, and two are close to closed: the field
+list and the credential asks are written down now, so what a cluster and a
+customer add is confirmation rather than knowledge. The one that can still cost
+a day is LINE, because `botProviderClass` is immutable - choosing wrong is a new
+BotProvider rather than an edit.
