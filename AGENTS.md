@@ -377,6 +377,10 @@ looked.
 
 ## What is checked, and what is not
 
+**How to run a pass, and how to do the part no check does, is
+`.agents/skills/consistency-checks/SKILL.md`.** This section is the inventory;
+that skill is the method.
+
 **"Every check passes" is not "the repository is correct", and the difference
 is this table.** Every defect found by reading rather than by a check came from
 a surface in the third group. So a claim that something is done says which

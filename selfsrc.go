@@ -33,3 +33,13 @@ var Go embed.FS
 //
 //go:embed *.md
 var Docs embed.FS
+
+// Skills is this repository's own `.agents/skills/` - the ones an agent
+// maintaining this material loads, as distinct from the design-time skills
+// under `internal/scaffold/templates/` that land in a customer repository.
+//
+// Embedded for the same reason as Docs: they name commands and paths, and the
+// audits read what is embedded.
+//
+//go:embed .agents/skills/*/SKILL.md
+var Skills embed.FS

@@ -258,6 +258,13 @@ server-side dry-run all pass a document the apiserver would reject or silently
 prune. `hack/README.md` is the procedure, and the PR template asks for its
 output.
 
+`.agents/skills/consistency-checks/` is this repository's own maintenance
+skill - how to run a consistency pass, what each check is blind to, and how to
+hold prose against the upstream it came from. **Not the design-time skills**:
+those are `scaffold/templates/.agents/skills/` and land in a customer
+repository. This one never leaves here, and `selfsrc` embeds it so the audits
+read it.
+
 `hack/sources.py` is where the upstream clones are: one environment variable
 per source, resolved from the shell, then `.env`, then a default that is one
 person's layout. `.env.example` is the template - **`.env.template` would be

@@ -577,6 +577,13 @@ maintainer can see.`,
 				for name, body := range docs {
 					all = append(all, source{label: "repo", name: name, body: body})
 				}
+				skills, err := repoSkills()
+				if err != nil {
+					return err
+				}
+				for name, body := range skills {
+					all = append(all, source{label: "repo", name: name, body: body})
+				}
 				return checkCommands(out, cmd.Root(), all)
 			}
 			if bareNames {

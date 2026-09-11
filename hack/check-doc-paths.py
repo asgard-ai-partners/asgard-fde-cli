@@ -35,7 +35,7 @@ DOCS = ["Goal.md", "README.md", "README.zh-TW.md", "AGENTS.md", "STRUCTURE.md",
         "APPROACH.md", "TASK.md",
         "hack/README.md", "hack/check-tables.py", "hack/sources.py",
         "hack/validate-crs.py", "hack/extract-crs.py", "hack/verify-references.sh",
-        ".env.example"]
+        ".env.example", ".agents/skills/consistency-checks/SKILL.md"]
 
 # A path inside this repository: a directory we own, then a file or a directory
 # under it. Trailing `/` is a directory reference and is checked as one.

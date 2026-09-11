@@ -115,3 +115,25 @@ func repoDocs() (map[string]string, error) {
 	}
 	return out, nil
 }
+
+// repoSkills returns this repository's own maintenance skills, keyed by path.
+//
+// Separate from `repoDocs` only because they live in a directory rather than
+// at the root. Same reason for reading them: a command one of them names has
+// to exist.
+func repoSkills() (map[string]string, error) {
+	out := map[string]string{}
+	entries, err := fs.Glob(selfsrc.Skills, ".agents/skills/*/SKILL.md")
+	if err != nil {
+		return nil, err
+	}
+	sort.Strings(entries)
+	for _, name := range entries {
+		body, err := selfsrc.Skills.ReadFile(name)
+		if err != nil {
+			return nil, err
+		}
+		out[name] = string(body)
+	}
+	return out, nil
+}
