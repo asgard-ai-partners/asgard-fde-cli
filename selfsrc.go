@@ -24,12 +24,9 @@ var Go embed.FS
 // STRUCTURE, APPROACH, TASK.
 //
 // **They are read by an agent working in this repository**, which is an
-// audience, and until this existed nothing held them to the standard the
-// shipped material is held to. STRUCTURE.md was sending a reader to
-// `asgard-cli scaffold` and README.md documented a command and a log file
-// that had both been deleted, while `--commands` reported 0 dead - because
-// these are read from a checkout rather than shipped, and the audit reads
-// what ships.
+// audience. They are read from a checkout rather than shipped, so without
+// this the audit - which reads what ships - cannot see them, and a command
+// they name can be gone with nothing to say so.
 //
 // They are still not material: they do not land anywhere, so `--paths` and
 // the provenance rules do not apply to them. What applies is that a command

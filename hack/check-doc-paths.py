@@ -7,12 +7,9 @@ only we have. This reads the documents that never land - Goal, README, AGENTS,
 STRUCTURE, APPROACH, TASK - where naming our own paths is the whole point, and
 fails when one of them is not there.
 
-**It exists because AGENTS.md told a reader to run `hack/imperatives.py`**, a
-script that has never been in this repository, and because five documents were
-still describing the corpus as living under `pages/`. Nothing looked: those
-files are read from a checkout rather than shipped, so `--paths` never sees
-them, and a wrong path in the file that states the rules is worse than a wrong
-path anywhere else.
+**Those files are read from a checkout rather than shipped, so `--paths` never
+sees them** - and a wrong path in the file that states the rules is worse than
+a wrong path anywhere else.
 
 Needs the checkout, which is why it is here and not in the binary.
 

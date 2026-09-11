@@ -104,14 +104,10 @@ func everything() ([]source, error) {
 	// The design-time skills are already in material() as prose, and including
 	// them again would double every hit in them.
 	//
-	// **The prefix alone was too broad.** `.agents/skills/` also holds the
-	// platform corpus this CLI generates - `asgard-platform/SKILL.md` and its
-	// index - and those are in no other source, so skipping the whole prefix
-	// meant nothing audited them. It shipped a `SKILL.md` naming
-	// `asgard-cli scaffold`, a command this build does not answer to, and
-	// `--commands` reported 0 dead the whole time; the repo-side check found
-	// it, in a scaffolded repository, which is a later and more expensive
-	// place to find it. So the skip names the skills material() covered.
+	// **The skip names those skills rather than the prefix.** `.agents/skills/`
+	// also holds the platform corpus this CLI generates -
+	// `asgard-platform/SKILL.md` and its index - and those are in no other
+	// source, so skipping the whole prefix leaves them audited by nothing.
 	covered := map[string]bool{}
 	for _, sk := range skills {
 		covered[path.Dir(scaffold.Path(sk.Name))+"/"] = true
@@ -171,16 +167,11 @@ func sweep(out io.Writer, sources []source, term string) error {
 	return nil
 }
 
-// **The corpus's own bookkeeping is audited too, and for a long time it was
-// not.** `List` hides the wiki's index and README and the extracts' README,
-// which is right for somebody listing pages and wrong here: they are documents
-// this material ships, they carry pointers and they name commands. Five
-// references to the deleted `asgard-cli usecase` sat in those three files
-// while `--commands` reported 0 dead - and the check that found them was the
-// one this tool writes into a customer repository, which is a later and more
-// expensive place to find anything.
-//
-// So the source set is what lands, not what lists.
+// **The source set is what lands, not what lists.** `List` hides the wiki's
+// index and README and the extracts' README, which is right for somebody
+// listing pages and wrong here: they are documents this material ships, they
+// carry pointers and they name commands. A document that ships is a document
+// that is checked.
 func material() ([]source, error) {
 	var out []source
 	pages, err := wiki.Landing()
@@ -475,10 +466,9 @@ this material points at; this resolves the COMMANDS it tells somebody to run,
 against the tree this binary actually answers to. It shipped without one:
 ` + "`asgard-cli pipeline deliveries`" + ` was named in six documents as the one place a
 push that produced no run explains itself, and no such command had ever been
-built - found by a person re-reading a provenance line, weeks later, which is a
-terrible mechanism for a claim a program can resolve instantly. It reads the
-scaffold templates too, because a scaffolded README is where a customer meets
-these names first.
+built. A claim a program can resolve instantly should not wait for somebody to
+re-read a provenance line. It reads the scaffold templates too, because a
+scaffolded README is where a customer meets these names first.
 
 **--orphans is the other half of --links.** A pointer that goes nowhere is
 caught by --links; a document nothing points at is not caught by anything, and
@@ -971,14 +961,9 @@ func checkLinks(out io.Writer, sources []source) error {
 // command tree, and fails on one that names something this build does not
 // answer to.
 //
-// **The failure it exists for shipped.** `asgard-cli pipeline deliveries` was
-// named in six documents - the verification skill, a scaffolded AGENTS.md and
-// README, two stage prompts - as the one place a push that produced no run
-// explains itself, and no such command had ever been built. It was caught by a
-// person re-reading a provenance line, weeks later. Nothing mechanical was
-// looking, even though the tree is already enumerated at startup for `check`.
-//
-// So this is the same enumeration turned inward. `check` asks whether a
+// **A named command is a checkable claim, and the tree is already enumerated
+// at startup for `check`.** So this is the same enumeration turned inward.
+// `check` asks whether a
 // CUSTOMER'S repository names a command this build no longer has; this asks
 // whether OUR OWN material does, which is the half that writes the customer's
 // repository in the first place.
@@ -1175,13 +1160,9 @@ const unreadMarker = " (unread)"
 // checkSources reports what this material has read, and fails on an upstream
 // nobody declared.
 //
-// **There is no "one commit per upstream" rule, and this check twice claimed
-// there was.** The first version failed when a pinned table in
-// `internal/gate` moved and the pages had not; the second narrowed it to one
-// document and failed when one section of a page was re-read on its own. Both
-// were the same mistake: provenance is per claim, so two commits of one
-// upstream is the ordinary state of a corpus read over time, and a rule
-// against it fails the schema for working.
+// **There is no "one commit per upstream" rule.** Provenance is per claim, so
+// two commits of one upstream is the ordinary state of a corpus read over
+// time, and a rule against it would fail the schema for working.
 //
 // What is left is a report and one gate.
 //
@@ -1310,12 +1291,10 @@ func checkSources(out io.Writer, srcs []source) error {
 // repository. So the rule is not "do not name a path" - it is **name the
 // repository the path is inside**, and this reports the lines that do not.
 //
-// `pages/` and `extracts/` are here for a different reason: they are the
-// layout this material used to have, and they resolve in neither tree now.
-// Five documents still described themselves in those terms, one of them the
-// file `SKILL.md` says to read first. A renamed directory leaves prose behind
-// exactly the way a renamed page leaves a pointer behind, and only one of the
-// two had a check.
+// `pages/` and `extracts/` are here for a different reason: they are an
+// earlier layout of this material and resolve in neither tree. **A renamed
+// directory leaves prose behind exactly the way a renamed page leaves a
+// pointer behind**, and the second has always had a check.
 var ourFiles = regexp.MustCompile(`(?:^|[^A-Za-z0-9_./-])((?:source|hack|internal|cmd|prompts|pages|extracts)/[A-Za-z0-9_./*-]*|(?:Goal|TASK|STRUCTURE|APPROACH)\.md|selfsrc\.go)`)
 
 // knownRepos are the repository names the material is allowed to cite a path
@@ -1381,11 +1360,9 @@ var docsURL = kb.SourceURLs
 // right without fetching it.
 func checkURLs(ctx context.Context, out io.Writer, sources []source) error {
 	seen := map[string][]string{}
-	disclosed := map[string]bool{}
 	var order []string
 	for _, s := range sources {
-		lines := strings.Split(s.body, "\n")
-		for i, line := range lines {
+		for _, line := range strings.Split(s.body, "\n") {
 			for _, u := range docsURL(line) {
 				u = strings.TrimSuffix(u, ".")
 				// A URL ending in / is a prose template - the pages write
@@ -1401,24 +1378,13 @@ func checkURLs(ctx context.Context, out io.Writer, sources []source) error {
 				if !slices.Contains(seen[u], where) {
 					seen[u] = append(seen[u], where)
 				}
-				// A citation that already says the link 404s is not a defect,
-				// it is a citation doing its job: the page is a draft, the
-				// file is readable in a checkout, and the material says so.
-				// Look at the citing line and the two after it, which is where
-				// such a note goes.
-				for _, near := range lines[i:min(i+3, len(lines))] {
-					l := strings.ToLower(near)
-					if strings.Contains(l, "404") || strings.Contains(l, "draft: true") {
-						disclosed[u] = true
-					}
-				}
 			}
 		}
 	}
 	sort.Strings(order)
 
 	client := &http.Client{Timeout: 15 * time.Second}
-	dead, known := 0, 0
+	dead := 0
 	for _, u := range order {
 		req, err := http.NewRequestWithContext(ctx, http.MethodHead, u, nil)
 		if err != nil {
@@ -1434,18 +1400,14 @@ func checkURLs(ctx context.Context, out io.Writer, sources []source) error {
 		if resp.StatusCode < 400 {
 			continue
 		}
-		if disclosed[u] {
-			known++
-			fmt.Fprintf(out, "%d   %s  (the citation says so)\n", resp.StatusCode, u)
-			continue
-		}
 		fmt.Fprintf(out, "%d   %s\n      cited by %s\n", resp.StatusCode, u, strings.Join(seen[u], ", "))
 		dead++
 	}
 
-	fmt.Fprintf(out, "\n%d link(s) fetched, %d dead, %d dead and disclosed.\n", len(order), dead, known)
+	fmt.Fprintf(out, "\n%d link(s) fetched, %d dead.\n", len(order), dead)
 	if dead > 0 {
-		fmt.Fprintf(out, "\nA 404 here is usually one of two things: a directory URL with no landing\npage, or a page marked `draft: true`, which asgard-docs does not publish. For\na draft, keep the citation and say the link 404s - the file is readable in a\ncheckout, and the content behind it is still where the material came from.\n")
+		fmt.Fprintf(out, "\n**A page that is not published is cited as a file, not as a URL.**\n"+
+			"`draft: true` and a directory with no landing page are both unpublished;\nthe file is readable in a checkout, so cite `asgard-docs <path>` and the\nprovenance is stronger than a link nobody can open.\n")
 		return fmt.Errorf("%d documentation link(s) are dead", dead)
 	}
 	return nil

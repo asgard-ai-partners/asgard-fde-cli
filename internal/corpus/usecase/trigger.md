@@ -285,7 +285,7 @@ production still means a scheduled hit on live source systems, which is usually
 reason enough to keep it suspended there.
 
 
-## `schedule` is ordinary cron, and this page used to say otherwise
+## `schedule` is ordinary cron
 
 Write the five-field expression you would write anywhere, or an `@descriptor`:
 
@@ -294,13 +294,11 @@ Write the five-field expression you would write anywhere, or an `@descriptor`:
     @daily           and every other @-macro
     0 0 1 JAN *      month and day names
 
-**This page previously said all four were refused** and told the reader to
-build five Triggers where a range would do. That was true of a regex the CRD
-used to carry, and asgard-kube deleted it on the grounds that it "had copied
-[cron] wrong in both directions" - refusing those four, and admitting
-`*/0 * * * *`, which the apiserver does not. The grammar is now exactly what
-`batch/v1` CronJob's `spec.schedule` accepts, because the value is copied
-verbatim into the derived CronJob.
+**The grammar is exactly what `batch/v1` CronJob's `spec.schedule` accepts**,
+because the value is copied verbatim into the derived CronJob. The CRD carries
+no pattern of its own - one existed and was removed as wrong in both
+directions, refusing those four and admitting `*/0 * * * *`, which the
+apiserver does not.
 
 **It is still validated, just not by a regex and not by this tool.** The
 platform runs a real `cron.ParseStandard()` in its admission webhook,

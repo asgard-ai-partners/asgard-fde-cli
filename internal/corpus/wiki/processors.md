@@ -279,9 +279,9 @@ Four things in it that are not anywhere else:
 
 **`await` and `temperature` are author keys on the streaming processor.** They
 are set in five production deployments and appear in neither the definitions nor
-the CRD, which is why this page used to say no source described them. The
-palette is that source. **A key absent from the definitions is not a key you may
-not use**, and now there is somewhere to check rather than a guess.
+the CRD, so the palette is the only source that describes them. **A key absent
+from the definitions is not a key you may not use** - check the palette rather
+than guess.
 
 **`llm-query-database` is in the CRD and in the definitions and not in the
 builder.** An author cannot add it from the editor; a chart can still declare
@@ -421,11 +421,8 @@ Two things worth knowing from their pages:
   before anyone noticed the ECMA5 limit lives in it
 - The pages under `developer-reference/processor/`, whose landing page is
   [introduction](https://docs.asgard-ai.com/docs/developer-reference/processor/introduction)
-  - **the bare directory URL 404s**, and this citation pointed at it until
-  2026-09-03
-  - asgard-docs `f00e0ee` for the prose. **None of them had been read into this
-  material before 2026-09-02**, which is why `workflow.md` carried a type table
-  and nothing below it
+  - **the bare directory URL 404s**; cite the introduction, not the directory
+  - asgard-docs `f00e0ee` for the prose
 - The editor palette per processor - which keys are the author's, which the
   platform sets, which types accept dynamic config, and which workflow-set
   types each is scoped to: **asgard-docs `23409b3`**, read 2026-09-11 from the

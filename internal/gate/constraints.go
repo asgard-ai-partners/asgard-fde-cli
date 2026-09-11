@@ -24,8 +24,8 @@ import (
 // `key` is worse: it collides with **core Kubernetes**, where
 // `secretKeyRef.key` is a Secret's key name and freely contains hyphens, while
 // Asgard's `key` is an identifier that may not. Matching on a json field name
-// cannot tell those apart, and the first run of this check reported two
-// production Syncers for it.
+// cannot tell those apart, and reporting on it means reporting correct
+// production Syncers.
 //
 // For the same reason the walk skips everything under `valueFrom`: that subtree
 // is Kubernetes' own, and none of the constraints here describe it.

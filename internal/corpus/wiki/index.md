@@ -93,7 +93,7 @@ The sources this material is actually built from:
 
 | source | what it holds | state |
 |---|---|---|
-| asgard-docs | the product documentation | 75 / 162 cited at `f00e0ee`; 87 published and unread; 28 deliberately excluded below. **Computed, not counted** - `hack/check-coverage.py` in asgard-fde-cli recomputes it and fails when this row drifts |
+| asgard-docs | the product documentation | 71 / 162 cited at `f00e0ee`; 91 published and unread; 28 deliberately excluded below. **Computed, not counted** - `hack/check-coverage.py` in asgard-fde-cli recomputes it and fails when this row drifts |
 | asgard-kube `crd/` | the contract | read per page, per field, and dated on the page |
 | **asgard-kube `pkg/apis/`** | **the Go types the CRDs are generated from, with the reasoning as comments** | read once, 2026-09-02, for the validation rules - `../wiki/crd-rules.md`. 134KB of declarations; what has been taken is the behavioural comments, not the field list |
 | **[asgard-core](https://github.com/asgard-ai-platform/asgard-core)** `internal/constants.go` | **the processor definitions the CRD is generated from** | read once, 2026-09-02, for the type list. Its per-processor config definitions are not carried anywhere |
@@ -107,14 +107,13 @@ inventory has to be run separately, over the charts, and its result is
 [`coverage`](../wiki/coverage.md) - how many deployments each CR shape was actually read
 from - rather than a number here.
 
-**Do not add a percentage back to this section** unless it names its denominator
-in the same sentence. The one that was here did not, and it is the reason this
-pass found four bodies of material nobody had opened.
+**A percentage here names its denominator in the same sentence, or it does not
+go here.** A fraction whose numerator counts links and whose denominator counts
+pages reads as better coverage than it is, and those are the two things easiest
+to confuse.
 
-**And do not count by hand.** The row above said "81 / 162" for a long time:
-81 was the number of LINKS this material writes and 162 the number of PAGES,
-which is two denominators in one fraction, and it read as better coverage than
-75 of 162 is. The unread figure beside it, 69, matched no reading at all.
+**And it is not counted by hand.** `hack/check-coverage.py` in asgard-fde-cli
+computes all four numbers and fails when this row drifts from them.
 
 ## Deliberately not covered
 

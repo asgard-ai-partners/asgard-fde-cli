@@ -60,6 +60,17 @@ rendered from them.
 
 [STRUCTURE.md](STRUCTURE.md) walks every directory.
 
+**Present tense, and no log.** A rule is stated as the rule. **What went wrong
+before is not the justification** - it reads as evidence and functions as a
+changelog, it grows without bound, and every reader pays for it in context.
+What belongs on a page is the constraint and what it costs to break; what
+happened to this repository belongs in `git log` and nowhere else. A platform
+or customer failure is different: that is a fact about the platform, it is what
+the material is for, and it carries its provenance.
+
+**Nor in a commit message.** The subject says what changed, the body says why
+the rule is what it is. Not a post-mortem.
+
 **One fact, one home; everywhere else links.** A trap that belongs to a CR
 template does not also get explained in a wiki page. When you are about to repeat
 a paragraph, link instead - two copies drift, and the reader cannot tell which is
@@ -459,19 +470,16 @@ nobody can check and everybody repeats. Write the denominator and how you got
 it, or write the raw counts and no percentage.
 
 **Would this check fire on material that is correct?**
-**An argument-count check was written, found one defect, and was deleted for
-failing this.** `asgard-cli render <project> dev` had shipped in six places -
-`render` takes a release and carries a custom error for that exact mistake -
-so cobra's own `Args` was asked to validate every invocation the material
-writes. It found that one and then twenty correct lines: a quoted argument
-written as four words, a line continuation, a short flag, `(asgard-cli
-render)` in a parenthetical, and an example block aligning a trailing
-description. The last is unfixable in principle - `workspace use <id> record
-the workspace` separates the argument from the prose by one space, and one
-space is significant in this material by its own rule. **A static check over
-prose cannot tell an instruction from a mention.** The six instances were
-fixed by hand; `render`'s own error catches the seventh at the moment somebody
-runs it, which is where that check belongs.
+**A static check over prose cannot tell an instruction from a mention**, and
+the boundary is worth knowing before writing one. Validating an invocation's
+argument count against cobra's own `Args` looks exact and is not: a quoted
+argument is four words, a line continuation is a token, `(asgard-cli render)`
+in a parenthetical takes the next three words, and an example block aligns a
+trailing description with a single space - and one space is significant here
+by rule. A check that fires on correct material is worse than none, because
+the answer is to turn it off. **Prefer the check that runs where the mistake
+is made**: `render` rejects a project-and-environment with its own message at
+the moment somebody types it.
 Three checks were written this way and deleted rather than tuned. One flagged a
 processor config key the definitions do not declare - and fired on five of five
 production charts, always for `await`, which is real and documented. One flagged
@@ -482,13 +490,13 @@ to change what it can see rather than what is wrong**, and this material has
 already caused that once, in a customer deck. Delete it; do not soften it.
 
 **If it is a pinned copy of the platform's contract, which way can it go stale?**
-**Both ways.** This used to say a constraint could only loosen, so a stale pin
-would at worst warn where the platform had stopped caring. asgard-kube then
-deleted the cron `schedule` pattern outright, because the regex was wrong in
-both directions - and the stale pin reported four correct schedules as
-violations while admitting one the apiserver refuses. `hack/check-tables.py`
-is what catches this, it takes the asgard-kube checkout as its only argument,
-and **the tables went eight upstream commits without anybody running it.**
+**Both ways, and the expensive direction is the one nobody expects.** A
+constraint that loosens upstream leaves a pin that reports correct charts as
+wrong, which costs more than a pin that has stopped catching something: the
+platform deletes constraints as readily as it adds them, and a regex it
+decides was wrong becomes a warning against the thing it now accepts.
+`hack/check-tables.py` is what catches it, and it takes the asgard-kube
+checkout as its only argument so that running it is one command.
 `gate` holds three: the processor definitions, the CRD enums, the CRD patterns.
 A copy can only be wrong by being behind, so a rule built on one is a **warning**
 - the platform adds a value and a correct chart looks wrong. The exception is a

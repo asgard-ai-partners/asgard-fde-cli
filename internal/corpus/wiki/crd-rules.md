@@ -128,10 +128,10 @@ blueprint by hand for.
   - asgard-kube `cbd8d70`
 - The generated CRDs carry the same rules without the reasoning:
   [asgard-kube `crd/`](https://github.com/asgard-ai-platform/asgard-kube/tree/main/crd)
-- The pruning behaviour, and the release it broke after 25 of 25 dry runs: read
-  off the two extracts that carry it against the field they concern,
-  `../usecase/write-path.md` and `../usecase/fixed-query-tools.md`, which took
-  it from a deployment. The two plan-report codes are the platform's own
+- The pruning behaviour: read off the two extracts that carry it against the
+  field they concern, `../usecase/write-path.md` and
+  `../usecase/fixed-query-tools.md`, which took it from a deployment. The two
+  plan-report codes are the platform's own
 
 **Unchecked:** none of the CEL rules has been seen to fire. They are read off the
 declarations rather than from a deployment that hit one, so what is confirmed is

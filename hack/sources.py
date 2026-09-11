@@ -3,10 +3,9 @@
 
 **The URL is the source of truth and a local path is not**, which is the rule
 `STRUCTURE.md` states and the reason nothing upstream is vendored in. But every
-check in this directory needs a clone to read, and the paths were written into
-the scripts and into `README.md` - true on one machine, wrong on every other,
-and the reason `hack/check-tables.py` went eight upstream commits without being
-run.
+check in this directory needs a clone to read, and a path written into a script
+is true on one machine and wrong on every other - which is the same reason
+nothing upstream is vendored in.
 
 So each source has an environment variable and a default. The default is one
 person's layout and is documented as such; the variable is the contract.

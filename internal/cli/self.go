@@ -16,11 +16,10 @@ import (
 //
 // **A printed string makes the same claim a document does**: that this build
 // answers to what it names. The material and the scaffold templates are
-// checked, and the tool's own output was not - so a renamed command left dead
-// names in the help, in `check`'s findings and in the generator's warnings,
-// and the only thing that caught one was the check written into a customer's
-// repository, an engagement later. The source is embedded at the module root;
-// see that package for why.
+// checked, and without this the tool's own output is not - a renamed command
+// leaves dead names in the help, in `check`'s findings and in the generator's
+// warnings. The source is embedded at the module root; see that package for
+// why.
 //
 // **Parsed rather than grepped, so that comments are excluded.** A comment
 // recording that a command *was* removed must not read as naming it - the

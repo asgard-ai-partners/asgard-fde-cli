@@ -328,8 +328,8 @@ var flagRe = regexp.MustCompile(`--([a-z][a-z0-9-]*)`)
 
 // handoff matches where one command's arguments end and another program's
 // begin. Without it, `asgard-cli render x | kubectl apply --dry-run=server`
-// resolves `--dry-run` against `render`, and the first run of this check
-// reported exactly that.
+// resolves `--dry-run` against `render`, which is a correct line reported as
+// wrong.
 //
 // A redirection has to be a `>` that follows a space. Every placeholder in this
 // material ends in one - `asgard-cli project add <slug> --env dev` - and a bare

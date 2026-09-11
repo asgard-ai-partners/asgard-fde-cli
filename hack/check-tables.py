@@ -8,16 +8,14 @@ because Kubernetes' own condition schema uses the same field name, and the
 entry sat in the enum table for a day before this check existed.
 
 **Run it whenever asgard-kube moves**, and move the read markers in
-`internal/gate` in the same change. With no argument it takes `$ASGARD_KUBE`,
+`internal/gate` in the same change. It takes `$ASGARD_KUBE` with no argument,
 which `hack/sources.py` resolves:
 
     hack/check-tables.py
 
-That is the whole ritual now. It was three lines of shell, so it did not get
-run: the tables went eight upstream commits unchecked, and in that window the
-platform deleted the cron `schedule` pattern this repository was still
-enforcing - which made `verify` report four correct schedules as violations
-and sent one extract's readers to build five Triggers instead of a range.
+**One command on purpose.** A pinned table goes stale in both directions - the
+platform can delete a constraint as readily as add one - and a check that
+needs three lines of shell to set up is a check that does not get run.
 
 Exits 1 on a disagreement. A field this reports as absent from the CRD is not
 necessarily a bug - `baseAgentName` lives inside a JSON string rather than in
@@ -63,12 +61,8 @@ def crd_properties(crdjson):
 def as_json(src: pathlib.Path) -> pathlib.Path:
     """Take a directory of CRDs and return one of the same as JSON.
 
-    **The conversion used to be three lines of shell in `README.md`**, so
-    running this meant remembering them, and the tables went eight upstream
-    commits without being held against anything - long enough for the platform
-    to delete a pattern this repository still enforced, and for an extract to
-    go on telling readers to build five Triggers because of it. A ritual that
-    is not one command is a ritual that does not happen.
+    **Here rather than in `README.md` as three lines of shell**, because a
+    ritual that is not one command is a ritual that does not happen.
     """
     if next(src.glob("*.json"), None):
         return src

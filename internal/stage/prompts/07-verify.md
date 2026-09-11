@@ -7,10 +7,10 @@ Run it with one command:
 
     asgard-cli gate
 
-That is the whole local half, and it is one command on purpose: a checklist in
-prose is not a gate, and the one this replaced named four steps of which the
-fourth ran a script deleted a month earlier. A step it could not run is
-reported as skipped, which is not a pass.
+That is the whole local half, and it is one command on purpose: **a checklist
+in prose is not a gate** - it goes stale where the binary cannot, and a reader
+has no way to tell. A step it could not run is reported as skipped, which is
+not a pass.
 
 Load the `asgard-cr-verification` skill under .agents/skills/ for what the
 PLATFORM checks, which is the other half and the authoritative one. It comes

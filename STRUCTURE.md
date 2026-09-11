@@ -275,9 +275,10 @@ because a search of the whole tree cannot tell one package's Index from
 another's.
 
 `hack/check-coverage.py` recomputes the asgard-docs coverage row in
-`internal/corpus/wiki/index.md` and fails when the page drifts from it. Three
-of that row's four numbers were hand-counted and wrong, including a fraction
-whose numerator counted links and whose denominator counted pages.
+`internal/corpus/wiki/index.md` and fails when the page drifts from it. That
+row is the material's own claim about how complete it is, and the two things
+easiest to confuse in it are the number of links the material writes and the
+number of pages there are.
 
 `hack/check-tables.py` is the other half of the contract check: it holds the gate's pinned enum and
 constraint tables against the generated CRDs, so a table that has fallen behind

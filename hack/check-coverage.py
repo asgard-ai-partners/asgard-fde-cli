@@ -2,15 +2,10 @@
 """Recompute the asgard-docs coverage row, and fail when the page disagrees.
 
 `internal/corpus/wiki/index.md` states how much of the product documentation
-this material is written from. **Every number in it was hand-counted and three
-of the four were wrong** - it claimed "81 / 162 cited; 69 published and unread;
-29 deliberately excluded", and at the commit it cites the answer is 75 cited,
-87 unread, 28 excluded. 81 was the count of LINKS the material writes, held
-against a denominator of PAGES; 69 matched no reading at all.
-
-That row is the material's own statement of how complete it is, and it is the
-one place a reader looks to decide whether an absence means "not covered" or
-"not there". A wrong denominator makes it read better than it is.
+this material is written from. That row is the one place a reader looks to
+decide whether an absence means "not covered" or "not there", **so a wrong
+denominator makes the material read better than it is** - and the two easiest
+to confuse are the number of LINKS it writes and the number of PAGES there are.
 
 So it is computed rather than counted. The page names the commit it was
 measured at, and this measures at that same commit - `git ls-tree` on the
