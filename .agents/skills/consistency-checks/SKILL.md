@@ -93,8 +93,16 @@ asgard-docs and it moved 286 files in nine days.
 
     hack/sources.py                          what each clone is, how far behind,
                                              and which recorded reading is now stale
-    hack/check-tables.py                     the pinned tables against the CRDs
+    hack/sources.py --extracts               how far each extract's source chart has moved
+    hack/check-tables.py                     the pinned tables against the CRDs, and
+                                             every CEL-rule count stated anywhere here
+    hack/check-processors.py                 processors.md's three tables against
+                                             asgard-core and asgard-docs
+    hack/check-counts.py                     every count taken off a deployment
     hack/check-coverage.py                   the coverage row against the docs tree
+    hack/check-coverage.py --drift           which cited pages have moved since the
+                                             commit the citing document names
+    hack/spec-key-gap.py                     how much of a production chart `add` never writes
     hack/extract-crs.py                      pulls the CRs out of the extracts, for the next line
     hack/validate-crs.py                     generated CRs and extracts against the schemas
     hack/verify-references.sh                the gate over the reference charts
@@ -140,7 +148,10 @@ tells you whether the clones are stale.
 | `--sources` | whether a recorded commit is current. Nothing inside this repository can know that; `hack/sources.py` reads the clones |
 | `check-tables` | a constraint the CRD expresses in CEL rather than in the schema |
 | `validate-crs` | whether the CR does what the page says it does |
-| `check-coverage` | whether the pages behind the numbers say anything true. It counts them |
+| `check-coverage` | whether the pages behind the numbers say anything true. It counts them. `--drift` names the pages that have moved and never says what changed in one |
+| `check-processors` | what a key **means**. The definitions say whether a processor takes dynamic config; that an extra key on `http-request` is an HTTP header is in the loop that reads it, and no table upstream states it |
+| `check-counts` | a count of something nobody upstream counts. It recomputes what a deployment's own documents state, and a number invented here has nothing to be held against |
+| `spec-key-gap` | whether a key `add` writes is written **well**. It compares key sets, so a field emitted with the wrong value counts as covered |
 | `check-pass-list` | **whether any check passed.** It holds the list against the binary and `hack/`, and a verdict is not in its reach |
 | `check-goal` | whether the material is any good. It asks whether the capability is there - the corpus lands, a grep finds things, a chart gets written, the issue route is printed - never whether what landed is right |
 | `sources.py` | whether a reading happened. It compares a recorded reading with its clone and reports staleness; the reading itself is nobody's to verify but whoever claims it |
@@ -168,9 +179,12 @@ than by document.
 1. **`hack/sources.py`** first. A reading held against a stale clone proves
    nothing, and five of the eight deployment clones have been behind by tens
    of commits at once. `git -C <path> pull` before reading.
-2. **Read the diff when the diff is small.** Four commits with one change that
-   reaches a page is a real reading. 286 files is not, and claiming it is
-   means moving every citation on a reading nobody did.
+2. **Let `--drift` set the scope rather than the diff.**
+   `hack/check-coverage.py --drift` lists every cited page that has moved since
+   the commit the citing document names. That turned "the 27 wiki pages against
+   asgard-docs" into five pages, which is a reading somebody can actually do -
+   where reading a 286-file diff is not, and claiming it is means moving every
+   citation on a reading nobody did.
 3. **Move the commit only for what you read.** A page's provenance is per
    claim, so one page legitimately cites two commits of one upstream. Mark a
    commit you have **not** read with ` (unread)` so `--sources` lets it stand.
@@ -187,7 +201,32 @@ Every judgement it recorded has held.
 
     rots      a count of anything upstream: CRs, Plugins, pages, nodes
     rots      a field name, an enum value, a file path somebody else owns
+    rots      a distance between two things that both move
     holds     a rule, a trade-off, a failure mode, what a word means here
+    holds     a count with a commit beside it
+
+**A count with no commit beside it cannot be checked twice.** That is the whole
+difference between the two count rows: 29 Plugins is meaningless and "29
+Plugins at `edb0ad0`" is permanent, because the commit does not move. A
+distance cannot be rescued the same way - "26 commits behind" compares two
+moving things, and `source/SOURCES.md` carried a column of those in which both
+non-zero rows had rotted within nine days. Compute a distance, never write one.
+
+**The worst of them is a count copied out of a document that states its own.**
+Nothing about 88 reads differently from 93. A pass set out to recount SHOPLINE's
+page ledger, took a figure off a different tally, and wrote it into seven
+places, where it sat looking exactly as authoritative as the truth - while the
+file it came from said 88 in two of its own headings and asserted it with a
+script. If the source counts itself, read its count; if it does not, compute
+yours and leave the method beside it.
+
+**And two numbers that describe the same thing are the ones to be most careful
+with.** 79 is the `XValidation` markers in asgard-kube's Go types; 231 is what
+the generator emits from them. This material had the marker count written down
+as the CRDs' own, in the one page whose subject is what the CRDs enforce. A live
+URL against a file path is the same trap: eight processor pages answer at a name
+that is not their file's, which made the coverage row understate itself by six
+pages and put a 404 into a naming table twice, in opposite directions.
 
 **So before writing a count, decide whether it can be computed instead.**
 `hack/check-coverage.py` exists because a coverage row was hand-counted and
