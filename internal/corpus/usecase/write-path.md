@@ -317,7 +317,7 @@ lints clean, deploys clean, and then acts without asking.
 So check it by reading, every time, and make it part of review:
 
 ```bash
-asgard-cli render <project> dev | grep -A2 'requestConsent'
+asgard-cli render <release> | grep -A2 'requestConsent'
 ```
 
 Every `true` should be a tool that changes something; every `false` should be a

@@ -174,9 +174,9 @@ Then, in this order:
 
     asgard-cli project add <slug>
 
-Then point the request at it. That is what moves this stage on: until the request
-names a project this repository has, `asgard-cli request` shows it with no project
-that has not finished.
+Then point the request at it. That is what moves this stage on: until the
+request names a project this repository has, `asgard-cli request` lists it as
+**`no project yet`** and says its audience has not been decided.
 
     asgard-cli request target <<.RequestID>> <slug>
     asgard-cli request ready <<.RequestID>>          once the audience and the scope are settled

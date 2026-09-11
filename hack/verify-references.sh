@@ -63,7 +63,7 @@ done
 echo
 echo "$charts chart(s), $total finding(s)."
 echo
-echo "**--rendered sees a chart with nothing around it** - R7, R10 and R11 ask"
+echo "**--rendered sees a chart with nothing around it** - R7 and R11 ask"
 echo "questions whose answer can be in the owning repo rather than in the CR, and"
 echo "there is nowhere to record one any more: .asgard-config.json held"
 echo "olapOnlyLayers and the sampleQuestions exemption, and it is gone from all"

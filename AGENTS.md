@@ -459,6 +459,19 @@ nobody can check and everybody repeats. Write the denominator and how you got
 it, or write the raw counts and no percentage.
 
 **Would this check fire on material that is correct?**
+**An argument-count check was written, found one defect, and was deleted for
+failing this.** `asgard-cli render <project> dev` had shipped in six places -
+`render` takes a release and carries a custom error for that exact mistake -
+so cobra's own `Args` was asked to validate every invocation the material
+writes. It found that one and then twenty correct lines: a quoted argument
+written as four words, a line continuation, a short flag, `(asgard-cli
+render)` in a parenthetical, and an example block aligning a trailing
+description. The last is unfixable in principle - `workspace use <id> record
+the workspace` separates the argument from the prose by one space, and one
+space is significant in this material by its own rule. **A static check over
+prose cannot tell an instruction from a mention.** The six instances were
+fixed by hand; `render`'s own error catches the seventh at the moment somebody
+runs it, which is where that check belongs.
 Three checks were written this way and deleted rather than tuned. One flagged a
 processor config key the definitions do not declare - and fired on five of five
 production charts, always for `await`, which is real and documented. One flagged
@@ -586,7 +599,7 @@ land differently - the first breaks a template silently, the second changes
 behaviour with no diff at all, and only the third fails loudly.
 
 ```bash
-asgard-cli render <project> <env> | \
+asgard-cli render <release> | \
   <validate each document against asgard-kube/crd/*.yaml openAPIV3Schema>
 ```
 

@@ -145,7 +145,7 @@ asgard-cli gate                                 # lint + render + xref + the ref
 asgard-cli verify <project>
 
 # 4. against the cluster you deploy to (read-only, needs kubectl)
-asgard-cli render <project> dev | kubectl apply --dry-run=server -n <ns> -f -
+asgard-cli render <release> | kubectl apply --dry-run=server -n <ns> -f -
 asgard-cli pipeline runs watch --release <name> --ref <tag>
 ```
 

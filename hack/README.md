@@ -89,7 +89,7 @@ up and they need opposite responses:
     a rule right for one shape,      the expensive kind. See R1b, and the
     applied to another               a rule right for one shape, wrong for the next
 
-And `--rendered` sees a chart with nothing around it. R7, R10 and R11 ask
+And `--rendered` sees a chart with nothing around it. R7 and R11 ask
 questions whose answer can live in the owning repository rather than in the CR,
 and there is nowhere to record one now: `.asgard-config.json` held
 `olapOnlyLayers` and the sampleQuestions exemption, and none of the four
@@ -116,7 +116,7 @@ both environments, validate each:
 ```bash
 go build -o .out/asgard-cli ./cmd/asgard-cli
 # init, scaffold, project add, then one `add <kind>` per kind, then:
-asgard-cli render <project> dev  --quiet | yq -o=json -I=0 '.' > .out/dev.ndjson
+asgard-cli render <release> --quiet | yq -o=json -I=0 '.' > .out/dev.ndjson
 python3 hack/validate-crs.py .out/crdjson .out/dev.ndjson
 ```
 

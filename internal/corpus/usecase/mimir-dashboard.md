@@ -76,10 +76,14 @@ Two things follow:
   layer itself and as a rule in its AGENTS.md, in the file the person doing the
   "fixing" is already looking at. A rule that lives only in a review comment
   loses to a plausible-looking diff
-- **Do not expect the gate to hold it.** Cross-reference checking validates the
-  references that exist; it has nothing to say about one that should not. A
-  green gate is not evidence this survived, and `asgard-cli verify` is the same
-  - it reports an Agent with no capability, never a layer with no consumer
+- **Expect the gate to report it, and expect that to be the wrong reading.**
+  `asgard-cli verify` has R11 for exactly this shape: *a SemanticLayer that no
+  Agent binds*. It is a warning and its own rule text says why - the render
+  cannot tell "deliberately unbound" from "somebody has not finished the read
+  path", and neither can this tool. **So on this shape R11 always fires and is
+  always wrong**, which is the thing to write in the chart before the next
+  reader treats it as work to do. A green gate is not evidence this survived;
+  neither is a red one evidence it did not
 
 ## Fields that are not obvious
 

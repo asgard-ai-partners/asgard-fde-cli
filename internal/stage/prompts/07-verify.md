@@ -81,9 +81,11 @@ installed and how to install it.
 
 Done when: every step is green, and you have said which ones could not be run.
 
-Once every chart is complete, `asgard-cli project` says so for each of them
-rather than a next step. After that, new capability is added
-with the loop in `../guide/enhance.md`.
+**No command says a chart is complete, and `asgard-cli project` refuses to.**
+It lists what each chart declares and says nothing about what it lacks: a chart
+with a SemanticLayer and no Agent may be finished or unfinished, and the files
+cannot tell the two apart. Completeness is your judgement against the request,
+and after it new capability is added with the loop in `../guide/enhance.md`.
 
 **Checked:** 2026-09-04 - each of the four steps names a command that exists and
 does what is said: `asgard-cli check` is structural, `asgard-cli verify` renders
