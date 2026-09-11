@@ -108,7 +108,7 @@ hub), `../usecase/flow-agent-single.md` (anonymous, one job), `../usecase/flow-a
 - [Flow Agent](https://docs.asgard-ai.com/docs/product-suite/odin/features/agent-hub-flow-agent)
   - asgard-docs `f00e0ee`
 - The two limits and the name mapping: checked 2026-09-02 against
-  [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `15ded0f` -
+  [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `cbd8d70` -
   `BotProviderSpec.Entrypoint`, `AgentClass`, `SandboxBlueprintSpec.Agents`
 
 **Unchecked:** the name mapping and the two limits were held against the CRD and

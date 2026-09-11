@@ -105,7 +105,7 @@ Read-only throughout. SELECT and introspection only, and db-query enforces it.
 Done when: every project that reads something has its DataConnector, and
 asgard-cli verify resolves it.
 
-**Checked:** 2026-09-04 against asgard-kube `15ded0f`. `dataConnectorClass` is
+**Checked:** 2026-09-04, re-read 2026-09-11 against asgard-kube `cbd8d70`. `dataConnectorClass` is
 one of postgres, mysql, mssql, oracle, salesforce, hana, netsuite, trino, athena,
 and is immutable after creation - so "a database we can read" covers nine engines
 and picking the wrong one is a replacement rather than an edit. db-query has a

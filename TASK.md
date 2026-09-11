@@ -144,7 +144,7 @@ it.
 
     **It was closed by checking, not by writing the lines**, which is the whole
     of the distinction: the guidance and the skills were held against
-    asgard-kube `15ded0f`, against the six reference repositories, and against
+    asgard-kube `cbd8d70`, against the six reference repositories, and against
     the gate that enforces the rules they describe. What that pass produced is
     in "The provenance pass" below - four corrections, not four provenance
     lines.

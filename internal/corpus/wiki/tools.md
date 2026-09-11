@@ -79,7 +79,7 @@ The last row exists only so older CRs stay valid, and nothing catches it for
 you: the generated CRD lists both events in the enum with no marking, so a CR
 declaring one is accepted and then does nothing. The statement comes from the
 API types themselves ([asgard-kube](https://github.com/asgard-ai-platform/asgard-kube)
-`15ded0f`, `pkg/apis/asgard/v1alpha1/types.go`): "Deprecated: never implemented
+`cbd8d70`, `pkg/apis/asgard/v1alpha1/types.go`): "Deprecated: never implemented
 ... declaring a hook with either event is a silent no-op". A `session-start` hook's
 content has to be stable; anything derived from the turn's payload belongs in
 `user-prompt-submit`.
@@ -122,7 +122,7 @@ repair to make when guidance seems to be missing.
   Plugin button, and does not document the creation form's fields
 - Hook events, the SkillSet trio and the shared-store exception: checked
   2026-09-02 against [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube)
-  `15ded0f` - `SandboxHookEvent`, `PluginSpec` - and against a deployment
+  `cbd8d70` - `SandboxHookEvent`, `PluginSpec` - and against a deployment
   carrying 28 Plugins
 
 **Unchecked:** the three roles and the hook events were held against the CRD, and

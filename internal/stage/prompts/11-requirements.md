@@ -1170,7 +1170,7 @@ Then split it into task specs:
 
     asgard-cli task add "<title>" --request <<.RequestID>> --project <project> --complexity M
 
-**Checked:** 2026-09-04 against asgard-kube `15ded0f` for the platform claims it
+**Checked:** 2026-09-04, re-read 2026-09-11 against asgard-kube `cbd8d70` for the platform claims it
 carries, which are few by design - it is an interview, and the shapes belong to
 the pages it points at. `botProviderClass` is immutable (`self == oldSelf`) and
 exactly one of [generic telegram line discord slack] must be present, so asking

@@ -13,7 +13,7 @@ Scheduled work. A cron that starts an agent run rather than a pipeline.
 **Seen in:** an hourly job that notices new arrivals in one system, matches them
 against records in another, and mails whoever asked for them.
 
-**Checked:** 2026-09-02 against a cron Trigger and its entrypoint Workflow, and the CRD - including testing the cron pattern against real expressions.
+**Checked:** 2026-09-02 against a cron Trigger and its entrypoint Workflow, and the CRD. The cron section was re-read 2026-09-11 against asgard-kube `cbd8d70`, which removed the `schedule` pattern this page had described.
 
 **Unchecked:** the prompt-writing guidance and the cursor rules. Taken from one deployment's experience, not re-derived.
 
@@ -136,22 +136,20 @@ API-key Secret, and the CronJob.
 
 ### The cron field takes less than crontab does
 
-The CRD's pattern accepts `*`, a single number, and `*/n` per field. It does
-**not** accept ranges or comma lists, which are the two things an ordinary
-crontab reaches for first:
+Ranges and comma lists work, and so do `@descriptors` - the two things an
+ordinary crontab reaches for first:
 
 | expression | |
 |---|---|
-| `0 * * * *` | accepted |
-| `*/15 * * * *` | accepted |
-| `0 9-18 * * *` | **rejected** - no ranges |
-| `0 9,13,17 * * *` | **rejected** - no comma lists |
+| `0 * * * *` | every hour |
+| `*/15 * * * *` | every fifteen minutes |
+| `0 9-18 * * *` | every hour during business hours |
+| `0 9,13,17 * * *` | three fixed times |
+| `@daily` | and the other descriptors |
 
-So "every hour during business hours" cannot be expressed; it is every hour or
-nothing. The day-of-month field also starts at 1 rather than 0.
-
-`helm lint` does not check the pattern - the rejection comes from the apiserver
-at apply time, which means during CD.
+`helm lint` does not look at it, and neither does this tool. The platform
+parses the expression on write, in an admission webhook, so a malformed one
+comes back with a message rather than deploying and never firing.
 
 ## The two labels that decide whether it is editable
 
@@ -287,27 +285,30 @@ production still means a scheduled hit on live source systems, which is usually
 reason enough to keep it suspended there.
 
 
-## The cron pattern rejects four forms you would expect to work
+## `schedule` is ordinary cron, and this page used to say otherwise
 
-The CRD enforces a regex on `schedule`, and it is narrower than cron. These are
-**refused by the apiserver at apply time** - helm renders them, `helm lint`
-passes, and the failure arrives when the tag is already pushed:
+Write the five-field expression you would write anywhere, or an `@descriptor`:
 
-    0 9 * * 1-5      a range      "weekdays at nine" - the obvious one to want
-    0 9,15 * * *     a list       twice a day
-    @daily           a macro      and every other @-macro
-    00 09 * * *      zero-padded  a leading zero on any field
+    0 9 * * 1-5      weekdays at nine
+    0 9,15 * * *     twice a day
+    @daily           and every other @-macro
+    0 0 1 JAN *      month and day names
 
-What it accepts is a single number, `*`, or `*/n`, per field, unpadded:
+**This page previously said all four were refused** and told the reader to
+build five Triggers where a range would do. That was true of a regex the CRD
+used to carry, and asgard-kube deleted it on the grounds that it "had copied
+[cron] wrong in both directions" - refusing those four, and admitting
+`*/0 * * * *`, which the apiserver does not. The grammar is now exactly what
+`batch/v1` CronJob's `spec.schedule` accepts, because the value is copied
+verbatim into the derived CronJob.
 
-    0 9 * * *        every day at nine
-    0 */6 * * *      every six hours
-    30 2 1 * *       02:30 on the 1st
-
-**For weekdays, use five triggers or one daily run that returns early** - there
-is no range syntax to reach for. Checked 2026-09-03 against the pattern in
-asgard-kube; `asgard-cli verify` (C1) catches all four before a tag, and found
-one zero-padded schedule already live in a reference deployment.
+**It is still validated, just not by a regex and not by this tool.** The
+platform runs a real `cron.ParseStandard()` in its admission webhook,
+synchronously on write, and again at the public API boundary - so a malformed
+expression comes back with a message rather than deploying and never firing.
+`asgard-cli verify` no longer reports anything about `schedule`: a local copy
+of that parse would be a second opinion that disagrees the first time either
+side changes, and the platform answers first.
 
 ## Verify
 

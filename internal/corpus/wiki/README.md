@@ -82,10 +82,22 @@ wherever; what goes into a page is the repository and the commit.
 | source | source of truth | read at |
 |---|---|---|
 | product documentation | https://github.com/asgard-ai-platform/asgard-docs | `f00e0ee` (2026-08-31) |
-| CRD definitions | https://github.com/asgard-ai-platform/asgard-kube | `15ded0f` |
-| processor definitions | https://github.com/asgard-ai-platform/asgard-core (private) | HEAD, 2026-09-03 - no commit was recorded, which is the thing this table exists to stop |
+| CRD definitions | https://github.com/asgard-ai-platform/asgard-kube | `cbd8d70` (2026-09-11) |
+| processor definitions | https://github.com/asgard-ai-platform/asgard-core (private) | `62a696b7` (2026-09-11). `internal/constants.go` last changed at `80b70e7c`, 2026-09-01 - before the 2026-09-03 reading - so what was read then is what is there now |
 
-Neither lives in this repository. `git pull` before writing against them.
+None of them lives in this repository. `git pull` before writing against them.
+
+**Moving a commit here is a claim that somebody re-read.** For `cbd8d70` what
+was read is the whole `15ded0f..cbd8d70` diff rather than every page again:
+four commits, and exactly one change that reaches a page. The cron `schedule`
+pattern was deleted from `Trigger.spec.cron` and from the SourceSet syncer,
+because the regex "had copied [cron] wrong in both directions". Nothing else
+in the diff touches an enum, a constraint or a field this material describes -
+the rest is CI, a lint, and documenting that `pre-tool-call` and
+`post-tool-call` do nothing, which `../usecase/per-turn-credentials.md` had
+already found from a deployment. **Reading the diff is a real reading when the
+diff is small; it is not one when the diff is large, and saying which was done
+is the point of this paragraph.**
 
 ## Three operations
 
@@ -151,7 +163,7 @@ That is why every page carries its sources.
 
 - [Flow Agent](https://docs.asgard-ai.com/docs/product-suite/odin/features/agent-hub-flow-agent)
   - asgard-docs `f00e0ee`
-- Checked 2026-09-02 against asgard-kube `15ded0f`
+- Checked 2026-09-02, re-read 2026-09-11 against asgard-kube `cbd8d70`
 ```
 
 Link the rendered page on docs.asgard-ai.com rather than the file path: a URL a

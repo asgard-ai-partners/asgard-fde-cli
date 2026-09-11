@@ -100,7 +100,7 @@ next person reads, and if the delta never reaches it, the next engagement starts
 from a description of a system that no longer exists.
 
 **Checked:** 2026-09-04 - the CR kinds it names are in the contract at
-asgard-kube `15ded0f`, and the loop it describes is the one the commands
+asgard-kube `cbd8d70`, and the loop it describes is the one the commands
 implement: a request, then a task spec, then the chart change, then the living
 spec. `asgard-cli request` and `asgard-cli task` are what move each status, and
 each writes the three places by hand editing would miss.

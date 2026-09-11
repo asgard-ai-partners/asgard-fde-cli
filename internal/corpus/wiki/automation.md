@@ -100,9 +100,12 @@ cannot use a tool that asks for consent. Not repeated here.
   - asgard-docs `f00e0ee`
 - [Connection](https://docs.asgard-ai.com/docs/product-suite/odin/features/settings/connection)
   - asgard-docs `f00e0ee`
-- Cron being the only class left, and the pattern's limits: checked 2026-09-02
+- Cron being the only class left: checked 2026-09-02, re-read 2026-09-11
   against [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube)
-  `15ded0f` - `TriggerClass`, `TriggerCronSpec`
+  `cbd8d70` - `TriggerClass`, `TriggerCronSpec`. **The `schedule` pattern is
+  gone** as of that commit: the grammar is whatever `batch/v1` CronJob accepts,
+  validated by a real cron parse in an admission webhook rather than by a regex
+  in the schema
 
-**Unchecked:** `TriggerClass` and the cron pattern were held against the CRD and
-one deployment; the UI fields come from the product documentation only.
+**Unchecked:** `TriggerClass` was held against the CRD and one deployment; the
+UI fields come from the product documentation only.

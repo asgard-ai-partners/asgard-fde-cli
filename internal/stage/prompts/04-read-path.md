@@ -136,7 +136,7 @@ dry-run and then fails the real deploy.
 Done when: every project reads through one shape or the other, and
 asgard-cli check plus asgard-cli verify are green.
 
-**Checked:** 2026-09-04 against asgard-kube `15ded0f`. `Toolset` declares no
+**Checked:** 2026-09-04, re-read 2026-09-11 against asgard-kube `cbd8d70`. `Toolset` declares no
 `instruction` field, so the note about adding it back is current;
 `SemanticLayer.spec` carries `cubes` and top-level `sampleQueries`; `allowedCubes`
 is on the **Agent's** semanticLayers mount rather than on the layer, and the CRD

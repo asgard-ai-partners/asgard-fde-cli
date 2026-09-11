@@ -6,15 +6,20 @@ import (
 )
 
 // The processor contract, extracted from `ProcessorDefinitions` in asgard-core
-// `internal/constants.go` with a go/ast walk on 2026-09-03, against
-// asgard-kube 15ded0f. `asgard-cli wiki processors` is the prose version and
-// carries the same table.
+// `internal/constants.go` with a go/ast walk on 2026-09-03, and cross-checked
+// against the CRDs. `.agents/skills/asgard-platform/wiki/processors.md` is the
+// prose version and carries the same table.
+//
+// **The read marker names asgard-core, which is where the definitions are.**
+// It said asgard-kube, which is what the extraction was checked against and
+// not what it came from - so the one upstream whose movement would invalidate
+// this table was the one the marker did not name.
 //
 // It is a pinned copy, and it is also **incomplete**: `await` is documented on
 // `stream-llm-completion-message`, set in five production deployments, and
 // declared in neither this file's source nor the CRD. So treat it as the set of
 // keys the definitions know about, never as the set a chart may use.
-const processorDefsRead = "2026-09-03, asgard-kube 15ded0f"
+const processorDefsRead = "2026-09-11, asgard-core 62a696b7, against asgard-kube cbd8d70"
 
 // processorDef holds only what a rule reads. It carried five more fields -
 // optional keys, defaults, whether extra keys are allowed, and the declared

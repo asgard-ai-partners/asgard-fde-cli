@@ -101,7 +101,7 @@ blueprint by hand for.
 
 - `asgard-kube/pkg/apis/asgard/v1alpha1/types.go`, read 2026-09-02 - the type
   definitions the CRDs are generated from, with the reasoning in comments
-  - asgard-kube `15ded0f`
+  - asgard-kube `cbd8d70`
 - The generated CRDs carry the same rules without the reasoning:
   [asgard-kube `crd/`](https://github.com/asgard-ai-platform/asgard-kube/tree/main/crd)
 

@@ -189,12 +189,12 @@ the shape without anyone reading a guide.
   - asgard-docs `f00e0ee`
 - The syncer-class table and the contextIndex behaviour: checked 2026-09-02
   against [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube)
-  `15ded0f` - `SyncerClass`, `SourceSetContextIndex`
+  `cbd8d70` - `SyncerClass`, `SourceSetContextIndex`
 - The schedule ordering and the two switches: read off a deployment's own Drive
 - Preferring a Drive over `KnowledgeBase`: one deployment's migration, recorded
   in asgard-fde-cli's `source/SOURCES.md`, which is internal and does not ship.
   Held against
-  [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `15ded0f` on
+  [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `cbd8d70` on
   2026-09-02 - `knowledgebases`, `loaders`, `indexers` and `sources` all exist
   and none is marked deprecated - and against asgard-docs `f00e0ee`, which
   documents the feature as current

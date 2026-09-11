@@ -134,14 +134,14 @@ in a chart.
   [Connection](https://docs.asgard-ai.com/docs/product-suite/odin/features/settings/connection)
   - asgard-docs `f00e0ee`
 - The CR mapping and the provider list: checked 2026-09-02 against
-  [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `15ded0f` -
+  [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `cbd8d70` -
   `DataConnectorClass`, `CompletionModelClass`, `EmbeddingModelClass`
 
 - The router's behaviour behind a builtin alias - logical models, the three
   selection policies, failover on 5xx or timeout, and the managed key in its own
   environment: `asgard-router`'s README, read 2026-09-02
 
-**Checked:** 2026-09-02 against asgard-kube `15ded0f`
+**Checked:** 2026-09-02, re-read 2026-09-11 against asgard-kube `cbd8d70`
 (`completionModelClass` enum, the immutability rule and the ExactlyOneOf
 validation) and against three deployments that declare their own model.
 

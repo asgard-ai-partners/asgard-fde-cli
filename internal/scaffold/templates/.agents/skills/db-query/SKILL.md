@@ -179,7 +179,7 @@ documentation says, a join that turns out to be many-to-many, a table that is
 empty in practice - none of that is visible again later unless somebody writes it
 down, and the next reader will otherwise re-derive it from the same queries.
 
-**Checked:** 2026-09-07 against asgard-kube `15ded0f` and against this skill's
+**Checked:** 2026-09-07, re-read 2026-09-11 against asgard-kube `cbd8d70` and against this skill's
 own scripts. `DataConnectorClass` has nine values; `SPECS` in
 `scripts/connectors.py` implements eight and its comment says which is left out
 and why. **The description claimed "all eight DataConnector classes the platform

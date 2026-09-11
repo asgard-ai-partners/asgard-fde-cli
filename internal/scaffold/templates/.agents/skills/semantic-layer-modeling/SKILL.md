@@ -193,7 +193,7 @@ SQL against the live schema — that is what your introspection queries are for.
 > orders rather than purchases - so the number the agent would have reported was not a rounding
 > error, it was a different question's answer. None of that is visible in column names.
 
-**Checked:** 2026-09-04 against asgard-kube `15ded0f`. `SemanticLayer.spec`
+**Checked:** 2026-09-04, re-read 2026-09-11 against asgard-kube `cbd8d70`. `SemanticLayer.spec`
 requires `completionModelName` and `cubes`, and the Agent CRD has no
 `completionModelName` at all - so the asymmetry this page warns about is real
 and a layer written from an Agent's shape fails on a required field. A

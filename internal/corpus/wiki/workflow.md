@@ -167,7 +167,7 @@ and why it is easy to conclude it is somebody else's concern.
 - [JSON Schema editor](https://docs.asgard-ai.com/docs/help-community/other/json-schema)
   - asgard-docs `f00e0ee`
 - Processor list and the limits: checked 2026-09-02 against
-  [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `15ded0f` -
+  [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `cbd8d70` -
   `ProcessorType`, `WorkflowSpec`
 - Expression being JavaScript: confirmed 2026-09-02 from both sides - the product
   documentation states it, the CRD makes no claim, and six deployments use

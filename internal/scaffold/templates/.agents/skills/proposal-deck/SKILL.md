@@ -1212,7 +1212,7 @@ is unusable six months later, because nobody can tell whether it is what was
 proposed or what was agreed.
 
 **Checked:** 2026-09-04. The CR vocabulary in the translation table is real at
-asgard-kube `15ded0f` - `SkillSet`, `SourceSet` + `Syncer` + `contextIndex`,
+asgard-kube `cbd8d70` - `SkillSet`, `SourceSet` + `Syncer` + `contextIndex`,
 `BotProvider` -> `Workflow` -> `SandboxBlueprint`, an `Agent` mounting a
 `SemanticLayer`, and `requestConsent` on a gated tool all exist and mean what
 the right-hand column says. Every shape it tells a deck to take is one

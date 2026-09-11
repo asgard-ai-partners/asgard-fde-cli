@@ -201,11 +201,11 @@ order not placed.
   and [Customized Integration](https://docs.asgard-ai.com/docs/product-suite/odin/features/applications-customized-integration)
   - asgard-docs `f00e0ee`
 - `botProviderClass` being immutable: checked against
-  [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `15ded0f` -
+  [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `cbd8d70` -
   `BotProviderSpec`
 - **The platform owning no handoff, takeover, suspend or per-user quota**:
   checked 2026-09-02 against
-  [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `15ded0f` -
+  [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `cbd8d70` -
   no CRD and no field carries any of those concepts
 - The quota numbers, all eight, that they are Workspace-level and shared, and
   that they are raised through sales:

@@ -294,6 +294,7 @@ asgard-cli audit-material --paths
 asgard-cli audit-material --unverified
 asgard-cli audit-material --sources
 hack/check-doc-paths.py
+hack/check-tables.py ~/asgard-kube/crd   # needs the clone
 asgard-cli audit-material --urls   # needs the network
 ```
 
@@ -467,6 +468,13 @@ to change what it can see rather than what is wrong**, and this material has
 already caused that once, in a customer deck. Delete it; do not soften it.
 
 **If it is a pinned copy of the platform's contract, which way can it go stale?**
+**Both ways.** This used to say a constraint could only loosen, so a stale pin
+would at worst warn where the platform had stopped caring. asgard-kube then
+deleted the cron `schedule` pattern outright, because the regex was wrong in
+both directions - and the stale pin reported four correct schedules as
+violations while admitting one the apiserver refuses. `hack/check-tables.py`
+is what catches this, it takes the asgard-kube checkout as its only argument,
+and **the tables went eight upstream commits without anybody running it.**
 `gate` holds three: the processor definitions, the CRD enums, the CRD patterns.
 A copy can only be wrong by being behind, so a rule built on one is a **warning**
 - the platform adds a value and a correct chart looks wrong. The exception is a

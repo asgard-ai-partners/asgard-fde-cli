@@ -7,12 +7,16 @@ academic: `status` carries three values in the Asgard types and six in the CRD,
 because Kubernetes' own condition schema uses the same field name, and the
 entry sat in the enum table for a day before this check existed.
 
-Run it after regenerating a table, and whenever asgard-kube moves.
+**Run it whenever asgard-kube moves**, and move the read markers in
+`internal/gate` in the same change. Point it at the checkout:
 
-    for f in ../asgard-kube/crd/*.yaml; do
-      yq -o=json "$f" > .out/crdjson/$(basename $f .yaml).json
-    done
-    python3 hack/check-tables.py .out/crdjson
+    hack/check-tables.py ~/projects/asgard/asgard-kube/crd
+
+That is the whole ritual now. It was three lines of shell, so it did not get
+run: the tables went eight upstream commits unchecked, and in that window the
+platform deleted the cron `schedule` pattern this repository was still
+enforcing - which made `verify` report four correct schedules as violations
+and sent one extract's readers to build five Triggers instead of a range.
 
 Exits 1 on a disagreement. A field this reports as absent from the CRD is not
 necessarily a bug - `baseAgentName` lives inside a JSON string rather than in
@@ -21,6 +25,7 @@ the schema - but it is always something to explain rather than leave.
 import json
 import pathlib
 import re
+import subprocess
 import sys
 
 CONSTRAINT_KEYS = ("pattern", "minLength", "maxLength", "minimum", "maximum", "minItems", "maxItems")
@@ -54,10 +59,34 @@ def crd_properties(crdjson):
     return enums, cons
 
 
+def as_json(src: pathlib.Path) -> pathlib.Path:
+    """Take a directory of CRDs and return one of the same as JSON.
+
+    **The conversion used to be three lines of shell in `README.md`**, so
+    running this meant remembering them, and the tables went eight upstream
+    commits without being held against anything - long enough for the platform
+    to delete a pattern this repository still enforced, and for an extract to
+    go on telling readers to build five Triggers because of it. A ritual that
+    is not one command is a ritual that does not happen.
+    """
+    if next(src.glob("*.json"), None):
+        return src
+    out = pathlib.Path(".out/crdjson")
+    out.mkdir(parents=True, exist_ok=True)
+    for f in sorted(src.glob("*.yaml")):
+        target = out / (f.stem + ".json")
+        if subprocess.run(["yq", "-o=json", str(f)],
+                          stdout=target.open("w")).returncode != 0:
+            sys.exit(f"yq failed on {f}")
+    if not next(out.glob("*.json"), None):
+        sys.exit(f"no CRDs found in {src}")
+    return out
+
+
 def main():
     if len(sys.argv) != 2:
-        sys.exit("usage: check-tables.py <dir of CRDs as json>")
-    enums, cons = crd_properties(sys.argv[1])
+        sys.exit("usage: check-tables.py <asgard-kube/crd, as yaml or as json>")
+    enums, cons = crd_properties(as_json(pathlib.Path(sys.argv[1])))
     problems = []
 
     src = pathlib.Path("internal/gate/enums.go").read_text()

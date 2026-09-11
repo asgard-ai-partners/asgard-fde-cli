@@ -83,6 +83,7 @@ nothing, and it moves without announcing it.
 KUBE=../asgard-kube
 git -C $KUBE fetch && git -C $KUBE status -sb        # say so in the PR if behind
 mkdir -p .out/crdjson
+# check-tables.py converts these itself; this is only for validate-crs.py below
 for f in $KUBE/crd/*.yaml; do yq -o=json "$f" > .out/crdjson/$(basename $f .yaml).json; done
 ```
 
@@ -111,7 +112,7 @@ commit in the PR body - `.github/pull_request_template.md` asks for them.
 
 ## Checking the pinned tables against the CRDs
 
-    python3 hack/check-tables.py .out/crdjson
+    hack/check-tables.py $KUBE/crd
 
 `internal/gate` holds three copies of the platform contract, extracted from
 asgard-kube's **Go types**. The Go types are not the contract; the generated
