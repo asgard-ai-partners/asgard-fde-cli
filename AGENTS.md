@@ -377,9 +377,12 @@ looked.
 
 ## What is checked, and what is not
 
-**How to run a pass, and how to do the part no check does, is
-`.agents/skills/consistency-checks/SKILL.md`.** This section is the inventory;
-that skill is the method.
+**This section is the inventory; the method is
+`.agents/skills/consistency-checks/SKILL.md`.** A pass writes its scope into
+`TASK.md` under "The consistency pass" **before running anything**, derived
+from all three groups here, and then runs them **most-volatile first** -
+upstream before the material, because nobody here touches asgard-docs and it
+moved 286 files in nine days.
 
 **"Every check passes" is not "the repository is correct", and the difference
 is this table.** Every defect found by reading rather than by a check came from

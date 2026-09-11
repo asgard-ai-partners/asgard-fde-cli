@@ -6,12 +6,58 @@ are implemented is [APPROACH.md](APPROACH.md), what lives in which directory is
 [STRUCTURE.md](STRUCTURE.md), how to change it is [AGENTS.md](AGENTS.md), and
 what the commands do is [README.md](README.md).
 
-**There is no worklist here.** What could be done from a checkout has been, and
-git log is the record of it. What is left is under "What is not done", where
-every line names the thing it is waiting for. A finding a reader needs lives on
+**There is one worklist here, and it is written rather than remembered.** "The
+consistency pass" below is filled in before a pass runs, by
+`.agents/skills/consistency-checks/SKILL.md`, and it is the scope of that pass.
+Everything else follows the older rule: what could be done from a checkout has
+been, git log is the record of it, and what is left is under "What is not done",
+where every line names the thing it is waiting for. A finding a reader needs lives on
 the document it concerns rather than here - `**Unchecked:**` on the page, a row
 on `.agents/skills/asgard-platform/wiki/platform-unknowns.md`, a rule in
 AGENTS.md.
+
+## The consistency pass
+
+**Written before the pass runs, not after.** A pass that discovers its own
+scope as it goes reports a surface nobody had listed as news, which is the
+failure this section exists to stop. Derived from `AGENTS.md`'s inventory -
+all three groups.
+
+Last filled in **2026-09-11**, against asgard-kube `cbd8d70`, asgard-docs
+`23409b3`, asgard-core `623ceb50` and the eight deployment clones pulled.
+
+### Upstream - moves without anyone touching this repository
+
+| item | state |
+|---|---|
+| `hack/sources.py` - every clone's commit and how far behind | ok; asgard-core was 7 behind and was pulled |
+| `hack/check-tables.py` - pinned tables against the CRDs | ok, 29 enums and 43 constraints, 0 disagreements |
+| `hack/check-coverage.py` - the coverage row | fixed; three of its four numbers were wrong |
+| `hack/validate-crs.py` - generated CRs and the extracts | ok, 0 schema violations |
+| `hack/verify-references.sh` - the gate over the reference charts | ok, 6 charts, 12 findings, unchanged |
+| the asgard-kube diff since the recorded commit | fixed; the cron `schedule` pattern was deleted upstream and still enforced here |
+| the asgard-docs diff since the recorded commit | fixed; a new Flow Agent's default flow, `effort`'s three states, the SDK client's methods |
+| the asgard-core diff since the recorded commit | fixed; the card tools and the result-set file were in no page |
+
+### The material - moves when somebody edits it
+
+| item | state |
+|---|---|
+| `--links`, `--bare`, `--commands`, `--paths`, `--unverified`, `--sources` | ok |
+| `hack/check-doc-paths.py` | ok |
+| `--urls` | ok, 0 dead and no disclosed exceptions |
+| `--orphans`, `--crossref`, `audit-material` with no flag | read, not run for a verdict; `--crossref`'s 43 sentences were opened one at a time |
+
+### Prose - no check reaches it
+
+| item | state |
+|---|---|
+| the 22 extracts against the charts they came from | read 2026-09-11; six numbers and one field name were wrong |
+| the 27 wiki pages against asgard-docs | the `f00e0ee..23409b3` diff was read; **the prose that diff did not touch still stands at its own reading** |
+| the 10 stage prompts' guidance, as opposed to their command claims | **not read** |
+| the 7 design-time skills' prose, as opposed to their command and path claims | **not read** - 2,255 lines, of which `proposal-deck` is 1,232 |
+| `wiki/processors.md`'s table, by re-walking asgard-core's `ProcessorDefinitions` | **not re-walked**; the file is unchanged since it was read, which is not the same thing |
+| the 14 packages' help against their behaviour | read 2026-09-11 |
 
 ## Goal
 

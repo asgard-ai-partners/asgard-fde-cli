@@ -27,11 +27,40 @@ amount of running checks closes it.
 
 So a claim about this repository says which of the two it rests on.
 
-## One pass, in this order
+## Write the list into TASK.md first
 
-Cheapest first, and each rules out a class the next cannot see.
+**A consistency pass begins by writing down every item, before running any of
+them.** `TASK.md` has a section for it - "The consistency pass" - and the skill
+fills it in: every check, every surface, its group, and its state.
 
-    go build ./... && go vet ./... && gofmt -l . && go test ./...
+That order is the point. A pass that runs checks and reports what they said
+discovers its own scope as it goes, which is how a surface nobody had listed
+gets found in the middle and reported as news. **The list is complete before
+the first check runs, or the pass has no scope.**
+
+Derive it from `AGENTS.md`'s inventory - all three groups, not just the
+mechanical one - and mark each item `ok`, `fixed`, `needs a clone` or
+`not read`. An item nobody looked at says so; that is more useful than its
+absence.
+
+## Then run them, most-volatile first
+
+**Not cheapest first.** Cheap-first optimises for the time of whoever is
+running the pass. What matters is where the answer is most likely to have
+changed since the last one, and that is upstream: nobody here touches
+asgard-docs and it moved 286 files in nine days.
+
+**1. The upstream, which moves without anyone touching this repository:**
+
+    hack/sources.py                          what each clone is, and how far behind
+    hack/check-tables.py                     the pinned tables against the CRDs
+    hack/check-coverage.py                   the coverage row against the docs tree
+    hack/validate-crs.py                     generated CRs and extracts against the schemas
+    hack/verify-references.sh                the gate over the reference charts
+
+Pull first, or these check a clone rather than the platform.
+
+**2. The material, which moves when somebody edits it:**
 
     asgard-cli audit-material --links        every pointer resolves, and a path's target lands
     asgard-cli audit-material --bare         a document named with no path
@@ -41,18 +70,20 @@ Cheapest first, and each rules out a class the next cannot see.
     asgard-cli audit-material --sources      every upstream cited is declared
     hack/check-doc-paths.py                  paths and symbols in our own documents
 
-    hack/sources.py                          what each clone is, and how far behind
-    hack/check-tables.py                     the pinned tables against the CRDs
-    hack/check-coverage.py                   the coverage row against the docs tree
-    hack/validate-crs.py                     generated CRs and extracts against the schemas
-    hack/verify-references.sh                the gate over the reference charts
-
-    asgard-cli audit-material --urls         every documentation link is live
-
 **Build the binary from the working tree first.** Every audit reads what is
 embedded, so a check run against an older binary is checking an older corpus.
 
-**`--urls` last**, because it is the only one that needs the network.
+**3. The code, which the compiler already mostly holds:**
+
+    go build ./... && go vet ./... && gofmt -l . && go test ./...
+
+**4. The network, last, because it is the only one that needs it:**
+
+    asgard-cli audit-material --urls         every documentation link is live
+
+**Then the prose**, which is the part no check does, and the section below is
+how. Leave it last because a stale clone makes it worthless, and step 1 is what
+tells you whether the clones are stale.
 
 ## What each one is blind to
 
@@ -121,7 +152,9 @@ Fix the claim, then ask the second question: **would a check have caught it?**
 
 **Checked:** every command and script named here is in this repository and
 does what is said - `--commands` and `hack/check-doc-paths.py` resolve them,
-and this file is in the set both read.
+and this file is in the set both read. The ordering claim is checkable too:
+`hack/sources.py` reports how far each clone is behind, which is the measure
+of what moves without anyone here touching it.
 
 **Unchecked:** whether this order is the best one. It is cheapest-first and
 each step rules out a class the next cannot see, which is a design rather than
