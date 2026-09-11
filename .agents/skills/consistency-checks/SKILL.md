@@ -38,10 +38,18 @@ discovers its own scope as it goes, which is how a surface nobody had listed
 gets found in the middle and reported as news. **The list is complete before
 the first check runs, or the pass has no scope.**
 
-Derive it from `AGENTS.md`'s inventory - all three groups, not just the
-mechanical one - and mark each item `ok`, `fixed`, `needs a clone` or
-`not read`. An item nobody looked at says so; that is more useful than its
-absence.
+**Record no verdict for a mechanical check.** `ok` beside `--links` is a
+result copied out of a script that can produce it, in prose nothing can
+verify - which is the same shape as every count this material got wrong. The
+pass lists those checks by name; their answer is their exit code, today.
+
+**The only group with a state is the one no program can answer**, and what it
+records is not a verdict but **what the reading was held against**. That
+matters because it makes the one checkable thing about a reading checkable:
+`hack/sources.py` compares each recorded reading against its clone and says
+which have gone behind. **That a reading happened is nobody's to verify but
+whoever claims it** - write `never` when it has not, because a row that says
+so is worth more than one that reads settled.
 
 **Then run `hack/check-pass-list.py`, because a list derived from a document
 is only as complete as that document.** It reads the binary's own flags and
@@ -65,7 +73,8 @@ asgard-docs and it moved 286 files in nine days.
 
 **1. The upstream, which moves without anyone touching this repository:**
 
-    hack/sources.py                          what each clone is, and how far behind
+    hack/sources.py                          what each clone is, how far behind,
+                                             and which recorded reading is now stale
     hack/check-tables.py                     the pinned tables against the CRDs
     hack/check-coverage.py                   the coverage row against the docs tree
     hack/extract-crs.py                      pulls the CRs out of the extracts, for the next line

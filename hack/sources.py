@@ -26,6 +26,7 @@ script ran", which is the one thing the provenance rule exists to prevent.
 
 import os
 import pathlib
+import re
 import subprocess
 import sys
 
@@ -113,6 +114,62 @@ def behind(path: pathlib.Path) -> str:
     return ""
 
 
+# The readings TASK.md records, and the clone each was held against. **This is
+# the only checkable thing about a reading**: not that it happened - nobody but
+# the reader can say that - but whether the thing it was held against has moved
+# since. A `never` row has nothing to go stale.
+READINGS = {
+    "extracts-vs-charts": "deployments",
+    "wiki-vs-docs": "docs",
+    "processors-rewalk": "core",
+}
+
+
+def stale() -> list:
+    """Which recorded readings are now behind their source."""
+    task = (pathlib.Path(__file__).resolve().parent.parent / "TASK.md").read_text()
+    out = []
+    for key, src in READINGS.items():
+        row = next((l for l in task.split("\n") if "`" + key + "`" in l and l.startswith("|")), None)
+        if row is None:
+            out.append(f"{key}: no row in TASK.md's pass, so nothing records what it was read against")
+            continue
+        if "**never" in row:
+            continue
+        p = resolve(src, need=False)
+        if p is None:
+            out.append(f"{key}: ${SOURCES[src][0]} is not set, so this cannot be answered")
+            continue
+        if src == "deployments":
+            behind = [n for n in reference_deployments()
+                      if (p / n / ".git").exists() and behind_of(p / n)]
+            if behind:
+                out.append(f"{key}: read against clones, {len(behind)} of which have moved since: "
+                           + ", ".join(behind[:4]) + ("..." if len(behind) > 4 else ""))
+            continue
+        if b := behind_of(p):
+            out.append(f"{key}: read against {SOURCES[src][0]}, which is now {b}")
+    return out
+
+
+def reference_deployments() -> list:
+    """The eight reference deployments, read off `source/SOURCES.md`.
+
+    **Not a list in this file.** That document is the only one allowed to name
+    a customer's repository, and a second copy here is the drift this whole
+    directory exists to catch. The two contract repositories are excluded by
+    name because they are declared as sources in their own right.
+    """
+    text = (pathlib.Path(__file__).resolve().parent.parent / "source/SOURCES.md").read_text()
+    names = set(re.findall(r"\[([a-z0-9-]+)\]\(https://github\.com/asgard-ai-platform/[a-z0-9-]+\)", text))
+    return sorted(names - {"asgard-kube", "asgard-docs", "asgard-core"})
+
+
+def behind_of(path: pathlib.Path) -> str:
+    """behind() for one clone, empty when it is current."""
+    return behind(path)
+
+
 def main() -> int:
     """Print what each source resolves to, which is the thing to run first."""
     width = max(len(e) for e, _, _ in SOURCES.values())
@@ -129,6 +186,17 @@ def main() -> int:
         b = behind(p)
         print(f"{env:<{width}}  {at:<10} {('(' + b + ')') if b else '(current)':<34} {p}")
     print("\nNothing here pulls. `git -C <path> pull` before a reading that matters.")
+
+    # **Whether a recorded reading has gone behind.** A reading cannot be
+    # verified; a reading being stale can.
+    rows = stale()
+    if rows:
+        print("\nreadings TASK.md records that are now behind their source:")
+        for r in rows:
+            print(f"  {r}")
+        print("\nThat is not a failure - it is the size of what re-reading would cover.")
+    else:
+        print("\nEvery reading TASK.md records is against a source that has not moved.")
     return 0
 
 

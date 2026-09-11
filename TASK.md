@@ -18,57 +18,50 @@ AGENTS.md.
 
 ## The consistency pass
 
-**Written before the pass runs, not after.** A pass that discovers its own
-scope as it goes reports a surface nobody had listed as news, which is the
-failure this section exists to stop. Derived from `AGENTS.md`'s inventory -
-all three groups.
+**Every check this repository has is named here, and no state is recorded for
+one.** `hack/check-pass-list.py` holds this list against the binary's own flags
+and `hack/`'s own contents, so it cannot be missing a check - and a verdict
+written into a table is a result copied from a script that can produce it, in
+prose nothing can verify.
 
-Last filled in **2026-09-11**, against asgard-kube `cbd8d70`, asgard-docs
-`23409b3`, asgard-core `623ceb50` and the eight deployment clones pulled.
+    hack/check-pass-list.py      this list is complete
+    <run the check>              whether it passes
 
-### Upstream - moves without anyone touching this repository
+So: **the mechanical checks appear here only as names.** Their answer is their
+exit code, today, not a word somebody typed.
 
-| item | state |
+| the checks | how to run them |
 |---|---|
-| `hack/sources.py` - every clone's commit and how far behind | ok; asgard-core was 7 behind and was pulled |
-| `hack/check-tables.py` - pinned tables against the CRDs | ok, 29 enums and 43 constraints, 0 disagreements |
-| `hack/check-coverage.py` - the coverage row | fixed; three of its four numbers were wrong |
-| `hack/validate-crs.py` - generated CRs and the extracts | ok, 0 schema violations |
-| `hack/verify-references.sh` - the gate over the reference charts | ok, 6 charts, 12 findings, unchanged |
-| the asgard-kube diff since the recorded commit | fixed; the cron `schedule` pattern was deleted upstream and still enforced here |
-| the asgard-docs diff since the recorded commit | fixed; a new Flow Agent's default flow, `effort`'s three states, the SDK client's methods |
-| the asgard-core diff since the recorded commit | fixed; the card tools and the result-set file were in no page |
-| `deployment-diffs`  the eight deployment clones' diffs since the extracts were written from them | **not read.** `hack/sources.py` says how far each is behind; reading the diff is a different act, and five were behind by up to 84 commits when the counts in those extracts turned out to be stale |
+| `--links`, `--bare`, `--commands`, `--paths`, `--unverified`, `--sources`, `--urls` | `asgard-cli audit-material <flag>`, after building from the working tree |
+| `hack/check-doc-paths.py`, `hack/check-coverage.py`, `hack/check-tables.py`, `hack/check-pass-list.py` | the ones that read this repository, and the coverage row's clone |
+| `hack/sources.py`, `hack/extract-crs.py`, `hack/validate-crs.py`, `hack/verify-references.sh` | the ones that need a clone of somebody else's repository |
+| `go build ./...`, `go vet ./...`, `gofmt -l .`, `go test ./...` | the compiler's half |
 
-### The material - moves when somebody edits it
+**Two are not checks and have no pass or fail.** `--orphans`, `--crossref`,
+`--ask`, `--unmarked` and `audit-material` with no flag are listings for a
+person to read, and `--term <field>` is a query: it answers a question somebody
+asks it after renaming a platform field, and it is in
+`.agents/skills/consistency-checks/SKILL.md` for that reason rather than here.
 
-| item | state |
-|---|---|
-| `--links`, `--bare`, `--commands`, `--paths`, `--unverified`, `--sources` | ok |
-| `hack/check-doc-paths.py` | ok |
-| `--urls` | ok, 0 dead and no disclosed exceptions |
-| `--orphans`, `--crossref`, and `audit-material` with no flag, `--ask` and `--unmarked` | read, not run for a verdict; `--crossref`'s 43 sentences were opened one at a time, and `--ask` narrowed the 162 imperatives to the 30 that tell a reader to ask a customer |
-| `--term <field>` after a rename | not run - **nothing was renamed in this pass.** It is the sweep to run when a platform field changes name, and it reads the templates as well as the prose |
+### What no check reaches
 
-### The code
+**This is the only part with a state, because it is the only part a program
+cannot answer.** It records what each reading was held against, so that
+`hack/sources.py` can say when a reading has gone behind - which is the one
+thing about a reading that *is* checkable. **That a reading happened is nobody's
+to verify but the person who claims it.**
 
-| item | state |
-|---|---|
-| `go build ./...`, `go vet ./...`, `gofmt -l .`, `go test ./...` | ok |
-| `hack/check-pass-list.py` - this list against the binary and `hack/` | ok |
-| `hack/extract-crs.py` - pulls the CRs out of the extracts for `validate-crs.py` | ok, 22 documents, 0 unparseable |
+| surface | read against | when |
+|---|---|---|
+| `extracts-vs-charts` the 22 extracts against the charts they came from | the eight clones as pulled | 2026-09-11 |
+| `wiki-vs-docs` the 27 wiki pages against asgard-docs | the `f00e0ee..23409b3` diff only; **the prose that diff did not touch stands at its own earlier reading** | 2026-09-11 |
+| `packages-help` the 14 packages' help against their behaviour | the working tree | 2026-09-11 |
+| `flag-usage` every flag's usage text against what the flag does | the working tree, all 81 | 2026-09-11 |
+| `stage-prompts` the 10 stage prompts' guidance, as opposed to their command claims | - | **never** |
+| `design-time-skills` the 7 design-time skills' prose, as opposed to their command and path claims | - | **never** - 2,255 lines, of which `proposal-deck` is 1,232 |
+| `processors-rewalk` `wiki/processors.md`'s table, by re-walking asgard-core's `ProcessorDefinitions` | - | **never re-walked.** The file is unchanged since it was read, which is not the same thing |
+| `deployment-diffs` the eight deployment clones' diffs since the extracts were written from them | - | **never.** `hack/sources.py` gives how far behind; the diff is a different act |
 
-### Prose - no check reaches it
-
-| item | state |
-|---|---|
-| `extracts-vs-charts`  the 22 extracts against the charts they came from | read 2026-09-11; six numbers and one field name were wrong |
-| `wiki-vs-docs`  the 27 wiki pages against asgard-docs | the `f00e0ee..23409b3` diff was read; **the prose that diff did not touch still stands at its own reading** |
-| `stage-prompts`  the 10 stage prompts' guidance, as opposed to their command claims | **not read** |
-| `design-time-skills`  the 7 design-time skills' prose, as opposed to their command and path claims | **not read** - 2,255 lines, of which `proposal-deck` is 1,232 |
-| `processors-rewalk`  `wiki/processors.md`'s table, by re-walking asgard-core's `ProcessorDefinitions` | **not re-walked**; the file is unchanged since it was read, which is not the same thing |
-| `packages-help`  the 14 packages' help against their behaviour | read 2026-09-11 |
-| `flag-usage`  every flag's usage text against what the flag does | read 2026-09-11, all 81; none registered and unread |
 
 ## Goal
 

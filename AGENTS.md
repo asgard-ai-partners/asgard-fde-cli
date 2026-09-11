@@ -417,6 +417,7 @@ judgement:
 | the gate over the reference charts | `hack/verify-references.sh` (needs the clones) |
 | build, vet, gofmt, tests | CI |
 | `TASK.md`'s pass naming every check this repository has, and this repository's own skill never appearing in a scaffolded tree | `hack/check-pass-list.py` |
+| whether a reading `TASK.md` records has gone behind the clone it was held against | `hack/sources.py` |
 
 **Reported, and deliberately not enforced.** Each needs a person to read it,
 and a green build says nothing about them:
@@ -430,7 +431,15 @@ and a green build says nothing about them:
 | `hack/sources.py` | how far each clone is behind, which is information rather than a verdict |
 
 **Checked by nothing, and verified by reading.** This is the group that has
-produced every finding, so it carries a date:
+produced every finding, so each row records **what the reading was held
+against** rather than a verdict.
+
+**A verdict typed into a table is not checkable and does not belong in one.**
+`ok` beside a script is a result copied out of something that can produce it;
+`read` beside a document is an honour-system claim no program can confirm.
+What *is* checkable is whether the thing a reading was held against has moved
+since, and `hack/sources.py` reports that - which is why the row records a
+source and a date and not a word.
 
 | surface | last read, and how |
 |---|---|
