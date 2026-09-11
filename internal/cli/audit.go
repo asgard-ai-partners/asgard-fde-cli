@@ -53,7 +53,12 @@ var (
 	// cannot be wrong this way; one that says what the other command reports
 	// can be, and one did - a stage prompt described `check` as saying the
 	// opposite of what it says.
-	crossSentence = regexp.MustCompile("[^.!?\n]*`asgard-cli[^`]*`[^.!?]*[.!?]")
+	// A sentence that names a command, in either of the two ways this
+	// material writes one. **The double-quoted form is not optional**: a Go
+	// raw string cannot hold a backtick, so every help screen quotes the
+	// commands it names, and a pattern matching only backticks reads none of
+	// them - which left the tool's own output out of this listing entirely.
+	crossSentence = regexp.MustCompile("[^.!?\n]*(?:`asgard-cli[^`]*`|\"asgard-cli[^\"]*\")[^.!?]*[.!?]")
 	claiming      = regexp.MustCompile(`(?i)\b(says?|said|reports?|tells?|warns?|prints?|` +
 		`lists?|names?|carries|describes?|covers?|gives?|answers?|states?|has|have|` +
 		`holds?|explains?|already|until)\b`)
@@ -613,7 +618,11 @@ maintainer can see.`,
 				return checkOrphans(out, append(sources, helpText(cmd.Root())...))
 			}
 			if cross {
-				return crossref(out, sources)
+				// **Including every command's own help.** A command
+				// describing another command wrongly is the same defect
+				// wherever it is written, and the help screens are where a
+				// reader meets most of these sentences.
+				return crossref(out, append(sources, helpText(cmd.Root())...))
 			}
 
 			total, shown := 0, 0

@@ -375,6 +375,58 @@ CRD schemas in [`asgard-kube/crd/`](https://github.com/asgard-ai-platform/asgard
 which is how four required fields were missing from two templates until somebody
 looked.
 
+## What is checked, and what is not
+
+**"Every check passes" is not "the repository is correct", and the difference
+is this table.** Every defect found by reading rather than by a check came from
+a surface in the third group. So a claim that something is done says which
+group it was in.
+
+**Mechanical, and fails the build.** Run them and the answer is not a
+judgement:
+
+| surface | check |
+|---|---|
+| every document pointer, in material, templates and help | `--links` |
+| a document named with no path | `--bare` |
+| every command named, in material, templates, help, this repository's Go string literals and its own documents | `--commands` |
+| a landed document naming a path only this repository has | `--paths` |
+| every document carrying a provenance marker | `--unverified` |
+| every upstream cited being declared in the raw-sources table | `--sources` |
+| every documentation URL being live | `--urls` (needs the network) |
+| the pinned enum and constraint tables against the CRDs | `hack/check-tables.py` (needs `$ASGARD_KUBE`) |
+| the four numbers in the coverage row | `hack/check-coverage.py` (needs `$ASGARD_DOCS`) |
+| every path and package-qualified Go symbol this repository's own documents name | `hack/check-doc-paths.py` |
+| generated CRs and the extracts' skeletons against the CRD schemas | `hack/validate-crs.py` (needs `$ASGARD_KUBE`) |
+| the gate over the reference charts | `hack/verify-references.sh` (needs the clones) |
+| build, vet, gofmt, tests | CI |
+
+**Reported, and deliberately not enforced.** Each needs a person to read it,
+and a green build says nothing about them:
+
+| surface | why it cannot fail |
+|---|---|
+| `--orphans` | a document reached only by search is still reached |
+| `--crossref` | a sentence describing another command reads correctly alone; only opening that command settles it |
+| `audit-material` with no flag | every bold imperative on one screen, because the failure is two opposing ones never being in front of the same reader |
+| `hack/sources.py` | how far each clone is behind, which is information rather than a verdict |
+
+**Checked by nothing, and verified by reading.** This is the group that has
+produced every finding, so it carries a date:
+
+| surface | last read, and how |
+|---|---|
+| the 22 extracts' prose against the charts they came from | 2026-09-11, every field name against the pulled clones and the CRDs, every count by rendering all 19 charts |
+| the 27 wiki pages' prose against asgard-docs | the prose stands at `f00e0ee`; the 17 processor pages were read at `23409b3` on 2026-09-11, and **the rest have not been re-read** |
+| the 10 stage prompts | 2026-09-11, for what they claim another command does; not for their guidance |
+| the 7 design-time skills' prose | 2026-09-11, for command and path claims only |
+| every flag's usage text against what the flag does | 2026-09-11, all 81 |
+| **`internal/localenv`, `platform`, `auth`, `work`, `skills`, `gitrepo`, `render`, `binding`, `chart`, `tool`, `browser`, `version`, `pipelineconfig`, `repo`** | **never read end to end - about 7,300 lines.** Their string literals are in `--commands` and any symbol a document names is in `check-doc-paths.py`; nothing checks that their help describes what they do |
+
+**Add a row when you add a surface, and move one up when you write its
+check.** A surface that is in none of the three groups is one nobody has
+decided about, which is the state every finding came out of.
+
 ## Before you say it is done
 
 The gate above is mechanical and catches almost nothing that has actually gone
