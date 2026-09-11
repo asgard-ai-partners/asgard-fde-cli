@@ -155,6 +155,27 @@ reason and against the same trap: 79 is the `XValidation` markers in the Go
 types, 231 is what the generator emits from them, and this material had the
 marker count written down as the CRDs' own for a week.
 
+## How far the generated chart is from a real one
+
+    hack/spec-key-gap.py             recompute, and check TASK.md's claim
+    hack/spec-key-gap.py --missing   the keys production uses and `add` never writes
+
+**The number behind "the chart half is the least finished of the four."** It
+decides whether an FDE treats what `add` emits as a chart or as a starting
+point, and it stood at "168 spec keys, 52 never mentioned" for a week with no
+method that reproduced either figure. It is 185 and 88 for the widest reference
+chart, 303 and 171 across all nineteen, and both sides are rendered here rather
+than quoted.
+
+`--missing` is the useful half: it is the worklist for closing the gap.
+
+Two traps it had to be taught. `$ASGARD_DEPLOYMENTS` is somebody's projects
+directory and also holds scratch repositories this tool scaffolded - those pass
+by construction, one of them at 0 keys not written - so only the deployments
+`source/SOURCES.md` declares are counted. And list indices are collapsed, or
+`processors.0.configs` and `processors.7.configs` count apart and the gap
+appears to close as a chart grows.
+
 ## Recomputing a count that came out of somebody else's document
 
     hack/check-counts.py           against the clones as they stand

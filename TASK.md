@@ -34,7 +34,7 @@ exit code, today, not a word somebody typed.
 |---|---|
 | `--links`, `--bare`, `--commands`, `--paths`, `--unverified`, `--sources`, `--urls` | `asgard-cli audit-material <flag>`, after building from the working tree |
 | `hack/check-doc-paths.py`, `hack/check-coverage.py`, `hack/check-tables.py`, `hack/check-pass-list.py` | the ones that read this repository, and the coverage row's clone |
-| `hack/sources.py`, `hack/check-processors.py`, `hack/check-counts.py`, `hack/extract-crs.py`, `hack/validate-crs.py`, `hack/verify-references.sh` | the ones that need a clone of somebody else's repository |
+| `hack/sources.py`, `hack/check-processors.py`, `hack/check-counts.py`, `hack/spec-key-gap.py`, `hack/extract-crs.py`, `hack/validate-crs.py`, `hack/verify-references.sh` | the ones that need a clone of somebody else's repository |
 | `go build ./...`, `go vet ./...`, `gofmt -l .`, `go test ./...` | the compiler's half |
 | `hack/check-goal.py` | **the capability, not the material.** Goal.md's four points held against the binary, in a temporary directory with no network, no account and no git repository |
 
@@ -83,9 +83,17 @@ version and this is the same list with what each one costs:
 
   3. **Implement the IaC - the charts.** Skeletons for the CR kinds, the
      invariants a rendered chart has to hold, and the judgement that goes with
-     both. **This is the least finished of the four**: a production chart uses
-     168 spec keys and `add` never mentions 52 of them, so what it writes is a
-     correct starting point and not a chart.
+     both. **This is the least finished of the four**: the widest reference
+     chart uses 185 spec keys and `add` never mentions 88 of them, so what it
+     writes is a correct starting point and not a chart.
+
+     **That pair read 168 and 52 for a week and no method reproduced it**, which
+     is worse than being wrong by a little: it is the number that decides whether
+     an FDE treats what `add` emits as a chart. `hack/spec-key-gap.py` renders
+     both sides, states the method - a dotted path under `spec` with list
+     indices collapsed - and fails when this line and the measurement disagree.
+     Across all 19 reference charts together it is 303 keys and 171 never
+     written.
 
   4. **When the knowledge is not here, say where to file it.**
      `asgard-cli issue-report` prints the repository URL and what a report has

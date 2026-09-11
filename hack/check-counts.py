@@ -231,6 +231,85 @@ def sources_table(base: pathlib.Path) -> list:
     return out
 
 
+def docs_images(docs: pathlib.Path, ref: str) -> dict:
+    """The screenshot arithmetic on `wiki/screenshots.md`, at one commit.
+
+    Four numbers that only mean something together, which is why that page
+    states the method before the figures: the images the repository holds, the
+    ones a live page actually uses, the orphans in one dead directory, and how
+    many of the used ones this material names. **The denominator is the used
+    set**, not the tree - "679 images" makes coverage look hopeless and "168"
+    makes it a two-thirds job, and the page says so.
+
+    The last of them is the one that moves without anybody deciding: adding an
+    image to that page is a normal edit, and until now the sentence counting
+    them was not redone. It read 113 against 116 named.
+    """
+    tree = subprocess.run(["git", "-C", str(docs), "ls-tree", "-r", "--name-only", ref],
+                          capture_output=True, text=True)
+    if tree.returncode != 0:
+        return {}
+    files = tree.stdout.split("\n")
+    under = {f[len("static/img/docs/"):] for f in files
+             if f.startswith("static/img/docs/") and f.endswith(".png")}
+    used = set()
+    for f in files:
+        if f.startswith("docs/") and f.endswith((".md", ".mdx")):
+            body = subprocess.run(["git", "-C", str(docs), "show", f"{ref}:{f}"],
+                                  capture_output=True, text=True).stdout
+            used |= set(re.findall(r"/img/docs/([A-Za-z0-9/_.@-]+\.png)", body))
+    used &= under
+    page = (ROOT / "internal/corpus/wiki/screenshots.md").read_text()
+    named = set(re.findall(r"`([A-Za-z0-9/_.@-]+\.png)`", page))
+    named |= set(re.findall(r"/img/docs/([A-Za-z0-9/_.@-]+\.png)", page))
+    return {
+        "held": len(under),
+        "used": len(used),
+        "orphaned_user_guide": len([f for f in files if "/user-guide/" in f and f.endswith(".png")]),
+        "named": len(named & used),
+        "unnamed": len(used) - len(named & used),
+        "coverage": round(100 * len(named & used) / len(used)) if used else 0,
+    }
+
+
+# The screenshot arithmetic, at the commit that page names. Its `names N of that
+# 168` moves whenever somebody adds an image to the page, which is why it is
+# here rather than trusted.
+IMAGES = [
+    (r"holds \*\*(\d+)\*\* `\.png` files", "held"),
+    (r"only \*\*(\d+)\*\* of\n?\s*them are referenced", "used"),
+    (r"(\d+) of those sit under `user-guide/`", "orphaned_user_guide"),
+    (r"denominator that means anything is (\d+)", "used"),
+    (r"page names \*\*(\d+)\*\* of that \d+", "named"),
+    (r"names \*\*\d+\*\* of that (\d+)", "used"),
+    (r"\*\*The (\d+) not named here carry no alt text\*\*", "unnamed"),
+    (r"Coverage is (\d+)% of the images", "coverage"),
+]
+
+IMAGES_REF = "f00e0ee"
+
+
+def check_images(docs: pathlib.Path) -> list:
+    counts = docs_images(docs, IMAGES_REF)
+    if not counts:
+        return [f"asgard-docs has no commit {IMAGES_REF}, so the screenshot arithmetic "
+                f"cannot be recomputed"]
+    page = (ROOT / "internal/corpus/wiki/screenshots.md").read_text()
+    out, seen = [], 0
+    for pattern, name in IMAGES:
+        for m in re.finditer(pattern, page):
+            seen += 1
+            if int(m.group(1)) != counts[name]:
+                line = page[:m.start()].count("\n") + 1
+                out.append(f"internal/corpus/wiki/screenshots.md:{line} says {m.group(1)} "
+                           f"for {name}, and asgard-docs has {counts[name]} at {IMAGES_REF}")
+    if seen < len(IMAGES):
+        out.append(f"only {seen} of the {len(IMAGES)} screenshot claims still match a pattern, "
+                   f"so the rest are going unchecked - either the wording moved and the "
+                   f"pattern has to move with it, or the claim is gone")
+    return out
+
+
 def material() -> list:
     out = []
     for root in MATERIAL:
@@ -335,6 +414,12 @@ def main() -> int:
     if not args.dump:
         bad.extend(sources_table(base))
         counted += 1
+        docs = resolve("docs", need=False)
+        if docs is None:
+            bad.append("$ASGARD_DOCS is not set, so the screenshot arithmetic is unchecked")
+        else:
+            bad.extend(check_images(docs))
+            counted += 1
 
     if args.dump:
         return 0
