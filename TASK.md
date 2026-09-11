@@ -61,7 +61,7 @@ to verify but the person who claims it.**
 | `processors-vs-palette` `wiki/processors.md`'s prose, as opposed to its two tables, which `hack/check-processors.py` now holds against asgard-core and asgard-docs | the two clones as pulled | 2026-09-11 |
 | `stage-prompts` the 10 stage prompts' guidance, as opposed to their command claims | - | **never** |
 | `design-time-skills` the 7 design-time skills' prose, as opposed to their command and path claims | - | **never** - 2,255 lines, of which `proposal-deck` is 1,232 |
-| `deployment-diffs` the eight deployment clones' diffs since the extracts were written from them | the four that had moved - `asgard-freyr-kube` (85 commits), `asgard-freyr-skills` (48), `unitech-e-asgard-kube` (26), `asgard-auto-post-kube` (7); the other four were unmoved, which `hack/sources.py --extracts` says | 2026-09-11 |
+| `deployment-diffs` the eight deployment clones' diffs since the extracts were written from them | the four that had moved, which `hack/sources.py --extracts` names; the other four were unmoved | 2026-09-11 |
 
 
 ## Goal
@@ -143,7 +143,7 @@ assembled on the spot is new knowledge and goes into a document, or the next
 reader assembles it again. No embeddings and no vector index - a retrieval layer
 over un-synthesised material is the thing the pattern replaces.
 
-What that costs and what it does not buy is the next section.
+What that costs and what it does not buy is "The design of record" below.
 
 ### What this tool does not do
 
@@ -160,12 +160,10 @@ one file each.
 
 ## The design of record: one corpus
 
-The shape is the [llm-wiki
-pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f),
-and every body of material is under the same schema. How that is implemented
-is [APPROACH.md](APPROACH.md); the rules a document has to follow are
-[AGENTS.md](AGENTS.md). What is below is what the pattern buys and what it does
-not.
+Every body of material is under one schema, in the form named above. How that
+is implemented is [APPROACH.md](APPROACH.md); the rules a document has to follow
+are [AGENTS.md](AGENTS.md). What is below is what the pattern buys and what it
+does not.
 
 ### Three layers
 
@@ -180,8 +178,10 @@ What separates them is which one may be rewritten.
 ### Three operations
 
 **ingest** a source: read it, confirm the reading, write or rewrite the pages it
-touches, update the index, append to the log. Step "the pages it touches",
-plural, is the one that gets skipped.
+touches, update the index, and put the commit you read it at in each page's own
+source block. Step "the pages it touches", plural, is the one that gets skipped;
+`internal/corpus/wiki/README.md` says why there is no separate ledger of
+readings.
 
 **query**: grep the corpus first, through `aliases.md` if the question did not
 arrive in English. An answer that needed three documents assembled on the spot
@@ -209,10 +209,10 @@ it.
 
     **It was closed by checking, not by writing the lines**, which is the whole
     of the distinction: the guidance and the skills were held against
-    asgard-kube `cbd8d70`, against the six reference repositories, and against
-    the gate that enforces the rules they describe. What that pass produced is
-    in "The provenance pass" below - four corrections, not four provenance
-    lines.
+    asgard-kube `cbd8d70`, against the eight reference repositories, and against
+    the gate that enforces the rules they describe. A marker is a claim about a
+    reading, so writing one without doing the reading is the only way to make
+    this check lie.
 
   - **Links are data.** Held. Every document carries `kb.Doc.Links`, read when
     it is parsed, with the ones inside its counterpart section marked
@@ -260,19 +260,19 @@ something cannot write it where it will be read. The loop that exists instead:
 confirm the reading with the person before writing", and the only human in this
 loop stands exactly where a claim enters material that ships to everybody.
 
-What changed to make it work is that **the report stopped being prose to be
-filled in from memory.** The reader and the writer here are both agents, so
-every narrated field is somebody's account of what happened and can be wrong -
-a search remembered as run, phrased differently from the one that was run. The
-recorded miss is the one part nobody has to be believed about: the tool
-witnessed it. `--new` puts that, the version and the repository state in; the
-four narrated fields are marked TODO.
+What makes it work is that **the report is not prose filled in from memory.**
+The reader and the writer here are both agents, so every narrated field is
+somebody's account of what happened and can be wrong - a search remembered as
+run, phrased differently from the one that was run. So `--new` fills in the two
+things nobody has to be believed about: the exact build, and the repository
+state or the fact that there is no repository. The four narrated fields are
+marked TODO, and **"run outside a customer repository" is printed as a normal
+answer** rather than an absence, because that is where the question gets asked.
 
-**The miss file is not committed.** A query is whatever words the customer used,
-so unlike `docs/.reading-log` - which carries page names of this tool and
-nothing else - it stays out of the repository, and the scaffold's `.gitignore`
-says so. It only has to live long enough for the issue to be filed; what reaches
-the next engagement is the fix in the next release.
+**Nothing records the query.** A search that came back empty was logged once and
+the mechanism is gone: a query is whatever words the customer used, so the file
+was a customer's vocabulary sitting in a repository, and the agent that ran the
+search already has the gap in front of it without being told.
 
 ## Non-goals
 
@@ -378,37 +378,13 @@ and inventing a row is worse than not having one. **Do not put it in
 actually searched for, and a bulk import of UI names is exactly the guess it
 forbids.
 
-**A clone of asgard-docs, first.** It has moved to asgard-docs `23409b3` (unread),
-dated 2026-09-09, and this material is cited at `f00e0ee` (2026-08-31) in 58
-places. Four commits,
-286 files, and the substantive one is
-`docs(processor): sync processor reference with asgard-core constants.go`:
-**17 new per-processor reference pages**, each verified against the editor's
-property panel as well as the code. Those answer P10 - see
-`.agents/skills/asgard-platform/wiki/platform-unknowns.md` - and
-`wiki/processors.md` was written from asgard-core's definitions without them.
-
-**The citations were deliberately not moved.** A diff is a real reading when
-it is small; 286 files is the case where it is not, and bumping 58 hashes
-would claim a reading nobody did. asgard-kube moved in the same pass and its
-citations did move, because that diff was four commits with one change
-reaching a page.
-
-**The eight reference deployment clones, pulled.** `source/SOURCES.md` now
-records what each held when its extracts were written, and five have moved
-since: `asgard-freyr-kube` by 84 commits and `asgard-freyr-skills` by 48. The
-second is the only source for `browser-operation`. Re-reading an extract
-against a current clone is the only way to find out whether it still describes
-that chart.
-
-**A clone of asgard-docs.** 87 pages are cited by no wiki page at `f00e0ee`,
-83 at the clone's HEAD - `hack/check-coverage.py` computes both. Two
-slices are worth reading and the rest is release notes and site plans:
-`developer-reference/processor`, because
-`.agents/skills/asgard-platform/wiki/processors.md` was written from
-asgard-core's definitions and P10 says that list is demonstrably incomplete; and
-`help-community/faq`, because nothing has checked whether the answers a customer
-gets there agree with what this material tells an FDE to say.
+**A clone of asgard-docs, and a reader for one slice of it.** 85 pages are
+cited by no wiki page at `f00e0ee`, 81 at the clone's HEAD, and
+`hack/check-coverage.py` computes both. Almost all of it is release notes and
+site plans. **The one slice worth reading is `help-community/faq`**, because
+nothing has checked whether the answers a customer gets there agree with what
+this material tells an FDE to say - and a customer quoting their own
+documentation back is the one disagreement that cannot be argued with.
 
 **An answer from the platform team.** The unknowns are on
 `.agents/skills/asgard-platform/wiki/platform-unknowns.md`, with who to ask and what each blocks. P12 is
