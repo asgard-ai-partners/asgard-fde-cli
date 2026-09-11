@@ -54,14 +54,14 @@ to verify but the person who claims it.**
 
 | surface | read against | when |
 |---|---|---|
-| `extracts-vs-charts` the 22 extracts against the charts they came from | the eight clones as pulled | 2026-09-11 |
+| `extracts-vs-charts` the 22 extracts against the charts they came from | the eight commits in `source/SOURCES.md`'s **held against** column, which is what makes this reading checkable rather than a date | 2026-09-11 |
 | `wiki-vs-docs` the 27 wiki pages against asgard-docs | **the pages whose citations have moved, which `hack/check-coverage.py --drift` names** - 5 of them, all read; the prose citing a page that has not moved stands at its own earlier reading | 2026-09-11 |
 | `packages-help` the 14 packages' help against their behaviour | the working tree | 2026-09-11 |
 | `flag-usage` every flag's usage text against what the flag does | the working tree, all 81 | 2026-09-11 |
 | `processors-vs-palette` `wiki/processors.md`'s prose, as opposed to its two tables, which `hack/check-processors.py` now holds against asgard-core and asgard-docs | the two clones as pulled | 2026-09-11 |
 | `stage-prompts` the 10 stage prompts' guidance, as opposed to their command claims | - | **never** |
 | `design-time-skills` the 7 design-time skills' prose, as opposed to their command and path claims | - | **never** - 2,255 lines, of which `proposal-deck` is 1,232 |
-| `deployment-diffs` the eight deployment clones' diffs since the extracts were written from them | - | **never.** `hack/sources.py` gives how far behind; the diff is a different act |
+| `deployment-diffs` the eight deployment clones' diffs since the extracts were written from them | the four that had moved - `asgard-freyr-kube` (85 commits), `asgard-freyr-skills` (48), `unitech-e-asgard-kube` (26), `asgard-auto-post-kube` (7); the other four were unmoved, which `hack/sources.py --extracts` says | 2026-09-11 |
 
 
 ## Goal

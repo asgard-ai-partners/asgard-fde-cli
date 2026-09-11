@@ -144,11 +144,30 @@ def stale() -> list:
             out.append(f"{key}: ${SOURCES[src][0]} is not set, so this cannot be answered")
             continue
         if src == "deployments":
-            behind = [n for n in reference_deployments()
-                      if (p / n / ".git").exists() and behind_of(p / n)]
-            if behind:
-                out.append(f"{key}: read against clones, {len(behind)} of which have moved since: "
-                           + ", ".join(behind[:4]) + ("..." if len(behind) > 4 else ""))
+            # **Against the commit the reading names, not against the remote.**
+            # This used to report a clone that was behind its own origin as a
+            # reading gone stale, which is a different fact about a different
+            # thing: the clone had not moved at all, its remote had, and the
+            # extracts describe the clone. One deployment was reported as six
+            # commits of drift while sitting exactly where its extracts were
+            # read.
+            doc = (pathlib.Path(__file__).resolve().parent.parent
+                   / "source/SOURCES.md").read_text()
+            moved = []
+            for name, ref in held_against(doc).items():
+                if not (p / name / ".git").exists():
+                    out.append(f"{key}: no clone of {name}, so its reading cannot be answered")
+                    continue
+                n = since(p / name, ref)
+                if n < 0:
+                    out.append(f"{key}: {name} has no commit {ref}, the one its claims "
+                               f"were read against")
+                elif n:
+                    moved.append((name, n))
+            if moved:
+                out.append(f"{key}: {len(moved)} clone(s) have moved since the reading: "
+                           + ", ".join(f"{n} by {c}" for n, c in moved[:4])
+                           + ("..." if len(moved) > 4 else ""))
             continue
         if b := behind_of(p):
             out.append(f"{key}: read against {SOURCES[src][0]}, which is now {b}")
@@ -171,7 +190,7 @@ def extracts() -> list:
     doc = (pathlib.Path(__file__).resolve().parent.parent / "source/SOURCES.md").read_text()
     base = resolve("deployments", need=False)
     out = []
-    for name, at in re.findall(r"^\|\s*([a-z0-9-]+)\s*\|\s*`([0-9a-f]{7,})`", doc, re.M):
+    for name, at in written_from(doc).items():
         if base is None or not (base / name / ".git").exists():
             out.append((name, at, None, "no clone"))
             continue
@@ -188,6 +207,32 @@ def extracts() -> list:
             continue
         out.append((name, at, int(n.stdout.strip()), head))
     return out
+
+
+def written_from(doc: str) -> dict:
+    """Each deployment and the commit its extracts were written from."""
+    return dict(re.findall(r"^\|\s*([a-z0-9-]+)\s*\|\s*`([0-9a-f]{7,})`", doc, re.M))
+
+
+def held_against(doc: str) -> dict:
+    """Each deployment and the commit its claims were last read against.
+
+    **The second column of that table, and the one a staleness report wants.**
+    An extract describes the version it was written from; whether it is still
+    true is a question about the version somebody last checked it against, and
+    those are different commits for four of the eight.
+    """
+    return {n: c for n, _, c in re.findall(
+        r"^\|\s*([a-z0-9-]+)\s*\|\s*`([0-9a-f]{7,})`[^|]*\|\s*`([0-9a-f]{7,})`", doc, re.M)}
+
+
+def since(path: pathlib.Path, ref: str) -> int:
+    """Commits between one ref and a clone's HEAD, or -1 when it has no such ref."""
+    got = subprocess.run(["git", "-C", str(path), "rev-list", "--count", f"{ref}..HEAD"],
+                         capture_output=True, text=True)
+    if got.returncode != 0:
+        return -1
+    return int(got.stdout.strip() or 0)
 
 
 def reference_deployments() -> list:

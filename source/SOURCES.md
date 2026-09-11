@@ -23,20 +23,29 @@ read is what each clone holds.
 Read 2026-09-11. **The right-hand column is the reason this table matters**: a
 chart moves, and an extract is a description of one version of one chart.
 
-| deployment | read at |
-|---|---|
-| unitech-e-asgard-kube | `223a59a` (2026-09-01) |
-| xxentria-asgard-kube | `57e4b4c` (2026-09-01) |
-| finance-ai-asgard-kube | `3a4ce84` (2026-09-01) |
-| buy123-asgard-kube | `08dac8f` (2026-08-31) |
-| asgard-freyr-kube | `0594f68` (2026-08-24) |
-| asgard-auto-post-kube | `d11b802` (2026-09-01) |
-| asgard-industry-demo-generator | `718cc0e` (2026-08-26) |
-| asgard-freyr-skills | `e0b3fe3` (2026-09-01) |
+**Two commits per row, and they answer different questions.** *Written from* is
+the version an extract describes. *Held against* is the version somebody last
+read the extract's claims against, which is a weaker act and a later commit -
+checking field names and counts, not rewriting the extract. Both are fixed, so
+both can be checked; a distance between them cannot be written down at all.
+
+| deployment | written from | held against |
+|---|---|---|
+| unitech-e-asgard-kube | `223a59a` (2026-09-01) | `80b16a5` (2026-09-11) |
+| xxentria-asgard-kube | `57e4b4c` (2026-09-01) | `57e4b4c` (2026-09-11) |
+| finance-ai-asgard-kube | `3a4ce84` (2026-09-01) | `3a4ce84` (2026-09-11) |
+| buy123-asgard-kube | `08dac8f` (2026-08-31) | `08dac8f` (2026-09-11) |
+| asgard-freyr-kube | `0594f68` (2026-08-24) | `47d0c06` (2026-09-11) |
+| asgard-auto-post-kube | `d11b802` (2026-09-01) | `edb0ad0` (2026-09-11) |
+| asgard-industry-demo-generator | `718cc0e` (2026-08-26) | `718cc0e` (2026-09-11) |
+| asgard-freyr-skills | `e0b3fe3` (2026-09-01) | `a5c84c6` (2026-09-11) |
 
 **How far each has moved since is computed, not written here:**
 
-    hack/sources.py --extracts
+    hack/sources.py --extracts     against `written from`, which is the question
+                                   "does this extract still describe that chart"
+    hack/sources.py                against `held against`, which is the question
+                                   "has anything moved since somebody last checked"
 
 There used to be a third column with those distances in it, and **both of the
 two non-zero rows had rotted within nine days.** One named a commit the clone
