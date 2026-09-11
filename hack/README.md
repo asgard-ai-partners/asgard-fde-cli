@@ -155,6 +155,14 @@ reason and against the same trap: 79 is the `XValidation` markers in the Go
 types, 231 is what the generator emits from them, and this material had the
 marker count written down as the CRDs' own for a week.
 
+**And every required field of a per-class block**, which is the set an FDE asks
+a customer for. `BotProvider.spec.telegram` requires `webhookSecretToken`
+beside `botToken`, no documentation page mentions it, and this material listed
+"the Bot Token" - half the ask, and a CR that is refused. Matched across
+everything that ships rather than the prose alone, because a field can be
+taught by the generator that writes it, and on a word boundary, because a
+substring test passes `region` on the word "regional".
+
 **And every immutable field.** 41 of the enforced rules are `self == oldSelf`,
 carried on 40 kind-and-property pairs across twelve kinds, and nothing offline
 can tell you a chart will be refused at apply - but **which fields they are** is

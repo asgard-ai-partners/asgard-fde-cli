@@ -187,6 +187,56 @@ def check_immutable(crd: pathlib.Path) -> list:
     return out
 
 
+def check_required_blocks(crd: pathlib.Path) -> list:
+    """Every required field of a per-class block has to be named in the corpus.
+
+    **These are the fields an FDE asks a customer for**, and a block whose
+    second field nobody wrote down sends somebody to a meeting with half the
+    ask. `BotProvider.spec.telegram` requires `webhookSecretToken` beside
+    `botToken`, no documentation page mentions it, and this material listed
+    "the Bot Token" for a month.
+
+    Only the classed blocks - a `spec` property that is an object with its own
+    `required` list - because those are the ones a class chooses between and a
+    reader has to be told which fields come with the class they picked.
+    """
+    root = pathlib.Path(__file__).resolve().parent.parent
+    # **Everything that ships, not only the prose.** A per-class field can be
+    # taught by the generator that writes it or by a skill that lands beside it
+    # - `athena.outputLocation` is in `internal/generate/dbclass.go` and in the
+    # db-query skill's connector reference - and reading the wiki alone reported
+    # ten fields as unnamed that a chart author meets by running `add`.
+    corpus = ""
+    for pattern in ("internal/corpus/**/*.md", "internal/generate/**/*.go",
+                    "internal/generate/**/*.tmpl", "internal/scaffold/templates/**/*.md",
+                    "internal/scaffold/templates/**/*.tmpl", "internal/needs/*.go",
+                    "internal/brief/*.go", "internal/stage/prompts/*.md"):
+        for f in root.glob(pattern):
+            corpus += f.read_text(errors="replace") + "\n"
+    out = []
+    for f in sorted(crd.glob("*.yaml")):
+        doc = json.loads(subprocess.run(["yq", "-o=json", "-I=0", "."], stdin=open(f),
+                                        capture_output=True, text=True).stdout)
+        kind = doc["spec"]["names"]["kind"]
+        spec = doc["spec"]["versions"][0]["schema"]["openAPIV3Schema"].get(
+            "properties", {}).get("spec", {})
+        classed = [k for k in (spec.get("properties") or {}) if k.endswith("Class")]
+        if not classed:
+            continue
+        enum = set((spec["properties"][classed[0]].get("enum") or []))
+        for name, block in (spec.get("properties") or {}).items():
+            if name not in enum or block.get("type") != "object":
+                continue
+            for field in (block.get("required") or []):
+                # **On a word boundary.** A plain substring test passes on
+                # `region` because some page says "regional", which is a false
+                # pass in a check whose whole job is to notice an absence.
+                if not re.search(rf"\b{re.escape(field)}\b", corpus):
+                    out.append(f"{kind}.spec.{name}.{field} is required and no page "
+                               f"in the corpus names it")
+    return out
+
+
 def cel_counts(crd: pathlib.Path, kube: pathlib.Path) -> dict:
     """How many CEL rules there are, on both sides of the generator."""
     rules = []
@@ -256,6 +306,7 @@ def main():
             problems.append(f"constraint {name}: {len(cons[name])} different constraint sets in the CRDs, so one table entry cannot be right")
 
     problems += check_immutable(crd)
+    problems += check_required_blocks(crd)
 
     kube = crd.parent
     if (kube / "pkg/apis/asgard/v1alpha1/types.go").is_file():

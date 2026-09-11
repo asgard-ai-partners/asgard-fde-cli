@@ -11,18 +11,43 @@ Four ways.
 
 ## Chat platforms
 
-Each platform needs different credentials, all supplied by the customer:
+Each platform needs different credentials, all supplied by the customer -
+**and for Slack the answer depends on which path you are on**, which is the one
+row here that has been got wrong:
 
-| platform | needs | extra step |
+| platform | the chart's `BotProvider` needs | the documentation's UI flow asks for |
 |---|---|---|
-| LINE | Channel Secret, Channel Access Token | Asgard produces a Webhook URL that has to be pasted back into the LINE Developers Console, verified, and Use webhook enabled |
-| Slack | Client ID, Client Secret, Signing Secret, Permission Scopes | a Slack app has to exist and subscribe to Bot events |
-| Discord | Bot Token | an app and bot in the Developer Portal, authorised and invited to the server |
-| Telegram | Bot Token | created through BotFather |
+| LINE | `channelAccessToken`, `channelSecret` | the same two, as Channel Access Token and Channel Secret |
+| Slack | `appToken`, `botToken` - **both required** | Client ID, Client Secret, Signing Secret, Permission Scopes |
+| Discord | `botToken` | Bot Token |
+| Telegram | `botToken` **and `webhookSecretToken`, both required** | Bot Token only |
+
+**Two of those rows differ, and in both cases the chart asks for more or other
+than the documentation does.**
+
+**Slack is two different credentials, not two names for one.** The UI's flow is
+an OAuth app installation - client id, client secret, signing secret, scopes -
+and it is what somebody clicking through Applications supplies. A chart writes
+neither: `spec.slack` takes an **app-level token** and a **bot token**, the
+`xapp-` and `xoxb-` pair. Asking a customer for a client id and then writing a
+chart leaves you without either field the CR requires.
+
+**Telegram's second field is in the CRD and in no documentation page.**
+`webhookSecretToken` is required beside `botToken`, and a page that lists only
+the bot token sends an FDE to the meeting with half the ask. It is ours to
+generate rather than theirs to supply - Telegram accepts a secret you choose -
+but it has to exist before the CR applies.
 
 LINE is the only one needing **two-way** setup - Asgard gives a URL that has to go
-back into LINE. The rest only take credentials inward. For Taiwanese customers it
-is usually the first one asked about.
+back into LINE, which somebody has to paste into the LINE Developers Console,
+verify, and then enable Use webhook on. The rest only take credentials inward.
+**LINE also has a prerequisite before any of that**: Messaging API has to be
+enabled on the Official Account, which is the customer's own step in a console
+nobody here can reach. For Taiwanese customers LINE is usually the first one
+asked about.
+
+**Discord and Slack get a Connector Pod** rather than a webhook, because both
+hold an outbound WebSocket - `../usecase/chat-channel.md` has what that costs.
 
 `botProviderClass` is immutable in the CRD, so it has to be right the first time.
 

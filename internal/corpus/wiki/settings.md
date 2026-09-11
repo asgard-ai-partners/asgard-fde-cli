@@ -73,9 +73,25 @@ carrying two provider blocks is refused by the apiserver and passes `helm lint`.
 
 Only one built-in, Builtin (Balanced).
 
-The custom form's fields change with the provider. The default, Azure OpenAI
-Embedding Model, takes six required fields: Name, Model Provider, Resource Name,
-Deployment ID, API Version and API Key.
+The custom form's fields change with the provider, **and Azure OpenAI is the
+expensive one to ask for.** The default, Azure OpenAI Embedding Model, takes six
+required fields - Name, Model Provider, Resource Name, Deployment ID, API
+Version and API Key - where plain OpenAI takes two. In a chart that is
+`spec.aoai` with **all four of `resourceName`, `deploymentId`, `apiVersion` and
+`apiKey` required**, against `spec.openai` needing `apiKey` and `model`.
+
+So for a customer on Azure, three of the four are things only their Azure
+administrator has: **`deploymentId` is what they named the deployment and is not
+the model name**, `resourceName` is the resource rather than the endpoint, and
+`apiVersion` is a dated version string that has to be given rather than guessed.
+Ask for all three together - a request that comes back one field at a time costs
+a round trip each.
+
+`ImageGenerationModel` and `TranscriptionModel` carry the same `aoai` block with
+the same four required fields. Neither has a UI page or any documentation -
+`../wiki/platform-unknowns.md` P12 is the question of whether an engagement is
+meant to reach for them at all - but if one is reached for, the credentials to
+ask for are these.
 
 ## Data Source
 

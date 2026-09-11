@@ -111,6 +111,17 @@ Drive one. Reading a chart that uses it is the case it exists for.
 For recognising older charts only. Creating one needs a Name and an Alias Name
 (lowercase letter first, then letters, digits and underscores).
 
+**A spreadsheet is not a file you point an Indexer at.** `Indexer.spec` picks a
+`sourceClass` and the block for it, and the two tabular ones demand more than
+the document ones: `csv` requires **`columns` and `skipHeader`**, and `xlsx`
+requires **`columns`, `skipHeader` and `sheetName`** on top. So the columns have
+to be declared before anything is indexed, and **`sheetName` means one Indexer
+per sheet** - a workbook with four sheets worth indexing is four of them. The
+document classes (`pdf`, `docx`, `pptx`) and the media ones (`image`, `audio`,
+`video`) require none of that.
+
+`xlsx` is also the one immutable Indexer field - see `../wiki/crd-rules.md`.
+
 Content is split across All, Manual Upload and Auto Load tabs.
 
 **Manual Upload** takes CSV, XLSX, PDF, PPTX, DOCX and JSON Lines. A CSV goes
