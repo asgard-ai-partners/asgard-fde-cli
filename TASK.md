@@ -34,7 +34,7 @@ exit code, today, not a word somebody typed.
 |---|---|
 | `--links`, `--bare`, `--commands`, `--paths`, `--unverified`, `--sources`, `--urls` | `asgard-cli audit-material <flag>`, after building from the working tree |
 | `hack/check-doc-paths.py`, `hack/check-coverage.py`, `hack/check-tables.py`, `hack/check-pass-list.py` | the ones that read this repository, and the coverage row's clone |
-| `hack/sources.py`, `hack/extract-crs.py`, `hack/validate-crs.py`, `hack/verify-references.sh` | the ones that need a clone of somebody else's repository |
+| `hack/sources.py`, `hack/check-processors.py`, `hack/extract-crs.py`, `hack/validate-crs.py`, `hack/verify-references.sh` | the ones that need a clone of somebody else's repository |
 | `go build ./...`, `go vet ./...`, `gofmt -l .`, `go test ./...` | the compiler's half |
 | `hack/check-goal.py` | **the capability, not the material.** Goal.md's four points held against the binary, in a temporary directory with no network, no account and no git repository |
 
@@ -58,9 +58,9 @@ to verify but the person who claims it.**
 | `wiki-vs-docs` the 27 wiki pages against asgard-docs | the `f00e0ee..23409b3` diff only; **the prose that diff did not touch stands at its own earlier reading** | 2026-09-11 |
 | `packages-help` the 14 packages' help against their behaviour | the working tree | 2026-09-11 |
 | `flag-usage` every flag's usage text against what the flag does | the working tree, all 81 | 2026-09-11 |
+| `processors-vs-palette` `wiki/processors.md`'s prose, as opposed to its two tables, which `hack/check-processors.py` now holds against asgard-core and asgard-docs | the two clones as pulled | 2026-09-11 |
 | `stage-prompts` the 10 stage prompts' guidance, as opposed to their command claims | - | **never** |
 | `design-time-skills` the 7 design-time skills' prose, as opposed to their command and path claims | - | **never** - 2,255 lines, of which `proposal-deck` is 1,232 |
-| `processors-rewalk` `wiki/processors.md`'s table, by re-walking asgard-core's `ProcessorDefinitions` | - | **never re-walked.** The file is unchanged since it was read, which is not the same thing |
 | `deployment-diffs` the eight deployment clones' diffs since the extracts were written from them | - | **never.** `hack/sources.py` gives how far behind; the diff is a different act |
 
 

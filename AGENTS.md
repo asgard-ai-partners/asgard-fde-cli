@@ -412,6 +412,7 @@ judgement:
 | every documentation URL being live | `--urls` (needs the network) |
 | the pinned enum and constraint tables against the CRDs | `hack/check-tables.py` (needs `$ASGARD_KUBE`) |
 | the four numbers in the coverage row | `hack/check-coverage.py` (needs `$ASGARD_DOCS`) |
+| **`wiki/processors.md`'s two tables against the two repositories they distil** - the thirteen processors' outputs, required keys and defaults against asgard-core's `ProcessorDefinitions`, and the editor palette's author and platform keys against asgard-docs' per-page metadata | `hack/check-processors.py` (needs `$ASGARD_CORE` and `$ASGARD_DOCS`) |
 | every path and package-qualified Go symbol this repository's own documents name | `hack/check-doc-paths.py` |
 | generated CRs and the extracts' skeletons against the CRD schemas | `hack/validate-crs.py` (needs `$ASGARD_KUBE`) |
 | the gate over the reference charts | `hack/verify-references.sh` (needs the clones) |
@@ -449,7 +450,7 @@ source and a date and not a word.
 | `stage-prompts`  the 10 stage prompts | 2026-09-11, for what they claim another command does; not for their guidance |
 | `design-time-skills`  the 7 design-time skills' prose | 2026-09-11, for command and path claims only |
 | `flag-usage`  every flag's usage text against what the flag does | 2026-09-11, all 81 |
-| `processors-rewalk`  `wiki/processors.md`'s table, by re-walking asgard-core's `ProcessorDefinitions` | **not re-walked.** The file is unchanged since it was read, which is not the same thing |
+| `processors-vs-palette`  `wiki/processors.md`'s prose, as opposed to its two tables | 2026-09-11. The tables are `hack/check-processors.py`'s now, and writing it found six defects reading had not - a documented default that upstream deleted, a page the naming table said did not exist, an `automation-tool-response` type it said had none, a `processor/entry` URL that 404s, and `validate-payload`'s `schema` marked as having a default, which told a reader that omitting it was a silent choice when it is an error. What is still nobody's but a reader's is the **palette at second hand**: asgard-docs records it from `asgard-ai-platform-web`, which nothing here clones |
 | `deployment-diffs`  the eight deployment clones' diffs since the extracts were written from them | **not read.** How far behind each is comes from `hack/sources.py`; the diff is a different act |
 | `packages-help`  `internal/localenv`, `platform`, `auth`, `work`, `skills`, `gitrepo`, `render`, `binding`, `chart`, `tool`, `browser`, `version`, `pipelineconfig`, `repo` | 2026-09-11, read end to end - about 7,300 lines. Every claim in a doc comment or a help screen that could be checked was: the loopback server's token, Host check and CSP; that `add` runs with no helm on PATH; that `doctor` reports a missing optional without failing; that a secret's value never comes back; that `profile show` prints where each field came from; every literal repository path each package emits, against a scaffolded tree |
 

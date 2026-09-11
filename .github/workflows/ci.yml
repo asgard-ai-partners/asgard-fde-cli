@@ -81,10 +81,11 @@ jobs:
       - name: Goal.md's four points, against the binary
         run: hack/check-goal.py
 
-      # check-tables.py and verify-references.sh are deliberately absent: both
-      # need a clone of somebody else's repository, and one of those is
-      # private. They are in the maintainer's gate, in AGENTS.md, and
-      # `hack/sources.py` says when one is due.
+      # check-tables.py, check-processors.py, check-coverage.py and
+      # verify-references.sh are deliberately absent: every one needs a clone of
+      # somebody else's repository, and asgard-core is private. They are in the
+      # maintainer's gate, in AGENTS.md, and `hack/sources.py` says when one is
+      # due.
 
 
   build:

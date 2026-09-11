@@ -7,9 +7,10 @@ and into this file** - true on one machine, wrong on every other, and the
 reason `check-tables.py` went eight upstream commits without being run. One
 environment variable per source, and a default that is one person's layout:
 
-    hack/sources.py          what each one resolves to, and how far behind it is
-    hack/check-tables.py     the pinned gate tables against the CRDs
-    hack/check-coverage.py   the wiki's coverage row against the docs tree
+    hack/sources.py            what each one resolves to, and how far behind it is
+    hack/check-tables.py       the pinned gate tables against the CRDs
+    hack/check-coverage.py     the wiki's coverage row against the docs tree
+    hack/check-processors.py   wiki/processors.md's two tables against their owners
 
     ASGARD_KUBE          the CRDs, the platform contract
     ASGARD_DOCS          the product documentation
@@ -147,6 +148,36 @@ Run it after regenerating a table and whenever asgard-kube moves. A field it
 reports as absent from the CRD is not automatically a bug - `baseAgentName`
 lives inside a JSON string rather than in the schema - but it is always
 something to explain rather than leave.
+
+## Re-walking the processor definitions
+
+    hack/check-processors.py            against the clones as they stand
+    hack/check-processors.py --dump     print what upstream says, and stop
+
+`wiki/processors.md` is the most claim-dense page in the corpus - thirteen
+processors, their required keys, their defaults, their outputs, and which keys
+an author may set - and every one of those claims belongs to a file in somebody
+else's repository. **The two tables on it have two different owners, and they
+disagree on purpose:**
+
+    the definitions table   asgard-core `internal/constants.go` -
+                            what the runtime validates a Workflow against
+    the palette table       asgard-docs' per-page `metadata.json` -
+                            what the builder lets an author type
+
+So each table is checked against its own owner and never against the other. A
+processor appearing or vanishing fails: the page says thirteen in four places.
+
+**The literal is walked by brace depth rather than matched by pattern.** An
+earlier pattern-based extraction of that same literal attributed one
+processor's fields to the next, and a table confidently wrong about `allowWrite`
+is worse than no table at all. Every identifier must resolve to a string or the
+script exits - an unresolved one means the literal grew a shape the walk does
+not understand, which is exactly when its output must not be trusted.
+
+Writing it found six things reading had missed, including `validate-payload`'s
+`schema` marked as having a default it does not have - which told a reader that
+omitting it was a silent choice when it is a rejected CR.
 
 ## What this catches that nothing else does
 
