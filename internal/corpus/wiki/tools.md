@@ -104,6 +104,64 @@ honest answer is that it can search the web unless told not to, and that the
 instruction not to is a prompt rather than a permission. Anyone answering "it
 only sees what you connect" is wrong.
 
+## The card tools the platform adds by itself
+
+Separate from a Toolset and from the sandbox's own CLI tools: **the platform
+puts these into every conversation**, and no CRD field declares or removes one.
+They render something for the user or set conversation metadata, and they are on
+the consent safe list - none of them stalls waiting for an approval, because
+none has an effect beyond rendering.
+
+| tool | what the user gets |
+|---|---|
+| `show_result_set_table` | a query's rows as a table |
+| `show_vega_visualization` | a chart over a result set |
+| `show_channel_home_download_link` | a download card |
+| `open_sandbox_file` | a card that opens one file in the file viewer |
+| `open_sandbox_folder` | a card that opens a directory in the file explorer's tree |
+| `open_sandbox_browser` | a card that hands the sandbox's browser to the user |
+| `show_canvas` | an HTML/SVG fragment the model wrote, rendered as a card |
+| `update_channel_title` | the conversation's title |
+
+**The file card and the folder card are not interchangeable, and getting it
+wrong produces a card that can only fail.** The viewer reads and tails its path
+(`fs/file` + `fs/watch`) and the sandbox filesystem API rejects both for a
+directory. `open_sandbox_folder` exists because the model had one card and a
+folder to show, so it aimed the file card at a directory.
+
+**Both can only address paths inside the working directory**, because that is
+where the file explorer is rooted - including for a file derived from a user's
+attachment, which lands outside it. An agent asked to unpack an attached `.zip`
+extracted beside the attachment and then pushed a card at that directory; the
+user tapped a card pointing outside the tree.
+
+**`show_canvas` is the one that is not delivered by a handler.** The fragment is
+the tool's own `html` argument, so it streams to the client *before* the tool
+executes - which is why consent on it would leave a half-drawn canvas on screen
+waiting for an answer about content the user can already see.
+
+## A query tool's rows are truncated, and the full set is a file
+
+`execute_database_query` returns **at most 20 rows** to the model, with
+`has_more` when there are more. Two different things to do with the rest, and
+the platform's own tool instruction is emphatic about not confusing them:
+
+    to show the user      pass `result_set_id` to show_result_set_table
+                          or show_vega_visualization - they get every row
+    to use it yourself    read `result_set_path`, a JSON file already written
+                          inside the sandbox
+
+`result_set_path` holds `{dataConnectorName, sql, rows}`, where `rows` is keyed
+by that query's own output column names. **Point a script at it** - the rows
+never enter the model's context, so the size of the result set stops mattering.
+Re-running the query with LIMIT/OFFSET to page rows into context is the thing
+this exists to avoid, and so is opening the file with a Read tool. The field is
+absent when no file was written, and only then is paging the right answer.
+
+**This is worth knowing in front of a customer** who asks whether the agent can
+work over a large table: it can, and the mechanism is a file in the sandbox
+rather than a bigger context.
+
 ## `Toolset.spec.instruction` is gone
 
 Removed from the live CRD. Tool usage guidance now lives on
@@ -124,7 +182,15 @@ repair to make when guidance seems to be missing.
   2026-09-02 against [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube)
   `cbd8d70` - `SandboxHookEvent`, `PluginSpec` - and against a deployment
   carrying 28 Plugins
+- The card tools, the file/folder distinction, the working-directory rule and
+  the result-set file: read 2026-09-11 from
+  asgard-core `623ceb50` `internal/constants.go` - `BuiltinToolCallSafeList`,
+  the `ToolName*` constants and the `execute_database_query` tool instruction. **No product
+  documentation covers any of it**, and no CRD field declares one, which is
+  why none of it was here
 
 **Unchecked:** the three roles and the hook events were held against the CRD, and
 the shared store against one deployment; the UI form fields come from the product
-documentation only.
+documentation only. **The card tools were read from source and not from a
+deployment or a screen** - the tool names and the two failures they were built
+from are the platform's own words, and nobody here has watched a card render.

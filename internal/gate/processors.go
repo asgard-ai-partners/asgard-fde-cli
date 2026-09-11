@@ -15,11 +15,17 @@ import (
 // not what it came from - so the one upstream whose movement would invalidate
 // this table was the one the marker did not name.
 //
+// Moved to `623ceb50` on 2026-09-11 after seven upstream commits, none of
+// which touched the definitions: `ProcessorDefinitions` is lines 1390-2064 of
+// `internal/constants.go` and every hunk in that diff starts at 645 or at
+// 2097 and beyond. The table's source is byte-identical, so the marker moves
+// without the table changing - which is the only case where that is honest.
+//
 // It is a pinned copy, and it is also **incomplete**: `await` is documented on
 // `stream-llm-completion-message`, set in five production deployments, and
 // declared in neither this file's source nor the CRD. So treat it as the set of
 // keys the definitions know about, never as the set a chart may use.
-const processorDefsRead = "2026-09-11, asgard-core 62a696b7, against asgard-kube cbd8d70"
+const processorDefsRead = "2026-09-11, asgard-core 623ceb50, against asgard-kube cbd8d70"
 
 // processorDef holds only what a rule reads. It carried five more fields -
 // optional keys, defaults, whether extra keys are allowed, and the declared

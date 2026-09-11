@@ -83,7 +83,7 @@ wherever; what goes into a page is the repository and the commit.
 |---|---|---|
 | product documentation | https://github.com/asgard-ai-platform/asgard-docs | `f00e0ee` (2026-08-31). **Newer and unread: asgard-docs `23409b3` (unread), 2026-09-09**, 286 files, including 17 per-processor reference pages that answer P10 |
 | CRD definitions | https://github.com/asgard-ai-platform/asgard-kube | `cbd8d70` (2026-09-11) |
-| processor definitions | https://github.com/asgard-ai-platform/asgard-core (private) | `62a696b7` (2026-09-11). `internal/constants.go` last changed at `80b70e7c`, 2026-09-01 - before the 2026-09-03 reading - so what was read then is what is there now |
+| processor definitions | https://github.com/asgard-ai-platform/asgard-core (private) | `623ceb50` (2026-09-11). `ProcessorDefinitions` is untouched across the seven commits since `62a696b7`, so the pinned table's source is byte-identical. What those commits DID add is read into `../wiki/tools.md`: a new card tool, and what a query tool does with rows beyond the twenty the model sees |
 
 None of them lives in this repository. `git pull` before writing against them.
 
