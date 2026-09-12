@@ -2,6 +2,15 @@
 # Everything produced by a command or a test; see AGENTS.md
 /.out/
 
+# ---- Local working state -----------------------------------------------
+# Worktrees created inside the checkout. Nothing under here is committable,
+# and while one exists this checkout has untracked files - which every binary
+# built from it then carries, because `go install` resolves the VCS root to
+# this checkout even when it is run from inside the worktree. `asgard-cli
+# version` reports `+dirty` for a tree nobody edited, in the very line
+# `issue-report` asks somebody to paste.
+/.claude/worktrees/
+
 # ---- Build output ------------------------------------------------------
 # GoReleaser output directory
 /dist/
