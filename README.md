@@ -43,8 +43,19 @@ does not have.
 ## Development
 
 ```bash
-go build -o asgard-cli ./cmd/asgard-cli   # build
-./asgard-cli version                      # run
+make build       # .out/asgard-cli
+make install     # onto your PATH
+make gate        # everything CI checks
+make help        # the rest
+```
+
+`make install` is `go install ./cmd/asgard-cli`: the binary lands in `GOBIN`,
+or in `go env GOPATH`/bin when that is unset, and the target says so afterwards
+- along with a warning when something earlier on your PATH will shadow what it
+just installed. To install somewhere else, name it:
+
+```bash
+make install GOBIN=~/.local/bin
 ```
 
 Layout:
