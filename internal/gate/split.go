@@ -20,9 +20,7 @@ const (
 // None of these break helm lint or apply. They make the orchestrator route
 // wrongly, or let an agent's search space grow back:
 //
-//	R1   at most one semantic layer per Agent, and no layer bound twice. At
-//	     most, not exactly: zero is legal, and its search space cannot grow.
-//	R1b  but an Agent cannot have no capability at all - a layer, a Toolset or a
+//	R1b  an Agent cannot have no capability at all - a layer, a Toolset or a
 //	     SkillSet, at least one - so that deleting one by accident does not pass
 //	     quietly. **SkillSet was missing from that list and the rule was wrong
 //	     about a running deployment**: every subagent of a flow-agent supervisor
@@ -36,9 +34,32 @@ const (
 //	R11  a SemanticLayer that no Agent binds is reported. An observation, not a
 //	     verdict: the render cannot tell "deliberately unbound" from "somebody
 //	     has not finished the read path", and neither can this tool.
+//	R13  no Agent lists the same semantic layer twice in its own semanticLayers.
+//	     A duplicate entry has no reading in which it was meant: the second one
+//	     grants nothing the first did not, and it is what a copied line looks
+//	     like when the name inside it was not changed.
 //
+// The numbering is inherited from the requirements document that first wrote
+// these rules down for one deployment, which is why it has gaps; R13 is new
+// here and continues it rather than reusing a retired number.
+//
+//	R1 is gone. It refused an Agent that bound more than one semantic layer, and
+//	an Agent that bound a layer some other Agent had already bound. **Neither
+//	half is enforced by anything else in the chain**: the CRD declares
+//	`semanticLayers` as a plain array with no maxItems, and the platform's own
+//	rule list checks that each name resolves to a real SemanticLayer and nothing
+//	more. Run over a 12-industry demo chart set - agents modelled one per
+//	business role, roles sharing the systems they read the way they do in a
+//	company - it produced 121 failures across 11 of its 12 charts, and every one
+//	of them was the shape somebody meant. The first half at least had a
+//	rationale in the material (an agent mounting two layers has the search space
+//	the split exists to shrink - `internal/corpus/usecase/agent-hub.md`); the
+//	second half had none anywhere. **That rationale is still the advice and it
+//	is not a verdict a render can reach**, so it stays in the extract and is not
+//	a rule here. What survives of R1 is R13, which is the half of "bound twice"
+//	that can only be a mistake.
 //	R10 is gone. It refused an Agent binding a layer recorded as "OLAP-only" in
-//	`+"`"+`.asgard-config.json`+"`"+`, and the recording was done by a flag on `+"`"+`verify`+"`"+`. **A rule
+//	`.asgard-config.json`, and the recording was done by a flag on `verify`. **A rule
 //	that needs a per-customer exemption list to work is not a rule.** It also
 //	wrote a product use case - Data Insight, read through Mimir - into a config
 //	field of a tool that cannot know what a customer is building. See
@@ -105,15 +126,6 @@ func AgentSplit(docs []Doc, opts Options) Result {
 		managed := mapOf(a.Spec["managed"])
 		layers := digList(managed, "semanticLayers")
 
-		if len(layers) > 1 {
-			names := make([]string, 0, len(layers))
-			for _, l := range layers {
-				names = append(names, digStr(mapOf(l), "name"))
-			}
-			errf("R1 %s: has %d semanticLayers, at most 1 is allowed (%s)",
-				a.Name, len(layers), strings.Join(names, ", "))
-		}
-
 		// A SkillSet is a capability source too, and leaving it out made this
 		// rule wrong about nine Agents in a deployment that is running: every
 		// subagent of a flow-agent supervisor mounts skills and nothing else,
@@ -126,19 +138,31 @@ func AgentSplit(docs []Doc, opts Options) Result {
 			errf("R1b %s: has no semanticLayers, no toolsetNames and no skillSetNames, so this Agent has no source of capability at all", a.Name)
 		}
 
+		// R13 is per Agent, so what counts as "already" resets here. Two Agents
+		// binding one layer is a shape the platform deploys and a chart set can
+		// mean - roles that share a system read it through the same layer - and
+		// refusing it was half of R1. One Agent binding it twice is the same
+		// line copied and not edited, and nothing else in the chain reports it:
+		// the CRD's array has no uniqueness rule.
+		seen := map[string]bool{}
+
 		for _, item := range layers {
 			layer := mapOf(item)
 			name := digStr(layer, "name")
 			if name == "" {
 				name = "<unnamed>"
 			}
-			allLayers = append(allLayers, name)
+			if seen[name] {
+				errf("R13 %s: lists %s twice in its own semanticLayers; the second entry grants nothing the first did not",
+					a.Name, name)
+			}
+			seen[name] = true
 
-			if first, ok := boundBy[name]; ok {
-				errf("R1 %s: %s is already bound by %s, and a semantic layer should have exactly one Agent",
-					a.Name, name, first)
-			} else {
+			// The first Agent to bind a layer is what R11 reads, and it is only
+			// ever asked whether the layer is bound at all.
+			if _, ok := boundBy[name]; !ok {
 				boundBy[name] = a.Name
+				allLayers = append(allLayers, name)
 			}
 
 			if len(digList(layer, "allowedCubes")) > 0 {
@@ -213,6 +237,11 @@ func AgentSplit(docs []Doc, opts Options) Result {
 	sort.Strings(warnings)
 	sort.Strings(allLayers)
 
+	// Each bound layer once, not once per binding. The list was one entry per
+	// binding while a layer could only have one, and a chart where four role
+	// agents read the same ERP layer printed its name four times - which reads
+	// as four layers to somebody scanning the summary for how wide the read
+	// path is.
 	summary := fmt.Sprintf("%d agent(s) (%d published)", len(agents), published)
 	if len(allLayers) > 0 {
 		summary += ", layers: " + strings.Join(allLayers, ", ")

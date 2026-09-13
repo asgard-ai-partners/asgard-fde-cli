@@ -44,9 +44,13 @@ server-side dry run all pass:
     reference, or both; a class block missing or doubled), and a discriminator
     that implies its block. Forty of the 79 rules are self == oldSelf and cannot
     be seen in a render; these are the rest
-  - the agent split: at most one semantic layer per Agent, no layer bound twice,
-    no allowedCubes, sampleQuestions on anything published, and prompt.task and
-    prompt.format identical across every Agent in one render
+  - the agent split: every Agent has some source of capability, no Agent lists
+    the same semantic layer twice, no allowedCubes, sampleQuestions on anything
+    published, and prompt.task and prompt.format identical across every Agent in
+    one render. **How many layers one Agent mounts is not checked here** - an
+    Agent per source system is the shape the extract argues for, and a chart
+    that mounts several on one agent deliberately is one the CRD, the platform
+    and this check all accept
 
 These are the checks a server-side dry run passes and runtime still fails: a
 reference to a CR that does not exist, an entry name nothing declares, a

@@ -106,7 +106,10 @@ processors before writing one - that is where the silent failures are:
 ## If the answer is a semantic layer
 
 One system, one layer, one Agent. An Agent mounting two layers has the search
-space the split was meant to shrink.
+space the split was meant to shrink - **advice with a reason, not a rule
+anything refuses**. Agents modelled per business role share the systems those
+roles read, and `../usecase/agent-hub.md` says when that is the shape to build
+instead.
 
   - Every cube, dimension and measure needs a description in 繁體中文. It is what
     the agent reads to decide which column answers a question; one without a

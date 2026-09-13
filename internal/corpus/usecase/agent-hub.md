@@ -6,7 +6,7 @@ author no BotProvider.**
 **Seen in:** a deployment with five agents over six semantic layers, one agent
 per source system.
 
-**Checked:** 2026-09-02 against a hub deployment's 5 Agent CRs (no BotProvider in that project, prompt.task byte-identical across all five) and the CRD.
+**Checked:** 2026-09-02 against a hub deployment's 5 Agent CRs (no BotProvider in that project, prompt.task byte-identical across all five) and the CRD. Extended 2026-09-14: "one layer per Agent" was held against a second chart set - 12 charts, 64 Agents modelled per business role - where 49 of the 64 mount more than one layer and 38 layers are bound by more than one Agent, all deliberately (counted off the rendered CRs of all 12 charts). Held against the contract the same day: `Agent.spec.managed.semanticLayers` is an array with no `maxItems` (asgard-kube `cbd8d70`, head when read), and the platform's own rule list checks only that each name resolves.
 
 **Unchecked:** the delegation-design guidance - how many agents, where the line between two of them goes. No deployment contradicts it; none confirms it either.
 
@@ -98,6 +98,18 @@ rather than a read surface.
 Each Agent mounts **exactly one** semantic layer, so its search space is that one
 system's cubes rather than all of them combined. An agent mounting two has the
 search space the split was meant to shrink.
+
+**This is the advice and it is not a rule anything enforces.** The CRD takes a
+plain array with no maximum, the platform's own rule list only checks that each
+name resolves, and `asgard-cli verify` stopped refusing it - it used to, and on
+a 12-industry demo chart set that models one agent per *business role* it
+refused 121 bindings that were all deliberate. Roles share the systems they read
+the way they do in a company: procurement, finance and production planning all
+read the same ERP layer, and a management view reads five. **A layer bound by
+several agents is a normal shape**, and a `verify` that called it an error was
+teaching people to change what it could see. So the question the split asks -
+is this agent's search space the one you meant - stays a judgement, and it is
+yours rather than the tool's.
 
 **No `allowedCubes`** on the binding: an agent may query any table in its own
 layer, and the restriction is which layer it mounts rather than which cubes
@@ -218,9 +230,10 @@ asgard-cli verify <project>   # or one step alone, while iterating
 that `gate` supplies, every chart that labels anything fails. `asgard-cli gate
 --help` says why.
 
-The last one is what catches this shape's specific mistakes: two layers on one
-agent, a layer mounted twice, a published agent with fewer than two sample
-questions, and `task`/`format` that have drifted apart.
+The last one is what catches this shape's specific mistakes: an agent with no
+capability source at all, `allowedCubes` on a binding, one agent listing the
+same layer twice, a published agent with fewer than two sample questions, and
+`task`/`format` that have drifted apart.
 
 ## Adding a system
 
