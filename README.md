@@ -823,6 +823,7 @@ asgard-cli pipeline create --name <name>        # bind this repository
 asgard-cli pipeline show                        # the pipeline bound to this checkout
 asgard-cli pipeline projects                    # projects a release can deploy into
 asgard-cli pipeline release create <name> --project <id>
+asgard-cli pipeline release update <name> --auto-apply    # the one create-time setting that moves
 asgard-cli pipeline releases                    # created releases, and the ghost rows
 asgard-cli pipeline variables list --release <name>
 asgard-cli pipeline variables set --release <name> --kind secret <key> --from-file <path>

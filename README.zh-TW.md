@@ -147,7 +147,8 @@ Deploy —— 平台，以及它知道的事
   login / logout / whoami
   workspace  list / use <id> / show
   pipeline   connect / connections / repos / create / list / use <id> / show
-             projects / release create|show / releases / deliveries
+             projects / release create|show|update|destroy|detach
+             releases / deliveries
              runs list|get|log|watch|approve|reject|cancel
              variables list|set|unset|sync-declared
              manifest
