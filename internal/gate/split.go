@@ -1,7 +1,6 @@
 package gate
 
 import (
-	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
@@ -64,50 +63,47 @@ const (
 //	wrote a product use case - Data Insight, read through Mimir - into a config
 //	field of a tool that cannot know what a customer is building. See
 //	asgard-odin-pm docs/decisions/2026-09-05-asgard-cli-config-surface.md.
-//	R12  prompt.task and prompt.format are byte-identical across every Agent in
-//	     one render. An Agent CR has no include mechanism, so a shared section
-//	     can only be copied; keeping the copies identical is what lets a later
-//	     change be one substitution and be verified with a diff.
+//	R12 is gone. It required prompt.task and prompt.format to be byte-identical
+//	across every Agent in one render, on the premise - measured at the time, on
+//	the deployments there were - that those two fields are wholly a shared
+//	scaffold and the specialisation lives in persona and context. **A chart set
+//	that interleaves instead breaks the premise**: one agent per business role,
+//	writing task and format as a shared skeleton with the role's own substance
+//	inside it. On that shape the rule was simultaneously always-red and blind -
+//	22 failures across 11 of 12 charts that no edit could clear short of
+//	redesigning 64 prompts, and an edit to a genuinely shared line in one agent
+//	would not have changed the output, which was already failing.
+//
+//	**Nothing replaced it, and the reason is that the replacement was tried.**
+//	The obvious one is to compare only the lines every Agent shares and report
+//	drift in those. Measured on the same 12 charts, "a line present in every
+//	Agent but one" hits 14 times, and all 14 are deliberate: a read-only role
+//	whose capability line says (read) where the others say (read + write). A
+//	rule cannot tell that from a copy somebody edited in one place, so there is
+//	no version of this check that does not cry wolf on a correct chart.
+//
+//	It was also not applying where it was supposed to. Subagents of a flow-agent
+//	supervisor are excluded, and the exclusion reads SandboxBlueprint
+//	`spec.agents.value` - a reference deployment declares its five subagents
+//	through `spec.agents.expression` instead, so all five counted as hub Agents
+//	and R12 failed that deployment too. Finding that the exemption silently did
+//	not apply to the shape it was written for is the other half of why this is a
+//	deletion rather than a repair.
+//
+//	`internal/corpus/usecase/agent-hub.md` keeps the advice - copy a shared
+//	block whole, and change every copy in one edit - as advice.
 //
 // Zero Agents is legal and passes: a pure Flow Agent project keeps its prompt in
 // a Workflow and its capability in a SandboxBlueprint, so its chart has no Agent
 // CR at all. The summary says "0 agent(s)" so that a project that lost its
 // Agents by accident is visible to a reviewer.
-// blueprintAgents names every Agent a SandboxBlueprint mounts as a subagent.
 //
-// `spec.agents` is a JSON string holding the array - that is how the CRD defines
-// it - so a name is only visible after parsing the string. A parse failure
-// yields nothing rather than an error: `gate.Xref` already reports invalid JSON
-// there, and reporting it twice from two checks reads as two defects.
-func blueprintAgents(docs []Doc) map[string]bool {
-	out := map[string]bool{}
-	for _, d := range docs {
-		if d.Kind != "SandboxBlueprint" {
-			continue
-		}
-		raw := digStr(d.Spec, "agents", "value")
-		if raw == "" {
-			continue
-		}
-		var agents []struct {
-			BaseAgentName string `json:"baseAgentName"`
-		}
-		if json.Unmarshal([]byte(raw), &agents) != nil {
-			continue
-		}
-		for _, a := range agents {
-			if a.BaseAgentName != "" {
-				out[a.BaseAgentName] = true
-			}
-		}
-	}
-	return out
-}
-
+// Every check here is per Agent, so none of them needs to know which Agents are
+// a supervisor's subagents. The helper that read that out of a SandboxBlueprint
+// existed for R12 and went with it.
 func AgentSplit(docs []Doc, opts Options) Result {
 	ix := newIndex(docs)
 	agents := ix.of("Agent")
-	subagents := blueprintAgents(docs)
 
 	var problems []string
 	errf := func(format string, args ...any) {
@@ -176,42 +172,6 @@ func AgentSplit(docs []Doc, opts Options) Result {
 			if n := len(digList(managed, "sampleQuestions")); n < minSampleQuestions {
 				errf("R7 %s: published but has %d sampleQuestions, and needs at least %d (set %s to \"false\" for an unverified agent rather than leaving the questions empty)",
 					a.Name, n, minSampleQuestions, publishedLabel)
-			}
-		}
-	}
-
-	// R12 is checked across all Agents at once, since it is about them agreeing.
-	// R12 is an agent-hub rule and applies to agent-hub Agents. A subagent of a
-	// flow-agent supervisor is excluded, measured rather than reasoned: across
-	// every reference deployment the five agent-hub Agents share **one**
-	// prompt.task, and the seventeen blueprint subagents have thirteen distinct
-	// ones - six of them empty, because their prompt lives on the Workflow's
-	// processor instead. Three supervisor deployments out of three, so it is the
-	// convention and not a mistake three engagements made. A subagent's task is
-	// what makes it a specialist; requiring them all to match cancels the split
-	// the shape exists for.
-	hub := make([]Doc, 0, len(agents))
-	for _, a := range agents {
-		if !subagents[a.Name] {
-			hub = append(hub, a)
-		}
-	}
-	if len(hub) > 1 {
-		for _, field := range []string{"task", "format"} {
-			byValue := map[string][]string{}
-			for _, a := range hub {
-				value := digStr(mapOf(a.Spec["managed"]), "prompt", field)
-				byValue[value] = append(byValue[value], a.Name)
-			}
-			if len(byValue) > 1 {
-				var groups []string
-				for value, names := range byValue {
-					sort.Strings(names)
-					groups = append(groups, fmt.Sprintf("%s (%d chars)", strings.Join(names, "+"), len(value)))
-				}
-				sort.Strings(groups)
-				errf("R12 prompt.%s differs: %d distinct values - %s",
-					field, len(byValue), strings.Join(groups, " | "))
 			}
 		}
 	}
