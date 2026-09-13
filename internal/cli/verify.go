@@ -45,12 +45,14 @@ server-side dry run all pass:
     that implies its block. Forty of the 79 rules are self == oldSelf and cannot
     be seen in a render; these are the rest
   - the agent split: every Agent has some source of capability, no Agent lists
-    the same semantic layer twice, no allowedCubes, sampleQuestions on anything
-    published, and prompt.task and prompt.format identical across every Agent in
-    one render. **How many layers one Agent mounts is not checked here** - an
-    Agent per source system is the shape the extract argues for, and a chart
-    that mounts several on one agent deliberately is one the CRD, the platform
-    and this check all accept
+    the same semantic layer twice, no allowedCubes, and sampleQuestions on
+    anything published. **Two things this deliberately no longer checks**: how
+    many layers one Agent mounts, and whether prompt.task and prompt.format are
+    identical across the Agents of one render. Both are shapes the CRD and the
+    platform accept, both have a chart set that means them, and a rule cannot
+    tell either from a mistake -
+    ".agents/skills/asgard-platform/usecase/agent-hub.md" argues for the shape
+    each one departs from
 
 These are the checks a server-side dry run passes and runtime still fails: a
 reference to a CR that does not exist, an entry name nothing declares, a
