@@ -21,7 +21,7 @@ func init() {
 	})
 	register("validate-crs", check{
 		Needs: "$ASGARD_KUBE",
-		What:  "validate CR documents against the CRDs - required fields, pruned fields, enums, patterns, maxItems and the ExactlyOneOf rules",
+		What:  "validate CR documents against the CRDs - required fields, pruned fields, enums, patterns, maxItems and the ExactlyOneOf rules. With no argument it checks the extracts' own skeletons, which are what somebody copies by hand",
 		Run:   runValidateCRs,
 	})
 }
@@ -342,11 +342,23 @@ func sortedAnyKeys(m map[string]any) []string {
 // a server-side dry-run: a dry-run is worse than silent, because it drops a
 // field it does not recognise and reports success.
 func runValidateCRs(args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("usage: go run ./hack validate-crs <documents.ndjson> [crd-dir]\n" +
-			"  the CRD directory defaults to $ASGARD_KUBE/crd")
+	// **With no argument, check the extracts.** They are what somebody copies by
+	// hand, so they are the case worth defaulting to - and `pass` lists this as
+	// a step, which a usage error would make unrunnable as listed. Pass an
+	// ndjson path to check a rendered chart instead.
+	docPath := ""
+	if len(args) > 0 {
+		docPath = args[0]
+	} else {
+		root, err := src.Root()
+		if err != nil {
+			return err
+		}
+		docPath = filepath.Join(root, ".out/extracts.ndjson")
+		if err := runExtractCRs([]string{docPath}); err != nil {
+			return err
+		}
 	}
-	docPath := args[0]
 	crdDir := ""
 	if len(args) > 1 {
 		crdDir = args[1]
