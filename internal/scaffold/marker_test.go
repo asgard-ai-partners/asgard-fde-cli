@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-// What a managed region means for the file it is in, and the four shapes a
+// What a managed region means for the file it is in, and the shapes a
 // difference can take.
 //
 // **The region is the shipped material and the rest of the file is not.** Both
@@ -22,11 +22,12 @@ func TestClassifyTreatsTheRegionAsTheShippedMaterial(t *testing.T) {
 	region := func(body string) string {
 		return "top\n<!-- asgard-cli:managed:start -->\n" + body + "\n<!-- asgard-cli:managed:end -->\ntail\n"
 	}
-	rec := Entry{CLIVersion: "0.9.0"}
+	rec := Entry{}
 
 	for _, c := range []struct {
 		name           string
 		disk, rendered string
+		writer         string // the CLI version the record says wrote it
 		want           Status
 	}{
 		{
@@ -41,13 +42,44 @@ func TestClassifyTreatsTheRegionAsTheShippedMaterial(t *testing.T) {
 			want:     Skipped,
 		},
 		{
-			// The CLI's half moved. mergeManaged replaces the region and
-			// leaves everything around it, so this is a refresh rather than
-			// anything needing --force.
+			// The CLI's half moved: an older version wrote what is on disk and
+			// this binary renders something else. mergeManaged replaces the
+			// region and leaves everything around it, so this is a refresh
+			// rather than anything needing --force.
 			name:     "the region moved",
 			disk:     "the engagement's answer\n" + region("ours, v1"),
 			rendered: "top\n" + region("ours, v2"),
+			writer:   "0.9.0",
 			want:     Updated,
+		},
+		{
+			// **THIS binary wrote that region and it now differs**, so the
+			// difference is somebody here. Reporting it as Updated said "this
+			// CLI has something newer" - and `gate` reads Updated as a pass,
+			// so an engagement that edited the managed half of AGENTS.md was
+			// told nothing and the next `init` overwrote it in silence.
+			name:     "the region was edited here",
+			disk:     "the engagement's answer\n" + region("somebody changed this"),
+			rendered: "top\n" + region("ours"),
+			writer:   "1.0.0",
+			want:     Edited,
+		},
+		{
+			// A newer CLI wrote it. --force must not hand this repository an
+			// older copy, which is what Ahead says everywhere else.
+			name:     "a newer CLI wrote the region",
+			disk:     "the engagement's answer\n" + region("theirs"),
+			rendered: "top\n" + region("ours"),
+			writer:   "1.1.0",
+			want:     Ahead,
+		},
+		{
+			// No record at all: a repository scaffolded before the record
+			// existed. Which way round the difference runs is not knowable.
+			name:     "the region differs and nobody recorded writing it",
+			disk:     "the engagement's answer\n" + region("who knows"),
+			rendered: "top\n" + region("ours"),
+			want:     Stale,
 		},
 		{
 			// A template that drops its marker is not a licence to delete what
@@ -63,17 +95,20 @@ func TestClassifyTreatsTheRegionAsTheShippedMaterial(t *testing.T) {
 			name:     "no region, and the record covers it",
 			disk:     "ours, v1\n",
 			rendered: "ours, v2\n",
+			writer:   "1.0.0",
 			want:     Updated,
 		},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			e := rec
-			if c.want == Updated && !strings.Contains(c.disk, "managed:start") {
-				// The whole-file path needs the record to match the disk;
-				// the region path never reads the digest at all.
+			if c.writer != "" {
+				// **The region path reads the record too, now.** Which side of
+				// a differing region moved is not in the bytes: it is whether
+				// the CLI that wrote the file is the one running.
+				e.CLIVersion = c.writer
 				e.Digest = digest([]byte(c.disk))
 			}
-			if got := classify([]byte(c.disk), []byte(c.rendered), e, "0.9.0"); got != c.want {
+			if got := classify([]byte(c.disk), []byte(c.rendered), e, "1.0.0"); got != c.want {
 				t.Errorf("classify() = %s, want %s", got, c.want)
 			}
 		})

@@ -258,10 +258,30 @@ func classify(disk, rendered []byte, rec Entry, running string) Status {
 	// behind, and a template that drops one is not a licence to delete what
 	// accumulated behind it.
 	if here := managedRegion.Find(disk); here != nil {
-		if want := managedRegion.Find(rendered); want != nil && !bytes.Equal(here, want) {
-			return Updated
+		want := managedRegion.Find(rendered)
+		if want == nil || bytes.Equal(here, want) {
+			return Skipped
 		}
-		return Skipped
+		// **The region differs, and which side moved is the whole question.**
+		// Reporting every difference as Updated said "this CLI has something
+		// newer" for a region somebody here had edited - and `gate` reads
+		// Updated as a pass, so an engagement that changed the managed half of
+		// AGENTS.md was told nothing and the next `init` overwrote it in
+		// silence. That is what Edited exists to say.
+		//
+		// The record decides it: when the CLI that wrote this file is the one
+		// running, the region on disk is one this binary produced, so a
+		// difference now is somebody here. An older writer means the binary
+		// moved on, which is the case Updated is for.
+		switch {
+		case rec.Digest == "":
+			return Stale
+		case compare(rec.CLIVersion, running) == newer:
+			return Ahead
+		case compare(rec.CLIVersion, running) == same:
+			return Edited
+		}
+		return Updated
 	}
 
 	if rec.Digest == "" {
