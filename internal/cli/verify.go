@@ -55,6 +55,12 @@ server-side dry run all pass:
     tell either from a mistake -
     ".agents/skills/asgard-platform/usecase/agent-hub.md" argues for the shape
     each one departs from
+  - every credential reference reads a key ` + "`.asgard-pipeline.yaml`" + ` declares.
+    **Setting a value on the platform without declaring the key is the silent
+    half**: it is stored, never injected, ` + "`variables list`" + ` marks it ORPHAN, and
+    lint, render and the dry run all stay green while the CR resolves to
+    nothing at runtime. Needs a release name, because the declaration is per
+    release
   - the generator's own TODOs, still in the render. **A warning, never a
     failure** - a chart carries them through the whole middle of an onboarding.
     This is the last place between ` + "`asgard-cli add`" + ` and a tag where anybody
@@ -183,7 +189,11 @@ time.`,
 				// The gate fills a remedy command with this, and those name a
 				// project rather than a release, so it has to be the project -
 				// a command printed with the wrong one cannot be run as printed.
-				if !record(release, docs, gate.Options{Project: projectOfRelease(root, release), Release: release}) {
+				if !record(release, docs, gate.Options{
+					Project:      projectOfRelease(root, release),
+					Release:      release,
+					DeclaredKeys: declaredKeys(root, release),
+				}) {
 					ok = false
 				}
 			}
@@ -249,6 +259,32 @@ func wrap(s string) string { return wrapAt(s, 72, 7) }
 // `--format json` cannot disagree about which checks ran: the pair an agent
 // acts on hardest is this one and `check`, and a gate that reports a different
 // set of checks depending on how it was asked is the worst kind of wrong.
+// declaredKeys reads what `.asgard-pipeline.yaml` declares for one release, by
+// reference kind. Nil when the declaration cannot be read, which is not the
+// same as a release that declares none - a check that cannot see the
+// declaration must say nothing rather than report every key as undeclared.
+func declaredKeys(root, release string) map[string]map[string]bool {
+	cfg, err := pipelineconfig.LoadFromRepo(root, "")
+	if err != nil {
+		return nil
+	}
+	r, ok := cfg.Release(release)
+	if !ok {
+		return nil
+	}
+	out := map[string]map[string]bool{
+		"secretKeyRef":    {},
+		"configMapKeyRef": {},
+	}
+	for _, k := range r.AppSecret {
+		out["secretKeyRef"][k.Key] = true
+	}
+	for _, k := range r.AppConfigMap {
+		out["configMapKeyRef"][k.Key] = true
+	}
+	return out
+}
+
 func gates(docs []gate.Doc, opts gate.Options) []verifyCheck {
 	named := []struct {
 		name string

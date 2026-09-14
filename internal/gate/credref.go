@@ -2,6 +2,7 @@ package gate
 
 import (
 	"fmt"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/pipelineconfig"
 	"sort"
 	"strings"
 
@@ -68,6 +69,27 @@ func CredentialRefs(docs []Doc, opts Options) Result {
 					continue
 				}
 				checked++
+
+				// **The key, not only the object.** A reference to the right
+				// Secret with a key the declaration never names is injected by
+				// nothing: `variables list` marks it ORPHAN, the run reports
+				// `vars/orphan`, and lint, render and the dry run stay green
+				// while the CR resolves to nothing at runtime. The declaration
+				// says that about itself; `add` generates the reference and
+				// leaves the declaring to somebody, and nothing said when it
+				// was not done.
+				if opts.DeclaredKeys != nil && (expect == "" || got == expect) {
+					key, _ := block["key"].(string)
+					if key != "" && !opts.DeclaredKeys[ref][key] {
+						msg := fmt.Sprintf("%s/%s: %s reads key %q, and %s declares it for no release",
+							kind, name, ref, key, pipelineconfig.FileName)
+						if !seen[msg] {
+							seen[msg] = true
+							warnings = append(warnings, msg)
+						}
+					}
+				}
+
 				if expect == "" || got == expect {
 					continue
 				}
@@ -95,11 +117,18 @@ func CredentialRefs(docs []Doc, opts Options) Result {
 	if len(warnings) > 0 {
 		sort.Strings(warnings)
 		for i, w := range warnings {
+			if strings.Contains(w, "declares it for no release") {
+				warnings[i] = w + ". Declare it under `appSecret:` or `appConfigMap:` on the release " +
+					"that deploys this chart, and set the value with `asgard-cli pipeline variables set`. " +
+					"Setting it without declaring it is the silent half: it is stored, never injected, " +
+					"and lint, render and the dry run all stay green"
+				continue
+			}
 			warnings[i] = w + ". The Platform injects the name on every run, so the fix is to read it in the " +
 				"template - `{{ include \"<chart>.appSecretName\" . }}` - rather than to create the object or " +
 				"rename anything. Nothing downstream reports this: the CR is valid and the failure is at runtime"
 		}
-		return Result{Warnings: warnings, Summary: fmt.Sprintf("%d credential reference(s), %d not resolvable", checked, len(warnings))}
+		return Result{Warnings: warnings, Summary: fmt.Sprintf("%d credential reference(s), %d unusable", checked, len(warnings))}
 	}
 	if checked == 0 {
 		return Result{Summary: "no credential references"}
