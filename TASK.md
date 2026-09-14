@@ -131,12 +131,9 @@ Every document names the surface it has not been held against, and that prints
 all 74. **Nothing is listed here**: a list that can be generated is not written
 down, the same rule this file applies to a count.
 
-Four things nobody here can produce come up in it, and **none blocks an
+Two things nobody here can produce come up in it, and **neither blocks an
 engagement**: a **console login**, for the five pages whose source is a UI
-screen; a **cluster**, to watch one of the 40 immutable fields actually be
-refused; a **first customer on a chat platform**, because every BotProvider in
-all eight reference deployments is `generic`; and an **answer from the platform
-team** on the three CRDs in `wiki/platform-unknowns.md` P12 that have no
-documentation anywhere. The immutable list and the credential asks are written
-down now, so the first two add confirmation rather than knowledge. **LINE is the
-one that can still cost a day**, because `botProviderClass` is immutable.
+screen, and a **first customer on a chat platform**, because every BotProvider
+in all eight reference deployments is `generic`. **LINE is the one that can
+still cost a day**, because `botProviderClass` is immutable - choosing wrong is
+a new BotProvider rather than an edit.

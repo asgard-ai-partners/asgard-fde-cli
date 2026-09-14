@@ -72,9 +72,14 @@ two counts answer different questions and the smaller one is not the platform's.
 
 **41 of the enforced rules are exactly `self == oldSelf`** - 40 of the markers -
 and they compare a proposed object against the one already on the cluster, so a
-render, which is one object with no history, cannot see any of them. Nothing
-offline can tell you a chart will be refused at apply. **What can be said
-offline is which fields they are**, and that is the useful half:
+render, which is one object with no history, cannot see any of them.
+
+**That is the platform's side of the line this tool draws, and deliberately so.**
+The apiserver evaluates them on write, synchronously, and refuses - so this is
+not a check that passes locally and explodes at runtime, and replicating it here
+would be a second copy that disagrees the first time either changes. **What is
+worth having offline is which fields they are**, because that is what decides a
+plan before anything is applied:
 
 ### Which fields are chosen once
 

@@ -76,10 +76,12 @@ where the judgement is; this table is only the name.
 | Settings > Connection | `OAuthProvider` + `OAuthCredential`. **Not Data Source**: this is third-party OAuth, where Data Source is a credential you type | `../wiki/settings.md` |
 
 **Four kinds are in the contract and are nobody's to create.** `Sandbox` is the
-runtime object a blueprint produces, so a chart never writes one;
-`ImageGenerationModel`, `TranscriptionModel` and `SourceSetEditorServer` have no
-UI page, no documentation and no material - `../wiki/platform-unknowns.md` P12
-is the open question about whether they are meant to be reached for at all.
+runtime object a blueprint produces, so a chart never writes one; and
+`ImageGenerationModel`, `TranscriptionModel` and `SourceSetEditorServer` are
+**internal** - confirmed 2026-09-14, `../wiki/platform-unknowns.md` P12. Their
+absence from the documentation is the answer rather than a gap, so **a customer
+asking for image generation or transcription needs the platform team and not a
+chart.**
 
 **Checked:** 2026-09-11, the UI's own vocabulary from asgard-docs `f00e0ee` -
 the sixteen pages under `product-suite/odin/features/` - held against the 24

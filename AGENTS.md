@@ -756,10 +756,13 @@ cat internal/corpus/usecase/*.md internal/generate/templates/*.tmpl \
     internal/corpus/wiki/*.md | grep -o 'kind: [A-Z][A-Za-z]*' | sort -u
 ```
 
-That comparison currently leaves three: `ImageGenerationModel`,
-`TranscriptionModel` and `SourceSetEditorServer` are in the contract and in no
-page, template or extract - and in no product documentation either, which is why
-nobody noticed. `TASK.md` carries it.
+That comparison leaves three, and **all three are a deliberate absence rather
+than a gap**: `ImageGenerationModel`, `TranscriptionModel` and
+`SourceSetEditorServer` are internal, confirmed 2026-09-14. A kind with a CRD
+and no material is the state this comparison exists to surface - it just turned
+out, this time, that the answer was "not for an engagement". **Ask before
+writing the page**, because the cost of the two mistakes is not symmetric:
+material for a kind nobody may use invites somebody to use it.
 
 ## Reference material lives outside this repo
 

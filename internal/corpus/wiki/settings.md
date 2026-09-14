@@ -88,10 +88,11 @@ Ask for all three together - a request that comes back one field at a time costs
 a round trip each.
 
 `ImageGenerationModel` and `TranscriptionModel` carry the same `aoai` block with
-the same four required fields. Neither has a UI page or any documentation -
-`../wiki/platform-unknowns.md` P12 is the question of whether an engagement is
-meant to reach for them at all - but if one is reached for, the credentials to
-ask for are these.
+the same four required fields. **Both are internal and neither is a route an
+engagement takes** - confirmed 2026-09-14, `../wiki/platform-unknowns.md` P12 -
+so a customer wanting image generation or transcription is a conversation with
+the platform team rather than a CR to write. The field shape is recorded for the
+day that changes, not as an invitation.
 
 ## Data Source
 
