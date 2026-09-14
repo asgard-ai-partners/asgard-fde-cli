@@ -199,7 +199,12 @@ type namedBody struct{ rel, text string }
 
 func countMaterial(root string) []namedBody {
 	var out []namedBody
-	for _, dir := range []string{"internal/corpus", "internal/needs", "internal/stage", "source"} {
+	// **Everywhere a count about a reference deployment is stated.** `internal/gate`
+	// and `internal/brief` were outside this and both state them: a gate warning
+	// said four deployments run the shared-SourceSet shape and none has a Plugin,
+	// where six do and the one with 29 Plugins is the exemption itself.
+	for _, dir := range []string{"internal/corpus", "internal/needs", "internal/stage",
+		"internal/gate", "internal/brief", "source"} {
 		_ = filepath.Walk(filepath.Join(root, dir), func(p string, fi os.FileInfo, err error) error {
 			if err != nil || fi.IsDir() {
 				return nil

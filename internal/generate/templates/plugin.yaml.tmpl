@@ -29,8 +29,12 @@ apiVersion: asgard-ai.com/v1alpha1
 kind: SkillSet
 metadata:
   name: sk-<<.Name>>
-  annotations:
-    asgard-ai.com/skill-set-name: "<<.DisplayName>>"
+  # **No skill-set-name and no managed-by here, on purpose.** A SkillSet a
+  # Plugin bundles is the bundle's implementation rather than something a
+  # person picks in the UI, so the platform does not present it and there is no
+  # name for it to show. The 29-Plugin deployment carries none on any of them.
+  # A skill set somebody is meant to choose gets its own SourceSet and its own
+  # annotation - `asgard-cli add skillset` writes that one.
   labels:
     {{- include "<<.Chart>>.labels" . | nindent 4 }}
 spec:

@@ -122,11 +122,17 @@ metadata:
     {{- include "<chart>.labels" . | nindent 4 }}
 ```
 
-The annotation key is the kind in kebab case: `agent-name`,
-`semantic-layer-name`, `data-connector-name`, `skill-set-name`,
-`source-set-name`, `syncer-name`, `toolset-name`, `workflow-name`,
-`trigger-name`, `bot-provider-name`, `sandbox-blueprint-name`. Several kinds also
-take a `-description`.
+The annotation key is the kind in kebab case, and **fifteen kinds are
+enforced**: `agent-name`, `semantic-layer-name`, `data-connector-name`,
+`skill-set-name`, `source-set-name`, `syncer-name`, `toolset-name`,
+`workflow-name`, `trigger-name`, `bot-provider-name`,
+`sandbox-blueprint-name`, `knowledge-base-name`, `loader-name`,
+`completion-model-name` and `plugin-name`. Several kinds also take a
+`-description`.
+
+**The one exemption is a SkillSet a Plugin bundles**, which is not presented in
+the UI at all and so has no name to be missing - `../usecase/plugin.md` is the
+shape.
 
 `asgard-cli verify` enforces the display annotations. **The authority for every
 platform key is the workflow-service source, `internal/shared.go`** - read it

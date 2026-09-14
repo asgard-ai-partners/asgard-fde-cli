@@ -86,8 +86,9 @@ apiVersion: asgard-ai.com/v1alpha1
 kind: SkillSet
 metadata:
   name: sk-<domain>
-  annotations:
-    asgard-ai.com/skill-set-name: "<display name>"
+  # No `skill-set-name` and no `managed-by` - see above. The platform does not
+  # present a bundled skill set, so there is no name for it to show, and
+  # `asgard-cli verify` does not ask for one here.
   labels:
     {{- include "<chart>.labels" . | nindent 4 }}
 spec:

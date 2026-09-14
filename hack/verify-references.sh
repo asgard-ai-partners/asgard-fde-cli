@@ -34,12 +34,20 @@ charts=0
 # ours is asgard-<name>-kube. Matching only the first missed a deployment with
 # 15 findings the first time this ran, which is the kind of miss a glob makes
 # silently.
+#
+# **And so does a layout glob.** Three layouts are in the set, not two: a
+# `projects/<name>/chart`, a `tenants/<name>/chart`, and a single `chart/` at
+# the root. The third was missing here, so the deployment with 29 Plugins - the
+# largest chart in the set, and the one shape that earns a shared SourceSet -
+# had never been rendered through the gate at all. A repo that contributes no
+# line to the output looks exactly like a repo with nothing to say.
 for repo in "$parent"/*-kube; do
     [ -d "$repo" ] || continue
     case "$(basename "$repo")" in
         asgard-kube) continue ;;   # the CRD contract, not a deployment
     esac
-    for chart in "$repo"/projects/*/chart "$repo"/tenants/*/chart; do
+    matched=0
+    for chart in "$repo"/projects/*/chart "$repo"/tenants/*/chart "$repo"/chart; do
         [ -d "$chart/app" ] || continue
         values=""
         for v in "$chart"/values-prod.yaml "$chart"/values-dev.yaml; do
@@ -57,7 +65,11 @@ for repo in "$parent"/*-kube; do
         [ "$n" -gt 0 ] && printf '%s\n' "$out" | grep 'FAIL' | sed 's/^/    /'
         total=$((total + n))
         charts=$((charts + 1))
+        matched=$((matched + 1))
     done
+    # **A repo that matched no layout says so.** Silence is what hid the
+    # 29-Plugin chart, and it reads identically to a clean run.
+    [ "$matched" -eq 0 ] && printf '%-26s %-16s no chart in any known layout\n' "$(basename "$repo")" "-"
 done
 
 echo
@@ -65,8 +77,10 @@ echo "$charts chart(s), $total finding(s)."
 echo
 echo "**--rendered sees a chart with nothing around it** - R7 and R11 ask"
 echo "questions whose answer can be in the owning repo rather than in the CR, and"
-echo "there is nowhere to record one any more: .asgard-config.json held"
-echo "olapOnlyLayers and the sampleQuestions exemption, and it is gone from all"
-echo "four reference repos. So a finding here may be answered somewhere this run"
-echo "cannot see. That is a reason to read a finding, not to discount one: R1b"
-echo "was dismissed as exactly this kind of noise once, and it was a bug."
+echo "this tool no longer reads anywhere one could be recorded:"
+echo ".asgard-config.json held olapOnlyLayers and the sampleQuestions exemption,"
+echo "and it is read by nothing in this binary now. A clone may still carry the"
+echo "file - one does - and it means nothing to any of these findings. So a"
+echo "finding here may be answered somewhere this run cannot see. That is a"
+echo "reason to read a finding, not to discount one: R1b was dismissed as"
+echo "exactly this kind of noise once, and it was a bug."

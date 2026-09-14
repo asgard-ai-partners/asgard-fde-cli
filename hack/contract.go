@@ -183,6 +183,59 @@ func checkRequiredBlocks(root string, crds []crd) []string {
 	return out
 }
 
+// checkDisplayAnnotations holds every place that lists the required display
+// annotations against the one list the binary enforces.
+//
+// **`asgard-cli verify` fails a CR without one, and the list is in the gate.**
+// The table shipped into every customer repository named eleven kinds and the
+// gate enforces fifteen, so four kinds - KnowledgeBase, Loader, CompletionModel
+// and Plugin - could fail a gate the repository's own AGENTS.md said nothing
+// about. That is a hand-written copy of a list a program owns, which is the
+// shape this repository has removed four times already.
+func checkDisplayAnnotations(root string) []string {
+	src, err := os.ReadFile(filepath.Join(root, "internal/gate/xref.go"))
+	if err != nil {
+		return []string{err.Error()}
+	}
+	block := regexp.MustCompile(`(?s)displayNameAnnotation = map\[string\]string\{(.*?)\n\}`).FindStringSubmatch(string(src))
+	if block == nil {
+		return []string{"internal/gate/xref.go no longer declares displayNameAnnotation, so nothing says which annotations are enforced"}
+	}
+	var keys []string
+	for _, m := range regexp.MustCompile(`"[A-Za-z]+":\s*"([a-z-]+)"`).FindAllStringSubmatch(block[1], -1) {
+		keys = append(keys, m[1])
+	}
+	sort.Strings(keys)
+
+	// Where a reader meets the list. Each states it in its own form - a table
+	// in the scaffolded AGENTS.md, a sentence in the extract - so what is held
+	// is the set of keys named, not the wording.
+	files := []string{
+		"internal/corpus/usecase/conventions.md",
+		"internal/scaffold/templates/AGENTS.md.tmpl",
+	}
+	var out []string
+	for _, f := range files {
+		data, err := os.ReadFile(filepath.Join(root, f))
+		if err != nil {
+			out = append(out, err.Error())
+			continue
+		}
+		text := string(data)
+		var missing []string
+		for _, k := range keys {
+			if !strings.Contains(text, k) {
+				missing = append(missing, k)
+			}
+		}
+		if len(missing) > 0 {
+			out = append(out, fmt.Sprintf("%s lists the required display annotations and never names %s, which `verify` fails a CR for",
+				f, strings.Join(missing, ", ")))
+		}
+	}
+	return out
+}
+
 // checkStatusKinds holds the statusless-kind claim against the CRDs.
 //
 // **`pipeline manifest --status` turns on which kinds have a status to give**,

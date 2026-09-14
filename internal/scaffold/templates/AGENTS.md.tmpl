@@ -572,6 +572,15 @@ half of `.agents/skills/plain-chinese/` applies: 「訂單查詢」not「智慧�
 | `Toolset` | `toolset-name` | `toolset-description` |
 | `Workflow` | `workflow-name` | — |
 | `Trigger` | `trigger-name` | — |
+| `KnowledgeBase` | `knowledge-base-name` | — |
+| `Loader` | `loader-name` | — |
+| `CompletionModel` | `completion-model-name` | — |
+| `Plugin` | `plugin-name` | — |
+
+**A SkillSet a Plugin bundles is the one exemption** — it is implementation
+detail of the bundle and the platform does not present it, so it carries no
+`skill-set-name` and no `managed-by` label. `asgard-cli verify` knows that shape
+and does not ask for one.
 
 > **The authority for every platform key is `asgard-ai-platform/asgard-workflow-service`,
 > `internal/shared.go`** — every `Annotation*` / `Label*` constant the platform reads, with
