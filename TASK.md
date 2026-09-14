@@ -38,8 +38,8 @@ and whether its source has moved since is what `hack/sources.py` reports.
 | `packages-help` the 14 packages' help against their behaviour | the working tree | 2026-09-11 |
 | `flag-usage` every flag's usage text against what the flag does | the working tree, all 81 | 2026-09-11 |
 | `processors-vs-palette` `wiki/processors.md`'s prose, as opposed to its two tables, which `hack/check-processors.py` now holds against asgard-core and asgard-docs | the two clones as pulled | 2026-09-11 |
-| `stage-prompts` the 10 stage prompts' guidance, as opposed to their command claims | - | **never** |
-| `design-time-skills` the 7 design-time skills' prose, as opposed to their command and path claims | - | **never** - 2,255 lines, of which `proposal-deck` is 1,232 |
+| `stage-prompts` the 10 stage prompts' guidance, as opposed to their command claims | read end to end; the platform claims they carry against asgard-kube `cbd8d70` and asgard-docs `23409b3` | 2026-09-14 |
+| `design-time-skills` the 7 design-time skills' prose, as opposed to their command and path claims | read end to end, 2,255 lines; every platform claim in them against the CRDs and asgard-core `623ceb5` | 2026-09-14 |
 | `deployment-diffs` the eight deployment clones' diffs since the extracts were written from them | the four that had moved, which `hack/sources.py --extracts` names; the other four were unmoved | 2026-09-11 |
 
 ## Where it stands

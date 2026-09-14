@@ -674,11 +674,28 @@ Mail, SMS, a message into a group. Customers ask for this constantly and it
 sounds trivial next to reading a database, so it gets nodded through.
 
 **The platform cannot send mail.** No SMTP, no preset mail toolset, nothing in
-the core. So:
+the core. The only outbound call it can make is `http-request`, which speaks
+HTTPS. So:
 
-    they have an HTTP endpoint that sends mail   we can call it
-    they do not                                  it cannot be built yet, and
+    they have an HTTP mail API                   we can call it
+    they have SMTP credentials                   **that is not an endpoint**
+    they have neither                            it cannot be built yet, and
                                                  that is a question for them
+
+**The middle row is the one that costs a week, because it sounds like a yes.**
+A username, a password and `smtp.<host>:587` is what a customer hands over when
+asked for mail access, and it cannot be used at all - SMTP is a multi-round
+protocol on its own port and a Workflow has no way to speak it. One engagement
+asked for a specific mail API, was told which one, and received SMTP credentials
+for it; they are different authentication mechanisms and not interchangeable.
+
+**Ask for the thing, not for "access":** an HTTP mail API, a key for it, and a
+sender address already verified with that provider. The verification is their
+IT's to do and an unverified sender is refused outright, so it belongs in the
+same sentence as the key rather than in a second round trip.
+
+The same applies to SMS and to a message into a group: the question is always
+whether there is an HTTP API, never whether they "have" the channel.
 
 **Do not let it be mocked silently.** A mocked send that returns success and
 writes "notified" into a log is worse than nothing - somebody later reads that
@@ -1170,9 +1187,14 @@ Then split it into task specs:
 
     asgard-cli task add "<title>" --request <<.RequestID>> --project <project> --complexity M
 
-**Checked:** 2026-09-04, re-read 2026-09-11 against asgard-kube `cbd8d70` for the platform claims it
+**Checked:** 2026-09-04, re-read 2026-09-11 and 2026-09-14 against asgard-kube
+`cbd8d70` and asgard-docs `23409b3` for the platform claims it
 carries, which are few by design - it is an interview, and the shapes belong to
-the pages it points at. `botProviderClass` is immutable (`self == oldSelf`) and
+the pages it points at. The three numbers handed to a customer - 5 requests per
+second, 3 minutes and 30 steps per request - are the quota page's own. **4c was
+corrected**: it offered "an HTTP endpoint that sends mail" against "they do not",
+and the answer that actually arrives is SMTP credentials, which look like the
+first and are the second. `botProviderClass` is immutable (`self == oldSelf`) and
 exactly one of [generic telegram line discord slack] must be present, so asking
 which channel in the same breath is a contract requirement rather than a
 courtesy. Two rows of the "obvious answer" table restated constraints the wiki
