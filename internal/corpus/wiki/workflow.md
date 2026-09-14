@@ -126,10 +126,14 @@ processors; `../usecase/fixed-query-tools.md` is the shape of a zero-parameter q
 ## What goes in a field
 
 Every processor field takes one of three kinds of value - Literal, Expression
-(ECMA5 JavaScript) or Template (Handlebars) - and the six variables in scope,
-the seven built-in functions and the `Blob` shape are in
-[`processors`](../wiki/processors.md). **Expression is ECMA5**, so no `let`, no arrow
-functions and no optional chaining, in any field of any processor.
+(JavaScript) or Template (Handlebars) - and the six variables in scope, the
+seven built-in functions and the `Blob` shape are in
+[`processors`](../wiki/processors.md). **The ECMA5 limit is `execute-script`'s
+Engine field and does not reach an Expression**, which is the same thing this
+page says above and the deployed charts settle: one of them evaluates an arrow
+function. What no chart uses in an Expression is `const` or `let`, and that is
+structural rather than a limit - the field holds one expression, not
+statements.
 
 ## The editor's canvas is a ConfigMap
 

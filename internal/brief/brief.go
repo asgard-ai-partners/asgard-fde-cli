@@ -33,8 +33,13 @@ type Item struct {
 	Subject string
 	Wrong   string
 	Right   string
-	// Where is the document that owns the right version - a path, relative to
-	// the directory this briefing lands in.
+	// Where is what owns the right version: a path relative to the directory
+	// this briefing lands in, or **a command to run**, where the answer is a
+	// fact about this workspace rather than a rule anybody wrote down - which
+	// pipeline the workspace has cannot be a page. `audit-material --links`
+	// resolves the first and `--commands` the second, so both are checked, and
+	// a row whose right version is spread over two documents names the second
+	// inside `Right` rather than taking a second field nothing resolves.
 	Where string
 }
 
@@ -70,7 +75,7 @@ edited and re-rendered; a wrong sentence is in their notes.`,
 			{
 				"whether an anonymous channel knows who is asking",
 				`"it cannot tell who they are, so identity has to wait"`,
-				"An anonymous channel answers \"where is MY order\" perfectly well. The caller supplies identity server-side every turn; only the **model** supplies nothing. **LINE's webhook carries a userId.** Deferring this gives away something you already had",
+				"An anonymous channel answers \"where is MY order\" perfectly well. The caller supplies identity server-side every turn; only the **model** supplies nothing. **LINE's webhook carries a userId**, which is `../guide/requirements.md`'s rather than this pointer's. Deferring this gives away something you already had",
 				"../guide/read-path.md",
 			},
 			{
@@ -246,8 +251,8 @@ built, and reversed. They are obvious in the same way again each time.`,
 			},
 			{
 				"what an Expression may use",
-				"modern JavaScript",
-				"**ECMA5 only** - no `let`, no arrow functions, no optional chaining - in every field of every processor. Which is why every documented example is defensively written",
+				"ECMA5 only, because the documentation says ECMA5",
+				"**That limit is `execute-script`'s Engine field and does not reach an Expression.** Across 520 expression values in the reference charts one evaluates an arrow function, so they are ordinary JavaScript. What none of them uses is `const` or `let`, and the reason is not a restriction: the field holds one expression rather than statements, so a declaration has nowhere to go. Writing an Expression defensively because of the wrong limit costs nothing; **refusing a shape because of it** is the failure - and it has been stated both ways inside one page",
 				"../wiki/processors.md",
 			},
 			{
@@ -287,7 +292,7 @@ not in this repository.`,
 			{
 				"which screens to show",
 				"whatever is in the documentation",
-				"Two of the recommended images carry a `ts-` prefix and the build console's own navigation. **Crop first**, and open every one - nothing records when any was captured",
+				"Two of the recommended images are marked **CROP FIRST** and for different reasons: one dialog names a toolset by its `ts-` prefix, and one card view has the whole Odin console navigation down its left side. Open every one - nothing records when any was captured",
 				"../wiki/screenshots.md",
 			},
 		},
