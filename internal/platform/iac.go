@@ -123,7 +123,8 @@ type Pipeline struct {
 	UpdatedAt        *time.Time         `json:"updated_at"`
 }
 
-// Release is one deployable unit: one chart into one project's namespace.
+// Release is one deployable unit: one chart into one platform Project's
+// namespace - the platform's own object, not a project in a customer's repo.
 type Release struct {
 	ReleaseId            string             `json:"release_id"`
 	PipelineId           string             `json:"pipeline_id"`

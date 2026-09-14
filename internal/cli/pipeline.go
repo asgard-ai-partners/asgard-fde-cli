@@ -26,7 +26,7 @@ func newPipelineCmd() *cobra.Command {
 		Long: `Deploy this repository through the platform's IaC pipeline.
 
 A pipeline binds one repository to a set of releases; a release deploys one
-chart into one project's namespace when a tag or branch matches its rule; each
+chart into one platform Project's namespace when a tag or branch matches its rule; each
 trigger produces a run that walks Plan, Review and Apply. What a repository
 declares is the one ` + "`.asgard-pipeline.yaml`" + ` at its root; the values are held on
 the platform, never in the repository.

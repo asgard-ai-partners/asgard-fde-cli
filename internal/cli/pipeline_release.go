@@ -17,19 +17,25 @@ func newPipelineProjectsCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "projects",
-		Short: "List the workspace's projects, which a release deploys into",
-		Long: `List the workspace's projects.
+		Short: "List the workspace's platform Projects, which a release deploys into",
+		Long: `List the workspace's platform Projects.
 
-A project is what a release deploys into: it decides the namespace, and the
-platform injects that namespace and the project's main environment id into every
+**A platform Project is not a project in this repository**, and both are in play
+at the same moment: ` + "`projects/<slug>/`" + ` here is one chart, and a platform Project
+is the division inside the workspace that chart deploys INTO. Everywhere else in
+this tool the bare word means the first.
+
+A platform Project is what a release deploys into: it decides the namespace, and
+the platform injects that namespace and its main environment id into every
 run as ` + "`.Values.asgard.namespace`" + ` and ` + "`.Values.asgard.projectEnvironmentId`" + `. A
 chart never writes either of them down.
 
 This is the list ` + "`pipeline release create --project`" + ` takes a value from, so it
-also reports whether each project has a main environment. One without is refused
-at create time, and finding that out after typing the id is the wrong end of the
-mistake - a project created before environments were mandatory can easily have
-none.
+also reports whether each has a **main platform Environment** - the platform's
+own object, not this repository's ` + "`dev`" + ` and ` + "`prod`" + `, which are releases. One
+without is refused at create time, and finding that out after typing the id is
+the wrong end of the mistake: a platform Project created before they were
+mandatory can easily have none.
 
 **An empty list is the normal start for a new customer, not a fault.** A
 workspace has no projects until somebody makes one, and
@@ -84,8 +90,8 @@ environment too, so what it creates can take a release immediately.`,
 func newPipelineProjectCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "project",
-		Short: "Create a project for a release to deploy into",
-		Long: `Create and inspect the projects a release deploys into.
+		Short: "Create a platform Project for a release to deploy into",
+		Long: `Create and inspect the platform Projects a release deploys into.
 
 ` + "`asgard-cli pipeline projects`" + ` lists them. This is where one is made.`,
 	}
@@ -101,13 +107,16 @@ func newPipelineProjectCreateCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "create <name>",
-		Short: "Create a project in this workspace",
-		Long: `Create a project in this workspace, and with it the default environment.
+		Short: "Create a platform Project in this workspace",
+		Long: `Create a platform Project in this workspace, and with it the default
+platform Environment. **Neither is a project or an environment in this
+repository**: a release here is what this tool calls an environment, and it
+deploys into one of these.
 
     asgard-cli pipeline project create acme-internal
 
-**A workspace with no projects is where a new customer starts**, not a fault to
-diagnose. A release deploys into a project - the project decides the namespace,
+**A workspace with no platform Projects is where a new customer starts**, not a
+fault to diagnose. A release deploys into one - it decides the namespace,
 and the platform injects that namespace and the project's main environment id
 into every run - so nothing can be deployed until one exists.
 
@@ -210,7 +219,7 @@ func newPipelineReleaseCmd() *cobra.Command {
 		Short: "Create and inspect a pipeline's releases",
 		Long: `Create and inspect a pipeline's releases.
 
-A release is one chart deployed into one project's namespace, triggered by the
+A release is one chart deployed into one platform Project's namespace, triggered by the
 rule its entry in ` + "`.asgard-pipeline.yaml`" + ` declares. The declaration names it; the
 platform holds its values; creating it here is what makes the declaration take
 effect, because an event matching a release that was never created produces no
@@ -235,8 +244,8 @@ func newReleaseCreateCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "create <name>",
-		Short: "Create a release, bound to one project",
-		Long: `Create a release under this pipeline, bound to one project.
+		Short: "Create a release, bound to one platform Project",
+		Long: `Create a release under this pipeline, bound to one platform Project.
 
 The name has to match the one the declaration uses: the platform matches a
 trigger to a release by name, so a release called something else is a release no
@@ -244,8 +253,9 @@ event ever reaches. A name the declaration does not have is allowed and is
 marked "not declared" - which is a warning, not a refusal, because a declaration
 can be added afterwards.
 
---project takes an id, a project name or a namespace from ` + "`pipeline projects`" + `.
-The project decides the namespace and cannot be changed afterwards.
+--project takes an id, a name or a namespace from ` + "`pipeline projects`" + ` - a
+**platform Project**, not one of this repository's charts. It decides the
+namespace and cannot be changed afterwards.
 
 --auto-apply skips the review stop: a plan that succeeds applies immediately.
 Off by default, and worth leaving off for anything that reaches a cluster
@@ -255,8 +265,9 @@ WHAT IT CREATES. The platform prepares the namespace side straight away: this
 release's own Secret and ConfigMap (empty at first), its deploy identity and its
 RBAC. The helm release itself does not exist until a run applies one.
 
-The helm release name is ` + "`iac-<name>`" + ` and has to be unique within the project, so
-a second pipeline declaring the same release name against the same project is
+The helm release name is ` + "`iac-<name>`" + ` and has to be unique within the platform
+Project, so a second pipeline declaring the same release name against the same
+one is
 refused here - that is the lock that stops two pipelines overwriting each
 other's deployment.`,
 		Args: cobra.ExactArgs(1),
@@ -320,7 +331,7 @@ other's deployment.`,
 		},
 	}
 	f.register(cmd, true)
-	cmd.Flags().StringVar(&project, "project", "", "project id, name or namespace to deploy into (required)")
+	cmd.Flags().StringVar(&project, "project", "", "platform Project id, name or namespace to deploy into - not a project in this repository (required)")
 	cmd.Flags().BoolVar(&autoApply, "auto-apply", false, "apply a successful plan without stopping for review")
 	return cmd
 }

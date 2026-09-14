@@ -25,6 +25,12 @@ func newSkillCmd() *cobra.Command {
 		Short: "Fetch the reference material for the Asgard server this repository deploys to",
 		Long: `Fetch the reference material for the Asgard server this repository deploys to.
 
+**These are design-time skills**, under ` + "`.agents/skills/`" + `, read by the coding
+agent while it authors a chart. They are **not** the runtime skills under
+` + "`assets/skills/`" + ` that a Syncer feeds to a deployed agent - nothing here touches
+those, and the bare word means the runtime ones everywhere else in this
+material. The glossary has the pair.
+
 An agent writing an Asgard CR needs facts that move with the platform: which
 Workflow processors exist, what each config key is called, which are required,
 what they default to. Those are not in this binary and must not be.
