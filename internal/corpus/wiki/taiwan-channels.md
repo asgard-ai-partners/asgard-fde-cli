@@ -105,7 +105,7 @@ for a channel skill at full size.
 
 - `asgard-freyr-skills`, read 2026-09-02: the two SHOPLINE skills, their
   frontmatter and the repository's own skill table
-- Searched the same day across the seven reference deployment charts for PChome,
+- Searched the same day across every reference deployment chart for PChome,
   momo, 蝔皮/Shopee and Coupang: no chart, skill or document mentions one
 
 **Unchecked:** which of the other channels offers an open API today. Deliberately

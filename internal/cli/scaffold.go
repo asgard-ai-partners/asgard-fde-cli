@@ -131,7 +131,7 @@ func runScaffold(cmd *cobra.Command, root string, force bool) error {
 	// the user the repo was current, and went on to work from a skill three
 	// versions old.
 	//
-	// **The five conditions below are separated because each is fixed
+	// **The conditions below are separated because each is fixed
 	// somewhere else**, and one of them must not be fixed with --force at all.
 	// They used to be one line saying "yours are older", which was a guess: it
 	// was printed over an engagement's own answers as readily as over material

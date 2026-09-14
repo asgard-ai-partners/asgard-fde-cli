@@ -56,9 +56,9 @@ adding anything is which part it belongs to:
 | stage prompts | what to weigh at one point in the work | `internal/stage/prompts/` |
 | scaffold templates | the part of a customer repo that is the same every time, including the skills the customer's agent loads | `internal/scaffold/templates/` |
 
-**Five of those six are written into a customer repository**, under
-`.agents/skills/asgard-platform/`, by `asgard-cli init` - the scaffold templates
-are the repository. So a change to any of them ships twice: into the binary,
+**All of those but the scaffold templates are written into a customer
+repository**, under `.agents/skills/asgard-platform/`, by `asgard-cli init` -
+the scaffold templates are the repository. So a change to any of them ships twice: into the binary,
 and into every repository that runs `init` after it. `internal/scaffold/corpus.go`
 is what writes them and `scaffold.replaceCorpus` is what replaces them when the
 version moves.
@@ -85,6 +85,35 @@ template does not also get explained in a wiki page. When you are about to repea
 a paragraph, link instead - two copies drift, and the reader cannot tell which is
 current.
 
+**The general form: reference the source of truth, never restate it.** A
+paragraph is the obvious copy; the expensive ones do not look like copies at
+all, and every kind of drift this repository has had is one of them:
+
+    a count in prose            the tree is the source. Adding one page forced
+                                edits to "70 documents", "27 wiki pages" and
+                                "22 extracts" in three files, none of which any
+                                goal asks for
+    a constraint pinned here    the CRD is the source, and it deletes rules as
+                                readily as it adds them
+    a list of what exists       the binary is the source - the checks, the
+                                commands, the kinds
+    a value copied into a       the platform is the source, and copying it
+    chart                       needs a route to obtain it that may not exist
+    the same constant in        one declaration, and the other package reads it
+    two packages
+
+**A checker that holds a copy is not a fix, it is the coupling made
+compulsory.** `hack goal` required TASK.md to state a document count that
+`Goal.md` never asks for; every page added then turned the check red and the
+repair was to retype a number the check had just computed. What it holds now is
+the claim - that every document the binary carries lands in a repository -
+compared set against set, with no number written anywhere.
+
+So before writing a number, a list, or a constant: **ask what owns it, and
+whether this can point at that instead.** If nothing owns it, it is a judgement
+and belongs in prose. If something does, prose gets the judgement and the
+program gets the value.
+
 The reading order is wiki, then extract: an extract assumes you already know the
 platform has that shape. `asgard-cli add <kind>` prints both, in that order.
 
@@ -94,7 +123,7 @@ The shape is the [llm-wiki
 pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) -
 raw sources that are never vendored in, a corpus that is rewritten continuously,
 and a schema a person changes deliberately. `internal/corpus/wiki/README.md`
-states it for the wiki and is the longer version; the five rules below apply to
+states it for the wiki and is the longer version; the rules below apply to
 every part, and each has a check that says so, so a rule that stops holding
 shows up in `asgard-cli gate` rather than in a list somebody has to maintain.
 
@@ -129,8 +158,8 @@ person:
   run it.
 - **a name with no path.** `write-path` and `[`x`](x.md)` both resolve for
   whoever is reading right now and are checked by nothing, so a renamed page
-  breaks them in silence. 141 were outside the graph at once, half of them in
-  the two indexes.
+  breaks them in silence, and the two indexes are where they accumulate,
+  because an index is nothing but references.
 
 **Check: `audit-material --links` and `--bare`.**
 
@@ -202,8 +231,8 @@ without saying why it earns one.
 **A check that is not compiled is a check nobody runs until it is wrong.** These
 scripts are the maintainer's gate and most of them run only when somebody runs
 them by hand, so a typo in a branch that is rarely taken sits there for weeks -
-and one pass added five of them: a missing import, a key that did not exist in
-the map it indexed, a `git grep` output parsed by the wrong field, a helper
+and one pass added every one of these: a missing import, a key that did not
+exist in the map it indexed, a `git grep` output parsed by the wrong field, a helper
 called with the wrong signature, and a substring test that passed on a longer
 word. **Every one of those is a compile error in Go**, and `go build ./...` and
 `go vet ./...` already run on every push.
@@ -334,8 +363,8 @@ answer is silent; everything else is checked by reading what ships.
 
 **The list is not written down here.** It is derived from the binary's own
 flags, this directory's contents and the gate's own subcommands, so it cannot go
-stale - which a list in a markdown file does, and this one had: it named two of
-the twelve Go checks and none of the other ten.
+stale - which a list in a markdown file does, and this one had: it named a couple of
+the Go checks and none of the rest.
 
 `make gate` runs all of it except `--urls`, which is `make audit-urls`. The
 Makefile **mirrors CI rather than defining it**: `.github/workflows/ci.yml` is
@@ -455,43 +484,37 @@ and a green build says nothing about them:
 | `--unchecked` | **what every document says it has NOT been held against**, which is the opposite question to `--unverified` and the only one that had no answer: a page whose marker names a whole surface passed the check and nothing put that surface in front of a reader. Every document is expected to have one, so it cannot fail - and it is what `TASK.md` reads its blocked list out of instead of keeping one |
 | `--term <field>` | the sweep for a renamed platform field, across prose and templates. It cannot fail on its own: it only answers a question somebody asks it |
 | `go run ./hack sources` | how far each clone is behind, which is information rather than a verdict |
+| `go run ./hack introduced` | **the count-shaped lines THIS change adds.** Over the corpus the same detector reports more than a thousand lines and would be a rule to delete rather than soften; over a diff it reports a few dozen. Existing counts are a backlog only reading closes, so there is nothing here to go green - what is bounded is the regression |
 
 **Checked by nothing, and verified by reading.** This is the group that has
-produced every finding, so each row records **what the reading was held
-against** rather than a verdict.
+produced every finding.
+
+**The rows are in [TASK.md](TASK.md), not here.** Two tables of the same
+surfaces is two tables that drift, and these two did - the same slugs,
+different prose, and a check whose whole job was to hold one copy against the
+other. `TASK.md` is where the state of this repository is written down, a
+reading is state, and this file is the rule for what a row has to say.
 
 **A verdict typed into a table is not checkable and does not belong in one.**
 `ok` beside a script is a result copied out of something that can produce it;
 `read` beside a document is an honour-system claim no program can confirm.
 What *is* checkable is whether the thing a reading was held against has moved
-since, and `go run ./hack sources` reports that - which is why the row records a
-source and a date and not a word.
+since, and `go run ./hack sources` reports that.
 
-| surface | last read, and how |
-|---|---|
-| `glossary-collisions`  every word `wiki/glossary.md` says has one meaning here, against every help screen and page | 2026-09-14, and it is the contradiction AGENTS.md lists second - **nothing enforces it and nothing can**, because telling which sense a bare word is in needs a reader. Three were live in the tool's own output, each where both senses are in the same pair of hands: the platform commands called a platform Project a "project" at `pipeline release create --project`, where `projects/<slug>/` means a chart; `pipeline projects` called a main platform Environment an "environment" beside releases named `dev` and `prod`; and `asgard-cli skill` fetches design-time skills while the bare word means the runtime ones a Syncer feeds. **The failures were not new pages redefining a term** - they were help written by somebody who knew which sense they meant |
-| `generated-repo-end-to-end`  the tool run the way an engagement runs it, rather than read | 2026-09-14, extended over the record commands, both flow-agent shapes, `gate --offline`, `doctor`, `reference add`, `local-env` and every command outside a repository. **A third wrong verdict**: an edit inside AGENTS.md's managed region - the half this CLI owns - was reported as `updated`, which `gate` reads as a pass, so an engagement that changed shipped material was told nothing and the next `init` overwrote it in silence. Which side of a differing region moved is not in the bytes; it is whether the CLI that wrote the file is the one running, and the record says. Edits above and below the marker stay a pass, which is what the region exists for. The earlier findings, same day: `init`, `project add`, four `add` kinds, a declared release, `check`, `render`, `verify`. **Two verdicts were wrong, and both are the kind only running finds.** `check` warned that `assets/skills/` is empty on a chart whose SkillSet syncs from git - the ordinary shape, and a warning that repository could never clear, in the command every customer agent runs. And **a chart whose every answer is still `TODO` passes everything**: helm renders the word, the apiserver accepts it, the run succeeds, and a published Agent shows "TODO" to the customer as its sample questions. `verify` has a `placeholders` step now, warning and never failing, silent on all seven production charts. **Extended by running the other shapes**: a flow agent's prompt is a processor config rather than an Agent field, and the supervisor writes it as a `template:` where the first version read only `value:` - the three forms the CRD makes exactly-one-of are three places a placeholder can hide. A fixed query tool's `sql` and every entry's `tooling.description` are named too: `select 1` applies cleanly and answers every question with the same row |
-| `provenance-markers`  every `**Checked:**` and `**Seen in:**` line in the corpus | 2026-09-14. **A count on a provenance line is not evidence of a reading**, and the right number is the dangerous one: it makes the check green and the page unread. Six markers carried tallies - "against 72 gated and 14 ungated tool entries", "against 11 SemanticLayer CRs" - and each now names a scope that cannot be satisfied by counting. `wiki/coverage.md` is the opposite case and was the one page whose counts are the claim with nothing recomputing them: `go run ./hack shapes` renders all seven deployments and holds the table both ways, so a kind in a chart with no row fails too |
-| `extracts-vs-charts`  the 22 extracts against the charts they came from | 2026-09-11, every field name against the pulled clones and the CRDs, every count by rendering all 19 charts |
-| `wiki-vs-docs`  the 27 wiki pages against asgard-docs | 2026-09-14, and **the scope is computed now**: `go run ./hack coverage --drift` lists every cited page that has moved since the commit the citing document names, and it is at 0. Getting there was the finding: the four that had moved were read on 09-11 and **the readings were never recorded**, so the commit beside each citation still said `f00e0ee` and the check went on reporting work already done. Each now names the commit it was held against. The check was wrong in two directions of its own - it measured every URL in a document from that document's oldest commit, so one stale entry held a whole page back, and it read a URL template and a fenced example of the source-block shape as citations. The prose citing a page that has not moved stands at its own reading |
-| `stage-prompts`  the 10 stage prompts | 2026-09-14, all 2,355 lines read end to end for the guidance as well as the command claims, and every command and flag each writes run against the binary. The three figures handed to a customer - 5 requests per second, 3 minutes, 30 steps - are the quota page's own; `botProviderClass` immutable and exactly one class block present are the CRD's. **Four corrections**: the mail question offered "an HTTP endpoint" against "they do not", and the answer that actually arrives is SMTP credentials; `08-deploy.md` told a reader to grep `.github/workflows/` for a Syncer wait, and **a repository this tool writes has no CD workflow at all** - the rollout is the platform's - which the plugin's `gate` command had copied; `02-projects.md` said `verify` would report an Agent with no capability in a chart that has no Agent, where what it actually reports is R11; and it credited this tool with deriving the namespace, which the platform does |
-| `scaffold-templates`  the 2,783 lines a customer repository receives that are not skills | 2026-09-14. `AGENTS.md.tmpl` is 912 of them and is the AGENTS.md every engagement then works under. Its six `spec.` fields are in asgard-kube `cbd8d70`, its acceptance-gate table matches the binary's eight steps exactly, and its shape-C field forms match the CRD. **It disclosed its one copied list** - the gate table, with the mechanism that reports when it moves - which is what the other hand-written lists found this week did not. What it was missing is the `sourceSetMounts` rule that takes a whole deployment down, and it points at it now |
-| `design-time-skills`  the 7 design-time skills' prose | 2026-09-14, read end to end - 2,255 lines, of which `proposal-deck` is 1,232. Every platform claim held against the CRDs: the nine DataConnector class blocks name every required field, `SemanticLayer.sampleQuestions` is strings, gate R4 exists. **One correction**: `semantic-layer-modeling` said nothing narrows a layer once it is mounted, which is true of the Agent path and not of the processor one, where `semanticLayer.allowedCubes` is exactly that narrowing |
-| `needs-and-briefs`  the 7 needs lists and 4 briefings, which are Go rather than markdown | 2026-09-14, and **this was the second surface in none of the three groups** - two of the six parts of the corpus, landing in every repository, read by nothing but `--links` resolving their pointers. Every platform claim holds: the four BotProvider class blocks require exactly what the rows ask a customer for, `botProviderClass` is immutable, `description` is required on every cube, dimension and measure. **The finding is a contradiction the material had with itself**: a briefing told a chart author an Expression is ECMA5 - no arrow functions - while `../wiki/processors.md` settles the opposite off the deployed charts, and `../wiki/workflow.md` said both things 77 lines apart. Also one row pointing at a document that does not own the claim it bolds. **The repair repeated the page's own numbers and they were wrong too** - 520 values, one arrow function, no `const` anywhere; recounting gives 449, 80 and 26, because the count had been taken over a set that excluded the deployment doing most of it |
-| `command-help`  the 2,866 lines of `--help` across 77 screens, which is the largest surface the FDE reads and was in no group | 2026-09-14, every screen read end to end and every countable claim recomputed. **Six defects, four of them contradictions between two screens**: `pipeline` told a reader to run `helm lint` by hand, which `gate` and `doctor` both forbid and which fails on every chart that labels anything; `login` taught `prod` and `dev` as built-in profiles, which the code removed - it prints a migration message saying so - while every other screen says `default`, and both READMEs carried it too; `verify` called 79 `XValidation` markers "79 rules", the exact confusion `go run ./hack tables` exists for, and `internal/cli` was not in the files that check reads; `pipeline manifest --status` named Agent, SemanticLayer, Plugin, SkillSet and SandboxBlueprint as declaring no status when all five do, and a test's comment rested on the same belief; `render` gave a pipe into `asgard-cli check xref -`, which is not a subcommand - `check` reads it as a project name; and `issue-report` said `--new` fills three of the five sections when it fills one. `gate`'s own example block had a paragraph inside it |
-| `gate-messages`  the 392 error and warning strings `check`, `verify` and the CLI print, and `hack/verify-references.sh` | 2026-09-14, the 33 that carry a claim read against the CRDs and the deployment clones. **The finding was what the script could not see**: it looked for two chart layouts and the set has three, so the largest chart in it - 105 CRs, 29 Plugins - had never been rendered through the gate at all, and a repo contributing no line looked exactly like a clean one. Rendering it found the gate failing a documented shape 29 times: a SkillSet a Plugin bundles carries no `skill-set-name` on purpose, which `../usecase/plugin.md` says and its own skeleton then contradicted, as did the generator. The warning about that shape quoted "four reference deployments and none has a Plugin" - six run it, and the one with 29 Plugins is the exemption - and it reads this chart now instead of quoting a count. The remaining 151 findings are that chart's own, in somebody else's repository |
-| `generator-templates`  the 1,100 lines `add` writes into a customer's chart | 2026-09-14, every claim against asgard-kube `cbd8d70` and asgard-core `623ceb5`. **Three defects, and the first is a write path**: the zero-parameter query tool - the shape whose whole argument is that no user input reaches SQL, for an anonymous audience - omitted `allowWrite`, which the definitions default to **true** and describe as permitting INSERT, UPDATE, DELETE and DDL. The extract's skeleton omitted it too. `go run ./hack write-path` now fails any place that mounts a database without writing it out. Second, two templates said **CD fails a project with no Syncer**, which is the belief `08-deploy.md` was corrected on - the rollout is the platform's and the gate warns. Third, the Trigger's cron comment taught a CRD pattern that upstream **deleted** because it had copied cron wrong in both directions, rejecting ranges and comma lists the API server accepts: the expensive direction a pinned copy goes stale in, and `wiki/automation.md` carried it as well |
-| `indexes-and-counts`  the two indexes, and every count in the material weighed against what a reader does with it | 2026-09-14. **The alias table routes by word and `--links` cannot see a word**, so `稽核 -> logging` sent every reader translating that term to a search the corpus has never matched. `go run ./hack aliases` greps the landed tree for every term; its first version reported a correct row as dead by cutting the cell at "and", which is where the row names the skill that answers it. **The rest of the pass was deletion rather than repair.** `wiki/index.md` carried a seven-row ledger deriving its coverage figure by hand and a record of what the figure used to be; both are gone, and the one row `go run ./hack coverage` recomputes is what is left. Six counts that stood in for a yes - how many expression values use an arrow function, how many uses of `prevPayload` - are replaced by the deployed expression that answers the same question and cannot rot; two of them had been recounted this week and were still wrong, because each recount used a different set. **Writing a checker for a count like that is treating the symptom**, and the rule is now in `.agents/skills/consistency-checks/SKILL.md` |
-| `flag-usage`  every flag's usage text against what the flag does | 2026-09-11, all 81 |
-| `processors-vs-palette`  `wiki/processors.md`'s prose, as opposed to its two tables | 2026-09-11. The tables are `go run ./hack processors`'s now, and writing it found six defects reading had not - a documented default that upstream deleted, a page the naming table said did not exist, an `automation-tool-response` type it said had none, a `processor/entry` URL that 404s, and `validate-payload`'s `schema` marked as having a default, which told a reader that omitting it was a silent choice when it is an error. What is still nobody's but a reader's is the **palette at second hand**: asgard-docs records it from `asgard-ai-platform-web`, which nothing here clones |
-| `deployment-diffs`  the eight deployment clones' diffs since the extracts were written from them | 2026-09-11. Four had moved and were read; `go run ./hack sources --extracts` says which and by how much. What came out: the consent gate being one field on the Toolset and both beliefs about it wrong, the `~/.claude` mount that kills the driver, a writable store needing its own Syncer-less SourceSet, that SMTP cannot be reached at all, and the SHOPLINE page count being 88 rather than the 93 written here |
-| `root-documents`  Goal, AGENTS, APPROACH, STRUCTURE, README | 2026-09-14, and **this was a surface in none of the three groups** - the state this section says every finding comes out of, in the files that state the rules. Goal.md holds: every claim in it is one `go run ./hack goal` checks, including that `issue-report` prints `gh issue create`. APPROACH.md had the disproved version of "a pinned copy can only go stale in the safe direction" and the marker count written as the CRDs', in a paragraph the CEL check could not reach because its patterns did not cross a line break. This file's two hand-written lists had both drifted, and its twelve questions were re-checked claim by claim - the four contradictions are all still described accurately and one count had grown. STRUCTURE.md restated README's directory listing and named four of ten test files; **README.md documented 23 of the 25 commands** - `local-env` and `reference` were in the binary and in no README, which `--commands` cannot see because it asks the opposite question. `go run ./hack doc-paths` asks this one now |
-| `packages-help`  `internal/localenv`, `platform`, `auth`, `work`, `skills`, `gitrepo`, `render`, `binding`, `chart`, `tool`, `browser`, `version`, `pipelineconfig`, `repo` | 2026-09-11, read end to end - about 7,300 lines. Every claim in a doc comment or a help screen that could be checked was: the loopback server's token, Host check and CSP; that `add` runs with no helm on PATH; that `doctor` reports a missing optional without failing; that a secret's value never comes back; that `profile show` prints where each field came from; every literal repository path each package emits, against a scaffolded tree |
+So a row records three things and no fourth:
 
-**Every row in the third group carries a slug**, and `TASK.md`'s pass carries
-the same slug for the same surface. `go run ./hack pass-list` compares the
-slugs in both directions, because the two are worded for their own context and
-comparing their prose drifts with them.
+    surface        what it is, named so that a reader can tell whether their
+                   change lands in it
+    held against   the clone, the commit, the binary, the rendered chart - the
+                   thing that can be gone back to. **Not a count**: a tally is
+                   evidence something was counted and reads exactly like
+                   evidence something was read
+    when           the date
+
+**What a reading found goes where it was fixed, not into the row.** A
+correction belongs on the document it corrects, a rule belongs in this file,
+and the history belongs in `git log` - a findings column grows without bound,
+is read by everybody, and is the changelog this file's first section forbids.
 
 **Add a row when you add a surface, and move one up when you write its
 check.** A surface that is in none of the three groups is one nobody has
@@ -577,6 +600,41 @@ Say what was verified and what was not. "The extracts are correct" and "the
 extracts' YAML skeletons validate against the CRD" are different claims, and
 reporting the first when you did the second is how a review passes something
 broken.
+
+**Do not ask whether to commit until you have finished checking.**
+Asking moves the checking onto the person answering, and they answer on the
+assumption that you already did it. A pass that ends with a question is a pass
+that ended early.
+
+What that means in practice, after the last edit and before the question:
+
+    every check, again, from the top   not the ones you were watching
+    what else claimed the thing        `audit-material --term`, and let its
+                                       scope be the scope
+    what YOU just introduced           `go run ./hack introduced`, then the id
+                                       you added, the pointer you moved, the
+                                       wording a check matches on
+
+**The scope of a sweep is the tool's, not yours.** Deciding by hand which files
+a sweep covers is the same mistake as writing a list that can be generated, and
+it fails the same way: the set you remember is the set you have been editing,
+which is not where the other copy is. `--term` reads every surface this
+repository is responsible for - the material, the scaffold templates, every
+`--help` screen, the CLI's own string literals, these documents, the maintenance
+skills and the gate under `hack/` - because `everySurface` assembles it once. It was three
+hand-written assemblies and they were not the same set; the narrowest was
+`--term`'s, so a sweep run exactly as this section instructs came back clean
+over surfaces it had never read.
+
+The third is the one that gets skipped, because it is not a surface anybody
+listed - it is a surface you created in the last ten minutes. A row added to
+`platform-unknowns.md` with an id that already existed, and four pointers at
+the old number, went out under "要 commit 嗎?" twice. **Nothing was red.** The
+identifiers were new, so no check knew to hold them against anything, and the
+question was asked as though the work were finished.
+
+**A question about the work is not a substitute for finishing it**, and "the
+gate is green" is not the same sentence as "I checked what I changed".
 
 **Never annotate a source with a count.**
 A provenance marker records **what was read and the commit it was read at**, and
@@ -721,7 +779,7 @@ That one was resolved by a decision rather than a repair - only the layout
 language is borrowed now, not the process - but the shape stands.
 
 **None of the four is enforced by anything**, and that is what separates them
-from the five rules above, each of which has a check. A convention catches this
+from the rules above, each of which has a check. A convention catches this
 kind of thing only after somebody has been caught by it.
 
 What would help is not a detector - all four read correctly line by line - but
@@ -733,7 +791,7 @@ reader to ask a customer something, which is where filter 0 applies.
 
 ## Three questions the material has to keep answering
 
-The twelve above are asked of a change. These three are asked of the tool,
+The questions above are asked of a change. These three are asked of the tool,
 because they are what it is for, and each has been *nearly* true while missing
 something specific. None of them is settled by reading - run the check.
 
@@ -816,7 +874,7 @@ material for a kind nobody may use invites somebody to use it.
 
 ## Reference material lives outside this repo
 
-Eleven repositories, read-only, never vendored in. **The URL is the source of
+The reference repositories, read-only, never vendored in. **The URL is the source of
 truth; where you happen to clone it is not** - a local path is true on one
 machine and wrong on every other:
 

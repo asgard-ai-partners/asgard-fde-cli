@@ -267,8 +267,8 @@ func newWorkspaceShowCmd() *cobra.Command {
 
 The reason is the useful half. A command that acted in the wrong workspace is
 the failure the resolution order exists to prevent, and the order is:
---workspace, then ASGARD_WORKSPACE, then the checkout's .asgard-cli.yaml. Those
-three are the whole list. **There is no last resort and no machine-wide
+--workspace, then ASGARD_WORKSPACE, then the checkout's .asgard-cli.yaml. That
+is the whole list. **There is no last resort and no machine-wide
 default**: every answer is either on the command line or in a committed file, so
 two people in the same checkout get the same one.
 

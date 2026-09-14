@@ -3,7 +3,7 @@
 Every other page here describes one object. This one describes the **order**,
 because the order is not written down anywhere else - not in the product
 documentation, which has a page per screen, and not in the extracts, which have a
-shape per CR. Assembling it from three pages on the spot is how it was done
+shape per CR. Assembling it from the pages on the spot is how it was done
 before this page existed, and everyone assembled it slightly differently.
 
 Read it when a customer has just handed over access and the question is "so what
@@ -188,9 +188,9 @@ The shapes it passes through are `../usecase/agent-hub.md`,
   kinds the CRDs define. `HttpTool`, `KnowledgeDrive` and `FlowAgent` are not
   among them, which an earlier draft of this table asserted
 - **Checked** 2026-09-02 against three of those images, opened rather than
-  listed: the Data Source Provider list (nine entries, every one a database, no
+  listed: the Data Source Provider list (every entry a database, no
   HTTP option), the Managed Agent form (the four Prompt fields and the live
-  preview), and the Sindri home page (five Available Agents, each card showing
+  preview), and the Sindri home page (the Available Agents, each card showing
   its Description as routing text)
 
 **Unchecked:** the order itself. Every step is documented and every claim about a

@@ -37,6 +37,12 @@
 # **沒宣告的 key 不會被注入。** 只在 Platform 上設值不算 —— 那筆變數會被存起來但
 # 永遠不注入,`variables list` 標它 ORPHAN,Run 報 vars/orphan,而 lint、render、
 # CRD dry-run 全部是綠的,只有 runtime 取不到。
+#
+# **反過來更安靜:宣告了、也設了值,卻沒有任何 template 讀它。** 它照樣每次 Run
+# 都被建出來、注進一個沒有 CR 指向的 Secret,`variables list` 看得到值,沒有
+# vars/orphan,本機全綠。這通常發生在形狀改了、原本讀它的 template 被換掉,
+# 結果留下一把還在輪替、卻對應到這個 chart 已經不再連的系統的憑證。
+# `asgard-cli verify <release>` 會警告 —— 要嘛補上讀它的 template,要嘛把這行刪掉。
 
 # **一個 Project 通常要一個環境一條 Release,不是一條。** dev 與 prod 共用同一份
 # chart 目錄,差別只在 name 與 on.pattern,而且各自 bind 到**不同的 Platform

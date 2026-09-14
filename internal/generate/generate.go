@@ -11,6 +11,7 @@ package generate
 import (
 	"embed"
 	"fmt"
+	platform "github.com/asgard-ai-partners/asgard-fde-cli/internal/render"
 	"os"
 	"path/filepath"
 	"slices"
@@ -386,6 +387,7 @@ func SecretKeysWritten(results []Result) (secretKeys, configKeys []string, err e
 
 // refKeys reads the `key:` that belongs to each secretKeyRef / configMapKeyRef
 // block, and nothing else.
+
 func refKeys(body string) (secret, config []string) {
 	lines := strings.Split(body, "\n")
 	for i, line := range lines {
@@ -402,6 +404,7 @@ func refKeys(body string) (secret, config []string) {
 		indent := len(line) - len(strings.TrimLeft(line, " "))
 		// The block ends at the first line indented no further than the ref
 		// itself, so a `key` belonging to the next field is never picked up.
+		var key, object string
 		for _, next := range lines[i+1:] {
 			if strings.TrimSpace(next) == "" {
 				continue
@@ -411,9 +414,21 @@ func refKeys(body string) (secret, config []string) {
 			}
 			if v, ok := strings.CutPrefix(strings.TrimSpace(next), "key:"); ok {
 				if v = strings.TrimSpace(v); v != "" && !strings.Contains(v, "{{") {
-					*into = append(*into, v)
+					key = v
 				}
 			}
+			if v, ok := strings.CutPrefix(strings.TrimSpace(next), "name:"); ok {
+				object = strings.TrimSpace(v)
+			}
+		}
+		// **A key in an object the platform owns is not one to declare.** The
+		// closing message exists to say what the engagement has to put in the
+		// release's own Secret, and `preset-agent-hub` is not that: the
+		// platform creates it, the value is already in it, and declaring the
+		// key anyway writes a variable into the release's Secret that nothing
+		// reads - which is invisible to lint, render, the dry run and the plan.
+		if key != "" && !platform.PlatformOwnedObjects[object] {
+			*into = append(*into, key)
 		}
 	}
 	return secret, config
@@ -580,7 +595,7 @@ func Write(root string, kind Kind, opts Options) ([]Result, error) {
 		Chart:     opts.Project,
 		CRName:    kind.Prefix + opts.Name,
 		ValuesKey: valuesKey(opts.Name),
-		SpecSlug:  repo.SpecSlug,
+		SpecSlug:  repo.SpecSlugIn(root),
 	}
 	if data.DisplayName == "" {
 		data.DisplayName = data.CRName

@@ -1,28 +1,21 @@
 # Chaining processors, and the graph that wires them
 
-A Workflow with more than one step: what the thirteen processor types are, what
-crosses between them, and how `relationships` decides the order. This is the
+A Workflow with more than one step: what crosses between the processors, and how
+`relationships` decides the order. This is the
 mechanism every other shape is built out of.
 
 **Seen in:** a two-call mail sender, a search tool that reshapes its API's
 response, a conversation loop, and a nine-branch content pipeline.
 
-**Checked:** 2026-09-02, re-read 2026-09-14 across all seven reference
-deployments. Every construct this page cites is written in at least one of
-them, `??` included; `prevPayload` is in all but two and is how a chain passes
-anything at all.
-
-**The tallies that were here are gone.** They said 134 uses and 20, and no
-method reproduces either: each recount used a different set, and every one left
-out the deployment writing most of them. A count is the right evidence when the
-count is the point - how much of a chart `add` never writes, how many pages a
-back office has - and the wrong evidence for "does this work", where a named
-construct that is deployed today says more and cannot rot.
+**Checked:** 2026-09-02, re-read 2026-09-14 across every reference
+deployment. Every construct this page cites is written in at least one of
+them, `??` included; `prevPayload` is in nearly all of them and is how a chain
+passes anything at all.
 
 **Unchecked:** nothing outstanding. The replacement of prevPayload by an http-request is stated in a deployment's own comment in the same words.
 
 **Read the platform side first:** `../wiki/workflow.md` -
-the processor types and the three ways a config takes a value. This page assumes you have.
+the processor types and the ways a config takes a value. This page assumes you have.
 
 ## When this shape, and when not
 
@@ -39,7 +32,7 @@ Reach for **more** processors when:
   the one that gets left out.
 
 Do **not** add processors to express what a prompt should decide. A workflow node
-per conversation topic puts the routing in two places: one deployment removed six
+per conversation topic puts the routing in two places: one deployment removed its
 topic workflows and let the orchestrator route from the prompt instead. Keep the
 conversation graph minimal - greet, listen, answer, back to listen, plus a
 failure branch.
@@ -50,10 +43,17 @@ failure branch.
     asgard-cli add querytool <name> --project <project> --connector dc-<name> --toolset ts-<name>
     asgard-cli add httptool <name> --project <project>
 
-Each writes a working chain with its relationships already wired, including the
-failure branches. Add processors to that rather than starting from an empty
-`spec` - the parts that fail silently (the display annotation, the workflow-set
-labels, the environment id) are already right.
+Each writes a working chain with its relationships already wired, and
+`http-request`'s failure branch with it. Add processors to that rather than
+starting from an empty `spec` - the parts that fail silently (the display
+annotation, the workflow-set labels, the environment id) are already right.
+
+**Check what you add is wired.** A Workflow whose processors carry no
+`relationships` is legal, passes every check, and answers nothing: the run
+reaches the entry's `handlingProcessor` and stops there, with the rest dead.
+`gate` W3 reports exactly that, and
+`../wiki/green-and-doing-nothing.md` is the way in when the symptom is silence
+and the kind is not yet known.
 
 ## The skeleton
 
@@ -159,22 +159,11 @@ spec:
 It goes in `projects/<project>/chart/app/templates/workflow/wf-<name>.yaml`, or
 `templates/tool/` where the chart groups tool workflows.
 
-## The thirteen processor types
+## The processor types
 
-| type | does |
-|---|---|
-| `listen-message` | wait for user input, including files |
-| `push-message` | send a message, or return a tool's result |
-| `llm-completion` | call a model synchronously; supports structured output |
-| `stream-llm-completion-message` | stream a model's reply; the agentic one |
-| `router` | branch on conditions |
-| `http-request` | one HTTP request |
-| `update-context` | put values into context |
-| `query-database` | query through a DataConnector |
-| `generate-embedding` | vectors, for RAG preprocessing |
-| `retrieve-knowledge` | search a knowledge store |
-| `execute-script` | custom logic |
-| `validate-payload` | validate input and files |
+**The list lives in `../wiki/processors.md`**, held against the platform's own
+definitions. It is not restated here: a second copy drifts, and a reader who
+meets both cannot tell which one is current.
 
 In practice a handful carry almost everything: `query-database` and
 `push-message` dominate the real charts, with `update-context` and
@@ -224,7 +213,7 @@ expression: |-
 Note the parentheses around a bare object literal - `({ ok: true })` - without
 them it parses as a block.
 
-The three config value types are `value` (static string), `expression`, and
+The config value types are `value` (static string), `expression`, and
 `template` (Handlebars, `{{name}}`). One per config.
 
 ## The graph

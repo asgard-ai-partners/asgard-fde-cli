@@ -44,7 +44,7 @@ the freshness question in halves. ` + "`update`" + ` does not touch that half: i
 written by ` + "`asgard-cli init`" + ` and checked by ` + "`asgard-cli gate`" + `'s ` + "`shipped`" + ` step.
 
 The version is a number the platform declares and a person increments. It is
-not a digest of the material, deliberately: three upstreams feed it - a
+not a digest of the material, deliberately: several upstreams feed it - a
 cluster's CRDs, the runtime's own constants, the written documents - and any of
 them can move for a cosmetic reason. Deriving the version from them would tell
 every repository in the world that it was behind because a map iterated

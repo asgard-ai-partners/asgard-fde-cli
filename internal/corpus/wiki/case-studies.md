@@ -13,7 +13,7 @@ concrete demonstration of how the three products divide the work.
 A fourth is a different shape: an AI help desk on an e-commerce site, using a
 Flow Agent rather than a Managed Agent.
 
-## The three angles in sequence
+## The angles in sequence
 
 **Mimir, before the decision.** An operations person selects the POS store
 semantic model and asks which stores hold more of a product than their safety

@@ -92,10 +92,10 @@ DO NOT FILE
 
 --new WRITES THE REPORT
 
-**One of the five is something this tool already knows, and it is the required
+**One section is something this tool already knows, and it is the required
 one.** Section 2 is the state you were in, asking for it by hand is why it
 arrives missing, and it is what separates a bug report from a complaint. --new
-emits the body with that section collected and the other four marked TODO:
+emits the body with that section collected and the rest marked TODO:
 
     asgard-cli issue-report --new > report.md
     asgard-cli issue-report --new | gh issue create --repo asgard-ai-partners/asgard-fde-cli --body-file -
@@ -135,10 +135,10 @@ you write.`,
 
 // writeReport emits the issue body.
 //
-// The sections are the five in this command's help, in that order, because a
+// The sections are the ones in this command's help, in that order, because a
 // reader of the repository's issues should not have to learn two shapes. What
 // differs is who fills each one: the tool fills what it can observe and marks
-// the rest TODO, rather than describing all five and hoping.
+// the rest TODO, rather than describing them all and hoping.
 //
 // It works outside a repository. Half this tool's job is answering a question
 // asked before there is a directory, and a gap found there is worth the same

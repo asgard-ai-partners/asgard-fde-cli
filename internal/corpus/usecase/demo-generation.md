@@ -4,10 +4,9 @@ Building something that looks like a prospect's business when you have none of
 their systems, none of their data and no credentials - and having it be a real
 deployment rather than a slide.
 
-**Seen in:** a generator carrying twelve industries, ten of them with a complete
-chart. It is the largest body of Asgard chart material in existence: 123
-SkillSets, 80 Workflows, 64 SemanticLayers, 64 Agents and 51 Toolsets, all
-produced from one source shape repeated per industry.
+**Seen in:** a generator carrying an industry per demo, not all of them with a
+complete chart. It is the largest body of Asgard chart material in existence,
+and every CR in it is produced from one source shape repeated per industry.
 
 **Checked:** 2026-09-02 against that repository - its wiring diagram, the
 frontmatter of a retail story, its consistency checker, and the CR kinds each

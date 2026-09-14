@@ -244,10 +244,10 @@ the customer's live systems, which is why they are reviewed before they are made
 ### Data and secret dependencies
 
 TODO. **How many platform identities does this deployment need, and which CRs share one?**
-` + "`SourceSet.apiKey`" + `, ` + "`Toolset.apiKey`" + ` and ` + "`BotProvider.adminApiKey`" + ` are all platform resource
-credentials; the skeleton points them all at one key, ` + "`asgard_resource_api_key`" + `, and whether
-that is right here is a question about rotation scope and blast radius. Answer it, do not inherit
-it. Each Release has its own Secret either way.
+` + "`SourceSet.apiKey`" + `, ` + "`Toolset.apiKey`" + ` and ` + "`BotProvider.adminApiKey`" + ` all read the Secret the
+platform mints per namespace, so the skeleton declares nothing for them. What this section is for
+is every OTHER credential: which systems this deployment reaches, and whether each needs its own
+identity - a question about rotation scope and blast radius. Answer it, do not inherit it.
 
 ### External API contracts
 

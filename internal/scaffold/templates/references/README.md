@@ -43,7 +43,7 @@ is skimmed once:
   them whether they found drift or a guess.
 
 Do not paste large material into a request or a task spec. Put it here and cite
-it from there: a spec that inlines forty pages stops being readable as a spec.
+it from there: a spec that inlines the whole of an API's documentation stops being readable as a spec.
 
 > Related but **not** here: domain knowledge the *agent* needs at runtime (status-code semantics,
 > cross-system entity mapping, aggregation conventions) belongs in a skill under

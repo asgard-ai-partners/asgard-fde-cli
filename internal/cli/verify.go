@@ -55,12 +55,15 @@ server-side dry run all pass:
     tell either from a mistake -
     ".agents/skills/asgard-platform/usecase/agent-hub.md" argues for the shape
     each one departs from
-  - every credential reference reads a key ` + "`.asgard-pipeline.yaml`" + ` declares.
-    **Setting a value on the platform without declaring the key is the silent
-    half**: it is stored, never injected, ` + "`variables list`" + ` marks it ORPHAN, and
-    lint, render and the dry run all stay green while the CR resolves to
-    nothing at runtime. Needs a release name, because the declaration is per
-    release
+  - every credential reference reads a key ` + "`.asgard-pipeline.yaml`" + ` declares,
+    **and every declared key is read by something**. Setting a value on the
+    platform without declaring the key is stored and never injected -
+    ` + "`variables list`" + ` marks it ORPHAN and the run reports ` + "`vars/orphan`" + `. The
+    reverse says nothing at all: a declared key with no reader is created and
+    injected on every run into a Secret no CR names, ` + "`variables list`" + ` shows a
+    value, and every check here is green, which is what a shape change leaves
+    behind when whatever read the key is replaced. Both are warnings, and both
+    need a release name, because the declaration is per release
   - the generator's own TODOs, still in the render. **A warning, never a
     failure** - a chart carries them through the whole middle of an onboarding.
     This is the last place between ` + "`asgard-cli add`" + ` and a tag where anybody
@@ -104,7 +107,7 @@ text a warning and a failure differ by one word at the left margin while only
 one of them is fatal.
 
 Run ` + "`gate`" + ` after changing anything; run this one alone while you are
-fixing a single finding and do not want the four steps in front of it each
+fixing a single finding and do not want the steps in front of it each
 time.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			out := cmd.OutOrStdout()
@@ -255,7 +258,7 @@ func wrap(s string) string { return wrapAt(s, 72, 7) }
 // runGates runs every check over one render and reports them under one heading.
 // gates runs every check on one render, in the order they are reported.
 //
-// It is a list rather than six calls in a loop body so that the text output and
+// It is a list rather than a call per check in a loop body so that the text output and
 // `--format json` cannot disagree about which checks ran: the pair an agent
 // acts on hardest is this one and `check`, and a gate that reports a different
 // set of checks depending on how it was asked is the worst kind of wrong.

@@ -43,3 +43,16 @@ var Docs embed.FS
 //
 //go:embed .agents/skills/*/SKILL.md
 var Skills embed.FS
+
+// Hack is the maintainer's gate - `hack/`, which is Go for the reason
+// AGENTS.md gives: a check that is not compiled is one nobody runs until it is
+// wrong.
+//
+// **Embedded because it is prose an audience reads.** `go run ./hack list`
+// prints each check's own `What:` string, and those describe what a check
+// covers to the only person who can act on it. Without this they are outside
+// every sweep: a check whose behaviour moves leaves its description standing,
+// and the description is what the next maintainer believes.
+//
+//go:embed hack/*.go hack/internal/*/*.go
+var Hack embed.FS

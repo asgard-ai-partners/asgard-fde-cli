@@ -73,6 +73,30 @@ spec:
             -- Put the reasoning in this comment: soft deletes, why a COUNT is
             -- DISTINCT, how a path is built. There is nowhere else for it.
             select 1
+
+    # **The query needs somewhere to come out.** `resultField` names the
+    # variable the rows land in; this is what returns them to the caller. A
+    # query with no response processor runs, succeeds, and answers nothing -
+    # and every deployed fixed query tool has this pair.
+    - name: proc-response
+      type: push-message
+      labels:
+        display_name: Response
+      configs:
+        - name: payload
+          expression: |-
+            (() => {
+              return rows;
+            })()
+
+  # **`relationships` is what runs the chain.** Without it the run starts at
+  # the entry's handlingProcessor and stops there. The CR is legal either way,
+  # so helm lint, CRD validation, the server-side dry run and `asgard-cli
+  # verify` are all green while the tool returns nothing - and an agent handed
+  # silence answers from memory.
+  relationships:
+    - from: {processor: proc-query, relationName: success}
+      to: {processor: proc-response}
 <<if .ToolsetExists>># The Toolset <<.Toolset>> already exists in this chart, so it is not written
 # again here: two CRs with one name means whichever applies last replaces the
 # other, and the tools in the discarded copy are silently gone.
@@ -106,11 +130,23 @@ metadata:
     {{- include "<<.Chart>>.labels" . | nindent 4 }}
 spec:
   toolsetClass: workflow-tooling
+  # **The platform mints this and guarantees the Secret in every namespace**, so
+  # there is nothing to obtain and nothing to declare: `preset-agent-hub` /
+  # `api_key` is created by the namespace reconciler, once, and never rotated.
+  # The platform's own preset Toolset, SourceSet and BotProvider read it the
+  # same way. **Proved end to end for a SourceSet** - applied, Ready, its
+  # Syncers ran - and to the server-side dry run for a Toolset, 2026-09-14. A
+  # BotProvider's adminApiKey is the same field resolved by the same code and
+  # has not been exercised.
+  #
+  # It is NOT the X-API-KEY the documentation tells you to create for calling
+  # the API from outside - see
+  # `.agents/skills/asgard-platform/usecase/conventions.md`.
   apiKey:
     valueFrom:
       secretKeyRef:
-        key: asgard_resource_api_key
-        name: {{ include "<<.Chart>>.appSecretName" . }}
+        name: preset-agent-hub
+        key: api_key
   tools:
     - entrypoint:
         entry: entry-main

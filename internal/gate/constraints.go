@@ -20,7 +20,7 @@ import (
 // by hand.
 //
 // **`name`, `aliasName` and `key` are dropped.** The first two carry a
-// different constraint in different Asgard structs - six sets for `name` alone.
+// different constraint in different Asgard structs, several for `name` alone.
 // `key` is worse: it collides with **core Kubernetes**, where
 // `secretKeyRef.key` is a Secret's key name and freely contains hyphens, while
 // Asgard's `key` is an identifier that may not. Matching on a json field name

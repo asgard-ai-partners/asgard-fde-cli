@@ -66,7 +66,7 @@ the onboarding produces.
 deliberate rather than an omission. Signing in, choosing a workspace, creating a
 pipeline and fetching the reference material that describes the server all come
 after - guided by the coding agent this command just equipped, which is a better
-guide than a list of six commands somebody has to follow by hand. When it is
+guide than a list of commands somebody has to follow by hand. When it is
 done, open the directory in your agent and say so; the closing message has the
 words.
 

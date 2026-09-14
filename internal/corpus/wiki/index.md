@@ -6,8 +6,8 @@
 
 | page | covers |
 |---|---|
-| [`product-suite`](../wiki/product-suite.md) | the six products, what each is for and who uses it |
-| [`console`](../wiki/console.md) | the two permission layers, five inconsistent pages, Workspace settings |
+| [`product-suite`](../wiki/product-suite.md) | what each product is for, and who uses it |
+| [`console`](../wiki/console.md) | the permission layers, the pages that disagree with each other, Workspace settings |
 | [`sindri`](../wiki/sindri.md) | Project, delegation, the Sandbox and its files, the governance gate |
 | [`mimir`](../wiki/mimir.md) | Thread, View, Dashboard, Knowledge |
 | [`fehu`](../wiki/fehu.md) | billing and usage, how cost is broken down |
@@ -25,8 +25,8 @@
 | [`processors`](../wiki/processors.md) | what each processor type takes, and the fields that decide behaviour |
 | [`workflow`](../wiki/workflow.md) | the processor types against the editor's groups; Expression is JavaScript, Template is Handlebars |
 | [`settings`](../wiki/settings.md) | Completion and Embedding Model, Data Source, Connection |
-| [`integration`](../wiki/integration.md) | chat platforms, the two Applications pages, the architecture |
-| [`api`](../wiki/api.md) | the endpoint and its actions, the SSE sequence, four patterns, the SDK |
+| [`integration`](../wiki/integration.md) | chat platforms, the Applications pages, the architecture |
+| [`api`](../wiki/api.md) | the endpoint and its actions, the SSE sequence, the integration patterns, the SDK |
 | [`crd-rules`](../wiki/crd-rules.md) | the validations helm lint does not run, and the one the schema cannot express |
 | [`platform-unknowns`](../wiki/platform-unknowns.md) | what no source answers, and who to ask |
 | [`coverage`](../wiki/coverage.md) | how many deployments each CR shape was read from - which extracts rest on a sample of one |
@@ -35,11 +35,12 @@
 
 | page | covers |
 |---|---|
+| [`green-and-doing-nothing`](../wiki/green-and-doing-nothing.md) | **it deployed, every check passed, and it does nothing.** The shapes that have happened, why no layer of the toolchain catches them, and which ones now have a rule. Start here when the symptom is silence rather than an error |
 | [`operations`](../wiki/operations.md) | Asgard's outbound IPs, checking model capability, vocabulary |
 | [`taiwan-channels`](../wiki/taiwan-channels.md) | the commerce channels a customer will name, what SHOPLINE cost, and what we have not built |
 | [`glossary`](../wiki/glossary.md) | words that mean one thing here, and what the other senses are called. **Check it for the word you searched**: a result in the wrong sense reads exactly like an answer |
-| [`what-they-read`](../wiki/what-they-read.md) | the picture a customer arrives with, and the three places it is wrong |
-| [`case-studies`](../wiki/case-studies.md) | the retail stockout from three angles, plus a Flow Agent help desk |
+| [`what-they-read`](../wiki/what-they-read.md) | the picture a customer arrives with, and where it is wrong |
+| [`case-studies`](../wiki/case-studies.md) | the retail stockout from several angles, plus a Flow Agent help desk |
 | [`screenshots`](../wiki/screenshots.md) | which picture answers which question, and the URL to fetch it from |
 
 ## Every UI name, and the CR it is
@@ -84,7 +85,7 @@ asking for image generation or transcription needs the platform team and not a
 chart.**
 
 **Checked:** 2026-09-11, the UI's own vocabulary from asgard-docs `f00e0ee` -
-the sixteen pages under `product-suite/odin/features/` - held against the 24
+every page under `product-suite/odin/features/` - held against the 24
 kinds in asgard-kube `cbd8d70` `crd/`. Each row's CR is the one that page says
 gets created, or the one the extract in the third column writes.
 
@@ -115,7 +116,7 @@ go here.** A percentage measured against one source out of nine reads as a
 statement about the material, and an in-scope denominator restated as a count
 of citations reads the same way.
 
-**And an index does not carry arithmetic.** There was a seven-row ledger here
+**And an index does not carry arithmetic.** There was a ledger here
 deriving the figure by hand, and beside it a record of what the figure used to
 be - which is a changelog, and it is what a count looks like when nothing can
 recompute it. `go run ./hack coverage` in asgard-fde-cli derives every one of
@@ -138,7 +139,7 @@ The sources this material is actually built from:
 | **asgard-kube `pkg/apis/`** | **the Go types the CRDs are generated from, with the reasoning as comments** | read once, 2026-09-02, for the validation rules - `../wiki/crd-rules.md`. 134KB of declarations; what has been taken is the behavioural comments, not the field list |
 | **[asgard-core](https://github.com/asgard-ai-platform/asgard-core)** `internal/constants.go` | **the processor definitions the CRD is generated from** | walked 2026-09-03 at `5da86c6` and re-walked 2026-09-11 at `623ceb5`. Every processor's required keys, defaults and declared outputs are in `../wiki/processors.md`, and asgard-fde-cli's `go run ./hack processors` is what holds that table against the literal |
 | **asgard-freyr-skills** | **9 runtime skills, incl. the SHOPLINE pair** | one page - `../usecase/skill-layers.md`. The eighth reference repository, and the only one with no CRs |
-| **seven deployments** | **every shape the extracts describe** | 19 charts between them; `../wiki/coverage.md` counts per deployment and says why |
+| **the reference deployments** | **every shape the extracts describe** | `../wiki/coverage.md` counts the charts per deployment and says why |
 
 **Deployment coverage cannot be measured from this material, by design.** An
 extract names no customer and no deployment - it says "seen in a deployment
@@ -158,7 +159,7 @@ computes all four numbers and fails when this row drifts from them.
 ## Deliberately not covered
 
 **One row of this table was wrong.** `asgard-builtin/` was excluded whole as
-lookup material; four of its pages are the expression language every processor
+lookup material; several of its pages are the expression language every processor
 field is written in, including where the ECMA5 limit actually applies - to
 `execute-script`'s engine, not to every Expression - and the variables in scope,
 one of which the documentation never mentions at all.
@@ -201,7 +202,7 @@ follows.
 
 **Adding a page means adding a row**, under the question it answers rather than
 at the end. The extracts index went a third out of date this way -
-eight of twenty-two written and never grouped - and nothing broke, because
+written and never grouped - and nothing broke, because
 the directory listed them regardless. What was lost is the only thing an
 index is for: telling somebody which page answers their question when they do
 not already know its name.

@@ -10,7 +10,7 @@ classes and the print rules. Its landing-page, resume and portfolio material is
 not here, and neither is its authoring process - `SKILL.md` says why taking that
 process damages a discovery deck.
 
-## The ten invariants
+## The invariants
 
 Each has a cost. Think before overriding one.
 

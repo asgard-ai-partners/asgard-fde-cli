@@ -1,15 +1,15 @@
 # A skill library at full size, and what the layers are for
 
-Nine runtime skills over one commerce middleware and one external commerce
+Runtime skills over one commerce middleware and one external commerce
 platform. It is the largest skill library here and the only one that answers the
 question `../usecase/skill-set.md` does not: **what is a skill for, and when do you need
 another one.**
 
 **Seen in:** a middleware deployment whose agents carry no SemanticLayer at all -
-five Agents, five SkillSets, one Toolset. Capability is almost entirely skills.
+one SkillSet per Agent, one Toolset. Capability is almost entirely skills.
 
 **Checked:** 2026-09-02 against that skill repository - the declared
-`skill-layer` of all nine, the dependency the README states, the write gates and
+`skill-layer` of every one, the dependency the README states, the write gates and
 the four-level exploration policy.
 
 **Unchecked:** whether the back-office map still matches the product. It was

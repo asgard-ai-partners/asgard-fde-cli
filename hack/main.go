@@ -31,7 +31,15 @@ type check struct {
 	Needs string
 	// What it answers, in one line, for `list`.
 	What string
-	Run  func(args []string) error
+	// Listing marks one that cannot fail: it prints something for a person to
+	// read and its exit code carries no verdict.
+	//
+	// **Kept apart from the checks in `pass` for the reason a skip is printed
+	// differently from a pass.** A listing sitting in the numbered groups reads
+	// as one more thing that went green, and a clean listing is not evidence -
+	// it says only that it found nothing to show.
+	Listing bool
+	Run     func(args []string) error
 }
 
 var checks = map[string]check{}

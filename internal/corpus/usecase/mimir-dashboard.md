@@ -5,12 +5,12 @@ The customer explores it by conversation and saves the useful answers as Views
 and Dashboards; nothing in the chart mounts the layer.
 
 **Seen in:** a finance deployment whose entire architecture is stated as one
-rule - two read paths in one chart that never touch, three domain Agents on a
-GraphQL API and three SemanticLayers that exist only for Mimir.
+rule - two read paths in one chart that never touch, domain Agents on a
+GraphQL API and SemanticLayers that exist only for Mimir.
 
 **Checked:** 2026-09-02 against that deployment's chart and its AGENTS.md -
-three layers, every cube and join in them, and
-`Agent.spec.managed.semanticLayers[]` empty on all three Agents - and against
+every layer, every cube and join in them, and
+`Agent.spec.managed.semanticLayers[]` empty on every Agent - and against
 the CRD.
 
 **Unchecked:** what the customer's Mimir side looks like. Views, Dashboards and
@@ -54,7 +54,7 @@ anything with a write in it. Mimir reads. A dashboard cannot approve a transfer.
 That is the whole chart side. There is **no Agent, no Toolset and no
 SandboxBlueprint** in this path, and that is the point rather than an omission.
 
-**One layer per section of what they will look at.** The deployment splits three
+**One layer per section of what they will look at.** The deployment splits its
 layers along the dashboard areas of the customer's own site - fundamentals,
 chips, market - rather than along the database's tables. The layer is a reading
 surface for a person exploring, so it is organised the way they think about the

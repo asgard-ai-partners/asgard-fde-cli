@@ -20,7 +20,7 @@ version of it did when this tool was built.
 
 What `asgard-cli gate` runs, and what each step is for:
 
-  tools    helm on PATH. Without it the three chart steps cannot run, and the
+  tools    helm on PATH. Without it the chart steps cannot run, and the
            gate says skipped rather than passed.
 
   repo     the repository's structure: the README project table against the
@@ -70,8 +70,8 @@ Then the step that cannot be run here. Push, and read the plan back:
 
      It answers two questions the old local pair used to answer separately:
      `crd/dry-run-rejected` is "will it be accepted", `crd/unknown-field` is
-     "**will it be kept**". A deprecated field once passed 25 of 25 plain
-     dry-runs and broke the deploy, because CRDs prune what they do not declare
+     "**will it be kept**". A deprecated field once passed every plain
+     dry run and broke the deploy, because CRDs prune what they do not declare
      while helm's server-side apply refuses it.
 
      If the run was never created, the push matched nothing - no pattern
@@ -97,7 +97,7 @@ with a SemanticLayer and no Agent may be finished or unfinished, and the files
 cannot tell the two apart. Completeness is your judgement against the request,
 and after it new capability is added with the loop in `../guide/enhance.md`.
 
-**Checked:** 2026-09-11 - the eight steps above are `gate`'s own, in its own
+**Checked:** 2026-09-11 - the steps above are `gate`'s own, in its own
 order, read off asgard-fde-cli's own `internal/cli/gate.go`; each names the command that runs it
 alone and each of those exists. This line described a four-step checklist that
 the body above had already replaced, and named dry-run and fidelity scripts as
@@ -105,8 +105,8 @@ the body above had already replaced, and named dry-run and fidelity scripts as
 that a dry-run reports success while dropping an undeclared field is the CRD's
 documented pruning behaviour.
 
-**Unchecked:** what the platform's own half reports. Two of the eight steps
-need a session, and nobody has held this page against a run.
+**Unchecked:** what the platform's own half reports. The steps that need a
+session are the ones nobody has held this page against.
 
 **Unchecked:** that a step this cannot run is not a step that passed. Nothing
 enforces saying so, and the failure it guards against - a green gate that never

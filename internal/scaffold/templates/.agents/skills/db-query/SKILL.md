@@ -61,7 +61,7 @@ correctly in both shells.
 ```bash
 Q() { .venv/bin/python .agents/skills/db-query/scripts/query.py "$@"; }
 
-Q --classes                                        # the eight this tool drives
+Q --classes                                        # the classes this tool drives
 Q --class postgres --prefix UOF_DB_ --keys         # the .env keys this connection needs
 Q --class postgres --prefix UOF_DB_ "select 1"
 Q --class postgres --prefix UOF_DB_ -f some.sql
@@ -138,7 +138,7 @@ The flow is:
 **You write the keys because only you know what you are about to connect to.**
 They know the values; naming what has to be filled in is your half of it.
 
-### Three kinds of credential, and they are not interchangeable
+### The kinds of credential, and they are not interchangeable
 
 | | who uses it | where it lives | who fills it |
 |---|---|---|---|
@@ -190,12 +190,12 @@ cannot reach it is this tool. Corrected here and in `--classes`.
 **Checked against a real customer system:** postgres, netsuite, mssql. The
 commands, the `--prefix` rule and the failure shapes come from one engagement's
 PostgreSQL and NetSuite work. **mssql** was driven end to end by a later one:
-`--keys` emitted the six keys including the optional named-instance one and
+`--keys` emitted every key, the optional named-instance one included, and
 `asgard-cli local-env` filled them, `select 1` connected, the stderr summary
 printed `user@host:port/database` with no password as documented, and a full
 introspection ran - `information_schema.tables` counts, `sys.tables` joined to
-`sys.partitions` for row counts, `--columns` on eight tables, and about fifteen
-ad-hoc join-verification queries over roughly 580 base tables. The read-only
+`sys.partitions` for row counts, `--columns` on individual tables, and
+ad-hoc join-verification queries across the whole database. The read-only
 guard refused nothing, because every statement was a `SELECT`. The `TOP n` /
 `LIMIT n` dialect note in `references/connectors.md` was correct and needed.
 

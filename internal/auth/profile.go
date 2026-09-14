@@ -215,7 +215,7 @@ func (e *ErrUnknownProfile) Error() string {
 	case "prod":
 		fmt.Fprintf(&b, "\n%q was a built-in name and is now just %q, which is the hosted platform\nwith nothing configured. Drop the flag.\n", "prod", DefaultProfileName)
 	case "dev":
-		fmt.Fprintf(&b, "\n%q was a built-in name. Our development platform is one installation among\nthe ones this tool meets, not a second kind of thing, so it is written like any\nother - see the internal setup notes for the three values:\n\n    asgard-cli profile set dev --issuer <url> --client-id <id> --platform-api <url>\n", "dev")
+		fmt.Fprintf(&b, "\n%q was a built-in name. Our development platform is one installation among\nthe ones this tool meets, not a second kind of thing, so it is written like any\nother - see the internal setup notes for its values:\n\n    asgard-cli profile set dev --issuer <url> --client-id <id> --platform-api <url>\n", "dev")
 	}
 
 	if len(e.Known) == 0 {

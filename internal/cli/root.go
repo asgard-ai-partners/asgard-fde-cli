@@ -168,7 +168,7 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 	// thirty commands is what this help used to be, and it is what made four
 	// commands that compose look like four commands that compete.
 	// Insertion order, not alphabetical. Within a group the first entry is
-	// where somebody starts - `gate` before the three checks it composes,
+	// where somebody starts - `gate` before the checks it composes,
 	// `login` before what needs a session - and alphabetical ordering put
 	// `check` and `doctor` in front of `gate`, which is the opposite of what
 	// the grouping was for.
@@ -234,16 +234,16 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 	return cmd
 }
 
-// The four groups the top-level help is organised into.
+// The groups the top-level help is organised into.
 //
-// They are the four questions somebody arrives with, in the order they arrive:
+// They are the questions somebody arrives with, in the order they arrive:
 // what is this platform, how do I write the repository, is what I wrote sound,
 // and get it deployed. A command that fits none of them is a command whose
 // place in the tool has not been decided.
 //
 // **The first group is nearly empty and its heading says why.** Most of the
 // answer to "what is this platform" is files rather than commands, so what is
-// left under Ask is the three that are not: guidance read against this
+// left under Ask is the ones that are not: guidance read against this
 // repository, a count taken off production, and the way back when the files
 // have no answer.
 const (
@@ -288,7 +288,7 @@ var replacements = map[string]string{
 		"read `aliases.md` there first if the question did not arrive in English",
 	"wiki":    "`cat .agents/skills/asgard-platform/wiki/<name>.md`, or grep the directory. `asgard-cli init` writes it, and needs no account and no network",
 	"usecase": "`cat .agents/skills/asgard-platform/usecase/<shape>.md`, or grep the directory",
-	"brief":   "`cat .agents/skills/asgard-platform/brief/<activity>.md` - the four are `customer-meeting`, `connect`, `write-chart` and `handover`",
+	"brief":   "`cat .agents/skills/asgard-platform/brief/<activity>.md` - they are `customer-meeting`, `connect`, `write-chart` and `handover`",
 	"needs":   "`cat .agents/skills/asgard-platform/needs/<shape>.md`, one file per deployment shape",
 	"reading": "Gone with the reading list. What to read before an activity is `.agents/skills/asgard-platform/brief/<activity>.md`; " +
 		"what a document points at is in the document",

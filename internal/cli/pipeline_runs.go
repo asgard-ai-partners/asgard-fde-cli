@@ -37,10 +37,9 @@ func newPipelineRunsCmd() *cobra.Command {
 		Short: "Read and review the pipeline's runs",
 		Long: `Read and review the pipeline's runs.
 
-A run walks six steps - Checkout, Lint, Variables, Render & Dry-run, Review,
-Apply - and everything that decides whether a change is deployable happens in
-them, on the platform, against the real cluster's CRDs. This is where the answer
-comes back.
+A run walks Checkout, Lint, Variables, Render & Dry-run, Review and Apply, and
+everything that decides whether a change is deployable happens in them, on the
+platform, against the real cluster's CRDs. This is where the answer comes back.
 
     asgard-cli pipeline runs list
     asgard-cli pipeline runs watch --release dev --ref <tag>
@@ -139,10 +138,10 @@ func newRunsGetCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get <run-id>",
 		Short: "Show one run with its steps and plan report",
-		Long: `Show one run: its six steps, and the plan report a reviewer reads.
+		Long: `Show one run: its steps, and the plan report a reviewer reads.
 
-The report has four parts - the lint findings, the variable changes, the
-resource changes as a diff per CR, and the server-side dry run. A run that
+The report's parts are the lint findings, the variable changes, the resource
+changes as a diff per CR, and the server-side dry run. A run that
 failed also carries the reason and which step produced it, so the first thing to
 read is the top, not the log.
 
@@ -580,7 +579,7 @@ run does not queue behind the stuck one.`,
 }
 
 // printRun renders a run for a reader: the header, the steps, then whichever of
-// the report's four parts have anything in them.
+// the report's parts have anything in them.
 func printRun(out io.Writer, r *platform.Run) {
 	fmt.Fprintf(out, "run          #%d  %s\n", r.Number, r.State)
 	fmt.Fprintf(out, "release      %s\n", r.ReleaseName)

@@ -1,6 +1,6 @@
 ---
 name: knowledge-base
-description: How to maintain this repo as a knowledge base rather than a pile of files - what the layers are for, filing an answer you worked out so the next reader gets it for free, and auditing for the rot no linter can see (pages that contradict each other, claims a newer source superseded, concepts nobody owns). Use when picking up a repo somebody else worked on, before a handover, after a burst of decisions, when you answered a question by reading four files, or when an answer you gave from the docs turned out to be wrong.
+description: How to maintain this repo as a knowledge base rather than a pile of files - what the layers are for, filing an answer you worked out so the next reader gets it for free, and auditing for the rot no linter can see (pages that contradict each other, claims a newer source superseded, concepts nobody owns). Use when picking up a repo somebody else worked on, before a handover, after a burst of decisions, when you answered a question by reading a handful of files, or when an answer you gave from the docs turned out to be wrong.
 ---
 
 # This repo is a knowledge base
@@ -28,7 +28,7 @@ the bookkeeping: updating the index, fixing the cross-reference, noticing that
 three other pages now say something slightly wrong.
 
 That half is yours. You do not get bored, you do not forget a cross-reference,
-and you can touch fifteen files in one pass. The person you are working with
+and you can touch many files in one pass. The person you are working with
 curates, directs, and questions - which page matters, whether a claim is true,
 what the customer actually meant. **When you land a change, land the bookkeeping
 with it in the same pass**, rather than reporting that an index needs updating.
@@ -44,7 +44,7 @@ knowledge and it is about to be thrown away.**
 
 This is the most common way effort is wasted here, and it does not feel like
 waste at the time - the question got answered, so the work looks finished. But
-the next person asks the same question and reads the same four files, because
+the next person asks the same question and reads the same files, because
 the synthesis lived in a chat and the files are unchanged.
 
 So after answering a question that took real assembly, ask one thing: *would the

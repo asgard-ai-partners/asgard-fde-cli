@@ -236,7 +236,7 @@ these, about this one.
 **The console route above is the documentation's and is unconfirmed.** An
 engagement holding the account could not find "Integration", "App settings" or
 anything issuing a key, on 2026-09-14. Either the page moved or it is named
-something else now; `../wiki/platform-unknowns.md` P12 carries it.
+something else now; `../wiki/platform-unknowns.md` P13 carries it.
 
 ## Before writing the chart
 
@@ -245,7 +245,7 @@ token chain, and `../usecase/workflow-chain.md` what passes between processors.
 
 ## Sources
 
-- All 17 files under
+- Every file under
   [send-message](https://docs.asgard-ai.com/docs/developer-reference/api-doc/send-message/introduction)
   - asgard-docs `f00e0ee`
 - [Integration guide](https://docs.asgard-ai.com/docs/developer-reference/integration-guide)
@@ -255,7 +255,7 @@ token chain, and `../usecase/workflow-chain.md` what passes between processors.
   - asgard-docs `f00e0ee`
 - [Migration guide](https://docs.asgard-ai.com/docs/developer-reference/migration)
   - asgard-docs `f00e0ee`
-- The four examples under
+- The examples under
   [examples](https://docs.asgard-ai.com/docs/developer-reference/examples)
   - asgard-docs `f00e0ee`
 - [Authentication](https://docs.asgard-ai.com/docs/developer-reference/authentication)
@@ -265,7 +265,7 @@ token chain, and `../usecase/workflow-chain.md` what passes between processors.
   [upload file](https://docs.asgard-ai.com/docs/developer-reference/api-doc/send-message/upload-file-api)
   and [append file and send](https://docs.asgard-ai.com/docs/developer-reference/api-doc/send-message/append-file-and-send-message-api)
   - asgard-docs `f00e0ee`, read 2026-09-02
-- The event envelope, the `fact` union and `runError.location`: the eleven pages
+- The event envelope, the `fact` union and `runError.location`: the pages
   under `developer-reference/api-doc/send-message/sse-response/` - one page per
   event, starting at
   [run-init](https://docs.asgard-ai.com/docs/developer-reference/api-doc/send-message/sse-response/run-init).

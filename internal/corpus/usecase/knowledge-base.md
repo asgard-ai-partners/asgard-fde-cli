@@ -73,10 +73,10 @@ about the CR looks wrong. It is the first thing to check when a document is
 which is the tell that nobody tuned it - reasonable, and worth saying out loud
 rather than presenting as a decision.
 
-**There are 10 Loaders per Workspace, shared by every project in it.** One
+**Loaders are capped per Workspace, shared by every project in it.** One
 recurring pull each, so a corpus fed from a dozen places does not fit and the
-failure appears when the eleventh is created. `../wiki/knowledge.md` has
-what to count.
+failure appears when the next one is created. `../wiki/integration.md` has the
+number and `../wiki/knowledge.md` has what to count.
 
 **`loader-suspend` is how a scheduled pull is turned off.** The deployment's own
 web Loader ships suspended. A Loader deleted instead of suspended loses its

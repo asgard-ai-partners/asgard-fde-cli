@@ -42,7 +42,7 @@ Load it and come back with what you found:
 
     .agents/skills/db-query/SKILL.md
 
-It covers all eight readable `DataConnector` classes, how a connection is
+It covers the readable `DataConnector` classes, how a connection is
 configured in `.env`, how to get a credential without asking anybody to type a
 password into a chat, and the recipes for listing tables, columns, primary keys
 and foreign keys on each engine. It is read-only and enforces that.
@@ -71,10 +71,10 @@ opens first, and the only place the three names for one system meet.
 |---|---|---|---|---|
 | | | | | |
 
-Adding a system means all four columns: the `.env` group so design time can
-reach it, the `DataConnector` CR, and the layer built on top. The non-password
-coordinates are declared as `chartValues` in `.asgard-pipeline.yaml` and their
-values set on the platform per release.
+Adding a system means filling the row end to end: the `.env` group so design
+time can reach it, the `DataConnector` CR, and the layer built on top. The
+non-password coordinates are declared as `chartValues` in
+`.asgard-pipeline.yaml` and their values set on the platform per release.
 
 ## Writing the `SemanticLayer` CR
 

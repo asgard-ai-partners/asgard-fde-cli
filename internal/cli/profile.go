@@ -31,7 +31,7 @@ func newProfileCmd() *cobra.Command {
 		Long: `Name a platform this binary does not have built in.
 
     asgard-cli profile list              what is configured, and what applies now
-    asgard-cli profile show [name]       the three values, and where each came from
+    asgard-cli profile show [name]       the values, and where each came from
     asgard-cli profile set <name> ...    write one
     asgard-cli profile remove <name>     forget one
 
@@ -40,13 +40,13 @@ at all, every command reaches it - that is what ` + "`" + auth.DefaultProfileNam
 why it is the default. These commands exist for the two cases this binary
 cannot know about: an on-prem installation, and a stack running locally.
 
-A profile holds three values, and **each falls back on its own**:
+A profile holds these values, and **each falls back on its own**:
 
     --platform-api    where the Asgard Platform API is
     --issuer          the Casdoor that issues tokens for it
     --client-id       the application this CLI presents itself as
 
-Set one and the other two stay the hosted platform's, which is right for a local
+Set one and the rest stay the hosted platform's, which is right for a local
 Platform API against a real Casdoor and wrong for an on-prem installation - so
 ` + "`profile show`" + ` prints where every value came from, and says so when the API and
 the identity provider disagree about where they are from.
@@ -141,14 +141,14 @@ func newProfileShowCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "show [name]",
-		Short: "Report a profile's three values, and where each came from",
-		Long: `Report the three values a profile resolves to, and **where each one came from**.
+		Short: "Report a profile's values, and where each came from",
+		Long: `Report the values a profile resolves to, and **where each one came from**.
 
     asgard-cli profile show              whichever applies now
     asgard-cli profile show onprem-dev   a particular one
 
 The provenance is the useful half. A profile that sets one value and inherits
-the other two looks exactly like a complete one, and the failure it causes
+the rest looks exactly like a complete one, and the failure it causes
 arrives at the far end as a permission error rather than as a mismatch.
 
 It writes nothing and reaches no network.`,
@@ -241,7 +241,7 @@ against a real Casdoor is a legitimate way to develop.`,
 				p.PlatformAPI = strings.TrimRight(platformAPI, "/")
 			}
 			if p.Issuer == "" && p.ClientID == "" && p.PlatformAPI == "" && name != auth.DefaultProfileName {
-				return fmt.Errorf("profile %q would set none of the three values, which is the hosted platform.\n"+
+				return fmt.Errorf("profile %q would set none of those values, which is the hosted platform.\n"+
 					"That is what %q already is - use it, or give this one something to change:\n\n"+
 					"    asgard-cli profile set %s --platform-api <url> --issuer <url> --client-id <id>",
 					name, auth.DefaultProfileName, name)

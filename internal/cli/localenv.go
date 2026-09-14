@@ -54,7 +54,7 @@ asked for is a form that cannot tell you about it. They can add keys too, which
 is why the agent should re-read ` + "`.env`" + ` afterwards rather than assume it got
 back exactly what it asked for.
 
-**Three kinds of credential, and this is only one of them:**
+**The kinds of credential, and this is only one of them:**
 
     design time         this .env, on this machine       the customer, or you
     pipeline variables  the platform, per release        asgard-cli pipeline variables set

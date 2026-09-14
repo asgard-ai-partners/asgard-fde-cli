@@ -55,6 +55,12 @@ type Options struct {
 	// without the declaration - so the shape the warning describes is the one
 	// the tool produces.
 	//
+	// **Both directions are checked, and the second one is silent.** A key that
+	// is declared and read by no template is created and injected on every run
+	// into a Secret no CR names: `variables list` shows a value, nothing reports
+	// `vars/orphan`, and every local check is green. It arrives when a shape
+	// changes and the template that read the key is replaced.
+	//
 	// Nil means the declaration was not read, which is not the same as a
 	// release that declares none.
 	DeclaredKeys map[string]map[string]bool

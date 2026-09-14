@@ -15,7 +15,7 @@ import (
 func init() {
 	register("pass-list", check{
 		Needs: "this repository",
-		What:  "every check says what it needs, the prose surfaces in TASK.md and AGENTS.md agree by slug, and this repository's own skill never appears in a scaffolded tree",
+		What:  "every check says what it needs, every prose surface in TASK.md carries the date it was read and has no second copy in AGENTS.md, and this repository's own skill never appears in a scaffolded tree",
 		Run:   runPassList,
 	})
 	register("pass", check{
@@ -124,6 +124,9 @@ func showPass(args []string) error {
 	}
 	fmt.Println("\n3. this repository")
 	for _, n := range goCheckNames() {
+		if checks[n].Listing {
+			continue
+		}
 		if strings.HasPrefix(checks[n].Needs, "this repository") {
 			fmt.Printf("     go run ./hack %-18s %s\n", n,
 				strings.TrimLeft(strings.TrimPrefix(checks[n].Needs, "this repository"), " -"))
@@ -150,18 +153,31 @@ func showPass(args []string) error {
 			listings = append(listings, "--"+f)
 		}
 	}
+	for _, n := range goCheckNames() {
+		if checks[n].Listing {
+			listings = append(listings, "hack "+n)
+		}
+	}
 	fmt.Println("\nListings, not checks - they do not fail:")
 	fmt.Println("     " + strings.Join(listings, "  "))
 	return nil
 }
 
-// slugs are the keys the prose surfaces correspond by.
+// slugRow matches a prose-surface row: a table row opening with a slug.
 //
-// **They are derived rather than discovered, so the two lists drift** - and
-// comparing their prose drifts with them: the same surface is worded for its
-// own context and filed under the group that suits it. Only the slugs are
-// compared.
+// **There is one table of these and it is TASK.md's.** AGENTS.md carried a
+// second, and the two drifted the way two copies do - the same slugs, prose
+// written for its own context, and this check existing only to hold one against
+// the other. What is compared now is that the second table has not come back,
+// and that every row in the one that is left records when it was read.
 var slugRow = regexp.MustCompile("(?m)^\\| `([a-z][a-z0-9-]*-[a-z0-9-]+)`")
+
+// dateCell matches the `when` column: a row ending with an ISO date.
+//
+// **A reading with no date is not checkable.** `go run ./hack sources` answers
+// whether the source has moved since, and it cannot answer that against a row
+// that does not say since when.
+var dateCell = regexp.MustCompile(`\| (\d{4}-\d{2}-\d{2}) \|\s*$`)
 
 func slugsAfter(text, heading string) map[string]bool {
 	i := strings.Index(text, heading)
@@ -212,19 +228,25 @@ func runPassList(args []string) error {
 	if err != nil {
 		return err
 	}
-	inventory := slugsAfter(string(agents), "**Checked by nothing, and verified by reading.**")
-	listed := slugsAfter(string(task), "## The consistency pass")
-	for _, k := range sortedKeys(inventory) {
-		if !listed[k] {
-			missing = append(missing, fmt.Sprintf(
-				"prose surface `%s` is in AGENTS.md's inventory and not in the pass", k))
-		}
+	// **A second table of the same surfaces is what this check now exists to
+	// prevent.** AGENTS.md states the rule for what a row has to say; the rows
+	// live in TASK.md, because a reading is state and that is where state is
+	// written down.
+	for _, k := range sortedKeys(slugsAfter(string(agents), "**Checked by nothing, and verified by reading.**")) {
+		missing = append(missing, fmt.Sprintf(
+			"prose surface `%s` has a row in AGENTS.md; the rows are TASK.md's, and two tables of them drift", k))
 	}
-	for _, k := range sortedKeys(listed) {
-		if !inventory[k] {
-			missing = append(missing, fmt.Sprintf(
-				"prose surface `%s` is in the pass and not in AGENTS.md's inventory", k))
+	listed := slugsAfter(string(task), "## The consistency pass")
+	if len(listed) == 0 {
+		missing = append(missing, "TASK.md's consistency pass has no prose surfaces in it at all")
+	}
+	for _, line := range strings.Split(string(task), "\n") {
+		m := slugRow.FindStringSubmatch(line)
+		if m == nil || dateCell.MatchString(line) {
+			continue
 		}
+		missing = append(missing, fmt.Sprintf(
+			"prose surface `%s` does not say when it was read, so nothing can tell whether its source has moved since", m[1]))
 	}
 
 	// The maintenance skill must not be in the scaffolded tree.

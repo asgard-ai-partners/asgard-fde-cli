@@ -126,7 +126,7 @@ possible to run first.
 **Connecting the checkout to a platform is deliberately not part of it.**
 Signing in, choosing a workspace, creating a pipeline and fetching the material
 describing the server all come afterwards, guided by the agent this command just
-equipped - which is a better guide than a list of six commands somebody follows
+equipped - which is a better guide than a list of commands somebody follows
 by hand. `asgard-cli gate` says what is still missing at any point.
 
 Run it again whenever this CLI has moved on or a project was added: existing
@@ -149,8 +149,8 @@ touched it), `edited` (somebody here did, and `--force` would discard it), `ahea
 record, all four were one line saying "yours are older", which was printed over an
 engagement's own answers as readily as over material that really was behind.
 
-It refuses to write into a home directory or a filesystem root. Forty-five files
-one directory up from where they were meant is the mistake worth a guard.
+It refuses to write into a home directory or a filesystem root. A whole scaffold
+one directory up from where it was meant is the mistake worth a guard.
 
 It writes the part of a customer repo that is the same for every engagement:
 
@@ -159,7 +159,7 @@ It writes the part of a customer repo that is the same for every engagement:
 | `AGENTS.md` | the platform contract, with the customer-specific sections marked TODO |
 | `docs/` | the four-layer model (meeting-notes / decisions / living spec) and the SDD rules |
 | `requirements/` | the task and request indexes |
-| `.agents/skills/` | the seven design-time skills that hold for any Asgard, `db-query` among them, plus `asgard-platform/` - the wiki and the extracts as greppable files; the ones describing a particular server come from `asgard-cli skill update` |
+| `.agents/skills/` | the design-time skills that hold for any Asgard, `db-query` among them, plus `asgard-platform/` - the wiki and the extracts as greppable files; the ones describing a particular server come from `asgard-cli skill update` |
 | `assets/` | the runtime-skill directory |
 | `.asgard-pipeline.yaml` | the deployment declaration, with one release per project to fill in |
 | `projects/<slug>/` | one chart skeleton per project |
@@ -599,7 +599,7 @@ repositories, so the honest answer there is not an `apt install`. It exits
 non-zero when a required tool is missing, so it works as a CI preflight.
 
 `init`, `project`, `request`, `task`, `question`, `decision`
-and `check` need none of these tools. `render`, `verify` and the three chart
+and `check` need none of these tools. `render`, `verify` and the chart
 steps of `gate` need helm. **kubectl is optional**: nothing in this binary talks
 to a cluster, and `doctor` lists it because a person debugging a deployment
 still wants to know whether it is there.
@@ -715,14 +715,13 @@ know about: an on-prem deployment, and a stack running locally.
 
 ```bash
 asgard-cli profile list              # what is configured, and what applies now
-asgard-cli profile show [name]       # the three values, and where each came from
+asgard-cli profile show [name]       # each value, and where it came from
 asgard-cli profile set onprem --platform-api https://asgard.acme.internal \
     --issuer https://iam.acme.internal --client-id abc123
 asgard-cli profile remove onprem
 ```
 
-A profile holds three values and **each falls back on its own** to the hosted
-platform's:
+A profile's values **each fall back on their own** to the hosted platform's:
 
 | | |
 |---|---|
@@ -765,7 +764,7 @@ and cannot.
 the ones this tool meets, not a second kind of thing, and compiling it in would
 put an internal endpoint in every customer's binary.
 
-Write it like any other, with the three values from the internal setup notes -
+Write it like any other, with the values from the internal setup notes -
 **they are not in this repository**:
 
 ```bash

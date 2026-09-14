@@ -177,7 +177,7 @@ Next Task section at whatever is now most advanced.
 				Project:    project,
 				Request:    request,
 				Created:    today(),
-				SpecSlug:   repo.SpecSlug,
+				SpecSlug:   repo.SpecSlugIn(root),
 			}
 
 			task, err = work.AddTask(root, task)
@@ -226,9 +226,8 @@ func newTaskStatusCmd(verb string, to work.Status, gate string) *cobra.Command {
 
 It rewrites the status in %s, in the task spec's own Meta section, appends a
 dated line to the spec's Execution Log, and refreshes the index's Next Task
-section. That is four places, and doing them by hand is how a repo ends up
-saying two different things about the same task with no way to tell which is
-current.
+section. Doing those by hand is how a repo ends up saying two different things
+about the same task with no way to tell which is current.
 
     asgard-cli task %s TASK-001`, to, gate, work.TaskIndex, verb),
 		Args: cobra.ExactArgs(1),
