@@ -42,6 +42,22 @@ type Options struct {
 	// the references SHOULD say. Empty when checking a stream rendered
 	// elsewhere, and the credential check then has nothing to compare against.
 	Release string
+
+	// DeclaredKeys are the keys `.asgard-pipeline.yaml` declares for this
+	// release, by reference kind - "secretKeyRef" from `appSecret:` and
+	// "configMapKeyRef" from `appConfigMap:`.
+	//
+	// **A key the declaration does not name is never injected**, however
+	// carefully it is set on the platform: `variables list` marks it ORPHAN,
+	// the run reports `vars/orphan`, and lint, render and the dry run all stay
+	// green while the CR resolves to nothing at runtime. The declaration says
+	// exactly that about itself, and `asgard-cli add` generates the reference
+	// without the declaration - so the shape the warning describes is the one
+	// the tool produces.
+	//
+	// Nil means the declaration was not read, which is not the same as a
+	// release that declares none.
+	DeclaredKeys map[string]map[string]bool
 }
 
 // ProjectOr returns the project name, or a placeholder when it is not known -
