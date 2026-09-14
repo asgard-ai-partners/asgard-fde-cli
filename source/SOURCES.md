@@ -42,9 +42,9 @@ both can be checked; a distance between them cannot be written down at all.
 
 **How far each has moved since is computed, not written here:**
 
-    hack/sources.py --extracts     against `written from`, which is the question
+    go run ./hack sources --extracts     against `written from`, which is the question
                                    "does this extract still describe that chart"
-    hack/sources.py                against `held against`, which is the question
+    go run ./hack sources                against `held against`, which is the question
                                    "has anything moved since somebody last checked"
 
 There used to be a third column with those distances in it, and **both of the
@@ -72,7 +72,7 @@ holds the pinned tables against asgard-kube.
 **Both columns below are counted at the commit in the table above**, which is
 why `auto-post` says 28 Plugin CRs where `internal/corpus/usecase/plugin.md`
 says 29: that page recounted at `edb0ad0` and says so. Neither is stale - they
-are counts of different commits, and `hack/check-counts.py` holds both against
+are counts of different commits, and `go run ./hack counts` holds both against
 the clone.
 
 | deployment | shape it demonstrates | CR files | referred to in extracts as |

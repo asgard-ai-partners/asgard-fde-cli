@@ -29,6 +29,11 @@ type Source struct {
 	What    string
 }
 
+// Order is the order a reader wants them in - the contract first, then what is
+// written from it - rather than alphabetical, which puts the deployments before
+// the CRDs they are checked against.
+var Order = []string{"kube", "docs", "core", "deployments"}
+
 var Sources = map[string]Source{
 	"kube": {"ASGARD_KUBE", "projects/asgard/asgard-kube",
 		"the CRDs: https://github.com/asgard-ai-platform/asgard-kube"},

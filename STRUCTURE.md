@@ -250,9 +250,9 @@ customer; this file is the one place that does.
 
 ## `hack/` - the contract check
 
-`hack/validate-crs.py` holds rendered CRs and the extracts' skeletons against
+`go run ./hack validate-crs` holds rendered CRs and the extracts' skeletons against
 asgard-kube's schemas: required fields, unknown fields, enums, patterns,
-`maxItems`, `ExactlyOneOf`. `hack/extract-crs.py` gets the skeletons out of the
+`maxItems`, `ExactlyOneOf`. `go run ./hack extract-crs` gets the skeletons out of the
 extracts, which are chart fragments rather than parseable YAML.
 
 It exists because nothing else looks. `helm lint`, `asgard-cli check` and a
@@ -267,7 +267,7 @@ those are `scaffold/templates/.agents/skills/` and land in a customer
 repository. This one never leaves here, and `selfsrc` embeds it so the audits
 read it.
 
-`hack/sources.py` is where the upstream clones are: one environment variable
+`go run ./hack sources` is where the upstream clones are: one environment variable
 per source, resolved from the shell, then `.env`, then a default that is one
 person's layout. `.env.example` is the template - **`.env.template` would be
 gitignored**, because the rule is `.env.*` with `!.env.example` carved out.
@@ -275,7 +275,7 @@ Running it prints what each resolves to and how far behind it is, and nothing
 here clones or pulls: a script that fetched would turn "read at this commit"
 into "read at whatever was there when the script ran".
 
-`hack/check-doc-paths.py` holds every path and every package-qualified Go
+`go run ./hack doc-paths` holds every path and every package-qualified Go
 symbol named by this repository's own documents - the seven at the root, plus
 this directory's README and scripts - against what is on disk - the
 mirror of `audit-material --paths`, which does the same for what lands in a
@@ -283,7 +283,7 @@ customer's repository. A symbol resolves inside the package that owns it,
 because a search of the whole tree cannot tell one package's Index from
 another's.
 
-`hack/check-goal.py` is the only check here that is not a consistency check.
+`go run ./hack goal` is the only check here that is not a consistency check.
 It scaffolds a repository in a temporary directory with no network, no account
 and no git repository, and holds `Goal.md`'s four points against what the
 binary does: the corpus lands with all five kinds, a grep finds things in it,
@@ -291,13 +291,13 @@ the `needs/` files and the deck's rules are there, a chart gets written and
 passes `check`, and `issue-report` prints the URL. Every other check can pass
 while one of those has gone.
 
-`hack/check-pass-list.py` holds `TASK.md`'s consistency pass against the
+`go run ./hack pass-list` holds `TASK.md`'s consistency pass against the
 binary's own flags and this directory's own contents, so the written list
 cannot be missing a check - and refuses this repository's maintenance skill
 appearing in the scaffolded tree, because the two `.agents/skills/`
 directories have the same name and only one of them ships.
 
-`hack/check-coverage.py` recomputes the asgard-docs coverage row in
+`go run ./hack coverage` recomputes the asgard-docs coverage row in
 `internal/corpus/wiki/index.md` and fails when the page drifts from it. That
 row is the material's own claim about how complete it is, and the two things
 easiest to confuse in it are the number of links the material writes and the
@@ -318,7 +318,7 @@ reading the customer's own source systems at design time.
 Read-only, never vendored in. **The URL is the source of truth; where you clone
 it is not** - so where you cloned it is an environment variable, not a path in
 a script: `ASGARD_KUBE`, `ASGARD_DOCS`, `ASGARD_CORE`, `ASGARD_DEPLOYMENTS`.
-`hack/sources.py` prints what each resolves to and how far behind it is.
+`go run ./hack sources` prints what each resolves to and how far behind it is.
 
 | what | source of truth |
 |---|---|

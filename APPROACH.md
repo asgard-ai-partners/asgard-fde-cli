@@ -139,7 +139,7 @@ dependency nobody declared, which is the one thing here that cannot be a matter
 of timing.
 
 It does not ask whether a commit is current: **nothing inside this repository
-can**, which is why the commit is recorded at all. `hack/sources.py` reads the
+can**, which is why the commit is recorded at all. `go run ./hack sources` reads the
 clones and says how far behind each is.
 
 `--commands` is `--links` pointed at the tool: it resolves every
@@ -165,7 +165,7 @@ not "do not name a path" — provenance should name the file it came from — it
 
 **The audits check the material and not the capability**, and the difference
 has teeth: `asgard-cli init` could come to require a session with every audit
-still green. `hack/check-goal.py` is the other side - it runs the tool in a
+still green. `go run ./hack goal` is the other side - it runs the tool in a
 temporary directory with no network, no account and no repository, and holds
 Goal.md's four points against what happens.
 

@@ -1198,7 +1198,7 @@ const unreadMarker = " (unread)"
 // matter of timing.
 //
 // It does not ask whether a commit is current - nothing inside this repository
-// can, which is why every page records one at all. `hack/sources.py` reads the
+// can, which is why every page records one at all. `go run ./hack sources` reads the
 // clones and says how far behind each is.
 func checkSources(out io.Writer, srcs []source) error {
 	type site struct{ where, commit string }

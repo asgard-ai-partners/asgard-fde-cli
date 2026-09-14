@@ -322,7 +322,7 @@ was a guess about a number seven times too small.
 
 **That number moves whenever somebody adds an image to this page**, which is an
 ordinary edit and not one anybody remembers to recount after. So it is computed:
-asgard-fde-cli's `hack/check-counts.py` intersects the paths named here with the
+asgard-fde-cli's `go run ./hack counts` intersects the paths named here with the
 images a live page references at `f00e0ee`, and adding one moves the figure or
 fails the check.
 

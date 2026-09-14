@@ -18,7 +18,7 @@ on the page, a row on
 **The list is not here.** It is derived from the binary's own flags, `hack/`'s
 contents and the Go gate's subcommands, so it cannot be missing one:
 
-    hack/check-pass-list.py --list
+    go run ./hack pass
 
 **No check carries a verdict anywhere.** A word typed beside one is a result
 copied out of something that can produce it; the answer is its exit code, today.
@@ -29,18 +29,18 @@ What follows is the only part of a pass a program cannot produce.
 **The only part carrying a state, because it is the only part a program cannot
 answer.** Each row records what the reading was held against rather than a
 verdict: that a reading happened is nobody's to verify but whoever claims it,
-and whether its source has moved since is what `hack/sources.py` reports.
+and whether its source has moved since is what `go run ./hack sources` reports.
 
 | surface | read against | when |
 |---|---|---|
 | `extracts-vs-charts` the 22 extracts against the charts they came from | the eight commits in `source/SOURCES.md`'s **held against** column, which is what makes this reading checkable rather than a date | 2026-09-11 |
-| `wiki-vs-docs` the 27 wiki pages against asgard-docs | **the pages whose citations have moved, which `hack/check-coverage.py --drift` names** - 5 of them, all read; the prose citing a page that has not moved stands at its own earlier reading | 2026-09-11 |
+| `wiki-vs-docs` the 27 wiki pages against asgard-docs | **the pages whose citations have moved, which `go run ./hack coverage --drift` names** - 5 of them, all read; the prose citing a page that has not moved stands at its own earlier reading | 2026-09-11 |
 | `packages-help` the 14 packages' help against their behaviour | the working tree | 2026-09-11 |
 | `flag-usage` every flag's usage text against what the flag does | the working tree, all 81 | 2026-09-11 |
-| `processors-vs-palette` `wiki/processors.md`'s prose, as opposed to its two tables, which `hack/check-processors.py` now holds against asgard-core and asgard-docs | the two clones as pulled | 2026-09-11 |
+| `processors-vs-palette` `wiki/processors.md`'s prose, as opposed to its two tables, which `go run ./hack processors` now holds against asgard-core and asgard-docs | the two clones as pulled | 2026-09-11 |
 | `stage-prompts` the 10 stage prompts' guidance, as opposed to their command claims | read end to end; the platform claims they carry against asgard-kube `cbd8d70` and asgard-docs `23409b3` | 2026-09-14 |
 | `design-time-skills` the 7 design-time skills' prose, as opposed to their command and path claims | read end to end, 2,255 lines; every platform claim in them against the CRDs and asgard-core `623ceb5` | 2026-09-14 |
-| `deployment-diffs` the eight deployment clones' diffs since the extracts were written from them | the four that had moved, which `hack/sources.py --extracts` names; the other four were unmoved | 2026-09-11 |
+| `deployment-diffs` the eight deployment clones' diffs since the extracts were written from them | the four that had moved, which `go run ./hack sources --extracts` names; the other four were unmoved | 2026-09-11 |
 
 ## Where it stands
 
@@ -48,13 +48,13 @@ Two numbers, and each is here because a check reads this file for it.
 
 **The corpus is 70 documents and over 100,000 words** - 27 wiki pages, 22 extracts,
 10 guides, 7 needs lists and 4 briefings, as `asgard-cli init` lands them.
-`hack/check-goal.py` counts them in the tree it builds, which is the only place
+`go run ./hack goal` counts them in the tree it builds, which is the only place
 the figure is true of anything.
 
 **The chart half is the least finished of Goal's four points.** The widest
 reference chart uses 185 spec keys and `add` never mentions 88 of them; across
 all nineteen it is 303 and 171. So what `add` writes is a correct starting point
-and not a chart. `hack/spec-key-gap.py` renders both sides and `--missing` is
+and not a chart. `go run ./hack spec-key-gap` renders both sides and `--missing` is
 the worklist.
 
 **The write-back path is the one part of the design that is not solved.** The

@@ -562,7 +562,7 @@ Two things worth knowing from their pages:
   asgard-core's `internal/constants.go` itself moved four times in between - a
   card tool, an upload cap, an agent-hub prompt version - which is why "the file
   has not changed" is not the claim to make. The walk is
-  asgard-fde-cli `hack/check-processors.py`, and it holds both tables on this
+  asgard-fde-cli `go run ./hack processors`, and it holds both tables on this
   page against that literal
   - and it is **incomplete**: checked against five rendered production charts,
   where `await` appears on the streaming processor in all five and is declared

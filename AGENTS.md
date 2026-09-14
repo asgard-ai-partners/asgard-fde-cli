@@ -340,13 +340,13 @@ asgard-cli audit-material --bare
 asgard-cli audit-material --paths
 asgard-cli audit-material --unverified
 asgard-cli audit-material --sources
-hack/check-doc-paths.py
+go run ./hack doc-paths
 go run ./hack tables                     # needs $ASGARD_KUBE
-hack/check-coverage.py                   # needs $ASGARD_DOCS
+go run ./hack coverage                   # needs $ASGARD_DOCS
 asgard-cli audit-material --urls   # needs the network
 ```
 
-`--paths` and `check-doc-paths.py` are the same rule from the two sides. The
+`--paths` and `go run ./hack doc-paths` are the same rule from the two sides. The
 audit reads what **lands** in a customer repository and fails on a path only we
 have; the script reads the documents that never land - Goal, README, AGENTS,
 STRUCTURE, APPROACH, TASK - where naming our own paths is the point, and fails
@@ -458,17 +458,17 @@ judgement:
 | every upstream cited being declared in the raw-sources table | `--sources` |
 | every documentation URL being live | `--urls` (needs the network) |
 | the pinned enum and constraint tables against the CRDs, **every CEL-rule count this repository states** - 231 enforced against 79 markers, which are two numbers easy to write for each other - **every immutable field**: that the page names all eleven class fields, states the Syncer's count and the total, and that no immutable Syncer field goes unnamed - and **every required field of a per-class block**, which is what an FDE asks a customer for, matched on a word boundary across everything that ships | `go run ./hack tables` (needs `$ASGARD_KUBE`) |
-| the four numbers in the coverage row, measured at the commit the row names and with a page's URL taken from its `slug:` frontmatter | `hack/check-coverage.py` (needs `$ASGARD_DOCS`) |
-| **every count this material asserts about a reference deployment** - the 88-row page ledger, the 160-row operation ledger, the 14 API domains, the Plugin and SkillSet counts at the commit each claim names, and `source/SOURCES.md`'s CR-file column at each deployment's read commit - recomputed, and a claim whose wording has drifted out of every pattern fails rather than passes | `hack/check-counts.py` (needs `$ASGARD_DEPLOYMENTS`) |
-| **`wiki/processors.md`'s two tables against the two repositories they distil** - the thirteen processors' outputs, required keys and defaults against asgard-core's `ProcessorDefinitions`, the editor palette's author and platform keys against asgard-docs' per-page metadata, that a processor accepting dynamic config says what its keys are for, and that every `processor/<name>` written in prose resolves against asgard-docs' `slug:` frontmatter rather than its file name | `hack/check-processors.py` (needs `$ASGARD_CORE` and `$ASGARD_DOCS`) |
-| every path and package-qualified Go symbol this repository's own documents name | `hack/check-doc-paths.py` |
-| generated CRs and the extracts' skeletons against the CRD schemas | `hack/validate-crs.py` (needs `$ASGARD_KUBE`) |
+| the four numbers in the coverage row, measured at the commit the row names and with a page's URL taken from its `slug:` frontmatter | `go run ./hack coverage` (needs `$ASGARD_DOCS`) |
+| **every count this material asserts about a reference deployment** - the 88-row page ledger, the 160-row operation ledger, the 14 API domains, the Plugin and SkillSet counts at the commit each claim names, and `source/SOURCES.md`'s CR-file column at each deployment's read commit - recomputed, and a claim whose wording has drifted out of every pattern fails rather than passes | `go run ./hack counts` (needs `$ASGARD_DEPLOYMENTS`) |
+| **`wiki/processors.md`'s two tables against the two repositories they distil** - the thirteen processors' outputs, required keys and defaults against asgard-core's `ProcessorDefinitions`, the editor palette's author and platform keys against asgard-docs' per-page metadata, that a processor accepting dynamic config says what its keys are for, and that every `processor/<name>` written in prose resolves against asgard-docs' `slug:` frontmatter rather than its file name | `go run ./hack processors` (needs `$ASGARD_CORE` and `$ASGARD_DOCS`) |
+| every path and package-qualified Go symbol this repository's own documents name | `go run ./hack doc-paths` |
+| generated CRs and the extracts' skeletons against the CRD schemas | `go run ./hack validate-crs` (needs `$ASGARD_KUBE`) |
 | the gate over the reference charts | `hack/verify-references.sh` (needs the clones) |
-| **how much of a production chart `add` never writes** - the number behind "the chart half is the least finished", rendered on both sides rather than quoted | `hack/spec-key-gap.py` (needs the clones, helm and a built binary) |
+| **how much of a production chart `add` never writes** - the number behind "the chart half is the least finished", rendered on both sides rather than quoted | `go run ./hack spec-key-gap` (needs the clones, helm and a built binary) |
 | build, vet, gofmt, tests | CI |
-| **Goal.md's four points, against the binary** - the corpus landing offline with no repository, **its size as TASK.md states it**, a grep finding things in it, the needs files and the deck's rules, a chart being written and passing `check`, and the issue route coming out of the tool's own output | `hack/check-goal.py` |
-| `TASK.md`'s pass naming every check this repository has, and this repository's own skill never appearing in a scaffolded tree | `hack/check-pass-list.py` |
-| whether a reading `TASK.md` records has gone behind the clone it was held against | `hack/sources.py` |
+| **Goal.md's four points, against the binary** - the corpus landing offline with no repository, **its size as TASK.md states it**, a grep finding things in it, the needs files and the deck's rules, a chart being written and passing `check`, and the issue route coming out of the tool's own output | `go run ./hack goal` |
+| `TASK.md`'s pass naming every check this repository has, and this repository's own skill never appearing in a scaffolded tree | `go run ./hack pass-list` |
+| whether a reading `TASK.md` records has gone behind the clone it was held against | `go run ./hack sources` |
 
 **Reported, and deliberately not enforced.** Each needs a person to read it,
 and a green build says nothing about them:
@@ -480,7 +480,7 @@ and a green build says nothing about them:
 | `audit-material` with no flag, `--ask`, `--unmarked` | every bold imperative on one screen, because the failure is two opposing ones never being in front of the same reader. `--ask` narrows to the ones telling a reader to ask a customer, which is where filter 0 applies |
 | `--unchecked` | **what every document says it has NOT been held against**, which is the opposite question to `--unverified` and the only one that had no answer: a page whose marker names a whole surface passed the check and nothing put that surface in front of a reader. Every document is expected to have one, so it cannot fail - and it is what `TASK.md` reads its blocked list out of instead of keeping one |
 | `--term <field>` | the sweep for a renamed platform field, across prose and templates. It cannot fail on its own: it only answers a question somebody asks it |
-| `hack/sources.py` | how far each clone is behind, which is information rather than a verdict |
+| `go run ./hack sources` | how far each clone is behind, which is information rather than a verdict |
 
 **Checked by nothing, and verified by reading.** This is the group that has
 produced every finding, so each row records **what the reading was held
@@ -490,22 +490,22 @@ against** rather than a verdict.
 `ok` beside a script is a result copied out of something that can produce it;
 `read` beside a document is an honour-system claim no program can confirm.
 What *is* checkable is whether the thing a reading was held against has moved
-since, and `hack/sources.py` reports that - which is why the row records a
+since, and `go run ./hack sources` reports that - which is why the row records a
 source and a date and not a word.
 
 | surface | last read, and how |
 |---|---|
 | `extracts-vs-charts`  the 22 extracts against the charts they came from | 2026-09-11, every field name against the pulled clones and the CRDs, every count by rendering all 19 charts |
-| `wiki-vs-docs`  the 27 wiki pages against asgard-docs | 2026-09-11, and **the scope is computed now**: `hack/check-coverage.py --drift` lists every cited page that has moved since the commit the citing document names, which was 5 pages - the expression introduction, the processor introduction, the SDK page, the flow-agent feature page and one directory URL that is deliberately not a page. All five were read; what they changed is in `../wiki/processors.md` and `integration.md`. The prose citing a page that has not moved stands at its own reading |
+| `wiki-vs-docs`  the 27 wiki pages against asgard-docs | 2026-09-11, and **the scope is computed now**: `go run ./hack coverage --drift` lists every cited page that has moved since the commit the citing document names, which was 5 pages - the expression introduction, the processor introduction, the SDK page, the flow-agent feature page and one directory URL that is deliberately not a page. All five were read; what they changed is in `../wiki/processors.md` and `integration.md`. The prose citing a page that has not moved stands at its own reading |
 | `stage-prompts`  the 10 stage prompts | 2026-09-14, read end to end for the guidance as well as the command claims. The three figures handed to a customer - 5 requests per second, 3 minutes, 30 steps - are the quota page's own; `botProviderClass` immutable and exactly one class block present are the CRD's. **One correction**: the mail question offered "an HTTP endpoint" against "they do not", and the answer that actually arrives is SMTP credentials, which read as the first and are the second |
 | `design-time-skills`  the 7 design-time skills' prose | 2026-09-14, read end to end - 2,255 lines, of which `proposal-deck` is 1,232. Every platform claim held against the CRDs: the nine DataConnector class blocks name every required field, `SemanticLayer.sampleQuestions` is strings, gate R4 exists. **One correction**: `semantic-layer-modeling` said nothing narrows a layer once it is mounted, which is true of the Agent path and not of the processor one, where `semanticLayer.allowedCubes` is exactly that narrowing |
 | `flag-usage`  every flag's usage text against what the flag does | 2026-09-11, all 81 |
-| `processors-vs-palette`  `wiki/processors.md`'s prose, as opposed to its two tables | 2026-09-11. The tables are `hack/check-processors.py`'s now, and writing it found six defects reading had not - a documented default that upstream deleted, a page the naming table said did not exist, an `automation-tool-response` type it said had none, a `processor/entry` URL that 404s, and `validate-payload`'s `schema` marked as having a default, which told a reader that omitting it was a silent choice when it is an error. What is still nobody's but a reader's is the **palette at second hand**: asgard-docs records it from `asgard-ai-platform-web`, which nothing here clones |
-| `deployment-diffs`  the eight deployment clones' diffs since the extracts were written from them | 2026-09-11. Four had moved and were read; `hack/sources.py --extracts` says which and by how much. What came out: the consent gate being one field on the Toolset and both beliefs about it wrong, the `~/.claude` mount that kills the driver, a writable store needing its own Syncer-less SourceSet, that SMTP cannot be reached at all, and the SHOPLINE page count being 88 rather than the 93 written here |
+| `processors-vs-palette`  `wiki/processors.md`'s prose, as opposed to its two tables | 2026-09-11. The tables are `go run ./hack processors`'s now, and writing it found six defects reading had not - a documented default that upstream deleted, a page the naming table said did not exist, an `automation-tool-response` type it said had none, a `processor/entry` URL that 404s, and `validate-payload`'s `schema` marked as having a default, which told a reader that omitting it was a silent choice when it is an error. What is still nobody's but a reader's is the **palette at second hand**: asgard-docs records it from `asgard-ai-platform-web`, which nothing here clones |
+| `deployment-diffs`  the eight deployment clones' diffs since the extracts were written from them | 2026-09-11. Four had moved and were read; `go run ./hack sources --extracts` says which and by how much. What came out: the consent gate being one field on the Toolset and both beliefs about it wrong, the `~/.claude` mount that kills the driver, a writable store needing its own Syncer-less SourceSet, that SMTP cannot be reached at all, and the SHOPLINE page count being 88 rather than the 93 written here |
 | `packages-help`  `internal/localenv`, `platform`, `auth`, `work`, `skills`, `gitrepo`, `render`, `binding`, `chart`, `tool`, `browser`, `version`, `pipelineconfig`, `repo` | 2026-09-11, read end to end - about 7,300 lines. Every claim in a doc comment or a help screen that could be checked was: the loopback server's token, Host check and CSP; that `add` runs with no helm on PATH; that `doctor` reports a missing optional without failing; that a secret's value never comes back; that `profile show` prints where each field came from; every literal repository path each package emits, against a scaffolded tree |
 
 **Every row in the third group carries a slug**, and `TASK.md`'s pass carries
-the same slug for the same surface. `hack/check-pass-list.py` compares the
+the same slug for the same surface. `go run ./hack pass-list` compares the
 slugs in both directions, because the two are worded for their own context and
 comparing their prose drifts with them.
 
@@ -840,14 +840,14 @@ the reason it sits outside `internal/`.
 
 Clone them wherever you like and point an environment variable at each:
 `ASGARD_KUBE`, `ASGARD_DOCS`, `ASGARD_CORE`, and `ASGARD_DEPLOYMENTS` for the
-directory holding the deployment clones. `hack/sources.py` prints what they
+directory holding the deployment clones. `go run ./hack sources` prints what they
 resolve to and how far behind each one is.
 
 Pull before relying on any of them, and **record the commit you read** in
 whatever you write - a copy taken into this repo stops tracking upstream and
 then reads exactly like a current one. `asgard-cli audit-material --sources`
 holds every recorded commit against every other; **nothing can tell you a
-recorded commit has gone stale**, which is what `sources.py` is for and why it
+recorded commit has gone stale**, which is what `go run ./hack sources` is for and why it
 reads the clone rather than fetching it.
 
 ## Put generated files in `.out/`

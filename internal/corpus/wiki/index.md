@@ -144,10 +144,10 @@ The sources this material is actually built from:
 
 | source | what it holds | state |
 |---|---|---|
-| asgard-docs | the product documentation | 77 / 162 cited at `f00e0ee`; 85 published and uncited; 28 deliberately excluded below. **Computed, not counted** - `hack/check-coverage.py` in asgard-fde-cli recomputes it and fails when this row drifts |
+| asgard-docs | the product documentation | 77 / 162 cited at `f00e0ee`; 85 published and uncited; 28 deliberately excluded below. **Computed, not counted** - `go run ./hack coverage` in asgard-fde-cli recomputes it and fails when this row drifts |
 | asgard-kube `crd/` | the contract | read per page, per field, and dated on the page |
 | **asgard-kube `pkg/apis/`** | **the Go types the CRDs are generated from, with the reasoning as comments** | read once, 2026-09-02, for the validation rules - `../wiki/crd-rules.md`. 134KB of declarations; what has been taken is the behavioural comments, not the field list |
-| **[asgard-core](https://github.com/asgard-ai-platform/asgard-core)** `internal/constants.go` | **the processor definitions the CRD is generated from** | walked 2026-09-03 at `5da86c6` and re-walked 2026-09-11 at `623ceb5`. Every processor's required keys, defaults and declared outputs are in `../wiki/processors.md`, and asgard-fde-cli's `hack/check-processors.py` is what holds that table against the literal |
+| **[asgard-core](https://github.com/asgard-ai-platform/asgard-core)** `internal/constants.go` | **the processor definitions the CRD is generated from** | walked 2026-09-03 at `5da86c6` and re-walked 2026-09-11 at `623ceb5`. Every processor's required keys, defaults and declared outputs are in `../wiki/processors.md`, and asgard-fde-cli's `go run ./hack processors` is what holds that table against the literal |
 | **asgard-freyr-skills** | **nine runtime skills, incl. the SHOPLINE pair** | one page - `../usecase/skill-layers.md`. The eighth reference repository, and the only one with no CRs |
 | **seven deployments** | **every shape the extracts describe** | 19 charts between them; `../wiki/coverage.md` counts per deployment and says why |
 
@@ -163,7 +163,7 @@ go here.** A fraction whose numerator counts links and whose denominator counts
 pages reads as better coverage than it is, and those are the two things easiest
 to confuse.
 
-**And it is not counted by hand.** `hack/check-coverage.py` in asgard-fde-cli
+**And it is not counted by hand.** `go run ./hack coverage` in asgard-fde-cli
 computes all four numbers and fails when this row drifts from them.
 
 ## Deliberately not covered
@@ -183,7 +183,7 @@ exclusion nobody has looked inside.
 **28 files at `f00e0ee`, and the count is computed** - it was 29 by hand, and
 before that 32, because four `asgard-builtin` pages came back into
 `../wiki/processors.md` and the subtraction was done in one place and not the
-other. asgard-fde-cli's `hack/check-coverage.py` counts it now.
+other. asgard-fde-cli's `go run ./hack coverage` counts it now.
 
 **`superpowers/` no longer exists upstream.** Those five pages are gone from
 asgard-docs as of `23409b3`, so at the clone's HEAD the excluded set is 23 and
@@ -193,7 +193,7 @@ directory being deleted, which is not something this material can notice.
 **The denominator moved by four rather than five**, because
 `developer-reference/processor/query-llm-database` arrived in the same span:
 158 pages at `23409b3` against 162 at `f00e0ee`, with the same 77 cited.
-asgard-fde-cli's `hack/check-coverage.py --head` prints both, and the difference
+asgard-fde-cli's `go run ./hack coverage --head` prints both, and the difference
 is the size of what re-reading would cover rather than a defect.
 
 **"Uncited" is not "unread", and the gap is two families.** 15 of the 85 are

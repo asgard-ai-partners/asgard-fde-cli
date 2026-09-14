@@ -15,10 +15,14 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"sort"
 )
+
+// errFailed means the check failed and has already said why.
+var errFailed = errors.New("check failed")
 
 // check is one entry in the gate.
 type check struct {
@@ -46,7 +50,13 @@ func main() {
 		os.Exit(2)
 	}
 	if err := c.Run(os.Args[2:]); err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		// **A check that has already printed its findings says nothing more.**
+		// It returns errFailed so the exit code carries the answer, because a
+		// summary line after the findings is a second account of one fact - the
+		// same reason no check here records a verdict in prose.
+		if err != errFailed {
+			fmt.Fprintln(os.Stderr, err)
+		}
 		os.Exit(1)
 	}
 }

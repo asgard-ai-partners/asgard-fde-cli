@@ -129,7 +129,7 @@ func runTables(args []string) error {
 	fmt.Printf("\n%d enum field(s), %d constrained field(s), %d disagreement(s)\n",
 		len(mine), len(fields), len(problems))
 	if len(problems) > 0 {
-		return fmt.Errorf("%d disagreement(s) between the pinned tables and the CRDs", len(problems))
+		return errFailed
 	}
 	return nil
 }

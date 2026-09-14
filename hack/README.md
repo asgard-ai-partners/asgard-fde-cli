@@ -1,5 +1,23 @@
 # hack/
 
+This is the maintainer's gate, and **it is Go**: one binary with a subcommand
+each, run as `go run ./hack <check>`.
+
+    go run ./hack pass     the whole pass, derived rather than written down
+    go run ./hack list     every check, and what each one needs
+
+**A check that is not compiled is a check nobody runs until it is wrong.** Most
+of these run only by hand, so an error in a branch nobody takes survives for
+weeks - AGENTS.md has the five that got through while they were scripts, every
+one of them a compile error in Go. Porting them also found a number the Python
+had been wrong about *and was validating a page against*: it counted distinct
+CEL rules by matching `rule:` with a regular expression over raw YAML, so two
+spellings of one rule counted as two.
+
+**One shell script is left.** `verify-references.sh` drives helm and this
+repository's own binary over the reference charts, and rewriting that in Go buys
+nothing.
+
 ## Where the upstream clones are
 
 Every check here needs one, and **the paths used to be written into the scripts
@@ -7,21 +25,21 @@ and into this file** - true on one machine, wrong on every other, and the
 reason `go run ./hack tables` went eight upstream commits without being run. One
 environment variable per source, and a default that is one person's layout:
 
-    hack/sources.py            what each one resolves to, and how far behind it is
+    go run ./hack sources      what each one resolves to, and how far behind it is
     go run ./hack tables       the pinned gate tables against the CRDs
-    hack/check-coverage.py     the wiki's coverage row against the docs tree
-    hack/check-processors.py   wiki/processors.md's two tables against their owners
-    hack/check-counts.py       counts this material asserts about a deployment
+    go run ./hack coverage     the wiki's coverage row against the docs tree
+    go run ./hack processors   wiki/processors.md's three tables against their owners
+    go run ./hack counts       counts this material asserts about a deployment
 
     ASGARD_KUBE          the CRDs, the platform contract
     ASGARD_DOCS          the product documentation
     ASGARD_CORE          the processor definitions the CRDs come from
     ASGARD_DEPLOYMENTS   the directory holding the reference deployment clones
 
-**Nothing here clones or pulls.** A script that fetched would turn "read at this
+**Nothing here clones or pulls.** A check that fetched would turn "read at this
 commit" into "read at whatever was there when the script ran", which is the one
 thing the provenance rule exists to prevent. `git -C <path> pull` is the
-reader's act, and `sources.py` tells you when it is due.
+reader's act, and `go run ./hack sources` tells you when it is due.
 
 This repository's own tooling. Not shipped, not embedded, and not the same thing
 as `.agents/skills/db-query/scripts/`, which `asgard-cli init` writes into a
@@ -108,7 +126,7 @@ nothing, and it moves without announcing it.
 KUBE=../asgard-kube
 git -C $KUBE fetch && git -C $KUBE status -sb        # say so in the PR if behind
 mkdir -p .out/crdjson
-# the tables check converts these itself; this is only for validate-crs.py below
+# `go run ./hack tables` reads the YAML itself; this is only for a JSON dump
 for f in $KUBE/crd/*.yaml; do yq -o=json "$f" > .out/crdjson/$(basename $f .yaml).json; done
 ```
 
@@ -119,7 +137,7 @@ both environments, validate each:
 go build -o .out/asgard-cli ./cmd/asgard-cli
 # init, scaffold, project add, then one `add <kind>` per kind, then:
 asgard-cli render <release> --quiet | yq -o=json -I=0 '.' > .out/dev.ndjson
-python3 hack/validate-crs.py .out/crdjson .out/dev.ndjson
+go run ./hack validate-crs .out/dev.ndjson
 ```
 
 **What the extracts teach.** These are what somebody copies by hand, so they are
@@ -128,8 +146,8 @@ they are defused first - Helm actions and `<placeholder>` text become sentinels
 the validator knows not to report on:
 
 ```bash
-python3 hack/extract-crs.py .out/extracts.ndjson
-python3 hack/validate-crs.py .out/crdjson .out/extracts.ndjson
+go run ./hack extract-crs .out/extracts.ndjson
+go run ./hack validate-crs .out/extracts.ndjson
 ```
 
 Both should print `0 schema violation(s)`. Put the counts and the asgard-kube
@@ -175,8 +193,8 @@ are two fields somebody can be refused on.
 
 ## How far the generated chart is from a real one
 
-    hack/spec-key-gap.py             recompute, and check TASK.md's claim
-    hack/spec-key-gap.py --missing   the keys production uses and `add` never writes
+    go run ./hack spec-key-gap             recompute, and check TASK.md's claim
+    go run ./hack spec-key-gap --missing   the keys production uses and `add` never writes
 
 **The number behind "the chart half is the least finished of the four."** It
 decides whether an FDE treats what `add` emits as a chart or as a starting
@@ -196,8 +214,8 @@ appears to close as a chart grows.
 
 ## Recomputing a count that came out of somebody else's document
 
-    hack/check-counts.py           against the clones as they stand
-    hack/check-counts.py --dump    print what upstream counts, and stop
+    go run ./hack counts           against the clones as they stand
+    go run ./hack counts --dump    print what upstream counts, and stop
 
 **A number copied out of a document that states its own count is the cheapest
 thing in this material to get wrong, and the most expensive to notice**: nothing
@@ -212,8 +230,8 @@ being checked without anybody deciding to stop checking it.
 
 ## Re-walking the processor definitions
 
-    hack/check-processors.py            against the clones as they stand
-    hack/check-processors.py --dump     print what upstream says, and stop
+    go run ./hack processors            against the clones as they stand
+    go run ./hack processors --dump     print what upstream says, and stop
 
 `wiki/processors.md` is the most claim-dense page in the corpus - thirteen
 processors, their required keys, their defaults, their outputs, and which keys

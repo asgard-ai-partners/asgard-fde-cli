@@ -71,22 +71,22 @@ jobs:
         run: go run ./cmd/asgard-cli audit-material --sources
 
       - name: this repo's own documents name no path or symbol that is gone
-        run: hack/check-doc-paths.py
+        run: go run ./hack doc-paths
 
       - name: TASK.md's pass names every check, and no maintenance skill ships
         run: |
           go build -o .out/asgard-cli ./cmd/asgard-cli
-          hack/check-pass-list.py
+          go run ./hack pass-list
 
       - name: Goal.md's four points, against the binary
-        run: hack/check-goal.py
+        run: go run ./hack goal
 
-      # the tables check, check-processors.py, check-counts.py, check-coverage.py,
-      # spec-key-gap.py and verify-references.sh are deliberately absent: every
-      # one needs a clone of somebody else's repository, and asgard-core is
-      # private. They are in the
-      # maintainer's gate, in AGENTS.md, and `hack/sources.py` says when one is
-      # due.
+      # `go run ./hack tables`, `processors`, `counts`, `coverage`,
+      # `spec-key-gap`, `validate-crs` and `hack/verify-references.sh` are
+      # deliberately absent: every one needs a clone of somebody else's
+      # repository, and asgard-core is private. They are in the maintainer's
+      # gate - `go run ./hack pass` prints it - and `go run ./hack sources` says
+      # when one is due.
 
 
   build:
