@@ -54,7 +54,7 @@ For a customer-service shape rather than an internal one:
 
 | path | what it shows |
 |---|---|
-| `retail-ai-customer-service/21-flow-agent-canvas.png` | the four-node flow: Entry, Init, Agent, Listen, with an error branch |
+| `retail-ai-customer-service/21-flow-agent-canvas.png` | the five-node default flow: Entry, Init, Agent, Listen, and a push on Agent's Failure branch |
 | `retail-ai-customer-service/23-agent-node-open.png` | the prompt deciding what a **logged-out** visitor is told, versus a logged-in one |
 
 And the one that shows Description doing its job in public:
@@ -314,13 +314,19 @@ them are referenced by any documentation page - the rest are orphaned assets
 from an older structure, and 204 of those sit under `user-guide/`, which no
 longer has pages. So the denominator that means anything is 168, not 679.
 
-This page names **113** of that 168. Every one of them resolves at `https://docs.asgard-ai.com/img/docs/<path>`, exists in the
+This page names **116** of that 168. Every one of them resolves at `https://docs.asgard-ai.com/img/docs/<path>`, exists in the
 repository, and is referenced by a live page, so nothing here points at a
-missing file or at an orphan. **Coverage is 67% of the images the documentation
+missing file or at an orphan. **Coverage is 69% of the images the documentation
 uses**, and the paragraph that used to sit here said "roughly a hundred", which
 was a guess about a number seven times too small.
 
-**The 55 not named here carry no alt text**, and most are hash-named files from
+**That number moves whenever somebody adds an image to this page**, which is an
+ordinary edit and not one anybody remembers to recount after. So it is computed:
+asgard-fde-cli's `go run ./hack counts` intersects the paths named here with the
+images a live page references at `f00e0ee`, and adding one moves the figure or
+fails the check.
+
+**The 52 not named here carry no alt text**, and most are hash-named files from
 an older documentation structure. There is nothing useful to say about them
 from a listing - the LINE three under `## What has no screenshot` are the
 exception, and they were found by reading the page that uses them rather than by

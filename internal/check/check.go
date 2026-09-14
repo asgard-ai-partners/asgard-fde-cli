@@ -310,7 +310,7 @@ func namesAnEnvironment(s string) bool {
 // platform project — which is what gives them different namespaces. One release
 // is right for a POC nobody will maintain, and for nothing else.
 //
-// Nothing used to say so. Every prompt around a release was singular, which
+// Nothing else says so. Every prompt around a release reads as singular, which
 // reads as a 1:1:1 chart-to-release-to-platform-project mapping, and an agent
 // onboarding a repository takes the prompts literally: the reported case wrote
 // a lone release with the pattern `dev-\d+\.\d+\.\d+` — naming a dev
@@ -426,19 +426,58 @@ func frontmatter(data []byte) map[string]string {
 // every run of every new repo and teaches the reader that a warn from this
 // command means nothing - which matters, because the interview check below
 // reports something worth acting on through the same channel.
+// chartsDeclareSkillSet reports whether any project's chart declares a SkillSet.
+// One does when its skills come from a git repository the Syncer clones, and
+// then this repository's own `assets/skills/` is empty by design.
+func (c *checker) chartsDeclareSkillSet(projects []string) bool {
+	for _, p := range projects {
+		dir := filepath.Join(c.root, filepath.FromSlash(repo.ChartDir(p)), "templates")
+		found := false
+		_ = filepath.Walk(dir, func(path string, fi os.FileInfo, err error) error {
+			if err != nil || fi.IsDir() || found {
+				return nil
+			}
+			data, err := os.ReadFile(path)
+			if err != nil {
+				return nil
+			}
+			if skillSetKind.Match(data) {
+				found = true
+			}
+			return nil
+		})
+		if found {
+			return true
+		}
+	}
+	return false
+}
+
+var skillSetKind = regexp.MustCompile(`(?m)^kind:\s*SkillSet\s*$`)
+
 func (c *checker) checkAssetSkills(projects []string) error {
 	c.checkRenamedCommonDir()
 
 	dir := filepath.Join(c.root, assetsDir, "skills")
 	entries, err := os.ReadDir(dir)
 	if os.IsNotExist(err) {
-		if len(projects) > 0 {
+		if len(projects) > 0 && !c.chartsDeclareSkillSet(projects) {
 			c.warnf("assets/skills/ does not exist; it is where runtime skills live, and there are none yet")
 		}
 		return nil
 	}
 	if err != nil {
 		return fmt.Errorf("read %s: %w", dir, err)
+	}
+
+	// **A chart that declares a SkillSet has answered this.** Those skills live
+	// in the git repository its Syncer clones, which is the ordinary shape -
+	// `assets/skills/` is for skills THIS repository ships, and staying empty
+	// is what the scaffold's own README says it does. Warning anyway meant a
+	// finished repo carried a warning it could never clear, which is how a
+	// reader learns that a warn from this command means nothing.
+	if len(projects) > 0 && c.chartsDeclareSkillSet(projects) {
+		return nil
 	}
 
 	found := false
@@ -720,11 +759,9 @@ func (c *checker) checkQuestionsFollowTheDeck() error {
 	// The newest date the questions themselves record - a row's raised date, or
 	// the date an answer was written next to it.
 	//
-	// **Not the file's modification time.** That was the first version, and any
-	// edit to the file silenced this: the one that did was a command rename in
-	// the prose, made for an unrelated reason, and a meeting's answers were
-	// never written back while the gate said ok. A date inside a row moves only
-	// when somebody works the questions.
+	// **Not the file's modification time**, which any edit silences - including
+	// one that touches only the prose. A date inside a row moves only when
+	// somebody works the questions.
 	body, err := os.ReadFile(questions)
 	if err != nil {
 		return err

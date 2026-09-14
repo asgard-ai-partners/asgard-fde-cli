@@ -6,7 +6,8 @@ two repos disagree about how the trio is wired, in a way that is dated.
 **Seen in:** two deployments that wire it differently - one file holding three
 CRs per skill set, versus several skill sets sharing one store.
 
-**Checked:** 2026-09-02 against both shapes: 1:1:1 in the newer deployment, one SourceSet shared across five SkillSets in the older one, and against the CRD.
+**Checked:** 2026-09-02 against both shapes: 1:1:1 in the newer deployment, one
+SourceSet sliced by several SkillSets in the older one, and against the CRD.
 
 **Unchecked:** nothing outstanding on the structure. The search-path rule is stated by the deployments themselves rather than enforced anywhere.
 
@@ -48,25 +49,76 @@ The Syncer writes to **`destinationPath: "git/"`**, trailing slash included, and
 a searchPath is then `git/skills/pdf/`. **The SourceSet declares no members** -
 the paths its Syncers write to are the whole truth about what is in it.
 
+**`destinationPath`, `statePath` and `sourceSetName` are immutable**, along with
+the repository location for every syncerClass. So a Syncer is never repointed:
+"sync from there instead" is a new Syncer and a deleted one, the apiserver
+refuses the edit, and the cursor does not come with it.
+`../wiki/crd-rules.md` lists all 21 of the Syncer's immutable fields.
+
 > **Two older shapes you will find in charts that have not been touched
 > recently.** Neither is worth copying, and the first one will not even apply:
 >
 > - **`members:` on the SourceSet, with `destinationMemberKey` / `stateMemberKey`
->   on the Syncer.** The member registry is gone; the fields are now
->   `destinationPath` and `statePath`.
+>   on the Syncer.** The two halves are not in the same state. `members:` is
+>   **gone from the SourceSet** - its spec carries `apiKey`, `contextIndex` and
+>   `labels` and nothing else - so a chart setting it loses the field silently.
+>   The Syncer's two key fields **still exist**, marked deprecated and kept "so
+>   pre-rename Syncer objects stay readable during the transition", so one set
+>   there does apply. Write `destinationPath` and `statePath`; the old pair is
+>   readable, not usable.
 > - **One SourceSet shared across several skill sets**, sliced apart with
 >   searchPaths, *for a skill set that is its own unit*. Changed away from on
 >   2026-08-28: it leaves the Platform UI
 >   unable to find a skill set's git config, so it renders as a skill set with no
 >   source - a UI failure, not a runtime one, which is why it survives unnoticed.
 
+### A store somebody writes into needs its own, with no Syncer on it
+
+**A SourceSet with a Syncer is not a place to write.** Every run of a git Syncer
+re-fills the paths it owns, so a file put there by anything else is overwritten
+or removed on the next sync - and a Syncer on a 30-minute schedule makes that a
+silent loss rather than a visible conflict. So a store that both a Syncer and
+somebody else writes into cannot be one SourceSet, however much the contents
+look alike.
+
+The shape read off a running deployment is two SourceSets with the same skills
+in them for different reasons:
+
+    ss-git-repos        members filled by Syncers from git. Read-only in
+                        practice, whatever the CRD allows
+    ss-brand-skills     no members, **no Syncer**, written through the Edge
+                        Server's SourceSet volume API at a path the writer
+                        chooses - there, `brands/<brand>/skills/<skill>/<rev>/`
+
+**The revision directory is the other half of it.** Each write goes to a new
+`<rev>/`, so a path is written once and afterwards only read or deleted; the
+parent directories are created by the write itself, which is why that SourceSet
+declares no members either. Without that, two writers land on one path and the
+reader gets whichever finished last.
+
+And **the name is load-bearing** in a way a chart rename does not warn about:
+the service writing into it holds the SourceSet name in its own configuration,
+so renaming the CR silently breaks every route that writes to it.
+
+**Checked:** read 2026-09-11 off `asgard-freyr-kube`'s
+`source_set/brand_skills.yaml`, whose own comment forbids reusing the
+Syncer-backed SourceSet and cites that deployment's `asgard-freyr-api` TASK-183
+D183-6 for the requirement.
+
+**Unchecked:** the mechanism. The Syncer implementation is in neither
+asgard-kube nor asgard-core, so nothing here confirms *how* a synced path treats
+a file it did not write - one deployment's chart comment is the whole of the
+evidence. Treat it as a constraint that deployment hit rather than a documented
+platform rule, and if a customer's design depends on writing into a synced
+store, ask the platform team rather than this page.
+
 ### The one place a shared store is right
 
 A **Plugin bundle** is the exception, and it is deliberate rather than a chart
-that was never updated. A deployment carrying 28 Plugins keeps one
+that was never updated. A deployment carrying 29 Plugins keeps one
 `ss-skill-repos` and lets each bundle's SkillSet slice it with `searchPaths`,
-because the skills all live in one repository and 28 SourceSets over the same
-repository would be 28 clones of it.
+because the skills all live in one repository and one SourceSet per bundle
+would be 29 clones of it.
 
 That shape accepts the UI cost knowingly: those SkillSets carry no
 `skill-set-name` annotation and no `managed-by` label, so they are not presented

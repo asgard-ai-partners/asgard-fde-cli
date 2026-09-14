@@ -35,15 +35,17 @@ status:
 		want: []string{"syncState: Succeeded", "lastSuccessfulTimestamp", "type: Ready"},
 		not:  []string{"none reported", "unreadable"},
 	}, {
-		// A SemanticLayer declares no status properties at all, which is the
-		// mimir-dashboard shape and the case the issue was filed from.
+		// A DataConnector declares no status properties at all - one of the
+		// seven kinds that do not - and it is half of the mimir-dashboard
+		// shape, which is the case the issue was filed from. A SemanticLayer
+		// was the example here and does declare one.
 		name: "nothing to report",
 		yaml: `apiVersion: asgard-ai.com/v1alpha1
-kind: SemanticLayer
+kind: DataConnector
 metadata:
-  name: sl-uof
+  name: dc-uof
 spec:
-  dataConnectorName: dc-uof
+  dataConnectorClass: postgres
 `,
 		want: []string{"status: none reported"},
 		not:  []string{"unreadable"},

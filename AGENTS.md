@@ -32,8 +32,17 @@ it cannot.
 It writes files into a *customer's* repository and never holds state of its
 own. The division: `Goal.md` is the goal, [TASK.md](TASK.md) is where it stands
 and what is missing, [README.md](README.md) is what the commands do,
-[APPROACH.md](APPROACH.md) is how the main capabilities are implemented, and
-this file is how to change the code and the material without breaking it.
+[APPROACH.md](APPROACH.md) is how the main capabilities are implemented,
+[STRUCTURE.md](STRUCTURE.md) is what lives in which directory, and this file is
+how to change the code and the material without breaking it.
+
+**Before saying anything here is correct, load
+`.agents/skills/consistency-checks/SKILL.md`.** It is the method: what to run,
+in what order, what each check is blind to, and how to do the part no check
+does. `go run ./hack pass` is the list itself, derived rather than written down;
+what a pass cannot derive is in `TASK.md` under "What no check reaches", and it
+is written there **before** a pass runs, because a pass that discovers its own
+scope as it goes finds a surface nobody listed and reports it as news.
 
 **Most of the value is not code.** It is one corpus, and the first question when
 adding anything is which part it belongs to:
@@ -59,6 +68,17 @@ document that owns its claim, and that pointer is checked; the markdown is
 rendered from them.
 
 [STRUCTURE.md](STRUCTURE.md) walks every directory.
+
+**Present tense, and no log.** A rule is stated as the rule. **What went wrong
+before is not the justification** - it reads as evidence and functions as a
+changelog, it grows without bound, and every reader pays for it in context.
+What belongs on a page is the constraint and what it costs to break; what
+happened to this repository belongs in `git log` and nowhere else. A platform
+or customer failure is different: that is a fact about the platform, it is what
+the material is for, and it carries its provenance.
+
+**Nor in a commit message.** The subject says what changed, the body says why
+the rule is what it is. Not a post-mortem.
 
 **One fact, one home; everywhere else links.** A trap that belongs to a CR
 template does not also get explained in a wiki page. When you are about to repeat
@@ -177,6 +197,33 @@ page makes every page look reached.
 Do not "fix" the scaffold templates into English. Do not start a second exception
 without saying why it earns one.
 
+## `hack/` is Go
+
+**A check that is not compiled is a check nobody runs until it is wrong.** These
+scripts are the maintainer's gate and most of them run only when somebody runs
+them by hand, so a typo in a branch that is rarely taken sits there for weeks -
+and one pass added five of them: a missing import, a key that did not exist in
+the map it indexed, a `git grep` output parsed by the wrong field, a helper
+called with the wrong signature, and a substring test that passed on a longer
+word. **Every one of those is a compile error in Go**, and `go build ./...` and
+`go vet ./...` already run on every push.
+
+So a check goes in `hack/` as Go, under the one `main` package with a
+subcommand each, and shares what it needs through `hack/internal/`. Three things
+follow:
+
+  - **No `yq`, and no subprocess for YAML.** `gopkg.in/yaml.v3` is already a
+    dependency, so a CRD is unmarshalled rather than shelled out to and parsed
+    back out of JSON.
+  - **Reading the corpus goes through `internal/kb`**, not a second regular
+    expression. The whole reason that package exists is that two readers of one
+    format drift.
+  - **`go test ./...` can reach them**, which nothing could before.
+
+**A shell script is still a shell script** when what it does is drive other
+programs - `verify-references.sh` renders charts with helm and pipes them into
+the binary, and rewriting that in Go buys nothing.
+
 ## Plain ASCII, no emoji
 
 No emoji, and no decorative Unicode either - no check marks, arrows, box-drawing
@@ -278,23 +325,17 @@ emitting a map, so it carries a `platform` key.
 
 ## The gate
 
-**Prose and material carry almost all of the risk here, so the checks are
-aimed there.** A handful of Go tests cover parsing and matching rules where a
-wrong answer is silent; everything else is checked by reading what ships.
+**Prose and material carry almost all of the risk here, so the checks are aimed
+there.** A handful of Go tests cover parsing and matching rules where a wrong
+answer is silent; everything else is checked by reading what ships.
 
-```bash
-go build ./...
-go vet ./...
-gofmt -l internal/ cmd/
-go test ./...
-asgard-cli audit-material --links
-asgard-cli audit-material --commands
-asgard-cli audit-material --bare
-asgard-cli audit-material --paths
-asgard-cli audit-material --unverified
-hack/check-doc-paths.py
-asgard-cli audit-material --urls   # needs the network
-```
+    go run ./hack pass     every check, in the order to run them
+    go run ./hack list     what each one is for, and what it needs
+
+**The list is not written down here.** It is derived from the binary's own
+flags, this directory's contents and the gate's own subcommands, so it cannot go
+stale - which a list in a markdown file does, and this one had: it named two of
+the twelve Go checks and none of the other ten.
 
 `make gate` runs all of it except `--urls`, which is `make audit-urls`. The
 Makefile **mirrors CI rather than defining it**: `.github/workflows/ci.yml` is
@@ -302,7 +343,7 @@ what decides whether a change merges, so a check added there and not to the
 Makefile is still enforced, and one added to the Makefile alone is a
 convenience.
 
-`--paths` and `check-doc-paths.py` are the same rule from the two sides. The
+`--paths` and `go run ./hack doc-paths` are the same rule from the two sides. The
 audit reads what **lands** in a customer repository and fails on a path only we
 have; the script reads the documents that never land - Goal, README, AGENTS,
 STRUCTURE, APPROACH, TASK - where naming our own paths is the point, and fails
@@ -314,44 +355,34 @@ symbol in backticks**, even to explain that it is deleted: this check reads
 this file, and it will resolve it. It needs the checkout, which is why it is in
 `hack/`.
 
-Everything above except `--urls` runs in CI. `--urls` does not: a third party's
-outage is not this repository's build failure, and a gate that only works
-online is one that fails on a plane.
+**CI runs the checks that need nothing but this repository**: the audits, the
+Go steps, `doc-paths`, `pass-list` and `goal`. The rest need a clone of somebody
+else's repository - and asgard-core is private - so they are the maintainer's to
+run, and `go run ./hack sources` says when one is due. `--urls` is excluded for
+its own reason: a third party's outage is not this repository's build failure,
+and a gate that only works online is one that fails on a plane.
 
-That is this repository's gate. **A customer repository's gate is one command,
-`asgard-cli gate`**, and the difference is deliberate: the thing an agent runs
-after every edit has to be one command whose definition lives in the binary,
-not a list in a markdown file that goes stale. This list is for the maintainer,
-who is editing the binary - and when a step is added to `gate`, nothing here
-needs changing, which is the point.
+**A customer repository's gate is one command, `asgard-cli gate`**, and the
+difference is deliberate: the thing an agent runs after every edit has to be one
+command whose definition lives in a binary. This one is for the maintainer, who
+is editing that binary.
 
-`--urls` fetches every `docs.asgard-ai.com` link the material cites and fails on
-a 404. A citation that already says the link 404s - a page marked `draft: true`,
-which asgard-docs does not publish - is reported and does not fail, so
-disclosing one is how you keep it.
+Three of the audits are worth a sentence each beyond what `--help` says:
 
-`--links` resolves every pointer the material writes - the paths
-`../wiki/<page>.md`, `../usecase/<name>.md` and the same for the other three
-kinds - in prose, in the templates, and in the generator's own `Wiki:`,
-`Extract:` and `AlsoRead:` fields, and exits 1 on one that goes nowhere. It
-also fails a path whose target `init` does not write into a repository,
-because that one resolves here and not there.
-**Run it after renaming or removing a page**, which is the only way to leave a
-dead pointer behind; it reads correctly and resolves to nothing, and the reader
-who follows it cannot tell that from a page they failed to find.
-
-`--commands` is `--links` for the tool itself: it resolves every
-`asgard-cli <command>` this material writes - prose, help screens and the
-scaffold templates alike - against the command tree the binary answers to, and
-exits 1 on one that does not exist. **It reads what is embedded**, which is what
-an engagement gets; this file, `README.md` and `STRUCTURE.md` are not in it,
-because they are read from a checkout rather than shipped.
-
-It exists because that failure shipped. `asgard-cli pipeline deliveries` was
-named in six documents - the verification skill, a scaffolded `AGENTS.md` and
-`README`, two stage prompts - as the one place a push that produced no run
-explains itself, and no such command had ever been built. A person re-reading a
-provenance line found it, weeks later.
+  - **`--links`** resolves every pointer, in prose, in the templates and in the
+    generator's own `Wiki:`, `Extract:` and `AlsoRead:` fields - and fails a
+    path whose target `init` does not write into a repository, because that one
+    resolves here and not there. **Run it after renaming or removing a page**,
+    which is the only way to leave a dead pointer behind: it reads correctly,
+    resolves to nothing, and the reader who follows it cannot tell that from a
+    page they failed to find.
+  - **`--commands`** is the same thing for the tool itself, and **it reads what
+    is embedded**, which is what an engagement gets. This file, `README.md` and
+    `STRUCTURE.md` are not in it, because they are read from a checkout rather
+    than shipped.
+  - **`--urls`** reports rather than fails on a citation that already says the
+    link 404s - a page marked `draft: true`, which asgard-docs does not publish -
+    so disclosing one is how you keep it.
 
 None of those sees a wrong string in an embedded template, a pointer that
 resolves to the wrong page rather than to none, or a generated CR the apiserver
@@ -372,6 +403,99 @@ CRD schemas in [`asgard-kube/crd/`](https://github.com/asgard-ai-platform/asgard
 `helm lint` and `asgard-cli check` do not compare against the platform contract,
 which is how four required fields were missing from two templates until somebody
 looked.
+
+## What is checked, and what is not
+
+**This section says which of three kinds of thing covers a surface; the method
+is `.agents/skills/consistency-checks/SKILL.md` and the list is
+`go run ./hack pass`.** It runs **most-volatile first** - upstream before the
+material, because nobody here touches asgard-docs and it moves without anyone
+here noticing.
+
+**"Every check passes" is not "the repository is correct", and the difference
+is this table.** Every defect found by reading rather than by a check came from
+a surface in the third group. So a claim that something is done says which
+group it was in.
+
+### Never report a pass as green while `TASK.md` has work in it
+
+**Do not answer "all green", or anything that reads as it, while `TASK.md`
+carries an unfinished item.** Report the checks as what they are - a list of
+exit codes - and then say what is still open, by name.
+
+The reason is not modesty. Green means every check this repository has passes,
+and the surfaces that produce the defects are the ones with no check: **17 were
+found by reading in a single pass during which everything was green**, among
+them a table saying a required field had a default it does not have, a count of
+88 written as 93 in seven places, and a pair of numbers no method could
+reproduce. So a green run is evidence about the checks and almost none about
+the material, and reporting it as a verdict on the repository tells the reader
+the opposite of what it means.
+
+**`TASK.md` is where that is read from.** "What is not done" is the list, every
+line names what it is waiting for, and "The consistency pass" is the scope of
+the current pass. If either has an entry, the answer is "the checks pass and
+these are open", never "green".
+
+**Mechanical, and fails the build.** Run them and the answer is not a
+judgement. **What each one covers is the check's own description**, printed by
+`go run ./hack list` and by `asgard-cli audit-material --help`, because a
+description kept here is a second copy that drifts from the code implementing
+it - this one did, and said `pass-list` checked something it had stopped
+checking.
+
+**Reported, and deliberately not enforced.** Each needs a person to read it,
+and a green build says nothing about them:
+
+| surface | why it cannot fail |
+|---|---|
+| `--orphans` | a document reached only by search is still reached |
+| `--crossref` | a sentence describing another command reads correctly alone; only opening that command settles it |
+| `audit-material` with no flag, `--ask`, `--unmarked` | every bold imperative on one screen, because the failure is two opposing ones never being in front of the same reader. `--ask` narrows to the ones telling a reader to ask a customer, which is where filter 0 applies |
+| `--unchecked` | **what every document says it has NOT been held against**, which is the opposite question to `--unverified` and the only one that had no answer: a page whose marker names a whole surface passed the check and nothing put that surface in front of a reader. Every document is expected to have one, so it cannot fail - and it is what `TASK.md` reads its blocked list out of instead of keeping one |
+| `--term <field>` | the sweep for a renamed platform field, across prose and templates. It cannot fail on its own: it only answers a question somebody asks it |
+| `go run ./hack sources` | how far each clone is behind, which is information rather than a verdict |
+
+**Checked by nothing, and verified by reading.** This is the group that has
+produced every finding, so each row records **what the reading was held
+against** rather than a verdict.
+
+**A verdict typed into a table is not checkable and does not belong in one.**
+`ok` beside a script is a result copied out of something that can produce it;
+`read` beside a document is an honour-system claim no program can confirm.
+What *is* checkable is whether the thing a reading was held against has moved
+since, and `go run ./hack sources` reports that - which is why the row records a
+source and a date and not a word.
+
+| surface | last read, and how |
+|---|---|
+| `glossary-collisions`  every word `wiki/glossary.md` says has one meaning here, against every help screen and page | 2026-09-14, and it is the contradiction AGENTS.md lists second - **nothing enforces it and nothing can**, because telling which sense a bare word is in needs a reader. Three were live in the tool's own output, each where both senses are in the same pair of hands: the platform commands called a platform Project a "project" at `pipeline release create --project`, where `projects/<slug>/` means a chart; `pipeline projects` called a main platform Environment an "environment" beside releases named `dev` and `prod`; and `asgard-cli skill` fetches design-time skills while the bare word means the runtime ones a Syncer feeds. **The failures were not new pages redefining a term** - they were help written by somebody who knew which sense they meant |
+| `generated-repo-end-to-end`  the tool run the way an engagement runs it, rather than read | 2026-09-14, extended over the record commands, both flow-agent shapes, `gate --offline`, `doctor`, `reference add`, `local-env` and every command outside a repository. **A third wrong verdict**: an edit inside AGENTS.md's managed region - the half this CLI owns - was reported as `updated`, which `gate` reads as a pass, so an engagement that changed shipped material was told nothing and the next `init` overwrote it in silence. Which side of a differing region moved is not in the bytes; it is whether the CLI that wrote the file is the one running, and the record says. Edits above and below the marker stay a pass, which is what the region exists for. The earlier findings, same day: `init`, `project add`, four `add` kinds, a declared release, `check`, `render`, `verify`. **Two verdicts were wrong, and both are the kind only running finds.** `check` warned that `assets/skills/` is empty on a chart whose SkillSet syncs from git - the ordinary shape, and a warning that repository could never clear, in the command every customer agent runs. And **a chart whose every answer is still `TODO` passes everything**: helm renders the word, the apiserver accepts it, the run succeeds, and a published Agent shows "TODO" to the customer as its sample questions. `verify` has a `placeholders` step now, warning and never failing, silent on all seven production charts. **Extended by running the other shapes**: a flow agent's prompt is a processor config rather than an Agent field, and the supervisor writes it as a `template:` where the first version read only `value:` - the three forms the CRD makes exactly-one-of are three places a placeholder can hide. A fixed query tool's `sql` and every entry's `tooling.description` are named too: `select 1` applies cleanly and answers every question with the same row |
+| `provenance-markers`  every `**Checked:**` and `**Seen in:**` line in the corpus | 2026-09-14. **A count on a provenance line is not evidence of a reading**, and the right number is the dangerous one: it makes the check green and the page unread. Six markers carried tallies - "against 72 gated and 14 ungated tool entries", "against 11 SemanticLayer CRs" - and each now names a scope that cannot be satisfied by counting. `wiki/coverage.md` is the opposite case and was the one page whose counts are the claim with nothing recomputing them: `go run ./hack shapes` renders all seven deployments and holds the table both ways, so a kind in a chart with no row fails too |
+| `extracts-vs-charts`  the 22 extracts against the charts they came from | 2026-09-11, every field name against the pulled clones and the CRDs, every count by rendering all 19 charts |
+| `wiki-vs-docs`  the 27 wiki pages against asgard-docs | 2026-09-14, and **the scope is computed now**: `go run ./hack coverage --drift` lists every cited page that has moved since the commit the citing document names, and it is at 0. Getting there was the finding: the four that had moved were read on 09-11 and **the readings were never recorded**, so the commit beside each citation still said `f00e0ee` and the check went on reporting work already done. Each now names the commit it was held against. The check was wrong in two directions of its own - it measured every URL in a document from that document's oldest commit, so one stale entry held a whole page back, and it read a URL template and a fenced example of the source-block shape as citations. The prose citing a page that has not moved stands at its own reading |
+| `stage-prompts`  the 10 stage prompts | 2026-09-14, all 2,355 lines read end to end for the guidance as well as the command claims, and every command and flag each writes run against the binary. The three figures handed to a customer - 5 requests per second, 3 minutes, 30 steps - are the quota page's own; `botProviderClass` immutable and exactly one class block present are the CRD's. **Four corrections**: the mail question offered "an HTTP endpoint" against "they do not", and the answer that actually arrives is SMTP credentials; `08-deploy.md` told a reader to grep `.github/workflows/` for a Syncer wait, and **a repository this tool writes has no CD workflow at all** - the rollout is the platform's - which the plugin's `gate` command had copied; `02-projects.md` said `verify` would report an Agent with no capability in a chart that has no Agent, where what it actually reports is R11; and it credited this tool with deriving the namespace, which the platform does |
+| `scaffold-templates`  the 2,783 lines a customer repository receives that are not skills | 2026-09-14. `AGENTS.md.tmpl` is 912 of them and is the AGENTS.md every engagement then works under. Its six `spec.` fields are in asgard-kube `cbd8d70`, its acceptance-gate table matches the binary's eight steps exactly, and its shape-C field forms match the CRD. **It disclosed its one copied list** - the gate table, with the mechanism that reports when it moves - which is what the other hand-written lists found this week did not. What it was missing is the `sourceSetMounts` rule that takes a whole deployment down, and it points at it now |
+| `design-time-skills`  the 7 design-time skills' prose | 2026-09-14, read end to end - 2,255 lines, of which `proposal-deck` is 1,232. Every platform claim held against the CRDs: the nine DataConnector class blocks name every required field, `SemanticLayer.sampleQuestions` is strings, gate R4 exists. **One correction**: `semantic-layer-modeling` said nothing narrows a layer once it is mounted, which is true of the Agent path and not of the processor one, where `semanticLayer.allowedCubes` is exactly that narrowing |
+| `needs-and-briefs`  the 7 needs lists and 4 briefings, which are Go rather than markdown | 2026-09-14, and **this was the second surface in none of the three groups** - two of the six parts of the corpus, landing in every repository, read by nothing but `--links` resolving their pointers. Every platform claim holds: the four BotProvider class blocks require exactly what the rows ask a customer for, `botProviderClass` is immutable, `description` is required on every cube, dimension and measure. **The finding is a contradiction the material had with itself**: a briefing told a chart author an Expression is ECMA5 - no arrow functions - while `../wiki/processors.md` settles the opposite off the deployed charts, and `../wiki/workflow.md` said both things 77 lines apart. Also one row pointing at a document that does not own the claim it bolds. **The repair repeated the page's own numbers and they were wrong too** - 520 values, one arrow function, no `const` anywhere; recounting gives 449, 80 and 26, because the count had been taken over a set that excluded the deployment doing most of it |
+| `command-help`  the 2,866 lines of `--help` across 77 screens, which is the largest surface the FDE reads and was in no group | 2026-09-14, every screen read end to end and every countable claim recomputed. **Six defects, four of them contradictions between two screens**: `pipeline` told a reader to run `helm lint` by hand, which `gate` and `doctor` both forbid and which fails on every chart that labels anything; `login` taught `prod` and `dev` as built-in profiles, which the code removed - it prints a migration message saying so - while every other screen says `default`, and both READMEs carried it too; `verify` called 79 `XValidation` markers "79 rules", the exact confusion `go run ./hack tables` exists for, and `internal/cli` was not in the files that check reads; `pipeline manifest --status` named Agent, SemanticLayer, Plugin, SkillSet and SandboxBlueprint as declaring no status when all five do, and a test's comment rested on the same belief; `render` gave a pipe into `asgard-cli check xref -`, which is not a subcommand - `check` reads it as a project name; and `issue-report` said `--new` fills three of the five sections when it fills one. `gate`'s own example block had a paragraph inside it |
+| `gate-messages`  the 392 error and warning strings `check`, `verify` and the CLI print, and `hack/verify-references.sh` | 2026-09-14, the 33 that carry a claim read against the CRDs and the deployment clones. **The finding was what the script could not see**: it looked for two chart layouts and the set has three, so the largest chart in it - 105 CRs, 29 Plugins - had never been rendered through the gate at all, and a repo contributing no line looked exactly like a clean one. Rendering it found the gate failing a documented shape 29 times: a SkillSet a Plugin bundles carries no `skill-set-name` on purpose, which `../usecase/plugin.md` says and its own skeleton then contradicted, as did the generator. The warning about that shape quoted "four reference deployments and none has a Plugin" - six run it, and the one with 29 Plugins is the exemption - and it reads this chart now instead of quoting a count. The remaining 151 findings are that chart's own, in somebody else's repository |
+| `generator-templates`  the 1,100 lines `add` writes into a customer's chart | 2026-09-14, every claim against asgard-kube `cbd8d70` and asgard-core `623ceb5`. **Three defects, and the first is a write path**: the zero-parameter query tool - the shape whose whole argument is that no user input reaches SQL, for an anonymous audience - omitted `allowWrite`, which the definitions default to **true** and describe as permitting INSERT, UPDATE, DELETE and DDL. The extract's skeleton omitted it too. `go run ./hack write-path` now fails any place that mounts a database without writing it out. Second, two templates said **CD fails a project with no Syncer**, which is the belief `08-deploy.md` was corrected on - the rollout is the platform's and the gate warns. Third, the Trigger's cron comment taught a CRD pattern that upstream **deleted** because it had copied cron wrong in both directions, rejecting ranges and comma lists the API server accepts: the expensive direction a pinned copy goes stale in, and `wiki/automation.md` carried it as well |
+| `indexes-and-counts`  the two indexes, and every count in the material weighed against what a reader does with it | 2026-09-14. **The alias table routes by word and `--links` cannot see a word**, so `稽核 -> logging` sent every reader translating that term to a search the corpus has never matched. `go run ./hack aliases` greps the landed tree for every term; its first version reported a correct row as dead by cutting the cell at "and", which is where the row names the skill that answers it. **The rest of the pass was deletion rather than repair.** `wiki/index.md` carried a seven-row ledger deriving its coverage figure by hand and a record of what the figure used to be; both are gone, and the one row `go run ./hack coverage` recomputes is what is left. Six counts that stood in for a yes - how many expression values use an arrow function, how many uses of `prevPayload` - are replaced by the deployed expression that answers the same question and cannot rot; two of them had been recounted this week and were still wrong, because each recount used a different set. **Writing a checker for a count like that is treating the symptom**, and the rule is now in `.agents/skills/consistency-checks/SKILL.md` |
+| `flag-usage`  every flag's usage text against what the flag does | 2026-09-11, all 81 |
+| `processors-vs-palette`  `wiki/processors.md`'s prose, as opposed to its two tables | 2026-09-11. The tables are `go run ./hack processors`'s now, and writing it found six defects reading had not - a documented default that upstream deleted, a page the naming table said did not exist, an `automation-tool-response` type it said had none, a `processor/entry` URL that 404s, and `validate-payload`'s `schema` marked as having a default, which told a reader that omitting it was a silent choice when it is an error. What is still nobody's but a reader's is the **palette at second hand**: asgard-docs records it from `asgard-ai-platform-web`, which nothing here clones |
+| `deployment-diffs`  the eight deployment clones' diffs since the extracts were written from them | 2026-09-11. Four had moved and were read; `go run ./hack sources --extracts` says which and by how much. What came out: the consent gate being one field on the Toolset and both beliefs about it wrong, the `~/.claude` mount that kills the driver, a writable store needing its own Syncer-less SourceSet, that SMTP cannot be reached at all, and the SHOPLINE page count being 88 rather than the 93 written here |
+| `root-documents`  Goal, AGENTS, APPROACH, STRUCTURE, README | 2026-09-14, and **this was a surface in none of the three groups** - the state this section says every finding comes out of, in the files that state the rules. Goal.md holds: every claim in it is one `go run ./hack goal` checks, including that `issue-report` prints `gh issue create`. APPROACH.md had the disproved version of "a pinned copy can only go stale in the safe direction" and the marker count written as the CRDs', in a paragraph the CEL check could not reach because its patterns did not cross a line break. This file's two hand-written lists had both drifted, and its twelve questions were re-checked claim by claim - the four contradictions are all still described accurately and one count had grown. STRUCTURE.md restated README's directory listing and named four of ten test files; **README.md documented 23 of the 25 commands** - `local-env` and `reference` were in the binary and in no README, which `--commands` cannot see because it asks the opposite question. `go run ./hack doc-paths` asks this one now |
+| `packages-help`  `internal/localenv`, `platform`, `auth`, `work`, `skills`, `gitrepo`, `render`, `binding`, `chart`, `tool`, `browser`, `version`, `pipelineconfig`, `repo` | 2026-09-11, read end to end - about 7,300 lines. Every claim in a doc comment or a help screen that could be checked was: the loopback server's token, Host check and CSP; that `add` runs with no helm on PATH; that `doctor` reports a missing optional without failing; that a secret's value never comes back; that `profile show` prints where each field came from; every literal repository path each package emits, against a scaffolded tree |
+
+**Every row in the third group carries a slug**, and `TASK.md`'s pass carries
+the same slug for the same surface. `go run ./hack pass-list` compares the
+slugs in both directions, because the two are worded for their own context and
+comparing their prose drifts with them.
+
+**Add a row when you add a surface, and move one up when you write its
+check.** A surface that is in none of the three groups is one nobody has
+decided about, which is the state every finding came out of.
 
 ## Before you say it is done
 
@@ -437,10 +561,11 @@ only the first one feels like finishing. `audit-material --orphans` is the
 mechanical half; grep for the name of what you added is the other.
 
 **Is the claim verified, or asserted?**
-The wiki was described as covering its sources completely, in the repository, in
-prose. Counting the citations against the source files gave 65 of 162. If a claim
-is countable, count it before writing it, and put the number somewhere the next
-person can recount it - `internal/corpus/wiki/index.md` carries that one.
+The wiki was described as covering its sources completely, in prose. Counting
+the citations against the source files gave a two-thirds job. If a claim is
+countable, count it before writing it, and **put the number where the next
+person can recount it** - `internal/corpus/wiki/index.md` carries that one and
+`go run ./hack coverage` recomputes it.
 
 **Would this be recognisable to the customer it came from?**
 `--help` shipped a real customer's repository name as its example, and a stage
@@ -453,18 +578,65 @@ extracts' YAML skeletons validate against the CRD" are different claims, and
 reporting the first when you did the second is how a review passes something
 broken.
 
+**Never annotate a source with a count.**
+A provenance marker records **what was read and the commit it was read at**, and
+nothing else. "Checked against 72 gated and 14 ungated tool entries" and
+"checked against 11 SemanticLayer CRs across three deployments" are not
+statements that anybody read those CRs - they are statements that something was
+counted, and they read exactly like the first. That is the damage, and it is
+worse when the number is right: **a correct count is what stops the next person
+opening the page.** The check is green, the figure recomputes, and the sentence
+beside it has been believed by everyone who has passed it.
+
+So a marker names the scope - which deployment, which shape, which commit - and
+the claim carries no tally:
+
+    no    checked against 11 SemanticLayer CRs across three deployments
+    yes   checked against every SemanticLayer CR in three deployments,
+          and completionModelName is present on all of them
+
+The second cannot be satisfied by counting, which is the point. **Deleting a
+count deletes its checker too** - `go run ./hack counts` reports a row whose
+claim has gone rather than passing silently, so the two stay in step.
+
+**Does the number need to be there at all?**
+**Ask that before asking whether it can be computed.** A count earns its place
+when the count is the claim - how much of a chart `add` never writes, how many
+pages a back office has. It does not when it is standing in for a yes: "one
+arrow function in 520 values" was recounted three times, was wrong every time,
+each recount used a different denominator, and one deployed expression answered
+the same question permanently. **Writing a checker for a number like that is
+treating the symptom.** And an index carries none: `internal/corpus/wiki/index.md`
+had a seven-row ledger deriving its coverage figure by hand, with a record of
+what the figure used to be beside it. `.agents/skills/consistency-checks/SKILL.md`
+has the three cases.
+
 **Did you say how the number was measured?**
-Four coverage figures in this repo have been wrong, and each was believed rather
-than checked: an index claiming 100%, a comparison that was case-sensitive, 39
-divided by every image in asgard-docs rather than by the ones any page uses, and
-the guess that preceded it. A percentage with no method beside it is a claim
-nobody can check and everybody repeats. Write the denominator and how you got
-it, or write the raw counts and no percentage.
+Every coverage figure this repository has stated has been wrong at least once,
+and each was believed rather than checked: an index claiming 100%, a comparison
+that matched a URL against a file path, an image count divided by every file in
+asgard-docs rather than by the ones any page uses. **A percentage with no method
+beside it is a claim nobody can check and everybody repeats.** Write the
+denominator and how you got it, or write the raw counts and no percentage - and
+prefer a check that recomputes it to either.
 
 **Would this check fire on material that is correct?**
+**A static check over prose cannot tell an instruction from a mention**, and
+the boundary is worth knowing before writing one. Validating an invocation's
+argument count against cobra's own `Args` looks exact and is not: a quoted
+argument is four words, a line continuation is a token, `(asgard-cli render)`
+in a parenthetical takes the next three words, and an example block aligns a
+trailing description with a single space - and one space is significant here
+by rule. A check that fires on correct material is worse than none, because
+the answer is to turn it off. **Prefer the check that runs where the mistake
+is made**: `render` rejects a project-and-environment with its own message at
+the moment somebody types it.
 Three checks were written this way and deleted rather than tuned. One flagged a
-processor config key the definitions do not declare - and fired on five of five
-production charts, always for `await`, which is real and documented. One flagged
+processor config key the definitions do not declare - and fired on every
+production chart with a streaming processor in it, always for `await`, which is
+real and documented. It was five of five when the check was written and is seven
+of seven now, which is the shape of evidence that should have stopped it being
+written at all. One flagged
 camelCase terms absent from the CRD - 29 findings, 0 defects. One flagged an
 extract for listing two of ten syncer classes, which is exactly what an extract
 about a git-backed SkillSet should do. **A checker that cries wolf teaches people
@@ -472,6 +644,13 @@ to change what it can see rather than what is wrong**, and this material has
 already caused that once, in a customer deck. Delete it; do not soften it.
 
 **If it is a pinned copy of the platform's contract, which way can it go stale?**
+**Both ways, and the expensive direction is the one nobody expects.** A
+constraint that loosens upstream leaves a pin that reports correct charts as
+wrong, which costs more than a pin that has stopped catching something: the
+platform deletes constraints as readily as it adds them, and a regex it
+decides was wrong becomes a warning against the thing it now accepts.
+`go run ./hack tables` is what catches it, and it takes the asgard-kube
+checkout as its only argument so that running it is one command.
 `gate` holds three: the processor definitions, the CRD enums, the CRD patterns.
 A copy can only be wrong by being behind, so a rule built on one is a **warning**
 - the platform adds a value and a correct chart looks wrong. The exception is a
@@ -573,8 +752,9 @@ answer.
 Render every kind and validate the result against the schemas: required fields,
 fields that are not in the schema, enums, patterns, and the `ExactlyOneOf` rules.
 Do the same for the YAML skeletons in the extracts, because those are what
-somebody copies by hand. `hack/README.md` is the procedure and `hack/` holds the
-two scripts; this is not a check to do by eye.
+somebody copies by hand. `go run ./hack extract-crs` pulls them out and
+`go run ./hack validate-crs` checks them; this is not a check to do by eye, and
+`hack/README.md` is the procedure.
 
 If the contract has moved since this repo last looked, say what changed and what
 it means here. A retired field, a flipped default and a new required field each
@@ -582,7 +762,7 @@ land differently - the first breaks a template silently, the second changes
 behaviour with no diff at all, and only the third fails loudly.
 
 ```bash
-asgard-cli render <project> <env> | \
+asgard-cli render <release> | \
   <validate each document against asgard-kube/crd/*.yaml openAPIV3Schema>
 ```
 
@@ -626,10 +806,13 @@ cat internal/corpus/usecase/*.md internal/generate/templates/*.tmpl \
     internal/corpus/wiki/*.md | grep -o 'kind: [A-Z][A-Za-z]*' | sort -u
 ```
 
-That comparison currently leaves three: `ImageGenerationModel`,
-`TranscriptionModel` and `SourceSetEditorServer` are in the contract and in no
-page, template or extract - and in no product documentation either, which is why
-nobody noticed. `TASK.md` carries it.
+That comparison leaves three, and **all three are a deliberate absence rather
+than a gap**: `ImageGenerationModel`, `TranscriptionModel` and
+`SourceSetEditorServer` are internal, confirmed 2026-09-14. A kind with a CRD
+and no material is the state this comparison exists to surface - it just turned
+out, this time, that the answer was "not for an engagement". **Ask before
+writing the page**, because the cost of the two mistakes is not symmetric:
+material for a kind nobody may use invites somebody to use it.
 
 ## Reference material lives outside this repo
 
@@ -650,37 +833,42 @@ contract, and `pkg/apis/` is the Go types it is generated from, where the
 reasoning survives as comments. `internal/corpus/wiki/crd-rules.md` was written
 from the second.
 
-**`asgard-core` was cited by name six times and by URL nowhere**, including in
-`internal/gate/processors.go`, whose processor contract is extracted from its
-`ProcessorDefinitions`. That makes it a pinned copy of the platform's contract,
-so the rule above about which way a pinned copy can go stale applies to it - and
-`internal/corpus/wiki/platform-unknowns.md` P10 records that the list is **demonstrably
-incomplete**: `await` and `temperature` are set in five production deployments
-and appear in neither it nor the CRD. A gate rule built on treating it as
-complete called five of five correct charts wrong, and was deleted.
+**`internal/gate/processors.go` holds a pinned copy of asgard-core's
+`ProcessorDefinitions`**, so the rule above about which way a pinned copy can go
+stale applies to it - **and that list is demonstrably incomplete**, which
+`internal/corpus/wiki/platform-unknowns.md` P10 records and "would this check
+fire on material that is correct" above has the cost of.
 
 **The reference deployments** - every extract under `internal/corpus/usecase/`
 was taken from one of these, and a claim about how a shape is built should be
 checkable against at least one:
 
-| repo | shape it demonstrates |
-|---|---|
-| [unitech-e-asgard-kube](https://github.com/asgard-ai-platform/unitech-e-asgard-kube) | agent hub (5 agents / 6 semantic layers) and a single-agent flow agent; trigger; knowledge drive. The most recently maintained of the set, so it wins a generational conflict |
-| [xxentria-asgard-kube](https://github.com/asgard-ai-platform/xxentria-asgard-kube) | supervisor + 9 agents |
-| [finance-ai-asgard-kube](https://github.com/asgard-ai-platform/finance-ai-asgard-kube) | supervisor + 3 agents over 3 semantic layers |
-| [buy123-asgard-kube](https://github.com/asgard-ai-platform/buy123-asgard-kube) | the minimal flow agent - **no Agent CR at all**, 8 CRs in the whole chart |
-| [asgard-freyr-kube](https://github.com/asgard-ai-platform/asgard-freyr-kube) | supervisor + 5 subagents, `agents.expression`, sandbox hooks, a `tenants/` layout |
-| [asgard-auto-post-kube](https://github.com/asgard-ai-platform/asgard-auto-post-kube) | **28 Plugin CRs**, knowledge bases, api workflows; 3 BotProviders |
-| [asgard-industry-demo-generator](https://github.com/asgard-ai-platform/asgard-industry-demo-generator) | 12 industries, the read/write governance split, a Claude Code plugin of commands + skills |
-| [asgard-freyr-skills](https://github.com/asgard-ai-platform/asgard-freyr-skills) | runtime skills as a repository of their own - the only source for browser operation, and what `browser-operation` was written from |
+    unitech-e-asgard-kube            xxentria-asgard-kube
+    finance-ai-asgard-kube           buy123-asgard-kube
+    asgard-freyr-kube                asgard-auto-post-kube
+    asgard-industry-demo-generator   asgard-freyr-skills
+
+all under https://github.com/asgard-ai-platform/. **What shape each one
+demonstrates is in `source/SOURCES.md`** and not restated here: that file owns
+the attribution, states the commit each extract was written from and held
+against, and its counts are recomputed by `go run ./hack counts`. A second copy
+of them here would be a second copy nothing checks.
 
 Which customer each belongs to, and how the extracts refer to one without naming
 it, is in `source/SOURCES.md` - the one file here allowed to make that link, and
 the reason it sits outside `internal/`.
 
-Clone them wherever you like. Pull before relying on any of them, and **record
-the commit you read** in whatever you write - a copy taken into this repo stops
-tracking upstream and then reads exactly like a current one.
+Clone them wherever you like and point an environment variable at each:
+`ASGARD_KUBE`, `ASGARD_DOCS`, `ASGARD_CORE`, and `ASGARD_DEPLOYMENTS` for the
+directory holding the deployment clones. `go run ./hack sources` prints what they
+resolve to and how far behind each one is.
+
+Pull before relying on any of them, and **record the commit you read** in
+whatever you write - a copy taken into this repo stops tracking upstream and
+then reads exactly like a current one. `asgard-cli audit-material --sources`
+holds every recorded commit against every other; **nothing can tell you a
+recorded commit has gone stale**, which is what `go run ./hack sources` is for and why it
+reads the clone rather than fetching it.
 
 ## Put generated files in `.out/`
 

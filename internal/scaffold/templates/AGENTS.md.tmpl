@@ -448,6 +448,14 @@ fields carry a **comma-separated string** in `value`; `sourceSetMounts` carries 
 re-declare `toolsets`** — that would be a second declaration of the same
 capability, and the two would drift.
 
+**Where a mount may go is not a free choice, and one wrong path takes every
+conversation down.** `mountPath` is validated as `^/.+` and nothing else - no
+traversal check - and a mount under the agent's `~/.claude` kills the driver at
+start-up with a symptom that looks nothing like a mount. `sourceSetMounts` is
+also the only mechanism that takes a `subPath`, so it is the only way to isolate
+one tenant's files. Read
+`.agents/skills/asgard-platform/usecase/conventions.md` before writing one.
+
 ## SemanticLayer conventions
 
 Common analysis views go in top-level `sampleQueries[]` (`comment` + `sql`),
@@ -564,6 +572,15 @@ half of `.agents/skills/plain-chinese/` applies: 「訂單查詢」not「智慧�
 | `Toolset` | `toolset-name` | `toolset-description` |
 | `Workflow` | `workflow-name` | — |
 | `Trigger` | `trigger-name` | — |
+| `KnowledgeBase` | `knowledge-base-name` | — |
+| `Loader` | `loader-name` | — |
+| `CompletionModel` | `completion-model-name` | — |
+| `Plugin` | `plugin-name` | — |
+
+**A SkillSet a Plugin bundles is the one exemption** — it is implementation
+detail of the bundle and the platform does not present it, so it carries no
+`skill-set-name` and no `managed-by` label. `asgard-cli verify` knows that shape
+and does not ask for one.
 
 > **The authority for every platform key is `asgard-ai-platform/asgard-workflow-service`,
 > `internal/shared.go`** — every `Annotation*` / `Label*` constant the platform reads, with

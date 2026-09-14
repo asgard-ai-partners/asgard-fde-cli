@@ -127,7 +127,7 @@ A skill with no such policy gets one anyway, invented per turn by the model.
 
 The back-office material was built by watching network traffic, because the
 vendor publishes no back-office API documentation. There was no generated source
-and no shortcut: 88 page entry points, each declared for whether anything deeper
+and no shortcut: 88 L1 page entry points, each declared for whether anything deeper
 sits beneath it, and 160 rows of operations covering in-page tabs, dialogs,
 editor panels and apps inside nested iframes.
 

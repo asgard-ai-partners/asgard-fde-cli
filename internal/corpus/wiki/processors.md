@@ -34,13 +34,28 @@ only that one is JavaScript and one is Handlebars:
     Template     Handlebars, for producing text. `{{#if prevMessage}}...{{/if}}`
 
 **The ECMA5 limit is `execute-script`'s Engine field, and does not reach the
-Expression fields.** The deployed charts settle it. Across 520
-`expression:` values in the reference charts exactly one uses an arrow function
-- `prevBlobs.map(b => b.blobId).join(',')`, in a shipped tenant chart - so
-arrow functions evaluate. What no chart uses anywhere is `const`, `let` or a
-template literal, and the reason is structural rather than a limit: **an
-Expression field holds one expression, not statements**, so there is nothing for
-a declaration to do in it.
+Expression fields.** The deployed charts settle it, and the evidence is a
+shipped chart rather than a tally: `prevBlobs.map(b => b.blobId).join(',')`
+evaluates in production, so arrow functions work.
+
+**`const` reaches an expression field through an IIFE**, which is the form this
+tool's own generator writes and several deployments use:
+
+    expression: |-
+      (() => {
+        const body = (httpResponse && httpResponse.json) || null;
+        return { raw: body };
+      })()
+
+The field holds one expression, so a bare `const x = 1` has nowhere to go - but
+a function body is statements, and wrapping one is how anything longer than a
+ternary gets written.
+
+**A count was here and is gone on purpose.** It said one arrow function in 520
+values, which was wrong twice over - the denominator was a different set each
+time somebody recounted, and the set left out the deployment doing most of it.
+A named expression that is deployed today cannot go stale the way a tally does,
+and it is the better evidence for a yes-or-no question.
 
 `execute-script` is the other thing. Its **Engine** takes `ECMA5` and the
 documentation says only `ECMA5` is supported, and that body *is* statements -
@@ -161,6 +176,39 @@ The chart keys are `semanticLayer.allowQuery`, `semanticLayer.allowWrite` and
 the model to decide whether to retry, rather than failing the step. Off is right
 when a failed tool call must not be retried - which is most writes.
 
+## `effort` fails the turn when the model does not take it
+
+The reasoning-effort field takes `low`, `medium`, `high`, `xhigh`, `max`, or
+`auto` to leave it to the model. It sets thinking depth and token spend
+together, so a higher level is slower and costs more.
+
+**Sending a level a model does not support fails that turn outright** - not a
+degraded answer, a failure. Some models do not accept the parameter at all: a
+non-reasoning model like `gpt-4.1-mini` rejects it, and the speed-oriented
+Haiku class is the other to know.
+
+**Omitting the field is not the same as disabling it, and that is the trap.**
+There are three states, not two:
+
+    a level          `--effort <level>` is sent
+    the field absent no `--effort` is sent - **and the driver treats a model id
+                     it does not recognise as supporting effort, so it supplies
+                     a level of its own, on the high side**
+    `disabled`       no `--effort`, and the spawn declares the capability as
+                     unsupported, so nothing is supplied
+
+So a chart on a non-reasoning model must write `disabled` explicitly. Leaving
+the field out is how one deployment's token spend went up without anyone
+changing a prompt. `effort` is per model rather than per chart: switching
+`completionModelName` can turn a working chart into one that fails on every
+turn, or one that quietly buys reasoning nobody asked for.
+
+**`input` on `stream-llm-completion-message` is normally left empty.** Empty
+means the processor uses what the pipe handed it - `prevMessage` in context,
+which is what the user actually said. Set it only when the input has been
+worked on first: a summary prepended, or the question rewritten into something
+clearer.
+
 ## Fields that decide something and look like detail
 
 | processor | field | what it decides |
@@ -205,10 +253,11 @@ default** - omitting one of those is a silent choice rather than an error.
 
 **This table is a subset of what a chart may set, not the contract.** `await`,
 described above and set in five separate production deployments, is in neither
-`ProcessorDefinitions` nor the CRD; `temperature` is documented on the streaming
-processor and is not in the definitions either. So a key missing from the row
-below is not a key you may not use - read the row as "these are declared", and
-the documentation as the wider set. `asgard-cli verify` reflects this: it fails
+`ProcessorDefinitions` nor the CRD; `temperature` is the same. So a key missing
+from the row below is not a key you may not use - read the row as "these are
+declared". **The wider set is the editor palette**, and it is a table of its
+own: "What the editor lets an author set" below, which has both of those keys
+and says which keys are the platform's rather than yours. `asgard-cli verify` reflects this: it fails
 on a **required** key with no default, because that is broken against any
 version, and does not complain about a key it has never heard of.
 
@@ -220,13 +269,13 @@ version, and does not complain about a key it has never heard of.
 | `listen-message` | none | no | *none* |
 | `llm-completion` | Success + Failure | **yes** | `completionModel` `prompt` `outputSchema` |
 | `llm-query-database` | Success + Failure | no | `semanticLayer` `query` `resultField` `completionModel` `maxTokens` |
-| `push-message` | Success | no | `message` ="" `flush` =false `isDebug` =false |
+| `push-message` | Success | no | `message` ="" `flush` =false `isDebug` =false **(the platform's)** |
 | `query-database` | Success | **yes** | `dataConnector` `sql` `resultField` |
 | `retrieve-knowledge` | Success | **yes** | `knowledgeBases` `textQuery` `similarityThreshold` `resultField` `sampleK` =20 |
 | `router` | Else | **yes**, + branches | *none* |
-| `stream-llm-completion-message` | Success + Failure | no | `completionModel` `isDebug` =false |
+| `stream-llm-completion-message` | Success + Failure | no | `completionModel` `isDebug` =false **(the platform's)** |
 | `update-context` | Success | **yes** | *none* |
-| `validate-payload` | Success + Failure | **yes** | `schema` ="" |
+| `validate-payload` | Success + Failure | **yes** | `schema` |
 
 **`update-context` and `router` require nothing and take arbitrary keys**, which
 is the whole of how they work: on `update-context` the extra key names *are* the
@@ -234,31 +283,172 @@ context variables you are setting, and on `router` they are the cases, with a
 dynamic output per case and the static `Else` for what matches none. This is why
 neither has a static field list to look up.
 
+### What an extra key means, per processor
+
+"Takes extra keys" is not one mechanism. Each processor reads them its own way,
+and **the key name is the parameter** - so a typo is not an error, it is a
+different parameter or a silently ignored one.
+
+| processor | an extra key is | the shape |
+|---|---|---|
+| `update-context` | a context variable you are setting | the key **is** the variable name |
+| `router` | a branch | the key is the branch name, the value a boolean or an expression returning one. An unknown value type fails the step |
+| `http-request` | an **HTTP header** | the key is the header name. **The value must be a string** or the step fails - a number written bare is a failure at run time, not at render |
+| `query-database` | one SQL placeholder | `sql.args.<n>.type` **and** `sql.args.<n>.value`, both, numbered **from 1** |
+| `retrieve-knowledge` | one JSON-path filter | `path.<n>.exists` or `path.<n>.predicate`, each series numbered **from 0** and counted independently |
+| `validate-payload` | one file requirement | `file.<n>.type`, `file.<n>.alias`, numbered **from 0** |
+| `llm-completion` | **nothing.** It declares dynamic config and no code reads it | an extra key here is accepted and ignored |
+
+**The numbered ones stop at the first gap.** Each is a loop that breaks the
+moment an index is missing, so `sql.args.1.*` and `sql.args.3.*` with no `2`
+sends **one** argument, not two - and nothing says so. The same holds for a
+`file.0.type` with no `file.0.alias` where the alias series is read separately,
+and for `path.<n>.*`. Renumber after deleting one.
+
+**Two of them start at 0 and one starts at 1.** There is no rule behind it to
+remember; it is per processor, and getting it wrong on `query-database` means an
+argument list that is silently empty.
+
 **Extra keys are also where `sqlTypeArguments` lives.** The documentation gives
 `query-sql` a **SQL Type Arguments** field for the `$1`, `$2` placeholders, and
 there is no such static key - the parameters are dynamic config on the
 processor. Looking for the key in the type definitions and not finding it does
 not mean the documentation is wrong.
 
-**One documented default is not in the definitions.** The `query-sql` page says
-`ResultField` 預設值為 `result`; the definition makes `resultField` required with
-no default at all. Write it out.
+**The documentation and the definitions disagree about what is required, and
+the direction has flipped.** At `f00e0ee` the `query-sql` page gave
+`ResultField` a 預設值為 `result` that the definition does not have; asgard-docs
+resynced the processor pages against asgard-core `internal/constants.go` on
+2026-09-04 and that default is gone. What is left is the other direction: the streaming page
+marks **MaxTokens（必填）** where the definition has `maxTokens` optional with no
+default, and `Temperature` 可選 where the definition has no such key on that
+processor at all.
+
+**So neither side is the one to trust for requiredness.** The definitions are
+what the runtime validates against - that is what `asgard-cli verify` reflects -
+and a field the documentation calls 必填 may be one the platform accepts without.
+Write it out anyway: a page that says 必填 is a page somebody will be held to.
+
+## What the editor lets an author set, which is a third source
+
+**Three sources describe a processor's configuration and they do not agree.**
+The CRD enum says which types exist; `ProcessorDefinitions` in asgard-core says
+which keys are declared; and the **editor palette** says which keys an author
+can actually set in the builder. asgard-docs added a page per processor on
+2026-09-09, each one verified against the palette rather than only against the
+code, and states why the code alone is not enough: the definitions "omit the
+section a `has_dynamic_config` processor generates, and list keys the editor
+hides".
+
+The table below is the palette's view. **`author` is what somebody filling in a
+node sees; `platform` is set for them and is not theirs to write.**
+
+| type | author sets | platform sets | dynamic | scope |
+|---|---|---|---|---|
+| `execute-script` | `engine` `script` | - | no | general |
+| `update-context` | *none* | - | **yes** | general |
+| `http-request` | `url` `method` `parseJson` `body` | - | **yes** | general |
+| `router` | one per branch | - | **yes** | general |
+| `listen-message` | *none* | - | no | general |
+| `push-message` | `message` `template` `flush` `payload` | `isDebug` | no | **bot, automation_tool** |
+| `validate-payload` | `schema` `path` | - | no | **automation_tool** |
+| `generate-embedding` | `embeddingModel` `input` `resultField` | - | no | general |
+| `llm-completion` | `completionModel` `prompt` `outputSchema` `maxTokens` `temperature` `effort` `toolsets` `semanticLayers` `openai.webSearch.enabled` `openai.webSearch.searchContextSize` `sandboxBlueprint` | `blobs` `semanticLayer` `semanticLayer.allowQuery` `semanticLayer.allowWrite` `semanticLayer.allowedCubes` | no | general |
+| `stream-llm-completion-message` | the same, plus `input` `await` `semanticLayers.dataVisualization`, minus `outputSchema` | the same, plus `isDebug` | no | general |
+| `query-database` | `dataConnector` `sql` `resultField` | `allowWrite` `allowedTables` | **yes** | general |
+| `retrieve-knowledge` | `knowledgeBases` `textQuery` `similarityThreshold` `resultField` `filterTags` `sampleK` | - | **yes** | general |
+| `llm-query-database` | `semanticLayer` `query` `resultField` `completionModel` `maxTokens` `temperature` | - | no | **not in the palette** |
+
+Four things in it that are not anywhere else:
+
+**`await` and `temperature` are author keys on the streaming processor.** They
+are set in five production deployments and appear in neither the definitions nor
+the CRD. The palette was the only source that described them until 2026-09-09,
+when `model-stream-llm-completion` gained an **Await** section, a **Temperature**
+section and a worked example that writes `await` as a config key - so the
+documentation now carries what the definitions do not. **A key absent from the
+definitions is not a key you may not use** - check the palette or the page
+rather than guess.
+
+**`llm-query-database` is in the CRD and in the definitions and not in the
+builder.** An author cannot add it from the editor; a chart can still declare
+it. Nothing says whether that is deliberate.
+
+**A processor is scoped to a kind of workflow set.** `validate-payload` is
+`automation_tool` only, `push-message` is `bot` and `automation_tool`, and
+everything else is `general`. So `push-message` is the same CRD type reached
+from two different places, which is why the documentation has two pages for it -
+`message-push` and `automation-tool-response`.
+
+**`isDebug`, `allowWrite`, `allowedTables` and the `semanticLayer.*` keys are
+the platform's, not the author's.** The definitions list `isDebug` as a
+required key with a default of false, which reads as something to write out; the
+palette says the platform sets it. The same holds for the per-layer permissions
+- see "Where `allowedCubes` and `allowWrite` actually live" above, which the
+palette confirms from the other side.
+
+**The definitions under-report Failure branches**, and the palette agrees with
+the documentation against them: `execute-script`, `http-request`,
+`push-message`, `query-database` and `retrieve-knowledge` all have one. The row
+in the table above this section says Success alone for several of those, because
+it was extracted from the definitions. Read the definitions as declared, not as
+complete.
+
+**For a field's meaning, read the page rather than this one.** Each carries the
+property panel as a screenshot, every field's default, and a worked example -
+`https://docs.asgard-ai.com/docs/developer-reference/processor/<name>`, where
+`<name>` is the documentation's name and not the chart's. The mismatch is the
+section below.
 
 ## The documentation's names are not the chart's names
 
-Fifteen pages sit under `developer-reference/processor`, plus an introduction.
-The CRD enum has thirteen types. They do not line up, and the mismatches are
+Sixteen pages sit under `developer-reference/processor` as of asgard-docs
+`23409b3`, plus an introduction - fifteen at `f00e0ee`. **The new one is
+`query-llm-database`**, which is the one type that is documented and is not in
+the editor palette: a chart can declare it, an author cannot add it from the
+builder. The CRD enum has thirteen types. They do not line up, and the mismatches are
 each a place where searching for what you read finds nothing:
 
 | the page is called | the chart writes |
 |---|---|
 | SQL, at `processor/query-sql` | `query-database` |
 | Entry, at `processor/entry` | *not a processor* - `spec.entries` |
-| Exit, at `processor/flow-exit` | *not a processor* - `spec.exits` |
-| Response, at `processor/automation-tool-response` | **no type of that name exists.** What an Automation Tool's final output is actually written as has not been established here - do not assume a `response` type |
-| *no page at all* | **`llm-query-database`** |
+| Exit, at `processor/exit` | *not a processor* - `spec.exits` |
+| Response, at `processor/automation-tool-response` | `push-message`. **There is no `response` type** - an Automation Tool's final output is the same processor a bot replies with, scoped to `automation_tool` |
+| LLM Database, at `processor/query-llm-database` | `llm-query-database` - **the two words are swapped**, so the page and the type do not find each other |
+| MCP Servers, the field label on both LLM processors | `toolsets`, a comma-separated list of Toolset names |
 
-**`llm-query-database` is a real processor with no documentation page.** It
+### And a page has a third name: the file it is in
+
+**Half the processor pages are served at a URL that is not their file name.**
+Eight of the sixteen declare a `slug:` in their frontmatter, so
+`flow-entry.mdx` answers at `processor/entry`, `message-push.mdx` at
+`processor/push-message`, `model-stream-llm-completion.mdx` at
+`processor/stream-llm-completion`. The file is named for the processor's family
+and the URL for the builder's label.
+
+Which matters twice. **A link built from a file name 404s**, and that is how
+the Entry row in the table above got a URL with `flow-` on the front of it,
+written while correcting something else on the same line. And **a grep of the
+docs repository finds the family name**, so searching it for `entry` finds a
+file called something else.
+
+The documentation's own index page links by URL and gets them right. Its
+category headings are the node menu's, which is a fourth naming of the same
+thirteen things and the one an author actually sees:
+
+    流程控制    Entry, Exit, Router
+    Message     Push Message, Listen Message
+    Model       LLM Completion, Stream LLM Completion Message, Generate Embedding
+    Action      Update Context, Execute Script
+    Query       SQL, Retrieve Knowledge
+    API         HTTP 請求
+    Automation Tool   Validate Payload, Response - **not in the Flow Agent
+                menu at all**, only in an Automation Tool workflow
+    CRD only    LLM Query Database
+
+**`llm-query-database` got its page on 2026-09-09 and is still the one type
+the editor will not add.** It
 takes `semanticLayer`, `query`, `resultField`, `completionModel` and `maxTokens`
 - all five required - plus an optional `temperature`. It is the processor for
 "let a model answer this question against the layer" as a single step, where
@@ -344,27 +534,65 @@ Two things worth knowing from their pages:
   [expression-introduction](https://docs.asgard-ai.com/docs/developer-reference/asgard-builtin/expression-introduction),
   [expression-variable](https://docs.asgard-ai.com/docs/developer-reference/asgard-builtin/expression-variable),
   [expression-ecma-script-functions](https://docs.asgard-ai.com/docs/developer-reference/asgard-builtin/expression-ecma-script-functions)
-  - asgard-docs `f00e0ee`. That section was listed here as deliberately not
-  covered, on the grounds that lookup material only goes stale - a judgement made
-  before anyone noticed the ECMA5 limit lives in it
-- The fifteen pages under `developer-reference/processor/`, whose landing page
-  is
+  - asgard-docs `23409b3`, read 2026-09-11. That section was listed here as
+  deliberately not covered, on the grounds that lookup material only goes stale -
+  a judgement made before anyone noticed the ECMA5 limit lives in it. What moved
+  since `f00e0ee` is a heading anchor and nothing else
+- The pages under `developer-reference/processor/`, whose landing page is
   [introduction](https://docs.asgard-ai.com/docs/developer-reference/processor/introduction)
-  - **the bare directory URL 404s**, and this citation pointed at it until
-  2026-09-03
-  - asgard-docs `f00e0ee`. **None of them had been read into this material
-  before 2026-09-02**, which is why `workflow.md` carried a type table and
-  nothing below it
+  - **the bare directory URL 404s**; cite the introduction, not the directory
+  - asgard-docs `23409b3`, read 2026-09-11. The introduction was rewritten at
+  that commit to follow the editor's node menu rather than the source, which is
+  where the group names, the two Automation Tool nodes being absent from the
+  menu, and `llm-query-database` being CRD-only all come from
+- `effort`'s levels, that an unsupported one fails the turn, and that an empty
+  `input` falls back to `prevMessage`: asgard-docs `23409b3`
+  `docs/developer-reference/processor/model-llm-completion.mdx` and
+  `model-stream-llm-completion.mdx`, read 2026-09-11
+- **The three states of `effort`, and that omitting it is not disabling it**:
+  read 2026-09-11 off `buy123-asgard-kube`, which carries
+  `defaultEffort: "disabled"` with the reasoning in its own values file and in
+  `cm-gpt-4.1-mini.yaml`, and cites asgard-core `internal/processor/clidriver/options.go`.
+  Confirmed there at `623ceb5`:
+  `disabled` becomes a `ModelCapabilities` declaration on the spawn rather than
+  a flag, and unset makes the CLI "supply its own default level for any model it
+  believes supports effort, and it believes that of every model id it cannot
+  recognize (which is all of ours)". **This is the one part of it seen to
+  fire** - that deployment's token spend was the symptom. The documentation says
+  the same thing more softly (未設定時採用模型預設值), which is why the strong form
+  is sourced to the driver
+- The editor palette per processor - which keys are the author's, which the
+  platform sets, which types accept dynamic config, and which workflow-set
+  types each is scoped to: **asgard-docs `23409b3`**, read 2026-09-11 from the
+  seventeen `metadata.json` files under
+  `content-generator/services/developer-reference/docs/processor/`. Those
+  record the palette as a third source beside the CRD enum and asgard-core's
+  definitions, and the pages are verified against it rather than only against
+  the code. **This is the only part of this page read at that commit** - the
+  prose above it is still at `f00e0ee`
 - `ProcessorDefinitions` in asgard-core `internal/constants.go`: the per-key
   `IsRequired` and `DefaultValue` the documentation does not carry, the
   Success/Failure declarations, and which processors take arbitrary extra keys.
-  Extracted 2026-09-03 with a `go/ast` walk of that literal, resolving the key
-  constants to their string values - **an earlier pattern-based attempt
-  misaligned**, attributing one processor's fields to the next, and was
-  discarded rather than published
+  Extracted 2026-09-03 at asgard-core `5da86c6` by walking that literal and
+  resolving the key constants to their string values - **an earlier
+  pattern-based attempt misaligned**, attributing one processor's fields to the
+  next, and was discarded rather than published
+  - **re-walked 2026-09-11 at `623ceb5` and the thirteen rows are unchanged.**
+  asgard-core's `internal/constants.go` itself moved four times in between - a
+  card tool, an upload cap, an agent-hub prompt version - which is why "the file
+  has not changed" is not the claim to make. The walk is
+  asgard-fde-cli `go run ./hack processors`, and it holds both tables on this
+  page against that literal
   - and it is **incomplete**: checked against five rendered production charts,
   where `await` appears on the streaming processor in all five and is declared
   nowhere in it
+- **What an extra key means, per processor**: read 2026-09-11 at asgard-core
+  `623ceb5` off the task implementations themselves - one file per processor
+  under asgard-core `internal/processor/task/`. The definitions say only
+  *whether* a processor takes dynamic config; the key shapes, the two different
+  starting indices and the break-at-the-first-gap behaviour are in the loops that
+  read them, and nowhere else. `llm-completion` declaring dynamic config that no
+  code reads was found the same way
 - The Failure outputs: **the documentation**, one page per processor, after the
   type definitions were found to disagree with four production charts. Checked
   2026-09-03 across `api-http-request`, `query-sql`, `query-retrieve-knowledge`,
@@ -383,7 +611,13 @@ Two things worth knowing from their pages:
 from a chart that sets them - the names, requiredness, defaults and outputs now
 come from the type definitions, which is why they are allowed to contradict the
 documentation above and win. Where an extract uses one - `http-request`, `query-sql`,
-`router` - that extract is the checked version and wins. The `Await` semantics are
-the one most worth confirming against a running deployment, because it changes
-what can be written rather than how it is configured. The `ECMA5` question was
-the other, and the charts have now answered it.
+`router` - that extract is the checked version and wins. The `Await` semantics were
+the one most worth confirming, because they change what can be written rather
+than how it is configured - and `23409b3` states them per connection point,
+which is where the description above now comes from. The `ECMA5` question was
+the other, and the charts have answered it.
+
+What is left unchecked is the **palette**: this page has it at second hand, from
+asgard-docs' `metadata.json` files, and the file those cite -
+`asgard-ai-platform-web` `src/components/react-flow/workflow/processors.json` -
+is in a repository nothing here has a clone of.

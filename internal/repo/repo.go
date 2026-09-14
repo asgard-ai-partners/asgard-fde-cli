@@ -1,13 +1,12 @@
 // Package repo answers what a customer repository is made of, by looking at it.
 //
-// It replaces `.asgard-config.json`, which recorded the same answers and then
-// drifted from them. The rule that file failed is the one this package is built
-// on: **a value belongs in a config file only when nothing on disk implies it
-// and the platform cannot be asked.** Every field that file carried failed that
-// test - the project list is the declaration's chart paths, the customer's name
-// is the platform's to answer, the deployment "shape" recorded an intent this
-// tool has no business judging, and the workspace slug named a directory that
-// no longer needs a name.
+// **A value belongs in a config file only when nothing on disk implies it and
+// the platform cannot be asked.** Nothing this package answers needs one: the
+// project list is the declaration's chart paths, the customer's name is the
+// platform's to answer, a deployment "shape" is an intent this tool has no
+// business judging, and the workspace slug named a directory that needs no
+// name. `LegacyConfigName` is here only to recognise a repository scaffolded
+// before that.
 //
 // See asgard-odin-pm docs/decisions/2026-09-05-asgard-cli-config-surface.md.
 package repo

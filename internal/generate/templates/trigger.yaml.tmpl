@@ -25,10 +25,11 @@ metadata:
     {{- include "<<.Chart>>.labels" . | nindent 4 }}
 spec:
   triggerClass: cron
-  # The CRD pattern takes *, a single number, or */n per field - NOT ranges and
-  # NOT comma lists. "0 9-18 * * *" and "0 9,13,17 * * *" are both rejected by
-  # the apiserver, so business hours are every hour or nothing. helm lint does
-  # not check it; the rejection arrives during CD.
+  # An ordinary five-field crontab or an @descriptor, copied verbatim into the
+  # derived CronJob - "0 9-18 * * *" and "0 9,13,17 * * *" both work. The CRD
+  # carries no pattern on this field; what checks it is a parse in the admission
+  # webhook, so a malformed expression comes back with a message rather than
+  # deploying and never firing. helm lint looks at none of it.
   cron:
     schedule: {{ .Values.triggers.<<.ValuesKey>>.schedule | quote }}
     timeZone: {{ .Values.triggers.<<.ValuesKey>>.timeZone | quote }}

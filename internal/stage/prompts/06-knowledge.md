@@ -71,7 +71,7 @@ graph points at - tell it that in the prompt, or it will crawl the whole Drive.
 Done when: the Drive syncs, or you have decided the customer has no unstructured
 knowledge and recorded that.
 
-**Checked:** 2026-09-04 against asgard-kube `15ded0f`. `SourceSet.spec` carries
+**Checked:** 2026-09-04, re-read 2026-09-11 against asgard-kube `cbd8d70`. `SourceSet.spec` carries
 `contextIndex` and no `members`; `Syncer` enforces destinationPath ending in `/`,
 statePath not ending in one, both immutable, neither absolute and neither
 containing `//` or `../`; one column at most may set `isMaxValueColumn`;

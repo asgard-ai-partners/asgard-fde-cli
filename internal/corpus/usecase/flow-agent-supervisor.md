@@ -60,7 +60,8 @@ commerce back-office one, read at their prod values on 2026-09-04:
     push-message                    --success-->  listen-message
 
 **It is a loop and it has no exit.** `exits: []`, and that is not an omission -
-14 of the 17 Workflows across every reference deployment declare none. A run ends
+Most Workflows across the reference deployments declare none - 35 of them
+outside the demo generator, which adds 80 more of one shape. A run ends
 when its terminal processor finishes; only a Trigger-driven Workflow, which has
 somewhere to report to, tends to declare one.
 

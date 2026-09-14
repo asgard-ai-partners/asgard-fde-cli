@@ -73,9 +73,26 @@ carrying two provider blocks is refused by the apiserver and passes `helm lint`.
 
 Only one built-in, Builtin (Balanced).
 
-The custom form's fields change with the provider. The default, Azure OpenAI
-Embedding Model, takes six required fields: Name, Model Provider, Resource Name,
-Deployment ID, API Version and API Key.
+The custom form's fields change with the provider, **and Azure OpenAI is the
+expensive one to ask for.** The default, Azure OpenAI Embedding Model, takes six
+required fields - Name, Model Provider, Resource Name, Deployment ID, API
+Version and API Key - where plain OpenAI takes two. In a chart that is
+`spec.aoai` with **all four of `resourceName`, `deploymentId`, `apiVersion` and
+`apiKey` required**, against `spec.openai` needing `apiKey` and `model`.
+
+So for a customer on Azure, three of the four are things only their Azure
+administrator has: **`deploymentId` is what they named the deployment and is not
+the model name**, `resourceName` is the resource rather than the endpoint, and
+`apiVersion` is a dated version string that has to be given rather than guessed.
+Ask for all three together - a request that comes back one field at a time costs
+a round trip each.
+
+`ImageGenerationModel` and `TranscriptionModel` carry the same `aoai` block with
+the same four required fields. **Both are internal and neither is a route an
+engagement takes** - confirmed 2026-09-14, `../wiki/platform-unknowns.md` P12 -
+so a customer wanting image generation or transcription is a conversation with
+the platform team rather than a CR to write. The field shape is recorded for the
+day that changes, not as an invitation.
 
 ## Data Source
 
@@ -134,14 +151,14 @@ in a chart.
   [Connection](https://docs.asgard-ai.com/docs/product-suite/odin/features/settings/connection)
   - asgard-docs `f00e0ee`
 - The CR mapping and the provider list: checked 2026-09-02 against
-  [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `15ded0f` -
+  [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `cbd8d70` -
   `DataConnectorClass`, `CompletionModelClass`, `EmbeddingModelClass`
 
 - The router's behaviour behind a builtin alias - logical models, the three
   selection policies, failover on 5xx or timeout, and the managed key in its own
   environment: `asgard-router`'s README, read 2026-09-02
 
-**Checked:** 2026-09-02 against asgard-kube `15ded0f`
+**Checked:** 2026-09-02, re-read 2026-09-11 against asgard-kube `cbd8d70`
 (`completionModelClass` enum, the immutability rule and the ExactlyOneOf
 validation) and against three deployments that declare their own model.
 

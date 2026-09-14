@@ -114,7 +114,7 @@ type xref struct {
 	// bundledSkillSets are the SkillSets a Plugin carries. They are exempt from
 	// the one-SourceSet-each rule: a chart of bundles shares one skill store on
 	// purpose, because the skills live in one repository and a store per bundle
-	// would clone it per bundle. A deployment with 28 Plugins has exactly one
+	// would clone it per bundle. A deployment with 29 Plugins has exactly one
 	// store. Those SkillSets are the Plugin's implementation rather than
 	// something a person picks in the UI, so the UI cost the rule protects
 	// against is one the shape accepts knowingly.
@@ -182,6 +182,17 @@ func (x *xref) buildLookups() {
 func (x *xref) checkDisplayName(d Doc) {
 	want, ok := displayNameAnnotation[d.Kind]
 	if !ok {
+		return
+	}
+	// **A SkillSet a Plugin bundles is not shown in the UI at all**, so it has
+	// no name to be missing. `skill-set.md` records that as the shape rather
+	// than as an omission: those SkillSets carry no `skill-set-name` and no
+	// `managed-by`, because they are implementation detail of the bundle. The
+	// shared-SourceSet rules already exempt them; this one did not, and the
+	// deployment with 29 Plugins was told 29 times to add a name nothing would
+	// ever display. Found the first time that chart was rendered through the
+	// gate at all.
+	if d.Kind == "SkillSet" && x.bundledSkillSets[d.Name] {
 		return
 	}
 	if d.Annotations[annotationPrefix+want] == "" {
@@ -414,11 +425,23 @@ func (x *xref) checkSkillSet(d Doc) {
 		// once per owner.
 		if d.Name == sortedOwners[0] {
 			if shared {
+				// **Whether this chart has a Plugin decides which sentence is
+				// true**, and the chart is right here - so it is read rather
+				// than a count of somebody else's deployments being quoted.
+				// The quoted one said four deployments run this shape and none
+				// has a Plugin: six do, and the one with 29 Plugins is the
+				// exemption itself, which is the opposite of what it told a
+				// reader holding a Plugin bundle.
+				cost := "If that cost was not decided on purpose, each SkillSet wants its own SourceSet"
+				if x.countsByKind["Plugin"] > 0 {
+					cost = "This chart declares Plugins, and a Plugin bundle is the one shape that earns this: " +
+						"its SkillSets are implementation detail of the bundle rather than something a person picks in the UI, " +
+						"so the presentation cost is one they never had. Nothing else here earns it"
+				}
 				x.warnf("SourceSet/%s is sliced by %d SkillSets (%s), each with its own searchPaths. That is the shared-skills-monorepo shape and the platform accepts it - "+
 					"what it costs is the UI, which cannot find a given skill set's git configuration, and `asgard-ai.com/skill-set-name` with it. "+
-					"Four reference deployments run this way and none has a Plugin, which is the only exemption `.agents/skills/asgard-platform/usecase/skill-set.md` records. "+
-					"If that cost was not decided on purpose, each SkillSet wants its own SourceSet",
-					ref, len(owners), strings.Join(sortedOwners, ", "))
+					"`.agents/skills/asgard-platform/usecase/skill-set.md` records the one exemption. %s",
+					ref, len(owners), strings.Join(sortedOwners, ", "), cost)
 			} else {
 				x.errf("SourceSet/%s is used by %d SkillSets (%s) and at least one declares no searchPaths, so it is not the monorepo shape; each SkillSet needs its own, or the Platform UI cannot find its git configuration",
 					ref, len(owners), strings.Join(sortedOwners, ", "))

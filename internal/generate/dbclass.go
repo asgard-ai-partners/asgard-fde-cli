@@ -7,7 +7,7 @@ import (
 )
 
 // The DataConnector classes, read off asgard-kube `crd/asgard-ai.com_dataconnectors.yaml`
-// at `15ded0f` on 2026-09-07: the fields each class declares, which of them the
+// at `cbd8d70` on 2026-09-07: the fields each class declares, which of them the
 // CRD requires, and which are credentials.
 //
 // **The generator wrote two of the nine.** `--db-class` accepted postgres and

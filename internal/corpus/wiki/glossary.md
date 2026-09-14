@@ -2,13 +2,17 @@
 
 A word that means two things inside one body of material produces the failure
 that is hardest to see: nothing contradicts anything, and the reader takes the
-wrong sense. It has happened - **"sandbox" meant the platform's agent runtime in
-one paragraph and the customer's test environment twenty lines later**, in the
-same section, and an FDE read the second as the first.
+wrong sense. **"sandbox" is the pair to know** - the platform's agent runtime,
+and the customer's test environment - and a paragraph using both without
+saying which is where an FDE reads the second as the first.
 
 So each of these has one meaning here, and the other senses have their own words.
 **Check this page before introducing a term, and before using one of these for
 something else.**
+
+**And grep it for the word you searched.** The table contains the word, so a
+search for an ambiguous term returns this page in the same result set as the
+ambiguity - which is why the senses are a table rather than prose about them.
 
 | word | means, here | not |
 |---|---|---|
@@ -72,6 +76,17 @@ None. This is about the material rather than about a deployment.
   no meanings and only collects the ones that collide. `sandbox` was raised by an
   engagement in 2026-09; the rest were found while writing the row above it
 
-**Unchecked:** nothing enforces this. A new page can redefine any of these and
-no command will notice, which is the open half of the problem this page only
-half solves.
+**Unchecked:** nothing enforces this, and a static check cannot: telling which
+sense a bare word is in needs a reader. **What was done instead is the reading**,
+2026-09-14, across every help screen and every page - and three of these were
+live in the tool's own output, each at the moment both senses are in a reader's
+hands. The platform commands called a platform Project a "project" while
+`projects/<slug>/` means a chart, at `pipeline release create --project`, which
+is exactly where somebody is holding both. `pipeline projects` called a main
+platform Environment an "environment" beside releases named `dev` and `prod`.
+And `asgard-cli skill` fetches design-time skills while the bare word here means
+the runtime ones a Syncer feeds. All three say which now.
+
+**A new page can still redefine any of these and no command will notice**, so
+this stays open - but the failures so far were not new pages. They were the
+tool's own help, written by somebody who knew which sense they meant.

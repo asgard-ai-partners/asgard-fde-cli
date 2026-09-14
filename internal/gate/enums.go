@@ -7,7 +7,7 @@ import (
 )
 
 // Enum values the CRDs accept, extracted from the kubebuilder validation
-// markers in asgard-kube `pkg/apis/asgard/v1alpha1/types.go` at 15ded0f on
+// markers in asgard-kube `pkg/apis/asgard/v1alpha1/types.go` at cbd8d70 on
 // 2026-09-03, keyed by json field name.
 //
 // **Four field names are deliberately absent**: `type`, `format`, `alias` and
@@ -26,9 +26,9 @@ import (
 // Like every pinned copy in this package this can go stale in one direction
 // only - the platform adding a value - so **E1 is a warning**, never a failure.
 //
-// `hack/check-tables.py` holds this table against the generated CRDs. Run it
+// `go run ./hack tables` holds this table against the generated CRDs. Run it
 // after regenerating, and when asgard-kube moves.
-const enumsRead = "2026-09-03, asgard-kube 15ded0f"
+const enumsRead = "2026-09-11, asgard-kube cbd8d70"
 
 var crdEnums = map[string][]string{
 	"agentClass":                {"managed"},                                                                                    // 1 declaration(s)

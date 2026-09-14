@@ -14,8 +14,11 @@ metadata:
   annotations:
     asgard-ai.com/source-set-name: "<<.DisplayName>> 來源"
   labels:
-    # Hides the Syncer from the generic list, and is what the platform cascades
-    # on when the SkillSet is deleted. Needed on both CRs.
+    # **Needed on this CR and on the Syncer, and it does a different thing on
+    # each.** Here it is what the front end reads to recognise that this store
+    # is one skill set's own; on the Syncer it is what keeps it out of the
+    # generic Syncer list. It is also what the platform cascades on when the
+    # SkillSet is deleted.
     asgard-ai.com/managed-by: skill-set
     {{- include "<<.Chart>>.labels" . | nindent 4 }}
 spec:

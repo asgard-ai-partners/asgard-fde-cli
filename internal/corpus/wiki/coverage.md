@@ -4,25 +4,40 @@ The extracts describe CR shapes. This says how many deployments each shape was
 read from, because an extract written from one chart is a description of that
 chart, and nothing in it says so.
 
-Rendered 2026-09-03 with `helm template` against each chart's own production
-values, then counted by kind. Eight charts - the seven customer and demo
-deployments plus auto-post, the platform's own.
+Rendered with `helm template` against each chart's own values, then counted by
+kind. **Per deployment, not per chart**, because the question is how many
+independent sources a shape was read from: one deployment ships twelve charts
+that differ only by industry, and counting those as twelve would say the
+opposite of what this page is for.
+
+**Seven deployments.** The eighth reference repository, the Freyr skills, holds
+runtime skills and no CRs at all - it is the only source for
+`../usecase/browser-operation.md` and it contributes nothing here.
 
 | kind | in how many | where |
 |---|---|---|
-| Workflow | 8 of 8 | everywhere |
-| SkillSet / SourceSet | 8 of 8 | everywhere |
-| Syncer | 7 of 8 | all but one shopping-guide deployment |
-| DataConnector | 6 of 8 | all but two, both of which reach their data through tools rather than a layer |
-| BotProvider | 6 of 8 | all but one internal-audience project and two demo ones |
-| SandboxBlueprint | 6 of 8 | |
-| Toolset | 6 of 8 | |
-| Agent | 5 of 8 | absent from three, and those three are the Flow Agent shapes |
-| SemanticLayer | 5 of 8 | |
-| CompletionModel | 3 of 8 | the platform's own deployment, one customer, the demo generator |
-| **Trigger** | **1 of 8** | one internal-audience project, and one instance of it |
-| **Plugin** | **1 of 8** | auto-post, which has 28 |
-| **KnowledgeBase / Loader / Source** | **1 of 8** | auto-post only |
+| Workflow | 7 of 7 | everywhere |
+| BotProvider | 7 of 7 | everywhere |
+| SandboxBlueprint | 7 of 7 | everywhere |
+| SkillSet / SourceSet / Syncer | 6 of 7 | all but the minimal flow agent |
+| DataConnector | 5 of 7 | all but two, which reach their data through tools rather than a layer |
+| Toolset | 5 of 7 | |
+| Agent | 5 of 7 | absent from two, and both are Flow Agent shapes |
+| SemanticLayer | 5 of 7 | |
+| CompletionModel | 3 of 7 | the platform's own deployment, one customer, the demo generator |
+| **Trigger** | **1 of 7** | one internal-audience project, and one instance of it |
+| **Plugin** | **1 of 7** | one deployment, which bundles many - `../usecase/plugin.md` |
+| **KnowledgeBase / Loader / Source** | **1 of 7** | auto-post only |
+| **Indexer** | **0 of 7** | a live CRD in no reference deployment. `../usecase/knowledge-drive.md` names it because the contract has it; nothing here has seen one configured |
+
+**The three at 7 of 7 are the entry point**, which is the one thing every
+deployment has. **The three at 1 of 7 are the thin samples**, and the sections
+below are about them. **`Indexer` at 0 of 7 is thinner still**: the material
+names it because the CRD does, and nobody here has seen one in a chart - read
+anything this material says about it as read off the schema.
+
+Every other kind in the rendered charts is named somewhere in this material,
+which is the check in the other direction.
 
 ## What that means for the extracts
 
@@ -55,11 +70,12 @@ on the sample size, which is the number that was missing - not a measure of
 whether the shape was understood.
 
 **Checked:** the counts are the whole of this page and they were measured, not
-estimated - eight charts rendered with `helm template` against their own
-production values on 2026-09-03, then `kind:` counted. Re-running it is one
-command and the method is in the Sources below, which is the point: a coverage
-number nobody can re-derive is a number that will be wrong within a month, and
-three in this repository already have been.
+estimated - re-measured 2026-09-11 by rendering every chart in the eight
+reference repositories with `helm template` against its own values, 19 charts
+in all, then grouping by deployment and counting `kind:`. **A coverage number
+nobody can re-derive is a number that will be wrong**, so the denominator is
+stated with what it excludes: seven deployments, the eighth repository holding
+no CRs.
 
 **Unchecked:** what the counts *mean*. A kind appearing in two charts is two
 declarations, not two arrangements, and this page cannot tell whether they use

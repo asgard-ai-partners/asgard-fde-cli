@@ -106,9 +106,14 @@ hub), `../usecase/flow-agent-single.md` (anonymous, one job), `../usecase/flow-a
 - [Managed Agent](https://docs.asgard-ai.com/docs/product-suite/odin/features/agent-hub-managed-agent)
   - asgard-docs `f00e0ee`
 - [Flow Agent](https://docs.asgard-ai.com/docs/product-suite/odin/features/agent-hub-flow-agent)
-  - asgard-docs `f00e0ee`
+  - asgard-docs `23409b3`, read 2026-09-11. That commit added what a new Flow
+  Agent arrives with - a runnable five-node default flow - which is in
+  `../usecase/flow-agent-single.md` rather than here, because it is how one
+  shape is assembled. What this page claims, that creating one needs a Name and
+  a Description and everything else sits under Advanced Sandbox Settings, is
+  unchanged by it
 - The two limits and the name mapping: checked 2026-09-02 against
-  [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `15ded0f` -
+  [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `cbd8d70` -
   `BotProviderSpec.Entrypoint`, `AgentClass`, `SandboxBlueprintSpec.Agents`
 
 **Unchecked:** the name mapping and the two limits were held against the CRD and

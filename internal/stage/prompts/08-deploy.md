@@ -29,19 +29,21 @@ pastes any more.
 
 **Whether the rollout waits on a Syncer is a property of the chart.** Apply
 triggers the Syncers this release deployed that carry
-`asgard-ai.com/auto-fire-on-rollout: "true"`, and waits for them. A chart is
-running today with zero Syncers under the first kind.
+`asgard-ai.com/auto-fire-on-rollout: "true"`, and waits for them on one shared
+budget. A chart is running today with zero of them.
 
-An even split is why this is written as "read your workflow" rather than as a
-rule. There is no majority to assume, and the two behaviours are one line apart
-in a file nobody opens after the repository is created.
+**A repository this tool writes has no CD workflow of its own**, and no cluster
+credential to run one with - the rollout is the platform's, and there is no
+`.github/workflows/` here to read. So the question is not what your workflow
+does with a Syncer count; it is whether the chart has one at all, and what a
+release with none actually proves.
 
-    grep -n 'syncer-name' -A15 .github/workflows/*.y*ml
-
-If what you find waits unconditionally, the project needs a Syncer before its
-first tag - which a SkillSet or a knowledge drive creates. If it counts first,
-it does not. **This tool warns either way**, because it cannot see your
-workflow, and the warning says which.
+With none, nothing runs after the dry run: a succeeded run means helm returned.
+`asgard-cli gate` warns about exactly that, and a SkillSet or a knowledge drive
+is what creates the first Syncer. When the shape genuinely has none - a
+DataConnector and a SemanticLayer is one - the warning is correct and the
+read-back is `asgard-cli pipeline manifest --release <name> --status`, which the
+warning itself names.
 
 ## After the deploy, and before saying it is live
 
@@ -168,8 +170,10 @@ environment id, then values, then declaration - no longer exists: both halves ar
 injected.
 
 **Unchecked:** anything about a cluster. Nothing here has been run against one
-from this repository, and the 180-second timeout, the reconcile into a Project
-and the CronJob the platform creates are all read off the workflows and the
-values files rather than observed. **The first deploy of a new environment is
+from this repository, and the reconcile into a Project and the CronJob the
+platform creates are read off the reference deployments' own values files rather
+than observed. Those deployments predate this tool and carry CD workflows of
+their own; **a repository this writes does not**, which is why no instruction
+here sends a reader to grep one. **The first deploy of a new environment is
 this document's first real test**, and if the order is wrong the symptom is a
 failed helm upgrade rather than anything subtle.

@@ -81,10 +81,11 @@ page.
   with no on-premises option
 - Odin's feature list: the filenames under
   `docs/product-suite/odin/features/` at asgard-docs `f00e0ee`
-- Model providers and integration outlets also appear in
-  [Asgard features](https://docs.asgard-ai.com/docs/overview/asgard-features) - **`draft: true`, 404s on the published site**,
-  which is marked `draft` and links to paths removed in the 2026-08-31 rebuild -
-  only the two lists corroborated elsewhere were taken from it
+- Model providers and integration outlets also appear in asgard-docs
+  `docs/overview/asgard-features.md` - **cited as a file: it is `draft: true`,
+  so there is no page to link to.** It also links to paths removed in the
+  2026-08-31 rebuild, so only the two lists corroborated elsewhere were taken
+  from it
 
 **Unchecked:** everything here comes from the product documentation; none of it
 was held against a deployment. Which product suits which need is a judgement.

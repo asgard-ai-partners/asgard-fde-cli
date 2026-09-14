@@ -111,6 +111,17 @@ Drive one. Reading a chart that uses it is the case it exists for.
 For recognising older charts only. Creating one needs a Name and an Alias Name
 (lowercase letter first, then letters, digits and underscores).
 
+**A spreadsheet is not a file you point an Indexer at.** `Indexer.spec` picks a
+`sourceClass` and the block for it, and the two tabular ones demand more than
+the document ones: `csv` requires **`columns` and `skipHeader`**, and `xlsx`
+requires **`columns`, `skipHeader` and `sheetName`** on top. So the columns have
+to be declared before anything is indexed, and **`sheetName` means one Indexer
+per sheet** - a workbook with four sheets worth indexing is four of them. The
+document classes (`pdf`, `docx`, `pptx`) and the media ones (`image`, `audio`,
+`video`) require none of that.
+
+`xlsx` is also the one immutable Indexer field - see `../wiki/crd-rules.md`.
+
 Content is split across All, Manual Upload and Auto Load tabs.
 
 **Manual Upload** takes CSV, XLSX, PDF, PPTX, DOCX and JSON Lines. A CSV goes
@@ -189,12 +200,12 @@ the shape without anyone reading a guide.
   - asgard-docs `f00e0ee`
 - The syncer-class table and the contextIndex behaviour: checked 2026-09-02
   against [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube)
-  `15ded0f` - `SyncerClass`, `SourceSetContextIndex`
+  `cbd8d70` - `SyncerClass`, `SourceSetContextIndex`
 - The schedule ordering and the two switches: read off a deployment's own Drive
 - Preferring a Drive over `KnowledgeBase`: one deployment's migration, recorded
   in asgard-fde-cli's `source/SOURCES.md`, which is internal and does not ship.
   Held against
-  [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `15ded0f` on
+  [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `cbd8d70` on
   2026-09-02 - `knowledgebases`, `loaders`, `indexers` and `sources` all exist
   and none is marked deprecated - and against asgard-docs `f00e0ee`, which
   documents the feature as current

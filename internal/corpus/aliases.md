@@ -22,6 +22,16 @@ gets it.
 Point a row at a page where one page answers it: the pointer is checked by
 `asgard-cli audit-material --links`, which a bare word would not be.
 
+**The words are checked too.** `go run ./hack aliases` greps the landed corpus
+for every term in the right-hand column and fails on one that appears nowhere -
+a row sending a reader to a word the material does not use is a search that
+comes back empty, which reads exactly like a subject nobody covered. `稽核` sent
+one to `logging`, and nothing here has ever used that word.
+
+**Prefer the term a page actually writes.** A near-miss is worse than a dead
+term: `audit` on its own lands mostly on this tool's own `audit-material`, so
+the row says `audit event`, which is what the page says.
+
 ## What a customer says, in the words this material uses
 
 The corpus is English and a customer conversation is not, so a query taken from
@@ -41,7 +51,7 @@ so keeping it in the query would only add a term that lands nowhere.
 | 訂單 | order |
 | 客服 | customer service, help desk - and `usecase/chat-channel.md` |
 | 權限 | permission, scope, console - and `wiki/platform-unknowns.md` P1 |
-| 稽核 | audit, logging - and `wiki/platform-unknowns.md` P2 |
+| 稽核 | audit event - and `wiki/platform-unknowns.md` P2 |
 | 報表 | dashboard, report, view - and `usecase/mimir-dashboard.md` |
 | 儀表板 | dashboard - and `usecase/mimir-dashboard.md` |
 | 知識庫 | knowledge, drive, context index |

@@ -1,8 +1,8 @@
 // Package render renders a release's chart with the native helm binary.
 //
-// It replaces common/render.sh, and the reason was Windows: that script is bash
-// with BASH_SOURCE and set -euo pipefail and shells out to yq, none of which
-// runs there without WSL, while helm has a native Windows build.
+// **The native binary, not a shell wrapper.** helm ships a Windows build; a
+// bash script with `BASH_SOURCE`, `set -euo pipefail` and a shell-out to yq
+// does not run there without WSL.
 //
 // WHAT IT RENDERS IS NOT WHAT WILL DEPLOY, and the distinction matters enough
 // that the command says so every time. A run's plan renders on the platform,
@@ -109,8 +109,8 @@ func AsgardValues(releaseName, namespace string) map[string]any {
 // Run renders the release's chart to out.
 //
 // helm's own stderr goes to errOut, so that `asgard-cli render x | asgard-cli
-// check xref -` keeps the pipe clean - the property render.sh had by writing
-// its progress to stderr.
+// verify --rendered -` keeps the pipe clean - the property render.sh had by
+// writing its progress to stderr.
 func Run(ctx context.Context, opts Options, out, errOut io.Writer) (Result, error) {
 	cfg, err := pipelineconfig.LoadFromRepo(opts.Root, opts.ConfigPath)
 	if err != nil {

@@ -33,8 +33,13 @@ type Item struct {
 	Subject string
 	Wrong   string
 	Right   string
-	// Where is the document that owns the right version - a path, relative to
-	// the directory this briefing lands in.
+	// Where is what owns the right version: a path relative to the directory
+	// this briefing lands in, or **a command to run**, where the answer is a
+	// fact about this workspace rather than a rule anybody wrote down - which
+	// pipeline the workspace has cannot be a page. `audit-material --links`
+	// resolves the first and `--commands` the second, so both are checked, and
+	// a row whose right version is spread over two documents names the second
+	// inside `Right` rather than taking a second field nothing resolves.
 	Where string
 }
 
@@ -53,10 +58,14 @@ var Activities = []Activity{
 	{
 		Name: "customer-meeting",
 		When: "before any conversation with the customer, at any stage",
-		Lead: `**Four of these five fail in the same direction: the intuitive answer
-undersells the platform or overstates a limit.** So the error is not neutral -
-it gives away scope, and from the customer's side being careful and being wrong
-look identical.
+		Lead: `**The intuitive answer is wrong in both directions, and they cost
+differently.** Undersell - "it cannot tell who they are", "we would have to
+build an approval step", "only the systems you connect to it" - gives away
+scope, and from the customer's side being careful and being wrong look
+identical. Oversell - a ticket number treated as authentication, a notification
+the platform cannot send - is a promise with no way to build it. Read every
+entry before the meeting rather than the ones that sound like your topic: the
+direction you are about to get wrong is not the one you expect.
 
 This stage's output is speech. Every other stage produces a file, which is
 edited and re-rendered; a wrong sentence is in their notes.`,
@@ -70,7 +79,7 @@ edited and re-rendered; a wrong sentence is in their notes.`,
 			{
 				"whether an anonymous channel knows who is asking",
 				`"it cannot tell who they are, so identity has to wait"`,
-				"An anonymous channel answers \"where is MY order\" perfectly well. The caller supplies identity server-side every turn; only the **model** supplies nothing. **LINE's webhook carries a userId.** Deferring this gives away something you already had",
+				"An anonymous channel answers \"where is MY order\" perfectly well. The caller supplies identity server-side every turn; only the **model** supplies nothing. **LINE's webhook carries a userId**, which is `../guide/requirements.md`'s rather than this pointer's. Deferring this gives away something you already had",
 				"../guide/read-path.md",
 			},
 			{
@@ -246,8 +255,8 @@ built, and reversed. They are obvious in the same way again each time.`,
 			},
 			{
 				"what an Expression may use",
-				"modern JavaScript",
-				"**ECMA5 only** - no `let`, no arrow functions, no optional chaining - in every field of every processor. Which is why every documented example is defensively written",
+				"ECMA5 only, because the documentation says ECMA5",
+				"**That limit is `execute-script`'s Engine field and does not reach an Expression.** They are ordinary JavaScript: `prevBlobs.map(b => b.blobId).join(',')` evaluates in a shipped chart, and `const` gets in through an IIFE, which is the form this tool generates. A bare declaration has nowhere to go only because the field holds one expression. Writing an Expression defensively costs nothing; **refusing a shape because of the wrong limit** is the failure, and this material has stated it both ways inside one page",
 				"../wiki/processors.md",
 			},
 			{
@@ -287,7 +296,7 @@ not in this repository.`,
 			{
 				"which screens to show",
 				"whatever is in the documentation",
-				"Two of the recommended images carry a `ts-` prefix and the build console's own navigation. **Crop first**, and open every one - nothing records when any was captured",
+				"Two of the recommended images are marked **CROP FIRST** and for different reasons: one dialog names a toolset by its `ts-` prefix, and one card view has the whole Odin console navigation down its left side. Open every one - nothing records when any was captured",
 				"../wiki/screenshots.md",
 			},
 		},

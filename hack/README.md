@@ -1,5 +1,46 @@
 # hack/
 
+This is the maintainer's gate, and **it is Go**: one binary with a subcommand
+each, run as `go run ./hack <check>`.
+
+    go run ./hack pass     the whole pass, derived rather than written down
+    go run ./hack list     every check, and what each one needs
+
+**A check that is not compiled is a check nobody runs until it is wrong.** Most
+of these run only by hand, so an error in a branch nobody takes survives for
+weeks - AGENTS.md has the five that got through while they were scripts, every
+one of them a compile error in Go. Porting them also found a number the Python
+had been wrong about *and was validating a page against*: it counted distinct
+CEL rules by matching `rule:` with a regular expression over raw YAML, so two
+spellings of one rule counted as two.
+
+**One shell script is left.** `verify-references.sh` drives helm and this
+repository's own binary over the reference charts, and rewriting that in Go buys
+nothing.
+
+## Where the upstream clones are
+
+Every check here needs one, and **the paths used to be written into the scripts
+and into this file** - true on one machine, wrong on every other, and the
+reason `go run ./hack tables` went eight upstream commits without being run. One
+environment variable per source, and a default that is one person's layout:
+
+    go run ./hack sources      what each one resolves to, and how far behind it is
+    go run ./hack tables       the pinned gate tables against the CRDs
+    go run ./hack coverage     the wiki's coverage row against the docs tree
+    go run ./hack processors   wiki/processors.md's three tables against their owners
+    go run ./hack counts       counts this material asserts about a deployment
+
+    ASGARD_KUBE          the CRDs, the platform contract
+    ASGARD_DOCS          the product documentation
+    ASGARD_CORE          the processor definitions the CRDs come from
+    ASGARD_DEPLOYMENTS   the directory holding the reference deployment clones
+
+**Nothing here clones or pulls.** A check that fetched would turn "read at this
+commit" into "read at whatever was there when the script ran", which is the one
+thing the provenance rule exists to prevent. `git -C <path> pull` is the
+reader's act, and `go run ./hack sources` tells you when it is due.
+
 This repository's own tooling. Not shipped, not embedded, and not the same thing
 as `.agents/skills/db-query/scripts/`, which `asgard-cli init` writes into a
 customer repo - that one reads the customer's own source systems, and is
@@ -68,11 +109,13 @@ up and they need opposite responses:
     a rule right for one shape,      the expensive kind. See R1b, and the
     applied to another               a rule right for one shape, wrong for the next
 
-And `--rendered` loses the owning repository's configuration - `olapOnlyLayers`
-and any sampleQuestions exemption are in its `.asgard-config.json` and its
-scripts - so R7, R10 and R11 can report something that repo has already
-answered. **That is a reason to read a finding, not to discount one.** It was
-used to discount R1b once, and R1b was a bug.
+And `--rendered` sees a chart with nothing around it. R7 and R11 ask
+questions whose answer can live in the owning repository rather than in the CR,
+and there is nowhere to record one now: `.asgard-config.json` held
+`olapOnlyLayers` and the sampleQuestions exemption, and none of the four
+reference repos still carries it. So a finding may be answered somewhere this
+run cannot see. **That is a reason to read a finding, not to discount one.** It
+was used to discount R1b once, and R1b was a bug.
 
 ## Checking a change against the CRDs
 
@@ -83,6 +126,7 @@ nothing, and it moves without announcing it.
 KUBE=../asgard-kube
 git -C $KUBE fetch && git -C $KUBE status -sb        # say so in the PR if behind
 mkdir -p .out/crdjson
+# `go run ./hack tables` reads the YAML itself; this is only for a JSON dump
 for f in $KUBE/crd/*.yaml; do yq -o=json "$f" > .out/crdjson/$(basename $f .yaml).json; done
 ```
 
@@ -92,8 +136,8 @@ both environments, validate each:
 ```bash
 go build -o .out/asgard-cli ./cmd/asgard-cli
 # init, scaffold, project add, then one `add <kind>` per kind, then:
-asgard-cli render <project> dev  --quiet | yq -o=json -I=0 '.' > .out/dev.ndjson
-python3 hack/validate-crs.py .out/crdjson .out/dev.ndjson
+asgard-cli render <release> --quiet | yq -o=json -I=0 '.' > .out/dev.ndjson
+go run ./hack validate-crs .out/dev.ndjson
 ```
 
 **What the extracts teach.** These are what somebody copies by hand, so they are
@@ -102,8 +146,8 @@ they are defused first - Helm actions and `<placeholder>` text become sentinels
 the validator knows not to report on:
 
 ```bash
-python3 hack/extract-crs.py .out/extracts.ndjson
-python3 hack/validate-crs.py .out/crdjson .out/extracts.ndjson
+go run ./hack extract-crs .out/extracts.ndjson
+go run ./hack validate-crs .out/extracts.ndjson
 ```
 
 Both should print `0 schema violation(s)`. Put the counts and the asgard-kube
@@ -111,7 +155,7 @@ commit in the PR body - `.github/pull_request_template.md` asks for them.
 
 ## Checking the pinned tables against the CRDs
 
-    python3 hack/check-tables.py .out/crdjson
+    go run ./hack tables
 
 `internal/gate` holds three copies of the platform contract, extracted from
 asgard-kube's **Go types**. The Go types are not the contract; the generated
@@ -123,6 +167,96 @@ Run it after regenerating a table and whenever asgard-kube moves. A field it
 reports as absent from the CRD is not automatically a bug - `baseAgentName`
 lives inside a JSON string rather than in the schema - but it is always
 something to explain rather than leave.
+
+**It also holds every CEL-rule count this repository states**, for the same
+reason and against the same trap: 79 is the `XValidation` markers in the Go
+types, 231 is what the generator emits from them, and this material had the
+marker count written down as the CRDs' own for a week.
+
+**And every required field of a per-class block**, which is the set an FDE asks
+a customer for. `BotProvider.spec.telegram` requires `webhookSecretToken`
+beside `botToken`, no documentation page mentions it, and this material listed
+"the Bot Token" - half the ask, and a CR that is refused. Matched across
+everything that ships rather than the prose alone, because a field can be
+taught by the generator that writes it, and on a word boundary, because a
+substring test passes `region` on the word "regional".
+
+**And every immutable field.** 41 of the enforced rules are `self == oldSelf`,
+carried on 40 kind-and-property pairs across twelve kinds, and nothing offline
+can tell you a chart will be refused at apply - but **which fields they are** is
+computable, and an immutable field nobody has written down is one an FDE meets
+after the tag is pushed. So this checks that `wiki/crd-rules.md` names all
+eleven class fields, states the Syncer's 21 and the total, and that no immutable
+Syncer field is missing from the corpus. Pairs rather than distinct paths:
+`bot.botProviderName` is immutable on the Loader and on the Syncer, and those
+are two fields somebody can be refused on.
+
+## How far the generated chart is from a real one
+
+    go run ./hack spec-key-gap             recompute, and check TASK.md's claim
+    go run ./hack spec-key-gap --missing   the keys production uses and `add` never writes
+
+**The number behind "the chart half is the least finished of the four."** It
+decides whether an FDE treats what `add` emits as a chart or as a starting
+point, and it stood at "168 spec keys, 52 never mentioned" for a week with no
+method that reproduced either figure. It is 185 and 88 for the widest reference
+chart, 303 and 171 across all nineteen, and both sides are rendered here rather
+than quoted.
+
+`--missing` is the useful half: it is the worklist for closing the gap.
+
+Two traps it had to be taught. `$ASGARD_DEPLOYMENTS` is somebody's projects
+directory and also holds scratch repositories this tool scaffolded - those pass
+by construction, one of them at 0 keys not written - so only the deployments
+`source/SOURCES.md` declares are counted. And list indices are collapsed, or
+`processors.0.configs` and `processors.7.configs` count apart and the gap
+appears to close as a chart grows.
+
+## Recomputing a count that came out of somebody else's document
+
+    go run ./hack counts           against the clones as they stand
+    go run ./hack counts --dump    print what upstream counts, and stop
+
+**A number copied out of a document that states its own count is the cheapest
+thing in this material to get wrong, and the most expensive to notice**: nothing
+about "88" reads differently from "93". A pass that set out to recount SHOPLINE's
+back-office map took a figure off a different tally and wrote it into seven
+places, where it sat for a week looking exactly as authoritative as the truth.
+
+So each of those counts is recomputed from the clone, and every place this
+material states one has to agree. **A claim whose wording has drifted out of
+every pattern is a failure rather than a pass** - that is how a count stops
+being checked without anybody deciding to stop checking it.
+
+## Re-walking the processor definitions
+
+    go run ./hack processors            against the clones as they stand
+    go run ./hack processors --dump     print what upstream says, and stop
+
+`wiki/processors.md` is the most claim-dense page in the corpus - thirteen
+processors, their required keys, their defaults, their outputs, and which keys
+an author may set - and every one of those claims belongs to a file in somebody
+else's repository. **The two tables on it have two different owners, and they
+disagree on purpose:**
+
+    the definitions table   asgard-core `internal/constants.go` -
+                            what the runtime validates a Workflow against
+    the palette table       asgard-docs' per-page `metadata.json` -
+                            what the builder lets an author type
+
+So each table is checked against its own owner and never against the other. A
+processor appearing or vanishing fails: the page says thirteen in four places.
+
+**The literal is walked by brace depth rather than matched by pattern.** An
+earlier pattern-based extraction of that same literal attributed one
+processor's fields to the next, and a table confidently wrong about `allowWrite`
+is worse than no table at all. Every identifier must resolve to a string or the
+script exits - an unresolved one means the literal grew a shape the walk does
+not understand, which is exactly when its output must not be trusted.
+
+Writing it found six things reading had missed, including `validate-payload`'s
+`schema` marked as having a default it does not have - which told a reader that
+omitting it was a silent choice when it is a rejected CR.
 
 ## What this catches that nothing else does
 

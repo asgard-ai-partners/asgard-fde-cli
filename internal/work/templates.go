@@ -182,7 +182,7 @@ const taskTemplate = `# {{.ID}} - {{.Title}}
 - Complexity: {{if .Complexity}}{{.Complexity}}{{else}}TODO - S, M or L{{end}}
 - Owner: {{if .Owner}}{{.Owner}}{{else}}TODO{{end}}
 - Spec mode: spec
-- Living spec module: docs/spec/{{.SpecSlug}}/TODO.md
+- Living spec module: TODO - ` + "`docs/spec/{{.SpecSlug}}/<module>.md`" + `, the one this is a delta against
 
 ## Writing this
 

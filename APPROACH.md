@@ -88,14 +88,12 @@ correct here and there alike.
 
 ## The audits
 
-    audit-material --links      every pointer resolves, and a path's target lands
-    audit-material --orphans    what nothing points at
-    audit-material --bare       a document named with no path
-    audit-material --commands   every command named exists
-    audit-material --paths      a landed document naming a file only we have
-    audit-material --unverified a document with no record of what it was held against
-    audit-material --urls       every documentation link is live
-    audit-material <term>       every line mentioning a term, prose and templates
+    asgard-cli audit-material --help     every flag, and what each one answers
+
+**The list is not here**, because a list of flags in a document is a second copy
+of `--help` that drifts from it - this one did, and named nine of the thirteen
+and one flag in a form the binary had stopped accepting. What follows is why the
+interesting ones are shaped the way they are.
 
 `--links` and `--orphans` read the same graph from opposite ends. A dead
 pointer is loud: the reader follows it and finds nothing. **A document nothing
@@ -116,6 +114,29 @@ token matching a document name has no other reading.
 `needs` and `brief` render every document from one shared provenance string, so
 the marker is there by construction and the check cannot fail on them. Counting
 eleven documents as having passed would say more than was done.
+
+**`--sources` is the version number of every moment of synthesis, collected.**
+A page's Sources block, a pinned table's `const` in `internal/gate` and the
+raw-sources table in the wiki README all carry one: which commit of which
+upstream a claim was read at.
+
+**It does not require them to agree, and twice it did.** The first version
+failed when a pinned table moved and the pages had not; the second narrowed
+that to one document and failed when one section of a page was re-read on its
+own. Both were the same error - provenance is per claim, so two commits of one
+upstream is the ordinary state of a corpus read over time, and a rule against
+it fails the schema for working.
+
+So what it prints is the spread, which is the useful thing: a sweep that was
+meant to move every citation and moved some of them looks exactly like a corpus
+read over several days, and nothing can tell those apart. What it **fails** on
+is an upstream cited somewhere and missing from the raw-sources table - a
+dependency nobody declared, which is the one thing here that cannot be a matter
+of timing.
+
+It does not ask whether a commit is current: **nothing inside this repository
+can**, which is why the commit is recorded at all. `go run ./hack sources` reads the
+clones and says how far behind each is.
 
 `--commands` is `--links` pointed at the tool: it resolves every
 `asgard-cli <command>` against the command tree this binary answers to — in the
@@ -138,9 +159,20 @@ where "this repo" is theirs and `source/SOURCES.md` is not there. The rule is
 not "do not name a path" — provenance should name the file it came from — it is
 **name the repository the path is inside**, on the same line.
 
-`hack/check-tables.py` holds the gate's pinned tables against the generated
-CRDs; `hack/verify-references.sh` runs the gate over the reference deployments.
-Neither ships in the binary — both need repositories that are not vendored.
+**The audits check the material and not the capability**, and the difference
+has teeth: `asgard-cli init` could come to require a session with every audit
+still green. `go run ./hack goal` is the other side - it runs the tool in a
+temporary directory with no network, no account and no repository, and holds
+Goal.md's four points against what happens.
+
+**The checks that need somebody else's repository are not in the binary**, and
+are Go under `hack/` instead: `go run ./hack tables` holds the gate's pinned
+tables against the generated CRDs, `processors` and `counts` hold the material's
+own tables and figures against what they were distilled from, and
+`hack/verify-references.sh` runs the gate over the reference deployments.
+`go run ./hack list` says what each one needs. They do not ship because the
+repositories they read are not vendored - see AGENTS.md for why that directory
+is compiled rather than scripted.
 
 ## Retrieval
 
@@ -246,8 +278,12 @@ is printed differently from a pass**.
 
 `verify` reads rendered CRs against each other and against tables pinned from
 the CRDs — enums in `internal/gate/enums.go`, field constraints in
-`constraints.go`. Both can only go stale in the direction of the platform
-adding something, so both are warnings.
+`constraints.go`. Both are warnings, and **not because a pinned copy can only go
+stale in the safe direction**: it cannot. The platform deleted a cron pattern
+its own regex had copied wrong, and the pinned row then reported four schedules
+an FDE would obviously want as violations while admitting one the apiserver
+refuses. `constraints.go` carries that reasoning; `go run ./hack tables` is what
+holds both against the CRDs.
 
 **Those tables are keyed by kind and path, not by field name.** A json field
 name is not a location: `Loader.spec.schedule` is an unconstrained string while
@@ -257,9 +293,12 @@ alone holds one against the other's rule.
 **It does not reproduce the platform's checks.** Whether a CR is admitted is an
 apiserver's decision and no client is issued cluster credentials, so a copy of
 those rules here would drift, and would still miss the two that matter: a field
-the CRD silently prunes, and a rejection only the apiserver produces. Forty of
-the seventy-nine CEL rules are `self == oldSelf`, comparing a proposal against
-the object already on the cluster — a render is one object with no history.
+the CRD silently prunes, and a rejection only the apiserver produces. **41 of
+the CRDs' 231 enforced CEL rules are `self == oldSelf`**, comparing a proposal
+against the object already on the cluster — a render is one object with no
+history. (79 is the marker count in asgard-kube's Go types, which is a different
+number for a different question; `internal/corpus/wiki/crd-rules.md` has both
+and which fields carry them.)
 
 A green gate means *worth pushing*. The authority is the plan:
 

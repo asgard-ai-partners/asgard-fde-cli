@@ -184,7 +184,7 @@ The shapes it passes through are `../usecase/agent-hub.md`,
   saying anything about the console flow. If you work through it against a live
   console and it is wrong anywhere, that is worth telling the maintainer: it is
   the page most likely to be confidently wrong
-- Checked 2026-09-02 against asgard-kube `15ded0f`, head at the time: the CR column names only
+- Checked 2026-09-02, re-read 2026-09-11 against asgard-kube `cbd8d70`, head at the time: the CR column names only
   kinds the CRDs define. `HttpTool`, `KnowledgeDrive` and `FlowAgent` are not
   among them, which an earlier draft of this table asserted
 - **Checked** 2026-09-02 against three of those images, opened rather than

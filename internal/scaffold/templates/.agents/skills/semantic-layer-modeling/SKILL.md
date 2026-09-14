@@ -153,11 +153,19 @@ spec:
   key is rejected outright, and `helm lint` does not see the difference. So `measures: []` is the
   normal outcome when there is no real aggregate the business asks for; do not mechanically add
   `count` to every cube, and do not read "optional" as permission to leave the key out.
-- **Nothing narrows a layer once it is mounted.** `allowedCubes` is not a field on
+- **Nothing narrows a layer once it is mounted on an Agent.** `allowedCubes` is not a field on
   `SemanticLayer` - it exists on `Agent.spec.managed.semanticLayers[]`, and `gate` R4 refuses an
   Agent that sets it, on the standing decision that a bound layer is queryable in full. So every
   cube and every dimension you add widens the reach of whatever consumes the layer, with no
   second setting that takes it back — which is why this needs a spec (below).
+
+  **A Flow Agent is the other shape and it does narrow.** Where the layer is mounted on a
+  processor rather than on an Agent CR, `semanticLayer.allowedCubes` is a config key on both
+  LLM processors and on `query-database` as `allowedTables`, and setting it restricts what that
+  processor may compose SQL over. **So "the layer is queryable in full" is a statement about the
+  Agent path, not about the platform**, and on the flow-agent path the narrowing exists and is
+  the whole argument for using it with an anonymous audience. Both default to empty, which means
+  unrestricted, so the widening still happens by default either way.
 - `Agent.managed.semanticLayers[]` needs `allowQuery: true` and (today) `allowWrite: false`.
 
 ## Spec Gate
@@ -193,13 +201,20 @@ SQL against the live schema — that is what your introspection queries are for.
 > orders rather than purchases - so the number the agent would have reported was not a rounding
 > error, it was a different question's answer. None of that is visible in column names.
 
-**Checked:** 2026-09-04 against asgard-kube `15ded0f`. `SemanticLayer.spec`
+**Checked:** 2026-09-04, re-read 2026-09-11 against asgard-kube `cbd8d70`. `SemanticLayer.spec`
 requires `completionModelName` and `cubes`, and the Agent CRD has no
 `completionModelName` at all - so the asymmetry this page warns about is real
 and a layer written from an Agent's shape fails on a required field. A
 dimension or measure requires `description`, `name`, `sql`, `title` and `type`,
 which makes the description a **contract requirement** rather than only a
 convention here; that it is written in 繁體中文 is ours.
+
+Re-read 2026-09-14 against asgard-core `623ceb5`, which corrected one statement:
+**"nothing narrows a layer once it is mounted" is true of the Agent path only.**
+Both LLM processors declare `semanticLayer.allowedCubes` and `query-database`
+declares `allowedTables`, so a Flow Agent can restrict what it composes SQL
+over - and both default to empty, meaning unrestricted, which is why the
+widening still happens by default.
 
 **Unchecked:** everything about the modelling itself. That a cube per business
 entity beats a cube per table, which joins are worth declaring, and what makes a

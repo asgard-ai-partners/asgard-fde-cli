@@ -20,10 +20,17 @@ email are readable and not writable - there is no merchant write endpoint. What
 the API can write is Merchant Metafields, the store-level custom fields.
 Changing the store's own details means the back office.
 
-**The back office is mapped, not browsed.** 88 page entry points, all 88
+**The back office is mapped, not browsed.** 88 L1 page entry points, each
 declared for whether anything deeper sits under them; 160 rows of operations
-covering in-page tabs, dialogs, editor panels and apps inside an iframe; 14
-API domains recorded. The discipline is **API first** - where a contract was
+covering in-page tabs, dialogs, editor panels and apps inside an iframe; 14 API
+domains recorded.
+
+That 88 is the count the map states in its own two headings and asserts with a
+script of its own, in `shopline-backoffice/references/page-map.md` in
+asgard-freyr-skills - **menu-level pages only**, with tabs, dialogs and nested
+apps in `operation-map.md` beside it. **Read the count off the document rather
+than recounting it**: this one states its own, and a figure taken from a
+neighbouring tally looks exactly as authoritative as the truth. The discipline is **API first** - where a contract was
 observed the skill calls the back office's own API rather than opening a
 browser, and browser operation is the fallback rather than the method.
 

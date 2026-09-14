@@ -71,16 +71,13 @@ type Stamp struct {
 // working somewhere unusual should not have to move its files to satisfy this.
 //
 // **A root that already holds the material wins over one that merely exists**,
-// and that order is the whole of this function. The comment on Roots says a
-// repository that has chosen one should not acquire the other by running an
-// update, and picking the first directory that exists did not implement it:
-// `asgard-cli init` creates `.agents/skills` unconditionally, so a repository
-// that had fetched into `.claude/skills` - a checkout already using Claude
-// Code, where nothing had run `init` yet - silently changed which directory
-// the material was read from the moment somebody scaffolded it. Everything
-// fetched before that stayed on disk, in the directory the agent's own runtime
-// still looks in, describing whatever server it described in August, with
-// `skill status` reporting "none" and no command in the tool mentioning it.
+// and that order is the whole of this function. Picking the first directory
+// that merely exists does not implement the rule on Roots: `asgard-cli init`
+// creates `.agents/skills` unconditionally, so a repository that had fetched
+// into `.claude/skills` would change which directory the material is read from
+// the moment somebody scaffolds it - leaving the fetched copy on disk, in the
+// directory the agent's own runtime still reads, with `skill status`
+// reporting none.
 func Root(repoRoot, override string) string {
 	if override != "" {
 		if filepath.IsAbs(override) {

@@ -21,8 +21,8 @@ import (
 // told about. `shipped` already covers that prefix, so these files get the
 // stamp and the five states with no rule of their own.
 //
-// Why a copy exists at all, and why that reverses what the corpus used to say,
-// is in `internal/corpus/wiki/README.md` beside the rule it replaced. Not repeated
+// Why a copy is safe - the stamp makes staleness visible - is in
+// `internal/corpus/wiki/README.md`, beside the rule it qualifies. Not repeated
 // here.
 const corpusSkillDir = ".agents/skills/asgard-platform"
 

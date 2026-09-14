@@ -42,8 +42,10 @@ server-side dry run all pass:
   - the CRDs' conditional CEL rules that a render can be held against: exactly
     one of a set of sibling fields (a credential that is neither a literal nor a
     reference, or both; a class block missing or doubled), and a discriminator
-    that implies its block. Forty of the 79 rules are self == oldSelf and cannot
-    be seen in a render; these are the rest
+    that implies its block. 40 of the 79 ` + "`" + `XValidation` + "`" + ` markers are
+    ` + "`" + `self == oldSelf` + "`" + ` and cannot be seen in a render; these are the rest. A
+    marker is not a rule: one on a struct several kinds embed is emitted into
+    each of their CRDs, which is why the enforced count is far higher
   - the agent split: every Agent has some source of capability, no Agent lists
     the same semantic layer twice, no allowedCubes, and sampleQuestions on
     anything published. **Two things this deliberately no longer checks**: how
@@ -53,6 +55,12 @@ server-side dry run all pass:
     tell either from a mistake -
     ".agents/skills/asgard-platform/usecase/agent-hub.md" argues for the shape
     each one departs from
+  - the generator's own TODOs, still in the render. **A warning, never a
+    failure** - a chart carries them through the whole middle of an onboarding.
+    This is the last place between ` + "`asgard-cli add`" + ` and a tag where anybody
+    says they are there: helm renders the word, the apiserver accepts it, the
+    run succeeds, and a published Agent shows "TODO" to the customer as its
+    sample questions
 
 These are the checks a server-side dry run passes and runtime still fails: a
 reference to a CR that does not exist, an entry name nothing declares, a
@@ -254,6 +262,7 @@ func gates(docs []gate.Doc, opts gate.Options) []verifyCheck {
 		{"shapes", gate.Shapes(docs, opts)},
 		{"credentials", gate.CredentialRefs(docs, opts)},
 		{"deployability", gate.Deployability(docs, opts)},
+		{"placeholders", gate.Placeholders(docs, opts)},
 	}
 	out := make([]verifyCheck, 0, len(named))
 	for _, n := range named {

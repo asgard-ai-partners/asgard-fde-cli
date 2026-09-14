@@ -99,9 +99,12 @@ the second direction is the one worth copying:
   - **every skill, system and attachment that exists must be named by a story**
 
 An orphan is an error, not a warning. That is what keeps twelve industries from
-accumulating half-built assets nobody can date, and it is the check a customer
-repository does not have - `asgard-cli check` finds a chart that references
-something missing, never something present that nothing references.
+accumulating half-built assets nobody can date, and it is close to the check a
+customer repository does not have. `asgard-cli check` resolves references that
+exist and says nothing about a thing nothing references. `asgard-cli verify`
+has **one** such rule - R11, a SemanticLayer no Agent binds - and it is a
+warning, because a render cannot tell a deliberate choice from unfinished work.
+For every other kind, nothing looks.
 
 It runs across the whole repository and has to be clean, not clean for the
 industry you touched.

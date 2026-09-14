@@ -7,7 +7,17 @@ mechanism every other shape is built out of.
 **Seen in:** a two-call mail sender, a search tool that reshapes its API's
 response, a conversation loop, and a nine-branch content pipeline.
 
-**Checked:** 2026-09-02 against workflows in six deployments: prevPayload 134 uses, httpResponse 20, and JavaScript constructs including exactly the 4 occurrences of ?? this page cites.
+**Checked:** 2026-09-02, re-read 2026-09-14 across all seven reference
+deployments. Every construct this page cites is written in at least one of
+them, `??` included; `prevPayload` is in all but two and is how a chain passes
+anything at all.
+
+**The tallies that were here are gone.** They said 134 uses and 20, and no
+method reproduces either: each recount used a different set, and every one left
+out the deployment writing most of them. A count is the right evidence when the
+count is the point - how much of a chart `add` never writes, how many pages a
+back office has - and the wrong evidence for "does this work", where a named
+construct that is deployed today says more and cannot rot.
 
 **Unchecked:** nothing outstanding. The replacement of prevPayload by an http-request is stated in a deployment's own comment in the same words.
 

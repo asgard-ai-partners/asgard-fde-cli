@@ -35,7 +35,7 @@ import (
 // was an AGENTS.md section, a stage prompt and whatever an agent happened to
 // remember. Every one of those is a place the list can go stale, and one of
 // them did: the scaffolded gate described four steps, the fourth of which ran a
-// python script that had been deleted a month earlier.
+// python script that no longer existed.
 //
 // An agent working in a compiled language does not have this problem. Whatever
 // it changed, it knows to run the build, and the build is one command whose
@@ -86,12 +86,12 @@ func newGateCmd() *cobra.Command {
     asgard-cli gate                  every release the declaration names
     asgard-cli gate internal-dev     one of them
     asgard-cli gate --offline        skip the two steps that need the platform
+    asgard-cli gate --format json    one record per step, for an agent
 
 The first line says which platform this run's verdict is about, and how that
 profile came to be the one in effect. Two of the steps ask a platform, so a
 verdict read against the wrong one is worth nothing; ` + "`--offline`" + ` and "not signed
 in" say so there rather than leaving the line out.
-    asgard-cli gate --format json    one record per step, for an agent
 
 **Run it after changing anything under a chart or ` + "`" + pipelineconfig.FileName + "`" + `.** It is the
 build step of a repository that has no build step: an agent working in a
@@ -100,7 +100,7 @@ compiler is one command whose definition lives with the code. Nothing here was
 missing before - ` + "`check`" + `, ` + "`helm lint`" + `, ` + "`render`" + `, ` + "`verify`" + ` and the reference
 material's freshness all existed - but the only thing that assembled them was
 prose, and prose goes stale. The gate this replaces described four steps, and
-the fourth ran a script that had been deleted a month earlier.
+the fourth ran a script that no longer existed.
 
 What it runs, in order:
 

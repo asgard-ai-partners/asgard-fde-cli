@@ -7,10 +7,10 @@ Run it with one command:
 
     asgard-cli gate
 
-That is the whole local half, and it is one command on purpose: a checklist in
-prose is not a gate, and the one this replaced named four steps of which the
-fourth ran a script deleted a month earlier. A step it could not run is
-reported as skipped, which is not a pass.
+That is the whole local half, and it is one command on purpose: **a checklist
+in prose is not a gate** - it goes stale where the binary cannot, and a reader
+has no way to tell. A step it could not run is reported as skipped, which is
+not a pass.
 
 Load the `asgard-cr-verification` skill under .agents/skills/ for what the
 PLATFORM checks, which is the other half and the authoritative one. It comes
@@ -26,6 +26,16 @@ What `asgard-cli gate` runs, and what each step is for:
   repo     the repository's structure: the README project table against the
            folders on disk, .asgard-pipeline.yaml against the charts it names,
            the docs/ layers, the requirements indexes. Alone: asgard-cli check
+
+  shipped  whether the files this CLI wrote here still match the ones it
+           carries - a page renamed upstream, or one edited here. It reads
+           .asgard-scaffold.json, which records a digest and a CLI version per
+           file. Alone: asgard-cli init, which reports and does not overwrite
+
+  binding  whether this checkout records which workspace and which pipeline it
+           deploys through. Nothing recorded is the ordinary state of a
+           repository nobody has connected yet, and it is reported as skipped.
+           Alone: asgard-cli pipeline show
 
   skills   whether the reference material here still describes the server this
            repository deploys to. Alone: asgard-cli skill status
@@ -81,21 +91,27 @@ installed and how to install it.
 
 Done when: every step is green, and you have said which ones could not be run.
 
-Once every chart is complete, `asgard-cli project` says so for each of them
-rather than a next step. After that, new capability is added
-with the loop in `../guide/enhance.md`.
+**No command says a chart is complete, and `asgard-cli project` refuses to.**
+It lists what each chart declares and says nothing about what it lacks: a chart
+with a SemanticLayer and no Agent may be finished or unfinished, and the files
+cannot tell the two apart. Completeness is your judgement against the request,
+and after it new capability is added with the loop in `../guide/enhance.md`.
 
-**Checked:** 2026-09-04 - each of the four steps names a command that exists and
-does what is said: `asgard-cli check` is structural, `asgard-cli verify` renders
-and checks the invariants a render cannot see, and step 4's dry-run and fidelity
-scripts are the two the generated repo ships. The claim that a dry-run reports
-success while dropping an undeclared field is the CRD's documented pruning
-behaviour and is why step 4 is two commands rather than one.
+**Checked:** 2026-09-11 - the eight steps above are `gate`'s own, in its own
+order, read off asgard-fde-cli's own `internal/cli/gate.go`; each names the command that runs it
+alone and each of those exists. This line described a four-step checklist that
+the body above had already replaced, and named dry-run and fidelity scripts as
+"the two the generated repo ships" when the scaffold ships neither. The claim
+that a dry-run reports success while dropping an undeclared field is the CRD's
+documented pruning behaviour.
+
+**Unchecked:** what the platform's own half reports. Two of the eight steps
+need a session, and nobody has held this page against a run.
 
 **Unchecked:** that a step this cannot run is not a step that passed. Nothing
 enforces saying so, and the failure it guards against - a green gate that never
 reached a cluster - has happened once in the engagement this came from. Also
-unchecked: that these four in this order are the whole gate. They are the gate
+unchecked: that these eight in this order are the whole gate. They are the gate
 **this tool implements**; a deployment that fails for a reason none of them
 looks at is the case that would disprove it, and there has been one: a chart
 that passed every step here and failed in the platform's own dry run, on a

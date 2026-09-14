@@ -79,6 +79,10 @@ still means something when the person has moved on.
 // has said what it must carry for as long as it has existed. What was missing
 // was making it mechanical, so it happens on the way in rather than being
 // reconstructed later by somebody who was not there.
+// bookkeeping is what `references/` holds that nobody filed: the directory's
+// own documentation and the provenance table the command writes.
+var bookkeeping = map[string]bool{"readme.md": true, "_index.md": true}
+
 func AddReference(root string, src string, ref Reference, out io.Writer) (Reference, error) {
 	info, err := os.Stat(src)
 	if err != nil {
@@ -91,6 +95,17 @@ func AddReference(root string, src string, ref Reference, out io.Writer) (Refere
 	if ref.Path == "" {
 		ref.Path = filepath.Base(src)
 	}
+	// **The directory's own bookkeeping is not a customer's first version**, and
+	// saying so matters: a customer handing over a `README.md` - a repository
+	// export, a system's own readme - collided with the scaffold's directory
+	// documentation and was told it had already filed that document.
+	if bookkeeping[strings.ToLower(filepath.ToSlash(ref.Path))] {
+		return ref, fmt.Errorf("%s is this directory's own, not a document somebody filed: "+
+			"`README.md` says what the directory is for and `_index.md` is the provenance table. "+
+			"Give the customer's document a name of its own - `--as <name>` - because the two "+
+			"cannot both live at that path", filepath.ToSlash(ref.Path))
+	}
+
 	dest := filepath.Join(root, ReferenceDir, filepath.FromSlash(ref.Path))
 	if _, err := os.Stat(dest); err == nil {
 		return ref, fmt.Errorf("%s already exists. A customer's second version of a document is a different document: file it under its own name, with its own date, and leave the first one where it is - the two together are how anyone sees what changed", filepath.ToSlash(filepath.Join(ReferenceDir, ref.Path)))

@@ -11,18 +11,43 @@ Four ways.
 
 ## Chat platforms
 
-Each platform needs different credentials, all supplied by the customer:
+Each platform needs different credentials, all supplied by the customer -
+**and for Slack the answer depends on which path you are on**, which is the one
+row here that has been got wrong:
 
-| platform | needs | extra step |
+| platform | the chart's `BotProvider` needs | the documentation's UI flow asks for |
 |---|---|---|
-| LINE | Channel Secret, Channel Access Token | Asgard produces a Webhook URL that has to be pasted back into the LINE Developers Console, verified, and Use webhook enabled |
-| Slack | Client ID, Client Secret, Signing Secret, Permission Scopes | a Slack app has to exist and subscribe to Bot events |
-| Discord | Bot Token | an app and bot in the Developer Portal, authorised and invited to the server |
-| Telegram | Bot Token | created through BotFather |
+| LINE | `channelAccessToken`, `channelSecret` | the same two, as Channel Access Token and Channel Secret |
+| Slack | `appToken`, `botToken` - **both required** | Client ID, Client Secret, Signing Secret, Permission Scopes |
+| Discord | `botToken` | Bot Token |
+| Telegram | `botToken` **and `webhookSecretToken`, both required** | Bot Token only |
+
+**Two of those rows differ, and in both cases the chart asks for more or other
+than the documentation does.**
+
+**Slack is two different credentials, not two names for one.** The UI's flow is
+an OAuth app installation - client id, client secret, signing secret, scopes -
+and it is what somebody clicking through Applications supplies. A chart writes
+neither: `spec.slack` takes an **app-level token** and a **bot token**, the
+`xapp-` and `xoxb-` pair. Asking a customer for a client id and then writing a
+chart leaves you without either field the CR requires.
+
+**Telegram's second field is in the CRD and in no documentation page.**
+`webhookSecretToken` is required beside `botToken`, and a page that lists only
+the bot token sends an FDE to the meeting with half the ask. It is ours to
+generate rather than theirs to supply - Telegram accepts a secret you choose -
+but it has to exist before the CR applies.
 
 LINE is the only one needing **two-way** setup - Asgard gives a URL that has to go
-back into LINE. The rest only take credentials inward. For Taiwanese customers it
-is usually the first one asked about.
+back into LINE, which somebody has to paste into the LINE Developers Console,
+verify, and then enable Use webhook on. The rest only take credentials inward.
+**LINE also has a prerequisite before any of that**: Messaging API has to be
+enabled on the Official Account, which is the customer's own step in a console
+nobody here can reach. For Taiwanese customers LINE is usually the first one
+asked about.
+
+**Discord and Slack get a Connector Pod** rather than a webhook, because both
+hold an outbound WebSocket - `../usecase/chat-channel.md` has what that costs.
 
 `botProviderClass` is immutable in the CRD, so it has to be right the first time.
 
@@ -167,6 +192,51 @@ common things a customer asks for, and the answer is not "yes, of course".
     they have an HTTP endpoint that sends mail   an external-api call
     they have no endpoint                        it cannot be built yet
 
+**And SMTP credentials are not an endpoint.** The platform's only outbound
+capability is `http-request`, which speaks HTTPS; SMTP is a multi-round protocol
+on its own TCP port and a Workflow has no way to speak it. So a username, a
+password and `smtp.<host>:587` cannot be used at all - **not "with more work",
+at all** - and that is the shape of credential a customer hands over when asked
+for mail access. One deployment asked for a mail API, was told which one, and
+received SMTP credentials for it; they are different authentication mechanisms
+and not interchangeable.
+
+**The reason to say no is that we cannot speak it, and nothing else.** "SMTP
+basic auth is being switched off soon" is a tempting second argument and it is
+**not true**: Microsoft has deferred that three times, the current schedule
+turns it off by default at the end of 2026 with administrators able to turn it
+back on, and no final removal date is announced. A deployment put the deferral
+correction into its own record for exactly this reason - the next person reaches
+for the same wrong argument.
+
+### So mail means a provider with an HTTP API
+
+Two shapes, and the cost difference is worth raising in the meeting:
+
+| | a single-call API | a token-first API |
+|---|---|---|
+| HTTP calls per mail | 1 | 2 - fetch a token, then send |
+| processors | send, respond | get-token, send, respond |
+| secrets to hold | 1 | 3 |
+
+**The sender has to be verified with the provider**, per address or per domain,
+or the send is refused outright - and that verification is the customer's IT to
+do, on their schedule. Ask for it in the same breath as the API key.
+
+Three details read off a working send, each of which looks like a bug when it
+bites:
+
+  - **success can be a 2xx that is not 200, with an empty body.** Test the
+    status as a range rather than `== 200`, and set `parseJson: false` - there
+    is no JSON to parse and every run leaves a parse warning otherwise
+  - **turn the provider's click tracking off.** It rewrites every link in the
+    mail to its own tracking domain, and an internal notification arriving with
+    an unfamiliar redirect domain in it reads as phishing
+  - **on `http-request`, every config key that is not `url`, `method`, `body` or
+    `parseJson` is sent as an HTTP header** - which is how the API key and the
+    content type get there, and `../wiki/processors.md` has the rest of what an
+    extra key means per processor
+
 **A deployment that mocks it owes a disclosure**, and this is worth copying. One
 does: `wf-send-mail` is a single `push-message` returning
 `{ok: true, mocked: true, to, subject, body}`, so the whole pipeline runs and
@@ -186,10 +256,13 @@ order not placed.
 
 - [LINE](https://docs.asgard-ai.com/docs/integration/line),
   [Slack](https://docs.asgard-ai.com/docs/integration/slack),
-  [Telegram](https://docs.asgard-ai.com/docs/integration/telegram),
-  [SDK](https://docs.asgard-ai.com/docs/integration/sdk)
+  [Telegram](https://docs.asgard-ai.com/docs/integration/telegram)
   - asgard-docs `f00e0ee`. `integration/Discord.mdx` is an empty file; the
   Discord content is under `integration-with-asgard/`
+- [SDK](https://docs.asgard-ai.com/docs/integration/sdk)
+  - asgard-docs `23409b3`, read 2026-09-14. The page is a two-line pointer at
+  the two SDK guides, and what moved since `f00e0ee` is the form of those two
+  links - nothing this page says rests on it
 - The four pages under `integration-with-asgard/` (api, line, slack, discord)
   - asgard-docs `f00e0ee`. All four are marked `draft`, and they describe an
   interface called "Published -> add integrated" inside a Project, which does not
@@ -200,12 +273,21 @@ order not placed.
 - [Applications overview](https://docs.asgard-ai.com/docs/product-suite/odin/features/applications-overview)
   and [Customized Integration](https://docs.asgard-ai.com/docs/product-suite/odin/features/applications-customized-integration)
   - asgard-docs `f00e0ee`
+- **That SMTP cannot be reached at all, and what a real mail send costs**: read
+  2026-09-11 off `unitech-e-asgard-kube`, which asked for a mail API, received
+  SMTP credentials for it, and wrote down why neither route worked. The
+  single-call shape, the empty-bodied 202, the click-tracking rewrite and the
+  verified-sender requirement are from that deployment's own working send; the
+  deferral correction is recorded in its living spec. **That an extra config key
+  on `http-request` is sent as an HTTP header** was then confirmed at asgard-core
+  `623ceb5`, asgard-core `internal/processor/task/http_request.go`, which is also
+  where the value having to be a string comes from
 - `botProviderClass` being immutable: checked against
-  [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `15ded0f` -
+  [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `cbd8d70` -
   `BotProviderSpec`
 - **The platform owning no handoff, takeover, suspend or per-user quota**:
   checked 2026-09-02 against
-  [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `15ded0f` -
+  [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `cbd8d70` -
   no CRD and no field carries any of those concepts
 - The quota numbers, all eight, that they are Workspace-level and shared, and
   that they are raised through sales:

@@ -24,11 +24,16 @@ import (
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/wiki"
 )
 
-// The instructions in this material are spread across 67 documents - 27 wiki
-// pages, 22 extracts, 12 stage prompts and 6 skills - and three
-// contradictions have reached a customer - every one found by somebody walking
-// into it. The cause is that no two opposing instructions are ever in front of
-// the same pair of eyes.
+// The instructions in this material are spread across every part of the corpus
+// - the wiki, the extracts, the stage prompts, the needs lists, the briefings
+// and the skills - and four ways it has contradicted itself have reached a
+// customer, every one found by somebody walking into it. The cause is that no
+// two opposing instructions are ever in front of the same pair of eyes.
+//
+// **The breakdown is not written here.** It was, as a count per part, and three
+// of its four numbers were wrong within a month of being typed: the material
+// moves and a sentence does not. What this command prints is counted at the
+// moment it runs, which is the only form of the number that stays true.
 //
 // This command makes that moment, and it lives in the binary rather than beside
 // the source for one reason: **an audit that only runs on the maintainer's
@@ -53,7 +58,12 @@ var (
 	// cannot be wrong this way; one that says what the other command reports
 	// can be, and one did - a stage prompt described `check` as saying the
 	// opposite of what it says.
-	crossSentence = regexp.MustCompile("[^.!?\n]*`asgard-cli[^`]*`[^.!?]*[.!?]")
+	// A sentence that names a command, in either of the two ways this
+	// material writes one. **The double-quoted form is not optional**: a Go
+	// raw string cannot hold a backtick, so every help screen quotes the
+	// commands it names, and a pattern matching only backticks reads none of
+	// them - which left the tool's own output out of this listing entirely.
+	crossSentence = regexp.MustCompile("[^.!?\n]*(?:`asgard-cli[^`]*`|\"asgard-cli[^\"]*\")[^.!?]*[.!?]")
 	claiming      = regexp.MustCompile(`(?i)\b(says?|said|reports?|tells?|warns?|prints?|` +
 		`lists?|names?|carries|describes?|covers?|gives?|answers?|states?|has|have|` +
 		`holds?|explains?|already|until)\b`)
@@ -104,14 +114,10 @@ func everything() ([]source, error) {
 	// The design-time skills are already in material() as prose, and including
 	// them again would double every hit in them.
 	//
-	// **The prefix alone was too broad.** `.agents/skills/` also holds the
-	// platform corpus this CLI generates - `asgard-platform/SKILL.md` and its
-	// index - and those are in no other source, so skipping the whole prefix
-	// meant nothing audited them. It shipped a `SKILL.md` naming
-	// `asgard-cli scaffold`, a command this build does not answer to, and
-	// `--commands` reported 0 dead the whole time; the repo-side check found
-	// it, in a scaffolded repository, which is a later and more expensive
-	// place to find it. So the skip names the skills material() covered.
+	// **The skip names those skills rather than the prefix.** `.agents/skills/`
+	// also holds the platform corpus this CLI generates -
+	// `asgard-platform/SKILL.md` and its index - and those are in no other
+	// source, so skipping the whole prefix leaves them audited by nothing.
 	covered := map[string]bool{}
 	for _, sk := range skills {
 		covered[path.Dir(scaffold.Path(sk.Name))+"/"] = true
@@ -171,16 +177,11 @@ func sweep(out io.Writer, sources []source, term string) error {
 	return nil
 }
 
-// **The corpus's own bookkeeping is audited too, and for a long time it was
-// not.** `List` hides the wiki's index and README and the extracts' README,
-// which is right for somebody listing pages and wrong here: they are documents
-// this material ships, they carry pointers and they name commands. Five
-// references to the deleted `asgard-cli usecase` sat in those three files
-// while `--commands` reported 0 dead - and the check that found them was the
-// one this tool writes into a customer repository, which is a later and more
-// expensive place to find anything.
-//
-// So the source set is what lands, not what lists.
+// **The source set is what lands, not what lists.** `List` hides the wiki's
+// index and README and the extracts' README, which is right for somebody
+// listing pages and wrong here: they are documents this material ships, they
+// carry pointers and they name commands. A document that ships is a document
+// that is checked.
 func material() ([]source, error) {
 	var out []source
 	pages, err := wiki.Landing()
@@ -415,7 +416,7 @@ func helpText(cmd *cobra.Command) []source {
 }
 
 func newAuditCmd() *cobra.Command {
-	var onlyAsk, onlyUnmarked, cross, links, commands, orphans, bareNames, urls, unverified, paths bool
+	var onlyAsk, onlyUnmarked, cross, links, commands, orphans, bareNames, urls, unverified, unchecked, paths, srcCommits bool
 	var term string
 
 	cmd := &cobra.Command{
@@ -424,10 +425,12 @@ func newAuditCmd() *cobra.Command {
 		Hidden: true,
 		Long: `Every instruction this tool ships, on one screen.
 
-Three contradictions in this material have reached a customer and every one was
-found by somebody walking into it. The cause is structural: the instructions are
-spread across 67 documents, so **no two opposing ones are ever in front of the
-same reader.** This makes that moment.
+Four ways this material has contradicted itself have reached a customer and
+every one was found by somebody walking into it. The cause is structural: the
+instructions are spread across every part of the corpus, so **no two opposing
+ones are ever in front of the same reader.** This makes that moment. The count
+of what it found is the last line it prints, because a number in this paragraph
+would be one nobody recomputes.
 
 It detects nothing, deliberately. Matching opposing verbs over prose produces
 noise, and a checker that cries wolf teaches people to change what it can see
@@ -446,6 +449,8 @@ a customer deck.
                                            not exist
     asgard-cli audit-material --paths      a landed document naming a path only
                                            this repository has
+    asgard-cli audit-material --sources    one upstream, one commit: every
+                                           citation of a source agrees
     asgard-cli audit-material --unverified what says nothing about having been
                                            checked, across every body
     asgard-cli audit-material --orphans    documents nothing points at. The
@@ -473,10 +478,9 @@ this material points at; this resolves the COMMANDS it tells somebody to run,
 against the tree this binary actually answers to. It shipped without one:
 ` + "`asgard-cli pipeline deliveries`" + ` was named in six documents as the one place a
 push that produced no run explains itself, and no such command had ever been
-built - found by a person re-reading a provenance line, weeks later, which is a
-terrible mechanism for a claim a program can resolve instantly. It reads the
-scaffold templates too, because a scaffolded README is where a customer meets
-these names first.
+built. A claim a program can resolve instantly should not wait for somebody to
+re-read a provenance line. It reads the scaffold templates too, because a
+scaffolded README is where a customer meets these names first.
 
 **--orphans is the other half of --links.** A pointer that goes nowhere is
 caught by --links; a document nothing points at is not caught by anything, and
@@ -580,6 +584,13 @@ maintainer can see.`,
 				for name, body := range docs {
 					all = append(all, source{label: "repo", name: name, body: body})
 				}
+				skills, err := repoSkills()
+				if err != nil {
+					return err
+				}
+				for name, body := range skills {
+					all = append(all, source{label: "repo", name: name, body: body})
+				}
 				return checkCommands(out, cmd.Root(), all)
 			}
 			if bareNames {
@@ -588,8 +599,33 @@ maintainer can see.`,
 			if unverified {
 				return checkUnverified(out)
 			}
+			if unchecked {
+				return listUnchecked(out)
+			}
 			if paths {
 				return checkPaths(out, append(sources, bookkeeping()...))
+			}
+			if srcCommits {
+				every, err := everything()
+				if err != nil {
+					return err
+				}
+				every = append(every, bookkeeping()...)
+				strs, err := goStrings()
+				if err != nil {
+					return err
+				}
+				for name, body := range strs {
+					every = append(every, source{label: "source", name: name, body: body})
+				}
+				docs, err := repoDocs()
+				if err != nil {
+					return err
+				}
+				for name, body := range docs {
+					every = append(every, source{label: "repo", name: name, body: body})
+				}
+				return checkSources(out, every)
 			}
 			if orphans {
 				// Help counts as a pointer and the index does not. A command's
@@ -599,7 +635,11 @@ maintainer can see.`,
 				return checkOrphans(out, append(sources, helpText(cmd.Root())...))
 			}
 			if cross {
-				return crossref(out, sources)
+				// **Including every command's own help.** A command
+				// describing another command wrongly is the same defect
+				// wherever it is written, and the help screens are where a
+				// reader meets most of these sentences.
+				return crossref(out, append(sources, helpText(cmd.Root())...))
 			}
 
 			total, shown := 0, 0
@@ -647,7 +687,9 @@ maintainer can see.`,
 	f.BoolVar(&bareNames, "bare", false, "documents named without the command that opens them, which nothing else can see; exits 1 on one")
 	f.BoolVar(&orphans, "orphans", false, "documents nothing else points at; the index does not count as a pointer")
 	f.BoolVar(&unverified, "unverified", false, "documents carrying no record of having been held against anything")
+	f.BoolVar(&unchecked, "unchecked", false, "what each document says it has NOT been held against; a listing, not a check")
 	f.BoolVar(&paths, "paths", false, "a landed document naming a file only this repository has")
+	f.BoolVar(&srcCommits, "sources", false, "every citation of one upstream names the same commit")
 	f.StringVar(&term, "term", "", "every line mentioning this word, templates included - for a rename")
 	f.BoolVar(&urls, "urls", false, "fetch every docs.asgard-ai.com link in the material; exits 1 on a 404. Needs the network")
 	return cmd
@@ -946,14 +988,9 @@ func checkLinks(out io.Writer, sources []source) error {
 // command tree, and fails on one that names something this build does not
 // answer to.
 //
-// **The failure it exists for shipped.** `asgard-cli pipeline deliveries` was
-// named in six documents - the verification skill, a scaffolded AGENTS.md and
-// README, two stage prompts - as the one place a push that produced no run
-// explains itself, and no such command had ever been built. It was caught by a
-// person re-reading a provenance line, weeks later. Nothing mechanical was
-// looking, even though the tree is already enumerated at startup for `check`.
-//
-// So this is the same enumeration turned inward. `check` asks whether a
+// **A named command is a checkable claim, and the tree is already enumerated
+// at startup for `check`.** So this is the same enumeration turned inward.
+// `check` asks whether a
 // CUSTOMER'S repository names a command this build no longer has; this asks
 // whether OUR OWN material does, which is the half that writes the customer's
 // repository in the first place.
@@ -1122,6 +1159,156 @@ func findChild(node *cobra.Command, name string) *cobra.Command {
 	return nil
 }
 
+// sourceCommit matches a provenance citation: an upstream repository and the
+// commit it was read at.
+//
+// **The commit is the version number of one moment of synthesis**, and it is
+// written by hand in three unrelated mechanisms - a page's Sources block, a
+// pinned table's `const ...Read` in `internal/gate`, and the raw-sources table
+// in `internal/corpus/wiki/README.md`. 37 places name one asgard-kube commit
+// and 23 name one asgard-docs commit. Re-reading a source means changing all
+// of them, and updating the gate's constants while leaving the pages is a
+// corpus that claims two different readings of the same upstream with nothing
+// to say which is true.
+var sourceCommit = regexp.MustCompile(`\b(asgard-[a-z0-9-]+)\s+` + "`?" + `([0-9a-f]{7,12})` + "`?" + `(\s*\(unread\))?`)
+
+// unreadMarker is how the material names a commit it has NOT read.
+//
+// **Saying "upstream has moved and nobody has read it" is not a citation**, and
+// it is worth saying: asgard-docs moved 286 files while this corpus was cited
+// at the older commit, and the useful record is that the gap exists rather than
+// silence. Without a way to write that, the only options were to bump 58
+// hashes - claiming a reading nobody did - or to leave the fact out.
+//
+// A literal marker rather than a phrase, because a keyword list that tries to
+// recognise "has not been read" from prose is a check nobody can predict.
+const unreadMarker = " (unread)"
+
+// checkSources reports what this material has read, and fails on an upstream
+// nobody declared.
+//
+// **There is no "one commit per upstream" rule.** Provenance is per claim, so
+// two commits of one upstream is the ordinary state of a corpus read over
+// time, and a rule against it would fail the schema for working.
+//
+// What is left is a report and one gate.
+//
+// **The report** is every upstream, every commit, and how many citations sit
+// at each. A sweep that was meant to move every citation and moved some of
+// them looks exactly like a corpus read over several days, and nothing can
+// tell those apart - so it is printed rather than judged.
+//
+// **The gate** is that `internal/corpus/wiki/README.md`'s raw-sources table
+// names every upstream cited anywhere. That table is the map of what this
+// material is written from; a source cited in a page and missing from it is a
+// dependency nobody declared, and it is the one thing here that cannot be a
+// matter of timing.
+//
+// It does not ask whether a commit is current - nothing inside this repository
+// can, which is why every page records one at all. `go run ./hack sources` reads the
+// clones and says how far behind each is.
+func checkSources(out io.Writer, srcs []source) error {
+	type site struct{ where, commit string }
+	seen := map[string][]site{}
+	var order []string
+	for _, s := range srcs {
+		for i, line := range strings.Split(s.body, "\n") {
+			for _, m := range sourceCommit.FindAllStringSubmatch(line, -1) {
+				repo, commit := m[1], m[2]
+				if m[3] != "" {
+					continue
+				}
+				if _, ok := seen[repo]; !ok {
+					order = append(order, repo)
+				}
+				seen[repo] = append(seen[repo],
+					site{fmt.Sprintf("%s %s:%d", s.label, s.name, i+1), commit})
+			}
+		}
+	}
+	sort.Strings(order)
+
+	// fold returns the key a commit belongs under, so a longer hash of the same
+	// commit is the same commit.
+	fold := func(in map[string][]string, commit string) string {
+		for k := range in {
+			if strings.HasPrefix(k, commit) || strings.HasPrefix(commit, k) {
+				return k
+			}
+		}
+		return commit
+	}
+
+	// The raw-sources table is the declaration. It is read from the wiki
+	// README, which is where the three-layer rule lives.
+	declared := map[string]bool{}
+	for _, src := range srcs {
+		if src.label != "wiki" || src.name != "README" {
+			continue
+		}
+		for _, line := range strings.Split(src.body, "\n") {
+			if !strings.Contains(line, "source of truth") && !strings.HasPrefix(line, "|") {
+				continue
+			}
+			for _, m := range regexp.MustCompile(`asgard-[a-z0-9-]+`).FindAllString(line, -1) {
+				declared[m] = true
+			}
+		}
+	}
+
+	var undeclared []string
+	for _, repo := range order {
+		// Per upstream, for the report.
+		commits := map[string][]string{}
+		// Per document, which is what fails.
+		perDoc := map[string]map[string]bool{}
+		for _, si := range seen[repo] {
+			commits[fold(commits, si.commit)] = append(commits[fold(commits, si.commit)], si.where)
+			doc := si.where[:strings.LastIndex(si.where, ":")]
+			if perDoc[doc] == nil {
+				perDoc[doc] = map[string]bool{}
+			}
+			perDoc[doc][si.commit] = true
+		}
+		var keys []string
+		for k := range commits {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+
+		if len(keys) == 1 {
+			fmt.Fprintf(out, "%-16s %s  (%d citation(s))\n", repo, keys[0], len(commits[keys[0]]))
+		} else {
+			fmt.Fprintf(out, "%-16s %d commits, read at different times:\n", repo, len(keys))
+			for _, k := range keys {
+				fmt.Fprintf(out, "    %s  %d citation(s)", k, len(commits[k]))
+				if len(commits[k]) <= 3 {
+					fmt.Fprintf(out, "  %s", strings.Join(commits[k], ", "))
+				}
+				fmt.Fprintln(out)
+			}
+		}
+
+		if !declared[repo] {
+			undeclared = append(undeclared, repo)
+		}
+		_ = perDoc
+	}
+
+	for _, repo := range undeclared {
+		fmt.Fprintf(out, "\nundeclared  %s is cited and is not in the raw-sources table\n", repo)
+	}
+	fmt.Fprintf(out, "\n%d upstream(s) cited, %d not declared in the raw-sources table.\n",
+		len(order), len(undeclared))
+	if len(undeclared) > 0 {
+		return fmt.Errorf("%d upstream(s) are cited and not declared in `internal/corpus/wiki/README.md`'s raw-sources table", len(undeclared))
+	}
+	if len(order) == 0 {
+		return fmt.Errorf("no provenance citation found at all, so this checked nothing")
+	}
+	return nil
+}
+
 // ourFiles are paths that exist in this repository and are never written into
 // a customer's. A landed document naming one of them points at nothing.
 //
@@ -1131,12 +1318,10 @@ func findChild(node *cobra.Command, name string) *cobra.Command {
 // repository. So the rule is not "do not name a path" - it is **name the
 // repository the path is inside**, and this reports the lines that do not.
 //
-// `pages/` and `extracts/` are here for a different reason: they are the
-// layout this material used to have, and they resolve in neither tree now.
-// Five documents still described themselves in those terms, one of them the
-// file `SKILL.md` says to read first. A renamed directory leaves prose behind
-// exactly the way a renamed page leaves a pointer behind, and only one of the
-// two had a check.
+// `pages/` and `extracts/` are here for a different reason: they are an
+// earlier layout of this material and resolve in neither tree. **A renamed
+// directory leaves prose behind exactly the way a renamed page leaves a
+// pointer behind**, and the second has always had a check.
 var ourFiles = regexp.MustCompile(`(?:^|[^A-Za-z0-9_./-])((?:source|hack|internal|cmd|prompts|pages|extracts)/[A-Za-z0-9_./*-]*|(?:Goal|TASK|STRUCTURE|APPROACH)\.md|selfsrc\.go)`)
 
 // knownRepos are the repository names the material is allowed to cite a path
@@ -1202,11 +1387,9 @@ var docsURL = kb.SourceURLs
 // right without fetching it.
 func checkURLs(ctx context.Context, out io.Writer, sources []source) error {
 	seen := map[string][]string{}
-	disclosed := map[string]bool{}
 	var order []string
 	for _, s := range sources {
-		lines := strings.Split(s.body, "\n")
-		for i, line := range lines {
+		for _, line := range strings.Split(s.body, "\n") {
 			for _, u := range docsURL(line) {
 				u = strings.TrimSuffix(u, ".")
 				// A URL ending in / is a prose template - the pages write
@@ -1222,24 +1405,13 @@ func checkURLs(ctx context.Context, out io.Writer, sources []source) error {
 				if !slices.Contains(seen[u], where) {
 					seen[u] = append(seen[u], where)
 				}
-				// A citation that already says the link 404s is not a defect,
-				// it is a citation doing its job: the page is a draft, the
-				// file is readable in a checkout, and the material says so.
-				// Look at the citing line and the two after it, which is where
-				// such a note goes.
-				for _, near := range lines[i:min(i+3, len(lines))] {
-					l := strings.ToLower(near)
-					if strings.Contains(l, "404") || strings.Contains(l, "draft: true") {
-						disclosed[u] = true
-					}
-				}
 			}
 		}
 	}
 	sort.Strings(order)
 
 	client := &http.Client{Timeout: 15 * time.Second}
-	dead, known := 0, 0
+	dead := 0
 	for _, u := range order {
 		req, err := http.NewRequestWithContext(ctx, http.MethodHead, u, nil)
 		if err != nil {
@@ -1255,18 +1427,14 @@ func checkURLs(ctx context.Context, out io.Writer, sources []source) error {
 		if resp.StatusCode < 400 {
 			continue
 		}
-		if disclosed[u] {
-			known++
-			fmt.Fprintf(out, "%d   %s  (the citation says so)\n", resp.StatusCode, u)
-			continue
-		}
 		fmt.Fprintf(out, "%d   %s\n      cited by %s\n", resp.StatusCode, u, strings.Join(seen[u], ", "))
 		dead++
 	}
 
-	fmt.Fprintf(out, "\n%d link(s) fetched, %d dead, %d dead and disclosed.\n", len(order), dead, known)
+	fmt.Fprintf(out, "\n%d link(s) fetched, %d dead.\n", len(order), dead)
 	if dead > 0 {
-		fmt.Fprintf(out, "\nA 404 here is usually one of two things: a directory URL with no landing\npage, or a page marked `draft: true`, which asgard-docs does not publish. For\na draft, keep the citation and say the link 404s - the file is readable in a\ncheckout, and the content behind it is still where the material came from.\n")
+		fmt.Fprintf(out, "\n**A page that is not published is cited as a file, not as a URL.**\n"+
+			"`draft: true` and a directory with no landing page are both unpublished;\nthe file is readable in a checkout, so cite `asgard-docs <path>` and the\nprovenance is stronger than a link nobody can open.\n")
 		return fmt.Errorf("%d documentation link(s) are dead", dead)
 	}
 	return nil
@@ -1278,6 +1446,61 @@ func checkURLs(ctx context.Context, out io.Writer, sources []source) error {
 // fine - see kb.Doc.Verified. **Do not close it by writing the lines.** An
 // `Unchecked:` line written to satisfy a listing converts UNKNOWN into a
 // claim, which is worse than the silence it replaces.
+// listUnchecked prints what every document says it has NOT been held against.
+//
+// **`--unverified` reports the documents carrying no marker; this reports what
+// the markers say.** Those are opposite questions and only the first had an
+// answer: a page whose `**Unchecked:**` line names a whole surface passed
+// `--unverified` and nothing put that surface in front of a reader.
+//
+// It exists because the alternative was a section in `TASK.md` listing what is
+// blocked and on what, maintained by hand, and every line of it was a second
+// copy of an `**Unchecked:**` marker on the page where a reader actually meets
+// it. Four of those rows survived after the thing they described was done. **A
+// list that can be generated should not be written down** - the same rule this
+// material applies to a count.
+//
+// No pass or fail. Every document is expected to have something it has not been
+// held against, and a corpus where nothing did would be one that had stopped
+// saying so.
+func listUnchecked(out io.Writer) error {
+	fmt.Fprintf(out, "What each document says it has NOT been held against.\n\n"+
+		"**This is a listing, not a check.** Every document is expected to have\n"+
+		"one; a corpus where nothing did would be one that had stopped saying so.\n"+
+		"`--unverified` is the check beside it, and it asks the opposite question:\n"+
+		"which documents carry no marker at all.\n\n")
+
+	bodies := []struct {
+		label string
+		list  func() ([]kb.Doc, error)
+	}{
+		{"wiki", wiki.List},
+		{"usecase", usecase.List},
+		{"guide", stage.Docs},
+		{"skills", scaffold.List},
+		{"needs", needs.List},
+		{"brief", brief.List},
+	}
+	total, said := 0, 0
+	for _, b := range bodies {
+		docs, err := b.list()
+		if err != nil {
+			return err
+		}
+		for _, d := range docs {
+			total++
+			if d.Unchecked == "" {
+				continue
+			}
+			said++
+			fmt.Fprintf(out, "%s %s\n    %s\n\n", b.label, d.Name, wrapAt(d.Unchecked, 72, 4))
+		}
+	}
+	fmt.Fprintf(out, "%d of %d document(s) name something they have not been held against.\n",
+		said, total)
+	return nil
+}
+
 func checkUnverified(out io.Writer) error {
 	fmt.Fprintf(out, "What carries no record of having been held against anything.\n\n"+
 		"Neither line present means UNKNOWN - not that the document is wrong, and\nnot that it is right.\n\n")

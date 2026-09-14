@@ -139,11 +139,15 @@ dry-run and then fails the real deploy.
 Done when: every project reads through one shape or the other, and
 asgard-cli check plus asgard-cli verify are green.
 
-**Checked:** 2026-09-04 against asgard-kube `15ded0f`. `Toolset` declares no
-`instruction` field, so the note about adding it back is current;
-`SemanticLayer.spec` carries `cubes` and top-level `sampleQueries`; `allowedCubes`
-is on the **Agent's** semanticLayers mount rather than on the layer, and the CRD
-permits it - refusing it is `gate` R4 and now says so.
+**Checked:** 2026-09-04, re-read 2026-09-14 against asgard-kube `cbd8d70`.
+`Toolset` declares no `instruction` field, so the note about adding it back is
+current; `SemanticLayer.spec` carries `cubes` and top-level `sampleQueries`;
+`allowedCubes` is on the **Agent's** semanticLayers mount rather than on the
+layer, and the CRD permits it - refusing it is `gate` R4 and now says so.
+`requestConsent` is a **required** field on each of a Toolset's tools, so
+"false because they are read-only" is a value somebody writes rather than a
+default they get, and tool guidance really is
+`Workflow.spec.entries[].tooling.description`, which the CRD also requires.
 
 **Unchecked:** the decision itself. Which audience gets a layer and which gets
 fixed tools, that a description in 繁體中文 is what the model matches on, and that

@@ -159,7 +159,7 @@ in a string field, and no schema validates its contents.
 - `SandboxHookEvent` is from the platform CRD. That `pre-tool-call` and
   `post-tool-call` are a silent no-op is **not** - the generated CRD lists both
   in the enum with no marking. It is stated in the API types themselves
-  ([asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `15ded0f`,
+  ([asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `cbd8d70`,
   `pkg/apis/asgard/v1alpha1/types.go`): "Deprecated: never implemented ...
   declaring a hook with either event is a silent no-op." Validation will accept
   one, so nothing catches this for you.

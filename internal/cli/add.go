@@ -188,7 +188,13 @@ Run "asgard-cli add" with no arguments to list the kinds.`,
 
 	cmd.Flags().StringVar(&opts.Project, "project", "", "project to add it to (optional when the repo has one)")
 	cmd.Flags().StringVar(&opts.DisplayName, "display-name", "", "name shown in the platform UI (defaults to the CR name)")
-	cmd.Flags().StringVar(&opts.Connector, "connector", "", "DataConnector this reads through")
+	// **One flag, two meanings, and the usage has to say both.** For every
+	// kind that reads a database it is the `dc-` DataConnector; for `plugin`
+	// it is the `ss-` SourceSet holding the skill store, because a plugin
+	// reads skills the way a query tool reads rows. A usage line naming only
+	// the first sends a reader to create the wrong kind.
+	cmd.Flags().StringVar(&opts.Connector, "connector", "",
+		"what this reads through: the `dc-` DataConnector for a database, or for a plugin the `ss-` SourceSet holding the skill store")
 	cmd.Flags().StringVar(&opts.Layer, "layer", "", "SemanticLayer to mount")
 	cmd.Flags().StringSliceVar(&layers, "layers", nil, "SemanticLayers a scheduled run mounts, repeatable")
 	cmd.Flags().StringVar(&opts.Toolset, "toolset", "", "Toolset to create alongside the tool")

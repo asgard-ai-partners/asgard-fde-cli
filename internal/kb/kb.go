@@ -328,8 +328,8 @@ var flagRe = regexp.MustCompile(`--([a-z][a-z0-9-]*)`)
 
 // handoff matches where one command's arguments end and another program's
 // begin. Without it, `asgard-cli render x | kubectl apply --dry-run=server`
-// resolves `--dry-run` against `render`, and the first run of this check
-// reported exactly that.
+// resolves `--dry-run` against `render`, which is a correct line reported as
+// wrong.
 //
 // A redirection has to be a `>` that follows a space. Every placeholder in this
 // material ends in one - `asgard-cli project add <slug> --env dev` - and a bare
@@ -372,7 +372,7 @@ func Invocations(body string) []Invocation {
 			for j, m := range ms {
 				// A flag belongs to the invocation it follows, so one
 				// invocation owns the text up to the next one - which is what
-				// `asgard-cli render x | asgard-cli check xref -` needs.
+				// `asgard-cli render x | asgard-cli verify --rendered -` needs.
 				end := len(seg)
 				if j+1 < len(ms) {
 					end = ms[j+1][0]
@@ -502,12 +502,30 @@ func Parse(name string, data []byte) Doc {
 
 	// The markers sit below the opening paragraph, by which point the summary
 	// loop below has already returned, so they need a pass of their own.
-	for _, line := range lines {
-		if rest, ok := strings.CutPrefix(line, "**Checked:**"); ok {
-			d.Checked = strings.TrimSpace(rest)
-		}
-		if rest, ok := strings.CutPrefix(line, "**Unchecked:**"); ok {
-			d.Unchecked = strings.TrimSpace(rest)
+	//
+	// **A marker is a paragraph, not a line.** Taking only the line the prefix
+	// sits on was enough while these fields were read for presence - which is
+	// all `--unverified` asks - and wrong the moment anything printed them:
+	// most of them run to several sentences, and half of one reads as a
+	// complete statement while omitting the surface it exists to name. So this
+	// reads to the blank line or the next marker.
+	for i, line := range lines {
+		for prefix, field := range map[string]*string{
+			"**Checked:**":   &d.Checked,
+			"**Unchecked:**": &d.Unchecked,
+		} {
+			rest, ok := strings.CutPrefix(line, prefix)
+			if !ok {
+				continue
+			}
+			para := []string{strings.TrimSpace(rest)}
+			for _, next := range lines[i+1:] {
+				if strings.TrimSpace(next) == "" || marker(next) {
+					break
+				}
+				para = append(para, strings.TrimSpace(next))
+			}
+			*field = strings.TrimSpace(strings.Join(para, " "))
 		}
 	}
 

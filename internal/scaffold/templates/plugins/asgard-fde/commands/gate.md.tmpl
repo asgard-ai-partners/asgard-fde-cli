@@ -1,35 +1,42 @@
 ---
-description: The acceptance gate, in order. Run before every tag.
+description: The acceptance gate. One command, before every tag.
 ---
 
-Four steps, and the order matters - each one is cheap and rules out a class the
-next one cannot see.
-
 ```bash
-asgard-cli check              # 1. structure: does the repository hold together
-asgard-cli verify             # 2 and 3: render every project, then the
-                              #    invariants a render cannot see
+asgard-cli gate
 ```
 
-Step 4 needs a cluster and is not in this repo - `.agents/skills/asgard-platform/guide/verify.md`
-says what it is.
+**One command, not a list.** A repository of CRs has no compiler, and the thing
+an agent runs after every edit has to be one command whose definition lives in
+the binary - a list in a file like this one goes stale, and this file carried a
+four-step one after the gate had eight steps.
+
+It runs, in order: `tools`, `repo`, `shipped`, `binding`, `skills`, `lint`,
+`render`, `verify`. **A skip is printed differently from a pass** - two steps
+need the platform, and a step that did not run is not a step that passed.
+
+What it cannot reach needs a cluster, and
+`.agents/skills/asgard-platform/guide/verify.md` says what that is. The
+authority is the plan:
+
+```bash
+asgard-cli pipeline runs watch --release <name> --ref <tag>
+```
 
 **Read the warnings, do not just check the exit code.** A warning here is a
 condition that is correct now and fatal once somebody tags, which is exactly the
 shape that gets skimmed past:
 
-- **no Syncer** - whether that fails your CD is one `if` in your own workflow.
-  Some count what the chart declares and skip at zero, some wait 180s and exit 1.
-  A production chart runs today with none. Check with
-  `grep -n syncer-name -A15 .github/workflows/*.y*ml`
-- **a declared key with no value on the platform** - correct until somebody has set
-  the namespace, and after that it means the CR works on the cluster while its
-  editor opens as a blank canvas
+- **no Syncer** - the rollout fires the Syncers this release deploys that carry
+  `asgard-ai.com/auto-fire-on-rollout` and waits for them, so with none there is
+  nothing after the dry run: a succeeded run means helm returned. A production
+  chart runs today with none, which is why this warns rather than fails
+- **a CR with no project-environment-id label** - it works on the cluster, and
+  its editor opens as a blank canvas. The platform injects the id as
+  `.Values.asgard.projectEnvironmentId` on every run, so the fix is in the
+  template rather than in a value
 - **R11, a layer with no consumer** - record which kind it is while you still
   know. The reader who finds it later is the one who binds it as a tidy-up
-- **C1 on a `schedule`** - the CRD's cron pattern is narrower than cron. No
-  ranges, no lists, no `@daily`, no zero-padding. The apiserver refuses those at
-  apply time, after the tag is pushed
 
 Then the review no rule can do:
 

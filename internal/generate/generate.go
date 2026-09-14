@@ -169,9 +169,9 @@ defaultSemanticLayerEffort: "medium"
 # <<.DisplayName>>
 triggers:
   <<.ValuesKey>>:
-    # The CRD's pattern is narrower than cron: no ranges (1-5), no lists
-    # (9,15), no @macros, no zero-padding (00 09). One number, * or */n per
-    # field. The apiserver refuses the rest at apply time, not helm.
+    # Ordinary five-field cron, or an @descriptor: the value is copied
+    # verbatim into the derived CronJob, so the grammar is batch/v1's. The
+    # platform parses it on write, in an admission webhook.
     schedule: "0 9 * * *"
     timeZone: "Asia/Taipei"
     # Suspended until the run has been exercised once by hand.
@@ -198,9 +198,9 @@ triggers:
 <<.ValuesKey>>:
   timeZone: "Asia/Taipei"
   dbSync:
-    # The CRD's pattern is narrower than cron: no ranges (1-5), no lists
-    # (9,15), no @macros, no zero-padding (00 09). One number, * or */n per
-    # field. The apiserver refuses the rest at apply time, not helm.
+    # Ordinary five-field cron, or an @descriptor: the value is copied
+    # verbatim into the derived CronJob, so the grammar is batch/v1's. The
+    # platform parses it on write, in an admission webhook.
     schedule: "0 9 * * *"
     suspend: "false"
     batchSize: 1000

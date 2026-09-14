@@ -6,7 +6,10 @@ A named bundle of capabilities that a blueprint loads by name - and can pick
 **Seen in:** a content-generation deployment with 28 of them, split into domain
 knowledge (`pg-med-*`, `pg-biz-*`, `pg-pr-*`) and writing style (`pg-style-*`).
 
-**Checked:** 2026-09-02 against a deployment carrying 28 Plugins, all sharing one skill store, and the CRD.
+**Checked:** 2026-09-02, re-read 2026-09-11 against that deployment at
+`edb0ad0`: one Plugin and one SkillSet per bundle, **every SkillSet naming the
+same `ss-skill-repos`**, and the CRD. The number of bundles moves as the
+deployment grows; the one store does not.
 
 **Unchecked:** how to divide capability into bundles. The naming IS the taxonomy, and no deployment's taxonomy has been reviewed here. That deployment is also the only one of eight that declares a `Plugin` at all (`../wiki/coverage.md`), so there is no second arrangement to tell the shape from its choices.
 
@@ -53,7 +56,7 @@ Every Plugin's SkillSet points at **one** `ss-skill-repos`, not at a SourceSet o
 its own. That is the opposite of the 1:1:1 rule in
 `../usecase/skill-set.md`, and it is deliberate: the skills live in one
 repository, so a SourceSet per bundle would clone the same repository once per
-bundle. The deployment with 28 Plugins has exactly one.
+bundle. The deployment with 29 has exactly one.
 
 The cost is paid on the UI side and paid knowingly - these SkillSets carry no
 `skill-set-name` annotation and no `managed-by: skill-set` label, so the platform
@@ -86,8 +89,9 @@ apiVersion: asgard-ai.com/v1alpha1
 kind: SkillSet
 metadata:
   name: sk-<domain>
-  annotations:
-    asgard-ai.com/skill-set-name: "<display name>"
+  # No `skill-set-name` and no `managed-by` - see above. The platform does not
+  # present a bundled skill set, so there is no name for it to show, and
+  # `asgard-cli verify` does not ask for one here.
   labels:
     {{- include "<chart>.labels" . | nindent 4 }}
 spec:

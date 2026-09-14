@@ -11,7 +11,69 @@ Where the material in `internal/corpus/usecase/` came from.
 Keep it that way: when adding an extract, put the customer-facing shape in
 `internal/corpus/usecase/` and the attribution here.
 
+**Record the commit you read.** The wiki side has always done this; this file
+had no commit for any of the eight, which made "which version of that chart
+did this extract describe" unanswerable. It is answerable now, and the answer
+below was reconstructed rather than recorded at the time: every clone's HEAD
+is dated **before** the extracts were written (2026-09-02 onward), so what was
+read is what each clone holds.
+
+## What each clone held when its extracts were written
+
+Read 2026-09-11. **The right-hand column is the reason this table matters**: a
+chart moves, and an extract is a description of one version of one chart.
+
+**Two commits per row, and they answer different questions.** *Written from* is
+the version an extract describes. *Held against* is the version somebody last
+read the extract's claims against, which is a weaker act and a later commit -
+checking field names and counts, not rewriting the extract. Both are fixed, so
+both can be checked; a distance between them cannot be written down at all.
+
+| deployment | written from | held against |
+|---|---|---|
+| unitech-e-asgard-kube | `223a59a` (2026-09-01) | `80b16a5` (2026-09-11) |
+| xxentria-asgard-kube | `57e4b4c` (2026-09-01) | `57e4b4c` (2026-09-11) |
+| finance-ai-asgard-kube | `3a4ce84` (2026-09-01) | `3a4ce84` (2026-09-11) |
+| buy123-asgard-kube | `08dac8f` (2026-08-31) | `08dac8f` (2026-09-11) |
+| asgard-freyr-kube | `0594f68` (2026-08-24) | `47d0c06` (2026-09-11) |
+| asgard-auto-post-kube | `d11b802` (2026-09-01) | `edb0ad0` (2026-09-11) |
+| asgard-industry-demo-generator | `718cc0e` (2026-08-26) | `718cc0e` (2026-09-11) |
+| asgard-freyr-skills | `e0b3fe3` (2026-09-01) | `a5c84c6` (2026-09-11) |
+
+**How far each has moved since is computed, not written here:**
+
+    go run ./hack sources --extracts     against `written from`, which is the question
+                                   "does this extract still describe that chart"
+    go run ./hack sources                against `held against`, which is the question
+                                   "has anything moved since somebody last checked"
+
+There used to be a third column with those distances in it, and **both of the
+two non-zero rows had rotted within nine days.** One named a commit the clone
+had already moved past; the other reported six commits of drift against a clone
+sitting exactly where the extract was read. A distance between two things that
+both move is the one shape of claim that cannot be written down and stay true -
+the left-hand column can, because a commit is fixed.
+
+**The two furthest along are the two that matter most for one extract each.**
+`asgard-freyr-skills` is the only source for
+`internal/corpus/usecase/browser-operation.md`, and `asgard-freyr-kube` is
+where `agents.expression` and the sandbox hooks were read. An extract resting on
+a sample of one, dozens of commits back, is the shape
+`internal/corpus/wiki/coverage.md` exists to make visible.
+
+**These are not in `asgard-cli audit-material --sources`.** That check reads
+what is embedded in the binary, and this file deliberately is not - it is the
+only one that names a customer. Holding these rows against the clones is a
+thing somebody does here, with the clones, the way `go run ./hack tables`
+holds the pinned tables against asgard-kube.
+
 ## The deployments read so far
+
+**Both columns below are counted at the commit in the table above**, which is
+why `auto-post` says 28 Plugin CRs where `internal/corpus/usecase/plugin.md`
+says 29: that page recounted at `edb0ad0` and says so. Neither is stale - they
+are counts of different commits, and `go run ./hack counts` holds both against
+the clone.
 
 | deployment | shape it demonstrates | CR files | referred to in extracts as |
 |---|---|---|---|

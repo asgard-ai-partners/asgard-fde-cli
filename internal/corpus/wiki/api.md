@@ -183,6 +183,28 @@ npm install @asgard-js/react    # chat UI components and hooks
 The SDK wraps the REST requests and authentication, handles the SSE stream, and
 persists a session so multi-turn conversation works.
 
+### What the client does besides opening a channel
+
+Worth knowing before a front-end team asks, because each of these is otherwise
+a REST endpoint somebody has to find. All of them derive their endpoint from
+`botProviderEndpoint`, and without it the error names which derivation failed:
+
+    uploadFile                  a file, returning blob info to carry into a message
+    downloadChannelHomeFile     one of that channel's own files
+    channelMetadata             whether a channel exists; null when it does not
+    suspendChannel              stop the run in flight on that channel
+    deleteChannel               remove it
+    sendMessageFeedback         the user's thumb up or down on one reply
+
+**`detach` and `close` are not the same.** `close` shuts the client down;
+`detach` stops accepting new requests and waits for the ones in flight, which
+is the one to call as a page unloads.
+
+**A feedback comment is capped in bytes, not characters.** `@asgard-js/core`
+exports `FEEDBACK_COMMENT_MAX_BYTES` and `feedbackCommentByteLength` for that
+reason - a Chinese comment reaches the cap in a third of the characters an
+English one does.
+
 ### Version migration
 
 The breaking change from 0.1.x to 0.2.x is **new SSE events** -
@@ -237,6 +259,11 @@ token chain, and `../usecase/workflow-chain.md` what passes between processors.
   [run-init](https://docs.asgard-ai.com/docs/developer-reference/api-doc/send-message/sse-response/run-init).
   **The directory itself has no landing page and 404s**, so cite the pages
   rather than the directory. Read 2026-09-02
+
+- The client's channel and file methods, `detach` against `close`, and the
+  byte-capped feedback comment: asgard-docs `23409b3` `docs/developer-reference/sdk/javascript.mdx`,
+  read 2026-09-11. **Not held against a front end** - no reference deployment
+  uses the SDK
 
 **Unchecked:** everything here comes from the product documentation; no actual
 integration was examined.

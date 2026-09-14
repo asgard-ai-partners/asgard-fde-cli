@@ -7,7 +7,9 @@ for me".
 **Seen in:** a deployment whose entire architecture is stated as one rule, and a
 notification chain whose single outward action is deliberately mocked.
 
-**Checked:** 2026-09-02 against 72 gated and 14 ungated tool entries across the deployments, with consent level consistent within every Toolset.
+**Checked:** 2026-09-02 against every tool entry across the deployments: the
+consent level is consistent within each Toolset, and no Toolset mixes gated and
+ungated tools.
 
 **Unchecked:** the reversibility table. It matches what the deployments do, but the deployments did not derive it from this table.
 
@@ -317,7 +319,7 @@ lints clean, deploys clean, and then acts without asking.
 So check it by reading, every time, and make it part of review:
 
 ```bash
-asgard-cli render <project> dev | grep -A2 'requestConsent'
+asgard-cli render <release> | grep -A2 'requestConsent'
 ```
 
 Every `true` should be a tool that changes something; every `false` should be a

@@ -110,7 +110,7 @@ AGENTS.md, "Workflow sets".
 
 Done when: asgard-cli verify resolves the whole chain including the entry names.
 
-**Checked:** 2026-09-04 against asgard-kube `15ded0f`. `BotProvider.spec.entrypoint`
+**Checked:** 2026-09-04, re-read 2026-09-11 against asgard-kube `cbd8d70`. `BotProvider.spec.entrypoint`
 is `{entry, workflow}`, both required, with no agent field; the Agent CRD's own
 description reads "The Agent CR is a pure 'subagent config' resource ... it no
 longer produces its own deployment"; `agentClass` carries `self == oldSelf`; the

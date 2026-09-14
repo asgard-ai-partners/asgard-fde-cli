@@ -3,11 +3,10 @@
 //
 // **A string this tool prints makes the same claim a document does**: that
 // this build answers to what it names. `audit-material --commands` resolves
-// the material and the scaffold templates against the command tree, and until
-// this existed it could not resolve the tool's own output - so a renamed
-// command left dead names in the help, in `check`'s findings and in the
-// generator's warnings, and the only thing that ever caught one was the check
-// written into a customer's repository, an engagement later.
+// the material and the scaffold templates against the command tree; without
+// this it cannot resolve the tool's own output, and a renamed command leaves
+// dead names in the help, in `check`'s findings and in the generator's
+// warnings - none of which any check here reads.
 //
 // It lives at the module root because `go:embed` only reaches downward, and
 // the packages that print are spread across `internal/`. The pattern is
@@ -24,12 +23,9 @@ var Go embed.FS
 // STRUCTURE, APPROACH, TASK.
 //
 // **They are read by an agent working in this repository**, which is an
-// audience, and until this existed nothing held them to the standard the
-// shipped material is held to. STRUCTURE.md was sending a reader to
-// `asgard-cli scaffold` and README.md documented a command and a log file
-// that had both been deleted, while `--commands` reported 0 dead - because
-// these are read from a checkout rather than shipped, and the audit reads
-// what ships.
+// audience. They are read from a checkout rather than shipped, so without
+// this the audit - which reads what ships - cannot see them, and a command
+// they name can be gone with nothing to say so.
 //
 // They are still not material: they do not land anywhere, so `--paths` and
 // the provenance rules do not apply to them. What applies is that a command
@@ -37,3 +33,13 @@ var Go embed.FS
 //
 //go:embed *.md
 var Docs embed.FS
+
+// Skills is this repository's own `.agents/skills/` - the ones an agent
+// maintaining this material loads, as distinct from the design-time skills
+// under `internal/scaffold/templates/` that land in a customer repository.
+//
+// Embedded for the same reason as Docs: they name commands and paths, and the
+// audits read what is embedded.
+//
+//go:embed .agents/skills/*/SKILL.md
+var Skills embed.FS

@@ -22,8 +22,8 @@
 | [`semantic-model`](../wiki/semantic-model.md) | the modelling flow, its limits, the Mimir side |
 | [`tools`](../wiki/tools.md) | MCP Server, Skillset and Plugin; hook events |
 | [`automation`](../wiki/automation.md) | Trigger and API, and why only cron is left |
-| [`processors`](../wiki/processors.md) | what each of the 13 takes, and the fields that decide behaviour |
-| [`workflow`](../wiki/workflow.md) | the 13 processors; Expression is JavaScript, Template is Handlebars |
+| [`processors`](../wiki/processors.md) | what each processor type takes, and the fields that decide behaviour |
+| [`workflow`](../wiki/workflow.md) | the processor types against the editor's groups; Expression is JavaScript, Template is Handlebars |
 | [`settings`](../wiki/settings.md) | Completion and Embedding Model, Data Source, Connection |
 | [`integration`](../wiki/integration.md) | chat platforms, the two Applications pages, the architecture |
 | [`api`](../wiki/api.md) | the endpoint and its actions, the SSE sequence, four patterns, the SDK |
@@ -42,6 +42,57 @@
 | [`case-studies`](../wiki/case-studies.md) | the retail stockout from three angles, plus a Flow Agent help desk |
 | [`screenshots`](../wiki/screenshots.md) | which picture answers which question, and the URL to fetch it from |
 
+## Every UI name, and the CR it is
+
+**Goal's first point owes an agent this table and there was one row family of
+it - the agent pages.** Every other mapping was stated in the prose of whichever
+page discusses the feature, which a grep for the UI name does reach and which
+nothing could check for completeness. **A UI name with no CR stated anywhere is
+invisible**, and that is what this closes.
+
+Read it as "the customer said X, so the chart writes Y". The page column is
+where the judgement is; this table is only the name.
+
+| the UI calls it | the chart writes | and the page is |
+|---|---|---|
+| Agent Hub > Flow Agent | `Workflow` + `SandboxBlueprint` + `BotProvider`, and **no `Agent`** | `../usecase/flow-agent-single.md` |
+| Agent Hub > Managed Agent | `Agent` | `../wiki/agents.md` |
+| Agent Hub > Configuration > Models | **no CR of its own** - it selects `CompletionModel`s that already exist | `../wiki/settings.md` |
+| Agent Hub > Configuration > Global Directory | a read-only `SourceSet`, mounted through `SandboxBlueprint.extraDirectories` | `../usecase/conventions.md` |
+| Applications (Data Insight & Agent Hub) | **no CR** - a listing of what is already published | `../wiki/integration.md` |
+| Applications > Customized Integration | `BotProvider` | `../usecase/chat-channel.md` |
+| Automation > API | `Workflow`, with the `automation_tool` workflow-set type | `../wiki/automation.md` |
+| Automation > Trigger | `Trigger`, plus the `Workflow` it enters | `../usecase/trigger.md` |
+| Data Insight > Semantic Model | `SemanticLayer` | `../usecase/semantic-layer.md` |
+| Drive | `SourceSet`, one `Syncer` per source | `../usecase/knowledge-drive.md` |
+| Drive > Context Index | `Indexer`, and three CRs the reconciler derives from `spec.contextIndex` | `../wiki/knowledge.md` |
+| Knowledge Base | `KnowledgeBase`; a `Loader` per Auto Load source, a `Source` per item | `../usecase/knowledge-base.md` |
+| MCP Servers | `Toolset` | `../wiki/tools.md` |
+| Plugins | `Plugin` | `../usecase/plugin.md` |
+| Skillsets | `SkillSet` + its own `SourceSet` + the `Syncer` that fills it | `../usecase/skill-set.md` |
+| Settings > Completion Model | `CompletionModel` | `../wiki/settings.md` |
+| Settings > Embedding Model | `EmbeddingModel` | `../wiki/settings.md` |
+| Settings > Data Source | `DataConnector` | `../wiki/settings.md` |
+| Settings > Connection | `OAuthProvider` + `OAuthCredential`. **Not Data Source**: this is third-party OAuth, where Data Source is a credential you type | `../wiki/settings.md` |
+
+**Four kinds are in the contract and are nobody's to create.** `Sandbox` is the
+runtime object a blueprint produces, so a chart never writes one; and
+`ImageGenerationModel`, `TranscriptionModel` and `SourceSetEditorServer` are
+**internal** - confirmed 2026-09-14, `../wiki/platform-unknowns.md` P12. Their
+absence from the documentation is the answer rather than a gap, so **a customer
+asking for image generation or transcription needs the platform team and not a
+chart.**
+
+**Checked:** 2026-09-11, the UI's own vocabulary from asgard-docs `f00e0ee` -
+the sixteen pages under `product-suite/odin/features/` - held against the 24
+kinds in asgard-kube `cbd8d70` `crd/`. Each row's CR is the one that page says
+gets created, or the one the extract in the third column writes.
+
+**Unchecked:** Mimir's and Sindri's own pages are not in it. Their features
+(Thread, View, Dashboard, My Chat, Directory) are reached rather than authored,
+so a chart writes nothing for them - but nobody has confirmed that a Mimir View
+leaves no CR behind.
+
 ## Known gaps between the documentation and the CRD
 
 Each is written on the page it affects:
@@ -59,46 +110,35 @@ Each is written on the page it affects:
 
 ## Coverage
 
-**A coverage number here names its denominator in the same sentence or it does
-not go here.** A percentage measured against one source out of nine reads as a
+**A coverage number names its denominator in the same sentence or it does not
+go here.** A percentage measured against one source out of nine reads as a
 statement about the material, and an in-scope denominator restated as a count
-of citations reads the same way. Both are the failure this section exists to
-warn about.
+of citations reads the same way.
 
-Counted 2026-09-03 against a clone at `f00e0ee`, the commit this wiki records,
-by deriving each file's published URL (`slug:` where one is declared) and
-matching it against every page's source block:
+**And an index does not carry arithmetic.** There was a seven-row ledger here
+deriving the figure by hand, and beside it a record of what the figure used to
+be - which is a changelog, and it is what a count looks like when nothing can
+recompute it. `go run ./hack coverage` in asgard-fde-cli derives every one of
+these from the clone and **fails when the row below drifts**, so the row is the
+only place a number belongs and the ledger is gone.
 
-| | count | how |
-|---|---|---|
-| files under `docs/` | 162 | `find docs -name '*.md*'` |
-| `draft: true`, so not published | 16 | frontmatter |
-| cited by some page's source block | 81 | URL match, per file |
-| uncited | 81 | the remainder |
-| - of those, drafts | 12 | |
-| - **published and uncited** | **69** | **the number that means anything** |
-| cited but draft | 4 | the four `audit-material --urls` reports as dead and disclosed |
-
-The last row is the check on the rest: `audit-material --urls` fetches all 81
-cited links against the live site and gets 4 404s, all of them drafts the site
-does not publish, all disclosed in their own citations. Two independent counts
-agreeing is what the earlier figures never had.
-
-That is a statement about the product documentation, and it was being read as a
-statement about the material - which is how a wiki with nothing about SHOPLINE,
-nothing about Mimir as a deliverable, and nothing about the largest chart
-repository in existence could report itself complete.
+**A page's live URL is not its path under `docs/`**, which is why the count is
+resolved through `slug:` frontmatter: channel pages are served from capitalised
+files, a directory's `index.mdx` answers without the `index`, and fourteen
+pages declare a slug that differs from where they sit. Matching literally
+undercounts. **Computing a number does not make it right; it makes it
+re-derivable**, which is the only reason that was ever catchable.
 
 The sources this material is actually built from:
 
 | source | what it holds | state |
 |---|---|---|
-| asgard-docs | the product documentation | 81 / 162 cited; 69 published and unread; 29 deliberately excluded below |
+| asgard-docs | the product documentation | 77 / 162 cited at `f00e0ee`; 85 published and uncited; 28 deliberately excluded below. **Computed, not counted** - `go run ./hack coverage` in asgard-fde-cli recomputes it and fails when this row drifts |
 | asgard-kube `crd/` | the contract | read per page, per field, and dated on the page |
 | **asgard-kube `pkg/apis/`** | **the Go types the CRDs are generated from, with the reasoning as comments** | read once, 2026-09-02, for the validation rules - `../wiki/crd-rules.md`. 134KB of declarations; what has been taken is the behavioural comments, not the field list |
-| **[asgard-core](https://github.com/asgard-ai-platform/asgard-core)** `internal/constants.go` | **the processor definitions the CRD is generated from** | read once, 2026-09-02, for the type list. Its per-processor config definitions are not carried anywhere |
-| **asgard-freyr-skills** | **nine runtime skills, incl. the SHOPLINE pair** | one page - `../usecase/skill-layers.md` |
-| **seven deployment charts** | **every shape the extracts describe** | see below |
+| **[asgard-core](https://github.com/asgard-ai-platform/asgard-core)** `internal/constants.go` | **the processor definitions the CRD is generated from** | walked 2026-09-03 at `5da86c6` and re-walked 2026-09-11 at `623ceb5`. Every processor's required keys, defaults and declared outputs are in `../wiki/processors.md`, and asgard-fde-cli's `go run ./hack processors` is what holds that table against the literal |
+| **asgard-freyr-skills** | **9 runtime skills, incl. the SHOPLINE pair** | one page - `../usecase/skill-layers.md`. The eighth reference repository, and the only one with no CRs |
+| **seven deployments** | **every shape the extracts describe** | 19 charts between them; `../wiki/coverage.md` counts per deployment and says why |
 
 **Deployment coverage cannot be measured from this material, by design.** An
 extract names no customer and no deployment - it says "seen in a deployment
@@ -107,9 +147,13 @@ inventory has to be run separately, over the charts, and its result is
 [`coverage`](../wiki/coverage.md) - how many deployments each CR shape was actually read
 from - rather than a number here.
 
-**Do not add a percentage back to this section** unless it names its denominator
-in the same sentence. The one that was here did not, and it is the reason this
-pass found four bodies of material nobody had opened.
+**A percentage here names its denominator in the same sentence, or it does not
+go here.** A fraction whose numerator counts links and whose denominator counts
+pages reads as better coverage than it is, and those are the two things easiest
+to confuse.
+
+**And it is not counted by hand.** `go run ./hack coverage` in asgard-fde-cli
+computes all four numbers and fails when this row drifts from them.
 
 ## Deliberately not covered
 
@@ -125,14 +169,24 @@ excluded, and that part of the judgement holds.
 it, particularly if it excludes a whole directory - that is the shape of an
 exclusion nobody has looked inside.
 
-**29 files, not the 32 this page used to claim.** Four `asgard-builtin` pages
-came back into `processors` and the subtraction was only done in one place.
+**An exclusion can stop being one without anybody noticing**, and one has:
+`superpowers/` is gone from asgard-docs, so at the clone's HEAD the excluded set
+is smaller than the row above says and neither number is wrong. A row that
+excludes a whole directory is the shape that does this.
 
-| excluded | count | why |
-|---|---|---|
-| `developer-reference/asgard-builtin/message-template-*` | 14 | Message template shapes - button, carousel, image, video, location. Genuinely lookup material, and per-channel. Read the source when writing one |
-| `help-community/release-notes/` | 10 | historical, and does not describe the present |
-| `superpowers/` | 5 | the documentation site's own redesign plans, not an Asgard feature |
+**"Uncited" is not "unread", and the gap is two families.** The per-processor
+reference pages and the SSE event pages are pointed at **by URL pattern rather
+than by link** - `../wiki/processors.md` gives the pattern and one example,
+`api.md` says "one page per event" and links one. That is deliberate: a link per
+page whose content is a field table would be that many things to keep resolving.
+**So the figure measures how much is linked, not how much has been read**, and
+it is worth knowing which before treating it as a backlog.
+
+| excluded | why |
+|---|---|
+| `developer-reference/asgard-builtin/message-template-*` | Message template shapes - button, carousel, image, video, location. Genuinely lookup material, and per-channel. Read the source when writing one |
+| `help-community/release-notes/` | historical, and does not describe the present |
+| `superpowers/` | the documentation site's own redesign plans, not an Asgard feature. **Gone from asgard-docs since**, which is how an exclusion stops being one without anybody noticing |
 
 ## Keeping this index complete
 

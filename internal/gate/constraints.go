@@ -7,7 +7,7 @@ import (
 )
 
 // Field constraints the CRDs enforce beyond enums, from the kubebuilder
-// markers in asgard-kube `pkg/apis/asgard/v1alpha1/types.go` at 15ded0f on
+// markers in asgard-kube `pkg/apis/asgard/v1alpha1/types.go` at cbd8d70 on
 // 2026-09-03: Pattern, MinLength, MaxLength, Minimum, Maximum, MinItems and
 // MaxItems, keyed by json field name.
 //
@@ -24,18 +24,37 @@ import (
 // `key` is worse: it collides with **core Kubernetes**, where
 // `secretKeyRef.key` is a Secret's key name and freely contains hyphens, while
 // Asgard's `key` is an identifier that may not. Matching on a json field name
-// cannot tell those apart, and the first run of this check reported two
-// production Syncers for it.
+// cannot tell those apart, and reporting on it means reporting correct
+// production Syncers.
 //
 // For the same reason the walk skips everything under `valueFrom`: that subtree
 // is Kubernetes' own, and none of the constraints here describe it.
 //
-// Unlike an enum, none of these can go stale in the direction that matters. A
-// pattern the apiserver enforces today it enforced yesterday, and loosening one
-// would only make this warn where the platform has stopped caring. So **C1 is
-// still a warning**, for consistency with E1 and W1, but it is the most
-// trustworthy of the three.
-const constraintsRead = "2026-09-03, asgard-kube 15ded0f"
+// **That reasoning was wrong, and the platform proved it.** This comment used
+// to say a constraint could only go stale in the safe direction - that a
+// pattern the apiserver enforces today it enforced yesterday, so loosening one
+// would at worst make this warn where the platform had stopped caring.
+//
+// asgard-kube then deleted the cron `schedule` pattern outright, saying the
+// regex "had copied it wrong in both directions - rejecting lists
+// (`0 8,13 * * *`), ranges, step-on-range, month/day names and every
+// @descriptor, all of which the API server accepts, while admitting
+// `*/0 * * * *`, which it does not". Held against the old row, four schedules
+// an FDE would obviously want were reported as violations and one the
+// apiserver refuses passed. A warning that is wrong is not a cheap warning: it
+// sent one extract's readers to build five Triggers where a range would do.
+//
+// So a pinned constraint goes stale in **both** directions, and the direction
+// that costs more is the one nobody expects. `go run ./hack tables` is what
+// holds this table against the generated CRDs; run it when the read marker
+// moves. C1 stays a warning, for consistency with E1 and W1.
+//
+// **`schedule` is deliberately absent now.** The CRD carries no pattern for
+// it, matching `batch/v1` CronJob, and the platform validates it with a real
+// cron parse in an admission webhook - synchronously, on write. That puts it
+// on the platform's side of the line this tool draws: it is not a check that
+// passes locally and explodes at runtime.
+const constraintsRead = "2026-09-11, asgard-kube cbd8d70"
 
 type fieldConstraint struct {
 	pattern   string
@@ -83,7 +102,6 @@ var crdConstraints = map[string]fieldConstraint{
 	"remotePath":           {minLength: 1},
 	"repoUrl":              {minLength: 1},
 	"revision":             {minLength: 1},
-	"schedule":             {pattern: "^(\\*|([0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])|\\*\\/([0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])) (\\*|([0-9]|1[0-9]|2[0-3])|\\*\\/([0-9]|1[0-9]|2[0-3])) (\\*|([1-9]|1[0-9]|2[0-9]|3[0-1])|\\*\\/([1-9]|1[0-9]|2[0-9]|3[0-1])) (\\*|([1-9]|1[0-2])|\\*\\/([1-9]|1[0-2])) (\\*|[0-6]|\\*\\/[0-6])$"},
 	"siteMapUrl":           {minLength: 1},
 	"sourceSetName":        {pattern: "^[a-z0-9][a-z0-9\\-]*$"},
 	"sql":                  {minLength: 1},
@@ -102,16 +120,18 @@ var crdConstraints = map[string]fieldConstraint{
 //	C1  a string outside its Pattern or length bounds, a number outside its
 //	    Minimum/Maximum, or a list outside its MinItems/MaxItems.
 //
-// The most useful of these in practice is `schedule`: a Trigger's cron
-// expression has a pattern that rejects several forms a person would expect to
-// work - ranges like `1-5`, lists like `1,15`, and `@daily` - and getting it
-// wrong is refused by the apiserver at apply time rather than by helm.
+// The most useful of these in practice are the path shapes -
+// `workingDirectoryPath` must end in a slash and must not start with one,
+// `mountPath` must start with one - because helm renders either way and the
+// apiserver refuses at apply time, after the tag is pushed.
 //
-// Immutability is deliberately absent. Forty of the 79 CEL rules are
-// `self == oldSelf`, which compares a proposed object against the one already
-// on the cluster; a render is a single object with no history, so nothing here
-// can see it. `botProviderClass` is the one that bites - see
-// `asgard-cli usecase chat-channel`.
+// Immutability is deliberately absent. 41 of the CRDs' 231 enforced CEL rules
+// are exactly `self == oldSelf` - 40 of the 79 `XValidation` markers the Go
+// types carry, which is a different count because one marker on a shared struct
+// is generated into every CRD that embeds it. Each compares a proposed object
+// against the one already on the cluster; a render is a single object with no
+// history, so nothing here can see it. `botProviderClass` is the one that bites - see
+// `.agents/skills/asgard-platform/usecase/chat-channel.md`.
 func Constraints(docs []Doc, opts Options) Result {
 	var warnings []string
 	checked := 0

@@ -78,7 +78,10 @@ None. This is about expectation rather than assembly.
 ## Sources
 
 - [Core concepts / the product triangle](https://docs.asgard-ai.com/docs/core-concepts-ecosystem)
-  and [Why Asgard](https://docs.asgard-ai.com/docs/overview/why-asgard) - **`draft: true`, so it 404s; a customer cannot have read it**
+  and asgard-docs `docs/overview/why-asgard.md` - the second is cited as a file
+  because it is `draft: true`, and **that matters more here than anywhere else
+  on this page: a customer cannot have read it.** A page about what they
+  arrived having read must not count an unpublished one
   - asgard-docs `f00e0ee`, read 2026-09-02. Neither had been read into this
   material before; both are what a customer sees first
 

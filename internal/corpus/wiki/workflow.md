@@ -6,22 +6,34 @@ chart it is the `Workflow` CR's `entries` / `exits` / `processors` /
 
 ## Processor types
 
-Thirteen of them. The CRD's `ProcessorType` against the documentation's grouping:
+Thirteen values in the CRD's `ProcessorType` enum, against the group each sits
+under in the editor's node menu:
 
-| group | processor | `type` |
+| group | node, as the menu labels it | `type` |
 |---|---|---|
-| Flow | Entry / Exit / Router | `router` |
-| Message | Push / Listen | `push-message` / `listen-message` |
+| 流程控制 | Router | `router` |
+| Message | Push Message | `push-message` |
+| | Listen Message | `listen-message` |
 | Model | LLM Completion | `llm-completion` |
-| | Stream LLM Completion | `stream-llm-completion-message` |
+| | Stream LLM Completion Message | `stream-llm-completion-message` |
 | | Generate Embedding | `generate-embedding` |
-| Query | SQL | `query-database` |
-| | LLM Query Database | `llm-query-database` |
-| | Retrieve Knowledge | `retrieve-knowledge` |
 | Action | Update Context | `update-context` |
 | | Execute Script | `execute-script` |
-| API | HTTP Request | `http-request` |
-| AutoTool | Validate Payload | `validate-payload` |
+| Query | SQL | `query-database` |
+| | Retrieve Knowledge | `retrieve-knowledge` |
+| API | HTTP 請求 | `http-request` |
+| Automation Tool | Validate Payload | `validate-payload` |
+| CRD only | LLM Query Database | `llm-query-database` |
+
+**Entry and Exit are nodes in that menu and are not processor types.** The
+editor draws them under 流程控制 and the documentation gives each its own page,
+but a Workflow declares them as its own `entries` and `exits` arrays - so
+looking for an `entry` value in the enum finds nothing, and a processor written
+with one is rejected. Two more rows of the menu are not general either:
+Validate Payload and Response appear only in an Automation Tool workflow, and
+**Response has no type at all** - the output is a `push-message` scoped to
+`automation_tool`, which `../wiki/processors.md` sets out. `llm-query-database`
+is the opposite case: a legal type the node menu will not add.
 
 At most 100 processors and 1000 relationships.
 
@@ -114,10 +126,14 @@ processors; `../usecase/fixed-query-tools.md` is the shape of a zero-parameter q
 ## What goes in a field
 
 Every processor field takes one of three kinds of value - Literal, Expression
-(ECMA5 JavaScript) or Template (Handlebars) - and the six variables in scope,
-the seven built-in functions and the `Blob` shape are in
-[`processors`](../wiki/processors.md). **Expression is ECMA5**, so no `let`, no arrow
-functions and no optional chaining, in any field of any processor.
+(JavaScript) or Template (Handlebars) - and the six variables in scope, the
+seven built-in functions and the `Blob` shape are in
+[`processors`](../wiki/processors.md). **The ECMA5 limit is `execute-script`'s
+Engine field and does not reach an Expression**, which is the same thing this
+page says above and the deployed charts settle: one of them evaluates an arrow
+function. What no chart uses in an Expression is `const` or `let`, and that is
+structural rather than a limit - the field holds one expression, not
+statements.
 
 ## The editor's canvas is a ConfigMap
 
@@ -156,9 +172,11 @@ and why it is easy to conclude it is somebody else's concern.
 
 - All 16 files under
   [processor](https://docs.asgard-ai.com/docs/developer-reference/processor/introduction)
-  - asgard-docs `f00e0ee`
+  - asgard-docs `23409b3`, read 2026-09-14. The type table above is the CRD's
+  `ProcessorType` enum at asgard-kube `cbd8d70` against that page's groups; the
+  two are not the same list, which is why Entry and Exit now say what they are
 - [Expression forms](https://docs.asgard-ai.com/docs/developer-reference/asgard-builtin/expression-introduction)
-  - asgard-docs `f00e0ee`
+  - asgard-docs `23409b3`, read 2026-09-14
 - [Architecture](https://docs.asgard-ai.com/docs/developer-reference/architecture)
   - asgard-docs `f00e0ee`
 - [Conversation context](https://docs.asgard-ai.com/docs/help-community/other/retrieve-conversation-context)
@@ -167,7 +185,7 @@ and why it is easy to conclude it is somebody else's concern.
 - [JSON Schema editor](https://docs.asgard-ai.com/docs/help-community/other/json-schema)
   - asgard-docs `f00e0ee`
 - Processor list and the limits: checked 2026-09-02 against
-  [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `15ded0f` -
+  [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `cbd8d70` -
   `ProcessorType`, `WorkflowSpec`
 - Expression being JavaScript: confirmed 2026-09-02 from both sides - the product
   documentation states it, the CRD makes no claim, and six deployments use

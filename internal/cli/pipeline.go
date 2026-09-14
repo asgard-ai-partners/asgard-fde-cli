@@ -26,7 +26,7 @@ func newPipelineCmd() *cobra.Command {
 		Long: `Deploy this repository through the platform's IaC pipeline.
 
 A pipeline binds one repository to a set of releases; a release deploys one
-chart into one project's namespace when a tag or branch matches its rule; each
+chart into one platform Project's namespace when a tag or branch matches its rule; each
 trigger produces a run that walks Plan, Review and Apply. What a repository
 declares is the one ` + "`.asgard-pipeline.yaml`" + ` at its root; the values are held on
 the platform, never in the repository.
@@ -44,8 +44,11 @@ These commands are a wrapper over the platform's API and hold no rules of their
 own. **The checking runs on the platform**, because the checks worth the most -
 the apiserver's own CEL, pattern and required validation of every rendered CR -
 need a cluster, and no cluster credential is ever issued to a client. So the
-loop is: change the chart, check what can be checked locally with ` + "`helm lint`" + `
-and ` + "`asgard-cli verify`" + `, push, and read the plan back.
+loop is: change the chart, run ` + "`asgard-cli gate`" + `, push, and read the plan back.
+**Not ` + "`helm lint`" + ` by hand** - a bare lint has no reserved asgard values file and
+fails on every chart that labels anything, which looks like a broken chart and
+is not. The gate supplies that one file and nothing else, which is what keeps
+the lint meaningful.
 
 Which pipeline a command acts on is the one recorded in ` + "`.asgard-cli.yaml`" + `, which
 ` + "`asgard-cli pipeline use`" + ` writes and which is committed. **It is never derived.**

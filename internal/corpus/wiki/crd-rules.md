@@ -62,10 +62,69 @@ thing to come back and fix when that model is retired.
 
 ## Which of them a render can be held against
 
-The CRDs carry 79 CEL rules. **Forty are `self == oldSelf`** - they compare a
-proposed object against the one already on the cluster, so a render, which is
-one object with no history, cannot see them. `botProviderClass` is the one that
-bites; `../usecase/chat-channel.md` says why.
+**There are 79 CEL rules written and 231 enforced, and the difference is not a
+rounding.** 79 is the number of `XValidation` markers in asgard-kube's Go
+types; the generated CRDs carry 231 rule instances, 46 of them distinct,
+because one marker on a struct several kinds embed lands in every CRD that
+embeds it. **Hold a render against the CRDs and not against the markers**: the
+generated schema is the contract and the Go types are only its source, so the
+two counts answer different questions and the smaller one is not the platform's.
+
+**41 of the enforced rules are exactly `self == oldSelf`** - 40 of the markers -
+and they compare a proposed object against the one already on the cluster, so a
+render, which is one object with no history, cannot see any of them.
+
+**That is the platform's side of the line this tool draws, and deliberately so.**
+The apiserver evaluates them on write, synchronously, and refuses - so this is
+not a check that passes locally and explodes at runtime, and replicating it here
+would be a second copy that disagrees the first time either changes. **What is
+worth having offline is which fields they are**, because that is what decides a
+plan before anything is applied:
+
+### Which fields are chosen once
+
+**Every resource's class is immutable.** `agentClass`, `botProviderClass`,
+`completionModelClass`, `dataConnectorClass`, `embeddingModelClass`,
+`imageGenerationModelClass`, `knowledgeBaseClass`, `loaderClass`,
+`sourceClass`, `syncerClass`, `transcriptionModelClass` - eleven of them, one
+per kind that has a class. So `botProviderClass` is not a special case, it is
+the instance of this rule an FDE meets first: **changing what kind of thing a
+resource is means a new resource with a new name**, and the old one's references
+have to move.
+
+**The Syncer is where this costs the most: 21 of the 40.** Not just
+`syncerClass` but **where it reads from and where it writes to**:
+
+    sourceSetName            which store it fills
+    destinationPath          the path inside that store
+    statePath                where it keeps its cursor
+    ftp.host  ftp.remotePath
+    sftp.host sftp.remotePath
+    smb.host  smb.remotePath
+    dropbox.folderPath       and its oAuthCredentialName
+    googleDrive.folderId     and its oAuthCredentialName
+    oneDrive.folderId oneDrive.folderPath  and its oAuthCredentialName
+    bot.botProviderName
+    database.columns
+
+**So a Syncer is not repointed, it is replaced.** "Sync from this folder
+instead" is a new Syncer and a deleted one, not an edit - and the cursor goes
+with it, so the new one re-reads from the beginning unless `statePath` is
+handed over deliberately. `../usecase/skill-set.md` writes one; nothing in
+that page said this.
+
+**The Loader is the same shape, smaller.** `knowledgeBaseName` is immutable, so
+a Loader cannot be pointed at a different knowledge base, along with its
+`loaderClass`, its Drive folder ids and its credential names.
+
+**And one that reads like a typo and is not:** `Indexer.spec.xlsx` is immutable.
+Whether a Drive's index treats spreadsheets as tables is decided when the
+Indexer is created.
+
+**Checked:** 2026-09-11, by walking every `self == oldSelf` rule in asgard-kube
+`cbd8d70` `crd/` back to the property that carries it - 40 properties across
+twelve kinds. The count of rules is 41 because one kind carries the same rule
+at two paths.
 
 The rest are two families, and `asgard-cli verify` checks both as of
 2026-09-04:
@@ -78,8 +137,33 @@ The rest are two families, and `asgard-cli verify` checks both as of
                                 the block named after it
 
 Every one of those renders, lints and passes a server-side dry-run, and is
-refused at apply. Run over the six reference deployments - 107 CRs - the check
-reports nothing, which is what a rule the platform already enforces should do.
+refused at apply. Run over the six renderable reference charts - 119 CRs as of
+2026-09-11 - the check reports nothing on either family, which is what a rule
+the platform already enforces should do.
+
+## An undeclared field is pruned, and a dry run says success
+
+**This is the one that breaks a release after everything passed.** A CRD
+discards a field its schema does not declare, silently:
+
+    kubectl apply --dry-run=server     reports success, field already discarded
+    helm's server-side apply, in CD    fails with `field not declared in schema`
+
+So the two are not the same check, and the cheap one answers a different
+question. **`crd/dry-run-rejected` is "will it be accepted"; `crd/unknown-field`
+is "will it be kept."** The platform's plan report runs both; nothing local
+runs the second, because pruning is an apiserver behaviour and no client is
+issued cluster credentials.
+
+It has happened. `Toolset.spec.instruction` was removed from the CRD and added
+back by hand; the chart passed **25 of 25 dry runs** and the deploy failed.
+`../usecase/write-path.md` and `../usecase/fixed-query-tools.md` both carry it
+against the field they concern.
+
+**So a green local gate is not evidence a field survives.** `asgard-cli gate`
+says as much, and the authority is the plan:
+
+    asgard-cli pipeline runs watch --release <name> --ref <tag>
 
 ## The one the schema cannot enforce
 
@@ -101,11 +185,15 @@ blueprint by hand for.
 
 - `asgard-kube/pkg/apis/asgard/v1alpha1/types.go`, read 2026-09-02 - the type
   definitions the CRDs are generated from, with the reasoning in comments
-  - asgard-kube `15ded0f`
+  - asgard-kube `cbd8d70`
 - The generated CRDs carry the same rules without the reasoning:
   [asgard-kube `crd/`](https://github.com/asgard-ai-platform/asgard-kube/tree/main/crd)
+- The pruning behaviour: read off the two extracts that carry it against the
+  field they concern, `../usecase/write-path.md` and
+  `../usecase/fixed-query-tools.md`, which took it from a deployment. The two
+  plan-report codes are the platform's own
 
-**Unchecked:** none of these has been seen to fire. They are read off the
+**Unchecked:** none of the CEL rules has been seen to fire. They are read off the
 declarations rather than from a deployment that hit one, so what is confirmed is
 that the rule exists and what it says - not what the failure looks like in CD.
 The evaluation-time one is the exception worth treating as urgent anyway, since
