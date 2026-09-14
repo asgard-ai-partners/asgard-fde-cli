@@ -1144,6 +1144,14 @@ the layout language and not for its authoring process** - which of the two you
 take is decided above, and the answer differs between a proposal and a discovery
 deck. This skill has already decided what goes on each slide.
 
+**`kami` is not shipped with this one and `asgard-cli init` does not write it.**
+It is a skill the FDE's own environment provides, so an agent reading this in a
+repository that has none will find nothing to load - which is a thing to notice
+before step 6 rather than in the middle of it. Everything above this section is
+content and needs no typesetting skill at all; `discovery-deck.html` beside this
+file is a working deck in plain HTML, and a proposal can be written the same way
+at the cost of doing the layout by hand.
+
 For a discovery deck there is a working starting point beside this file:
 `discovery-deck.html`, eight pages, plain HTML with no separate content file,
 every customer noun neutralised and the question wording left as it ended up.
