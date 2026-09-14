@@ -134,7 +134,13 @@ into it, and that is a decision worth making in a place that shows you what is
 there - the Console. This command creates.
 
 **It consumes account quota**, so a refusal can be a subscription limit rather
-than anything about the name. The error says which.`,
+than anything about the name. The error says which.
+
+**A 5xx here is not a failure, it is an unknown.** The platform has answered 500
+to a create that had already created, twice in one loop of four. Read
+` + "`asgard-cli pipeline projects`" + ` back before trying again: a second attempt is a
+second platform Project, and removing one is the Console's job because it takes
+whatever is deployed into it with it.`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			name := strings.TrimSpace(args[0])

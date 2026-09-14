@@ -14,6 +14,7 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/pipelineconfig"
 	"io/fs"
 	"maps"
 	"os"
@@ -553,6 +554,21 @@ func (j job) content() ([]byte, error) {
 // accumulators are the files this CLI's own commands append to. The spec
 // module index is matched by suffix because its directory carries the spec slug.
 var accumulators = map[string]bool{
+	// **The deployment declaration, and the one that costs most.** It decides
+	// which releases exist, what triggers each and which keys each takes -
+	// none of it knowable from a scaffold, all of it written by hand. `--force`
+	// replaced a twelve-release declaration with the twenty-four it generates
+	// from the directories under `projects/`, taking every `chartValues` and
+	// `appSecret` list with it, in a repository that had asked for the newer
+	// skills and nothing else.
+	//
+	// It is the clearest case of the rule below rather than an exception to
+	// it: a file the scaffold writes once and the engagement owns from then on.
+	// The record agrees - `.asgard-scaffold.json` claims `AGENTS.md` and no
+	// other top-level file, so `--force` was replacing something nothing said
+	// it had written.
+	pipelineconfig.FileName: true,
+
 	filepath.Join("docs", "open-questions.md"):             true,
 	filepath.Join("requirements", "requests", "_index.md"): true,
 	filepath.Join("requirements", "tasks", "_index.md"):    true,
