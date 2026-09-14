@@ -113,6 +113,34 @@ spec:
               const body = (httpResponse && httpResponse.json) || null;
               return { raw: body };
             })()
+
+    # **A failed call has to say so.** Without this branch the run ends at
+    # proc-call and the tool returns nothing, which the model reads as "no
+    # result" rather than "the call failed" - and then answers from memory.
+    - name: proc-error
+      type: push-message
+      labels:
+        display_name: Error
+      configs:
+        - name: payload
+          expression: |-
+            (() => {
+              return { error: (prevError && String(prevError)) || "the request failed" };
+            })()
+
+  # **`relationships` is what runs the chain.** Without it the run starts at the
+  # entry's handlingProcessor and stops there: the arguments are read into
+  # context and the HTTP call is never made. The CR is legal either way, so
+  # helm lint, CRD validation, the server-side dry run and `asgard-cli verify`
+  # are all green while the tool does one third of what this file looks like it
+  # does - and an agent handed silence answers from memory.
+  relationships:
+    - from: {processor: proc-input, relationName: success}
+      to: {processor: proc-call}
+    - from: {processor: proc-call, relationName: success}
+      to: {processor: proc-response}
+    - from: {processor: proc-call, relationName: failure}
+      to: {processor: proc-error}
 ---
 apiVersion: asgard-ai.com/v1alpha1
 kind: Toolset
@@ -128,11 +156,23 @@ metadata:
     {{- include "<<.Chart>>.labels" . | nindent 4 }}
 spec:
   toolsetClass: workflow-tooling
+  # **The platform mints this and guarantees the Secret in every namespace**, so
+  # there is nothing to obtain and nothing to declare: `preset-agent-hub` /
+  # `api_key` is created by the namespace reconciler, once, and never rotated.
+  # The platform's own preset Toolset, SourceSet and BotProvider read it the
+  # same way. **Proved end to end for a SourceSet** - applied, Ready, its
+  # Syncers ran - and to the server-side dry run for a Toolset, 2026-09-14. A
+  # BotProvider's adminApiKey is the same field resolved by the same code and
+  # has not been exercised.
+  #
+  # It is NOT the X-API-KEY the documentation tells you to create for calling
+  # the API from outside - see
+  # `.agents/skills/asgard-platform/usecase/conventions.md`.
   apiKey:
     valueFrom:
       secretKeyRef:
-        key: asgard_resource_api_key
-        name: {{ include "<<.Chart>>.appSecretName" . }}
+        name: preset-agent-hub
+        key: api_key
   tools:
     - entrypoint:
         entry: entry-main

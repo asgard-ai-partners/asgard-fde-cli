@@ -10,10 +10,10 @@ import (
 // markers in asgard-kube `pkg/apis/asgard/v1alpha1/types.go` at cbd8d70 on
 // 2026-09-03, keyed by json field name.
 //
-// **Four field names are deliberately absent**: `type`, `format`, `alias` and
+// **Some field names are deliberately absent**: `type`, `format`, `alias` and
 // `status` each carry a different enum in different places, and the union of
 // two enums accepts values that are wrong wherever they appear - the CRD's
-// `type` unions 32 values across processors, blobs, measures and connectors.
+// `type` unions values across processors, blobs, measures and connectors.
 // `type` is checked properly by Processors instead, which knows it is looking
 // at a processor.
 //

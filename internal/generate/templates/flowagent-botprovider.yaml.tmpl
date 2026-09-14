@@ -65,19 +65,35 @@ spec:
   disabled: {{ .Values.botProviders.<<.ValuesKey>>.disabled }}
   maxUnsupervisedSteps: 30
   # Guards the admin API. One platform resource key per namespace, shared.
+  # **The platform mints this and guarantees the Secret in every namespace**, so
+  # there is nothing to obtain and nothing to declare: `preset-agent-hub` /
+  # `api_key` is created by the namespace reconciler, once, and never rotated.
+  # The platform's own preset Toolset, SourceSet and BotProvider read it the
+  # same way. **Proved end to end for a SourceSet** - applied, Ready, its
+  # Syncers ran - and to the server-side dry run for a Toolset, 2026-09-14. A
+  # BotProvider's adminApiKey is the same field resolved by the same code and
+  # has not been exercised.
+  #
+  # It is NOT the X-API-KEY the documentation tells you to create for calling
+  # the API from outside - see
+  # `.agents/skills/asgard-platform/usecase/conventions.md`.
   adminApiKey:
     valueFrom:
       secretKeyRef:
-        name: {{ include "<<.Chart>>.appSecretName" . }}
-        key: asgard_resource_api_key
+        name: preset-agent-hub
+        key: api_key
 <<if eq .BotClass "generic">>  generic:
 <<if .Public>>    authMode: none
 <<else>>    authMode: api-key
+    # The same platform-minted Secret as `adminApiKey` above: nothing to obtain
+    # and nothing to declare. It is NOT the X-API-KEY the documentation tells
+    # you to create for calling the API from outside - see
+    # `.agents/skills/asgard-platform/usecase/conventions.md`.
     apiKey:
       valueFrom:
         secretKeyRef:
-          name: {{ include "<<.Chart>>.appSecretName" . }}
-          key: asgard_resource_api_key
+          name: preset-agent-hub
+          key: api_key
 <<end>><<end>><<if eq .BotClass "line">>  # Both come from the LINE Developers console for this channel. They are new
   # keys, so each has to be DECLARED under `appSecret:` in .asgard-pipeline.yaml
   # and then set with `variables set --kind secret`, before the first deploy. A

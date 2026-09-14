@@ -5,7 +5,7 @@ of, and who each piece is for. These conventions are how this repo writes it
 down; the wiki is what is being written down.
 
 **Checked:** 2026-09-02: every naming prefix in the table below and the
-`templates/<kind>/` layout, against four deployments.
+`templates/<kind>/` layout, against the deployments they came from.
 
 **Unchecked:** the rest of the conventions. They are house style, and house style has no external source to check against.
 
@@ -123,7 +123,7 @@ metadata:
     {{- include "<chart>.labels" . | nindent 4 }}
 ```
 
-The annotation key is the kind in kebab case, and **fifteen kinds are
+The annotation key is the kind in kebab case, and **these kinds are
 enforced**: `agent-name`, `semantic-layer-name`, `data-connector-name`,
 `skill-set-name`, `source-set-name`, `syncer-name`, `toolset-name`,
 `workflow-name`, `trigger-name`, `bot-provider-name`,
@@ -139,12 +139,12 @@ shape.
 
 Every CR `asgard-cli project add` writes carries
 `asgard-ai.com/product: platform`, from the chart's own `<chart>.labels`
-helper. **It is not a display annotation and not one of the fifteen above**, so
+helper. **It is not a display annotation and not one of those above**, so
 nothing in the gate asks for it and a chart without it deploys.
 
 What it does is name the product that owns the resource, as the IAM product
 code, and **asgard-core echoes it into every audit-log event so the Console can
-filter by product** - it is the dimension an audit event is filed under. The three IAM product codes are `product: agent-hub`, `product: data-insight`
+filter by product** - it is the dimension an audit event is filed under. The IAM product codes are `product: agent-hub`, `product: data-insight`
 and `product: platform`, and **unlabelled means no product** rather than a default - a resource with no
 label is one the Console's product filter will not find.
 
@@ -179,12 +179,13 @@ name arrives as `.Values.asgard.appSecretName`. A literal name in a template
 points at an object that is not in that namespace, and nothing catches it - the
 CR is valid, the dry run passes, apply succeeds, and it fails at runtime.
 
-`asgard_resource_api_key` is the **conventional** name for a platform resource
-credential. `SourceSet.apiKey`, `Toolset.apiKey` and `BotProvider.adminApiKey`
-are all of that kind, and `asgard-cli add` points them at that one key. Whether
-they share one credential or need separate ones is a requirement about rotation
-scope, not a rule this page can state: the Platform reads whatever
-`secretKeyRef.key` says and never the name itself.
+`SourceSet.apiKey`, `Toolset.apiKey` and `BotProvider.adminApiKey` are all
+platform resource credentials, and **none of them needs a declared key**:
+`asgard-cli add` points each at the Secret the platform mints, which the next
+section is about. A declared key of your own is for a resource that genuinely
+needs a different credential from the namespace's, which is a requirement about
+rotation scope rather than a rule this page can state: the Platform reads
+whatever `secretKeyRef.key` says and never the name itself.
 
 ### Where that credential comes from
 
@@ -195,11 +196,43 @@ namespace is reconciled the platform creates a Secret named
 deliberately stable: created when missing and never rotated on a version bump,
 because Agent Hub holds the same key outside the cluster.
 
-So the work is not to create a key. It is to get that value into the release's
-own Secret under whatever name the chart's `secretKeyRef` uses -
-`asgard_resource_api_key` by convention - by declaring it under `appSecret:` and
-setting it with `asgard-cli pipeline variables set`. Every reference deployment
-wires it exactly that way.
+**So read it where it is, and there is nothing to obtain:**
+
+    apiKey:
+      valueFrom:
+        secretKeyRef:
+          name: preset-agent-hub
+          key: api_key
+
+Nothing to declare under `appSecret:`, nothing to set with `pipeline variables
+set`, nobody to ask. The platform's own preset Toolset, SourceSet and
+BotProvider read it exactly this way, and `asgard-cli add` now writes it.
+
+**Proved on a deployed namespace, 2026-09-14, and how far differs by kind.**
+A SourceSet is proved end to end: admission accepted the cross-object
+reference, apply succeeded, it came up Ready and its Syncers ran on rollout. A
+Toolset is proved to the server-side dry run, which is the step that builds the
+typed patch, and had not applied when this was written. A BotProvider's
+`adminApiKey` is the same field read by the same resolver and has not been
+exercised at all. Treat the first as settled, the second as very likely, and
+the third as reasoned. The namespace role grants `get` on every
+Secret in the namespace with no `resourceNames` restriction, and a `ValueSource`
+is resolved by the platform reading the Secret by name - the release's own
+deploy identity is not what reads it.
+
+**The older route is not wrong, just unnecessary.** The reference deployments
+copy the value into the release's own Secret under `asgard_resource_api_key`,
+declared under `appSecret:`. Those charts work and need no change. What that
+route costs is a value somebody has to obtain first, and **there is no
+documented way to obtain it** - which blocked a first deploy once and is
+`../wiki/platform-unknowns.md` P13. A chart being written now should read the
+Secret rather than copy it.
+
+**One caveat on the verification.** The release it was proved on was created
+under a platform admin account, and nothing available here can show whether that
+made its deploy identity broader than an ordinary one. The reasoning above says
+it should not matter - the identity is not the reader - but a confirmation from
+a release created by a non-admin account is what would close it.
 
 **This is not the API key the product documentation tells you to create**, and
 the two are easy to read as one. That one is the `X-API-KEY` header for calling
@@ -211,7 +244,7 @@ credential above, which no console page issues.
 Secret in the namespace, this tool is never given a cluster credential, and
 `pipeline manifest` reads back only what the helm release deployed - which that
 Secret is not, since the platform's own reconciler created it.
-`../wiki/platform-unknowns.md` P11 carries the question and who to ask.
+`../wiki/platform-unknowns.md` P13 carries the question and who to ask.
 
 **Do not declare a `secretKeyRef` for a key that does not exist yet.** Config
 evaluation fails at call time, not at apply time, so the chart deploys and the
@@ -281,7 +314,7 @@ asgard-core `internal/bpoperator/reconciler/sb_reconciler.go` for the mount
 construction, the subPath validation and the local-plugin emptyDir, and
 asgard-core `internal/processor/clidriver/options.go` for the seed file the
 driver writes - and against asgard-kube `cbd8d70`, its asgard-kube
-`pkg/apis/asgard/v1alpha1/types.go` for the three patterns and the directory
+`pkg/apis/asgard/v1alpha1/types.go` for the patterns and the directory
 rule. The `~/.claude` failure was reported by a
 deployment that had hit it in production, and the mechanism was then re-read in
 the platform source rather than taken from the report.

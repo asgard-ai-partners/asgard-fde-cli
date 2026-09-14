@@ -29,11 +29,23 @@ spec:
   # under `appSecret:` and set it with `asgard-cli pipeline variables set`.
   # It is NOT the X-API-KEY the documentation tells you to create for calling
   # the API. See `.agents/skills/asgard-platform/usecase/conventions.md`.
+  # **The platform mints this and guarantees the Secret in every namespace**, so
+  # there is nothing to obtain and nothing to declare: `preset-agent-hub` /
+  # `api_key` is created by the namespace reconciler, once, and never rotated.
+  # The platform's own preset Toolset, SourceSet and BotProvider read it the
+  # same way. **Proved end to end for a SourceSet** - applied, Ready, its
+  # Syncers ran - and to the server-side dry run for a Toolset, 2026-09-14. A
+  # BotProvider's adminApiKey is the same field resolved by the same code and
+  # has not been exercised.
+  #
+  # It is NOT the X-API-KEY the documentation tells you to create for calling
+  # the API from outside - see
+  # `.agents/skills/asgard-platform/usecase/conventions.md`.
   apiKey:
     valueFrom:
       secretKeyRef:
-        key: asgard_resource_api_key
-        name: {{ include "<<.Chart>>.appSecretName" . }}
+        name: preset-agent-hub
+        key: api_key
 ---
 apiVersion: asgard-ai.com/v1alpha1
 kind: Syncer

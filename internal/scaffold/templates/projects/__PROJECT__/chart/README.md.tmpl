@@ -30,9 +30,15 @@ namespace)、由一條 tag 或 branch 規則觸發。namespace 由那個 Project
 > `asgard-cli pipeline variables set --kind secret` 填。
 > 少一把 key 的症狀是 CR apply 成功但呼叫時失敗。
 
+> **平台資源憑證不在這張表裡。** `SourceSet.apiKey`、`Toolset.apiKey`、
+> `BotProvider.adminApiKey` 讀的是平台每個 namespace 自己生成的 Secret
+> `preset-agent-hub` / `api_key`,`asgard-cli add` 直接指過去 —— **不用宣告,
+> 也沒有值要去要**。自己宣告一把只會多出一個沒人讀、也拿不到值的 key。
+
 | key | 誰在用 |
 |---|---|
-| `asgard_resource_api_key` | 平台資源憑證的**慣用名**。`SourceSet.apiKey`、`Toolset.apiKey`、`BotProvider.adminApiKey` 都屬於這一類,`asgard-cli add` 預設指向這一把。**幾個 CR 共用一把是這次部署的設計決定**(輪替範圍、爆炸半徑),不是規則 —— Platform 只讀 `secretKeyRef.key` 寫什麼,不認識這個名字 |
+| `<system>_db_password` | 每個資料庫一把,`asgard-cli add dataconnector` 會印出它實際寫了哪些 key 名 |
+| `asgard-github-pat-password` | 只有 git `Syncer` clone **私有** repo 時才需要 |
 
 ## 非機密的 runtime 值:專屬 ConfigMap
 

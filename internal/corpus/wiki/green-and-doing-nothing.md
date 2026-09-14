@@ -1,0 +1,70 @@
+# It deployed, everything is green, and it does nothing
+
+**Every check this tool and this platform run asks whether a CR is legal. None
+asks whether it can do what it visibly intends to.** So a chart can render,
+lint, pass CRD validation, pass the server-side dry run, apply, report `ok`, and
+answer nothing - and the first sight of it is an agent telling a customer
+something untrue, because a model handed silence does not report a failure. It
+fills the silence.
+
+This page is the way in for that symptom. It is by symptom rather than by CR
+kind on purpose: the reader arriving here does not know which kind is at fault.
+
+## The ones that have actually happened
+
+| what you see | what it is | where |
+|---|---|---|
+| a tool returns nothing, and the agent answers from memory | processors present, `relationships` absent or partial, so only the entry's `handlingProcessor` runs | `../usecase/workflow-chain.md` |
+| a value is set on the platform and the CR behaves as if it were empty | the key is declared under no release, so it is stored and never injected | `../usecase/conventions.md` |
+| a capability that was working stops, with no change to it | the variable it read is still declared and set, and the thing that read it was replaced | this page, below |
+| an agent has fewer skills than it should | a `searchPaths` entry names a parent directory, which resolves to nothing | `../usecase/skill-set.md` |
+| the very first message on a new channel is never answered, and every message after it is | the entry routes into `listen-message` before anything replies, and reaching a `listen-message` ends the request | `../usecase/flow-agent-supervisor.md` |
+
+## Why the toolchain does not catch these
+
+Each layer answers a different question, and none of them is this one:
+
+    helm lint                does every `.Values.*` a template reads have a default
+    CRD validation           are the fields the right types, are required ones present
+    server-side dry run      does the apiserver accept this object
+    asgard-cli verify        do the references between CRs resolve
+    the run                  did apply return
+
+**"Accepted" and "doing something" are different claims**, and reading the first
+as the second is what costs the hours. An engagement debugged two real bugs in a
+tool's code - a misclassified 401, a wrong query parameter - before establishing
+that the code had never executed at all. Both fixes were correct and neither was
+reachable.
+
+So when a shape does not work and every check is green, **the first question is
+not what the code computes. It is whether it runs.**
+
+## What does catch them
+
+`asgard-cli verify` grew the graph checks for exactly this reason, and they are
+the only ones here that ask about behaviour rather than legality:
+
+- **W3** - a Workflow declaring several processors and no `relationships`. Only
+  the entry's processor runs; the rest are dead. This is a failure, because
+  there is no shape it is correct for.
+- **the credential key check** - a `secretKeyRef` reading a key
+  `.asgard-pipeline.yaml` declares for no release.
+- **the placeholders step** - the generator's own TODOs still in the render,
+  which is how a published Agent comes to show `TODO` as its sample questions.
+
+**What still has no check is the third row of the table above**: a declaration
+that was right when it was written and became dead when the shape around it
+changed. Nothing sees drift, because nothing compares what is declared against
+what the render reads. It is the one of the four that only a person notices,
+and only by asking what still uses this.
+
+**Checked:** 2026-09-14, from engagements' own reports and the failures
+behind them - a tool whose HTTP call was never wired, a variable left declared
+after the tool that read it was replaced, and a credential nobody could obtain.
+The gate rules named above were written from those and each was held against
+every reference deployment to confirm it reports none of them.
+
+**Unchecked:** that these four are the whole list. They are the ones somebody
+has walked into and written down; the shape of the failure - legal, accepted,
+inert - has no upper bound on how many ways it can happen, and a fifth will
+arrive the same way these did.

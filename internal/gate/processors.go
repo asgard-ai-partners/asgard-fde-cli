@@ -3,6 +3,7 @@ package gate
 import (
 	"fmt"
 	"sort"
+	"strings"
 )
 
 // The processor contract, extracted from `ProcessorDefinitions` in asgard-core
@@ -59,7 +60,7 @@ var processorDefs = map[string]processorDef{
 
 // Processors checks every Workflow's processors against the contract above.
 //
-//	W1  the type is one of the thirteen the CRD enum allows. A warning: the
+//	W1  the type is one the CRD enum allows. A warning: the
 //	    enum can gain a value, and a chart using a new one is right while this
 //	    copy is stale.
 //	W2  every required key with no default is set. **This fails.** A required
@@ -97,7 +98,40 @@ func Processors(docs []Doc, opts Options) Result {
 		if d.Kind != "Workflow" {
 			continue
 		}
-		for _, raw := range digList(d.Spec, "processors") {
+
+		// W3. **`relationships` is what runs the chain**, and a Workflow that
+		// declares several processors and wires none of them runs exactly one:
+		// the entry's `handlingProcessor`, and then it stops.
+		//
+		// Nothing else sees it. A Workflow with no relationships is a legal
+		// CR, so helm lint, CRD validation, the server-side dry run and every
+		// other rule here are green, the run succeeds and the resource reads
+		// `ok` - while a tool that was written to call an API reads its
+		// arguments into context and returns nothing. An agent handed silence
+		// does not report a failure; it answers from memory.
+		//
+		// `asgard-cli add httptool` generated three processors and no
+		// relationships for as long as it existed, and `usecase/workflow-chain.md`
+		// told its reader the generators wire them.
+		//
+		// One processor needs none, which is the Trigger and the single-step
+		// tool. A reachability walk would be the stronger rule and is not this
+		// one: an unreachable processor can be a branch somebody has not
+		// finished, and refusing that would fire on work in progress.
+		procs := digList(d.Spec, "processors")
+		if len(procs) > 1 && len(digList(d.Spec, "relationships")) == 0 {
+			names := make([]string, 0, len(procs))
+			for _, raw := range procs {
+				if n := digStr(mapOf(raw), "name"); n != "" {
+					names = append(names, n)
+				}
+			}
+			errf("W3 Workflow/%s: %d processors (%s) and no relationships, so only the entry's handlingProcessor runs and the rest are dead. "+
+				"Nothing downstream reports this - the CR is legal, the run succeeds, and the tool returns nothing",
+				d.Name, len(procs), strings.Join(names, ", "))
+		}
+
+		for _, raw := range procs {
 			p := mapOf(raw)
 			pname := digStr(p, "name")
 			ptype := digStr(p, "type")
@@ -108,8 +142,12 @@ func Processors(docs []Doc, opts Options) Result {
 
 			def, known := processorDefs[ptype]
 			if !known {
-				warnf("W1 Workflow/%s processor %q: type %q is not one of the thirteen this build knows (read %s). Either it is a typo, or the platform has added one and this copy is stale",
-					d.Name, pname, ptype, processorDefsRead)
+				// **The number is counted, not typed.** It is the length of the
+				// pinned copy this build carries, and a copy that gains a type
+				// while the sentence says the old figure tells the reader the
+				// wrong thing about the thing the warning is complaining about.
+				warnf("W1 Workflow/%s processor %q: type %q is not one of the %d this build knows (read %s). Either it is a typo, or the platform has added one and this copy is stale",
+					d.Name, pname, ptype, len(processorDefs), processorDefsRead)
 				continue
 			}
 

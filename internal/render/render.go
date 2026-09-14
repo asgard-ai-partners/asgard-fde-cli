@@ -78,6 +78,25 @@ type Result struct {
 // naming rule is how a chart came to point at `app-secret`, a name that is real
 // in the Terraform-provisioned demo namespaces and absent from every Release
 // namespace.
+// PlatformOwnedObjects are the Secrets and ConfigMaps the platform provisions in
+// every namespace, which a chart references directly rather than copying out of.
+//
+// **`preset-agent-hub` holds the resource credential.** The namespace reconciler
+// creates it once with an `api_key` it generates and never rotates, and the
+// platform's own preset Toolset, SourceSet and BotProvider read it the same way.
+// A chart that reads it needs no value obtained, nothing declared under
+// `appSecret:` and nobody asked - which matters because the value has no
+// documented route out of the namespace.
+//
+// **It lives here with the rest of the naming contract** rather than in the two
+// packages that consult it. `internal/gate` must not report a reference to one
+// as dangling, and `internal/generate` must not tell an engagement to declare a
+// key that is already in one; those are the same fact, and two copies of it
+// drift the first time the platform adds a second object.
+var PlatformOwnedObjects = map[string]bool{
+	"preset-agent-hub": true,
+}
+
 func HelmReleaseName(releaseName string) string { return "iac-" + releaseName }
 
 // AppSecretName is the Release's own Secret.
