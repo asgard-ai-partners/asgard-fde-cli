@@ -595,10 +595,30 @@ func accumulator(target string) bool {
 	if accumulators[target] {
 		return true
 	}
+	dir, file := filepath.Split(target)
+	slash := filepath.ToSlash(dir)
+
 	// docs/spec/<slug>/README.md carries the living spec's module index and its
 	// traceability table, both written a row at a time as the work happens.
-	dir, file := filepath.Split(target)
-	return file == "README.md" && strings.HasPrefix(filepath.ToSlash(dir), "docs/spec/")
+	if file == "README.md" && strings.HasPrefix(slash, "docs/spec/") {
+		return true
+	}
+
+	// **A chart's values.yaml, which every `add` appends to.** `appendValues`
+	// puts the keys each new CR reads there, because values.yaml has to default
+	// every `.Values.*` a template reads - so after one `add` the file is the
+	// engagement's and the templates beside it depend on what is in it.
+	//
+	// Regenerating it left a chart that **does not render**: the CR still reads
+	// `.Values.dbDB.host` and the block is gone, so `helm template` fails on a
+	// nil pointer. `check` said `ok` either way, because the structure is
+	// intact - the failure is one command further on, which is what made this
+	// worth a test that renders rather than one that asserts this list.
+	if file == "values.yaml" && strings.HasPrefix(slash, "projects/") && strings.HasSuffix(slash, "/chart/app/") {
+		return true
+	}
+
+	return false
 }
 
 // plan walks the embedded tree and expands the placeholder path segments. A
