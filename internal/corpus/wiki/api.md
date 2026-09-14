@@ -226,6 +226,18 @@ need handlers adding. The `<Chatbot>` component's `config` should be checked too
 The API key comes from the project's Integration -> App settings page. **Keep it
 out of front-end code, version control and anywhere public.**
 
+**This is not the credential a CR uses.** `SourceSet.apiKey`, `Toolset.apiKey`
+and `BotProvider.adminApiKey` take a platform resource credential, which the
+platform mints per namespace and no console page issues -
+`../usecase/conventions.md` has where that one comes from. The two are read as
+one easily, and the only sentences saying where a key comes from used to be
+these, about this one.
+
+**The console route above is the documentation's and is unconfirmed.** An
+engagement holding the account could not find "Integration", "App settings" or
+anything issuing a key, on 2026-09-14. Either the page moved or it is named
+something else now; `../wiki/platform-unknowns.md` P12 carries it.
+
 ## Before writing the chart
 
 `../usecase/external-api.md` covers an HTTP tool, `../usecase/api-oauth.md` the two-call

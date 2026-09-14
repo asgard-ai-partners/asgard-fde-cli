@@ -186,6 +186,33 @@ they share one credential or need separate ones is a requirement about rotation
 scope, not a rule this page can state: the Platform reads whatever
 `secretKeyRef.key` says and never the name itself.
 
+### Where that credential comes from
+
+**Nobody issues it. The platform mints it, once per namespace.** When the
+namespace is reconciled the platform creates a Secret named
+`preset-agent-hub` holding one key, `api_key`, whose value it generates - and
+**that one value backs both `BotProvider.apiKey` and `SourceSet.apiKey`**. It is
+deliberately stable: created when missing and never rotated on a version bump,
+because Agent Hub holds the same key outside the cluster.
+
+So the work is not to create a key. It is to get that value into the release's
+own Secret under whatever name the chart's `secretKeyRef` uses -
+`asgard_resource_api_key` by convention - by declaring it under `appSecret:` and
+setting it with `asgard-cli pipeline variables set`. Every reference deployment
+wires it exactly that way.
+
+**This is not the API key the product documentation tells you to create**, and
+the two are easy to read as one. That one is the `X-API-KEY` header for calling
+the Asgard API from outside - `../wiki/api.md` - and the documentation's route
+to it is a console page. A CR calling back into the platform uses the resource
+credential above, which no console page issues.
+
+**What is not settled is how to read the minted value out.** It is a Kubernetes
+Secret in the namespace, this tool is never given a cluster credential, and
+`pipeline manifest` reads back only what the helm release deployed - which that
+Secret is not, since the platform's own reconciler created it.
+`../wiki/platform-unknowns.md` P11 carries the question and who to ask.
+
 **Do not declare a `secretKeyRef` for a key that does not exist yet.** Config
 evaluation fails at call time, not at apply time, so the chart deploys and the
 CR breaks the first time it is used.

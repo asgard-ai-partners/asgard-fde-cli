@@ -22,6 +22,13 @@ metadata:
     asgard-ai.com/managed-by: skill-set
     {{- include "<<.Chart>>.labels" . | nindent 4 }}
 spec:
+  # **Nobody issues this key: the platform mints it per namespace.** It is the
+  # `api_key` of the `preset-agent-hub` Secret, generated once and never
+  # rotated, and the same value backs a BotProvider's. The work is to get that
+  # value into this release's own Secret under the name below - declare it
+  # under `appSecret:` and set it with `asgard-cli pipeline variables set`.
+  # It is NOT the X-API-KEY the documentation tells you to create for calling
+  # the API. See `.agents/skills/asgard-platform/usecase/conventions.md`.
   apiKey:
     valueFrom:
       secretKeyRef:
