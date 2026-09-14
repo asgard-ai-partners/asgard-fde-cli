@@ -142,6 +142,13 @@ type State struct {
 	// second is the failure worth naming, and it looks identical from the
 	// records alone.
 	References int
+
+	// SpecSlug is the living-spec directory this repository actually uses,
+	// which an engagement may have renamed. It is read from disk rather than
+	// assumed, because a prompt naming a path that is not there sends a reader
+	// looking for it. Empty outside a repository, where `repo.SpecSlug` - the
+	// default a fresh one gets - is what a prompt should say.
+	SpecSlug string
 }
 
 // InFlight reports whether the repository records any work not yet done. It is
@@ -225,7 +232,7 @@ func (p ProjectState) Summary() string {
 
 // Inspect reads the repository at root and reports its state.
 func Inspect(root string) (State, error) {
-	state := State{}
+	state := State{SpecSlug: repo.SpecSlugIn(root)}
 
 	projects, err := repo.Projects(root)
 	if err != nil {
@@ -417,7 +424,7 @@ func (s Stage) Prompt(state State) (string, error) {
 		Requests:   work.ActiveRequests(state.Requests),
 		References: state.References,
 		Questions:  len(state.Questions),
-		SpecSlug:   repo.SpecSlug,
+		SpecSlug:   specSlugOf(state),
 		Stage:      s,
 	})
 	if err != nil {
@@ -550,4 +557,15 @@ func StaticDocuments() ([]struct{ Name, Body string }, error) {
 		out = append(out, struct{ Name, Body string }{string(s.Name), body})
 	}
 	return out, nil
+}
+
+// specSlugOf is the living-spec directory a prompt should name: the one this
+// repository has, or the default when there is no repository to read - `guide`
+// answers outside one, and a prompt with an empty path in it is worse than a
+// prompt naming the directory a fresh repository gets.
+func specSlugOf(state State) string {
+	if state.SpecSlug == "" {
+		return repo.SpecSlug
+	}
+	return state.SpecSlug
 }

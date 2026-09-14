@@ -83,7 +83,13 @@ that changed it keeps its version.`,
 				}
 			}
 
-			specSlug := repo.SpecSlug
+			// **The slug is a fact on disk.** An engagement may rename
+			// `docs/spec/<slug>/`, and the constant is only the default for a
+			// repository that has none yet - using it in a repository that
+			// renamed the directory writes the record and links it from a path
+			// that is not there, which reports as an error at the end of a
+			// command that otherwise succeeded.
+			specSlug := repo.SpecSlugIn(root)
 			path, linkErr := work.AddDecision(root, topic, slug, specSlug, module, today())
 			if path == "" {
 				return linkErr

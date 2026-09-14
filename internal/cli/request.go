@@ -166,7 +166,7 @@ interview that has not finished looks like.`,
 				Audience: audience,
 				Project:  project,
 				Raised:   today(),
-				SpecSlug: repo.SpecSlug,
+				SpecSlug: repo.SpecSlugIn(root),
 			}
 
 			request, err = work.AddRequest(root, request)
@@ -211,9 +211,8 @@ func newRequestStatusCmd(verb string, to work.Status, gate string) *cobra.Comman
 		Long: fmt.Sprintf(`Move a request to %s, which means %s.
 
 It rewrites the status in %s, in the request spec's own Meta section, and appends
-a dated line to the spec's log. Those are three places, and they are done
-together here because a repo where two of them disagree gives the next reader no
-way to tell which one is current.
+a dated line to the spec's log. They are done together here because a repo where
+two of them disagree gives the next reader no way to tell which one is current.
 
     asgard-cli request %s REQ-001`, to, gate, work.RequestIndex, verb),
 		Args: cobra.ExactArgs(1),
