@@ -6,11 +6,11 @@ are implemented is [APPROACH.md](APPROACH.md), what lives where is
 [STRUCTURE.md](STRUCTURE.md), how to change it is [AGENTS.md](AGENTS.md), and
 what the commands do is [README.md](README.md).
 
-**One worklist, written rather than remembered.** "The consistency pass" below
-is filled in before a pass runs, by
-`.agents/skills/consistency-checks/SKILL.md`, and is the scope of that pass.
-**A finding a reader needs lives on the document it concerns, not here** - an
-`**Unchecked:**` marker on the page, a row on
+**What a pass cannot derive is written here rather than remembered**, which is
+"What no check reaches" below and nothing else;
+`.agents/skills/consistency-checks/SKILL.md` is the method. **A finding a reader
+needs lives on the document it concerns, not here** - an `**Unchecked:**` marker
+on the page, a row on
 `.agents/skills/asgard-platform/wiki/platform-unknowns.md`, a rule in AGENTS.md.
 
 ## The consistency pass
@@ -105,10 +105,9 @@ exception, and the first half must never acquire it.
 ## Open questions
 
 Not carried here. Each lives where whoever can answer it will be standing: the
-platform's on `.agents/skills/asgard-platform/wiki/platform-unknowns.md` with
-who to ask and what each blocks, an engagement's in its own
-`docs/open-questions.md` which `asgard-cli question` reads back, and the FDE's
-under "What is not done" below.
+platform's on `.agents/skills/asgard-platform/wiki/platform-unknowns.md`, with
+who to ask and what each blocks, and an engagement's in its own
+`docs/open-questions.md`, which `asgard-cli question` reads back.
 
 
 ## What is not done
