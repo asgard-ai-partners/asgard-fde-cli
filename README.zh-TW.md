@@ -127,6 +127,7 @@ Build —— 寫出 repo 與裡面的 CR
   task / add / ready / start / done        task spec
   decision add           寫一份帶日期的決議紀錄
   reference add          歸檔客戶自己的素材，連同出處
+  local-env              開一頁表單，讓握有憑證的人自己填進 .env
 
 Check —— 這台機器能檢查的全部
   gate [release ...]     ★ 一個指令跑完下面所有能跑的
@@ -279,6 +280,41 @@ Projects:
 ```
 
 **它說每份 chart「有」什麼，完全不說它缺什麼。** 那件事以前是對著每個 project 記錄的一個「形狀」去量的，而報出「這個形狀要 X 但 X 不在」等於把某人記下的意圖當成一份這支工具可以檢查的規格。清單本身就是 repo —— 宣告檔指名的 chart 路徑，加上 `projects/` 底下的目錄 —— 所以沒有第二份會漂移。
+
+### `reference` —— 歸檔客戶交過來的東西
+
+    asgard-cli reference add <file> --what "<這是什麼>" \
+      --from "<誰給的>" --dated <文件自己的日期>
+
+`references/` 是給人和寫 spec 的 agent 看的背景。**不是跑起來的 agent 讀的東西**:
+agent 在 runtime 需要的領域知識屬於 skill,因為 skill 會同步進平台,這個目錄不會。
+
+這個指令存在,是因為歸檔一份文件是每個案子都會做、而沒有兩個案子做法相同的事——
+每一個都自己發明一套出處表,其中一個發明的目錄名後來讀起來像個慣例。它逐位元組複製
+檔案,所以之後的版本可以跟歸檔的那份 diff,而出處寫進 `references/_index.md`,不是貼
+一段 header 進客戶自己的檔案裡。
+
+**`--dated` 是那份文件自己的日期,不是今天。** 那才是決定素材過不過期的那個,而一份
+沒有日期的文件,「沒有日期」本身就值得記下來。`asgard-cli check` 會對欄位不全的列提出
+警告。
+
+### `local-env` —— 一頁表單,因為密碼不能進 transcript
+
+    asgard-cli local-env
+    asgard-cli local-env --focus UOF_DB_HOST,UOF_DB_PASSWORD
+
+**coding agent 絕對不可以叫任何人把密碼講給它聽**——不在對話裡,也不是「你貼上來我
+之後刪掉」:進過 transcript 的憑證就是已經外洩。而原本的替代方案是叫一個可能不是
+工程師的人去打開一個 dotfile、找到那一行、還要注意空白,那是一個會失敗的請求。
+
+所以 agent 先把要的 key 名稱寫進去、值留空,這個指令開一頁表單讓人填:127.0.0.1 上
+一個隨機 port、URL 帶一次性 token、不回應任何其他 host 名稱,而且那一頁只能跟服務它
+的那個 process 講話。表單一存就關掉。
+
+**回到這裡的是 key 的名字,永遠不是值**——存檔時不是,錯誤訊息裡不是,摘要裡也不是。
+`--focus` 會把你在等的 key 標出來,而且**刻意不隱藏其他的**:填表的人可能知道一個還
+沒有人提過的資料庫,而且他們可以自己加 key,所以之後要重讀 `.env`,不要假設拿回來的
+就是你問的那些。
 
 ### `request`、`task`、`question`、`decision` —— 寫紀錄
 

@@ -116,11 +116,18 @@ func checkCommandsDocumented(root, binary string) ([]string, int, error) {
 	if err != nil {
 		return nil, 0, fmt.Errorf("%s --help failed:\n%s", binary, out)
 	}
-	readme, err := os.ReadFile(filepath.Join(root, "README.md"))
-	if err != nil {
-		return nil, 0, err
+	// **Each README on its own, not the two concatenated.** A command
+	// documented in one and absent from the other is undocumented for whoever
+	// reads that one, and the Chinese half drifted the same way the English one
+	// did - both were missing the same two commands.
+	readmes := map[string]string{}
+	for _, name := range []string{"README.md", "README.zh-TW.md"} {
+		data, err := os.ReadFile(filepath.Join(root, name))
+		if err != nil {
+			return nil, 0, err
+		}
+		readmes[name] = string(data)
 	}
-	text := string(readme)
 	// cobra's own entries, and the binary's own name in the usage line.
 	skip := map[string]bool{"asgard-cli": true, "completion": true, "help": true}
 	var missing []string
@@ -134,8 +141,15 @@ func checkCommandsDocumented(root, binary string) ([]string, int, error) {
 		// On a word boundary: a plain Contains passes `local-env` on the
 		// string `local-envX`, which is the same false pass that let a
 		// substring test elsewhere accept `region` inside "regional".
-		if !regexp.MustCompile(`asgard-cli ` + regexp.QuoteMeta(name) + `\b`).MatchString(text) {
-			missing = append(missing, name)
+		//
+		// The Chinese overview writes a subcommand without the binary's name,
+		// so a bare name at the start of a line counts too - what is asked is
+		// whether a reader of that file meets the command at all.
+		named := regexp.MustCompile(`(?m)(?:asgard-cli |^\s+)` + regexp.QuoteMeta(name) + `\b`)
+		for _, file := range []string{"README.md", "README.zh-TW.md"} {
+			if !named.MatchString(readmes[file]) {
+				missing = append(missing, name+" ("+file+")")
+			}
 		}
 	}
 	return missing, seen, nil
@@ -211,7 +225,7 @@ func runDocPaths(args []string) error {
 		}
 		commands = n
 		for _, c := range missing {
-			fmt.Printf("undocumented  `asgard-cli %s` is in the command tree and README.md never names it\n", c)
+			fmt.Printf("undocumented  `asgard-cli %s` is in the command tree and that README never names it\n", c)
 			bad++
 		}
 	} else {
