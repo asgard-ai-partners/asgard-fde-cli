@@ -47,45 +47,9 @@ go build -o asgard-cli ./cmd/asgard-cli   # build
 ./asgard-cli version                      # run
 ```
 
-Layout:
-
-```
-cmd/asgard-cli/     main; signal handling and exit codes only
-internal/cli/       cobra command tree, one file per subcommand
-internal/corpus/    the material itself, in the layout a repository receives it
-internal/wiki/      serves the platform wiki and the alias tables beside it
-internal/usecase/   serves the deployment-shape extracts
-internal/needs/     what a shape has to be given by the customer
-internal/brief/     what one activity gets wrong, addressed by intent
-internal/stage/     the onboarding guidance, rendered against the repository
-internal/size/      the deployment shapes, counted off production
-internal/kb/        one implementation of listing, reading, provenance and the
-                    link graph, shared by every part of the material
-internal/scaffold/  writes the non-customer-specific tree, the design-time skills
-                    and the platform corpus, and keeps .asgard-scaffold.json
-internal/generate/  CR skeletons, wired to what the chart already declares
-internal/repo/      what a customer repository is made of, by looking at it
-internal/work/      reads and writes the customer repo's own records of its work
-                    (requests, task specs, open questions, decision records)
-internal/check/     repository structure: indexes, dated names, links, orphan pages
-internal/gate/      the invariant checks on a rendered chart (xref, agent split, enums)
-internal/render/    renders a release's chart via helm, with placeholder asgard values
-internal/localenv/  the local environment file a chart's placeholders are filled from
-internal/auth/      the OAuth flow and the credential store, which is the only file
-                    this CLI keeps outside a repository
-internal/platform/  the platform API client
-internal/skills/    the platform's fetched reference material
-internal/binding/   reads and writes .asgard-cli.yaml, the checkout's platform binding
-internal/pipelineconfig/ reads .asgard-pipeline.yaml, the deployment declaration
-internal/chart/     reads a project's unrendered templates for (kind, name)
-internal/gitrepo/   the checkout's root and its remotes
-internal/tool/      resolves helm/kubectl/python3, and how to install one
-internal/browser/   opens a URL, or says it could not
-internal/version/   build information (injected by GoReleaser via ldflags)
-selfsrc.go          this repo's own Go source, embedded so the binary can audit
-                    the commands it prints
-```
-
+**What lives in which directory is [STRUCTURE.md](STRUCTURE.md)**, and is not
+repeated here: two copies of a directory listing drift, and the reader cannot
+tell which is current.
 
 To add a subcommand, write a `newXxxCmd()` in `internal/cli/` and register it
 through `addTo(cmd, group..., ...)` in `root.go`. The group is required - cobra
@@ -282,6 +246,49 @@ for X and X is absent" meant treating somebody's note of intent as a
 specification. The list itself is the repository - the chart paths the
 declaration names, and the directories under `projects/` - so there is no second
 copy of it to drift.
+
+### `reference` - filing what the customer hands over
+
+    asgard-cli reference add <file> --what "<what it is>" \
+      --from "<who supplied it>" --dated <the document's own date>
+
+`references/` is background for humans and spec-writing agents. **It is not what
+the running agent reads**: domain knowledge the agent needs at run time belongs
+in a skill, because a skill is synced into the platform and this directory is
+not.
+
+The command exists because filing a document is a step every engagement takes
+and none has done the same way - each invented its own provenance table, and one
+invented a directory name that then read like a convention. It copies the file
+byte-identical, so a later version can be diffed against the filed one, and puts
+the provenance in `references/_index.md` rather than in a header pasted into the
+customer's own file.
+
+**`--dated` is the document's own date, not today.** That is the one that decides
+whether the material is stale, and a document carrying no date is worth
+recording as carrying none. `asgard-cli check` warns about rows that are short.
+
+### `local-env` - a form, because a password must not reach a transcript
+
+    asgard-cli local-env
+    asgard-cli local-env --focus UOF_DB_HOST,UOF_DB_PASSWORD
+
+**A coding agent must never ask anybody to say a password to it** - not in the
+conversation, and not "paste it and I will remove it after": a credential that
+has been through a transcript is disclosed. The alternative had been to ask
+somebody who may not be an engineer to open a dotfile, find the right line and
+mind the whitespace, which is a request that fails.
+
+So the agent writes the key names with empty values, and this opens a form to
+fill them in: one page on 127.0.0.1 on a random port, a one-time token in the
+URL, no other host name answered, and a policy that lets the page talk to
+nothing but the process that served it. It closes as soon as the form is saved.
+
+**What comes back is a list of key names, never a value** - not on save, not in
+an error, not in the summary. `--focus` highlights the keys you are waiting for
+and **does not hide the others**, deliberately: the person filling it in may know
+about a second database nobody has mentioned, and they can add keys, so re-read
+`.env` afterwards rather than assuming you got back what you asked for.
 
 ### `request`, `task`, `question`, `decision` - writing the records
 

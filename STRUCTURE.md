@@ -23,7 +23,7 @@ CLAUDE.md             @AGENTS.md, so the rules load without being asked for
 cmd/asgard-cli/       main; signal handling and exit codes only
 internal/             every package, none exported
 source/               internal notes that must never ship
-hack/                 this repo's own tooling: the CRD contract check
+hack/                 the maintainer's gate, in Go: `go run ./hack pass`
 .github/             CI, the tag-driven release, and the PR template
 .goreleaser.yaml      how the binary is built and published
 ```
@@ -248,70 +248,43 @@ It lives outside `internal/` deliberately, so `go:embed` cannot reach it even by
 accident. Everything under `internal/` ships to every engagement and names no
 customer; this file is the one place that does.
 
-## `hack/` - the contract check
+## `hack/` - the maintainer's gate
 
-`go run ./hack validate-crs` holds rendered CRs and the extracts' skeletons against
-asgard-kube's schemas: required fields, unknown fields, enums, patterns,
-`maxItems`, `ExactlyOneOf`. `go run ./hack extract-crs` gets the skeletons out of the
-extracts, which are chart fragments rather than parseable YAML.
+**Go, one binary with a subcommand each**, and `hack/internal/src` for where the
+upstream clones are. AGENTS.md has why it is compiled rather than scripted.
 
-It exists because nothing else looks. `helm lint`, `asgard-cli check` and a
+    go run ./hack pass     every check, in the order to run them
+    go run ./hack list     what each one is for, and what it needs
+
+**What each one does is not restated here**: the descriptions live in the
+checks' own registrations, beside the code, and `list` prints them. What belongs
+in this document is why the directory exists at all.
+
+**It exists because nothing else looks.** `helm lint`, `asgard-cli check` and a
 server-side dry-run all pass a document the apiserver would reject or silently
-prune. `hack/README.md` is the procedure, and the PR template asks for its
-output.
+prune, and the checks that would catch it need a clone of somebody else's
+repository - which is also why they are here rather than in the binary, and why
+CI runs only the ones that need nothing but this repository. `hack/README.md` is
+the procedure, and the PR template asks for its output.
+
+**`hack/verify-references.sh` is the one shell script and stays one.** What it
+does is drive helm and this repository's own binary over the reference
+deployments; rewriting that in Go buys nothing.
+
+**Nothing here clones or pulls.** A check that fetched would turn "read at this
+commit" into "read at whatever was there when it ran", which is the one thing
+the provenance rule exists to prevent. `.env.example` is the template for the
+four environment variables - **`.env.template` would be gitignored**, because
+the rule is `.env.*` with `!.env.example` carved out.
 
 `.agents/skills/consistency-checks/` is this repository's own maintenance
 skill - how to run a consistency pass, what each check is blind to, and how to
 hold prose against the upstream it came from. **Not the design-time skills**:
 those are `scaffold/templates/.agents/skills/` and land in a customer
 repository. This one never leaves here, and `selfsrc` embeds it so the audits
-read it.
-
-`go run ./hack sources` is where the upstream clones are: one environment variable
-per source, resolved from the shell, then `.env`, then a default that is one
-person's layout. `.env.example` is the template - **`.env.template` would be
-gitignored**, because the rule is `.env.*` with `!.env.example` carved out.
-Running it prints what each resolves to and how far behind it is, and nothing
-here clones or pulls: a script that fetched would turn "read at this commit"
-into "read at whatever was there when the script ran".
-
-`go run ./hack doc-paths` holds every path and every package-qualified Go
-symbol named by this repository's own documents - the seven at the root, plus
-this directory's README and scripts - against what is on disk - the
-mirror of `audit-material --paths`, which does the same for what lands in a
-customer's repository. A symbol resolves inside the package that owns it,
-because a search of the whole tree cannot tell one package's Index from
-another's.
-
-`go run ./hack goal` is the only check here that is not a consistency check.
-It scaffolds a repository in a temporary directory with no network, no account
-and no git repository, and holds `Goal.md`'s four points against what the
-binary does: the corpus lands with all five kinds, a grep finds things in it,
-the `needs/` files and the deck's rules are there, a chart gets written and
-passes `check`, and `issue-report` prints the URL. Every other check can pass
-while one of those has gone.
-
-`go run ./hack pass-list` holds `TASK.md`'s consistency pass against the
-binary's own flags and this directory's own contents, so the written list
-cannot be missing a check - and refuses this repository's maintenance skill
-appearing in the scaffolded tree, because the two `.agents/skills/`
-directories have the same name and only one of them ships.
-
-`go run ./hack coverage` recomputes the asgard-docs coverage row in
-`internal/corpus/wiki/index.md` and fails when the page drifts from it. That
-row is the material's own claim about how complete it is, and the two things
-easiest to confuse in it are the number of links the material writes and the
-number of pages there are.
-
-`go run ./hack tables` is the other half of the contract check: it holds the gate's pinned enum and
-constraint tables against the generated CRDs, so a table that has fallen behind
-the platform is reported rather than quietly warning about the wrong thing.
-`hack/verify-references.sh` runs the whole gate over the reference deployments.
-Neither ships in the binary - both need repositories that are not vendored in.
-
-Not to be confused with `.agents/skills/db-query/scripts/`, which
-`asgard-cli init` writes into a **customer** repo - that is the tool-chain for
-reading the customer's own source systems at design time.
+read it. Not to be confused with `.agents/skills/db-query/scripts/` either,
+which `asgard-cli init` writes into a **customer** repo - that is the tool-chain
+for reading the customer's own source systems at design time.
 
 ## Reference material that is not in this repo
 
@@ -332,12 +305,13 @@ current one. Record the commit you read instead.
 
 ## What is not here
 
-- **Almost no tests, and the ones here are deliberate.** A handful cover
-  parsing and matching rules where a wrong answer is silent - `gate/credref`,
-  `generate/refkeys`, `check/environments`, the pipeline manifest. Prose and
-  material are covered by `audit-material` instead, which reads what ships
-  rather than a copy of it. `go test ./...` runs in CI alongside `go vet` and
-  `gofmt -l`; see "The gate" in `AGENTS.md`.
+- **Few tests, and what they cover is deliberate.** Ten files across seven
+  packages, all of them on parsing and matching rules where a wrong answer is
+  silent - a credential reference, a reference key, an environment name, a
+  pipeline manifest, a provenance marker. **Prose and material are covered by
+  `audit-material` instead**, which reads what ships rather than a copy of it,
+  and by the gate under `hack/`. `go test ./...` runs in CI alongside `go vet`
+  and `gofmt -l`; see "The gate" in `AGENTS.md`.
 - **No `.out/` in version control.** It is gitignored and holds anything a command
   produces: hand-built binaries, command output, scratch programs.
 - **No customer data anywhere.** Everything under `internal/` is generic; the

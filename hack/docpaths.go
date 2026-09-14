@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -13,7 +14,7 @@ import (
 func init() {
 	register("doc-paths", check{
 		Needs: "this repository",
-		What:  "every path and package-qualified Go symbol this repository's own documents name",
+		What:  "every path and package-qualified Go symbol this repository's own documents name, and **every command in the tree being named in README.md** - the opposite question to `audit-material --commands`, which nothing asked",
 		Run:   runDocPaths,
 	})
 }
@@ -102,7 +103,45 @@ func goPackages(root string) map[string]bool {
 	return names
 }
 
-func runDocPaths(_ []string) error {
+// checkCommandsDocumented reports a command the binary answers to that
+// `README.md` never names.
+//
+// **`audit-material --commands` is the mirror and cannot see this.** It
+// resolves every command the material *writes* against the tree and fails on
+// one that is gone; nothing asked the opposite question, so `local-env` and
+// `reference` - a credential form and the way a customer's own document gets
+// filed - were in the binary and in no README for as long as they existed.
+func checkCommandsDocumented(root, binary string) ([]string, int, error) {
+	out, err := exec.Command(binary, "--help").CombinedOutput()
+	if err != nil {
+		return nil, 0, fmt.Errorf("%s --help failed:\n%s", binary, out)
+	}
+	readme, err := os.ReadFile(filepath.Join(root, "README.md"))
+	if err != nil {
+		return nil, 0, err
+	}
+	text := string(readme)
+	// cobra's own entries, and the binary's own name in the usage line.
+	skip := map[string]bool{"asgard-cli": true, "completion": true, "help": true}
+	var missing []string
+	seen := 0
+	for _, m := range regexp.MustCompile(`(?m)^\s{2}([a-z][a-z-]+)\s{2,}\S`).FindAllStringSubmatch(string(out), -1) {
+		name := m[1]
+		if skip[name] {
+			continue
+		}
+		seen++
+		// On a word boundary: a plain Contains passes `local-env` on the
+		// string `local-envX`, which is the same false pass that let a
+		// substring test elsewhere accept `region` inside "regional".
+		if !regexp.MustCompile(`asgard-cli ` + regexp.QuoteMeta(name) + `\b`).MatchString(text) {
+			missing = append(missing, name)
+		}
+	}
+	return missing, seen, nil
+}
+
+func runDocPaths(args []string) error {
 	root, err := src.Root()
 	if err != nil {
 		return err
@@ -160,7 +199,27 @@ func runDocPaths(_ []string) error {
 			}
 		}
 	}
-	fmt.Printf("\n%d path(s) and symbol(s) named, %d that are not there.\n", checked, bad)
+	binary := filepath.Join(root, ".out/asgard-cli")
+	if len(args) > 0 {
+		binary = args[0]
+	}
+	commands := 0
+	if _, err := os.Stat(binary); err == nil {
+		missing, n, err := checkCommandsDocumented(root, binary)
+		if err != nil {
+			return err
+		}
+		commands = n
+		for _, c := range missing {
+			fmt.Printf("undocumented  `asgard-cli %s` is in the command tree and README.md never names it\n", c)
+			bad++
+		}
+	} else {
+		fmt.Printf("(no binary at %s, so the command tree is unchecked; go build -o .out/asgard-cli ./cmd/asgard-cli)\n", binary)
+	}
+
+	fmt.Printf("\n%d path(s) and symbol(s) named, %d command(s) in the tree, %d that are not there.\n",
+		checked, commands, bad)
 	if bad > 0 {
 		fmt.Println("\nA document that names a file or a symbol this repository does not have")
 		fmt.Println("sends a reader to look for it. Fix it, or delete the sentence.")
