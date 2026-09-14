@@ -913,6 +913,11 @@ Other things worth knowing:
   binary; a browser does. Handing somebody a release URL to click is the case
   that breaks, and `anchore/quill` is the answer if that ever becomes the normal
   way in.
-- **Every PR builds a release.** `ci.yml`'s `build` job runs
-  `goreleaser release --snapshot --clean --skip=publish`, so a config or
-  cross-compilation break is caught before it is a failed tag.
+- **main builds a release, a pull request does not.** `ci.yml`'s `build` job
+  runs `goreleaser release --snapshot --clean --skip=publish` on a push to
+  `main`, so a config or cross-compilation break is caught before it is a failed
+  tag. It is off on a pull request because it takes three minutes to answer what
+  `test` answers in forty seconds - whether the code compiles - and the part it
+  uniquely checks cannot break on the merge commit without having been broken on
+  the branch. `make snapshot` is the same build on a laptop, which is what to
+  run when a change touches `.goreleaser.yaml`.
