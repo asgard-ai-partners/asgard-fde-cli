@@ -15,7 +15,7 @@ import (
 func init() {
 	register("coverage", check{
 		Needs: "$ASGARD_DOCS",
-		What:  "the four numbers in the coverage row, at the commit the row names; --head also measures at HEAD, --drift names the cited pages that have moved",
+		What:  "the four numbers in the coverage row, at the commit the row names and with a page's URL taken from its `slug:` frontmatter; --head also measures at HEAD, --drift names the cited pages that have moved",
 		Run:   runCoverage,
 	})
 }

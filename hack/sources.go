@@ -14,7 +14,7 @@ import (
 func init() {
 	register("sources", check{
 		Needs: "the clones",
-		What:  "what each upstream resolves to, how far behind it is, and which recorded reading has gone stale",
+		What:  "what each upstream resolves to, how far behind it is, and **whether a reading TASK.md records has gone behind the clone it was held against**; --extracts is how far each extract's source chart has moved",
 		Run:   runSources,
 	})
 }

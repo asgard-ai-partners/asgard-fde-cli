@@ -39,10 +39,10 @@ how to change the code and the material without breaking it.
 **Before saying anything here is correct, load
 `.agents/skills/consistency-checks/SKILL.md`.** It is the method: what to run,
 in what order, what each check is blind to, and how to do the part no check
-does. **A pass writes its whole scope into `TASK.md` before running anything**,
-because a pass that discovers its own scope as it goes finds a surface nobody
-listed in the middle and reports it as news. The inventory of what covers what
-is "What is checked, and what is not", below.
+does. `go run ./hack pass` is the list itself, derived rather than written down;
+what a pass cannot derive is in `TASK.md` under "What no check reaches", and it
+is written there **before** a pass runs, because a pass that discovers its own
+scope as it goes finds a surface nobody listed and reports it as news.
 
 **Most of the value is not code.** It is one corpus, and the first question when
 adding anything is which part it belongs to:
@@ -325,26 +325,17 @@ emitting a map, so it carries a `platform` key.
 
 ## The gate
 
-**Prose and material carry almost all of the risk here, so the checks are
-aimed there.** A handful of Go tests cover parsing and matching rules where a
-wrong answer is silent; everything else is checked by reading what ships.
+**Prose and material carry almost all of the risk here, so the checks are aimed
+there.** A handful of Go tests cover parsing and matching rules where a wrong
+answer is silent; everything else is checked by reading what ships.
 
-```bash
-go build ./...
-go vet ./...
-gofmt -l internal/ cmd/
-go test ./...
-asgard-cli audit-material --links
-asgard-cli audit-material --commands
-asgard-cli audit-material --bare
-asgard-cli audit-material --paths
-asgard-cli audit-material --unverified
-asgard-cli audit-material --sources
-go run ./hack doc-paths
-go run ./hack tables                     # needs $ASGARD_KUBE
-go run ./hack coverage                   # needs $ASGARD_DOCS
-asgard-cli audit-material --urls   # needs the network
-```
+    go run ./hack pass     every check, in the order to run them
+    go run ./hack list     what each one is for, and what it needs
+
+**The list is not written down here.** It is derived from the binary's own
+flags, this directory's contents and the gate's own subcommands, so it cannot go
+stale - which a list in a markdown file does, and this one had: it named two of
+the twelve Go checks and none of the other ten.
 
 `--paths` and `go run ./hack doc-paths` are the same rule from the two sides. The
 audit reads what **lands** in a customer repository and fails on a path only we
@@ -358,38 +349,34 @@ symbol in backticks**, even to explain that it is deleted: this check reads
 this file, and it will resolve it. It needs the checkout, which is why it is in
 `hack/`.
 
-Everything above except `--urls` runs in CI. `--urls` does not: a third party's
-outage is not this repository's build failure, and a gate that only works
-online is one that fails on a plane.
+**CI runs the checks that need nothing but this repository**: the audits, the
+Go steps, `doc-paths`, `pass-list` and `goal`. The rest need a clone of somebody
+else's repository - and asgard-core is private - so they are the maintainer's to
+run, and `go run ./hack sources` says when one is due. `--urls` is excluded for
+its own reason: a third party's outage is not this repository's build failure,
+and a gate that only works online is one that fails on a plane.
 
-That is this repository's gate. **A customer repository's gate is one command,
-`asgard-cli gate`**, and the difference is deliberate: the thing an agent runs
-after every edit has to be one command whose definition lives in the binary,
-not a list in a markdown file that goes stale. This list is for the maintainer,
-who is editing the binary - and when a step is added to `gate`, nothing here
-needs changing, which is the point.
+**A customer repository's gate is one command, `asgard-cli gate`**, and the
+difference is deliberate: the thing an agent runs after every edit has to be one
+command whose definition lives in a binary. This one is for the maintainer, who
+is editing that binary.
 
-`--urls` fetches every `docs.asgard-ai.com` link the material cites and fails on
-a 404. A citation that already says the link 404s - a page marked `draft: true`,
-which asgard-docs does not publish - is reported and does not fail, so
-disclosing one is how you keep it.
+Three of the audits are worth a sentence each beyond what `--help` says:
 
-`--links` resolves every pointer the material writes - the paths
-`../wiki/<page>.md`, `../usecase/<name>.md` and the same for the other three
-kinds - in prose, in the templates, and in the generator's own `Wiki:`,
-`Extract:` and `AlsoRead:` fields, and exits 1 on one that goes nowhere. It
-also fails a path whose target `init` does not write into a repository,
-because that one resolves here and not there.
-**Run it after renaming or removing a page**, which is the only way to leave a
-dead pointer behind; it reads correctly and resolves to nothing, and the reader
-who follows it cannot tell that from a page they failed to find.
-
-`--commands` is `--links` for the tool itself: it resolves every
-`asgard-cli <command>` this material writes - prose, help screens and the
-scaffold templates alike - against the command tree the binary answers to, and
-exits 1 on one that does not exist. **It reads what is embedded**, which is what
-an engagement gets; this file, `README.md` and `STRUCTURE.md` are not in it,
-because they are read from a checkout rather than shipped.
+  - **`--links`** resolves every pointer, in prose, in the templates and in the
+    generator's own `Wiki:`, `Extract:` and `AlsoRead:` fields - and fails a
+    path whose target `init` does not write into a repository, because that one
+    resolves here and not there. **Run it after renaming or removing a page**,
+    which is the only way to leave a dead pointer behind: it reads correctly,
+    resolves to nothing, and the reader who follows it cannot tell that from a
+    page they failed to find.
+  - **`--commands`** is the same thing for the tool itself, and **it reads what
+    is embedded**, which is what an engagement gets. This file, `README.md` and
+    `STRUCTURE.md` are not in it, because they are read from a checkout rather
+    than shipped.
+  - **`--urls`** reports rather than fails on a citation that already says the
+    link 404s - a page marked `draft: true`, which asgard-docs does not publish -
+    so disclosing one is how you keep it.
 
 None of those sees a wrong string in an embedded template, a pointer that
 resolves to the wrong page rather than to none, or a generated CR the apiserver
@@ -413,12 +400,11 @@ looked.
 
 ## What is checked, and what is not
 
-**This section is the inventory; the method is
-`.agents/skills/consistency-checks/SKILL.md`.** A pass writes its scope into
-`TASK.md` under "The consistency pass" **before running anything**, derived
-from all three groups here, and then runs them **most-volatile first** -
-upstream before the material, because nobody here touches asgard-docs and it
-moved 286 files in nine days.
+**This section says which of three kinds of thing covers a surface; the method
+is `.agents/skills/consistency-checks/SKILL.md` and the list is
+`go run ./hack pass`.** It runs **most-volatile first** - upstream before the
+material, because nobody here touches asgard-docs and it moves without anyone
+here noticing.
 
 **"Every check passes" is not "the repository is correct", and the difference
 is this table.** Every defect found by reading rather than by a check came from
@@ -446,29 +432,11 @@ the current pass. If either has an entry, the answer is "the checks pass and
 these are open", never "green".
 
 **Mechanical, and fails the build.** Run them and the answer is not a
-judgement:
-
-| surface | check |
-|---|---|
-| every document pointer, in material, templates and help | `--links` |
-| a document named with no path | `--bare` |
-| every command named, in material, templates, help, this repository's Go string literals and its own documents | `--commands` |
-| a landed document naming a path only this repository has | `--paths` |
-| every document carrying a provenance marker | `--unverified` |
-| every upstream cited being declared in the raw-sources table | `--sources` |
-| every documentation URL being live | `--urls` (needs the network) |
-| the pinned enum and constraint tables against the CRDs, **every CEL-rule count this repository states** - 231 enforced against 79 markers, which are two numbers easy to write for each other - **every immutable field**: that the page names all eleven class fields, states the Syncer's count and the total, and that no immutable Syncer field goes unnamed - and **every required field of a per-class block**, which is what an FDE asks a customer for, matched on a word boundary across everything that ships | `go run ./hack tables` (needs `$ASGARD_KUBE`) |
-| the four numbers in the coverage row, measured at the commit the row names and with a page's URL taken from its `slug:` frontmatter | `go run ./hack coverage` (needs `$ASGARD_DOCS`) |
-| **every count this material asserts about a reference deployment** - the 88-row page ledger, the 160-row operation ledger, the 14 API domains, the Plugin and SkillSet counts at the commit each claim names, and `source/SOURCES.md`'s CR-file column at each deployment's read commit - recomputed, and a claim whose wording has drifted out of every pattern fails rather than passes | `go run ./hack counts` (needs `$ASGARD_DEPLOYMENTS`) |
-| **`wiki/processors.md`'s two tables against the two repositories they distil** - the thirteen processors' outputs, required keys and defaults against asgard-core's `ProcessorDefinitions`, the editor palette's author and platform keys against asgard-docs' per-page metadata, that a processor accepting dynamic config says what its keys are for, and that every `processor/<name>` written in prose resolves against asgard-docs' `slug:` frontmatter rather than its file name | `go run ./hack processors` (needs `$ASGARD_CORE` and `$ASGARD_DOCS`) |
-| every path and package-qualified Go symbol this repository's own documents name | `go run ./hack doc-paths` |
-| generated CRs and the extracts' skeletons against the CRD schemas | `go run ./hack validate-crs` (needs `$ASGARD_KUBE`) |
-| the gate over the reference charts | `hack/verify-references.sh` (needs the clones) |
-| **how much of a production chart `add` never writes** - the number behind "the chart half is the least finished", rendered on both sides rather than quoted | `go run ./hack spec-key-gap` (needs the clones, helm and a built binary) |
-| build, vet, gofmt, tests | CI |
-| **Goal.md's four points, against the binary** - the corpus landing offline with no repository, **its size as TASK.md states it**, a grep finding things in it, the needs files and the deck's rules, a chart being written and passing `check`, and the issue route coming out of the tool's own output | `go run ./hack goal` |
-| `TASK.md`'s pass naming every check this repository has, and this repository's own skill never appearing in a scaffolded tree | `go run ./hack pass-list` |
-| whether a reading `TASK.md` records has gone behind the clone it was held against | `go run ./hack sources` |
+judgement. **What each one covers is the check's own description**, printed by
+`go run ./hack list` and by `asgard-cli audit-material --help`, because a
+description kept here is a second copy that drifts from the code implementing
+it - this one did, and said `pass-list` checked something it had stopped
+checking.
 
 **Reported, and deliberately not enforced.** Each needs a person to read it,
 and a green build says nothing about them:
@@ -577,10 +545,11 @@ only the first one feels like finishing. `audit-material --orphans` is the
 mechanical half; grep for the name of what you added is the other.
 
 **Is the claim verified, or asserted?**
-The wiki was described as covering its sources completely, in the repository, in
-prose. Counting the citations against the source files gave 65 of 162. If a claim
-is countable, count it before writing it, and put the number somewhere the next
-person can recount it - `internal/corpus/wiki/index.md` carries that one.
+The wiki was described as covering its sources completely, in prose. Counting
+the citations against the source files gave a two-thirds job. If a claim is
+countable, count it before writing it, and **put the number where the next
+person can recount it** - `internal/corpus/wiki/index.md` carries that one and
+`go run ./hack coverage` recomputes it.
 
 **Would this be recognisable to the customer it came from?**
 `--help` shipped a real customer's repository name as its example, and a stage
@@ -594,12 +563,13 @@ reporting the first when you did the second is how a review passes something
 broken.
 
 **Did you say how the number was measured?**
-Four coverage figures in this repo have been wrong, and each was believed rather
-than checked: an index claiming 100%, a comparison that was case-sensitive, 39
-divided by every image in asgard-docs rather than by the ones any page uses, and
-the guess that preceded it. A percentage with no method beside it is a claim
-nobody can check and everybody repeats. Write the denominator and how you got
-it, or write the raw counts and no percentage.
+Every coverage figure this repository has stated has been wrong at least once,
+and each was believed rather than checked: an index claiming 100%, a comparison
+that matched a URL against a file path, an image count divided by every file in
+asgard-docs rather than by the ones any page uses. **A percentage with no method
+beside it is a claim nobody can check and everybody repeats.** Write the
+denominator and how you got it, or write the raw counts and no percentage - and
+prefer a check that recomputes it to either.
 
 **Would this check fire on material that is correct?**
 **A static check over prose cannot tell an instruction from a mention**, and
@@ -730,8 +700,9 @@ answer.
 Render every kind and validate the result against the schemas: required fields,
 fields that are not in the schema, enums, patterns, and the `ExactlyOneOf` rules.
 Do the same for the YAML skeletons in the extracts, because those are what
-somebody copies by hand. `hack/README.md` is the procedure and `hack/` holds the
-two scripts; this is not a check to do by eye.
+somebody copies by hand. `go run ./hack extract-crs` pulls them out and
+`go run ./hack validate-crs` checks them; this is not a check to do by eye, and
+`hack/README.md` is the procedure.
 
 If the contract has moved since this repo last looked, say what changed and what
 it means here. A retired field, a flipped default and a new required field each
@@ -810,29 +781,26 @@ contract, and `pkg/apis/` is the Go types it is generated from, where the
 reasoning survives as comments. `internal/corpus/wiki/crd-rules.md` was written
 from the second.
 
-**`asgard-core` was cited by name six times and by URL nowhere**, including in
-`internal/gate/processors.go`, whose processor contract is extracted from its
-`ProcessorDefinitions`. That makes it a pinned copy of the platform's contract,
-so the rule above about which way a pinned copy can go stale applies to it - and
-`internal/corpus/wiki/platform-unknowns.md` P10 records that the list is **demonstrably
-incomplete**: `await` and `temperature` are set in five production deployments
-and appear in neither it nor the CRD. A gate rule built on treating it as
-complete called five of five correct charts wrong, and was deleted.
+**`internal/gate/processors.go` holds a pinned copy of asgard-core's
+`ProcessorDefinitions`**, so the rule above about which way a pinned copy can go
+stale applies to it - **and that list is demonstrably incomplete**, which
+`internal/corpus/wiki/platform-unknowns.md` P10 records and "would this check
+fire on material that is correct" above has the cost of.
 
 **The reference deployments** - every extract under `internal/corpus/usecase/`
 was taken from one of these, and a claim about how a shape is built should be
 checkable against at least one:
 
-| repo | shape it demonstrates |
-|---|---|
-| [unitech-e-asgard-kube](https://github.com/asgard-ai-platform/unitech-e-asgard-kube) | agent hub (5 agents / 6 semantic layers) and a single-agent flow agent; trigger; knowledge drive. The most recently maintained of the set, so it wins a generational conflict |
-| [xxentria-asgard-kube](https://github.com/asgard-ai-platform/xxentria-asgard-kube) | supervisor + 9 agents |
-| [finance-ai-asgard-kube](https://github.com/asgard-ai-platform/finance-ai-asgard-kube) | supervisor + 3 agents over 3 semantic layers |
-| [buy123-asgard-kube](https://github.com/asgard-ai-platform/buy123-asgard-kube) | the minimal flow agent - **no Agent CR at all**, 8 CRs in the whole chart |
-| [asgard-freyr-kube](https://github.com/asgard-ai-platform/asgard-freyr-kube) | supervisor + 5 subagents, `agents.expression`, sandbox hooks, a `tenants/` layout |
-| [asgard-auto-post-kube](https://github.com/asgard-ai-platform/asgard-auto-post-kube) | **28 Plugin CRs**, knowledge bases, api workflows; 3 BotProviders |
-| [asgard-industry-demo-generator](https://github.com/asgard-ai-platform/asgard-industry-demo-generator) | 12 industries, the read/write governance split, a Claude Code plugin of commands + skills |
-| [asgard-freyr-skills](https://github.com/asgard-ai-platform/asgard-freyr-skills) | runtime skills as a repository of their own - the only source for browser operation, and what `browser-operation` was written from |
+    unitech-e-asgard-kube            xxentria-asgard-kube
+    finance-ai-asgard-kube           buy123-asgard-kube
+    asgard-freyr-kube                asgard-auto-post-kube
+    asgard-industry-demo-generator   asgard-freyr-skills
+
+all under https://github.com/asgard-ai-platform/. **What shape each one
+demonstrates is in `source/SOURCES.md`** and not restated here: that file owns
+the attribution, states the commit each extract was written from and held
+against, and its counts are recomputed by `go run ./hack counts`. A second copy
+of them here would be a second copy nothing checks.
 
 Which customer each belongs to, and how the extracts refer to one without naming
 it, is in `source/SOURCES.md` - the one file here allowed to make that link, and

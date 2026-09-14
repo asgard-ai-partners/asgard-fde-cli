@@ -16,7 +16,7 @@ import (
 func init() {
 	register("spec-key-gap", check{
 		Needs: "the clones, helm and a built binary",
-		What:  "how much of a production chart `add` never writes; --missing lists the keys",
+		What:  "**how much of a production chart `add` never writes** - the number behind \"the chart half is the least finished\", rendered on both sides rather than quoted. --missing lists the keys",
 		Run:   runSpecKeyGap,
 	})
 }

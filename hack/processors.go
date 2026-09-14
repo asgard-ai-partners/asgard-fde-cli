@@ -16,7 +16,7 @@ import (
 func init() {
 	register("processors", check{
 		Needs: "$ASGARD_CORE and $ASGARD_DOCS",
-		What:  "wiki/processors.md's three tables against asgard-core's ProcessorDefinitions and asgard-docs' palette metadata; --dump prints upstream",
+		What:  "**wiki/processors.md's three tables against the two repositories they distil** - outputs, required keys and defaults against asgard-core's ProcessorDefinitions; the palette's author and platform keys against asgard-docs' per-page metadata; that a processor accepting dynamic config says what its keys are for; and that every `processor/<name>` in prose resolves against the frontmatter rather than a file name. --dump prints upstream",
 		Run:   runProcessors,
 	})
 }

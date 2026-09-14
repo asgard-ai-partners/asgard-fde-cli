@@ -15,7 +15,7 @@ import (
 func init() {
 	register("pass-list", check{
 		Needs: "this repository",
-		What:  "every check is grouped, the prose surfaces agree with AGENTS.md, and no maintenance skill ships",
+		What:  "every check says what it needs, the prose surfaces in TASK.md and AGENTS.md agree by slug, and this repository's own skill never appears in a scaffolded tree",
 		Run:   runPassList,
 	})
 	register("pass", check{

@@ -15,7 +15,7 @@ import (
 func init() {
 	register("goal", check{
 		Needs: "this repository - **the capability, not the material**",
-		What:  "Goal.md's four points held against the binary, in a temp directory with no network, no account and no git repository",
+		What:  "**Goal.md's four points against the binary** - the corpus landing offline with no repository, its size as TASK.md states it, a grep finding things in it, the needs files and the deck's rules, a chart written and passing `check`, and the issue route coming out of the tool's own output",
 		Run:   runGoal,
 	})
 }

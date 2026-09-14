@@ -14,7 +14,7 @@ import (
 func init() {
 	register("counts", check{
 		Needs: "$ASGARD_DEPLOYMENTS",
-		What:  "every count this material asserts about a reference deployment, recomputed; --dump prints what upstream counts",
+		What:  "**every count this material asserts about a reference deployment** - the page and operation ledgers, the API domains, the Plugin and SkillSet counts at the commit each claim names, and SOURCES.md's CR-file column at each read commit. A claim whose wording has drifted out of every pattern fails rather than passes. --dump prints what upstream counts",
 		Run:   runCounts,
 	})
 }
