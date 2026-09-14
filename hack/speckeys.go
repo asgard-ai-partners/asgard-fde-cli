@@ -50,7 +50,17 @@ const injected = `asgard:
   namespace: probe-ns
 `
 
-var specKeyClaim = regexp.MustCompile(`(\d+) spec keys and ` + "`" + `add` + "`" + ` never mentions (\d+) of them`)
+// **The claim, not the count.** TASK.md used to carry the four numbers and this
+// held them digit for digit - so every change to what `add` writes turned the
+// check red and the repair was to retype a number a script had just computed.
+// That is the shape this repository removed everywhere else: a number a script
+// can derive does not belong in prose.
+//
+// What TASK.md states is the judgement - that the chart half is the least
+// finished, because `add` writes a starting point rather than a chart - and
+// what this holds is whether that is still true. The numbers are printed by the
+// run above, where they cannot go stale.
+var specKeyClaim = regexp.MustCompile(`the least finished`)
 
 // specKeys returns every dotted key path under `spec`, with list indices
 // collapsed.
@@ -268,18 +278,21 @@ func runSpecKeyGap(args []string) error {
 	}
 	m := specKeyClaim.FindStringSubmatch(string(task))
 	if m == nil {
-		fmt.Println("\nTASK.md states no `<n> spec keys and `add` never mentions <n> of them` claim,")
-		fmt.Println("so this measures and checks nothing. Either restore the claim or delete this.")
+		fmt.Println("\nTASK.md no longer says the chart half is the least finished, so this")
+		fmt.Println("measures nothing. Either the claim is back, or this check goes with it.")
 		return errFailed
 	}
 	wantKeys, wantMissing := len(prod[widest]), countMissing(prod[widest], mine)
-	if atoi(m[1]) != wantKeys || atoi(m[2]) != wantMissing {
-		fmt.Printf("\nTASK.md says %s spec keys and %s never mentioned;\n", m[1], m[2])
-		fmt.Printf("the widest reference chart has %d and %d.\n", wantKeys, wantMissing)
+	if wantMissing == 0 {
+		fmt.Printf("\n`add` now writes every one of the widest chart's %d spec keys.\n", wantKeys)
+		fmt.Println("TASK.md still says the chart half is the least finished, and that is what is")
+		fmt.Println("wrong now - rewrite the paragraph rather than this check.")
 		return errFailed
 	}
-	fmt.Printf("\nTASK.md's claim matches the widest chart: %d keys, %d never written.\n",
+	fmt.Printf("\nThe widest reference chart uses %d spec keys and `add` never mentions %d.\n",
 		wantKeys, wantMissing)
+	fmt.Println("TASK.md states that as a judgement and carries no number, which is why")
+	fmt.Println("neither can go stale. `--missing` lists them.")
 	return nil
 }
 

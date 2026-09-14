@@ -116,6 +116,32 @@ func repoDocs() (map[string]string, error) {
 	return out, nil
 }
 
+// repoHack returns the maintainer's gate - `hack/` - keyed by path.
+//
+// Read for the same reason as the skills: `go run ./hack list` prints each
+// check's `What:` string, and a description that outlives the behaviour it
+// describes is what the next maintainer acts on.
+func repoHack() (map[string]string, error) {
+	out := map[string]string{}
+	var entries []string
+	for _, pattern := range []string{"hack/*.go", "hack/internal/*/*.go"} {
+		found, err := fs.Glob(selfsrc.Hack, pattern)
+		if err != nil {
+			return nil, err
+		}
+		entries = append(entries, found...)
+	}
+	sort.Strings(entries)
+	for _, name := range entries {
+		body, err := selfsrc.Hack.ReadFile(name)
+		if err != nil {
+			return nil, err
+		}
+		out[name] = string(body)
+	}
+	return out, nil
+}
+
 // repoSkills returns this repository's own maintenance skills, keyed by path.
 //
 // Separate from `repoDocs` only because they live in a directory rather than

@@ -137,6 +137,69 @@ func everything() ([]source, error) {
 	return out, nil
 }
 
+// everySurface is every body of text this repository is responsible for: the
+// material, the scaffold templates, the command help, this package's own string
+// literals, this repository's own documents, its maintenance skills and the
+// maintainer's gate under `hack/`.
+//
+// **One assembly, because the hand-written ones drifted.** `--commands`,
+// `--sources` and `--term` each built their own set and they were not the same
+// set - and the narrowest was `--term`, which is the one AGENTS.md sends a
+// reader to for "what else claimed the thing you just changed". It could not
+// see a help screen, this file, or a maintenance skill, so a sweep run exactly
+// as instructed came back clean over three surfaces it had never read. A rule
+// whose tool cannot reach the surface the rule is about is worse than no rule:
+// the reader does the work and gets a false answer.
+//
+// **Help prose arrives through `goStrings`, not `helpText`.** A help screen is
+// authored as a Go string literal, so that is where a sweep finds its wording;
+// `helpText` renders what cobra composes and keeps only the screens carrying a
+// document pointer, which is what the link checks want and would be a hole if
+// it were the only route to help.
+func everySurface(root *cobra.Command) ([]source, error) {
+	all, err := everything()
+	if err != nil {
+		return nil, err
+	}
+	all = append(all, bookkeeping()...)
+	all = append(all, helpText(root)...)
+	strs, err := goStrings()
+	if err != nil {
+		return nil, err
+	}
+	for name, body := range strs {
+		all = append(all, source{label: "source", name: name, body: body})
+	}
+	docs, err := repoDocs()
+	if err != nil {
+		return nil, err
+	}
+	for name, body := range docs {
+		all = append(all, source{label: "repo", name: name, body: body})
+	}
+	skills, err := repoSkills()
+	if err != nil {
+		return nil, err
+	}
+	for name, body := range skills {
+		all = append(all, source{label: "repo", name: name, body: body})
+	}
+	hack, err := repoHack()
+	if err != nil {
+		return nil, err
+	}
+	for name, body := range hack {
+		all = append(all, source{label: "hack", name: name, body: body})
+	}
+	sort.Slice(all, func(i, j int) bool {
+		if all[i].label != all[j].label {
+			return all[i].label < all[j].label
+		}
+		return all[i].name < all[j].name
+	})
+	return all, nil
+}
+
 // sweep prints every line mentioning term, across prose and templates alike.
 //
 // A rename is the one vocabulary change that is cheap to do and expensive to do
@@ -457,8 +520,8 @@ a customer deck.
                                            index does not count as a pointer
     asgard-cli audit-material --bare       documents named without the command
                                            that opens them, which nothing sees
-    asgard-cli audit-material --term <s>   every line mentioning <s>, in the
-                                           templates as well as the prose
+    asgard-cli audit-material --term <s>   every line mentioning <s>, across
+                                           every surface this repo owns
     asgard-cli audit-material --urls       fetch every docs link; exits 1 on a
                                            404. Needs the network
 
@@ -498,19 +561,23 @@ resolves where they land. A path inside a repository has to name the repository
 it is inside, on the same line.
 
 **--urls is the one that needs the network**, which is why it is not in --links.
-Six of the 82 documentation links in this material were 404s when this was first
-run, and nothing had ever checked: two directory URLs with no landing page, and
-four pages marked ` + "`draft: true`" + `, which the site does not publish. A draft is the
-one worth knowing about - the file is readable in a checkout, so the material is
-sound and only the link is broken, and it looks identical to a link that was
-never right.
+Nothing had ever checked, and the first run found two shapes of 404: directory
+URLs with no landing page, and pages marked ` + "`draft: true`" + `, which the site does
+not publish. A draft is the one worth knowing about - the file is readable in a
+checkout, so the material is sound and only the link is broken, and it looks
+identical to a link that was never right.
 
-**--term is for a rename.** When a platform field is renamed or retired, it is
-taught in three places - a template that writes it, an extract that explains it,
-a stage prompt that mentions it - and fixing one leaves the other two teaching a
-field that no longer exists. This is the only audit here that reads the
-templates, because they are the half a prose search misses and the half a
-customer's repository is built from.
+**--term is for a rename, and its scope is the point.** When a platform field is
+renamed or retired it is taught in several places - a template that writes it,
+an extract that explains it, a stage prompt that mentions it, a help screen that
+names it - and fixing one leaves the rest teaching a field that no longer
+exists. So this reads every surface this repository is responsible for: the
+material, the scaffold templates, every ` + "`--help`" + ` screen, this package's own
+string literals, this repository's own documents and maintenance skills, and the
+gate under ` + "`hack/`" + `.
+**Deciding that set by hand is how a sweep comes back clean over a file nobody
+read** - the templates are the half a prose search misses, and the help screens
+are the half an audit of the material misses.
 
 **--crossref catches the shape nothing else can.** A page saying "` + "`check`" + ` will
 report X" while ` + "`check`" + ` reports the opposite: both pages read correctly alone.
@@ -535,7 +602,7 @@ maintainer can see.`,
 				return checkURLs(cmd.Context(), out, all)
 			}
 			if term != "" {
-				all, err := everything()
+				all, err := everySurface(cmd.Root())
 				if err != nil {
 					return err
 				}
@@ -555,41 +622,15 @@ maintainer can see.`,
 				return checkLinks(out, append(all, helpText(cmd.Root())...))
 			}
 			if commands {
-				// everything(), not material(): a scaffolded README is where
-				// half of these are written, and it is the half a customer
-				// reads first.
-				all, err := everything()
+				// **Every surface, not just the material.** A scaffolded
+				// README is where half of these are written and it is the half
+				// a customer reads first; a help screen and this package's own
+				// string literals make the same claim as a document; and an
+				// agent working here reads AGENTS.md before anything else, so
+				// a command named there is one it is about to run.
+				all, err := everySurface(cmd.Root())
 				if err != nil {
 					return err
-				}
-				all = append(all, helpText(cmd.Root())...)
-
-				// **And this package's own strings**, which make the same
-				// claim as a document and were the half nothing checked.
-				strs, err := goStrings()
-				if err != nil {
-					return err
-				}
-				for name, body := range strs {
-					all = append(all, source{label: "source", name: name, body: body})
-				}
-
-				// **And this repository's own documentation.** An agent
-				// working here reads AGENTS.md before it reads anything else,
-				// and a command named there is one it is about to run.
-				docs, err := repoDocs()
-				if err != nil {
-					return err
-				}
-				for name, body := range docs {
-					all = append(all, source{label: "repo", name: name, body: body})
-				}
-				skills, err := repoSkills()
-				if err != nil {
-					return err
-				}
-				for name, body := range skills {
-					all = append(all, source{label: "repo", name: name, body: body})
 				}
 				return checkCommands(out, cmd.Root(), all)
 			}
@@ -606,24 +647,9 @@ maintainer can see.`,
 				return checkPaths(out, append(sources, bookkeeping()...))
 			}
 			if srcCommits {
-				every, err := everything()
+				every, err := everySurface(cmd.Root())
 				if err != nil {
 					return err
-				}
-				every = append(every, bookkeeping()...)
-				strs, err := goStrings()
-				if err != nil {
-					return err
-				}
-				for name, body := range strs {
-					every = append(every, source{label: "source", name: name, body: body})
-				}
-				docs, err := repoDocs()
-				if err != nil {
-					return err
-				}
-				for name, body := range docs {
-					every = append(every, source{label: "repo", name: name, body: body})
 				}
 				return checkSources(out, every)
 			}
@@ -690,7 +716,7 @@ maintainer can see.`,
 	f.BoolVar(&unchecked, "unchecked", false, "what each document says it has NOT been held against; a listing, not a check")
 	f.BoolVar(&paths, "paths", false, "a landed document naming a file only this repository has")
 	f.BoolVar(&srcCommits, "sources", false, "every citation of one upstream names the same commit")
-	f.StringVar(&term, "term", "", "every line mentioning this word, templates included - for a rename")
+	f.StringVar(&term, "term", "", "every line mentioning this word, across the material, the templates, the help screens and this repository's own documents - for a rename")
 	f.BoolVar(&urls, "urls", false, "fetch every docs.asgard-ai.com link in the material; exits 1 on a 404. Needs the network")
 	return cmd
 }
@@ -1165,20 +1191,20 @@ func findChild(node *cobra.Command, name string) *cobra.Command {
 // **The commit is the version number of one moment of synthesis**, and it is
 // written by hand in three unrelated mechanisms - a page's Sources block, a
 // pinned table's `const ...Read` in `internal/gate`, and the raw-sources table
-// in `internal/corpus/wiki/README.md`. 37 places name one asgard-kube commit
-// and 23 name one asgard-docs commit. Re-reading a source means changing all
-// of them, and updating the gate's constants while leaving the pages is a
-// corpus that claims two different readings of the same upstream with nothing
-// to say which is true.
+// in `internal/corpus/wiki/README.md`. `--sources` counts how many places name
+// each one. Re-reading a source means changing all of them, and updating the
+// gate's constants while leaving the pages is a corpus that claims two
+// different readings of the same upstream with nothing to say which is true.
 var sourceCommit = regexp.MustCompile(`\b(asgard-[a-z0-9-]+)\s+` + "`?" + `([0-9a-f]{7,12})` + "`?" + `(\s*\(unread\))?`)
 
 // unreadMarker is how the material names a commit it has NOT read.
 //
 // **Saying "upstream has moved and nobody has read it" is not a citation**, and
-// it is worth saying: asgard-docs moved 286 files while this corpus was cited
-// at the older commit, and the useful record is that the gap exists rather than
-// silence. Without a way to write that, the only options were to bump 58
-// hashes - claiming a reading nobody did - or to leave the fact out.
+// it is worth saying: asgard-docs rewrote most of its tree while this corpus
+// was cited at the older commit, and the useful record is that the gap exists
+// rather than silence. Without a way to write that, the only options were to
+// bump every hash citing it - claiming a reading nobody did - or to leave the
+// fact out.
 //
 // A literal marker rather than a phrase, because a keyword list that tries to
 // recognise "has not been read" from prose is a check nobody can predict.

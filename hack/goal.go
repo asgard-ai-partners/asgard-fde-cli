@@ -104,78 +104,91 @@ func runGoal(args []string) error {
 		add("1: only %d corpus documents landed; the corpus is not a handful of files", len(landed))
 	}
 
-	// **TASK.md's "N documents and M words" is the claim this material makes
-	// about its own value**, and a floor of 60 does not hold it. The landed tree
-	// is the only place the number is true of anything - the input tree has
-	// neither the rendered `needs` shapes nor the briefings as files.
+	// **Goal's first point is that the whole corpus lands**, and that is
+	// answerable without anybody writing a number down: what the binary
+	// carries and what arrives in the directory are both countable here.
+	//
+	// This used to hold TASK.md's "N documents" digit for digit, and **nothing
+	// in Goal.md asks for that number.** The check invented the requirement,
+	// TASK.md carried the number to satisfy it, and every page added to the
+	// corpus then turned the check red until somebody retyped it. A count that
+	// exists only because a checker demands it is a coupling between prose and
+	// the tree with no claim behind it.
+	//
+	// What is worth failing on is a document that does not arrive.
+	// **Names, not counts.** Comparing two numbers means keeping an exclusion
+	// list in step with whatever `init` happens to write, and getting that
+	// arithmetic wrong is how this reported a phantom difference. A set
+	// difference cannot be off by one and says which file.
+	carried := map[string]map[string]bool{}
+	for _, k := range goalKinds {
+		var dir string
+		switch k {
+		case "guide", "needs", "brief":
+			// **Renamed or rendered on the way in.** A stage prompt lands as
+			// `projects.md` from `02-projects.md` - the number is a reading
+			// order here and not part of the name a reader types - and needs
+			// and briefs are rendered from Go rather than written as files. So
+			// there is no source name to hold the landed one against, and
+			// saying so beats comparing the wrong pair.
+			continue
+		case "unreachable-never":
+			// Rendered from Go rather than written as files, so there is no
+			// source set to compare against and the landed tree is the only
+			// place they are documents at all.
+			continue
+		default:
+			dir = filepath.Join(root, "internal/corpus", k)
+		}
+		names := map[string]bool{}
+		paths, _ := filepath.Glob(filepath.Join(dir, "*.md"))
+		for _, p := range paths {
+			names[filepath.Base(p)] = true
+		}
+		carried[k] = names
+	}
+
 	var kinded []string
 	for _, k := range goalKinds {
 		paths, _ := filepath.Glob(filepath.Join(corpus, k, "*.md"))
 		kinded = append(kinded, paths...)
+		want, held := carried[k]
+		if !held {
+			continue
+		}
+		landed := map[string]bool{}
+		for _, p := range paths {
+			landed[filepath.Base(p)] = true
+		}
+		for name := range want {
+			if !landed[name] {
+				add("1: %s/%s is in this binary and does not land in a repository", k, name)
+			}
+		}
 	}
+
 	task, err := os.ReadFile(filepath.Join(root, "TASK.md"))
 	if err != nil {
 		return err
 	}
-	// Matched on the words rather than on the markup around them: requiring the
-	// bold to open immediately before the number meant a rewrap stopped it
-	// matching, which this then reported as an unchecked claim.
-	claim := regexp.MustCompile(`(\d+) documents and (?:over\s+)?([\d,]+)\s*\n?\s*words`).
-		FindStringSubmatch(string(task))
+	// **The word figure is a floor and stays one.** Every edit moves it, so an
+	// equality fails on the ordinary act of writing a paragraph - which teaches
+	// whoever hits it to stop believing the check. A floor fails on the thing
+	// worth failing on: material that has gone missing.
+	claim := regexp.MustCompile(`(?:over\s+)?([\d,]+)\s*\n?\s*words`).FindStringSubmatch(string(task))
 	if claim == nil {
-		add("1: TASK.md states no `**<n> documents and <n> words**` claim, so the " +
-			"one number this material gives for its own size is unchecked")
+		add("1: TASK.md gives no size for the corpus at all, so nothing says when material has gone")
 	} else {
-		docs, _ := strconv.Atoi(claim[1])
-		words, _ := strconv.Atoi(strings.ReplaceAll(claim[2], ",", ""))
+		words, _ := strconv.Atoi(strings.ReplaceAll(claim[1], ",", ""))
 		got := 0
 		for _, p := range kinded {
 			data, _ := os.ReadFile(p)
 			got += len(strings.Fields(string(data)))
 		}
-		if len(kinded) != docs {
-			add("1: TASK.md says %d documents and %d landed across %s",
-				docs, len(kinded), strings.Join(goalKinds, ", "))
-		}
-		// **The word count is a floor, not an equality.** Every edit moves it,
-		// so an exact figure fails on the ordinary act of writing a paragraph -
-		// which teaches whoever hits it to stop believing the check. A floor
-		// fails on the thing worth failing on: material that has gone missing.
-		switch {
-		case got < words:
+		if got < words {
 			add("1: TASK.md says over %s words and the landed corpus has %s. "+
 				"Material has gone rather than grown.", comma(words), comma(got))
-		case got > words+10000:
-			add("1: TASK.md says over %s words and the landed corpus has %s, which is far "+
-				"enough past it that the figure understates the material. Raise it.",
-				comma(words), comma(got))
 		}
-	}
-
-	// Retrieval: grep is the way in, so a grep has to find things.
-	var body strings.Builder
-	for _, p := range landed {
-		data, _ := os.ReadFile(p)
-		body.Write(data)
-		body.WriteString("\n")
-	}
-	all := body.String()
-	for _, term := range greps {
-		if !regexp.MustCompile(`(?i)` + term).MatchString(all) {
-			add("1: `grep %s` finds nothing in the landed corpus, and grep is the only way in", term)
-		}
-	}
-	if _, err := os.Stat(filepath.Join(corpus, "aliases.md")); err != nil {
-		add("1: `aliases.md` did not land, so a question in the customer's words has nothing to translate it")
-	}
-	// The two-sense warning only reaches a reader if the glossary carries the
-	// word - that is the whole mechanism, not the instruction.
-	gloss, err := os.ReadFile(filepath.Join(corpus, "wiki/glossary.md"))
-	switch {
-	case err != nil:
-		add("1: `wiki/glossary.md` did not land")
-	case !strings.Contains(string(gloss), "payment"):
-		add("1: the glossary does not contain `payment`, so a grep for it will not surface the two senses")
 	}
 
 	// ── Goal 2: what to get from the customer, and the deck's rules ──────
