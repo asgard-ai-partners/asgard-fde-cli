@@ -36,6 +36,7 @@ and whether its source has moved since is what `go run ./hack sources` reports.
 | `extracts-vs-charts` the 22 extracts against the charts they came from | the eight commits in `source/SOURCES.md`'s **held against** column, which is what makes this reading checkable rather than a date | 2026-09-11 |
 | `wiki-vs-docs` the 27 wiki pages against asgard-docs | **the pages whose citations have moved, which `go run ./hack coverage --drift` names** - 5 of them, all read; the prose citing a page that has not moved stands at its own earlier reading | 2026-09-11 |
 | `packages-help` the 14 packages' help against their behaviour | the working tree | 2026-09-11 |
+| `root-documents` Goal, AGENTS, APPROACH, STRUCTURE, README - the files that state the rules, as opposed to the paths and commands in them | Goal and APPROACH read end to end against the binary and the CRDs; AGENTS for its lists and its mechanisms, not its twelve questions; STRUCTURE and README **not read** | 2026-09-14 |
 | `flag-usage` every flag's usage text against what the flag does | the working tree, all 81 | 2026-09-11 |
 | `processors-vs-palette` `wiki/processors.md`'s prose, as opposed to its two tables, which `go run ./hack processors` now holds against asgard-core and asgard-docs | the two clones as pulled | 2026-09-11 |
 | `stage-prompts` the 10 stage prompts' guidance, as opposed to their command claims | read end to end; the platform claims they carry against asgard-kube `cbd8d70` and asgard-docs `23409b3` | 2026-09-14 |

@@ -229,15 +229,21 @@ func checkCEL(root string, crds []crd, crdDir string) []string {
 	}
 	counts["distinct"] = len(distinct)
 
+	// **Whitespace-tolerant, because these documents are hard-wrapped.** A
+	// pattern written with a literal space stops matching the moment a rewrap
+	// puts a newline inside the phrase, and a claim that matches nothing is
+	// reported only when NO claim anywhere matches - so one file drifting out
+	// is silent. APPROACH.md was.
+	ws := func(p string) *regexp.Regexp { return regexp.MustCompile(strings.ReplaceAll(p, " ", `\s+`)) }
 	claims := []struct {
 		re    *regexp.Regexp
 		names []string
 	}{
-		{regexp.MustCompile(`(\d+) CEL rules written and (\d+) enforced`), []string{"markers", "rules"}},
-		{regexp.MustCompile(`(\d+) of the CRDs' (\d+) enforced CEL rules`), []string{"oldself_rules", "rules"}},
-		{regexp.MustCompile(`(\d+) of the enforced rules are exactly ` + "`" + `self == oldSelf` + "`"), []string{"oldself_rules"}},
-		{regexp.MustCompile(`(\d+) of the (\d+) ` + "`" + `XValidation` + "`" + ` markers`), []string{"oldself_markers", "markers"}},
-		{regexp.MustCompile(`(\d+) rule instances, (\d+) of them distinct`), []string{"rules", "distinct"}},
+		{ws(`(\d+) CEL rules written and (\d+) enforced`), []string{"markers", "rules"}},
+		{ws(`(\d+) of the CRDs' (\d+) enforced CEL rules`), []string{"oldself_rules", "rules"}},
+		{ws(`(\d+) of the enforced rules are exactly ` + "`" + `self == oldSelf` + "`"), []string{"oldself_rules"}},
+		{ws(`(\d+) of the (\d+) ` + "`" + `XValidation` + "`" + ` markers`), []string{"oldself_markers", "markers"}},
+		{ws(`(\d+) rule instances, (\d+) of them distinct`), []string{"rules", "distinct"}},
 	}
 
 	bodies, err := celClaimFiles(root)
@@ -271,7 +277,11 @@ type body struct{ name, text string }
 
 func celClaimFiles(root string) ([]body, error) {
 	var out []body
-	for _, pattern := range []string{"internal/corpus/*/*.md", "internal/gate/*.go", "TASK.md", "AGENTS.md"} {
+	// **Everything that states one.** APPROACH.md was not in this list and
+	// carried the marker count as the CRDs' own for as long as the page whose
+	// subject it is did.
+	for _, pattern := range []string{"internal/corpus/*/*.md", "internal/gate/*.go",
+		"TASK.md", "AGENTS.md", "APPROACH.md"} {
 		paths, err := filepath.Glob(filepath.Join(root, pattern))
 		if err != nil {
 			return nil, err

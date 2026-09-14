@@ -88,16 +88,12 @@ correct here and there alike.
 
 ## The audits
 
-    audit-material --links      every pointer resolves, and a path's target lands
-    audit-material --orphans    what nothing points at
-    audit-material --bare       a document named with no path
-    audit-material --commands   every command named exists
-    audit-material --paths      a landed document naming a file only we have
-    audit-material --unverified a document with no record of what it was held against
-    audit-material --sources    what has been read, at which commits, and
-                                whether every upstream is declared
-    audit-material --urls       every documentation link is live
-    audit-material <term>       every line mentioning a term, prose and templates
+    asgard-cli audit-material --help     every flag, and what each one answers
+
+**The list is not here**, because a list of flags in a document is a second copy
+of `--help` that drifts from it - this one did, and named nine of the thirteen
+and one flag in a form the binary had stopped accepting. What follows is why the
+interesting ones are shaped the way they are.
 
 `--links` and `--orphans` read the same graph from opposite ends. A dead
 pointer is loud: the reader follows it and finds nothing. **A document nothing
@@ -169,9 +165,14 @@ still green. `go run ./hack goal` is the other side - it runs the tool in a
 temporary directory with no network, no account and no repository, and holds
 Goal.md's four points against what happens.
 
-`go run ./hack tables` holds the gate's pinned tables against the generated
-CRDs; `hack/verify-references.sh` runs the gate over the reference deployments.
-Neither ships in the binary — both need repositories that are not vendored.
+**The checks that need somebody else's repository are not in the binary**, and
+are Go under `hack/` instead: `go run ./hack tables` holds the gate's pinned
+tables against the generated CRDs, `processors` and `counts` hold the material's
+own tables and figures against what they were distilled from, and
+`hack/verify-references.sh` runs the gate over the reference deployments.
+`go run ./hack list` says what each one needs. They do not ship because the
+repositories they read are not vendored - see AGENTS.md for why that directory
+is compiled rather than scripted.
 
 ## Retrieval
 
@@ -277,8 +278,12 @@ is printed differently from a pass**.
 
 `verify` reads rendered CRs against each other and against tables pinned from
 the CRDs — enums in `internal/gate/enums.go`, field constraints in
-`constraints.go`. Both can only go stale in the direction of the platform
-adding something, so both are warnings.
+`constraints.go`. Both are warnings, and **not because a pinned copy can only go
+stale in the safe direction**: it cannot. The platform deleted a cron pattern
+its own regex had copied wrong, and the pinned row then reported four schedules
+an FDE would obviously want as violations while admitting one the apiserver
+refuses. `constraints.go` carries that reasoning; `go run ./hack tables` is what
+holds both against the CRDs.
 
 **Those tables are keyed by kind and path, not by field name.** A json field
 name is not a location: `Loader.spec.schedule` is an unconstrained string while
@@ -288,9 +293,12 @@ alone holds one against the other's rule.
 **It does not reproduce the platform's checks.** Whether a CR is admitted is an
 apiserver's decision and no client is issued cluster credentials, so a copy of
 those rules here would drift, and would still miss the two that matter: a field
-the CRD silently prunes, and a rejection only the apiserver produces. Forty of
-the seventy-nine CEL rules are `self == oldSelf`, comparing a proposal against
-the object already on the cluster — a render is one object with no history.
+the CRD silently prunes, and a rejection only the apiserver produces. **41 of
+the CRDs' 231 enforced CEL rules are `self == oldSelf`**, comparing a proposal
+against the object already on the cluster — a render is one object with no
+history. (79 is the marker count in asgard-kube's Go types, which is a different
+number for a different question; `internal/corpus/wiki/crd-rules.md` has both
+and which fields carry them.)
 
 A green gate means *worth pushing*. The authority is the plan:
 
