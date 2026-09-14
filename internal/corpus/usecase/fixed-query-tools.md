@@ -2,10 +2,10 @@
 
 A `Toolset` of zero-parameter queries. The read path for a **public** audience.
 
-**Seen in:** a public catalogue widget with five tools covering products,
+**Seen in:** a public catalogue widget whose tools cover products,
 categories, locations, recommendations and downloads.
 
-**Checked:** 2026-09-02 against a five-tool Toolset whose tools all carry a zero-parameter inputSchema, and the CRD.
+**Checked:** 2026-09-02 against every tool in one Toolset - all of them carry a zero-parameter inputSchema - and the CRD.
 
 **Unchecked:** the guidance on writing a tool description. Nothing mechanical checks whether it names the tool it could be confused with.
 
@@ -104,6 +104,24 @@ spec:
         - name: sql
           value: |-
             select ...
+    # The query needs somewhere to come out: `resultField` names the variable
+    # the rows land in, and this returns them. Every deployed fixed query tool
+    # has this pair.
+    - name: proc-response
+      type: push-message
+      labels:
+        display_name: Response
+      configs:
+        - name: payload
+          expression: |-
+            (() => {
+              return <field>;
+            })()
+  # **Without this the run stops at proc-query.** The CR is legal, the run
+  # succeeds, and the tool answers nothing - `gate` W3 is what reports it.
+  relationships:
+    - from: {processor: proc-query, relationName: success}
+      to: {processor: proc-response}
 ---
 apiVersion: asgard-ai.com/v1alpha1
 kind: Toolset
@@ -119,8 +137,8 @@ spec:
   apiKey:
     valueFrom:
       secretKeyRef:
-        key: asgard_resource_api_key
-        name: {{ include "<chart>.appSecretName" . }}
+        name: preset-agent-hub
+        key: api_key
   tools:
     - entrypoint:
         entry: entry-main
@@ -151,8 +169,8 @@ exactly where a model picks wrong**.
 
 Merge them, and make the difference a **column value** instead of a tool choice.
 "Do I want the empty categories?" becomes `product_count = 0` rather than a
-second tool. One deployment merged seven tools into five this way, and recorded
-that the merge also settled a real inconsistency: the two queries had used
+second tool. One deployment merged tools together this way, and recorded that
+the merge also settled a real inconsistency: the two queries had used
 different join types and different soft-delete filters, so they disagreed about
 what existed.
 
@@ -203,7 +221,7 @@ usage guidance lives in each tool's Workflow, in
 Do not add it back: **the CRD silently prunes it, `kubectl apply
 --dry-run=server` reports success, and then helm's server-side apply fails the
 deploy** with `field not declared in schema`. That cost a broken release once,
-after passing 25 of 25 dry-runs.
+after passing every dry run.
 
 **The 口徑 lives in the SQL now.** With no `instruction` field, anything a reader
 needs to know - soft deletes, how a category path is built, why a `COUNT` is

@@ -2,22 +2,21 @@
 
 `../wiki/workflow.md` says which processors exist and how they wire
 together. This page is what each one takes, and it exists because the
-per-processor documentation - fifteen pages and an introduction - had never
+per-processor documentation - a page each, and an introduction - had never
 been read into this material. A chart author writing a Workflow was working from a type list.
 
-**Almost every processor has a Failure output, and one does not.** Of the
-thirteen, only `update-context` documents Success alone; `http-request` fails on
+**Almost every processor has a Failure output, and one does not.** Only
+`update-context` documents Success alone; `http-request` fails on
 a non-200 or a network error and produces `prevError`, and `query-database`,
 `retrieve-knowledge`, `execute-script` and `push-message` all document one too.
 Draw the error branch.
 
-**`ProcessorDefinitions`' `StaticRelationships` is not the contract.** It lists
-five processors with a Failure relation and the rest with Success or nothing,
-and it is incomplete in both directions: it gives `listen-message` no
-relationships at all while every production chart continues from one, and
-`http-request` Success only while four production charts across two
-repositories route `failure` off it and the documentation describes that branch
-in full.
+**`ProcessorDefinitions`' `StaticRelationships` is not the contract.** It gives
+some processors a Failure relation and the rest Success or nothing, and it is
+incomplete in both directions: it gives `listen-message` no relationships at all
+while every production chart continues from one, and `http-request` Success only
+while production charts in two repositories route `failure` off it and the
+documentation describes that branch in full.
 
 That list is the third thing in `ProcessorDefinitions` to be incomplete -
 `await` and the config keys are the others. **Treat it as what the definitions
@@ -71,7 +70,7 @@ which is where the restriction bites, and where it belongs in your head.
 | `prevError` | | the previous step's error, on a Failure branch |
 | `customChannelId` | string | the conversation key, chosen by the caller |
 | `customMessageId` | string | the message id, optional |
-| `prevToolCalls` | array | **what the agent just called, and what came back.** Not in the documentation, not in the expression pages, and used in eight places in a production chart |
+| `prevToolCalls` | array | **what the agent just called, and what came back.** Not in the documentation, not in the expression pages, and used throughout a production chart |
 
     interface Blob {
       blobId: number; fileType: FileType; fileName?: string;
@@ -103,7 +102,7 @@ throw at run time on the turn where a user sends no file:
     prevBlobs && prevBlobs[0] && prevBlobs[0].fileName
     prevPayload && 'property' in prevPayload ? prevPayload.property : '預設值'
 
-### The seven built-in functions
+### The built-in functions
 
 | function | what it does |
 |---|---|
@@ -252,7 +251,7 @@ the labels the builder shows. `=` marks a **required key that also has a
 default** - omitting one of those is a silent choice rather than an error.
 
 **This table is a subset of what a chart may set, not the contract.** `await`,
-described above and set in five separate production deployments, is in neither
+described above and set in production deployments, is in neither
 `ProcessorDefinitions` nor the CRD; `temperature` is the same. So a key missing
 from the row below is not a key you may not use - read the row as "these are
 declared". **The wider set is the editor palette**, and it is a table of its
@@ -362,7 +361,7 @@ node sees; `platform` is set for them and is not theirs to write.**
 Four things in it that are not anywhere else:
 
 **`await` and `temperature` are author keys on the streaming processor.** They
-are set in five production deployments and appear in neither the definitions nor
+are set in production deployments and appear in neither the definitions nor
 the CRD. The palette was the only source that described them until 2026-09-09,
 when `model-stream-llm-completion` gained an **Await** section, a **Temperature**
 section and a worked example that writes `await` as a config key - so the
@@ -402,12 +401,12 @@ section below.
 
 ## The documentation's names are not the chart's names
 
-Sixteen pages sit under `developer-reference/processor` as of asgard-docs
-`23409b3`, plus an introduction - fifteen at `f00e0ee`. **The new one is
-`query-llm-database`**, which is the one type that is documented and is not in
-the editor palette: a chart can declare it, an author cannot add it from the
-builder. The CRD enum has thirteen types. They do not line up, and the mismatches are
-each a place where searching for what you read finds nothing:
+A page per processor sits under `developer-reference/processor` as of asgard-docs
+`23409b3`, plus an introduction, and one of them is new since `f00e0ee`. **The
+new one is `query-llm-database`**, which is the one type that is documented and
+is not in the editor palette: a chart can declare it, an author cannot add it
+from the builder. The CRD enum is a list of its own. They do not line up, and the
+mismatches are each a place where searching for what you read finds nothing:
 
 | the page is called | the chart writes |
 |---|---|
@@ -420,8 +419,8 @@ each a place where searching for what you read finds nothing:
 
 ### And a page has a third name: the file it is in
 
-**Half the processor pages are served at a URL that is not their file name.**
-Eight of the sixteen declare a `slug:` in their frontmatter, so
+**Some processor pages are served at a URL that is not their file name.**
+A page declaring a `slug:` in its frontmatter answers at that slug, so
 `flow-entry.mdx` answers at `processor/entry`, `message-push.mdx` at
 `processor/push-message`, `model-stream-llm-completion.mdx` at
 `processor/stream-llm-completion`. The file is named for the processor's family
@@ -435,7 +434,7 @@ file called something else.
 
 The documentation's own index page links by URL and gets them right. Its
 category headings are the node menu's, which is a fourth naming of the same
-thirteen things and the one an author actually sees:
+things and the one an author actually sees:
 
     流程控制    Entry, Exit, Router
     Message     Push Message, Listen Message
@@ -462,8 +461,8 @@ differently scoped, and the scoping is somewhere else.
 ## Router at scale is a chain, not a switch
 
 The mental model that costs a day is "a router is a switch with N branches".
-The largest use of routers read here - a content-generation deployment with five
-across two workflows - is not that shape at all. Each router asks **one boolean
+The largest use of routers read here - a content-generation deployment's, across
+two workflows - is not that shape at all. Each router asks **one boolean
 question and has one named branch**, and its `else` goes to the next router.
 
     proc-route-if-vscode-open-file  is-true -> push the "open in VSCode" CTA
@@ -506,8 +505,8 @@ whether something happened, that branch belongs in the graph.**
 ## Entry, Exit and Router
 
 **Neither is a processor type.** The documentation files them under
-`developer-reference/processor` and the builder draws them as nodes, but the CRD
-enum has thirteen types and neither is among them: a Workflow carries
+`developer-reference/processor` and the builder draws them as nodes, but neither
+is in the CRD enum: a Workflow carries
 `spec.entries` and `spec.exits` as their own lists, siblings of
 `spec.processors`. An entry is `{name, handlingProcessor}` - a named way in that
 points at the processor which handles it - and an exit is
@@ -563,8 +562,8 @@ Two things worth knowing from their pages:
   is sourced to the driver
 - The editor palette per processor - which keys are the author's, which the
   platform sets, which types accept dynamic config, and which workflow-set
-  types each is scoped to: **asgard-docs `23409b3`**, read 2026-09-11 from the
-  seventeen `metadata.json` files under
+  types each is scoped to: **asgard-docs `23409b3`**, read 2026-09-11 from every
+  `metadata.json` file under
   `content-generator/services/developer-reference/docs/processor/`. Those
   record the palette as a third source beside the CRD enum and asgard-core's
   definitions, and the pages are verified against it rather than only against
@@ -577,14 +576,14 @@ Two things worth knowing from their pages:
   resolving the key constants to their string values - **an earlier
   pattern-based attempt misaligned**, attributing one processor's fields to the
   next, and was discarded rather than published
-  - **re-walked 2026-09-11 at `623ceb5` and the thirteen rows are unchanged.**
-  asgard-core's `internal/constants.go` itself moved four times in between - a
+  - **re-walked 2026-09-11 at `623ceb5` and every row is unchanged.**
+  asgard-core's `internal/constants.go` itself moved in between - a
   card tool, an upload cap, an agent-hub prompt version - which is why "the file
   has not changed" is not the claim to make. The walk is
   asgard-fde-cli `go run ./hack processors`, and it holds both tables on this
   page against that literal
-  - and it is **incomplete**: checked against five rendered production charts,
-  where `await` appears on the streaming processor in all five and is declared
+  - and it is **incomplete**: checked against the rendered production charts,
+  where `await` appears on the streaming processor in every one and is declared
   nowhere in it
 - **What an extra key means, per processor**: read 2026-09-11 at asgard-core
   `623ceb5` off the task implementations themselves - one file per processor
@@ -596,14 +595,14 @@ Two things worth knowing from their pages:
 - The Failure outputs: **the documentation**, one page per processor, after the
   type definitions were found to disagree with four production charts. Checked
   2026-09-03 across `api-http-request`, `query-sql`, `query-retrieve-knowledge`,
-  `action-execute-script`, `message-push` and `action-update-context` - five
-  document a Failure branch and `update-context` does not
+  `action-execute-script`, `message-push` and `action-update-context` - all but
+  `update-context` document a Failure branch
 - `prevToolCalls`, the router branch mechanism and the cascade shape: read
   2026-09-03 off `asgard-auto-post-kube`'s two agent workflows, which are the
-  only charts anywhere in the reference set that use `prevToolCalls` - eight
-  uses, all of them post-processing. It appears in no documentation page and in
+  only charts anywhere in the reference set that use `prevToolCalls` - every use
+  post-processing. It appears in no documentation page and in
   no other deployment
-- The thirteen-value `ProcessorType` enum in asgard-kube
+- The `ProcessorType` enum in asgard-kube
   `pkg/apis/asgard/v1alpha1/types.go`, and `WorkflowSpec` beside it, which is
   what settles that entries and exits are not processors
 

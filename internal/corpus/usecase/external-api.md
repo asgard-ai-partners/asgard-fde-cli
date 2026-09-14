@@ -181,6 +181,33 @@ spec:
               const items = (httpResponse && httpResponse.json && httpResponse.json.items) || [];
               return { items };
             })()
+
+    # A failed call has to say so. Without this branch the run ends at
+    # proc-call and the tool returns nothing, which a model reads as "no
+    # result" rather than "the call failed" - and then answers from memory.
+    - name: proc-error
+      type: push-message
+      labels:
+        display_name: Error
+      configs:
+        - name: payload
+          expression: |-
+            (() => {
+              return { error: (prevError && String(prevError)) || "the request failed" };
+            })()
+
+  # **`relationships` is what runs the chain.** Without it the run starts at
+  # the entry's handlingProcessor and stops there: the arguments reach context
+  # and the call is never made. The CR is legal either way, so every check is
+  # green while the tool does a third of what this looks like it does.
+  # `gate` W3 reports it.
+  relationships:
+    - from: {processor: proc-input, relationName: success}
+      to: {processor: proc-call}
+    - from: {processor: proc-call, relationName: success}
+      to: {processor: proc-response}
+    - from: {processor: proc-call, relationName: failure}
+      to: {processor: proc-error}
 ```
 
 Endpoints and non-secret settings are `chartValues` set on the platform; a token is

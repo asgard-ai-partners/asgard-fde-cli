@@ -63,17 +63,20 @@ which have gone behind. **That a reading happened is nobody's to verify but
 whoever claims it** - write `never` when it has not, because a row that says
 so is worth more than one that reads settled.
 
-**Then run `go run ./hack pass-list`.** It no longer compares names - the pass
-is printed rather than copied, so there is nothing to compare - and what it still
-holds is the part no program can derive: that the prose surfaces in `TASK.md` and
-`AGENTS.md` agree by slug, that every check says what it needs, and that this
-repository's own maintenance skill never appears in a scaffolded tree.
+**Then run `go run ./hack pass-list`.** It compares no names - the pass is
+printed rather than copied - and what it holds is the part no program can
+derive: that every check says what it needs, that every prose surface in
+`TASK.md` records the date it was read, and that this repository's own
+maintenance skill never appears in a scaffolded tree.
 
-**The prose surfaces carry a slug, in both documents.** They are the group
-that cannot be discovered from the binary, so they are the group that drifts;
-comparing their wording drifts with them, because each list words a surface
-for its own context. `go run ./hack pass-list` compares the slugs, both ways, so
-a surface in one list and not the other is reported rather than assumed.
+**The prose surfaces live in one document, and that is `TASK.md`.** They were
+in two, worded for each document's own context, and the check's whole job was
+holding one copy against the other - so a rename in one was a failure in the
+other and the repair was to retype it. **A row records when it was read**,
+because that is the one thing a program can act on: `go run ./hack sources`
+cannot say whether a source has moved since a reading that gives no date.
+`pass-list` fails a row without one, and fails a second table of the same
+surfaces appearing anywhere else.
 
 **And know what that check cannot do.** It verifies that the list is
 complete - never that anything on it passed. A table whose cells are verdicts
@@ -127,7 +130,7 @@ each is for; this table is the other half, which the tool cannot print.
 | `processors` | what a key **means**. The definitions say whether a processor takes dynamic config; that an extra key on `http-request` is an HTTP header is in the loop that reads it, and no table upstream states it |
 | `counts` | a count of something nobody upstream counts. It recomputes what a deployment's own documents state, and a number invented here has nothing to be held against |
 | `spec-key-gap` | whether a key `add` writes is written **well**. It compares key sets, so a field emitted with the wrong value counts as covered |
-| `pass-list` | **whether any check passed.** It holds the prose surfaces against each other and a verdict is not in its reach |
+| `pass-list` | **whether any check passed**, and **whether a listed surface was actually read.** It holds the shape of the list - that every check says what it needs, that every prose surface carries a date, that there is no second table of them - and a verdict is not in its reach |
 | `goal` | whether the material is any good. It asks whether the capability is there - the corpus lands, a grep finds things, a chart gets written, the issue route is printed - never whether what landed is right |
 | `sources` | whether a reading happened. It compares a recorded reading with its clone and reports staleness; the reading itself is nobody's to verify but whoever claims it |
 | `doc-paths` | whether a document's prose is right. It resolves the paths, the Go symbols and whether every command in the tree is named in both READMEs, and says nothing about what the sentence around one claims |
@@ -138,15 +141,34 @@ each is for; this table is the other half, which the tool cannot print.
 
     asgard-cli audit-material --term <field>
 
-**Run it when a platform field is renamed or retired**, and only then. It has
+**Run it whenever you change anything a second place might restate** - a
+renamed platform field, a rule reworded, a check whose behaviour moved. It has
 no pass or fail - it answers a question somebody asks it - so it is here and
 not in `TASK.md`'s pass, which lists checks that can be run and answered
 without being told what to look for.
 
-It reads the templates as well as the prose. A renamed field is taught in
-three places - a template that writes it, an extract that explains it, a
-prompt that mentions it - and fixing one leaves the other two teaching a field
-that no longer exists.
+**Let its scope be the scope.** It reads every surface this repository is
+responsible for: the material, the scaffold templates, every `--help` screen,
+the CLI's own string literals, these documents, the maintenance skills and the
+gate under `hack/` - whose `What:` strings are what `go run ./hack list` prints. A
+claim is taught in several of those at once - a template that writes a field,
+an extract that explains it, a prompt that mentions it, a help screen that
+names it - and fixing one leaves the rest teaching what is no longer true.
+
+**Do not decide that set by hand.** Choosing which files to sweep is the same
+mistake as writing down a list that can be generated, and it fails the same
+way: the set you remember is the set you have been editing, which is not where
+the other copy is. A sweep that names its own files comes back clean over the
+files it never opened, and reads exactly like a sweep that found nothing.
+
+**The same rule one level up: the patterns are not yours either.**
+`go run ./hack introduced` reads the lines THIS change adds and lists every
+count-shaped one, with no phrase list to remember. Over the whole corpus that
+detector reports more than a thousand lines and is useless; over a diff it
+reports a few dozen and is the item above that gets skipped. **Existing counts
+are a backlog no check closes** - they are found by reading, and saying the
+sweep is finished is the claim that keeps being wrong. The ones a change adds
+are bounded, and they are the regression.
 
 ## Holding prose against its source
 
@@ -155,17 +177,17 @@ than by document.
 
 0. **`asgard-cli audit-material --unchecked`** first, because it is the scope.
    Every document names the surface it has not been held against, and reading
-   those 74 lines is how you find out what a pass is for before spending it.
+   that output is how you find out what a pass is for before spending it.
    **This replaced a hand-written list**, four of whose entries outlived the
    thing they described.
 1. **`go run ./hack sources`** next. A reading held against a stale clone proves
-   nothing, and five of the eight deployment clones have been behind by tens
+   nothing, and most of the deployment clones have been behind by tens
    of commits at once. `git -C <path> pull` before reading.
 2. **Let `--drift` set the scope rather than the diff.**
    `go run ./hack coverage --drift` lists every cited page that has moved since
-   the commit the citing document names. That turned "the 27 wiki pages against
-   asgard-docs" into five pages, which is a reading somebody can actually do -
-   where reading a 286-file diff is not, and claiming it is means moving every
+   the commit the citing document names. That turns "the wiki against
+   asgard-docs" into the handful that moved, which is a reading somebody can
+   actually do - where reading the whole diff is not, and claiming it is means moving every
    citation on a reading nobody did.
 3. **Move the commit only for what you read.** A page's provenance is per
    claim, so one page legitimately cites two commits of one upstream. Mark a
@@ -274,8 +296,9 @@ Fix the claim, then ask the second question: **would a check have caught it?**
 - If no, say so where the claim lives. A `**Unchecked:**` line that names what
   nobody has held against anything is worth more than a claim that reads as
   settled.
-- If a check would fire on correct material, do not write it. That is the
-  ninth question in `AGENTS.md`, and an argument-count check failed it.
+- If a check would fire on correct material, do not write it. `AGENTS.md` asks
+  that under "Would this check fire on material that is correct?", and an
+  argument-count check failed it.
 
 **Checked:** every command and script named here is in this repository and
 does what is said - `--commands` and `go run ./hack doc-paths` resolve them,

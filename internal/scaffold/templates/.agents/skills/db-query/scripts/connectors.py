@@ -61,8 +61,8 @@ def _port(default: str) -> Field:
                  note=f"預設 {default};CR 的 spec.*.port 仍必須明寫")
 
 
-# 對應 asgard-kube DataConnectorClass 的九個值。hana 沒有 design-time 解方
-# (見 references/connectors.md 的說明),其餘八個都在這裡。
+# 對應 asgard-kube 的 DataConnectorClass。hana 沒有 design-time 解方
+# (見 references/connectors.md 的說明),其餘都在這裡。
 SPECS: dict[str, Spec] = {
     "postgres": Spec(
         fields=(_HOST, _port("5432"), _USER, _PASSWORD, _DATABASE,
@@ -503,7 +503,7 @@ def runner(cls: str, prefix: str) -> Runner:
 
 # --- 欄位內省 -------------------------------------------------------------
 #
-# 建 SemanticLayer 的第一步永遠是「這張表到底有哪些欄位、什麼型別」。六個走
+# 建 SemanticLayer 的第一步永遠是「這張表到底有哪些欄位、什麼型別」。多數走
 # information_schema,Oracle 走 all_tab_columns,NetSuite 兩者都沒有、只能取樣。
 
 def _split(table: str) -> tuple[str, str]:

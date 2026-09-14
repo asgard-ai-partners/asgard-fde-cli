@@ -58,6 +58,10 @@ so keeping it in the query would only add a term that lands nowhere.
 | 白名單 | allowlist, outbound - and `wiki/operations.md` |
 | 網路 | network, reachable, allowlist |
 | 排程 | schedule, trigger, cron |
+| 沒反應 | returns nothing, never runs - and `wiki/green-and-doing-nothing.md` |
+| 第一則訊息沒回應 | first message, listen-message, terminal - and `usecase/flow-agent-supervisor.md` |
+| 沒作用 | returns nothing, never runs - and `wiki/green-and-doing-nothing.md` |
+| 空的 | returns nothing - and `wiki/green-and-doing-nothing.md` |
 | 核准 | approval, consent, requestConsent - and `usecase/write-path.md` |
 | 寫入 | write - and `usecase/write-path.md` |
 | 投影片 | deck, slides - and the proposal-deck design-time skill |

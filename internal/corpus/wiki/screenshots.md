@@ -2,8 +2,8 @@
 
 Every screenshot of this platform lives in the product documentation. There are
 none in this binary and none in a customer repository, and that is deliberate:
-an image copied into an engagement goes stale where nobody is looking, and 1.7MB
-of PNGs teaches nobody anything. What is worth carrying is **which picture
+an image copied into an engagement goes stale where nobody is looking, and a
+folder of PNGs teaches nobody anything. What is worth carrying is **which picture
 answers which question**, which is this page.
 
 Both places serve the same file:
@@ -125,8 +125,8 @@ slide about limiting access is the overstatement this tool warns about most.
 ## The rest of what the documentation uses
 
 The sections above are the curated set - grouped by the situation they answer,
-and five of them opened. **This is everything else the documentation references**,
-74 images added 2026-09-03 so that "not in this page" stops meaning "does not
+and some of them opened. **This is everything else the documentation references**,
+added 2026-09-03 so that "not in this page" stops meaning "does not
 exist". They are grouped by product rather than by situation, because nobody has
 worked out which situation each one answers, and pretending otherwise would make
 this look more considered than it is.
@@ -241,12 +241,8 @@ to recognise the screen they are about to fill in.
 | `manage-workspace/workspace-menu.png` | 左下角點擊 Workspace 展開的選單，顯示 Workspace Member 與 Rename Workspace |
 | `manage-workspace/workspace-overview.png` | 工作空間 Overview 頁面，Analysis 區塊列出 Requests per second、Request Duration、Token Usage、Total Message、Data Source 等圖表 |
 
-**53 more carry no alt text**, most of them hash-named files from an older
-documentation structure. They are reachable by path under
-`https://docs.asgard-ai.com/img/docs/` and there is nothing useful to say about
-them from here - the LINE three under `## What has no screenshot` are the
-exception, and they were found by reading the page that uses them rather than by
-listing files.
+The rest are reachable by path under `https://docs.asgard-ai.com/img/docs/`;
+what is known about them is below, under `## What has no screenshot`.
 
 ## What has no screenshot
 
@@ -274,7 +270,7 @@ Not everything does, and assuming otherwise wastes a search:
     The second one is the screen a customer would want to see. **It is the old
     console** - a left nav of Overview / Workflows / Knowledge / Environment /
     Apps, and a card dated 2024/09/20 - and today's Odin has none of those.
-    `integration.md` already flags those four pages as possibly stale for the
+    `integration.md` already flags those pages as possibly stale for the
     same reason.
 
     So the answer for the first two is still not to use them, but for a
@@ -335,8 +331,9 @@ read the docs page for that feature**, not to conclude the platform has no
 screen for it.
 
 **Unchecked:** everything else here is described by its alt text, not by having
-been looked at, and **no capture date exists for any of them**. Five of the 39
-have been opened, and two of those five needed cropping - so assume an unopened
-one does too, rather than that the marked ones are the only ones. The grouping
+been looked at, and **no capture date exists for any of them**. Only the ones
+the Checked block names have been opened, and two of those needed cropping - so
+assume an unopened one does too, rather than that the marked ones are the only
+ones. The grouping
 into situations is this tool's judgement rather than anything the documentation
 says.

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """query.py -- 對客戶的來源系統跑唯讀查詢並印出結果。
 
-一支 CLI 蓋住八個 DataConnector class。連線設定放在 repo 根的 .env,每一組用自己
+一支 CLI 蓋住 connectors.py 宣告的每個 DataConnector class。連線設定放在 repo 根的 .env,每一組用自己
 的前綴;前綴由你決定,因為一個 engagement 可能同時接兩個 PostgreSQL。
 
     # 這個 class 需要哪些鍵(把輸出接到 .env,再請使用者填值)

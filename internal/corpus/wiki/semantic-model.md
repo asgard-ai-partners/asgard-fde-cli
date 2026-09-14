@@ -25,8 +25,8 @@ Three steps: Basic Information, Table Setting, Modeling.
 
 The 60,000-token floor is a real limit: the wrong model fails during modelling.
 
-Six data sources are listed here, while the Data Source settings page supports
-nine - it also has SAP Hana, SalesForce and NetSuite. Whether a Semantic Model
+Fewer data sources are listed here than the Data Source settings page supports -
+it also has SAP Hana, SalesForce and NetSuite. Whether a Semantic Model
 can use those three is not documented.
 
 ### Table Setting
@@ -115,11 +115,12 @@ answer.
   - asgard-docs `f00e0ee`
 - [Data Model](https://docs.asgard-ai.com/docs/product-suite/mimir/features/data-model)
   - asgard-docs `f00e0ee`
-- `completionModelName` being required: checked 2026-09-02 against 11 real
-  `SemanticLayer` CRs across three deployments
+- `completionModelName` being required: checked 2026-09-02 against every real
+  `SemanticLayer` CR in three deployments
 - The six-versus-nine data source difference: compared against the
   [Data Source](https://docs.asgard-ai.com/docs/product-suite/odin/features/settings/data-source)
   page. The documentation gives no reason, so this is **unconfirmed**
 
 **Unchecked:** the modelling guidance and the UI steps come from the product
-documentation only. `completionModelName` was held against 11 real CRs.
+documentation only. `completionModelName` was held against every real
+`SemanticLayer` CR in three deployments.

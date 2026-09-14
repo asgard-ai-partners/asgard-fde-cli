@@ -37,7 +37,7 @@ The detail page has four tabs:
 The table shows Folder, Source, Active, Status, Schedule. In Edit mode, New
 Syncer opens a three-step wizard: Type, Basic, Settings.
 
-**The UI offers five source types; the CRD supports ten.**
+**Not every `syncerClass` the CRD supports is reachable from the UI.**
 
 | source | in the UI | `syncerClass` |
 |---|---|---|
@@ -50,7 +50,7 @@ Syncer opens a three-step wizard: Type, Basic, Settings.
 | Dropbox | no | `dropbox` |
 | FTP / SFTP / SMB | no | `ftp` / `sftp` / `smb` |
 
-The bottom five can only be declared in a chart. If a customer's data lives on an
+The ones marked no can only be declared in a chart. If a customer's data lives on an
 FTP server or an SMB share, that route works - it just cannot be built in the UI.
 
 ### Context Index
@@ -141,23 +141,24 @@ number in a Drive makes the agent paraphrase a figure it should have read.
 
 `../usecase/knowledge-drive.md` has the full Drive-plus-Syncer shape.
 
-## Ten Loaders, workspace-wide
+## The Loader cap, workspace-wide
 
-A Loader is one recurring pull, and the platform allows **10 per Workspace** -
-shared across every project in it, not per knowledge base. Indexers are capped at
-150 and Processors at 500 on the same basis.
+A Loader is one recurring pull, and the platform caps how many a Workspace may
+have - shared across every project in it, not per knowledge base. Indexers and
+Processors are capped on the same basis. **`../wiki/integration.md` owns those
+numbers**, and says why the Loader one bites first.
 
-**A customer with a dozen document sources exceeds this before anything else in
-the quota list**, and the failure arrives when the eleventh is created rather
+**A customer with a dozen document sources exceeds it before anything else in
+the quota list**, and the failure arrives when the next Loader is created rather
 than at design time. Two consequences worth carrying into an interview:
 
-  - **count the sources, not the documents.** Fifty files behind one crawl is
-    one Loader; five files from five places is five
+  - **count the sources, not the documents.** A crawl of a whole site is one
+    Loader; the same files spread across separate places is one each
   - a Drive with a Syncer is a different mechanism and is not counted here -
     which is one more reason it is the recommendation for new work
 
-They are defaults rather than ceilings - `../wiki/integration.md` has all
-eight numbers and how they are raised.
+They are defaults rather than ceilings, and `../wiki/integration.md` has how
+each is raised.
 
 ## Citations are possible, and they are not automatic
 

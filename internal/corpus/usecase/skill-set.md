@@ -53,7 +53,7 @@ the paths its Syncers write to are the whole truth about what is in it.
 the repository location for every syncerClass. So a Syncer is never repointed:
 "sync from there instead" is a new Syncer and a deleted one, the apiserver
 refuses the edit, and the cursor does not come with it.
-`../wiki/crd-rules.md` lists all 21 of the Syncer's immutable fields.
+`../wiki/crd-rules.md` lists the Syncer's immutable fields.
 
 > **Two older shapes you will find in charts that have not been touched
 > recently.** Neither is worth copying, and the first one will not even apply:
@@ -161,8 +161,8 @@ spec:
   apiKey:
     valueFrom:
       secretKeyRef:
-        key: asgard_resource_api_key
-        name: {{ include "<chart>.appSecretName" . }}
+        name: preset-agent-hub
+        key: api_key
 ---
 apiVersion: asgard-ai.com/v1alpha1
 kind: Syncer

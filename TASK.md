@@ -36,36 +36,47 @@ and whether its source has moved since is what `go run ./hack sources` reports.
 | `glossary-collisions` every word the glossary says has one meaning here, against the help screens and the pages | read 2026-09-14; no check is possible, because which sense a bare word carries needs a reader | 2026-09-14 |
 | `generated-repo-end-to-end` the tool run the way an engagement runs it | `init` through `verify` in a scratch repository, every generated kind rendered; both findings were verdicts, not prose | 2026-09-14 |
 | `provenance-markers` every `**Checked:**` and `**Seen in:**` line in the corpus | read for what it actually claims: a count on one is not evidence anybody read the source, so the counts are gone and the scope is named instead. The commit each extract was read at lives in `source/SOURCES.md`, which `go run ./hack sources` holds against the clones | 2026-09-14 |
-| `extracts-vs-charts` the 22 extracts against the charts they came from | the eight commits in `source/SOURCES.md`'s **held against** column, which is what makes this reading checkable rather than a date | 2026-09-11 |
-| `wiki-vs-docs` the 27 wiki pages against asgard-docs | **the pages whose citations have moved, which `go run ./hack coverage --drift` names** - now 0, each citation carrying the commit it was held against; the prose citing a page that has not moved stands at its own earlier reading | 2026-09-14 |
-| `packages-help` the 14 packages' help against their behaviour | the working tree | 2026-09-11 |
-| `root-documents` Goal, AGENTS, APPROACH, STRUCTURE, README and its Chinese half - the files that state the rules, as opposed to the paths and commands in them | all six read end to end against the binary, the tree and the CRDs, **including AGENTS' twelve questions and four contradictions**: each one's citable claim was re-checked, the four contradictions are all still described accurately, and the `await` count moved from five of five to seven of seven | 2026-09-14 |
-| `needs-and-briefs` the 7 needs lists and 4 briefings - Go rather than markdown, and in no group until now | every platform claim against asgard-kube `cbd8d70`, every command and flag against the binary, and every row's pointer against the document it names | 2026-09-14 |
-| `command-help` the 2,866 lines of `--help` across 77 screens - the largest reader-facing surface, and in no group until now | every screen read end to end; every command, flag and count in them run or recomputed against the binary and the CRDs | 2026-09-14 |
-| `gate-messages` the 392 error and warning strings the checks print, and `hack/verify-references.sh` | the 33 carrying a claim, against asgard-kube `cbd8d70` and the deployment clones; every reference chart rendered, including the third layout the script had never looked for | 2026-09-14 |
-| `generator-templates` the 1,100 lines of CR skeleton `add` writes into a customer's chart | every field and claim against asgard-kube `cbd8d70` and asgard-core `623ceb5`; each kind generated, rendered and verified in a scratch repository | 2026-09-14 |
-| `indexes-and-counts` the two indexes, and every count in the material weighed against what a reader does with it | every alias term grepped against the landed tree; the counts that are a claim recomputed by `go run ./hack counts`, the ones standing in for a yes deleted in favour of a named example | 2026-09-14 |
-| `flag-usage` every flag's usage text against what the flag does | the working tree, all 81 | 2026-09-11 |
-| `processors-vs-palette` `wiki/processors.md`'s prose, as opposed to its two tables, which `go run ./hack processors` now holds against asgard-core and asgard-docs | the two clones as pulled | 2026-09-11 |
-| `stage-prompts` the 10 stage prompts' guidance, as opposed to their command claims | all 2,355 lines read end to end; the platform claims they carry against asgard-kube `cbd8d70` and asgard-docs `23409b3`, and every command and flag they write run against the binary | 2026-09-14 |
-| `design-time-skills` the 7 design-time skills' prose, as opposed to their command and path claims | read end to end, 2,255 lines; every platform claim in them against the CRDs and asgard-core `623ceb5` | 2026-09-14 |
-| `scaffold-templates` the 2,783 lines a customer repository receives that are not skills - of which `AGENTS.md.tmpl` is 912 | read; its platform field claims against asgard-kube `cbd8d70`, its gate table against the binary's eight steps, its shape-C field forms against the CRD | 2026-09-14 |
-| `deployment-diffs` the eight deployment clones' diffs since the extracts were written from them | the four that had moved, which `go run ./hack sources --extracts` names; the other four were unmoved | 2026-09-11 |
+| `extracts-vs-charts` the extracts against the charts they came from | the commits in `source/SOURCES.md`'s **held against** column, which is what makes this reading checkable rather than a date | 2026-09-11 |
+| `wiki-vs-docs` the wiki pages against asgard-docs | **the pages whose citations have moved, which `go run ./hack coverage --drift` names** - now 0, each citation carrying the commit it was held against; the prose citing a page that has not moved stands at its own earlier reading | 2026-09-14 |
+| `packages-help` every package's help against its behaviour | the working tree | 2026-09-11 |
+| `root-documents` Goal, AGENTS, APPROACH, STRUCTURE, README and its Chinese half - the files that state the rules, as opposed to the paths and commands in them | all six read end to end against the binary, the tree and the CRDs, **including AGENTS' questions and its four contradictions**: each one's citable claim was re-checked, the four contradictions are all still described accurately, and the `await` count moved from five of five to seven of seven | 2026-09-14 |
+| `needs-and-briefs` the needs lists and briefings - Go rather than markdown, and in no group until now | every platform claim against asgard-kube `cbd8d70`, every command and flag against the binary, and every row's pointer against the document it names | 2026-09-14 |
+| `command-help` every `--help` screen - the largest reader-facing surface, and in no group until now | every screen read end to end; every command, flag and count in them run or recomputed against the binary and the CRDs | 2026-09-14 |
+| `gate-messages` every error and warning string the checks print, and `hack/verify-references.sh` | the ones carrying a claim, against asgard-kube `cbd8d70` and the deployment clones; every reference chart rendered, including the third layout the script had never looked for | 2026-09-14 |
+| `generator-templates` the CR skeletons `add` writes into a customer's chart | every field and claim against asgard-kube `cbd8d70` and asgard-core `623ceb5`; each kind generated, rendered and verified in a scratch repository | 2026-09-14 |
+| `indexes-and-counts` the two indexes, and every count in the material weighed against what a reader does with it | every alias term grepped against the landed tree; the counts that are a claim left to `go run ./hack counts` to recompute, the ones standing in for a yes replaced by a named example, and the rest deleted. The sweep reached every part of the corpus, the stage prompts, the scaffold templates, the design-time skills, every `--help` screen and the root documents. **What is left is check-held or load-bearing**: a figure `counts`, `tables`, `processors`, `coverage` or `shapes` recomputes, a platform quota a customer is sized against, or a number that is itself the argument. **Nothing mechanical stops the next one being written** - a count in prose is indistinguishable from a correct one, which is why the rule is in AGENTS.md rather than in a check | 2026-09-14 |
+| `flag-usage` every flag's usage text against what the flag does | the working tree, every one | 2026-09-11 |
+| `processors-vs-palette` `wiki/processors.md`'s prose, as opposed to its two tables, which `go run ./hack processors` now holds against asgard-core and asgard-docs | the two clones as pulled. **The palette is at second hand and stays there** - asgard-docs records it from a repository nothing here clones, which that page's `**Unchecked:**` marker names | 2026-09-11 |
+| `stage-prompts` the stage prompts' guidance, as opposed to their command claims | read end to end; the platform claims they carry against asgard-kube `cbd8d70` and asgard-docs `23409b3`, and every command and flag they write run against the binary | 2026-09-14 |
+| `design-time-skills` the design-time skills' prose, as opposed to their command and path claims | read end to end; every platform claim in them against the CRDs and asgard-core `623ceb5` | 2026-09-14 |
+| `scaffold-templates` what a customer repository receives that is not a skill, `AGENTS.md.tmpl` above all | read; its platform field claims against asgard-kube `cbd8d70`, its gate table against the binary's own steps, its shape-C field forms against the CRD | 2026-09-14 |
+| `deployment-diffs` the deployment clones' diffs since the extracts were written from them | the ones that had moved, which `go run ./hack sources --extracts` names; the rest were unmoved | 2026-09-11 |
 
 ## Where it stands
 
-Two numbers, and each is here because a check reads this file for it.
+**The corpus is over 100,000 words** - wiki pages, extracts, guides, needs
+lists and briefings, as `asgard-cli init` lands them.
 
-**The corpus is 70 documents and over 100,000 words** - 27 wiki pages, 22 extracts,
-10 guides, 7 needs lists and 4 briefings, as `asgard-cli init` lands them.
-`go run ./hack goal` counts them in the tree it builds, which is the only place
-the figure is true of anything.
+**The document count is not written here, and was.** `go run ./hack goal` held
+this file's figure digit for digit, so every page added to the corpus turned the
+check red until somebody retyped a number the check had just computed - and
+**nothing in `Goal.md` asks for that number.** The check invented the
+requirement and the prose carried it to satisfy the check.
 
-**The chart half is the least finished of Goal's four points.** The widest
-reference chart uses 185 spec keys and `add` never mentions 88 of them; across
-all nineteen it is 303 and 171. So what `add` writes is a correct starting point
-and not a chart. `go run ./hack spec-key-gap` renders both sides and `--missing` is
-the worklist.
+What it holds now is what Goal's first point actually claims: that every
+document this binary carries arrives in a repository. It compares the two sets
+by name, so a page that fails to land is reported as itself. The word figure
+stays a **floor** for the same reason it always was - an equality fails on the
+ordinary act of writing a paragraph, and a check that fires on correct work
+teaches people to stop reading it.
+
+**The chart half is the least finished of Goal's four points.** What `add`
+writes is a correct starting point and not a chart: a large share of the spec
+keys the widest reference chart uses are keys it never mentions.
+
+**The size is not written here.** `go run ./hack spec-key-gap` renders both
+sides and prints it, `--missing` is the worklist, and the check fails if the gap
+ever closes - because then this paragraph is what is wrong.
 
 **The write-back path is the one part of the design that is not solved.** The
 corpus is compiled into the binary - correctly, so a stale page is fixed once
@@ -124,14 +135,14 @@ who to ask and what each blocks, and an engagement's in its own
 
     asgard-cli audit-material --unchecked
 
-Every document names the surface it has not been held against, and that prints
-all 74. **Nothing is listed here** - a list that can be generated is not written
+Every document names the surface it has not been held against, and that command
+prints every one of them. **Nothing is listed here** - a list that can be generated is not written
 down, the same rule this file applies to a count, and the marker is on the page
 where a reader meets the claim rather than in a file they have to think to open.
 
 **Most of what it prints is not waiting on anybody.** A page says what it was
 held against and what it was not, and the honest answer for a shape nobody has
 deployed is that the first engagement to do it is its first test - which is a
-thing to read before building one, not a task. The five pages whose source is a
-UI screen are the one group where somebody with an account could close the gap
-in an afternoon.
+thing to read before building one, not a task. The pages whose source is a UI screen
+are the one group where somebody with an account could close the gap in an
+afternoon.

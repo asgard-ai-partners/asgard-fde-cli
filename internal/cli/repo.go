@@ -41,7 +41,7 @@ var today = func() string { return time.Now().Format("2006-01-02") }
 
 // loadState reads the repository and every record it keeps.
 //
-// Four commands list what the repo contains, and they used to be one command
+// Several commands list what the repo contains, and they used to be one command
 // that listed all of it and then said which guidance the shape of it made
 // relevant. The listing survived that; the inference did not. Each command now
 // reads the whole state and prints only its own part, because the parts are

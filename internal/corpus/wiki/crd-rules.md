@@ -45,8 +45,8 @@ aggregate the platform can compose itself.
 written against a two-column key with one column listed passes review by looking
 reasonable and is refused by the apiserver.
 
-Both are worth checking before a tag, because a chart with 31 cubes has enough
-of them that one is usually wrong, and neither `asgard-cli check` nor `helm
+Both are worth checking before a tag, because a layer of any size has enough of
+them that one is usually wrong, and neither `asgard-cli check` nor `helm
 lint` looks.
 
 ## The builtin model holds no key, deliberately
@@ -137,7 +137,7 @@ The rest are two families, and `asgard-cli verify` checks both as of
                                 the block named after it
 
 Every one of those renders, lints and passes a server-side dry-run, and is
-refused at apply. Run over the six renderable reference charts - 119 CRs as of
+refused at apply. Run over every renderable reference chart - read as of
 2026-09-11 - the check reports nothing on either family, which is what a rule
 the platform already enforces should do.
 
@@ -156,7 +156,7 @@ runs the second, because pruning is an apiserver behaviour and no client is
 issued cluster credentials.
 
 It has happened. `Toolset.spec.instruction` was removed from the CRD and added
-back by hand; the chart passed **25 of 25 dry runs** and the deploy failed.
+back by hand; the chart passed **every dry run** and the deploy failed.
 `../usecase/write-path.md` and `../usecase/fixed-query-tools.md` both carry it
 against the field they concern.
 

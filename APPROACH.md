@@ -10,7 +10,7 @@ Present tense. Why something changed is `git log`.
 
 ## The corpus
 
-Six bodies of material, one reader. `kb.Corpus` is that reader and all six
+Every body of material, one reader. `kb.Corpus` is that reader and all of them
 declare one; `needs` and `brief` have no files, so they render documents from
 Go structs into an in-memory FS and get the same treatment.
 
@@ -44,8 +44,8 @@ Two questions, and they are not interchangeable:
 `Unlisted` is what separates them. `wiki.Landing()` - what `init` writes - is
 `All()`, because a map that does not travel with the material leaves the copy
 without one. The audit's source set is the same: **a document that ships is a
-document that is checked**, and using `List()` there once hid five dead
-references in the three files it skips.
+document that is checked**, and using `List()` there hides every dead reference
+in the files it skips.
 
 ## Pointers
 
@@ -91,9 +91,8 @@ correct here and there alike.
     asgard-cli audit-material --help     every flag, and what each one answers
 
 **The list is not here**, because a list of flags in a document is a second copy
-of `--help` that drifts from it - this one did, and named nine of the thirteen
-and one flag in a form the binary had stopped accepting. What follows is why the
-interesting ones are shaped the way they are.
+of `--help` that drifts from it. What follows is why the interesting ones are
+shaped the way they are.
 
 `--links` and `--orphans` read the same graph from opposite ends. A dead
 pointer is loud: the reader follows it and finds nothing. **A document nothing
@@ -105,27 +104,25 @@ suspects it.
 **`--bare` is what keeps the graph complete, and the graph is only as good as
 it.** A reference written without a path — a same-directory markdown link, or a
 name on its own — resolves for a reader today and is checked by nothing, so a
-renamed page breaks it silently. 141 of them were outside the graph at once,
-half of them in the two indexes. The rule that makes the check safe is a
+renamed page breaks it silently, and an index is where they accumulate because
+an index is nothing but references. The rule that makes the check safe is a
 hyphen: `agents` is a CR field and `verify` is a command, while a hyphenated
 token matching a document name has no other reading.
 
-`--unverified` reports two of the six bodies differently, and that is the point.
+`--unverified` reports `needs` and `brief` differently, and that is the point.
 `needs` and `brief` render every document from one shared provenance string, so
 the marker is there by construction and the check cannot fail on them. Counting
-eleven documents as having passed would say more than was done.
+them as having passed would say more than was done.
 
 **`--sources` is the version number of every moment of synthesis, collected.**
 A page's Sources block, a pinned table's `const` in `internal/gate` and the
 raw-sources table in the wiki README all carry one: which commit of which
 upstream a claim was read at.
 
-**It does not require them to agree, and twice it did.** The first version
-failed when a pinned table moved and the pages had not; the second narrowed
-that to one document and failed when one section of a page was re-read on its
-own. Both were the same error - provenance is per claim, so two commits of one
-upstream is the ordinary state of a corpus read over time, and a rule against
-it fails the schema for working.
+**It does not require them to agree.** Provenance is per claim, so two commits
+of one upstream is the ordinary state of a corpus read over time - a rule
+requiring one commit everywhere fails the schema for working, and fails it
+hardest on the day somebody re-reads a single section.
 
 So what it prints is the spread, which is the useful thing: a sweep that was
 meant to move every citation and moved some of them looks exactly like a corpus
@@ -246,7 +243,7 @@ on a release that touched no page.
 
 `.asgard-scaffold.json` holds a digest and a CLI version **per file**,
 committed beside the material. A byte comparison says a file differs; only the
-record says which way round, which is what the five states report:
+record says which way round, which is what these states report:
 
 | state | meaning |
 |---|---|
@@ -296,9 +293,9 @@ those rules here would drift, and would still miss the two that matter: a field
 the CRD silently prunes, and a rejection only the apiserver produces. **41 of
 the CRDs' 231 enforced CEL rules are `self == oldSelf`**, comparing a proposal
 against the object already on the cluster — a render is one object with no
-history. (79 is the marker count in asgard-kube's Go types, which is a different
-number for a different question; `internal/corpus/wiki/crd-rules.md` has both
-and which fields carry them.)
+history. (A marker in the Go types and a rule on the cluster are different
+questions with different answers; `internal/corpus/wiki/crd-rules.md` has both,
+and `go run ./hack tables` recomputes them.)
 
 A green gate means *worth pushing*. The authority is the plan:
 
@@ -306,8 +303,8 @@ A green gate means *worth pushing*. The authority is the plan:
 
 ## Chart authoring
 
-`asgard-cli add <kind> <name>` writes a CR skeleton into a project's chart. Ten
-kinds in `generate.Kinds`, each naming the wiki page and the extract that
+`asgard-cli add <kind> <name>` writes a CR skeleton into a project's chart.
+`generate.Kinds` is the set, each naming the wiki page and the extract that
 explain it — those names are pointers like any other and `--links` resolves
 them, which is the half a prose search cannot reach.
 

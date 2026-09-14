@@ -6,7 +6,7 @@ chart it is the `Workflow` CR's `entries` / `exits` / `processors` /
 
 ## Processor types
 
-Thirteen values in the CRD's `ProcessorType` enum, against the group each sits
+The values in the CRD's `ProcessorType` enum, against the group each sits
 under in the editor's node menu:
 
 | group | node, as the menu labels it | `type` |
@@ -126,8 +126,8 @@ processors; `../usecase/fixed-query-tools.md` is the shape of a zero-parameter q
 ## What goes in a field
 
 Every processor field takes one of three kinds of value - Literal, Expression
-(JavaScript) or Template (Handlebars) - and the six variables in scope, the
-seven built-in functions and the `Blob` shape are in
+(JavaScript) or Template (Handlebars) - and the variables in scope, the
+built-in functions and the `Blob` shape are in
 [`processors`](../wiki/processors.md). **The ECMA5 limit is `execute-script`'s
 Engine field and does not reach an Expression**, which is the same thing this
 page says above and the deployed charts settle: one of them evaluates an arrow
@@ -164,13 +164,13 @@ together:
     the ConfigMap missing            the nodes open on top of each other
     project-environment-id missing   the editor opens as a blank canvas
 
-One deployment carries 80 of these, one per Workflow. `ConfigMap` is not an
+One deployment carries one per Workflow. `ConfigMap` is not an
 Asgard CR and appears in no CRD, which is why nothing else here mentions it -
 and why it is easy to conclude it is somebody else's concern.
 
 ## Sources
 
-- All 16 files under
+- Every file under
   [processor](https://docs.asgard-ai.com/docs/developer-reference/processor/introduction)
   - asgard-docs `23409b3`, read 2026-09-14. The type table above is the CRD's
   `ProcessorType` enum at asgard-kube `cbd8d70` against that page's groups; the
@@ -188,9 +188,9 @@ and why it is easy to conclude it is somebody else's concern.
   [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `cbd8d70` -
   `ProcessorType`, `WorkflowSpec`
 - Expression being JavaScript: confirmed 2026-09-02 from both sides - the product
-  documentation states it, the CRD makes no claim, and six deployments use
+  documentation states it, the CRD makes no claim, and the deployments use
   JavaScript constructs throughout
 
 **Unchecked:** the processor list and value forms were held against the CRD, and
-`prevPayload` behaviour against six deployments; the message templates were not
+`prevPayload` behaviour against the reference deployments; the message templates were not
 examined.

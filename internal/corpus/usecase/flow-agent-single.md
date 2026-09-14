@@ -4,7 +4,7 @@ A public entry point with no subagent at all. The smallest shape that serves an
 anonymous audience.
 
 **Seen in:** a public product-catalogue widget, and a deployment whose whole
-chart is eight CRs.
+chart is a handful of CRs.
 
 **Checked:** 2026-09-02 against a public widget's BotProvider, Workflow and SandboxBlueprint, and the CRD. A required field was missing from the skeleton and was added.
 
@@ -97,8 +97,8 @@ spec:
   adminApiKey:
     valueFrom:
       secretKeyRef:
-        name: {{ include "<chart>.appSecretName" . }}
-        key: asgard_resource_api_key
+        name: preset-agent-hub
+        key: api_key
   generic:
     authMode: none          # anonymous visitors; see the security argument below
 ---

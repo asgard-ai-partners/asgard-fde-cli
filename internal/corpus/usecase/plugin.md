@@ -3,7 +3,7 @@
 A named bundle of capabilities that a blueprint loads by name - and can pick
 **per request**.
 
-**Seen in:** a content-generation deployment with 28 of them, split into domain
+**Seen in:** a content-generation deployment carrying one per bundle, split into domain
 knowledge (`pg-med-*`, `pg-biz-*`, `pg-pr-*`) and writing style (`pg-style-*`).
 
 **Checked:** 2026-09-02, re-read 2026-09-11 against that deployment at
@@ -11,7 +11,7 @@ knowledge (`pg-med-*`, `pg-biz-*`, `pg-pr-*`) and writing style (`pg-style-*`).
 same `ss-skill-repos`**, and the CRD. The number of bundles moves as the
 deployment grows; the one store does not.
 
-**Unchecked:** how to divide capability into bundles. The naming IS the taxonomy, and no deployment's taxonomy has been reviewed here. That deployment is also the only one of eight that declares a `Plugin` at all (`../wiki/coverage.md`), so there is no second arrangement to tell the shape from its choices.
+**Unchecked:** how to divide capability into bundles. The naming IS the taxonomy, and no deployment's taxonomy has been reviewed here. That deployment is also the only one of the reference deployments that declares a `Plugin` at all (`../wiki/coverage.md`), so there is no second arrangement to tell the shape from its choices.
 
 **Read the platform side first:** `../wiki/tools.md` -
 how MCP Server, Skillset and Plugin differ. This page assumes you have.

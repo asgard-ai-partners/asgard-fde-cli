@@ -17,7 +17,7 @@ func TestWriteObjectStatus(t *testing.T) {
 		want []string
 		not  []string
 	}{{
-		// A Syncer is one of the twelve kinds that declare a status schema.
+		// A Syncer declares a status schema.
 		name: "reports",
 		yaml: `apiVersion: asgard-ai.com/v1alpha1
 kind: Syncer
@@ -35,10 +35,10 @@ status:
 		want: []string{"syncState: Succeeded", "lastSuccessfulTimestamp", "type: Ready"},
 		not:  []string{"none reported", "unreadable"},
 	}, {
-		// A DataConnector declares no status properties at all - one of the
-		// seven kinds that do not - and it is half of the mimir-dashboard
-		// shape, which is the case the issue was filed from. A SemanticLayer
-		// was the example here and does declare one.
+		// A DataConnector declares no status properties at all, and it is
+		// half of the mimir-dashboard shape, which is the case the issue was
+		// filed from. A SemanticLayer was the example here and does declare
+		// one.
 		name: "nothing to report",
 		yaml: `apiVersion: asgard-ai.com/v1alpha1
 kind: DataConnector

@@ -78,14 +78,14 @@ None. This is about the material rather than about a deployment.
 
 **Unchecked:** nothing enforces this, and a static check cannot: telling which
 sense a bare word is in needs a reader. **What was done instead is the reading**,
-2026-09-14, across every help screen and every page - and three of these were
+2026-09-14, across every help screen and every page - and some of these were
 live in the tool's own output, each at the moment both senses are in a reader's
 hands. The platform commands called a platform Project a "project" while
 `projects/<slug>/` means a chart, at `pipeline release create --project`, which
 is exactly where somebody is holding both. `pipeline projects` called a main
 platform Environment an "environment" beside releases named `dev` and `prod`.
 And `asgard-cli skill` fetches design-time skills while the bare word here means
-the runtime ones a Syncer feeds. All three say which now.
+the runtime ones a Syncer feeds. Each of those says which now.
 
 **A new page can still redefine any of these and no command will notice**, so
 this stays open - but the failures so far were not new pages. They were the

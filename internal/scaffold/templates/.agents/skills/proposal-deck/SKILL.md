@@ -65,7 +65,7 @@ went back because nothing said it should.
     found one                        add it, with who can answer
 
 **In the same edit, not afterwards.** The FDE who reported this intended to
-reconcile at the end; after twenty rounds the two had diverged far enough that
+reconcile at the end; after many rounds the two had diverged far enough that
 the reconciliation kept being deferred.
 
 **Why this one matters more than ordinary staleness:** `asgard-cli question`
@@ -508,12 +508,12 @@ everything else here.
 **Three page kinds and no others.** The deck that worked had cover, context,
 subject and close - and every attempt to invent a fifth kind, or to group
 subjects under headings, was removed. Eight different grouping labels were tried
-across ten pages and all eight were deleted.
+across many pages and all were deleted.
 
 **The pairing is the shape, and both halves are on one page, side by side.**
 
 This page previously said they were separate slides. **That was wrong and it was
-tried**: the deck went to 23 pages and the reaction was that the split version
+tried**: the deck was split and the reaction was that the split version
 was worse. The reason is worth keeping - **two slides separate what you are
 asking for from what it buys, and the trade disappears.** A customer looking at a
 full page of requests has finished counting the cost before turning to the
@@ -783,7 +783,7 @@ their answer, and every one of those additions invented a branch that does not
 exist - "no test environment" does not mean no integration.
 
 **3. Inventing groupings, then bending content to fit them.** Eight different
-group labels across ten pages, and content distorted to sit under them: three
+group labels across many pages, and content distorted to sit under them: three
 things that are all required presented as a ladder, a question filed under
 "things you can give us".
 
@@ -1113,13 +1113,13 @@ printed anywhere. Read the list, fix what is genuinely missing, and stop.
 to prevent exactly what went wrong here. Writing the content first, in a file
 with no columns and no pages, makes it impossible to add a line because the left
 column looks short. The mechanism existed, it was documented, it was skipped,
-and then the error it prevents was made about twenty times.
+and then the error it prevents was made over and over.
 
 **The reason not to take it is what a discovery deck is.** Its content is not
-settled before layout; **it grows through being rejected.** Twenty rounds of
+settled before layout; **it grows through being rejected.** Many rounds of
 revision reworded about half the question sentences - and those sentences are
 precisely what a locked content file exists to fix in place. Fixing something and
-then changing it twenty times is not fixing it, and maintaining two files through
+then changing it repeatedly is not fixing it, and maintaining two files through
 those rounds doubles the work of each one.
 
 **And two sources drift on their own.** In that engagement the content file
@@ -1152,7 +1152,7 @@ skill's own density checks do not know the difference. This skill has already
 decided what goes on each slide.
 
 For a discovery deck there is a working starting point beside this file:
-`discovery-deck.html`, eight pages, plain HTML with no separate content file,
+`discovery-deck.html`, plain HTML with no separate content file,
 every customer noun neutralised and the question wording left as it ended up.
 
 The four rules worth knowing before you write, which `references/design.md`

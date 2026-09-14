@@ -148,7 +148,7 @@ tracks which is right.
 
 Authenticated with an `X-API-KEY` header. The key comes from the project's
 Integration -> App settings page - **the documentation's route, and an
-engagement could not find that page**; `../wiki/platform-unknowns.md` P12 has
+engagement could not find that page**; `../wiki/platform-unknowns.md` P13 has
 it. It is also **not** the credential a CR reads: that one is a platform
 resource key, minted per namespace, and `../usecase/conventions.md` says where
 it comes from.
@@ -267,7 +267,7 @@ order not placed.
   - asgard-docs `23409b3`, read 2026-09-14. The page is a two-line pointer at
   the two SDK guides, and what moved since `f00e0ee` is the form of those two
   links - nothing this page says rests on it
-- The four pages under `integration-with-asgard/` (api, line, slack, discord)
+- The the pages under `integration-with-asgard/` (api, line, slack, discord)
   - asgard-docs `f00e0ee`. All four are marked `draft`, and they describe an
   interface called "Published -> add integrated" inside a Project, which does not
   match Odin's current Applications -> Customized Integration. **Possibly stale**

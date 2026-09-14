@@ -75,7 +75,7 @@ not
 One deployment chose the agent hub first and recorded this as the cost: "LINE
 頻道無解" - restoring a LINE channel would mean changing shape, not adding a CR.
 
-## The five classes, and what each one costs
+## The classes, and what each one costs
 
 `spec.botProviderClass` is `generic | telegram | line | discord | slack`. Every
 class takes the same `entrypoint`, so the Workflow, the SandboxBlueprint and the
@@ -102,8 +102,8 @@ can be pending when you look for why the bot is silent.
 That writes the three CRs of the flow agent with the channel's credential block
 in place, and prints what the channel costs: which keys the release's Secret
 needs, and
-whether the class needs a connector pod. `--bot-class` accepts any of the five
-and defaults to `generic`.
+whether the class needs a connector pod. `--bot-class` accepts any class the CRD
+declares and defaults to `generic`.
 
 **Do not hand-copy this from another chart.** The credential block differs per
 class, `botProviderClass` is immutable once applied, and a wrong key name in a
@@ -129,8 +129,8 @@ spec:
   adminApiKey:                    # guards the admin API, separate from the channel
     valueFrom:
       secretKeyRef:
-        name: {{ include "<chart>.appSecretName" . }}
-        key: asgard_resource_api_key
+        name: preset-agent-hub
+        key: api_key
   line:
     # Both from the LINE Developers console for this channel. They are NEW keys
     # keys, so each has to be declared under `appSecret:` and then set - a

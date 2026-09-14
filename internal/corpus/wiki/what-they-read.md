@@ -32,7 +32,7 @@ The overview describes three kinds of node tool:
     Template             "a ready-made workflow to adjust"
 
 **No other source has these.** The CRD and `../wiki/processors.md` have
-thirteen processor types and no Basic/Advanced split and no Template concept.
+their own processor types and no Basic/Advanced split and no Template concept.
 The overview page is also one the index already flags as possibly stale.
 
 So when a customer says "we will just start from a Template", they are using a
@@ -47,7 +47,7 @@ algorithms, analysing the past and simulating the future.
 
 What `../wiki/mimir.md` describes is conversational exploration over a
 Semantic Model, producing Views and Dashboards. **Forecasting is not among the
-four concepts.**
+concepts it lists.**
 
 If a customer's evaluation list has a forecast on it, that is a question rather
 than a feature - and it is one to settle before the shape is decided, because

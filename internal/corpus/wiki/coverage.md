@@ -6,7 +6,7 @@ chart, and nothing in it says so.
 
 Rendered with `helm template` against each chart's own values, then counted by
 kind. **Per deployment, not per chart**, because the question is how many
-independent sources a shape was read from: one deployment ships twelve charts
+independent sources a shape was read from: one deployment ships a chart per industry
 that differ only by industry, and counting those as twelve would say the
 opposite of what this page is for.
 
@@ -57,7 +57,7 @@ shape heavily and no other uses it at all, so there is no second arrangement to
 compare against and no way to tell which of auto-post's choices are the shape
 and which are auto-post.
 
-**Agent is absent from three of eight**, and those three are the Flow Agent
+**Agent is absent wherever the shape is a Flow Agent**, and those are the Flow Agent
 projects. An engagement that reaches for an Agent CR because the material talks
 about Agents is choosing one of two shapes without being told there are two -
 see `../usecase/agent-hub.md` against `flow-agent`.
@@ -70,12 +70,15 @@ on the sample size, which is the number that was missing - not a measure of
 whether the shape was understood.
 
 **Checked:** the counts are the whole of this page and they were measured, not
-estimated - re-measured 2026-09-11 by rendering every chart in the eight
-reference repositories with `helm template` against its own values, 19 charts
-in all, then grouping by deployment and counting `kind:`. **A coverage number
-nobody can re-derive is a number that will be wrong**, so the denominator is
-stated with what it excludes: seven deployments, the eighth repository holding
-no CRs.
+estimated - re-measured 2026-09-11 by rendering every chart in every reference
+repository with `helm template` against its own values, 19 charts in all, then
+grouping by deployment and counting `kind:`. **A coverage number nobody can
+re-derive is a number that will be wrong**, so the denominator is stated with
+what it excludes: the table counts out of the deployments that declare CRs, and
+one reference repository declares none. Nothing here is typed twice - the
+table's own denominator is re-rendered and held against what is on disk, in
+both directions, so a kind in a chart with no row fails as loudly as a row that
+counts out of the wrong total.
 
 **Unchecked:** what the counts *mean*. A kind appearing in two charts is two
 declarations, not two arrangements, and this page cannot tell whether they use
@@ -85,12 +88,12 @@ understood.
 
 ## Sources
 
-Eight charts rendered 2026-09-03 with `helm template` against each one's own
+Every chart rendered with `helm template` against its own
 production values, then counted by `kind:`. **They are not named here** - this
 page ships to every engagement, and shipped material names no customer, no
 tenant and no deployment, the same rule the extracts follow. They are the
 platform's own deployment, six customer or demo charts, and one industry demo
-standing for the eleven more built from the same template - counting those would
+standing for the rest built from the same template - counting those would
 inflate every row without adding a second arrangement.
 
 Whoever maintains this tool can re-derive the list from the parent directory in

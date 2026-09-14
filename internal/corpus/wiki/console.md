@@ -32,10 +32,10 @@ The fastest way to see what an account actually holds is View Permissions from
 Workspace Accounts, which lists Domain, Role and Product, each expandable to the
 underlying permission codes.
 
-## The five product permission pages do not match
+## The product permission pages do not match
 
 Product Permission covers Studio, Data Insight, Agent Hub, Heimdall and Billing
-Portal. All five manage accounts and roles, but their composition differs -
+Portal. Every one manages accounts and roles, but their composition differs -
 carrying steps from one page to another means looking for buttons that are not
 there.
 
@@ -52,7 +52,7 @@ Things that bite:
 - **Agent Hub has no Roles.** There is no entry point in the Console for editing
   its role definitions.
 - **Shares exists only for Data Insight.**
-- **Only Data Insight is purchase-based** (Purchase Named User); the other four
+- **Only Data Insight is purchase-based** (Purchase Named User); the rest
   invite directly.
 - The URL slug and the navigation label disagree: Studio is `platform`, Agent Hub
   is `../wiki/sindri.md`.

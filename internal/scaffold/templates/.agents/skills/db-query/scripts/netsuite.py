@@ -1,6 +1,6 @@
 """netsuite.py -- NetSuite(SuiteQL)的傳輸層。
 
-八個 class 裡有六個走 DBAPI。NetSuite 不是資料庫,是 REST 服務,所以自成一層:
+多數 class 走 DBAPI。NetSuite 不是資料庫,是 REST 服務,所以自成一層:
 OAuth 2.0 client credentials + JWT client assertion 換 token,再 POST 到 SuiteQL
 端點。connectors.py 已經把 .env 讀好,這裡只負責「怎麼問 NetSuite」。
 

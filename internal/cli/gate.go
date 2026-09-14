@@ -85,11 +85,11 @@ func newGateCmd() *cobra.Command {
 
     asgard-cli gate                  every release the declaration names
     asgard-cli gate internal-dev     one of them
-    asgard-cli gate --offline        skip the two steps that need the platform
+    asgard-cli gate --offline        skip the steps that need the platform
     asgard-cli gate --format json    one record per step, for an agent
 
 The first line says which platform this run's verdict is about, and how that
-profile came to be the one in effect. Two of the steps ask a platform, so a
+profile came to be the one in effect. Some of the steps ask a platform, so a
 verdict read against the wrong one is worth nothing; ` + "`--offline`" + ` and "not signed
 in" say so there rather than leaving the line out.
 
@@ -104,16 +104,16 @@ the fourth ran a script that no longer existed.
 
 What it runs, in order:
 
-  tools    helm is on PATH. Without it the three chart steps cannot run, and
+  tools    helm is on PATH. Without it the chart steps cannot run, and
            they are reported as skipped rather than passed
   repo     the structural invariants a chart render cannot see
   shipped  whether AGENTS.md and the design-time skills are still what this
            binary carries. It is the one freshness check that is always
            answerable: it compares against the binary rather than a platform,
-           so no session and no --offline can skip it. Two of its states warn
-           rather than fail - a shipped file somebody here changed on purpose,
-           and material written by a NEWER CLI than the one running, which is a
-           fact about the install rather than about the repository
+           so no session and no --offline can skip it. Some of its states
+           warn rather than fail - a shipped file somebody here changed on
+           purpose, and material written by a NEWER CLI than the one running,
+           which is a fact about the install rather than about the repository
   binding  whether .asgard-cli.yaml names a workspace and a pipeline that the
            platform still has. It is the step that catches a half-bound
            checkout - ` + "`workspace use`" + ` clears the pipeline line, and this goes
@@ -145,8 +145,8 @@ What it runs, in order:
     5. apply
 
 Steps 2 to 5 belong to the platform, and the platform describes them: the
-` + "`asgard-cr-verification`" + ` skill that ` + "`asgard-cli skill update`" + ` fetches lists the six
-run steps, all fourteen rule codes and what each means. **It deliberately says
+` + "`asgard-cr-verification`" + ` skill that ` + "`asgard-cli skill update`" + ` fetches lists the
+run steps, every rule code and what each means. **It deliberately says
 nothing about step 1**, because a server cannot know which version of this
 binary somebody installed - an on-prem customer's CLI can be several releases
 from the platform's in either direction. So the two documents interlock rather
@@ -213,7 +213,7 @@ Exits non-zero if any step failed.`,
 				return nil
 			}
 			// Before the steps, because a verdict is only a verdict about
-			// something: two of these steps ask a platform, and reading their
+			// something: some of these steps ask a platform, and reading their
 			// answer against the wrong one is the failure this line exists for.
 			fmt.Fprintf(out, "against   %s\n\n", against)
 			printSteps(out, steps)
@@ -226,7 +226,7 @@ Exits non-zero if any step failed.`,
 
 	addProfileFlag(cmd, &profile)
 	cmd.Flags().StringVar(&format, formatFlag, formatText, formatUsage)
-	cmd.Flags().BoolVar(&offline, "offline", false, "skip the two steps that need the platform: binding and skills")
+	cmd.Flags().BoolVar(&offline, "offline", false, "skip the steps that need the platform: binding and skills")
 	return cmd
 }
 
@@ -234,7 +234,7 @@ Exits non-zero if any step failed.`,
 // verdict about.
 //
 // **`--offline` and "not signed in" get a sentence rather than silence.** The
-// two platform steps report themselves as skipped, but the header is where
+// platform steps report themselves as skipped, but the header is where
 // somebody looks to know whether the run means anything about a platform at
 // all, and an empty header there would read as "no platform involved" rather
 // than "the platform was not asked".
@@ -485,7 +485,7 @@ func gateBinding(cmd *cobra.Command, root, profile string, offline bool) stepRes
 // ever reported it was a re-run of `asgard-cli init` - a command documented as
 // the one written for a person, which nothing re-runs on a schedule.
 //
-// **Two of the states warn rather than fail.** `edited` is somebody here having
+// **Some states warn rather than fail.** `edited` is somebody here having
 // changed a shipped file, which the scaffolded AGENTS.md invites by shipping a
 // project list of TODO rows, and a gate that goes red on an engagement
 // answering one is a checker crying wolf - which this material has caused once

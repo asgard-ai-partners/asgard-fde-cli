@@ -3,10 +3,10 @@
 Several specialist agents reachable through the platform's own entry point. **You
 author no BotProvider.**
 
-**Seen in:** a deployment with five agents over six semantic layers, one agent
-per source system.
+**Seen in:** a deployment with several agents over several semantic layers, one
+agent per source system.
 
-**Checked:** 2026-09-02 against a hub deployment's 5 Agent CRs (no BotProvider in that project, prompt.task byte-identical across all five) and the CRD. Extended 2026-09-14: "one layer per Agent" was held against a second chart set - 12 charts, 64 Agents modelled per business role - where 49 of the 64 mount more than one layer and 38 layers are bound by more than one Agent, all deliberately (counted off the rendered CRs of all 12 charts). Held against the contract the same day: `Agent.spec.managed.semanticLayers` is an array with no `maxItems` (asgard-kube `cbd8d70`, head when read), and the platform's own rule list checks only that each name resolves. The same chart set is where the shared-prompt section's counts come from: 11 of its 12 charts have Agents whose `task` and `format` differ, which was 22 findings (both fields, 11 charts), and the 14 near-identical lines were counted per chart as the lines present in every Agent but one.
+**Checked:** 2026-09-02 against every Agent CR in a hub deployment (no BotProvider in that project, prompt.task byte-identical across every one) and the CRD. Extended 2026-09-14: "one layer per Agent" was held against a second chart set - a demo generator whose Agents are modelled per business role - where most of them mount more than one layer and most layers are bound by more than one Agent, all deliberately (counted off the rendered CRs of every chart in it). Held against the contract the same day: `Agent.spec.managed.semanticLayers` is an array with no `maxItems` (asgard-kube `cbd8d70`, head when read), and the platform's own rule list checks only that each name resolves. The same chart set is where the shared-prompt section's evidence comes from: most of its charts have Agents whose `task` and `format` differ in both fields, and the near-identical lines were read per chart as the lines present in every Agent but one.
 
 **Unchecked:** the delegation-design guidance - how many agents, where the line between two of them goes. No deployment contradicts it; none confirms it either.
 
@@ -103,9 +103,9 @@ search space the split was meant to shrink.
 plain array with no maximum, the platform's own rule list only checks that each
 name resolves, and `asgard-cli verify` stopped refusing it - it used to, and on
 a 12-industry demo chart set that models one agent per *business role* it
-refused 121 bindings that were all deliberate. Roles share the systems they read
+refused bindings that were all deliberate. Roles share the systems they read
 the way they do in a company: procurement, finance and production planning all
-read the same ERP layer, and a management view reads five. **A layer bound by
+read the same ERP layer, and a management view reads several. **A layer bound by
 several agents is a normal shape**, and a `verify` that called it an error was
 teaching people to change what it could see. So the question the split asks -
 is this agent's search space the one you meant - stays a judgement, and it is
@@ -226,14 +226,14 @@ what this role may read and write. `format` goes the same way - lines 1 and 4
 identical everywhere, lines 2 and 3 saying what this role leads with.
 
 `asgard-cli verify` used to refuse that shape (R12, byte-identical or fail) and
-no longer does. It failed 22 times across 11 of 12 charts of one such set, and
-nothing short of redesigning 64 prompts could have cleared it.
+no longer does. It failed on charts of one such set that were correct, and
+nothing short of redesigning every prompt could have cleared it.
 
 **So this is the one thing here that nothing checks.** A shared line edited in
 one agent and not the others is invisible - to the tool, and to a reviewer
 reading one file. The replacement was tried and measured: comparing only the
-lines every Agent shares reports 14 drifts on that same chart set, and all 14
-are deliberate - a read-only role whose capability line says "read" where the
+lines every Agent shares reports drifts on that same chart set, and they are
+deliberate - a read-only role whose capability line says "read" where the
 others say "read and write". No rule separates those two, so the discipline is
 yours:
 

@@ -805,10 +805,9 @@ exactly how near.
 **Seven of the twenty-four kinds declare no status at all, by schema**, and an
 empty result on one of them is the schema rather than a reconciler that has not
 got to it. This says which of the two it is looking at, so the list is not one
-to carry in your head. The seven are Workflow, DataConnector, OAuthProvider and
-the four model kinds - CompletionModel, EmbeddingModel, ImageGenerationModel
-and TranscriptionModel. Everything else has one, Agent and SemanticLayer
-included.
+to carry in your head. They are Workflow, DataConnector, OAuthProvider and the
+model kinds - CompletionModel, EmbeddingModel, ImageGenerationModel and
+TranscriptionModel. Everything else has one, Agent and SemanticLayer included.
 
 **That matters most for a chart with no Syncer.** ` + "`asgard-cli verify`" + ` warns
 that with no Syncer a succeeded run only means helm returned, and a chart of a
@@ -911,13 +910,13 @@ A release that has never deployed has no manifest, and says so.`,
 // why it is a flag on an existing read and not a new endpoint.
 //
 // **An empty status and no status are different answers and are printed
-// differently.** Seven of the twenty-four Asgard kinds declare no status schema
-// at all - Workflow, DataConnector, OAuthProvider and the four model kinds - so
-// for those "nothing" is the shape of the CRD and not a reconciler that has not
-// run. This function cannot tell which kind it was handed; the help screen
-// names the seven, and it was wrong about five of them for as long as nothing
-// held it against the CRDs. Reporting both as blank is what sends somebody looking for a problem
-// that cannot exist - which is the twenty minutes this flag exists to save.
+// differently.** Some Asgard kinds declare no status schema at all, so for
+// those "nothing" is the shape of the CRD and not a reconciler that has not
+// run. This function cannot tell which kind it was handed; the `--status` help
+// above is where that list lives, and it named the wrong kinds for as long as
+// nothing held it against the CRDs. Reporting both as blank is what sends
+// somebody looking for a problem that cannot exist - which is the twenty
+// minutes this flag exists to save.
 //
 // What it can never show is a reconciler's complaint that landed in a
 // Kubernetes Event instead, and that is a decision rather than a gap. Events

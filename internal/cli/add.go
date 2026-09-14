@@ -47,8 +47,8 @@ The name is written without the kind's prefix: "asgard-cli add dataconnector erp
 creates dc-erp. Passing the prefixed form is accepted and means the same thing,
 so dc-erp never becomes dc-dc-erp.
 
-**--db-class takes any of the nine DataConnector classes and they share almost
-nothing.** salesforce has no port and no user; athena has neither host nor
+**--db-class takes any DataConnector class the CRD declares, and they share
+almost nothing.** salesforce has no port and no user; athena has neither host nor
 database, just a region, an S3 output location and an IAM key pair; netsuite
 authenticates with a certificate whose PEM is a secret and whose id is not;
 oracle takes serviceName **or** sid and the CRD refuses both and refuses

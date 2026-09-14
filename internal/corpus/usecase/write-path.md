@@ -152,8 +152,8 @@ spec:
   apiKey:
     valueFrom:
       secretKeyRef:
-        key: asgard_resource_api_key
-        name: {{ include "<chart>.appSecretName" . }}
+        name: preset-agent-hub
+        key: api_key
   tools:
     - entrypoint:
         entry: entry-main
@@ -258,16 +258,18 @@ It was removed from the CRD. Usage guidance lives in the Workflow's
 Adding it back is a trap worth knowing precisely: the CRD **silently prunes**
 undeclared fields, so `kubectl apply --dry-run=server` reports success while the
 field is discarded, and then helm's server-side apply fails **in CD** with
-`field not declared in schema`. That broke a release once, after passing 25 of 25
-dry-runs.
+`field not declared in schema`. That broke a release once, after passing every
+dry run.
 
 ### One credential or several is a requirement, not a convention
 
-`asgard_resource_api_key` is the conventional name the skeleton uses for a
-platform resource credential, and `asgard-cli add` points every CR of that kind
-at it. Whether they in fact share one is a question about rotation scope and
-blast radius - a requirement, not something a template settles. A token for the
-**external** service is its own key either way, and only ever a `secretKeyRef`.
+A platform resource credential is one key for the whole namespace - the
+`api_key` of `preset-agent-hub` - and `asgard-cli add` points every CR of that
+kind straight at it, so rotation scope is not a decision an engagement makes
+here: the platform owns that key and shares it by design
+(`../usecase/conventions.md`). A token for the **external** service is its own
+key either way, is the engagement's to obtain, and is only ever a
+`secretKeyRef` into the release's own Secret.
 
 **Do not declare a `secretKeyRef` for a key that is not both declared and set.**
 Config evaluation fails at call time, not at apply time, so the chart deploys

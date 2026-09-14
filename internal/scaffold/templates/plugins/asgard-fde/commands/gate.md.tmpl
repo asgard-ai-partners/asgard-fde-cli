@@ -8,12 +8,14 @@ asgard-cli gate
 
 **One command, not a list.** A repository of CRs has no compiler, and the thing
 an agent runs after every edit has to be one command whose definition lives in
-the binary - a list in a file like this one goes stale, and this file carried a
-four-step one after the gate had eight steps.
+the binary. A count of the steps written into a file like this one is a copy of
+something the binary owns, so run the command and read what it reports rather
+than checking a number here.
 
 It runs, in order: `tools`, `repo`, `shipped`, `binding`, `skills`, `lint`,
-`render`, `verify`. **A skip is printed differently from a pass** - two steps
-need the platform, and a step that did not run is not a step that passed.
+`render`, `verify`. **A skip is printed differently from a pass** - the steps
+that need the platform report as skipped when there is no session, and a step
+that did not run is not a step that passed.
 
 What it cannot reach needs a cluster, and
 `.agents/skills/asgard-platform/guide/verify.md` says what that is. The

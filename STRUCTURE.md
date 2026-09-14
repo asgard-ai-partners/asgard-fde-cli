@@ -45,7 +45,7 @@ change, and a stale number reads as a fact.
 | `work` | the customer repo's own records: requests, task specs, open questions and decisions |
 | `check` | repository structure: indexes, dated names, links, orphan pages |
 | `platform` | the platform API client: workspaces, the whole `/v1/iac` surface, and `/v1/docs` |
-| `generate` | CR skeletons for ten kinds, wired to what the chart already declares |
+| `generate` | CR skeletons, wired to what the chart already declares |
 | `localenv` | the local environment file a chart's placeholders are filled from |
 | `kb` | one implementation of listing, reading, provenance and the link graph, shared by every corpus |
 | `stage` | the onboarding guidance: a static half that lands as files, and the half rendered against this repository |
@@ -56,11 +56,11 @@ change, and a stale number reads as a fact.
 | `render` | renders via `helm template`, with the reserved `asgard` block supplied as placeholders |
 | `binding` | reads and writes `.asgard-cli.yaml`, the checkout's platform binding |
 | `gitrepo` | the checkout's root and its remotes, read and never compared to anything |
-| `needs` | what a shape has to be given by the customer, as seven documents written into a repository beside the extracts |
+| `needs` | what a shape has to be given by the customer, written into a repository beside the extracts |
 | `repo` | what a customer repository is made of, by looking at it |
 | `pipelineconfig` | reads `.asgard-pipeline.yaml`, the deployment declaration |
 | `chart` | reads a project's **unrendered** templates for (kind, name) |
-| `wiki` | serves the platform wiki, and the two tables in `aliases.md` beside it |
+| `wiki` | serves the platform wiki, and the tables in `aliases.md` beside it |
 | `version` | build information, injected by GoReleaser via ldflags |
 | `browser` | opens a URL, or says it could not |
 | `usecase` | serves the deployment-shape extracts |
@@ -100,21 +100,21 @@ templates as text rather than rendering them.
 Most of this repo's value is not code. It is compiled into the binary, and the
 first question when adding anything is which part it belongs to.
 
-**Four of these are one corpus** - grep reaches them together and
+**Most of these are one corpus** - grep reaches them together and
 they share one schema: a `# ` title, a summary, and `**Checked:**` /
-`**Unchecked:**`. `asgard-cli audit-material --unverified` is the check, and it is 0 of 25,
-0 of 21, 0 of 12, 0 of 7. The fifth, `generate/templates/`, is not searched: it
-is what `add` writes, not something anybody reads to decide.
+`**Unchecked:**`. `asgard-cli audit-material --unverified` is the check, and it reports
+nothing unmarked in any of them. `generate/templates/` is the exception and is not
+searched: it is what `add` writes, not something anybody reads to decide.
 
-| where | files | answers | language | searched |
-|---|---|---|---|---|
-| `corpus/wiki/` | 27 | what the platform is, and who each piece is for | English | yes |
-| `corpus/usecase/` | 22 | how one shape of deployment is assembled, field by field | English | yes |
-| `stage/prompts/` | 12 | what to weigh at one point in the work | English | yes |
-| `scaffold/templates/.agents/skills/` | 7 | what the agent in a customer repo loads to do one kind of work | mixed | yes |
-| `.agents/skills/asgard-platform/` | 73 | the wiki and the extracts written out so an agent can grep them, with a generated `index.md` mapping both halves as paths; from `scaffold/corpus.go`, not a template | md | yes |
-| `scaffold/templates/` | 45 | the part of a customer repo that is the same every time | mixed | the skills only |
-| `generate/templates/` | 12 | the CR skeletons `asgard-cli add` writes | English | no |
+| where | answers | language | searched |
+|---|---|---|---|
+| `corpus/wiki/` | what the platform is, and who each piece is for | English | yes |
+| `corpus/usecase/` | how one shape of deployment is assembled, field by field | English | yes |
+| `stage/prompts/` | what to weigh at one point in the work | English | yes |
+| `scaffold/templates/.agents/skills/` | what the agent in a customer repo loads to do one kind of work | mixed | yes |
+| `.agents/skills/asgard-platform/` | the wiki and the extracts written out so an agent can grep them, with a generated `index.md` mapping both halves as paths; from `scaffold/corpus.go`, not a template | md | yes |
+| `scaffold/templates/` | the part of a customer repo that is the same every time | mixed | the skills only |
+| `generate/templates/` | the CR skeletons `asgard-cli add` writes | English | no |
 
 They are compiled into the binary and **also written into a customer
 repository** by `asgard-cli init`, under `.agents/skills/asgard-platform/`.
@@ -161,7 +161,7 @@ returned the word list rather than the page about it. It is beside the pages
 rather than inside them.
 
 `aliases.md` is applied to a query before searching, so the question can be
-asked in the customer's own words. Two tables, and they behave differently on
+asked in the customer's own words. Its tables behave differently on
 purpose: an **alias** replaces the word, because a Chinese term appears nowhere
 in an English corpus and keeping it only adds a term that lands nowhere; an
 **entity** - a marketplace, a product - is added to the query, because the name
@@ -222,7 +222,7 @@ docs/spec/__SPEC_SLUG__/README.md.tmpl
 ```
 
 A `.tmpl` suffix means the file is rendered; anything else is copied verbatim.
-`.agents/skills/` under it holds the seven design-time skills the coding agent
+`.agents/skills/` under it holds the design-time skills the coding agent
 in the customer repo loads.
 
 **The line is authority, not subject.** What ships here is what is true of any
@@ -275,7 +275,7 @@ deployments; rewriting that in Go buys nothing.
 **Nothing here clones or pulls.** A check that fetched would turn "read at this
 commit" into "read at whatever was there when it ran", which is the one thing
 the provenance rule exists to prevent. `.env.example` is the template for the
-four environment variables - **`.env.template` would be gitignored**, because
+environment variables - **`.env.template` would be gitignored**, because
 the rule is `.env.*` with `!.env.example` carved out.
 
 `.agents/skills/consistency-checks/` is this repository's own maintenance
@@ -299,16 +299,16 @@ a script: `ASGARD_KUBE`, `ASGARD_DOCS`, `ASGARD_CORE`, `ASGARD_DEPLOYMENTS`.
 | CRD definitions, the platform contract | https://github.com/asgard-ai-platform/asgard-kube |
 | product documentation | https://github.com/asgard-ai-platform/asgard-docs |
 | the processor definitions the CRD is generated from | https://github.com/asgard-ai-platform/asgard-core (private) |
-| the eight reference deployments | listed with their shapes in `AGENTS.md` |
+| the reference deployments | listed with their shapes in `source/SOURCES.md` |
 
 A copy taken into this repo stops tracking upstream and then reads exactly like a
 current one. Record the commit you read instead.
 
 ## What is not here
 
-- **Few tests, and what they cover is deliberate.** Ten files across seven
-  packages, all of them on parsing and matching rules where a wrong answer is
-  silent - a credential reference, a reference key, an environment name, a
+- **Few tests, and what they cover is deliberate.** What there is sits in a
+  handful of packages, all of them on parsing and matching rules where a wrong
+  answer is silent - a credential reference, a reference key, an environment name, a
   pipeline manifest, a provenance marker. **Prose and material are covered by
   `audit-material` instead**, which reads what ships rather than a copy of it,
   and by the gate under `hack/`. `go test ./...` runs in CI alongside `go vet`

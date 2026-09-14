@@ -87,8 +87,8 @@ spec:
   apiKey:
     valueFrom:
       secretKeyRef:
-        key: asgard_resource_api_key
-        name: {{ include "<chart>.appSecretName" . }}
+        name: preset-agent-hub
+        key: api_key
   # No member registry: what is in the Drive is whatever its Syncers write,
   # plus anything uploaded by hand. The paths are the truth.
   #

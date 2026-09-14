@@ -85,10 +85,10 @@ arriving before the meeting is the normal order here - their internal approval
 comes before they will book one - so the material being early is not the
 problem. Nothing having been read out of it is.
 
-**Read it into questions, not into a request.** Six of a request's seven
-sections are what the interview decides, so one written now is a copied section
-and six TODOs; an empty `requirements/requests/` before the interview is the
-correct state.
+**Read it into questions, not into a request.** Nearly every section of a
+request is what the interview decides, so one written now is a copied section
+and a file of TODOs; an empty `requirements/requests/` before the interview is
+the correct state.
 
     asgard-cli question add "<what blocks it>" --ask "<who can answer>"
 
@@ -135,9 +135,9 @@ skill a correction pointed at.
 review checklist. This is the part you cannot start without.
 
 **Every outcome ends with what happens when it fails.** "It says it cannot find
-that number rather than guessing one." Written once, never revised in twenty
+that number rather than guessing one." Written once, never revised in many
 rounds, because failure behaviour has one right answer where a capability has
-twenty phrasings. Cheapest line on the page and the most persuasive.
+many phrasings. Cheapest line on the page and the most persuasive.
 
 **Two sentence shapes are banned outright, in Chinese**, because they mark the
 page as machine-written before anyone reads what it says: `不僅……更是……`, and
@@ -163,7 +163,7 @@ you split one of their items, the title is still a phrase from their document an
 the lead says which item it came from.
 
 A capability's context page contains **nothing you wrote** - their heading, their
-description, their list. Those pages went through twenty rounds without a single
+description, their list. Those pages went through many rounds without a single
 correction, and that is the measurement worth remembering: **the number of
 revisions tracks how much of the page was ours.**
 
@@ -176,7 +176,7 @@ the meeting can start there.
 branches that do not exist. The shape it takes:
 
     有沒有測試環境?
-    有沒有測試環境?沒有的話讀正式資料可以嗎     <- added five times, rejected five
+    有沒有測試環境?沒有的話讀正式資料可以嗎     <- added and rejected repeatedly
 
 Each addition rehearses their answer. "No test environment" does not mean no
 integration, and writing the second half creates a fork nobody was standing at.
@@ -239,7 +239,7 @@ wrong level. **A check failing on text you can see means the check is wrong.**
 **Write back to `docs/open-questions.md` in the same edit**, not afterwards.
 Rewording a question, dropping one, finding one - each belongs in the row now.
 
-One engagement deferred it and after twenty rounds the two had diverged too far
+One engagement deferred it and after many rounds the two had diverged too far
 to reconcile. What survived in the file was a security judgement the deck had
 already corrected, **still argued convincingly**. `asgard-cli question` prints that
 file before anything else, so the next person reads the superseded version
@@ -247,7 +247,7 @@ first. `asgard-cli check` warns when the deck is newer.
 
 ## Why the interview is a stage of its own
 
-Of the target repo's thirteen task specs, **three were superseded and one was
+Of the target repo's task specs, **three were superseded and one was
 reverted**, and they were the three most expensive decisions in the engagement.
 None of them flipped because the code was wrong. They flipped because the
 question that decides them was answered from the design already in mind rather
@@ -321,7 +321,7 @@ Mimir is for and is the subject of the product documentation's own case study,
 came back as an agent over a semantic layer. Nothing had asked what they do with
 the answer.
 
-Four products still have no shape to propose instead - Heimdall, Fehu, the
+Some products still have no shape to propose instead - Heimdall, Fehu, the
 Management Console as work in its own right, and Knowledge Base as distinct from
 a Drive - so if 2b lands on one of those, `../wiki/product-suite.md` is
 what to reason from and there is no extract to lean on.
@@ -542,7 +542,7 @@ Question 2 decides whether the entry point is the platform's hub or one of your
 own. This is the separate question of **which channel**, and it is worth asking
 in the same breath because `botProviderClass` is **immutable once created** -
 changing it later means a new BotProvider, not an edit. The CRD enforces both
-that and exactly one of the five class blocks being present.
+that and exactly one class block being present.
 
     LINE / Telegram          the platform posts a webhook; one CR
     Slack / Discord          a connector pod holds a socket; the operator creates it
@@ -886,7 +886,7 @@ is who reads them:
     assets/skills/         what the RUNNING agent needs, synced to the platform
 
 So: file the material into `references/`, and have the request **cite** it. A
-request that inlines forty pages of API documentation stops being readable as a
+request that inlines the whole of an API's documentation stops being readable as a
 request, and the section that matters - what the customer asked for and who is
 on the other end - disappears into an appendix.
 
@@ -960,7 +960,7 @@ else" does not share.
 
 ## Two filters before a question becomes a row
 
-An interview that ends with twenty-five open questions has not narrowed anything.
+An interview that ends with a long table of open questions has not narrowed anything.
 It has moved the customer's whole document into a table, and the meeting that
 follows spends its time on questions nobody needed answered yet.
 
@@ -1140,7 +1140,7 @@ remember, and what you remember is the design you were already forming. The
 three commands are at the top of this page.
 
 `request add` writes `requirements/requests/REQ-xxx-<name>.md` with today's date
-and `draft` on it, and its seven sections are this interview in the same order.
+and `draft` on it, and its sections are this interview in the same order.
 Fill them in the file; the TODOs are the questions above.
 
 **Open questions go to `docs/open-questions.md` as well**, one row each, with

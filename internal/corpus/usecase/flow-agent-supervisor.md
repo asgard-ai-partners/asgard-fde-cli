@@ -2,10 +2,12 @@
 
 A public entry point that delegates to several specialist agents.
 
-**Seen in:** three deployments - a commerce back-office with five
-specialists, a manufacturing one with nine, and a finance one with three.
+**Seen in:** a commerce back-office, a manufacturing deployment, a finance one
+and a shopping guide, each with its own roster of specialists. The first three
+share one graph; the shopping guide differs by a single edge, and that edge
+costs it the first message of every new conversation - see below.
 
-**Checked:** 2026-09-02 against three supervisor deployments and the CRD. The agents field was documented as a YAML list and is a stringified JSON array; corrected. Extended 2026-09-04: the conversation loop's graph read off every reference deployment at its prod values - four processors and five relationships, edge for edge identical in three of them and one edge different in a fourth, with the counts and the variant recorded below.
+**Checked:** 2026-09-02 against every supervisor deployment and the CRD. The agents field was documented as a YAML list and is a stringified JSON array; corrected. Extended 2026-09-04: the conversation loop's graph read off every reference deployment at its prod values - edge for edge identical but for one, whose single differing edge is recorded below. Extended 2026-09-15: what that edge costs, read off asgard-core `623ceb50` - `bp_controller.go` treats a `listen-message` processor as a request terminal, so a first contact routed into the wait point is finalized with nothing sent.
 
 **Unchecked:** how to split responsibilities between subagents, and the routing prose. Judgement, taken from deployments that have not been re-examined.
 
@@ -47,9 +49,8 @@ writes it, with the prompt left TODO and the subagents left to be added to the
 blueprint. What follows is what it writes and why each edge is where it is.
 
 
-It is four processors and five relationships, and **three deployments have it
-edge for edge identical** - a finance supervisor, a manufacturing one and a
-commerce back-office one, read at their prod values on 2026-09-04:
+It is the graph below, and **every supervisor deployment but the shopping guide
+has it edge for edge identical**, read at their prod values on 2026-09-04:
 
     entry  ->  update-context
 
@@ -60,9 +61,9 @@ commerce back-office one, read at their prod values on 2026-09-04:
     push-message                    --success-->  listen-message
 
 **It is a loop and it has no exit.** `exits: []`, and that is not an omission -
-Most Workflows across the reference deployments declare none - 35 of them
-outside the demo generator, which adds 80 more of one shape. A run ends
-when its terminal processor finishes; only a Trigger-driven Workflow, which has
+Most Workflows across the reference deployments declare none - plenty of them
+outside the demo generator, which adds many more of one shape. A run ends when
+its terminal processor finishes; only a Trigger-driven Workflow, which has
 somewhere to report to, tends to declare one.
 
 Read the loop as: prime the context once, answer, then wait for the next turn.
@@ -75,13 +76,28 @@ not end the conversation. A branch that failed and one that answered must not
 look the same to the caller, which is why it is a separate processor rather than
 the same one.
 
-**One deployment differs by a single edge**: a shopping guide sends
-`update-context --success--> listen-message`, waiting before it answers rather
-than answering first. Both are deployed. Which one is right depends on whether
-the agent opens the conversation.
+**One deployment differs by a single edge, and it is not a free choice**: a
+shopping guide sends `update-context --success--> listen-message`, waiting
+before it answers rather than answering first.
+
+**That edge costs the first message of every new conversation.** Reaching a
+`listen-message` processor is a terminal: the controller calls `finalizeRequest`
+and then `commitChannel` and returns, so the run ends there. On a channel that
+has never been seen, the first request walks `update-context`, arrives at the
+wait point, and stops - nothing answers it. The channel is parked, and every
+message after that resumes from the wait point into the agent, so a returning
+user never sees it. The deployment that ships this records the same consequence
+in its own chart comment; the mechanism is asgard-core `623ceb50`,
+`bpcontroller/server/bp_controller.go`.
+
+**Answer first unless you mean that.** `update-context --success-->
+stream-llm-completion-message` is what the other deployments write, and it is
+what `asgard-cli add flowagent` generates. A greeting that is silent exactly
+once, on first contact, is the shape `../wiki/green-and-doing-nothing.md`
+exists for: deployed, green, and quietly dropping traffic.
 
 **The two-processor query tool is a different shape and worth not confusing with
-this one.** Two deployments have `update-context --success--> http-request`, with
+this one.** Deployments have `update-context --success--> http-request`, with
 the request's `success` **and** `failure` both going to `push-message`: one turn,
 no waiting, and the failure path says so rather than being silent.
 `../wiki/processors.md` says which relations each type emits, and a
@@ -132,15 +148,15 @@ spec:
   adminApiKey:
     valueFrom:
       secretKeyRef:
-        name: {{ include "<chart>.appSecretName" . }}
-        key: asgard_resource_api_key
+        name: preset-agent-hub
+        key: api_key
   generic:
     authMode: api-key       # or none, for an anonymous audience
     apiKey:
       valueFrom:
         secretKeyRef:
-          name: {{ include "<chart>.appSecretName" . }}
-          key: asgard_resource_api_key
+          name: preset-agent-hub
+          key: api_key
 ---
 apiVersion: asgard-ai.com/v1alpha1
 kind: SandboxBlueprint
@@ -188,7 +204,7 @@ OR-aggregated: a blueprint saying `enabled: "false"` does not hold if any agent
 it resolves asks for one. The same aggregation applies to the subagents'
 skillSets, toolsets and semanticLayers, which land on the main orchestrator too -
 so listing a capability on the blueprint as well is redundancy, not a
-requirement. Both supervisor deployments list them anyway, so the supervisor's
+requirement. The supervisor deployments list them anyway, so the supervisor's
 own capability set reads without having to compute the aggregation.
 
 ## Designing the split - the part the generator leaves TODO
@@ -236,7 +252,7 @@ conversation - per tenant, per user's permissions, per brand. Then the
 
 `asgard-ai.com/agent-hub-published: "true"` on the BotProvider is what makes this
 supervisor appear in the Hub's agent list, which is where an internal console
-finds it. Both supervisor deployments carry it.
+finds it. The supervisor deployments carry it.
 
 The opposite case is a public widget, which must **not** carry it - see
 `../usecase/flow-agent-single.md`. Copying a supervisor's BotProvider into a
@@ -301,8 +317,9 @@ content.
                         from the release's own Secret.
 
 `adminApiKey` is separate from visitor auth: it guards the admin API, and the
-skeleton points it at `asgard_resource_api_key` - the conventional name, shared
-with the other platform resource credentials by convention rather than by rule.
+skeleton reads it straight from `preset-agent-hub` - the Secret the platform
+creates in every namespace - so there is nothing to obtain or declare for it.
+`../usecase/conventions.md` has why, and what the older copying route was.
 
 Also on the BotProvider: `maxUnsupervisedSteps` (30 in one deployment) caps how
 far the orchestrator runs without a human, and `debugMode: on-demand`.

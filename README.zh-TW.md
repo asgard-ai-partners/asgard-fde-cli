@@ -75,7 +75,7 @@ internal/version/   build 資訊（GoReleaser 用 ldflags 注入）
 
 - [Goal.md](Goal.md) —— 這個工具是為誰、做什麼，四點。
 - [APPROACH.md](APPROACH.md) —— 主要功能怎麼實作的：語料、指標的形式、稽核、檢索、`init` 寫了什麼。
-- [STRUCTURE.md](STRUCTURE.md) —— 每個目錄是做什麼的，包含五份內嵌語料以及一個改動屬於哪一份。
+- [STRUCTURE.md](STRUCTURE.md) —— 每個目錄是做什麼的，包含各份內嵌語料以及一個改動屬於哪一份。
 - [AGENTS.md](AGENTS.md) —— 這個 repo 遵循的慣例，以及 gate 是什麼。
 - [TASK.md](TASK.md) —— 目前走到哪裡，以及還沒完成的部分。
 
@@ -194,11 +194,11 @@ Now open this directory in your coding agent and say:
 
 **它不碰網路、不需要帳號。** 骨架是關於這個工具的事實，不是關於任何平台的，所以飛機上、workspace 還沒開、還沒有人登入，都寫得出來。那正是它能當第一個指令的原因。
 
-**把 checkout 接上平台刻意不在裡面。** 登入、選 workspace、建 pipeline、抓描述 server 的素材，全部在之後 —— 由這個指令剛裝備好的 agent 帶著走，那比讓人照著六個指令的清單手動走要好。`asgard-cli gate` 在任何時候都會說還缺什麼。
+**把 checkout 接上平台刻意不在裡面。** 登入、選 workspace、建 pipeline、抓描述 server 的素材，全部在之後 —— 由這個指令剛裝備好的 agent 帶著走，那比讓人照著一張指令清單手動走要好。`asgard-cli gate` 在任何時候都會說還缺什麼。
 
 CLI 有更新、或新增了 project 的時候就再跑一次：既有檔案不動、報成 skipped。`--force` 取用比較新的出貨素材（會丟掉你對骨架的修改）；被這個工具寫入過的檔案 —— 索引、open-questions 表、living spec —— 兩種情況都會保留並回報。`--yes` 什麼都不問，stdin 不是終端機時行為相同，所以 agent 或 CI 重跑不需要互動。
 
-它拒絕寫進家目錄或檔案系統根目錄。**四十五個檔案寫錯一層目錄**，是值得設一道防呆的錯。
+它拒絕寫進家目錄或檔案系統根目錄。**整份骨架寫錯一層目錄**，是值得設一道防呆的錯。
 
 它寫的是每個 engagement 都一樣的那部分：
 
@@ -207,7 +207,7 @@ CLI 有更新、或新增了 project 的時候就再跑一次：既有檔案不�
 | `AGENTS.md` | 平台契約，客戶特有的段落標成 TODO |
 | `docs/` | 四層模型（meeting-notes / decisions / living spec）與 SDD 規則 |
 | `requirements/` | task 與 request 的索引 |
-| `.agents/skills/` | 對任何 Asgard 都成立的七個設計期 skill，`db-query` 是其中之一；描述某一座 server 的那些來自 `asgard-cli skill update` |
+| `.agents/skills/` | 對任何 Asgard 都成立的設計期 skill，`db-query` 是其中之一；描述某一座 server 的那些來自 `asgard-cli skill update` |
 | `assets/` | runtime skill 目錄 |
 | `.asgard-pipeline.yaml` | 部署宣告，每個 project 一個 release 待填 |
 | `projects/<slug>/` | 每個 project 一份 chart 骨架 |
@@ -518,13 +518,13 @@ OAuth 2.0 authorization code ＋ PKCE，走 loopback redirect，那是 RFC 8252 
 
 ```bash
 asgard-cli profile list              # 設了哪些、現在生效的是哪個
-asgard-cli profile show [name]       # 三個值，以及每個是哪來的
+asgard-cli profile show [name]       # 每個值，以及它是哪來的
 asgard-cli profile set onprem --platform-api https://asgard.acme.internal \
     --issuer https://iam.acme.internal --client-id abc123
 asgard-cli profile remove onprem
 ```
 
-一個 profile 裝三個值，而且**每一個各自 fallback** 到代管平台的：
+一個 profile 的每個值**各自 fallback** 到代管平台的：
 
 | | |
 |---|---|
@@ -554,7 +554,7 @@ identity provider from the hosted platform ...
 
 `dev` **不是內建名字**。我們的開發平台是這支工具會遇到的其中一座安裝，不是第二種東西；把它編進去等於在每個客戶的 binary 裡塞一個內部端點。
 
-跟其他 profile 一樣寫出來，三個值去看內部的設定筆記 —— **它們不在這個 repo 裡**：
+跟其他 profile 一樣寫出來，值去看內部的設定筆記 —— **它們不在這個 repo 裡**：
 
 ```bash
 asgard-cli profile set dev \

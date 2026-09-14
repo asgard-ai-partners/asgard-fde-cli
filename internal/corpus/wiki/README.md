@@ -59,14 +59,14 @@ The llm-wiki split. What separates the layers is which one may be rewritten.
 
 **These are the corpus's layers, not this wiki's alone.** The extracts, the
 stage guidance and the design-time skills are the same middle layer read for a
-different question, and `AGENTS.md` states the four rules that apply to all of
+different question, and `AGENTS.md` states the rules that apply to all of
 them. This file is the longer version, and the part below about a page's source
 block is the wiki's own.
 
 | layer | contents | may be edited |
 |---|---|---|
 | raw sources | asgard-docs and asgard-kube (URLs below) | read-only. Never copied in; only the commit is recorded |
-| the corpus | these pages, and the other four parts | rewritten continuously, and only ever describes the present |
+| the corpus | these pages, and the other parts | rewritten continuously, and only ever describes the present |
 | the schema | `AGENTS.md`, and this file for what a page must carry | changed deliberately, by a person |
 
 Raw sources are not vendored, and the reason is not size. A copy stops tracking
@@ -81,15 +81,15 @@ wherever; what goes into a page is the repository and the commit.
 
 | source | source of truth | read at |
 |---|---|---|
-| product documentation | https://github.com/asgard-ai-platform/asgard-docs | `f00e0ee` (2026-08-31) for most pages, `23409b3` (2026-09-09) where a page moved and was re-read - **each citation names its own**, and `go run ./hack coverage --drift` is what lists the readings a move has left unconfirmed. The 286 files between them include 17 per-processor reference pages, which answer P10 |
+| product documentation | https://github.com/asgard-ai-platform/asgard-docs | `f00e0ee` (2026-08-31) for most pages, `23409b3` (2026-09-09) where a page moved and was re-read - **each citation names its own**, and `go run ./hack coverage --drift` is what lists the readings a move has left unconfirmed. The files between them include the per-processor reference pages, which answer P10 |
 | CRD definitions | https://github.com/asgard-ai-platform/asgard-kube | `cbd8d70` (2026-09-11) |
-| processor definitions | https://github.com/asgard-ai-platform/asgard-core (private) | `623ceb50` (2026-09-11). `ProcessorDefinitions` is untouched across the seven commits since `62a696b7`, so the pinned table's source is byte-identical. What those commits DID add is read into `../wiki/tools.md`: a new card tool, and what a query tool does with rows beyond the twenty the model sees |
+| processor definitions | https://github.com/asgard-ai-platform/asgard-core (private) | `623ceb50` (2026-09-11). `ProcessorDefinitions` is untouched across every commit since `62a696b7`, so the pinned table's source is byte-identical. What those commits DID add is read into `../wiki/tools.md`: a new card tool, and what a query tool does with rows beyond the twenty the model sees |
 
 None of them lives in this repository. `git pull` before writing against them.
 
 **Moving a commit here is a claim that somebody re-read.** For `cbd8d70` what
 was read is the whole `15ded0f..cbd8d70` diff rather than every page again:
-four commits, and exactly one change that reaches a page. The cron `schedule`
+every commit in it, and exactly one change that reaches a page. The cron `schedule`
 pattern was deleted from `Trigger.spec.cron` and from the SourceSet syncer,
 because the regex "had copied [cron] wrong in both directions". Nothing else
 in the diff touches an enum, a constraint or a field this material describes -
@@ -130,7 +130,7 @@ Three of these are mechanical and ship as flags:
 
 **--commands is --links pointed at the tool.** A document that tells somebody to
 run something resolves the same way a pointer does, against the command tree
-this binary answers to, and six documents once named a command nobody had
+this binary answers to, and documents once named a command nobody had
 built. It reads the scaffold templates too - a customer meets these names in a
 generated README before meeting any of this.
 
@@ -144,8 +144,8 @@ and never opened it.
 Both read the link graph, which is a field on every document rather than a
 regular expression over prose - see `kb.Link`.
 
-The three kinds of rot in `.agents/skills/knowledge-base/` apply here too. There
-is a fourth that only happens here:
+The kinds of rot `.agents/skills/knowledge-base/` names apply here too. There is
+one more that only happens here:
 
 **Upstream moved and the wiki did not.** asgard-docs and asgard-kube both change.
 A page can be internally consistent, unorphaned and free of contradictions while
@@ -188,7 +188,7 @@ produce no CRs at all - that is a decision, not an omission.
 Extracts point at a wiki page without exception: an extract assumes the reader
 knows the platform has that shape, and this is where the assumption comes from.
 
-Four more:
+More:
 
 - **One fact, one home; everywhere else links.** Turn a paragraph you were about
   to copy into a link.
