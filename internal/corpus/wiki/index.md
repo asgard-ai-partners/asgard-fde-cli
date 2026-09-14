@@ -204,14 +204,13 @@ be 26 things to keep resolving. A further 14 are the excluded message-template
 shapes. **So the number is a measure of how much is linked, not of how much has
 been read**, and it is worth knowing which before treating it as a backlog.
 
-**The numerator read 71 for a week, and the reason was the checker rather than
-the material.** A live URL is not always the file path under `docs/`: four
-channel pages are served from capitalised files - `integration/line` from
-`integration/LINE.mdx` - and two more are a directory's `index.mdx` reached
-without the `index`. Matched literally, those six citations counted as unread, so
-**the row understated its own coverage** - the safe direction to be wrong in, and
-still wrong. Computing a number does not make it right; it makes it
-re-derivable, which is how this was found.
+**A live URL is not the file path under `docs/`, and matching them literally
+undercounts this row by six.** Four channel pages are served from capitalised
+files - `integration/line` from `integration/LINE.mdx` - and two more are a
+directory's `index.mdx` reached without the `index`; 14 of the 158 pages declare
+a `slug:` that differs from where they sit. The numerator is resolved through
+that frontmatter for this reason. **Computing a number does not make it right;
+it makes it re-derivable**, which is the only reason this was catchable.
 
 | excluded | count at `f00e0ee` | why |
 |---|---|---|

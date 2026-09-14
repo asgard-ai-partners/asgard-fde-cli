@@ -320,11 +320,11 @@ missing file or at an orphan. **Coverage is 69% of the images the documentation
 uses**, and the paragraph that used to sit here said "roughly a hundred", which
 was a guess about a number seven times too small.
 
-It read 113 until 2026-09-11, because three images were added to this page
-without the sentence counting them being redone. The count is recomputed now -
-`hack/check-counts.py` in asgard-fde-cli intersects the paths named here with
-the images a live page references at `f00e0ee`, so adding one to this page moves
-the number or fails.
+**That number moves whenever somebody adds an image to this page**, which is an
+ordinary edit and not one anybody remembers to recount after. So it is computed:
+asgard-fde-cli's `hack/check-counts.py` intersects the paths named here with the
+images a live page references at `f00e0ee`, and adding one moves the figure or
+fails the check.
 
 **The 52 not named here carry no alt text**, and most are hash-named files from
 an older documentation structure. There is nothing useful to say about them

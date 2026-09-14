@@ -28,10 +28,9 @@ domains recorded.
 That 88 is the count the map states in its own two headings and asserts with a
 script of its own, in `shopline-backoffice/references/page-map.md` in
 asgard-freyr-skills - **menu-level pages only**, with tabs, dialogs and nested
-apps in `operation-map.md` beside it. It was **93 here for a week**, because a
-pass that set out to recount it took a number off a different tally and wrote it
-into seven places. A count copied from a document that states its own is the
-cheapest thing in this material to get wrong. The discipline is **API first** - where a contract was
+apps in `operation-map.md` beside it. **Read the count off the document rather
+than recounting it**: this one states its own, and a figure taken from a
+neighbouring tally looks exactly as authoritative as the truth. The discipline is **API first** - where a contract was
 observed the skill calls the back office's own API rather than opening a
 browser, and browser operation is the fallback rather than the method.
 
