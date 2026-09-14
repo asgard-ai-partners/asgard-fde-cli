@@ -4,7 +4,8 @@
 of, and who each piece is for. These conventions are how this repo writes it
 down; the wiki is what is being written down.
 
-**Checked:** 2026-09-02: the 11 naming prefixes and the templates/<kind>/ layout, against four deployments.
+**Checked:** 2026-09-02: every naming prefix in the table below and the
+`templates/<kind>/` layout, against four deployments.
 
 **Unchecked:** the rest of the conventions. They are house style, and house style has no external source to check against.
 

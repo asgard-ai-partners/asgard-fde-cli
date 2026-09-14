@@ -463,6 +463,7 @@ source and a date and not a word.
 
 | surface | last read, and how |
 |---|---|
+| `provenance-markers`  every `**Checked:**` and `**Seen in:**` line in the corpus | 2026-09-14. **A count on a provenance line is not evidence of a reading**, and the right number is the dangerous one: it makes the check green and the page unread. Six markers carried tallies - "against 72 gated and 14 ungated tool entries", "against 11 SemanticLayer CRs" - and each now names a scope that cannot be satisfied by counting. `wiki/coverage.md` is the opposite case and was the one page whose counts are the claim with nothing recomputing them: `go run ./hack shapes` renders all seven deployments and holds the table both ways, so a kind in a chart with no row fails too |
 | `extracts-vs-charts`  the 22 extracts against the charts they came from | 2026-09-11, every field name against the pulled clones and the CRDs, every count by rendering all 19 charts |
 | `wiki-vs-docs`  the 27 wiki pages against asgard-docs | 2026-09-14, and **the scope is computed now**: `go run ./hack coverage --drift` lists every cited page that has moved since the commit the citing document names, and it is at 0. Getting there was the finding: the four that had moved were read on 09-11 and **the readings were never recorded**, so the commit beside each citation still said `f00e0ee` and the check went on reporting work already done. Each now names the commit it was held against. The check was wrong in two directions of its own - it measured every URL in a document from that document's oldest commit, so one stale entry held a whole page back, and it read a URL template and a fenced example of the source-block shape as citations. The prose citing a page that has not moved stands at its own reading |
 | `stage-prompts`  the 10 stage prompts | 2026-09-14, all 2,355 lines read end to end for the guidance as well as the command claims, and every command and flag each writes run against the binary. The three figures handed to a customer - 5 requests per second, 3 minutes, 30 steps - are the quota page's own; `botProviderClass` immutable and exactly one class block present are the CRD's. **Four corrections**: the mail question offered "an HTTP endpoint" against "they do not", and the answer that actually arrives is SMTP credentials; `08-deploy.md` told a reader to grep `.github/workflows/` for a Syncer wait, and **a repository this tool writes has no CD workflow at all** - the rollout is the platform's - which the plugin's `gate` command had copied; `02-projects.md` said `verify` would report an Agent with no capability in a chart that has no Agent, where what it actually reports is R11; and it credited this tool with deriving the namespace, which the platform does |
@@ -568,6 +569,27 @@ Say what was verified and what was not. "The extracts are correct" and "the
 extracts' YAML skeletons validate against the CRD" are different claims, and
 reporting the first when you did the second is how a review passes something
 broken.
+
+**Never annotate a source with a count.**
+A provenance marker records **what was read and the commit it was read at**, and
+nothing else. "Checked against 72 gated and 14 ungated tool entries" and
+"checked against 11 SemanticLayer CRs across three deployments" are not
+statements that anybody read those CRs - they are statements that something was
+counted, and they read exactly like the first. That is the damage, and it is
+worse when the number is right: **a correct count is what stops the next person
+opening the page.** The check is green, the figure recomputes, and the sentence
+beside it has been believed by everyone who has passed it.
+
+So a marker names the scope - which deployment, which shape, which commit - and
+the claim carries no tally:
+
+    no    checked against 11 SemanticLayer CRs across three deployments
+    yes   checked against every SemanticLayer CR in three deployments,
+          and completionModelName is present on all of them
+
+The second cannot be satisfied by counting, which is the point. **Deleting a
+count deletes its checker too** - `go run ./hack counts` reports a row whose
+claim has gone rather than passing silently, so the two stay in step.
 
 **Does the number need to be there at all?**
 **Ask that before asking whether it can be computed.** A count earns its place

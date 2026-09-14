@@ -8,9 +8,10 @@ and Dashboards; nothing in the chart mounts the layer.
 rule - two read paths in one chart that never touch, three domain Agents on a
 GraphQL API and three SemanticLayers that exist only for Mimir.
 
-**Checked:** 2026-09-02 against that deployment's chart and its AGENTS.md - three
-layers, 31 cubes, 510 dimensions, 21 joins, `Agent.spec.managed.semanticLayers[]`
-empty on all three Agents - and against the CRD.
+**Checked:** 2026-09-02 against that deployment's chart and its AGENTS.md -
+three layers, every cube and join in them, and
+`Agent.spec.managed.semanticLayers[]` empty on all three Agents - and against
+the CRD.
 
 **Unchecked:** what the customer's Mimir side looks like. Views, Dashboards and
 Knowledge are created in the product by the people who use it, not declared in a

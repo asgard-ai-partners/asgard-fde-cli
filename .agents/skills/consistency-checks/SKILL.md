@@ -210,6 +210,15 @@ URL against a file path is the same trap: eight processor pages answer at a name
 that is not their file's, which made the coverage row understate itself by six
 pages and put a 404 into a naming table twice, in opposite directions.
 
+**A count on a provenance line is not evidence of a reading.** `**Checked:**`
+records what was read and the commit; a tally beside it - "against 72 gated and
+14 ungated tool entries" - says only that something was counted, while reading
+exactly like a statement that somebody looked. **The right number is the
+dangerous one**: it makes the check green and the page unread, and everyone who
+passes it inherits whatever the sentence next to it says. Name the scope
+instead - every CR of that kind, in these deployments, at this commit - because
+a scope cannot be satisfied by counting.
+
 **Before asking whether a count can be computed, ask what the reader does with
 it.** That question comes first and it is the one that gets skipped. Three
 kinds, and only one of them earns a number:

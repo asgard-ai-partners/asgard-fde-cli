@@ -6,7 +6,8 @@ two repos disagree about how the trio is wired, in a way that is dated.
 **Seen in:** two deployments that wire it differently - one file holding three
 CRs per skill set, versus several skill sets sharing one store.
 
-**Checked:** 2026-09-02 against both shapes: 1:1:1 in the newer deployment, one SourceSet shared across five SkillSets in the older one, and against the CRD.
+**Checked:** 2026-09-02 against both shapes: 1:1:1 in the newer deployment, one
+SourceSet sliced by several SkillSets in the older one, and against the CRD.
 
 **Unchecked:** nothing outstanding on the structure. The search-path rule is stated by the deployments themselves rather than enforced anywhere.
 

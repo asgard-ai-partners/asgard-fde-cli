@@ -26,7 +26,7 @@ runtime skills and no CRs at all - it is the only source for
 | SemanticLayer | 5 of 7 | |
 | CompletionModel | 3 of 7 | the platform's own deployment, one customer, the demo generator |
 | **Trigger** | **1 of 7** | one internal-audience project, and one instance of it |
-| **Plugin** | **1 of 7** | auto-post, which has 28 |
+| **Plugin** | **1 of 7** | one deployment, which bundles many - `../usecase/plugin.md` |
 | **KnowledgeBase / Loader / Source** | **1 of 7** | auto-post only |
 | **Indexer** | **0 of 7** | a live CRD in no reference deployment. `../usecase/knowledge-drive.md` names it because the contract has it; nothing here has seen one configured |
 

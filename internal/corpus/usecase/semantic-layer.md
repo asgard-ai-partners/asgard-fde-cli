@@ -6,7 +6,8 @@ a chart, and the one that most rewards looking at the real database.**
 **Seen in:** deployments with one layer per source system; the largest single
 layer runs to hundreds of cubes.
 
-**Checked:** 2026-09-02 against 11 SemanticLayer CRs across three deployments (completionModelName present on every one) and the CRD.
+**Checked:** 2026-09-02 against every SemanticLayer CR in three deployments -
+`completionModelName` is present on all of them - and the CRD.
 
 **Unchecked:** the modelling guidance - cube granularity, what belongs in instruction. Checkable only against a database, and not checked.
 
