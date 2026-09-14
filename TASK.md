@@ -41,7 +41,7 @@ and whether its source has moved since is what `go run ./hack sources` reports.
 | `processors-vs-palette` `wiki/processors.md`'s prose, as opposed to its two tables, which `go run ./hack processors` now holds against asgard-core and asgard-docs | the two clones as pulled | 2026-09-11 |
 | `stage-prompts` the 10 stage prompts' guidance, as opposed to their command claims | read end to end; the platform claims they carry against asgard-kube `cbd8d70` and asgard-docs `23409b3` | 2026-09-14 |
 | `design-time-skills` the 7 design-time skills' prose, as opposed to their command and path claims | read end to end, 2,255 lines; every platform claim in them against the CRDs and asgard-core `623ceb5` | 2026-09-14 |
-| `scaffold-templates` the 2,783 lines a customer repository receives that are not skills - of which `AGENTS.md.tmpl` is 912 | its platform field claims against asgard-kube `cbd8d70`, all six present; **the guidance itself not read** | 2026-09-14 |
+| `scaffold-templates` the 2,783 lines a customer repository receives that are not skills - of which `AGENTS.md.tmpl` is 912 | read; its platform field claims against asgard-kube `cbd8d70`, its gate table against the binary's eight steps, its shape-C field forms against the CRD | 2026-09-14 |
 | `deployment-diffs` the eight deployment clones' diffs since the extracts were written from them | the four that had moved, which `go run ./hack sources --extracts` names; the other four were unmoved | 2026-09-11 |
 
 ## Where it stands

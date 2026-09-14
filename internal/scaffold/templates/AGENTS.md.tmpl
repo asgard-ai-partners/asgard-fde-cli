@@ -448,6 +448,14 @@ fields carry a **comma-separated string** in `value`; `sourceSetMounts` carries 
 re-declare `toolsets`** — that would be a second declaration of the same
 capability, and the two would drift.
 
+**Where a mount may go is not a free choice, and one wrong path takes every
+conversation down.** `mountPath` is validated as `^/.+` and nothing else - no
+traversal check - and a mount under the agent's `~/.claude` kills the driver at
+start-up with a symptom that looks nothing like a mount. `sourceSetMounts` is
+also the only mechanism that takes a `subPath`, so it is the only way to isolate
+one tenant's files. Read
+`.agents/skills/asgard-platform/usecase/conventions.md` before writing one.
+
 ## SemanticLayer conventions
 
 Common analysis views go in top-level `sampleQueries[]` (`comment` + `sql`),

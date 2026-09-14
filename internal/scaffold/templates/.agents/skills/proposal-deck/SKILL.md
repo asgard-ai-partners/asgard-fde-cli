@@ -1,6 +1,6 @@
 ---
 name: proposal-deck
-description: Use when deciding what to propose to the customer, or building any deck they will see - a discovery deck taken while the questions are still open, a proposal, a scope review, a phase kick-off, or a handover after the work lands. Covers how the shape is chosen and what phase 1 is, where a deck lives in this repo, which material it is allowed to be built from, the order a proposal argues in, how to say it in the customer's own words without claiming further than the evidence goes, and what must never appear on a customer's screen. Typesetting is delegated to the kami skill; this one owns the content.
+description: Use when deciding what to propose to the customer, or building any deck they will see - a discovery deck taken while the questions are still open, a proposal, a scope review, a phase kick-off, or a handover after the work lands. Covers how the shape is chosen and what phase 1 is, where a deck lives in this repo, which material it is allowed to be built from, the order a proposal argues in, how to say it in the customer's own words without claiming further than the evidence goes, and what must never appear on a customer's screen. The design language and the slide contract are in references/ beside it.
 ---
 
 # Proposal decks
@@ -1053,7 +1053,7 @@ second the moment anyone else opens the deck.
 - **Precision we do not have.** "Around 10 minutes, from your own figures" beats
   "11.4 minutes" when 11.4 came from one afternoon's sample.
 
-## Step 6 - write it, with kami
+## Step 6 - write it
 
 **Read this before the first slide, not after the tenth.** Everything below the
 next two sections is content; these are the things that cost an FDE a working
@@ -1139,24 +1139,24 @@ the words.
 
 ### The rest
 
-Typesetting and the visual language belong to the **`kami`** skill. **Load it for
-the layout language and not for its authoring process** - which of the two you
-take is decided above, and the answer differs between a proposal and a discovery
-deck. This skill has already decided what goes on each slide.
+**The design language is `references/design.md` beside this file**, and the
+content contract is `references/slides.json`. Both are here so that building a
+deck needs nothing but this repository: the palette, the type scale, the slide
+classes, the print rules and the layouts, taken from the `kami` skill's design
+system and reduced to the half a deck uses.
 
-**`kami` is not shipped with this one and `asgard-cli init` does not write it.**
-It is a skill the FDE's own environment provides, so an agent reading this in a
-repository that has none will find nothing to load - which is a thing to notice
-before step 6 rather than in the middle of it. Everything above this section is
-content and needs no typesetting skill at all; `discovery-deck.html` beside this
-file is a working deck in plain HTML, and a proposal can be written the same way
-at the cost of doing the layout by hand.
+**Take the layout language, not an authoring process.** If your environment has
+`kami` installed you may render with it, and the decision above still holds -
+which rules apply differs between a proposal and a discovery deck, and a layout
+skill's own density checks do not know the difference. This skill has already
+decided what goes on each slide.
 
 For a discovery deck there is a working starting point beside this file:
 `discovery-deck.html`, eight pages, plain HTML with no separate content file,
 every customer noun neutralised and the question wording left as it ended up.
 
-What kami expects, and what is worth knowing before you write:
+The four rules worth knowing before you write, which `references/design.md`
+carries in full:
 
 - **The ghost deck test**, for a **proposal**. Reading only the titles, in order,
   must tell the whole argument. If a title is a topic label - "Current
@@ -1175,17 +1175,20 @@ What kami expects, and what is worth knowing before you write:
   narration**: not where the material came from, not what the slide is about,
   not what you are about to talk about. If a reader would not copy it into their
   notes, it does not earn the line.
-- Its content contract is `references/schemas/slides.json` in the kami skill, and
-  its layouts are `cover`, `chapter`, `content`, `quote`, `metrics`, `close`.
+- The content contract is `references/slides.json`, and the layouts are
+  `cover`, `chapter`, `content`, `quote`, `metrics`, `close`.
 
-Ask kami for the deck in the customer's language. Default output is a PDF, which
-is what gets handed over; ask for the editable path only when the customer has
-said they want to edit it.
+Write the deck in the customer's language. **A PDF is what gets handed over**;
+produce an editable file only when the customer has said they want to edit it -
+and `references/design.md` says why HTML to PDF rather than a presentation
+format, which is about CJK rendering rather than preference.
 
-If kami is not installed, write `deck.md` as plain Marp markdown - `---` between
-slides - and say in the handover that it has not been typeset. Do not invent a
-second house style; a plain deck that says what it means beats a decorated one
-that does not.
+**With no typesetting skill installed the deck is still typeset**, because the
+design language is `references/design.md` and `discovery-deck.html` is it
+applied. Plain Marp markdown - `---` between slides - is the fallback below
+that, and then say in the handover that it has not been typeset. Either way, **do
+not invent a second house style**: a plain deck that says what it means beats a
+decorated one that does not.
 
 ## Before you send it
 
