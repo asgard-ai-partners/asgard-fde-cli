@@ -83,8 +83,12 @@ this binary's older copy. ` + "`retired`" + `: an older CLI shipped the file and
 does not, which nothing else in a repository can notice.
 
 ` + "`--force`" + ` takes the newer shipped material, discarding local edits to the
-skeleton; files this tool writes into - the indexes, the open-questions table,
-the living spec - are preserved either way and reported.
+skeleton; files this tool writes into - **the deployment declaration**, the
+indexes, the open-questions table, the living spec - are preserved either way
+and reported. The declaration is the one worth naming: it decides which releases
+exist and what each takes, none of which a scaffold can know, and ` + "`--force`" + `
+used to replace a hand-written one with the shape it generates from the
+directories under ` + "`projects/`" + `.
 
 **In a file with a managed region it takes the region and nothing else.** The
 scaffolded AGENTS.md tells its reader that the half above the marker is theirs

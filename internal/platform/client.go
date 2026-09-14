@@ -91,7 +91,35 @@ func (e *APIError) Error() string {
 	case http.StatusNotFound:
 		return fmt.Sprintf("not found (%d %s): %s %s", e.Status, msg, e.Method, e.Path)
 	}
+	// **A 5xx on a write does not mean the write did not happen.** The platform
+	// answered 500 to two of four `pipeline project create` calls and had
+	// created both; `pipeline projects` listed all four, each once. Nothing in
+	// the error suggested that, and the obvious response to a 500 is to retry -
+	// which makes a duplicate platform Project that only the Console can
+	// remove, and removing one removes what is deployed into it.
+	//
+	// So the outcome is reported as unknown rather than as a failure, for the
+	// methods where it matters. A GET can be retried freely and says so by
+	// omission.
+	if e.Status >= 500 && !idempotent(e.Method) {
+		return fmt.Sprintf(
+			"the platform answered %d: %s\n"+
+				"  **this was a %s, so it may have been applied before the error** - the platform has\n"+
+				"  answered 500 to a create that had already created. Read the current state back before\n"+
+				"  retrying; a second attempt is a second object, not a retry",
+			e.Status, msg, e.Method)
+	}
 	return fmt.Sprintf("the platform answered %d: %s", e.Status, msg)
+}
+
+// idempotent reports whether repeating the request is free. A 5xx on one of
+// these is safe to retry; on anything else the outcome is unknown.
+func idempotent(method string) bool {
+	switch strings.ToUpper(method) {
+	case http.MethodGet, http.MethodHead, http.MethodOptions, "":
+		return true
+	}
+	return false
 }
 
 // NotFound reports whether err is a 404, which several callers treat as an

@@ -135,6 +135,28 @@ enforced**: `agent-name`, `semantic-layer-name`, `data-connector-name`,
 the UI at all and so has no name to be missing - `../usecase/plugin.md` is the
 shape.
 
+### `asgard-ai.com/product`, which every generated chart stamps
+
+Every CR `asgard-cli project add` writes carries
+`asgard-ai.com/product: platform`, from the chart's own `<chart>.labels`
+helper. **It is not a display annotation and not one of the fifteen above**, so
+nothing in the gate asks for it and a chart without it deploys.
+
+What it does is name the product that owns the resource, as the IAM product
+code, and **asgard-core echoes it into every audit-log event so the Console can
+filter by product** - it is the dimension an audit event is filed under. The three IAM product codes are `product: agent-hub`, `product: data-insight`
+and `product: platform`, and **unlabelled means no product** rather than a default - a resource with no
+label is one the Console's product filter will not find.
+
+`platform` is right for a chart's own CRs: they are applied by the pipeline
+rather than created inside a product. The other two are stamped by the platform
+itself - workflow-service on a Flow Agent, the preset reconcilers on the
+per-namespace preset BotProviders - so a chart never writes them.
+
+**Do not drop it from a migrated chart because a grep of this material came
+back empty.** It did, and the label read as retired; it is current, and what it
+costs to remove is a gap in the audit trail that nothing reports.
+
 `asgard-cli verify` enforces the display annotations. **The authority for every
 platform key is the workflow-service source, `internal/shared.go`** - read it
 rather than inferring a convention from another chart. Anything not on the
