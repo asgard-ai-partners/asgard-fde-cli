@@ -95,7 +95,7 @@ above were written:
 | file | when |
 |---|---|
 | [`workflow-chain.md`](../usecase/workflow-chain.md) | a Workflow with more than one step: the processor types, and what crosses between them |
-| [`skill-layers.md`](../usecase/skill-layers.md) | nine runtime skills over one middleware and one external platform - what the layering looks like past the first skill |
+| [`skill-layers.md`](../usecase/skill-layers.md) | 9 runtime skills over one middleware and one external platform - what the layering looks like past the first skill |
 | [`demo-generation.md`](../usecase/demo-generation.md) | building something that looks like a prospect's business when you have none of their data |
 
 ## Keeping this list complete

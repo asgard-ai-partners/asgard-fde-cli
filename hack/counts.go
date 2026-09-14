@@ -83,6 +83,74 @@ func markdownFilesIn(path string) int {
 // A vendored subchart under `charts/` is not one of ours and is excluded - it
 // would inflate the sample-size floor this count exists to state without adding
 // an arrangement anybody here read.
+// skillDirsIn counts the runtime skills under a path: one SKILL.md each, which
+// is what makes a directory a skill rather than a folder beside them.
+func skillDirsIn(path string) int {
+	n := 0
+	_ = filepath.Walk(path, func(p string, fi os.FileInfo, err error) error {
+		if err != nil || fi.IsDir() || filepath.Base(p) != "SKILL.md" {
+			return nil
+		}
+		n++
+		return nil
+	})
+	return n
+}
+
+// tokenIn counts occurrences of a word across the YAML and templates of a
+// clone, which is what a reader's grep would find.
+func tokenIn(word string) func(string) int {
+	re := regexp.MustCompile(`\b` + regexp.QuoteMeta(word) + `\b`)
+	return func(path string) int {
+		n := 0
+		_ = filepath.Walk(path, func(p string, fi os.FileInfo, err error) error {
+			if err != nil || fi.IsDir() {
+				return nil
+			}
+			if strings.Contains(p, string(filepath.Separator)+".git"+string(filepath.Separator)) {
+				return nil
+			}
+			switch filepath.Ext(p) {
+			case ".yaml", ".yml", ".tmpl":
+			default:
+				return nil
+			}
+			data, err := os.ReadFile(p)
+			if err != nil {
+				return nil
+			}
+			n += len(re.FindAllString(string(data), -1))
+			return nil
+		})
+		return n
+	}
+}
+
+// nullishIn counts `??`, which has no word boundary to anchor on.
+func nullishIn(path string) int {
+	n := 0
+	_ = filepath.Walk(path, func(p string, fi os.FileInfo, err error) error {
+		if err != nil || fi.IsDir() {
+			return nil
+		}
+		if strings.Contains(p, string(filepath.Separator)+".git"+string(filepath.Separator)) {
+			return nil
+		}
+		switch filepath.Ext(p) {
+		case ".yaml", ".yml", ".tmpl":
+		default:
+			return nil
+		}
+		data, err := os.ReadFile(p)
+		if err != nil {
+			return nil
+		}
+		n += strings.Count(string(data), "??")
+		return nil
+	})
+	return n
+}
+
 func chartsIn(path string) int {
 	n := 0
 	_ = filepath.Walk(path, func(p string, fi os.FileInfo, err error) error {
@@ -203,28 +271,10 @@ type countRow struct {
 // Each count: where it comes from, how, and every way this material states it.
 var counts = []countRow{
 	{
-		Slug: "expression-values", How: expressionTotal,
-		What: "`expression:` values in the reference deployments",
-		Says: []string{`(\d+) ` + "`" + `expression:` + "`" + ` values`, `Across (\d+) expression values`},
-		Only: []string{"unitech-e-asgard-kube", "xxentria-asgard-kube", "finance-ai-asgard-kube",
-			"buy123-asgard-kube", "asgard-freyr-kube", "asgard-auto-post-kube",
-			"asgard-industry-demo-generator"},
-	},
-	{
-		Slug: "expression-arrow", How: expressionArrow,
-		What: "of those expression values using an arrow function",
-		Says: []string{`(\d+) use an arrow\s+function`, `(\d+) use an arrow function`},
-		Only: []string{"unitech-e-asgard-kube", "xxentria-asgard-kube", "finance-ai-asgard-kube",
-			"buy123-asgard-kube", "asgard-freyr-kube", "asgard-auto-post-kube",
-			"asgard-industry-demo-generator"},
-	},
-	{
-		Slug: "expression-decl", How: expressionDecl,
-		What: "of those expression values using const or let",
-		Says: []string{`(\d+) use ` + "`" + `const` + "`" + ` or ` + "`" + `let` + "`"},
-		Only: []string{"unitech-e-asgard-kube", "xxentria-asgard-kube", "finance-ai-asgard-kube",
-			"buy123-asgard-kube", "asgard-freyr-kube", "asgard-auto-post-kube",
-			"asgard-industry-demo-generator"},
+		Slug: "runtime-skills", Clone: "asgard-freyr-skills", Of: ".",
+		How:  skillDirsIn,
+		What: "runtime skills in the skills repository",
+		Says: []string{`(\d+) runtime skills`},
 	},
 	{
 		Slug: "shopline-l1-pages", Clone: "asgard-freyr-skills",

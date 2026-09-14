@@ -34,14 +34,12 @@ only that one is JavaScript and one is Handlebars:
     Template     Handlebars, for producing text. `{{#if prevMessage}}...{{/if}}`
 
 **The ECMA5 limit is `execute-script`'s Engine field, and does not reach the
-Expression fields.** The deployed charts settle it, and not narrowly: across
-**449 `expression:` values in the seven reference deployments, 80 use an arrow
-function and 26 use `const` or `let`** - counted by taking each `expression:`
-key's value, block scalar or inline, across every `.yaml` and `.tmpl` in the
-clones. `go run ./hack counts` recomputes it.
+Expression fields.** The deployed charts settle it, and the evidence is a
+shipped chart rather than a tally: `prevBlobs.map(b => b.blobId).join(',')`
+evaluates in production, so arrow functions work.
 
 **`const` reaches an expression field through an IIFE**, which is the form this
-tool's own generator writes:
+tool's own generator writes and several deployments use:
 
     expression: |-
       (() => {
@@ -51,8 +49,13 @@ tool's own generator writes:
 
 The field holds one expression, so a bare `const x = 1` has nowhere to go - but
 a function body is statements, and wrapping one is how anything longer than a
-ternary gets written. Sixteen of the 26 are in a single deployment, which is
-also the one that reaches for a guard clause rather than a chain of `&&`.
+ternary gets written.
+
+**A count was here and is gone on purpose.** It said one arrow function in 520
+values, which was wrong twice over - the denominator was a different set each
+time somebody recounted, and the set left out the deployment doing most of it.
+A named expression that is deployed today cannot go stale the way a tally does,
+and it is the better evidence for a yes-or-no question.
 
 `execute-script` is the other thing. Its **Engine** takes `ECMA5` and the
 documentation says only `ECMA5` is supported, and that body *is* statements -

@@ -256,7 +256,7 @@ built, and reversed. They are obvious in the same way again each time.`,
 			{
 				"what an Expression may use",
 				"ECMA5 only, because the documentation says ECMA5",
-				"**That limit is `execute-script`'s Engine field and does not reach an Expression.** Across 449 expression values in the reference deployments, 80 use an arrow function and 26 use `const` or `let` - they are ordinary JavaScript. A bare declaration has nowhere to go, because the field holds one expression; an IIFE is how a function body gets in, and it is the form this tool generates. Writing an Expression defensively costs nothing; **refusing a shape because of the wrong limit** is the failure, and this material has stated it both ways inside one page",
+				"**That limit is `execute-script`'s Engine field and does not reach an Expression.** They are ordinary JavaScript: `prevBlobs.map(b => b.blobId).join(',')` evaluates in a shipped chart, and `const` gets in through an IIFE, which is the form this tool generates. A bare declaration has nowhere to go only because the field holds one expression. Writing an Expression defensively costs nothing; **refusing a shape because of the wrong limit** is the failure, and this material has stated it both ways inside one page",
 				"../wiki/processors.md",
 			},
 			{

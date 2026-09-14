@@ -210,6 +210,36 @@ URL against a file path is the same trap: eight processor pages answer at a name
 that is not their file's, which made the coverage row understate itself by six
 pages and put a 404 into a naming table twice, in opposite directions.
 
+**Before asking whether a count can be computed, ask what the reader does with
+it.** That question comes first and it is the one that gets skipped. Three
+kinds, and only one of them earns a number:
+
+    the count IS the claim        how much of a chart `add` never writes, how
+                                  many pages a back office has, how far a clone
+                                  is behind. Keep it, and compute it.
+    the count is evidence         "does an arrow function evaluate" - the
+                                  answer is yes or no, and a tally is a weak
+                                  way to say yes. Name the deployed example
+                                  instead: it cannot rot, and it is checkable
+                                  by opening one file.
+    the count is decoration       "the 13 processors" in an index row. The row
+                                  reads the same without it and cannot go
+                                  stale. Delete it.
+
+**A tally standing in for a yes is the one that keeps going wrong.** "One arrow
+function in 520 values" was recounted three times, was wrong every time, and
+each recount used a different denominator - while `prevBlobs.map(b => b.blobId)`
+in a shipped chart answered the same question and could not have been wrong.
+**Writing a checker for a number like that is treating the symptom**: the number
+never needed to be there.
+
+**An index carries no arithmetic.** `internal/corpus/wiki/index.md` had a
+seven-row ledger deriving its coverage figure by hand and, beside it, a record
+of what the figure used to be - which is a changelog, and a changelog is what a
+count grows when nothing can recompute it. An index says which page answers a
+question. One number survives there, the row `go run ./hack coverage`
+recomputes and fails on.
+
 **So before writing a count, decide whether it can be computed instead.**
 `go run ./hack coverage` exists because a coverage row was hand-counted and
 three of its four numbers were wrong; the row cannot be wrong now, because

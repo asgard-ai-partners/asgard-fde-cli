@@ -22,8 +22,8 @@
 | [`semantic-model`](../wiki/semantic-model.md) | the modelling flow, its limits, the Mimir side |
 | [`tools`](../wiki/tools.md) | MCP Server, Skillset and Plugin; hook events |
 | [`automation`](../wiki/automation.md) | Trigger and API, and why only cron is left |
-| [`processors`](../wiki/processors.md) | what each of the 13 takes, and the fields that decide behaviour |
-| [`workflow`](../wiki/workflow.md) | the 13 processors; Expression is JavaScript, Template is Handlebars |
+| [`processors`](../wiki/processors.md) | what each processor type takes, and the fields that decide behaviour |
+| [`workflow`](../wiki/workflow.md) | the processor types against the editor's groups; Expression is JavaScript, Template is Handlebars |
 | [`settings`](../wiki/settings.md) | Completion and Embedding Model, Data Source, Connection |
 | [`integration`](../wiki/integration.md) | chat platforms, the two Applications pages, the architecture |
 | [`api`](../wiki/api.md) | the endpoint and its actions, the SSE sequence, four patterns, the SDK |
@@ -110,35 +110,24 @@ Each is written on the page it affects:
 
 ## Coverage
 
-**A coverage number here names its denominator in the same sentence or it does
-not go here.** A percentage measured against one source out of nine reads as a
+**A coverage number names its denominator in the same sentence or it does not
+go here.** A percentage measured against one source out of nine reads as a
 statement about the material, and an in-scope denominator restated as a count
-of citations reads the same way. Both are the failure this section exists to
-warn about.
+of citations reads the same way.
 
-Counted 2026-09-03 against a clone at `f00e0ee`, the commit this wiki records,
-by deriving each file's published URL (`slug:` where one is declared) and
-matching it against every page's source block:
+**And an index does not carry arithmetic.** There was a seven-row ledger here
+deriving the figure by hand, and beside it a record of what the figure used to
+be - which is a changelog, and it is what a count looks like when nothing can
+recompute it. `go run ./hack coverage` in asgard-fde-cli derives every one of
+these from the clone and **fails when the row below drifts**, so the row is the
+only place a number belongs and the ledger is gone.
 
-| | count | how |
-|---|---|---|
-| files under `docs/` | 162 | `find docs -name '*.md*'` |
-| `draft: true`, so not published | 16 | frontmatter |
-| cited by some page's source block | 81 | URL match, per file |
-| uncited | 81 | the remainder |
-| - of those, drafts | 12 | |
-| - **published and uncited** | **69** | **the number that means anything** |
-| cited but draft | 4 | the four `audit-material --urls` reports as dead and disclosed |
-
-The last row is the check on the rest: `audit-material --urls` fetches all 81
-cited links against the live site and gets 4 404s, all of them drafts the site
-does not publish, all disclosed in their own citations. Two independent counts
-agreeing is what the earlier figures never had.
-
-That is a statement about the product documentation, and it was being read as a
-statement about the material - which is how a wiki with nothing about SHOPLINE,
-nothing about Mimir as a deliverable, and nothing about the largest chart
-repository in existence could report itself complete.
+**A page's live URL is not its path under `docs/`**, which is why the count is
+resolved through `slug:` frontmatter: channel pages are served from capitalised
+files, a directory's `index.mdx` answers without the `index`, and fourteen
+pages declare a slug that differs from where they sit. Matching literally
+undercounts. **Computing a number does not make it right; it makes it
+re-derivable**, which is the only reason that was ever catchable.
 
 The sources this material is actually built from:
 
@@ -148,7 +137,7 @@ The sources this material is actually built from:
 | asgard-kube `crd/` | the contract | read per page, per field, and dated on the page |
 | **asgard-kube `pkg/apis/`** | **the Go types the CRDs are generated from, with the reasoning as comments** | read once, 2026-09-02, for the validation rules - `../wiki/crd-rules.md`. 134KB of declarations; what has been taken is the behavioural comments, not the field list |
 | **[asgard-core](https://github.com/asgard-ai-platform/asgard-core)** `internal/constants.go` | **the processor definitions the CRD is generated from** | walked 2026-09-03 at `5da86c6` and re-walked 2026-09-11 at `623ceb5`. Every processor's required keys, defaults and declared outputs are in `../wiki/processors.md`, and asgard-fde-cli's `go run ./hack processors` is what holds that table against the literal |
-| **asgard-freyr-skills** | **nine runtime skills, incl. the SHOPLINE pair** | one page - `../usecase/skill-layers.md`. The eighth reference repository, and the only one with no CRs |
+| **asgard-freyr-skills** | **9 runtime skills, incl. the SHOPLINE pair** | one page - `../usecase/skill-layers.md`. The eighth reference repository, and the only one with no CRs |
 | **seven deployments** | **every shape the extracts describe** | 19 charts between them; `../wiki/coverage.md` counts per deployment and says why |
 
 **Deployment coverage cannot be measured from this material, by design.** An
@@ -180,45 +169,24 @@ excluded, and that part of the judgement holds.
 it, particularly if it excludes a whole directory - that is the shape of an
 exclusion nobody has looked inside.
 
-**28 files at `f00e0ee`, and the count is computed** - it was 29 by hand, and
-before that 32, because four `asgard-builtin` pages came back into
-`../wiki/processors.md` and the subtraction was done in one place and not the
-other. asgard-fde-cli's `go run ./hack coverage` counts it now.
+**An exclusion can stop being one without anybody noticing**, and one has:
+`superpowers/` is gone from asgard-docs, so at the clone's HEAD the excluded set
+is smaller than the row above says and neither number is wrong. A row that
+excludes a whole directory is the shape that does this.
 
-**`superpowers/` no longer exists upstream.** Those five pages are gone from
-asgard-docs as of `23409b3`, so at the clone's HEAD the excluded set is 23 and
-not 28 - a row that excludes a directory can stop being an exclusion by the
-directory being deleted, which is not something this material can notice.
+**"Uncited" is not "unread", and the gap is two families.** The per-processor
+reference pages and the SSE event pages are pointed at **by URL pattern rather
+than by link** - `../wiki/processors.md` gives the pattern and one example,
+`api.md` says "one page per event" and links one. That is deliberate: a link per
+page whose content is a field table would be that many things to keep resolving.
+**So the figure measures how much is linked, not how much has been read**, and
+it is worth knowing which before treating it as a backlog.
 
-**The denominator moved by four rather than five**, because
-`developer-reference/processor/query-llm-database` arrived in the same span:
-158 pages at `23409b3` against 162 at `f00e0ee`, with the same 77 cited.
-asgard-fde-cli's `go run ./hack coverage --head` prints both, and the difference
-is the size of what re-reading would cover rather than a defect.
-
-**"Uncited" is not "unread", and the gap is two families.** 15 of the 85 are
-the per-processor reference pages and 11 more are the SSE event pages under
-`developer-reference/api-doc/send-message/sse-response/`, both of which this
-material points at **by URL pattern rather than by link** - `../wiki/processors.md`
-gives the pattern and one example, `api.md` says "one page per event" and links
-one. That is deliberate: 26 links to pages whose content is a field table would
-be 26 things to keep resolving. A further 14 are the excluded message-template
-shapes. **So the number is a measure of how much is linked, not of how much has
-been read**, and it is worth knowing which before treating it as a backlog.
-
-**A live URL is not the file path under `docs/`, and matching them literally
-undercounts this row by six.** Four channel pages are served from capitalised
-files - `integration/line` from `integration/LINE.mdx` - and two more are a
-directory's `index.mdx` reached without the `index`; 14 of the 158 pages declare
-a `slug:` that differs from where they sit. The numerator is resolved through
-that frontmatter for this reason. **Computing a number does not make it right;
-it makes it re-derivable**, which is the only reason this was catchable.
-
-| excluded | count at `f00e0ee` | why |
-|---|---|---|
-| `developer-reference/asgard-builtin/message-template-*` | 14 | Message template shapes - button, carousel, image, video, location. Genuinely lookup material, and per-channel. Read the source when writing one |
-| `help-community/release-notes/` | 10 | historical, and does not describe the present |
-| `superpowers/` | 5 | the documentation site's own redesign plans, not an Asgard feature |
+| excluded | why |
+|---|---|
+| `developer-reference/asgard-builtin/message-template-*` | Message template shapes - button, carousel, image, video, location. Genuinely lookup material, and per-channel. Read the source when writing one |
+| `help-community/release-notes/` | historical, and does not describe the present |
+| `superpowers/` | the documentation site's own redesign plans, not an Asgard feature. **Gone from asgard-docs since**, which is how an exclusion stops being one without anybody noticing |
 
 ## Keeping this index complete
 

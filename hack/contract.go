@@ -272,10 +272,20 @@ func checkStatusKinds(root string, crds []crd) []string {
 	}
 	ws := func(p string) *regexp.Regexp { return regexp.MustCompile(strings.ReplaceAll(p, " ", `\s+`)) }
 	claim := ws(`([\w-]+) of the ([\w-]+) kinds declare no status at all`)
+	// The same number stated on its own, as provenance for a reading: "held
+	// against the 24 kinds in asgard-kube". A kind added upstream makes it
+	// wrong, and nothing was looking at it.
+	total := ws(`the ([\w-]+) kinds in asgard-kube`)
 
 	var out []string
 	seen := 0
 	for _, b := range bodies {
+		for _, m := range total.FindAllStringSubmatch(b.text, -1) {
+			if numberWord(m[1]) != len(crds) {
+				out = append(out, fmt.Sprintf("%s says asgard-kube has %s kinds, and it has %d",
+					b.name, m[1], len(crds)))
+			}
+		}
 		for _, loc := range claim.FindAllStringIndex(b.text, -1) {
 			m := claim.FindStringSubmatch(b.text[loc[0]:loc[1]])
 			seen++
