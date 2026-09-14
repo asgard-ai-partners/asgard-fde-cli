@@ -17,7 +17,7 @@ one is blind to, and how to do the part no check does.
 **Almost every check here is a consistency check.** It asks whether two things
 inside this repository agree - a pointer against the file it names, a command
 against the command tree, a number against a measurement. Four ask something
-harder, and they need a clone: `hack/check-tables.py`, `hack/validate-crs.py`,
+harder, and they need a clone: `go run ./hack tables`, `hack/validate-crs.py`,
 `hack/check-coverage.py` and `hack/sources.py`.
 
 **Nothing checks whether a sentence is true.** A page can be internally
@@ -94,7 +94,7 @@ asgard-docs and it moved 286 files in nine days.
     hack/sources.py                          what each clone is, how far behind,
                                              and which recorded reading is now stale
     hack/sources.py --extracts               how far each extract's source chart has moved
-    hack/check-tables.py                     the pinned tables against the CRDs, and
+    go run ./hack tables                     the pinned tables against the CRDs, and
                                              every CEL-rule count stated anywhere here
     hack/check-processors.py                 processors.md's three tables against
                                              asgard-core and asgard-docs

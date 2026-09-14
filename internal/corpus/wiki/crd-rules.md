@@ -64,7 +64,7 @@ thing to come back and fix when that model is retired.
 
 **There are 79 CEL rules written and 231 enforced, and the difference is not a
 rounding.** 79 is the number of `XValidation` markers in asgard-kube's Go
-types; the generated CRDs carry 231 rule instances, 52 of them distinct,
+types; the generated CRDs carry 231 rule instances, 46 of them distinct,
 because one marker on a struct several kinds embed lands in every CRD that
 embeds it. **Hold a render against the CRDs and not against the markers**: the
 generated schema is the contract and the Go types are only its source, so the

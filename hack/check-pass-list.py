@@ -29,6 +29,26 @@ TASKS = ROOT / "TASK.md"
 # Flags that are not checks: they change what a check reads, or take a value.
 NOT_A_CHECK = {"template-dir", "help", "format"}
 
+# Flags that have no pass or fail: listings for a person, and one query.
+NOT_A_VERDICT = {"orphans", "crossref", "ask", "unmarked", "unchecked", "term"}
+
+# What each script needs to run, because that is the only thing about the list
+# that is judgement rather than discovery. A script absent from here still
+# appears - under "ungrouped", which is the prompt to say what it needs.
+NEEDS = {
+    "check-doc-paths.py": "this repository",
+    "check-pass-list.py": "this repository",
+    "check-goal.py": "this repository - **the capability, not the material**",
+    "check-coverage.py": "$ASGARD_DOCS",
+        "check-processors.py": "$ASGARD_CORE and $ASGARD_DOCS",
+    "check-counts.py": "$ASGARD_DEPLOYMENTS",
+    "spec-key-gap.py": "the clones, helm and a built binary",
+    "sources.py": "the clones",
+    "extract-crs.py": "$ASGARD_KUBE",
+    "validate-crs.py": "$ASGARD_KUBE",
+    "verify-references.sh": "the clones",
+}
+
 # The Go steps. They are not discoverable from a binary, so they are named -
 # and named here rather than in TASK.md, so this file is the only list.
 GO_STEPS = ["go build", "go vet", "gofmt", "go test"]
@@ -51,31 +71,92 @@ def audit_flags(binary: str) -> set:
     return {f for f in got if f not in NOT_A_CHECK}
 
 
+def scripts() -> list:
+    return sorted(s.name for s in (ROOT / "hack").iterdir() if s.suffix in (".py", ".sh"))
+
+
+def go_checks() -> list:
+    """The subcommands of the Go gate, asked for rather than listed here.
+
+    **`hack/` is Go now** - see AGENTS.md - and each check that moves across
+    stops being a file in this directory and becomes a subcommand. Asking the
+    binary is the same discipline as asking `audit-material --help` for its
+    flags: a list written here would be the copy this file exists to refuse.
+    """
+    out = subprocess.run(["go", "run", "./hack", "list"], cwd=ROOT,
+                         capture_output=True, text=True)
+    if out.returncode != 0:
+        sys.exit(f"`go run ./hack list` failed, so the Go half of the pass cannot be read:\n{out.stderr}")
+    found = []
+    for line in out.stdout.split("\n"):
+        m = re.match(r"^  (\S+)  ", line)
+        if m:
+            found.append(m.group(1))
+    return found
+
+
+def show(binary: str) -> int:
+    """Print the pass, derived from the binary and this directory.
+
+    **TASK.md used to carry this as a table.** It was a hand-written copy of
+    what this file already computes, which is the one shape of claim this
+    repository has decided not to keep: a list that can be generated is not
+    written down. So the pass is printed and TASK.md points here.
+    """
+    flags = sorted(audit_flags(binary))
+    print("The consistency pass, most-volatile first. No state is recorded for a")
+    print("check anywhere: the answer is its exit code, today.\n")
+
+    print("1. upstream - pull first, or these check a clone rather than the platform")
+    for name in go_checks():
+        print(f"     go run ./hack {name}")
+    for name in scripts():
+        need = NEEDS.get(name, "")
+        if "$" in need or "clone" in need:
+            print(f"     hack/{name:<24} needs {need}")
+    print("\n2. the material - build from the working tree first, or you audit an older corpus")
+    for f in flags:
+        if f not in NOT_A_VERDICT:
+            print(f"     asgard-cli audit-material --{f}")
+    print("\n3. this repository")
+    for name in scripts():
+        if NEEDS.get(name, "").startswith("this repository"):
+            print(f"     hack/{name:<24} {NEEDS[name][len('this repository'):].lstrip(' -') or ''}")
+    for name in scripts():
+        if name not in NEEDS:
+            print(f"     hack/{name:<24} ungrouped - say what it needs in NEEDS here")
+    print("\n4. the compiler")
+    for step in GO_STEPS:
+        print(f"     {step} ./...")
+    print("\n5. the network, last, because it is the only one that needs it")
+    print("     asgard-cli audit-material --urls")
+
+    print("\nListings, not checks - they do not fail:")
+    print("     " + "  ".join(f"--{f}" for f in flags if f in NOT_A_VERDICT))
+    return 0
+
+
 def main() -> int:
-    binary = sys.argv[1] if len(sys.argv) > 1 else str(ROOT / ".out/asgard-cli")
+    binary = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith("-") \
+        else str(ROOT / ".out/asgard-cli")
     if not pathlib.Path(binary).exists():
         sys.exit(f"no binary at {binary}\n"
                  f"  go build -o .out/asgard-cli ./cmd/asgard-cli\n"
                  f"  A pass reads what is embedded, so build from the working tree first.")
 
+    if "--list" in sys.argv:
+        return show(binary)
+
     section = pass_section()
     missing = []
 
-    for flag in sorted(audit_flags(binary)):
-        if f"--{flag}" not in section:
-            missing.append(f"--{flag}")
-
-    for script in sorted((ROOT / "hack").iterdir()):
-        if script.suffix not in (".py", ".sh"):
-            continue
-        if script.name == pathlib.Path(__file__).name:
-            continue
-        if f"hack/{script.name}" not in section:
-            missing.append(f"hack/{script.name}")
-
-    for step in GO_STEPS:
-        if step not in section:
-            missing.append(step)
+    # **The names are not compared any more**, because the pass is printed from
+    # this file rather than copied into TASK.md. What is still compared is the
+    # part no program can derive: the prose surfaces, below. A flag or script
+    # missing from NEEDS shows up in `--list` as ungrouped instead.
+    for name in scripts():
+        if name not in NEEDS and name != pathlib.Path(__file__).name:
+            missing.append(f"hack/{name} is in this directory and NEEDS does not say what it needs")
 
     # **The prose surfaces correspond by key, not by wording.** They are
     # derived rather than discovered, so the two lists drift - and comparing
@@ -104,15 +185,14 @@ def main() -> int:
         if m.startswith("prose surface"):
             print(f"adrift    {m}")
         else:
-            print(f"unlisted  {m} is a check here and TASK.md's pass does not name it")
+            print(f"ungrouped {m}")
     for n in leaked:
         print(f"leaked    .agents/skills/{n} is also in the scaffolded tree, so it ships")
 
-    print(f"\n{len(audit_flags(binary))} flag(s), "
-          f"{len([s for s in (ROOT / 'hack').iterdir() if s.suffix in ('.py', '.sh')]) - 1} script(s), "
-          f"{len(GO_STEPS)} Go step(s); {len(missing)} unlisted, {len(leaked)} leaked.")
+    print(f"\n{len(audit_flags(binary))} flag(s), {len(scripts()) - 1} script(s), "
+          f"{len(GO_STEPS)} Go step(s); {len(missing)} ungrouped or adrift, {len(leaked)} leaked.")
+    print("`hack/check-pass-list.py --list` prints the pass itself.")
     if missing or leaked:
-        print("\nAdd the row, or - if it is not a check - say so in NOT_A_CHECK here.")
         return 1
     return 0
 

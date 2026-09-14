@@ -15,26 +15,14 @@ is filled in before a pass runs, by
 
 ## The consistency pass
 
-**Every check is named here and none carries a verdict.** A word typed beside
-one is a result copied out of something that can produce it; the answer is the
-exit code, today. `hack/check-pass-list.py` holds the list against the binary's
-own flags and `hack/`'s contents, so it cannot be missing one.
+**The list is not here.** It is derived from the binary's own flags, `hack/`'s
+contents and the Go gate's subcommands, so it cannot be missing one:
 
-| the checks | how to run them |
-|---|---|
-| `--links`, `--bare`, `--commands`, `--paths`, `--unverified`, `--sources`, `--urls` | `asgard-cli audit-material <flag>`, after building from the working tree |
-| `hack/check-doc-paths.py`, `hack/check-coverage.py`, `hack/check-tables.py`, `hack/check-pass-list.py` | the ones that read this repository, and the coverage row's clone |
-| `hack/sources.py`, `hack/check-processors.py`, `hack/check-counts.py`, `hack/spec-key-gap.py`, `hack/extract-crs.py`, `hack/validate-crs.py`, `hack/verify-references.sh` | the ones that need a clone of somebody else's repository |
-| `go build ./...`, `go vet ./...`, `gofmt -l .`, `go test ./...` | the compiler's half |
-| `hack/check-goal.py` | **the capability, not the material.** Goal.md's four points held against the binary, in a temporary directory with no network, no account and no git repository |
+    hack/check-pass-list.py --list
 
-**Some of them are not checks and have no pass or fail.** `--orphans`,
-`--crossref`, `--ask`, `--unmarked`, `--unchecked` and `audit-material` with no
-flag are listings for a person to read - `--unchecked` is the one that replaced
-this file's hand-written list of what is blocked - and `--term <field>` is a
-query: it answers a question somebody asks it after renaming a platform field,
-and it is in `.agents/skills/consistency-checks/SKILL.md` for that reason rather
-than here.
+**No check carries a verdict anywhere.** A word typed beside one is a result
+copied out of something that can produce it; the answer is its exit code, today.
+What follows is the only part of a pass a program cannot produce.
 
 ### What no check reaches
 

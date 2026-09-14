@@ -45,7 +45,7 @@ import (
 // sent one extract's readers to build five Triggers where a range would do.
 //
 // So a pinned constraint goes stale in **both** directions, and the direction
-// that costs more is the one nobody expects. `hack/check-tables.py` is what
+// that costs more is the one nobody expects. `go run ./hack tables` is what
 // holds this table against the generated CRDs; run it when the read marker
 // moves. C1 stays a warning, for consistency with E1 and W1.
 //

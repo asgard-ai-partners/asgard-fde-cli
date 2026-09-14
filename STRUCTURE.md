@@ -303,7 +303,7 @@ row is the material's own claim about how complete it is, and the two things
 easiest to confuse in it are the number of links the material writes and the
 number of pages there are.
 
-`hack/check-tables.py` is the other half of the contract check: it holds the gate's pinned enum and
+`go run ./hack tables` is the other half of the contract check: it holds the gate's pinned enum and
 constraint tables against the generated CRDs, so a table that has fallen behind
 the platform is reported rather than quietly warning about the wrong thing.
 `hack/verify-references.sh` runs the whole gate over the reference deployments.

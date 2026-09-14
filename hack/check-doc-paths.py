@@ -33,7 +33,7 @@ import sys
 # naming it.
 DOCS = ["Goal.md", "README.md", "README.zh-TW.md", "AGENTS.md", "STRUCTURE.md",
         "APPROACH.md", "TASK.md", "CLAUDE.md",
-        "hack/README.md", "hack/check-tables.py", "hack/sources.py",
+        "hack/README.md", "hack/sources.py",
         "hack/validate-crs.py", "hack/extract-crs.py", "hack/verify-references.sh",
         ".env.example", ".agents/skills/consistency-checks/SKILL.md"]
 

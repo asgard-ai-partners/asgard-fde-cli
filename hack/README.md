@@ -4,11 +4,11 @@
 
 Every check here needs one, and **the paths used to be written into the scripts
 and into this file** - true on one machine, wrong on every other, and the
-reason `check-tables.py` went eight upstream commits without being run. One
+reason `go run ./hack tables` went eight upstream commits without being run. One
 environment variable per source, and a default that is one person's layout:
 
     hack/sources.py            what each one resolves to, and how far behind it is
-    hack/check-tables.py       the pinned gate tables against the CRDs
+    go run ./hack tables       the pinned gate tables against the CRDs
     hack/check-coverage.py     the wiki's coverage row against the docs tree
     hack/check-processors.py   wiki/processors.md's two tables against their owners
     hack/check-counts.py       counts this material asserts about a deployment
@@ -108,7 +108,7 @@ nothing, and it moves without announcing it.
 KUBE=../asgard-kube
 git -C $KUBE fetch && git -C $KUBE status -sb        # say so in the PR if behind
 mkdir -p .out/crdjson
-# check-tables.py converts these itself; this is only for validate-crs.py below
+# the tables check converts these itself; this is only for validate-crs.py below
 for f in $KUBE/crd/*.yaml; do yq -o=json "$f" > .out/crdjson/$(basename $f .yaml).json; done
 ```
 
@@ -137,7 +137,7 @@ commit in the PR body - `.github/pull_request_template.md` asks for them.
 
 ## Checking the pinned tables against the CRDs
 
-    hack/check-tables.py $KUBE/crd
+    go run ./hack tables
 
 `internal/gate` holds three copies of the platform contract, extracted from
 asgard-kube's **Go types**. The Go types are not the contract; the generated

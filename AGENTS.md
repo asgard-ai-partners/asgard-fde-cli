@@ -197,6 +197,33 @@ page makes every page look reached.
 Do not "fix" the scaffold templates into English. Do not start a second exception
 without saying why it earns one.
 
+## `hack/` is Go
+
+**A check that is not compiled is a check nobody runs until it is wrong.** These
+scripts are the maintainer's gate and most of them run only when somebody runs
+them by hand, so a typo in a branch that is rarely taken sits there for weeks -
+and one pass added five of them: a missing import, a key that did not exist in
+the map it indexed, a `git grep` output parsed by the wrong field, a helper
+called with the wrong signature, and a substring test that passed on a longer
+word. **Every one of those is a compile error in Go**, and `go build ./...` and
+`go vet ./...` already run on every push.
+
+So a check goes in `hack/` as Go, under the one `main` package with a
+subcommand each, and shares what it needs through `hack/internal/`. Three things
+follow:
+
+  - **No `yq`, and no subprocess for YAML.** `gopkg.in/yaml.v3` is already a
+    dependency, so a CRD is unmarshalled rather than shelled out to and parsed
+    back out of JSON.
+  - **Reading the corpus goes through `internal/kb`**, not a second regular
+    expression. The whole reason that package exists is that two readers of one
+    format drift.
+  - **`go test ./...` can reach them**, which nothing could before.
+
+**A shell script is still a shell script** when what it does is drive other
+programs - `verify-references.sh` renders charts with helm and pipes them into
+the binary, and rewriting that in Go buys nothing.
+
 ## Plain ASCII, no emoji
 
 No emoji, and no decorative Unicode either - no check marks, arrows, box-drawing
@@ -314,7 +341,7 @@ asgard-cli audit-material --paths
 asgard-cli audit-material --unverified
 asgard-cli audit-material --sources
 hack/check-doc-paths.py
-hack/check-tables.py                     # needs $ASGARD_KUBE
+go run ./hack tables                     # needs $ASGARD_KUBE
 hack/check-coverage.py                   # needs $ASGARD_DOCS
 asgard-cli audit-material --urls   # needs the network
 ```
@@ -430,7 +457,7 @@ judgement:
 | every document carrying a provenance marker | `--unverified` |
 | every upstream cited being declared in the raw-sources table | `--sources` |
 | every documentation URL being live | `--urls` (needs the network) |
-| the pinned enum and constraint tables against the CRDs, **every CEL-rule count this repository states** - 231 enforced against 79 markers, which are two numbers easy to write for each other - **every immutable field**: that the page names all eleven class fields, states the Syncer's count and the total, and that no immutable Syncer field goes unnamed - and **every required field of a per-class block**, which is what an FDE asks a customer for, matched on a word boundary across everything that ships | `hack/check-tables.py` (needs `$ASGARD_KUBE`) |
+| the pinned enum and constraint tables against the CRDs, **every CEL-rule count this repository states** - 231 enforced against 79 markers, which are two numbers easy to write for each other - **every immutable field**: that the page names all eleven class fields, states the Syncer's count and the total, and that no immutable Syncer field goes unnamed - and **every required field of a per-class block**, which is what an FDE asks a customer for, matched on a word boundary across everything that ships | `go run ./hack tables` (needs `$ASGARD_KUBE`) |
 | the four numbers in the coverage row, measured at the commit the row names and with a page's URL taken from its `slug:` frontmatter | `hack/check-coverage.py` (needs `$ASGARD_DOCS`) |
 | **every count this material asserts about a reference deployment** - the 88-row page ledger, the 160-row operation ledger, the 14 API domains, the Plugin and SkillSet counts at the commit each claim names, and `source/SOURCES.md`'s CR-file column at each deployment's read commit - recomputed, and a claim whose wording has drifted out of every pattern fails rather than passes | `hack/check-counts.py` (needs `$ASGARD_DEPLOYMENTS`) |
 | **`wiki/processors.md`'s two tables against the two repositories they distil** - the thirteen processors' outputs, required keys and defaults against asgard-core's `ProcessorDefinitions`, the editor palette's author and platform keys against asgard-docs' per-page metadata, that a processor accepting dynamic config says what its keys are for, and that every `processor/<name>` written in prose resolves against asgard-docs' `slug:` frontmatter rather than its file name | `hack/check-processors.py` (needs `$ASGARD_CORE` and `$ASGARD_DOCS`) |
@@ -600,7 +627,7 @@ constraint that loosens upstream leaves a pin that reports correct charts as
 wrong, which costs more than a pin that has stopped catching something: the
 platform deletes constraints as readily as it adds them, and a regex it
 decides was wrong becomes a warning against the thing it now accepts.
-`hack/check-tables.py` is what catches it, and it takes the asgard-kube
+`go run ./hack tables` is what catches it, and it takes the asgard-kube
 checkout as its only argument so that running it is one command.
 `gate` holds three: the processor definitions, the CRD enums, the CRD patterns.
 A copy can only be wrong by being behind, so a rule built on one is a **warning**

@@ -169,7 +169,7 @@ still green. `hack/check-goal.py` is the other side - it runs the tool in a
 temporary directory with no network, no account and no repository, and holds
 Goal.md's four points against what happens.
 
-`hack/check-tables.py` holds the gate's pinned tables against the generated
+`go run ./hack tables` holds the gate's pinned tables against the generated
 CRDs; `hack/verify-references.sh` runs the gate over the reference deployments.
 Neither ships in the binary — both need repositories that are not vendored.
 

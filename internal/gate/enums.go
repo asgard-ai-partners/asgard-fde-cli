@@ -26,7 +26,7 @@ import (
 // Like every pinned copy in this package this can go stale in one direction
 // only - the platform adding a value - so **E1 is a warning**, never a failure.
 //
-// `hack/check-tables.py` holds this table against the generated CRDs. Run it
+// `go run ./hack tables` holds this table against the generated CRDs. Run it
 // after regenerating, and when asgard-kube moves.
 const enumsRead = "2026-09-11, asgard-kube cbd8d70"
 

@@ -64,7 +64,7 @@ a sample of one, dozens of commits back, is the shape
 **These are not in `asgard-cli audit-material --sources`.** That check reads
 what is embedded in the binary, and this file deliberately is not - it is the
 only one that names a customer. Holding these rows against the clones is a
-thing somebody does here, with the clones, the way `hack/check-tables.py`
+thing somebody does here, with the clones, the way `go run ./hack tables`
 holds the pinned tables against asgard-kube.
 
 ## The deployments read so far
