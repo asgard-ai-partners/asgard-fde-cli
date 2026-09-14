@@ -63,12 +63,11 @@ which have gone behind. **That a reading happened is nobody's to verify but
 whoever claims it** - write `never` when it has not, because a row that says
 so is worth more than one that reads settled.
 
-**Then run `go run ./hack pass-list`, because a list derived from a document
-is only as complete as that document.** It reads the binary's own flags and
-`hack/`'s own contents rather than another list, and fails on a check the pass
-does not name - `--ask`, `--unmarked`, `--term`, `extract-crs.py` and all four
-Go steps were absent from the inventory too, so deriving faithfully produced
-the same holes.
+**Then run `go run ./hack pass-list`.** It no longer compares names - the pass
+is printed rather than copied, so there is nothing to compare - and what it still
+holds is the part no program can derive: that the prose surfaces in `TASK.md` and
+`AGENTS.md` agree by slug, that every check says what it needs, and that this
+repository's own maintenance skill never appears in a scaffolded tree.
 
 **The prose surfaces carry a slug, in both documents.** They are the group
 that cannot be discovered from the binary, so they are the group that drifts;
@@ -84,59 +83,35 @@ the mechanical rows carry no state at all.
 
 ## Then run them, most-volatile first
 
-**Not cheapest first.** Cheap-first optimises for the time of whoever is
-running the pass. What matters is where the answer is most likely to have
-changed since the last one, and that is upstream: nobody here touches
-asgard-docs and it moved 286 files in nine days.
+    go run ./hack pass
 
-**1. The upstream, which moves without anyone touching this repository:**
+**That prints the pass, in the order to run it, derived from the binary's own
+flags and the gate's own subcommands - so it is not written down anywhere,
+including here.** A list of checks kept in a document drifts from the checks;
+four documents were carrying one and each had drifted in its own direction.
 
-    go run ./hack sources                          what each clone is, how far behind,
-                                             and which recorded reading is now stale
-    go run ./hack sources --extracts               how far each extract's source chart has moved
-    go run ./hack tables                     the pinned tables against the CRDs, and
-                                             every CEL-rule count stated anywhere here
-    go run ./hack processors                 processors.md's three tables against
-                                             asgard-core and asgard-docs
-    go run ./hack counts                     every count taken off a deployment
-    go run ./hack coverage                   the coverage row against the docs tree
-    go run ./hack coverage --drift           which cited pages have moved since the
-                                             commit the citing document names
-    go run ./hack spec-key-gap                     how much of a production chart `add` never writes
-    go run ./hack extract-crs                      pulls the CRs out of the extracts, for the next line
-    go run ./hack validate-crs                     generated CRs and extracts against the schemas
-    hack/verify-references.sh                the gate over the reference charts
+**Not cheapest first**, which is the order that optimises for the time of
+whoever is running the pass. What matters is where the answer is most likely to
+have changed:
 
-Pull first, or these check a clone rather than the platform.
-
-**2. The material, which moves when somebody edits it:**
-
-    asgard-cli audit-material --links        every pointer resolves, and a path's target lands
-    asgard-cli audit-material --bare         a document named with no path
-    asgard-cli audit-material --commands     every command named exists
-    asgard-cli audit-material --paths        a landed document naming a path only we have
-    asgard-cli audit-material --unverified   a document with no provenance marker
-    asgard-cli audit-material --sources      every upstream cited is declared
-    go run ./hack doc-paths                  paths and symbols in our own documents
-
-**Build the binary from the working tree first.** Every audit reads what is
-embedded, so a check run against an older binary is checking an older corpus.
-
-**3. The code, which the compiler already mostly holds:**
-
-    go build ./... && go vet ./... && gofmt -l . && go test ./...
-    go run ./hack pass-list                  this list against the binary and hack/
-    go run ./hack goal                       Goal.md's four points, against the binary
-
-**4. The network, last, because it is the only one that needs it:**
-
-    asgard-cli audit-material --urls         every documentation link is live
+  - **Upstream first.** Nobody here touches asgard-docs or asgard-kube, and they
+    move without anyone noticing. **Pull before running them**, or they check a
+    clone rather than the platform.
+  - **Then the material** - and **build the binary from the working tree first**,
+    because every audit reads what is embedded, so an older binary checks an
+    older corpus.
+  - **Then the compiler**, which already holds most of what it can.
+  - **The network last**, because it is the only one that needs it, and a third
+    party's outage is not this repository's failure.
 
 **Then the prose**, which is the part no check does, and the section below is
 how. Leave it last because a stale clone makes it worthless, and step 1 is what
 tells you whether the clones are stale.
 
 ## What each one is blind to
+
+**The names are the gate's own** - `go run ./hack list` prints them with what
+each is for; this table is the other half, which the tool cannot print.
 
 | check | what it will not catch |
 |---|---|
@@ -146,15 +121,16 @@ tells you whether the clones are stale.
 | `--paths` | a path relative to the skill that writes it, which is correct and looks wrong from the root |
 | `--unverified` | whether the marker is true. It reports the marker's presence, and for `needs` and `brief` the marker is one shared constant |
 | `--sources` | whether a recorded commit is current. Nothing inside this repository can know that; `go run ./hack sources` reads the clones |
-| `check-tables` | a constraint the CRD expresses in CEL rather than in the schema |
+| `tables` | a constraint the CRD expresses in CEL rather than in the schema |
 | `validate-crs` | whether the CR does what the page says it does |
-| `check-coverage` | whether the pages behind the numbers say anything true. It counts them. `--drift` names the pages that have moved and never says what changed in one |
-| `check-processors` | what a key **means**. The definitions say whether a processor takes dynamic config; that an extra key on `http-request` is an HTTP header is in the loop that reads it, and no table upstream states it |
-| `check-counts` | a count of something nobody upstream counts. It recomputes what a deployment's own documents state, and a number invented here has nothing to be held against |
+| `coverage` | whether the pages behind the numbers say anything true. It counts them. `--drift` names the pages that have moved and never says what changed in one |
+| `processors` | what a key **means**. The definitions say whether a processor takes dynamic config; that an extra key on `http-request` is an HTTP header is in the loop that reads it, and no table upstream states it |
+| `counts` | a count of something nobody upstream counts. It recomputes what a deployment's own documents state, and a number invented here has nothing to be held against |
 | `spec-key-gap` | whether a key `add` writes is written **well**. It compares key sets, so a field emitted with the wrong value counts as covered |
-| `check-pass-list` | **whether any check passed.** It holds the list against the binary and `hack/`, and a verdict is not in its reach |
-| `check-goal` | whether the material is any good. It asks whether the capability is there - the corpus lands, a grep finds things, a chart gets written, the issue route is printed - never whether what landed is right |
-| `go run ./hack sources` | whether a reading happened. It compares a recorded reading with its clone and reports staleness; the reading itself is nobody's to verify but whoever claims it |
+| `pass-list` | **whether any check passed.** It holds the prose surfaces against each other and a verdict is not in its reach |
+| `goal` | whether the material is any good. It asks whether the capability is there - the corpus lands, a grep finds things, a chart gets written, the issue route is printed - never whether what landed is right |
+| `sources` | whether a reading happened. It compares a recorded reading with its clone and reports staleness; the reading itself is nobody's to verify but whoever claims it |
+| `doc-paths` | whether a document's prose is right. It resolves the paths, the Go symbols and whether every command in the tree is named in both READMEs, and says nothing about what the sentence around one claims |
 | `--unchecked` | nothing - it does not fail. It prints what every document says it has **not** been held against, which is where the blocked list comes from now instead of a section in `TASK.md` that had to be maintained |
 | `--orphans`, `--crossref`, `--ask`, `--unmarked`, no flag | nothing - they do not fail. They are listings for a person |
 
@@ -255,7 +231,7 @@ else is a claim nothing can hold against anything.
 Fix the claim, then ask the second question: **would a check have caught it?**
 
 - If yes, and there is no check - write it. `--paths`, `--sources` and
-  `check-coverage.py` all began as a defect somebody found by reading.
+  `go run ./hack coverage` all began as a defect somebody found by reading.
 - If no, say so where the claim lives. A `**Unchecked:**` line that names what
   nobody has held against anything is worth more than a claim that reads as
   settled.
