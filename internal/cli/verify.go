@@ -49,6 +49,12 @@ server-side dry run all pass:
   - the agent split: at most one semantic layer per Agent, no layer bound twice,
     no allowedCubes, sampleQuestions on anything published, and prompt.task and
     prompt.format identical across every Agent in one render
+  - the generator's own TODOs, still in the render. **A warning, never a
+    failure** - a chart carries them through the whole middle of an onboarding.
+    This is the last place between ` + "`asgard-cli add`" + ` and a tag where anybody
+    says they are there: helm renders the word, the apiserver accepts it, the
+    run succeeds, and a published Agent shows "TODO" to the customer as its
+    sample questions
 
 These are the checks a server-side dry run passes and runtime still fails: a
 reference to a CR that does not exist, an entry name nothing declares, a
@@ -250,6 +256,7 @@ func gates(docs []gate.Doc, opts gate.Options) []verifyCheck {
 		{"shapes", gate.Shapes(docs, opts)},
 		{"credentials", gate.CredentialRefs(docs, opts)},
 		{"deployability", gate.Deployability(docs, opts)},
+		{"placeholders", gate.Placeholders(docs, opts)},
 	}
 	out := make([]verifyCheck, 0, len(named))
 	for _, n := range named {

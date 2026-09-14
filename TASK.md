@@ -34,6 +34,7 @@ and whether its source has moved since is what `go run ./hack sources` reports.
 | surface | read against | when |
 |---|---|---|
 | `glossary-collisions` every word the glossary says has one meaning here, against the help screens and the pages | read 2026-09-14; no check is possible, because which sense a bare word carries needs a reader | 2026-09-14 |
+| `generated-repo-end-to-end` the tool run the way an engagement runs it | `init` through `verify` in a scratch repository, every generated kind rendered; both findings were verdicts, not prose | 2026-09-14 |
 | `provenance-markers` every `**Checked:**` and `**Seen in:**` line in the corpus | read for what it actually claims: a count on one is not evidence anybody read the source, so the counts are gone and the scope is named instead. The commit each extract was read at lives in `source/SOURCES.md`, which `go run ./hack sources` holds against the clones | 2026-09-14 |
 | `extracts-vs-charts` the 22 extracts against the charts they came from | the eight commits in `source/SOURCES.md`'s **held against** column, which is what makes this reading checkable rather than a date | 2026-09-11 |
 | `wiki-vs-docs` the 27 wiki pages against asgard-docs | **the pages whose citations have moved, which `go run ./hack coverage --drift` names** - now 0, each citation carrying the commit it was held against; the prose citing a page that has not moved stands at its own earlier reading | 2026-09-14 |

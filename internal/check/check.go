@@ -426,19 +426,58 @@ func frontmatter(data []byte) map[string]string {
 // every run of every new repo and teaches the reader that a warn from this
 // command means nothing - which matters, because the interview check below
 // reports something worth acting on through the same channel.
+// chartsDeclareSkillSet reports whether any project's chart declares a SkillSet.
+// One does when its skills come from a git repository the Syncer clones, and
+// then this repository's own `assets/skills/` is empty by design.
+func (c *checker) chartsDeclareSkillSet(projects []string) bool {
+	for _, p := range projects {
+		dir := filepath.Join(c.root, filepath.FromSlash(repo.ChartDir(p)), "templates")
+		found := false
+		_ = filepath.Walk(dir, func(path string, fi os.FileInfo, err error) error {
+			if err != nil || fi.IsDir() || found {
+				return nil
+			}
+			data, err := os.ReadFile(path)
+			if err != nil {
+				return nil
+			}
+			if skillSetKind.Match(data) {
+				found = true
+			}
+			return nil
+		})
+		if found {
+			return true
+		}
+	}
+	return false
+}
+
+var skillSetKind = regexp.MustCompile(`(?m)^kind:\s*SkillSet\s*$`)
+
 func (c *checker) checkAssetSkills(projects []string) error {
 	c.checkRenamedCommonDir()
 
 	dir := filepath.Join(c.root, assetsDir, "skills")
 	entries, err := os.ReadDir(dir)
 	if os.IsNotExist(err) {
-		if len(projects) > 0 {
+		if len(projects) > 0 && !c.chartsDeclareSkillSet(projects) {
 			c.warnf("assets/skills/ does not exist; it is where runtime skills live, and there are none yet")
 		}
 		return nil
 	}
 	if err != nil {
 		return fmt.Errorf("read %s: %w", dir, err)
+	}
+
+	// **A chart that declares a SkillSet has answered this.** Those skills live
+	// in the git repository its Syncer clones, which is the ordinary shape -
+	// `assets/skills/` is for skills THIS repository ships, and staying empty
+	// is what the scaffold's own README says it does. Warning anyway meant a
+	// finished repo carried a warning it could never clear, which is how a
+	// reader learns that a warn from this command means nothing.
+	if len(projects) > 0 && c.chartsDeclareSkillSet(projects) {
+		return nil
 	}
 
 	found := false
