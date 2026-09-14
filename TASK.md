@@ -128,12 +128,13 @@ under "What is not done" below.
     asgard-cli audit-material --unchecked
 
 Every document names the surface it has not been held against, and that prints
-all 74. **Nothing is listed here**: a list that can be generated is not written
-down, the same rule this file applies to a count.
+all 74. **Nothing is listed here** - a list that can be generated is not written
+down, the same rule this file applies to a count, and the marker is on the page
+where a reader meets the claim rather than in a file they have to think to open.
 
-Two things nobody here can produce come up in it, and **neither blocks an
-engagement**: a **console login**, for the five pages whose source is a UI
-screen, and a **first customer on a chat platform**, because every BotProvider
-in all eight reference deployments is `generic`. **LINE is the one that can
-still cost a day**, because `botProviderClass` is immutable - choosing wrong is
-a new BotProvider rather than an edit.
+**Most of what it prints is not waiting on anybody.** A page says what it was
+held against and what it was not, and the honest answer for a shape nobody has
+deployed is that the first engagement to do it is its first test - which is a
+thing to read before building one, not a task. The five pages whose source is a
+UI screen are the one group where somebody with an account could close the gap
+in an afternoon.
