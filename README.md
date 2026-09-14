@@ -658,8 +658,8 @@ and the platform cannot be asked.* See
 Sign in to the Asgard platform, so that the `pipeline` commands can act as you.
 
 ```bash
-asgard-cli login                     # sign in to prod
-asgard-cli login --profile dev       # sign in to dev
+asgard-cli login                     # sign in to the hosted platform
+asgard-cli login --profile onprem    # sign in to one you configured
 asgard-cli login --no-browser        # print the URL instead of opening one
 asgard-cli whoami                    # ask the platform who the session is
 asgard-cli logout --all              # forget every stored session

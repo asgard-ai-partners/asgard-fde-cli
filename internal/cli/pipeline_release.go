@@ -473,17 +473,18 @@ YAML this returns - the objects come back from the cluster verbatim. It is the
 nearest thing there is to "does this deployment work", and it is worth knowing
 exactly how near.
 
-**Half the kinds have no status at all, by schema.** Syncer, Trigger, Toolset,
-SourceSet, Source, Sandbox, Loader, Indexer, KnowledgeBase, OAuthCredential,
-BotProvider and SourceSetEditorServer declare one. Agent, Workflow,
-SemanticLayer, DataConnector, Plugin, SkillSet, SandboxBlueprint, OAuthProvider
-and the four model kinds do not, so an empty result there is the schema rather than a reconciler
-that has not got to it - and this says which of the two it is looking at.
+**Seven of the twenty-four kinds declare no status at all, by schema**, and an
+empty result on one of them is the schema rather than a reconciler that has not
+got to it. This says which of the two it is looking at, so the list is not one
+to carry in your head. The seven are Workflow, DataConnector, OAuthProvider and
+the four model kinds - CompletionModel, EmbeddingModel, ImageGenerationModel
+and TranscriptionModel. Everything else has one, Agent and SemanticLayer
+included.
 
 **That matters most for a chart with no Syncer.** ` + "`asgard-cli verify`" + ` warns
 that with no Syncer a succeeded run only means helm returned, and a chart of a
-DataConnector and a SemanticLayer is exactly the shape where no object can
-report anything: presence is genuinely all there is, and the only verification
+DataConnector and a SemanticLayer is a shape where the DataConnector has no
+status to give at all: presence is most of what there is, and the verification
 left is to open the product and ask the layer a question. This turns twenty
 minutes of looking for a read-back into one line that says so.
 
@@ -581,9 +582,12 @@ A release that has never deployed has no manifest, and says so.`,
 // why it is a flag on an existing read and not a new endpoint.
 //
 // **An empty status and no status are different answers and are printed
-// differently.** Roughly half the Asgard kinds declare no status schema at all,
-// so for those "nothing" is the shape of the CRD and not a reconciler that has
-// not run. Reporting both as blank is what sends somebody looking for a problem
+// differently.** Seven of the twenty-four Asgard kinds declare no status schema
+// at all - Workflow, DataConnector, OAuthProvider and the four model kinds - so
+// for those "nothing" is the shape of the CRD and not a reconciler that has not
+// run. This function cannot tell which kind it was handed; the help screen
+// names the seven, and it was wrong about five of them for as long as nothing
+// held it against the CRDs. Reporting both as blank is what sends somebody looking for a problem
 // that cannot exist - which is the twenty minutes this flag exists to save.
 //
 // What it can never show is a reconciler's complaint that landed in a

@@ -122,6 +122,7 @@ func runTables(args []string) error {
 	problems = append(problems, checkImmutable(root, crds)...)
 	problems = append(problems, checkRequiredBlocks(root, crds)...)
 	problems = append(problems, checkCEL(root, crds, dir)...)
+	problems = append(problems, checkStatusKinds(root, crds)...)
 
 	for _, p := range problems {
 		fmt.Printf("  %s\n", p)

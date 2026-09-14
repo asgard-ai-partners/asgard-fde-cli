@@ -86,12 +86,12 @@ func newGateCmd() *cobra.Command {
     asgard-cli gate                  every release the declaration names
     asgard-cli gate internal-dev     one of them
     asgard-cli gate --offline        skip the two steps that need the platform
+    asgard-cli gate --format json    one record per step, for an agent
 
 The first line says which platform this run's verdict is about, and how that
 profile came to be the one in effect. Two of the steps ask a platform, so a
 verdict read against the wrong one is worth nothing; ` + "`--offline`" + ` and "not signed
 in" say so there rather than leaving the line out.
-    asgard-cli gate --format json    one record per step, for an agent
 
 **Run it after changing anything under a chart or ` + "`" + pipelineconfig.FileName + "`" + `.** It is the
 build step of a repository that has no build step: an agent working in a

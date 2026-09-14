@@ -25,7 +25,7 @@ BEFORE A MEETING, read the one for what you are about to do:
 
     .agents/skills/asgard-platform/
       needs/<shape>.md           what they have to give us before we start
-      brief/customer-meeting.md  the five things said wrong to a customer
+      brief/customer-meeting.md  what gets said wrong to a customer
       brief/connect.md           before binding a checkout to the platform
       brief/write-chart.md       before touching a chart
       brief/handover.md          before telling anyone it is live
@@ -80,12 +80,13 @@ own namespace:
     asgard-cli add <kind>    a CR skeleton, wired to what the chart declares
     asgard-cli check         the structure; "verify" is the rendered chart
 
-Each of those four reads a file in the customer's repository back to you, and
-each takes ` + "`--format json`" + `. **None of them says where the engagement is**, and
-there is no such command: an onboarding is not linear, so a single position
-derived from the earliest missing CR kind is a claim the repository cannot
-support. What answers "what now" is those records, plus guidance by name with
-"asgard-cli guide <name>" or by grep over the material.
+"project", "question", "request" and "task" each read a file in the
+customer's repository back to you, and each takes ` + "`--format json`" + `.
+**None of them says where the engagement is**, and there is no such command:
+an onboarding is not linear, so a single position derived from the earliest
+missing CR kind is a claim the repository cannot support. What answers "what
+now" is those records, plus guidance by name with "asgard-cli guide <name>" or
+by grep over the material.
 
 Work arrives as a request: one thing the customer wants that the agent cannot do
 today. "asgard-cli request add" opens one, and every status the engagement keeps

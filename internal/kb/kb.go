@@ -372,7 +372,7 @@ func Invocations(body string) []Invocation {
 			for j, m := range ms {
 				// A flag belongs to the invocation it follows, so one
 				// invocation owns the text up to the next one - which is what
-				// `asgard-cli render x | asgard-cli check xref -` needs.
+				// `asgard-cli render x | asgard-cli verify --rendered -` needs.
 				end := len(seg)
 				if j+1 < len(ms) {
 					end = ms[j+1][0]

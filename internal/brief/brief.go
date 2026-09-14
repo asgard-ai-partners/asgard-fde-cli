@@ -58,10 +58,14 @@ var Activities = []Activity{
 	{
 		Name: "customer-meeting",
 		When: "before any conversation with the customer, at any stage",
-		Lead: `**Four of these five fail in the same direction: the intuitive answer
-undersells the platform or overstates a limit.** So the error is not neutral -
-it gives away scope, and from the customer's side being careful and being wrong
-look identical.
+		Lead: `**The intuitive answer is wrong in both directions, and they cost
+differently.** Undersell - "it cannot tell who they are", "we would have to
+build an approval step", "only the systems you connect to it" - gives away
+scope, and from the customer's side being careful and being wrong look
+identical. Oversell - a ticket number treated as authentication, a notification
+the platform cannot send - is a promise with no way to build it. Read every
+entry before the meeting rather than the ones that sound like your topic: the
+direction you are about to get wrong is not the one you expect.
 
 This stage's output is speech. Every other stage produces a file, which is
 edited and re-rendered; a wrong sentence is in their notes.`,

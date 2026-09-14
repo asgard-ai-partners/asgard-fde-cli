@@ -92,9 +92,10 @@ DO NOT FILE
 
 --new WRITES THE REPORT
 
-Three of the five sections above are things this tool already knows, and asking
-for them by hand is why they arrive missing. --new emits the body with those
-filled in and the rest marked TODO:
+**One of the five is something this tool already knows, and it is the required
+one.** Section 2 is the state you were in, asking for it by hand is why it
+arrives missing, and it is what separates a bug report from a complaint. --new
+emits the body with that section collected and the other four marked TODO:
 
     asgard-cli issue-report --new > report.md
     asgard-cli issue-report --new | gh issue create --repo asgard-ai-partners/asgard-fde-cli --body-file -

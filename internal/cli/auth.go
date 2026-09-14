@@ -46,27 +46,33 @@ CLI ships no client secret, so nothing in a release is worth lifting out of it.
 The session lasts 24 hours and renews itself for 30 days without asking again;
 after that, or once it is revoked, the next command says to run this one.
 
-    asgard-cli login                     sign in to prod
-    asgard-cli login --profile dev       sign in to dev
+    asgard-cli login                     sign in to the hosted platform
+    asgard-cli login --profile onprem    sign in to an installation you configured
     asgard-cli login --no-browser        do not open a browser; the URL is
                                          printed either way
 
-Two profiles exist, prod and dev, and each is a different platform with different
-workspaces. Signing in to one leaves the other alone, so both can be held at once
-and --profile picks between them per command.
+**With nothing configured, there is one platform and it is the hosted one.**
+That is what the profile named ` + "`default`" + ` is, and every command falls back to it.
+` + "`prod`" + ` and ` + "`dev`" + ` were once built-in names and are not any more: a development
+platform is one installation among the ones this tool meets rather than a second
+kind of thing, so it is written like any other with ` + "`asgard-cli profile set`" + `.
+Passing either name now says so rather than signing you in somewhere.
 
-**Nothing records which profile is meant when nothing says; it is prod.** A
+A session is held per profile, so signing in to one leaves the others alone and
+several can be held at once.
+
+**Nothing records which profile applies when nothing says; it is ` + "`default`" + `.** A
 default used to be recordable, in a file beside the credentials, and it is gone:
 a preference stored on one machine is a preference two people running the same
 command do not share, and it was one more file an upgrade had to keep
 understanding. Say it per command with --profile, or once per shell:
 
-    export ASGARD_PROFILE=dev
+    export ASGARD_PROFILE=onprem
 
-That way round is the safe one. The recorded default was usually dev, so
-forgetting it was set meant a command reaching a customer's platform believing
-it was the test one - and an exported variable is visible in the shell that set
-it, where a file under the user's config directory is not.
+That way round is the safe one. The recorded default was usually a test
+platform, so forgetting it was set meant a command reaching a customer's
+platform believing it was the test one - and an exported variable is visible in
+the shell that set it, where a file under the user's config directory is not.
 
 WITH NO BROWSER - CI, a container, an agent sandbox - do not use this command.
 Set ASGARD_TOKEN to an access token instead: it bypasses the store completely,
@@ -155,8 +161,8 @@ revoked at the platform, and any other machine holding one keeps it. Signing out
 of a profile that has no session is not an error - running this twice reports the
 same thing both times.
 
-    asgard-cli logout                    forget the prod session
-    asgard-cli logout --profile dev      forget the dev session
+    asgard-cli logout                    forget the hosted platform's session
+    asgard-cli logout --profile onprem   forget one installation's
     asgard-cli logout --all              forget every profile's
 
 --all does not take --profile, because it means every one of them.`,

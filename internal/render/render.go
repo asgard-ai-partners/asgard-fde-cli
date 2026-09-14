@@ -109,8 +109,8 @@ func AsgardValues(releaseName, namespace string) map[string]any {
 // Run renders the release's chart to out.
 //
 // helm's own stderr goes to errOut, so that `asgard-cli render x | asgard-cli
-// check xref -` keeps the pipe clean - the property render.sh had by writing
-// its progress to stderr.
+// verify --rendered -` keeps the pipe clean - the property render.sh had by
+// writing its progress to stderr.
 func Run(ctx context.Context, opts Options, out, errOut io.Writer) (Result, error) {
 	cfg, err := pipelineconfig.LoadFromRepo(opts.Root, opts.ConfigPath)
 	if err != nil {

@@ -183,6 +183,99 @@ func checkRequiredBlocks(root string, crds []crd) []string {
 	return out
 }
 
+// checkStatusKinds holds the statusless-kind claim against the CRDs.
+//
+// **`pipeline manifest --status` turns on which kinds have a status to give**,
+// and the help screen is the only place that list exists: it tells a reader
+// whether an empty status block is the schema or a reconciler that has not run.
+// It said half the kinds had none and named Agent, SemanticLayer, Plugin,
+// SkillSet and SandboxBlueprint among them; all five declare one, and seven of
+// the twenty-four kinds actually do not.
+//
+// A hand-written list of kinds is the shape that drifts - so it is held here,
+// by name and by count, against the schemas themselves.
+//
+// **The inverse is not checked, and that is deliberate.** A paragraph naming
+// kinds on both sides - "the seven are X, Y and Z; everything else has one,
+// Agent and SemanticLayer included" - reads perfectly and cannot be told from
+// the wrong version by any pattern over prose. A first version of this check
+// reported exactly that correct sentence. What catches the original defect is
+// the shape of the claim instead: it said "half the kinds", no pattern matched
+// it, and the last branch below fails a claim written in a form nothing can
+// check.
+func checkStatusKinds(root string, crds []crd) []string {
+	var without []string
+	for _, c := range crds {
+		props, _ := c.Spec.Versions[0].Schema.OpenAPIV3Schema["properties"].(map[string]any)
+		if _, ok := props["status"]; !ok {
+			without = append(without, c.Spec.Names.Kind)
+		}
+	}
+	sort.Strings(without)
+
+	bodies, err := celClaimFiles(root)
+	if err != nil {
+		return []string{err.Error()}
+	}
+	ws := func(p string) *regexp.Regexp { return regexp.MustCompile(strings.ReplaceAll(p, " ", `\s+`)) }
+	claim := ws(`([\w-]+) of the ([\w-]+) kinds declare no status at all`)
+
+	var out []string
+	seen := 0
+	for _, b := range bodies {
+		for _, loc := range claim.FindAllStringIndex(b.text, -1) {
+			m := claim.FindStringSubmatch(b.text[loc[0]:loc[1]])
+			seen++
+			// **The paragraph, not the file.** A whole-file search passes on a
+			// kind the list dropped whenever any other sentence happens to
+			// name it - and the paragraph after this one names DataConnector,
+			// so removing it from the list changed nothing.
+			para := b.text[loc[0]:]
+			if i := strings.Index(para, "\n\n"); i >= 0 {
+				para = para[:i]
+			}
+			if numberWord(m[1]) != len(without) {
+				out = append(out, fmt.Sprintf("%s says %s kinds declare no status, and the CRDs have %d: %s",
+					b.name, m[1], len(without), strings.Join(without, ", ")))
+			}
+			if numberWord(m[2]) != len(crds) {
+				out = append(out, fmt.Sprintf("%s says there are %s kinds, and asgard-kube has %d",
+					b.name, m[2], len(crds)))
+			}
+			// **Every kind it names has to be one of them.** The count being
+			// right is not the claim a reader acts on; the names are.
+			for _, kind := range without {
+				if !strings.Contains(para, kind) {
+					out = append(out, fmt.Sprintf("%s states the statusless kinds and does not name %s, which declares none",
+						b.name, kind))
+				}
+			}
+		}
+	}
+	if seen == 0 {
+		out = append(out, fmt.Sprintf(
+			"no statusless-kind claim matches, so %d kind(s) without a status schema are going unchecked",
+			len(without)))
+	}
+	return out
+}
+
+// numberWord reads the small number words this material writes out, and digits.
+func numberWord(s string) int {
+	words := map[string]int{
+		"zero": 0, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
+		"six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
+		"eleven": 11, "twelve": 12, "thirteen": 13, "fourteen": 14,
+		"fifteen": 15, "sixteen": 16, "seventeen": 17, "eighteen": 18,
+		"nineteen": 19, "twenty": 20, "twenty-one": 21, "twenty-two": 22,
+		"twenty-three": 23, "twenty-four": 24, "twenty-five": 25,
+	}
+	if n, ok := words[strings.ToLower(s)]; ok {
+		return n
+	}
+	return atoi(s)
+}
+
 // checkCEL holds every CEL-rule count this repository states.
 //
 // **Two numbers that are easy to write for each other**: 79 is the
@@ -279,9 +372,11 @@ func celClaimFiles(root string) ([]body, error) {
 	var out []body
 	// **Everything that states one.** APPROACH.md was not in this list and
 	// carried the marker count as the CRDs' own for as long as the page whose
-	// subject it is did.
+	// subject it is did; `internal/cli` was not in it either, and `verify`'s
+	// own help screen - which is where an FDE meets these numbers - called 79
+	// markers "79 rules", the exact confusion this check exists for.
 	for _, pattern := range []string{"internal/corpus/*/*.md", "internal/gate/*.go",
-		"TASK.md", "AGENTS.md", "APPROACH.md"} {
+		"internal/cli/*.go", "TASK.md", "AGENTS.md", "APPROACH.md"} {
 		paths, err := filepath.Glob(filepath.Join(root, pattern))
 		if err != nil {
 			return nil, err
@@ -293,11 +388,30 @@ func celClaimFiles(root string) ([]body, error) {
 				return nil, err
 			}
 			rel, _ := filepath.Rel(root, p)
-			out = append(out, body{rel, string(data)})
+			out = append(out, body{rel, unquoteBackticks(string(data))})
 		}
 	}
 	return out, nil
 }
+
+// unquoteBackticks turns Go's way of putting a backtick inside a raw string
+// back into the backtick a reader sees.
+//
+// **A help screen is prose, and this check reads it as source.** A claim
+// written as a sentence quoting a field name is stored as a raw string broken
+// around a concatenated backtick, so a pattern looking for the rendered
+// sentence
+// matches nothing - and a claim that matches nothing is reported only when NO
+// claim anywhere matches. The first version of this check read `internal/cli`
+// and still could not see the one wrong number in it.
+func unquoteBackticks(s string) string {
+	return goTick.ReplaceAllString(s, "\x60")
+}
+
+// goTick matches the two spellings, spaced and not. Written with \x60 rather
+// than the character itself so that this file does not contain the sequence it
+// is looking for.
+var goTick = regexp.MustCompile("\x60\\s*\\+\\s*\"\x60\"\\s*\\+\\s*\x60")
 
 // shipped is everything that reaches a reader: the corpus, what the generator
 // writes, the scaffolded templates, and the Go-held bodies.

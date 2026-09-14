@@ -30,7 +30,7 @@ reads it renders rather than failing on a missing key.
 
     asgard-cli render internal-dev
     asgard-cli render internal-dev > .out/rendered.yaml
-    asgard-cli render internal-dev | asgard-cli check xref -
+    asgard-cli render internal-dev | asgard-cli verify --rendered -
 
 **WHAT THIS RENDERS IS NOT WHAT WILL DEPLOY.** A run renders on the platform,
 with the release's real values and real ids, and then checks every resulting CR

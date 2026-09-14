@@ -24,11 +24,16 @@ import (
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/wiki"
 )
 
-// The instructions in this material are spread across 67 documents - 27 wiki
-// pages, 22 extracts, 12 stage prompts and 6 skills - and three
-// contradictions have reached a customer - every one found by somebody walking
-// into it. The cause is that no two opposing instructions are ever in front of
-// the same pair of eyes.
+// The instructions in this material are spread across every part of the corpus
+// - the wiki, the extracts, the stage prompts, the needs lists, the briefings
+// and the skills - and four ways it has contradicted itself have reached a
+// customer, every one found by somebody walking into it. The cause is that no
+// two opposing instructions are ever in front of the same pair of eyes.
+//
+// **The breakdown is not written here.** It was, as a count per part, and three
+// of its four numbers were wrong within a month of being typed: the material
+// moves and a sentence does not. What this command prints is counted at the
+// moment it runs, which is the only form of the number that stays true.
 //
 // This command makes that moment, and it lives in the binary rather than beside
 // the source for one reason: **an audit that only runs on the maintainer's
@@ -420,10 +425,12 @@ func newAuditCmd() *cobra.Command {
 		Hidden: true,
 		Long: `Every instruction this tool ships, on one screen.
 
-Three contradictions in this material have reached a customer and every one was
-found by somebody walking into it. The cause is structural: the instructions are
-spread across 67 documents, so **no two opposing ones are ever in front of the
-same reader.** This makes that moment.
+Four ways this material has contradicted itself have reached a customer and
+every one was found by somebody walking into it. The cause is structural: the
+instructions are spread across every part of the corpus, so **no two opposing
+ones are ever in front of the same reader.** This makes that moment. The count
+of what it found is the last line it prints, because a number in this paragraph
+would be one nobody recomputes.
 
 It detects nothing, deliberately. Matching opposing verbs over prose produces
 noise, and a checker that cries wolf teaches people to change what it can see

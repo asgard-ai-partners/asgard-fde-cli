@@ -488,8 +488,8 @@ asgard-cli 的散佈方式沒有一種裝得了它們。tar.gz、zip 與 `go ins
 登入 Asgard 平台，讓 `pipeline` 指令能以你的身分行動。
 
 ```bash
-asgard-cli login                     # 登入 prod
-asgard-cli login --profile dev       # 登入 dev
+asgard-cli login                     # 登入代管平台
+asgard-cli login --profile onprem    # 登入自己設定的那一座
 asgard-cli login --no-browser        # 印出 URL 而不是開瀏覽器
 asgard-cli whoami                    # 問平台這個 session 是誰
 asgard-cli logout --all              # 忘掉每一個 session

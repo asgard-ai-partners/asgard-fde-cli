@@ -111,13 +111,14 @@ meeting is cheaper than a correction after it.
 
 ### Run `../brief/customer-meeting.md` before the meeting
 
-Not reading - running. It lists the five things that reach a customer wrong, and
-it lives there rather than here because meetings happen at any point: a briefing
+Not reading - running. It lists what reaches a customer wrong, and it lives
+there rather than here because meetings happen at any point: a briefing
 reachable only from this page is unreachable to an engagement halfway through a
 chart with a meeting tomorrow.
- The short version of why: four of the five fail
-in the same direction - the intuitive answer undersells the platform or
-overstates a limit - so when a customer asks whether something is possible and
+ The short version of why: an intuitive answer goes
+wrong in **both** directions - some entries undersell the platform or overstate
+a limit, and some promise something that cannot be built - so when a customer
+asks whether something is possible and
 the honest-sounding answer is "no" or "not yet", that is the moment to check
 rather than to be modest. Being careful and being wrong look identical from
 their side.

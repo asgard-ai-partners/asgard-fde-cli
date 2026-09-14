@@ -341,7 +341,7 @@ func (e *ErrRetiredSettings) Error() string {
 			fmt.Fprintf(&b, "                       asgard-cli workspace use <id>\n")
 		case "profiles":
 			fmt.Fprintf(&b, "  profiles           now %s, %s and %s, applied on top of\n", EnvIssuer, EnvClientID, EnvPlatformAPI)
-			fmt.Fprintf(&b, "                       dev or prod\n")
+			fmt.Fprintf(&b, "                       whichever profile applies, which is %q unless one is named\n", DefaultProfileName)
 		}
 	}
 	// Only where a profile was recorded. That is the case where ignoring the
