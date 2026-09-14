@@ -23,6 +23,7 @@ func TestAccumulatorsAreTheFilesAnEngagementAnswersInto(t *testing.T) {
 		filepath.Join("requirements", "tasks", "_index.md"),
 		filepath.Join("docs", "decisions", "README.md"),
 		filepath.Join("docs", "spec", "acme", "README.md"),
+		filepath.Join("projects", "erp", "chart", "app", "values.yaml"),
 	} {
 		if !accumulator(target) {
 			t.Errorf("%s is written into after the scaffold runs and --force would overwrite it", target)
