@@ -37,6 +37,24 @@ var reachesAReader = map[string]map[string]string{
 	},
 }
 
+// **A flow agent has no Agent CR, so its prompt is on a processor** - and that
+// prompt is the whole product. A named field cannot find it, because a
+// Workflow's prompt is a `configs` entry inside whichever processor happens to
+// be the completion one, so it is looked for by walking the graph.
+var promptProcessors = map[string]bool{
+	"stream-llm-completion-message": true,
+	"llm-completion":                true,
+}
+
+// namedConfigs are the other processor configs worth naming, and what each
+// costs unanswered. `sql` is the one that looks harmless: the generator writes
+// `select 1`, the CR applies, the tool answers every question with the same
+// row, and nothing else in this gate reads SQL.
+var namedConfigs = map[string]map[string]string{
+	"query-database": {"sql": "the generator writes `select 1`, which applies cleanly and answers every question with the same row"},
+	"http-request":   {"url": "a request to an unanswered URL fails at call time rather than at deploy"},
+}
+
 // Placeholders reports the generator's TODOs that are still in the render.
 //
 // **Warnings, never failures.** A chart is full of them through the whole
@@ -61,6 +79,22 @@ func Placeholders(docs []Doc, opts Options) Result {
 		}
 		total += n
 		byKind[d.Kind] += n
+
+		if d.Kind == "Workflow" {
+			for _, p := range workflowPrompts(d) {
+				warnings = append(warnings, fmt.Sprintf(
+					"Workflow/%s: processor %q has prompt still TODO - this shape has no Agent CR, "+
+						"so the prompt on this processor is the whole of what it does", d.Name, p))
+			}
+			for _, f := range workflowConfigs(d) {
+				warnings = append(warnings, fmt.Sprintf("Workflow/%s: %s", d.Name, f))
+			}
+			for _, e := range workflowTooling(d) {
+				warnings = append(warnings, fmt.Sprintf(
+					"Workflow/%s: entry %q has tooling.description still TODO - the model reads it to "+
+						"decide whether to call this tool, and reads nothing else about it", d.Name, e))
+			}
+		}
 
 		named := reachesAReader[d.Kind]
 		var hit []string
@@ -87,6 +121,97 @@ func Placeholders(docs []Doc, opts Options) Result {
 			"and nothing between here and a tag mentions them again: helm renders the word, the apiserver accepts it, "+
 			"and the run succeeds", total, strings.Join(kinds, ", ")))
 	return Result{Warnings: warnings, Summary: fmt.Sprintf("%d TODO(s)", total)}
+}
+
+// workflowPrompts names every completion processor whose prompt is still a
+// placeholder.
+func workflowPrompts(d Doc) []string {
+	var out []string
+	procs, _ := d.Spec["processors"].([]any)
+	for _, p := range procs {
+		m, ok := p.(map[string]any)
+		if !ok || !promptProcessors[fmt.Sprint(m["type"])] {
+			continue
+		}
+		configs, _ := m["configs"].([]any)
+		for _, c := range configs {
+			cm, ok := c.(map[string]any)
+			if !ok || fmt.Sprint(cm["name"]) != "prompt" {
+				continue
+			}
+			// **All three forms.** A config value is a Literal, an
+			// Expression or a Template and the CRD enforces exactly one, so
+			// reading `value` alone missed the supervisor's prompt - which is
+			// written as a Template and is the whole of what that shape does.
+			for _, form := range []string{"value", "expression", "template"} {
+				if placeholder.MatchString(fmt.Sprint(cm[form])) {
+					out = append(out, fmt.Sprint(m["name"]))
+					break
+				}
+			}
+		}
+	}
+	sort.Strings(out)
+	return out
+}
+
+// workflowConfigs names the other processor configs in namedConfigs that are
+// still placeholders.
+func workflowConfigs(d Doc) []string {
+	var out []string
+	procs, _ := d.Spec["processors"].([]any)
+	for _, p := range procs {
+		m, ok := p.(map[string]any)
+		if !ok {
+			continue
+		}
+		named := namedConfigs[fmt.Sprint(m["type"])]
+		if named == nil {
+			continue
+		}
+		configs, _ := m["configs"].([]any)
+		for _, c := range configs {
+			cm, ok := c.(map[string]any)
+			if !ok {
+				continue
+			}
+			why, wanted := named[fmt.Sprint(cm["name"])]
+			if !wanted {
+				continue
+			}
+			for _, form := range []string{"value", "expression", "template"} {
+				if placeholder.MatchString(fmt.Sprint(cm[form])) {
+					out = append(out, fmt.Sprintf("processor %q has %s still TODO - %s",
+						fmt.Sprint(m["name"]), fmt.Sprint(cm["name"]), why))
+					break
+				}
+			}
+		}
+	}
+	sort.Strings(out)
+	return out
+}
+
+// workflowTooling names every entry whose tool description a model would read
+// as the word TODO.
+func workflowTooling(d Doc) []string {
+	var out []string
+	entries, _ := d.Spec["entries"].([]any)
+	for _, e := range entries {
+		m, ok := e.(map[string]any)
+		if !ok {
+			continue
+		}
+		tooling, ok := m["tooling"].(map[string]any)
+		if !ok {
+			continue
+		}
+		if placeholder.MatchString(fmt.Sprint(tooling["description"])) {
+			out = append(out, fmt.Sprint(m["name"]))
+		}
+	}
+	sort.Strings(out)
+	return out
 }
 
 func sortedKindKeys(m map[string]int) []string {
