@@ -41,12 +41,21 @@ var greps = []string{"allowlist", "botProviderClass", "immutable", "read-only"}
 // **No network.** A proxy that resolves nowhere is the cheapest way to make a
 // fetch fail rather than succeed slowly, and Goal's first point is that none is
 // needed.
+//
+// **HOME is a sibling of the scratch directory, not the scratch directory.**
+// It is set at all so that the run reads none of this machine's credentials or
+// profiles - but `init` refuses to scaffold a home directory, which is its own
+// guard against somebody running it in theirs, so pointing HOME at the
+// directory being scaffolded made every one of Goal's points fail for a reason
+// that was nothing to do with Goal.
 func runCLI(binary, dir string, args ...string) (string, string, error) {
+	home := dir + "-home"
+	_ = os.MkdirAll(home, 0o755)
 	cmd := exec.Command(binary, args...)
 	cmd.Dir = dir
 	cmd.Env = append(os.Environ(),
 		"HTTP_PROXY=http://127.0.0.1:1", "HTTPS_PROXY=http://127.0.0.1:1",
-		"ALL_PROXY=http://127.0.0.1:1", "NO_PROXY=", "ASGARD_PROFILE=", "HOME="+dir)
+		"ALL_PROXY=http://127.0.0.1:1", "NO_PROXY=", "ASGARD_PROFILE=", "HOME="+home)
 	var out, errb strings.Builder
 	cmd.Stdout = &out
 	cmd.Stderr = &errb

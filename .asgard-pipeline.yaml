@@ -1,0 +1,79 @@
+# .asgard-pipeline.yaml —— 本 repo 在 Platform Pipeline 上的部署宣告。**唯一的一份。**
+#
+# 它回答兩個問題:
+#   1. 有哪些 Release(一份 chart 部署到一個 Project/namespace,由一條 tag 或 branch 規則觸發)
+#   2. 每個 Release 吃哪些 Variables —— **只宣告 key,不放值**
+#
+# 值一律在 Platform 上填,用 CLI 或 UI:
+#
+#   asgard-cli pipeline variables list --release <name>
+#   asgard-cli pipeline variables set  --release <name> <key> <value>
+#   asgard-cli pipeline variables set  --release <name> --kind secret <key> --from-file <path>
+#
+# 這裡是「有哪些 key」的事實來源,Platform 是「值是什麼」的事實來源。
+#
+# 沒有的東西,以及它們去了哪裡:
+#   - namespace            → Release 建立時選 Project,namespace 由 Project 決定
+#   - environment id       → Platform 注入 .Values.asgard.projectEnvironmentId
+#   - Secret / ConfigMap 名 → Platform 每個 Release 配一組,名字注入 .Values.asgard.*
+#   - appVersion / 版本號   → Platform 把觸發的 ref 蓋進 chart 的 appVersion
+#   - 哪個 workspace        → .asgard-cli.yaml,那是 client 端的事,Platform 不讀
+#
+# 規則:
+#   - name:小寫字母、數字、-,1~40 字,Pipeline 內唯一;Platform 上的 Release 必須同名
+#   - on.type:tag | branch;on.pattern:RE2 regex,比對整個 tag / branch 名(隱含錨定)
+#   - chart:chart **目錄**(含 Chart.yaml),相對 repo 根目錄
+#   - chartValues[].key:helm dotted path;type 預設 auto(型別推斷)| string | json
+#   - appSecret[].key / appConfigMap[].key:**Secret / ConfigMap 裡的平的 key 名,
+#     不是 helm path**。CR 用 secretKeyRef / configMapKeyRef 取,key 名要與這裡逐字一致
+#   - required 預設 true;false = 沒設值就沿用 chart values.yaml 的預設
+#
+# 三個清單的差別在**值在哪裡被解開**:
+#   chartValues   烘進渲染出來的 manifest —— reviewer 在 plan 報告上看得到
+#   appSecret     寫進本 Release 的 Secret,CR 在 runtime 用 secretKeyRef 取;
+#                 值永不進 helm value、log 或 plan 報告
+#   appConfigMap  同上,但走 ConfigMap 與 configMapKeyRef(非機密)
+#
+# **沒宣告的 key 不會被注入。** 只在 Platform 上設值不算 —— 那筆變數會被存起來但
+# 永遠不注入,`variables list` 標它 ORPHAN,Run 報 vars/orphan,而 lint、render、
+# CRD dry-run 全部是綠的,只有 runtime 取不到。
+
+# **一個 Project 通常要一個環境一條 Release,不是一條。** dev 與 prod 共用同一份
+# chart 目錄,差別只在 name 與 on.pattern,而且各自 bind 到**不同的 Platform
+# Project**(因此不同 namespace)。
+#
+# Platform Project 不是 projects/<slug>/ —— 後者是這個 repo 裡的 chart,前者是
+# Workspace 底下擁有一個 namespace 的分區。bind 是在這個檔案外面做的:
+#
+#   asgard-cli pipeline projects                    看 Workspace 現有哪些
+#   asgard-cli pipeline project create <name>       建一個(連預設 environment)
+#   asgard-cli pipeline release create <release-name> --project <id>
+#
+# 其中一條可以沿用既有的 Platform Project;不能兩條共用同一個 —— 那樣兩條會部署
+# 進同一個 namespace,prod 就變成「最後一個被 tag 的那個」。
+#
+# 一條 Release 只有在「沒人要維護的 POC」時才是對的。上線後才想加 staging,
+# 那時 Platform Project、namespace 和 Release 名都已經是 prod 在用的了。
+
+version: 1
+
+releases:
+  # 還沒有 Project。`asgard-cli project add <slug>` 寫出 chart 之後,
+  # 一個環境一條 Release 長這樣 —— 兩條的 chart 相同,name 與 pattern 不同:
+  #
+  #   - name: <slug>-dev
+  #     on:
+  #       type: tag
+  #       pattern: '^dev-[0-9]+\.[0-9]+\.[0-9]+$'
+  #     chart: projects/<slug>/chart/app
+  #     chartValues: []
+  #     appSecret: []
+  #     appConfigMap: []
+  #   - name: <slug>-prod
+  #     on:
+  #       type: tag
+  #       pattern: '^[0-9]+\.[0-9]+\.[0-9]+$'
+  #     chart: projects/<slug>/chart/app
+  #     chartValues: []
+  #     appSecret: []
+  #     appConfigMap: []

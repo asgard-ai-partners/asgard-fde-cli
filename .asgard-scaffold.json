@@ -1,0 +1,361 @@
+{
+  "written_at": "2026-09-14T05:45:15Z",
+  "files": {
+    ".agents/skills/asgard-fde-onboarding/SKILL.md": {
+      "digest": "b4041eb3bc15",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/SKILL.md": {
+      "digest": "9e816b424737",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/aliases.md": {
+      "digest": "b2b61490c02b",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/brief/connect.md": {
+      "digest": "6ecd310c552b",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/brief/customer-meeting.md": {
+      "digest": "524ee0330ccd",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/brief/handover.md": {
+      "digest": "dbbd2a19882b",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/brief/write-chart.md": {
+      "digest": "3516409b578c",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/guide/data-sources.md": {
+      "digest": "b3ce69ce0b5a",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/guide/deploy.md": {
+      "digest": "c911beaba82b",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/guide/enhance.md": {
+      "digest": "752200cbff58",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/guide/entry-point.md": {
+      "digest": "67e6b94869ef",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/guide/idle.md": {
+      "digest": "d89305940d0f",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/guide/knowledge.md": {
+      "digest": "ca47e1ccd2c4",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/guide/projects.md": {
+      "digest": "5b71dcf4dd59",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/guide/read-path.md": {
+      "digest": "6078ef7ec6de",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/guide/requirements.md": {
+      "digest": "b70267ffebfe",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/guide/verify.md": {
+      "digest": "f2abb030db08",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/index.md": {
+      "digest": "f91dc58d93b6",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/needs/browser-operation.md": {
+      "digest": "834b3cbde1db",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/needs/chat-channel.md": {
+      "digest": "9db4105059e1",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/needs/external-api.md": {
+      "digest": "23334eebe558",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/needs/knowledge-drive.md": {
+      "digest": "a03eea6b3c43",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/needs/semantic-layer.md": {
+      "digest": "c3b88a122ecc",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/needs/skill-set.md": {
+      "digest": "39cd133e5c94",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/needs/write-path.md": {
+      "digest": "f81961a2fc53",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/usecase/README.md": {
+      "digest": "f5fd8b7ebac4",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/usecase/agent-hub.md": {
+      "digest": "31f902513b25",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/usecase/api-oauth.md": {
+      "digest": "3029e4b500b5",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/usecase/browser-operation.md": {
+      "digest": "178a5276a435",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/usecase/chat-channel.md": {
+      "digest": "476e17648dc1",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/usecase/conventions.md": {
+      "digest": "3fdb4ce4b41c",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/usecase/demo-generation.md": {
+      "digest": "4cf2d3818a18",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/usecase/external-api.md": {
+      "digest": "f137145abb4d",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/usecase/fixed-query-tools.md": {
+      "digest": "0198b84bb9c7",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/usecase/flow-agent-single.md": {
+      "digest": "070636251cf1",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/usecase/flow-agent-supervisor.md": {
+      "digest": "20a92810a860",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/usecase/knowledge-base.md": {
+      "digest": "3f2f1b5b9598",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/usecase/knowledge-drive.md": {
+      "digest": "1713584b97ef",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/usecase/mimir-dashboard.md": {
+      "digest": "6287479f2406",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/usecase/per-turn-credentials.md": {
+      "digest": "c9c16e81fd15",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/usecase/plugin.md": {
+      "digest": "67f561b7d044",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/usecase/semantic-layer.md": {
+      "digest": "06f8cbe4fdd3",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/usecase/skill-layers.md": {
+      "digest": "f95d044653b2",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/usecase/skill-set.md": {
+      "digest": "dbc4b89bf8a0",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/usecase/trigger.md": {
+      "digest": "c3d597b6b62f",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/usecase/workflow-chain.md": {
+      "digest": "f0ce98396a91",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/usecase/write-path.md": {
+      "digest": "d434e1b2f70d",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/wiki/README.md": {
+      "digest": "8622dc247101",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/wiki/agents.md": {
+      "digest": "a303abe12d84",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/wiki/api.md": {
+      "digest": "5ff058af3049",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/wiki/automation.md": {
+      "digest": "3da2bb777c41",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/wiki/case-studies.md": {
+      "digest": "9c122ad4c7d4",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/wiki/console.md": {
+      "digest": "6c42f069ee25",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/wiki/coverage.md": {
+      "digest": "d8a424d5c793",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/wiki/crd-rules.md": {
+      "digest": "ce0b2446a82d",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/wiki/fehu.md": {
+      "digest": "daaac63ada25",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/wiki/glossary.md": {
+      "digest": "98a6765d6346",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/wiki/index.md": {
+      "digest": "294ac00f6dda",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/wiki/integration.md": {
+      "digest": "4768627de2db",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/wiki/knowledge.md": {
+      "digest": "f943d2fca867",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/wiki/mimir.md": {
+      "digest": "a4b3da33eedb",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/wiki/operations.md": {
+      "digest": "5396876c3b36",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/wiki/platform-unknowns.md": {
+      "digest": "d18eb90c7c7e",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/wiki/processors.md": {
+      "digest": "6f87ed701d97",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/wiki/product-suite.md": {
+      "digest": "8b3ec617f1ac",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/wiki/screenshots.md": {
+      "digest": "9d9bf7f0cf5e",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/wiki/semantic-model.md": {
+      "digest": "d1d38b761e55",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/wiki/settings.md": {
+      "digest": "528797063e4c",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/wiki/setup-path.md": {
+      "digest": "597630f544e6",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/wiki/sindri.md": {
+      "digest": "187b94b0ac45",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/wiki/taiwan-channels.md": {
+      "digest": "01d0b74f62b4",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/wiki/tools.md": {
+      "digest": "3f069879ab3d",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/wiki/what-they-read.md": {
+      "digest": "94bab366c5f1",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/asgard-platform/wiki/workflow.md": {
+      "digest": "bbb6da907c0c",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/db-query/SKILL.md": {
+      "digest": "c97989f3c3b2",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/db-query/references/connectors.md": {
+      "digest": "2bdc7769ea90",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/db-query/scripts/connectors.py": {
+      "digest": "b8580ea6fcad",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/db-query/scripts/netsuite.py": {
+      "digest": "69e637dad879",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/db-query/scripts/query.py": {
+      "digest": "5f6c6e8602b6",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/db-query/scripts/requirements.txt": {
+      "digest": "5c7f4a413841",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/db-query/scripts/salesforce.py": {
+      "digest": "a923f3c23470",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/knowledge-base/SKILL.md": {
+      "digest": "eba233ab388e",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/plain-chinese/SKILL.md": {
+      "digest": "56a019314dcb",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/proposal-deck/SKILL.md": {
+      "digest": "a0358427c23c",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/proposal-deck/discovery-deck.html": {
+      "digest": "6d265c2859a3",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/proposal-deck/references/design.md": {
+      "digest": "6ab6ea252eb1",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/proposal-deck/references/slides.json": {
+      "digest": "2575b8232aa6",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/semantic-layer-modeling/SKILL.md": {
+      "digest": "52cc0c204566",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    },
+    ".agents/skills/spec-workflow/SKILL.md": {
+      "digest": "f92c84092b1b",
+      "cli_version": "v0.1.1-0.20260914054119-e144940f86ca+dirty"
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "asgard-fde",
+  "version": "0.1.0",
+  "description": "Slash commands over asgard-cli for this onboarding. The commands are thin on purpose: asgard-cli holds the knowledge, this holds the order.",
+  "author": { "name": "asgard-cli" }
+}

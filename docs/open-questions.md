@@ -1,0 +1,124 @@
+# Open questions
+
+**Questions that block or shape a decision, and are not answered yet.** This is
+the first file to read when picking this repo up, and the first to update when
+an answer arrives.
+
+It exists because an unanswered question has nowhere else to live. A decision
+record is for something settled. A task spec's open questions vanish when the
+task reaches `done`. The living spec describes what *is*, not what nobody knows
+yet. Without this file, the question is rediscovered by the next person, usually
+by making the wrong assumption first.
+
+`asgard-cli question` reads this file and reports anything still open.
+
+## How to use it
+
+- **Add a row the moment a question blocks or shapes a decision**, not later.
+  A question you can already answer is not one - answer it.
+- **Say who can answer it, in this row.** A question with no owner is a wish.
+  The name is who we chase, not something the customer is shown.
+- **When it is answered**: move the row to Answered with the date, write a
+  `docs/decisions/YYYY-MM-DD-<topic>.md` if it settled anything, and apply the
+  delta to the living spec. **Do not delete the row** - the fact that it was once
+  open explains why the design has the shape it has.
+- **Numbers never move.** Retire a row in place rather than renumbering, and
+  leave the gap. Once anything cites a question by number - a deck, a meeting
+  note, the prose under this table - renumbering breaks every reference at once,
+  and the cost of that overtakes the cost of a gap almost immediately.
+- **A deck edits this file.** Reworking questions with somebody rewrites them,
+  and whatever is reworded, retired or discovered while building one belongs
+  back in these rows in the same edit. `asgard-cli question` prints this file before
+  anything else, so a stale row is what the next person reads first - and it
+  does not merely lag, it keeps a judgement that has been overturned, still
+  reading as though it were considered.
+- **Do not park a question here to avoid asking it.** If the customer can answer
+  it in the next meeting, it belongs in the agenda, not in a table.
+
+## Two filters, before a question becomes a row
+
+A table of twenty-five questions has not narrowed anything - it has moved the
+customer's document into a table. Most questions are removed by one of these
+two, and what survives is short.
+
+**1. Is this ours to answer at all?** Ask first; it removes the most. We deliver
+an agent, we do not design the customer's operation. The test is whether the
+answer changes what we build. What we need *from* them is ours to chase - a
+credential, an endpoint, a network path, a document, an account. How they staff a
+channel, who maintains a document, how their own two systems relate to each other
+is theirs: hand it back as a note before go-live, do not track it as a row. Doing
+their integration analysis looks like diligence and produces a table nobody
+uses.
+
+**2. What is the smallest thing that proves what the customer said they are
+testing?** Not the smallest thing that is easy to build - if they gave you a
+verification list, a first delivery that skips the item they most want to see has
+failed however fast it shipped. Find the smallest slice that reaches the hardest
+item on their list. What that slice does not need is not an open question: it is
+a line in the request's "out of scope", with a note of what has to be answered
+before it comes back.
+
+**What gets cut is a mechanism, not a capability.** Dropping "we will not read
+your system yet" fails the test, because that is the thing being judged. Dropping
+"for now the user tells us which record they mean" does not - a lookup keyed on
+something the user types proves the same integration as one keyed on a recognised
+identity. The hardest question in an engagement usually does not block the first
+delivery, and filing it as a blocker makes a week's work look impossible.
+
+What is left after both filters is usually three or four rows - what blocks the
+minimum itself, anything the customer must do before we can proceed, and anywhere
+two of their answers contradict each other.
+
+`.agents/skills/asgard-platform/guide/requirements.md` carries both filters in full, with a
+worked example.
+
+## Open
+
+| # | Question | What it blocks | Who can answer | Raised |
+|---|---|---|---|---|
+
+## Questions the platform itself does not answer
+
+Some questions are not about this customer at all - they are things the Asgard
+platform's own documentation does not settle, and every engagement hits the same
+ones. Those live in the tool rather than in this file, so that an answer reaches
+every engagement at once instead of ageing in whichever repo happened to write it
+down:
+
+    `.agents/skills/asgard-platform/wiki/platform-unknowns.md`
+
+Read that list before assuming the platform can or cannot do something. When one
+of those questions blocks *this* engagement, add a row above naming it, and when
+the platform team answers it, tell whoever maintains `asgard-cli` so the next
+engagement starts with the answer.
+
+## What the customer asked us
+
+Their questions, not ours. A customer's own document usually ends with a list of
+things they want us to confirm, and those are not open questions about this
+engagement - they are obligations with a reply date.
+
+**Check each against `.agents/skills/asgard-platform/wiki/platform-unknowns.md` first.** Several will be
+on it, because customers ask about the same things every engagement hits - what
+a given user may reach, what gets logged and for how long. When one matches, say
+so: "no confirmed answer yet, we are checking with the platform team" is honest
+and is itself an answer. Answering from a reasonable assumption is how something
+we cannot do ends up in their acceptance criteria, and their list is usually also
+what they will judge us by.
+
+Answer in writing, with a date, next to the question.
+
+**These answers go back to the customer**, so load
+`.agents/skills/plain-chinese/SKILL.md` before writing them - no 不僅……更是……,
+no sentence that ends by announcing its own importance, no 至關重要 or 賦能 or
+無縫銜接. An answer to a customer's own question is the shortest thing you will
+write and the most closely read; a paragraph of adjectives around a "we are
+checking" reads as evasion, where the bare sentence does not.
+
+| # | What they asked | Our answer | Answered on |
+|---|---|---|---|
+
+## Answered
+
+| # | Question | Answer | Decision record | Answered |
+|---|---|---|---|---|

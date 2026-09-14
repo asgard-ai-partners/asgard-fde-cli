@@ -1,0 +1,49 @@
+---
+description: The acceptance gate. One command, before every tag.
+---
+
+```bash
+asgard-cli gate
+```
+
+**One command, not a list.** A repository of CRs has no compiler, and the thing
+an agent runs after every edit has to be one command whose definition lives in
+the binary - a list in a file like this one goes stale, and this file carried a
+four-step one after the gate had eight steps.
+
+It runs, in order: `tools`, `repo`, `shipped`, `binding`, `skills`, `lint`,
+`render`, `verify`. **A skip is printed differently from a pass** - two steps
+need the platform, and a step that did not run is not a step that passed.
+
+What it cannot reach needs a cluster, and
+`.agents/skills/asgard-platform/guide/verify.md` says what that is. The
+authority is the plan:
+
+```bash
+asgard-cli pipeline runs watch --release <name> --ref <tag>
+```
+
+**Read the warnings, do not just check the exit code.** A warning here is a
+condition that is correct now and fatal once somebody tags, which is exactly the
+shape that gets skimmed past:
+
+- **no Syncer** - the rollout fires the Syncers this release deploys that carry
+  `asgard-ai.com/auto-fire-on-rollout` and waits for them, so with none there is
+  nothing after the dry run: a succeeded run means helm returned. A production
+  chart runs today with none, which is why this warns rather than fails
+- **a CR with no project-environment-id label** - it works on the cluster, and
+  its editor opens as a blank canvas. The platform injects the id as
+  `.Values.asgard.projectEnvironmentId` on every run, so the fix is in the
+  template rather than in a value
+- **R11, a layer with no consumer** - record which kind it is while you still
+  know. The reader who finds it later is the one who binds it as a tidy-up
+
+Then the review no rule can do:
+
+```bash
+asgard-cli verify --tools
+```
+
+Read every tool description together, the way the model gets them - one list, no
+other context, deciding which answers the question. The failure this catches is
+two descriptions that are each accurate and do not say which to prefer.

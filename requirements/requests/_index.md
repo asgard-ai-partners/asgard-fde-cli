@@ -1,0 +1,20 @@
+# Requests Index
+
+**一個 request 是客戶要求的一件事,用他們自己的話記下來。** 每一列一個 `REQ-*.md`,
+由 `asgard-cli request add "<他們說的話>"` 開,狀態也由 `asgard-cli request` 移動。
+
+**這裡不是 task。** 一個 request 是「他們想要什麼」,一個 task(`../tasks/`)是
+「我們要做什麼」—— 一個 request 可以生出好幾個 task,也可以在談過之後生出零個。
+**不要在這裡寫實作**;實作寫在 task spec,行為的現況寫在 `docs/spec/asgard/`。
+
+**這張表由 `asgard-cli` 維護。** 手改是可以的,但下一個 `request add` 會接在後面。
+
+| Request ID | Title | Priority | Status | Spec |
+|---|---|---|---|---|
+
+## Rules
+
+- Create request specs as `REQ-xxx-short-name.md`.
+- New requests start as `draft`.
+- A request moves to `ready` when background, goal, scope, and open questions are resolved.
+- Link related task specs from the request spec's `3) Implementation Tasks` section.
