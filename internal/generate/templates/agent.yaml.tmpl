@@ -9,8 +9,8 @@
 #      self-introduction. It is the only thing seen when deciding whether to
 #      delegate, so put the business nouns in it. Where another agent looks
 #      similar, say which side of the line each is on.
-#   2. prompt.task and prompt.format must be BYTE-IDENTICAL across every Agent
-#      in this chart - asgard-cli verify diffs them. Copy from a sibling.
+#   2. prompt.task and prompt.format are the shared block - copy them from a
+#      sibling Agent, and change every copy in one edit. NOTHING CHECKS THIS.
 #   3. At least two sampleQuestions while published.
 apiVersion: asgard-ai.com/v1alpha1
 kind: Agent
@@ -37,11 +37,11 @@ spec:
       persona: |-
         TODO: who this agent is. Per agent.
       task: |-
-        TODO: byte-identical across every agent in this chart.
+        TODO: the operating rules. The shared block - copy it from a sibling.
       context: |-
         TODO: what it can reach. Per agent.
       format: |-
-        TODO: byte-identical across every agent in this chart.
+        TODO: how to answer. The shared block - copy it from a sibling.
     # Shown to the end user in Sindri, so they are 繁體中文 and the customer
     # reads them before anything else this agent says. Write real questions
     # somebody would actually type, to .agents/skills/plain-chinese/ - not

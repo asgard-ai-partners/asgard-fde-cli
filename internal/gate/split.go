@@ -1,7 +1,6 @@
 package gate
 
 import (
-	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
@@ -20,9 +19,7 @@ const (
 // None of these break helm lint or apply. They make the orchestrator route
 // wrongly, or let an agent's search space grow back:
 //
-//	R1   at most one semantic layer per Agent, and no layer bound twice. At
-//	     most, not exactly: zero is legal, and its search space cannot grow.
-//	R1b  but an Agent cannot have no capability at all - a layer, a Toolset or a
+//	R1b  an Agent cannot have no capability at all - a layer, a Toolset or a
 //	     SkillSet, at least one - so that deleting one by accident does not pass
 //	     quietly. **SkillSet was missing from that list and the rule was wrong
 //	     about a running deployment**: every subagent of a flow-agent supervisor
@@ -36,57 +33,77 @@ const (
 //	R11  a SemanticLayer that no Agent binds is reported. An observation, not a
 //	     verdict: the render cannot tell "deliberately unbound" from "somebody
 //	     has not finished the read path", and neither can this tool.
+//	R13  no Agent lists the same semantic layer twice in its own semanticLayers.
+//	     A duplicate entry has no reading in which it was meant: the second one
+//	     grants nothing the first did not, and it is what a copied line looks
+//	     like when the name inside it was not changed.
 //
+// The numbering is inherited from the requirements document that first wrote
+// these rules down for one deployment, which is why it has gaps; R13 is new
+// here and continues it rather than reusing a retired number.
+//
+//	R1 is gone. It refused an Agent that bound more than one semantic layer, and
+//	an Agent that bound a layer some other Agent had already bound. **Neither
+//	half is enforced by anything else in the chain**: the CRD declares
+//	`semanticLayers` as a plain array with no maxItems, and the platform's own
+//	rule list checks that each name resolves to a real SemanticLayer and nothing
+//	more. Run over a 12-industry demo chart set - agents modelled one per
+//	business role, roles sharing the systems they read the way they do in a
+//	company - it produced 121 failures across 11 of its 12 charts, and every one
+//	of them was the shape somebody meant. The first half at least had a
+//	rationale in the material (an agent mounting two layers has the search space
+//	the split exists to shrink - `internal/corpus/usecase/agent-hub.md`); the
+//	second half had none anywhere. **That rationale is still the advice and it
+//	is not a verdict a render can reach**, so it stays in the extract and is not
+//	a rule here. What survives of R1 is R13, which is the half of "bound twice"
+//	that can only be a mistake.
 //	R10 is gone. It refused an Agent binding a layer recorded as "OLAP-only" in
-//	`+"`"+`.asgard-config.json`+"`"+`, and the recording was done by a flag on `+"`"+`verify`+"`"+`. **A rule
+//	`.asgard-config.json`, and the recording was done by a flag on `verify`. **A rule
 //	that needs a per-customer exemption list to work is not a rule.** It also
 //	wrote a product use case - Data Insight, read through Mimir - into a config
 //	field of a tool that cannot know what a customer is building. See
 //	asgard-odin-pm docs/decisions/2026-09-05-asgard-cli-config-surface.md.
-//	R12  prompt.task and prompt.format are byte-identical across every Agent in
-//	     one render. An Agent CR has no include mechanism, so a shared section
-//	     can only be copied; keeping the copies identical is what lets a later
-//	     change be one substitution and be verified with a diff.
+//	R12 is gone. It required prompt.task and prompt.format to be byte-identical
+//	across every Agent in one render, on the premise - measured at the time, on
+//	the deployments there were - that those two fields are wholly a shared
+//	scaffold and the specialisation lives in persona and context. **A chart set
+//	that interleaves instead breaks the premise**: one agent per business role,
+//	writing task and format as a shared skeleton with the role's own substance
+//	inside it. On that shape the rule was simultaneously always-red and blind -
+//	22 failures across 11 of 12 charts that no edit could clear short of
+//	redesigning 64 prompts, and an edit to a genuinely shared line in one agent
+//	would not have changed the output, which was already failing.
+//
+//	**Nothing replaced it, and the reason is that the replacement was tried.**
+//	The obvious one is to compare only the lines every Agent shares and report
+//	drift in those. Measured on the same 12 charts, "a line present in every
+//	Agent but one" hits 14 times, and all 14 are deliberate: a read-only role
+//	whose capability line says (read) where the others say (read + write). A
+//	rule cannot tell that from a copy somebody edited in one place, so there is
+//	no version of this check that does not cry wolf on a correct chart.
+//
+//	It was also not applying where it was supposed to. Subagents of a flow-agent
+//	supervisor are excluded, and the exclusion reads SandboxBlueprint
+//	`spec.agents.value` - a reference deployment declares its five subagents
+//	through `spec.agents.expression` instead, so all five counted as hub Agents
+//	and R12 failed that deployment too. Finding that the exemption silently did
+//	not apply to the shape it was written for is the other half of why this is a
+//	deletion rather than a repair.
+//
+//	`internal/corpus/usecase/agent-hub.md` keeps the advice - copy a shared
+//	block whole, and change every copy in one edit - as advice.
 //
 // Zero Agents is legal and passes: a pure Flow Agent project keeps its prompt in
 // a Workflow and its capability in a SandboxBlueprint, so its chart has no Agent
 // CR at all. The summary says "0 agent(s)" so that a project that lost its
 // Agents by accident is visible to a reviewer.
-// blueprintAgents names every Agent a SandboxBlueprint mounts as a subagent.
 //
-// `spec.agents` is a JSON string holding the array - that is how the CRD defines
-// it - so a name is only visible after parsing the string. A parse failure
-// yields nothing rather than an error: `gate.Xref` already reports invalid JSON
-// there, and reporting it twice from two checks reads as two defects.
-func blueprintAgents(docs []Doc) map[string]bool {
-	out := map[string]bool{}
-	for _, d := range docs {
-		if d.Kind != "SandboxBlueprint" {
-			continue
-		}
-		raw := digStr(d.Spec, "agents", "value")
-		if raw == "" {
-			continue
-		}
-		var agents []struct {
-			BaseAgentName string `json:"baseAgentName"`
-		}
-		if json.Unmarshal([]byte(raw), &agents) != nil {
-			continue
-		}
-		for _, a := range agents {
-			if a.BaseAgentName != "" {
-				out[a.BaseAgentName] = true
-			}
-		}
-	}
-	return out
-}
-
+// Every check here is per Agent, so none of them needs to know which Agents are
+// a supervisor's subagents. The helper that read that out of a SandboxBlueprint
+// existed for R12 and went with it.
 func AgentSplit(docs []Doc, opts Options) Result {
 	ix := newIndex(docs)
 	agents := ix.of("Agent")
-	subagents := blueprintAgents(docs)
 
 	var problems []string
 	errf := func(format string, args ...any) {
@@ -105,15 +122,6 @@ func AgentSplit(docs []Doc, opts Options) Result {
 		managed := mapOf(a.Spec["managed"])
 		layers := digList(managed, "semanticLayers")
 
-		if len(layers) > 1 {
-			names := make([]string, 0, len(layers))
-			for _, l := range layers {
-				names = append(names, digStr(mapOf(l), "name"))
-			}
-			errf("R1 %s: has %d semanticLayers, at most 1 is allowed (%s)",
-				a.Name, len(layers), strings.Join(names, ", "))
-		}
-
 		// A SkillSet is a capability source too, and leaving it out made this
 		// rule wrong about nine Agents in a deployment that is running: every
 		// subagent of a flow-agent supervisor mounts skills and nothing else,
@@ -126,19 +134,31 @@ func AgentSplit(docs []Doc, opts Options) Result {
 			errf("R1b %s: has no semanticLayers, no toolsetNames and no skillSetNames, so this Agent has no source of capability at all", a.Name)
 		}
 
+		// R13 is per Agent, so what counts as "already" resets here. Two Agents
+		// binding one layer is a shape the platform deploys and a chart set can
+		// mean - roles that share a system read it through the same layer - and
+		// refusing it was half of R1. One Agent binding it twice is the same
+		// line copied and not edited, and nothing else in the chain reports it:
+		// the CRD's array has no uniqueness rule.
+		seen := map[string]bool{}
+
 		for _, item := range layers {
 			layer := mapOf(item)
 			name := digStr(layer, "name")
 			if name == "" {
 				name = "<unnamed>"
 			}
-			allLayers = append(allLayers, name)
+			if seen[name] {
+				errf("R13 %s: lists %s twice in its own semanticLayers; the second entry grants nothing the first did not",
+					a.Name, name)
+			}
+			seen[name] = true
 
-			if first, ok := boundBy[name]; ok {
-				errf("R1 %s: %s is already bound by %s, and a semantic layer should have exactly one Agent",
-					a.Name, name, first)
-			} else {
+			// The first Agent to bind a layer is what R11 reads, and it is only
+			// ever asked whether the layer is bound at all.
+			if _, ok := boundBy[name]; !ok {
 				boundBy[name] = a.Name
+				allLayers = append(allLayers, name)
 			}
 
 			if len(digList(layer, "allowedCubes")) > 0 {
@@ -152,42 +172,6 @@ func AgentSplit(docs []Doc, opts Options) Result {
 			if n := len(digList(managed, "sampleQuestions")); n < minSampleQuestions {
 				errf("R7 %s: published but has %d sampleQuestions, and needs at least %d (set %s to \"false\" for an unverified agent rather than leaving the questions empty)",
 					a.Name, n, minSampleQuestions, publishedLabel)
-			}
-		}
-	}
-
-	// R12 is checked across all Agents at once, since it is about them agreeing.
-	// R12 is an agent-hub rule and applies to agent-hub Agents. A subagent of a
-	// flow-agent supervisor is excluded, measured rather than reasoned: across
-	// every reference deployment the five agent-hub Agents share **one**
-	// prompt.task, and the seventeen blueprint subagents have thirteen distinct
-	// ones - six of them empty, because their prompt lives on the Workflow's
-	// processor instead. Three supervisor deployments out of three, so it is the
-	// convention and not a mistake three engagements made. A subagent's task is
-	// what makes it a specialist; requiring them all to match cancels the split
-	// the shape exists for.
-	hub := make([]Doc, 0, len(agents))
-	for _, a := range agents {
-		if !subagents[a.Name] {
-			hub = append(hub, a)
-		}
-	}
-	if len(hub) > 1 {
-		for _, field := range []string{"task", "format"} {
-			byValue := map[string][]string{}
-			for _, a := range hub {
-				value := digStr(mapOf(a.Spec["managed"]), "prompt", field)
-				byValue[value] = append(byValue[value], a.Name)
-			}
-			if len(byValue) > 1 {
-				var groups []string
-				for value, names := range byValue {
-					sort.Strings(names)
-					groups = append(groups, fmt.Sprintf("%s (%d chars)", strings.Join(names, "+"), len(value)))
-				}
-				sort.Strings(groups)
-				errf("R12 prompt.%s differs: %d distinct values - %s",
-					field, len(byValue), strings.Join(groups, " | "))
 			}
 		}
 	}
@@ -213,6 +197,11 @@ func AgentSplit(docs []Doc, opts Options) Result {
 	sort.Strings(warnings)
 	sort.Strings(allLayers)
 
+	// Each bound layer once, not once per binding. The list was one entry per
+	// binding while a layer could only have one, and a chart where four role
+	// agents read the same ERP layer printed its name four times - which reads
+	// as four layers to somebody scanning the summary for how wide the read
+	// path is.
 	summary := fmt.Sprintf("%d agent(s) (%d published)", len(agents), published)
 	if len(allLayers) > 0 {
 		summary += ", layers: " + strings.Join(allLayers, ", ")

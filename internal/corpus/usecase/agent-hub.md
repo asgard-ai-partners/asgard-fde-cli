@@ -6,7 +6,7 @@ author no BotProvider.**
 **Seen in:** a deployment with five agents over six semantic layers, one agent
 per source system.
 
-**Checked:** 2026-09-02 against a hub deployment's 5 Agent CRs (no BotProvider in that project, prompt.task byte-identical across all five) and the CRD.
+**Checked:** 2026-09-02 against a hub deployment's 5 Agent CRs (no BotProvider in that project, prompt.task byte-identical across all five) and the CRD. Extended 2026-09-14: "one layer per Agent" was held against a second chart set - 12 charts, 64 Agents modelled per business role - where 49 of the 64 mount more than one layer and 38 layers are bound by more than one Agent, all deliberately (counted off the rendered CRs of all 12 charts). Held against the contract the same day: `Agent.spec.managed.semanticLayers` is an array with no `maxItems` (asgard-kube `cbd8d70`, head when read), and the platform's own rule list checks only that each name resolves. The same chart set is where the shared-prompt section's counts come from: 11 of its 12 charts have Agents whose `task` and `format` differ, which was 22 findings (both fields, 11 charts), and the 14 near-identical lines were counted per chart as the lines present in every Agent but one.
 
 **Unchecked:** the delegation-design guidance - how many agents, where the line between two of them goes. No deployment contradicts it; none confirms it either.
 
@@ -74,11 +74,11 @@ spec:
       persona: |-
         <who this agent is - per agent>
       task: |-
-        <byte-identical across every agent in this chart>
+        <the operating rules - the shared block, copied into every agent>
       context: |-
         <what it can reach - per agent>
       format: |-
-        <byte-identical across every agent in this chart>
+        <how to answer - the shared block, copied into every agent>
     sampleQuestions:
       - <at least two, required while published>
       - <...>
@@ -98,6 +98,18 @@ rather than a read surface.
 Each Agent mounts **exactly one** semantic layer, so its search space is that one
 system's cubes rather than all of them combined. An agent mounting two has the
 search space the split was meant to shrink.
+
+**This is the advice and it is not a rule anything enforces.** The CRD takes a
+plain array with no maximum, the platform's own rule list only checks that each
+name resolves, and `asgard-cli verify` stopped refusing it - it used to, and on
+a 12-industry demo chart set that models one agent per *business role* it
+refused 121 bindings that were all deliberate. Roles share the systems they read
+the way they do in a company: procurement, finance and production planning all
+read the same ERP layer, and a management view reads five. **A layer bound by
+several agents is a normal shape**, and a `verify` that called it an error was
+teaching people to change what it could see. So the question the split asks -
+is this agent's search space the one you meant - stays a judgement, and it is
+yours rather than the tool's.
 
 **No `allowedCubes`** on the binding: an agent may query any table in its own
 layer, and the restriction is which layer it mounts rather than which cubes
@@ -169,9 +181,9 @@ state the boundary in one sentence per side, the split is wrong.
 | section | holds | per agent? |
 |---|---|---|
 | `persona` | who it is, and that it works **through tools** rather than from memory | yes |
-| `task` | the operating rules: when to reach for a tool, what to do when it cannot | **byte-identical across the chart** |
+| `task` | the operating rules: when to reach for a tool, what to do when it cannot | **usually shared** - see below |
 | `context` | what this agent can reach, described by capability | yes |
-| `format` | how to answer, and what never to say | **byte-identical across the chart** |
+| `format` | how to answer, and what never to say | **usually shared** - see below |
 
 **Keep it high level. Do not name CRs, tools, skills or columns in a prompt.**
 Say "query through the semantic model" and "act through the system's tools", so
@@ -179,8 +191,8 @@ that adding a cube or renaming a tool does not mean editing prose. A capability
 the agent should have is bound with a SkillSet, not described in a prompt.
 
 The two shared sections are shared because there is no include mechanism: they
-are duplicated on purpose, so a change is one global replace and the gate can
-diff them.
+are duplicated on purpose, so a change is one global replace. What that costs,
+and the other shape, is the next section.
 
 ### `sampleQuestions` - two per agent, and they are demo openers
 
@@ -198,14 +210,39 @@ having to ask a follow-up for an id nobody knows:
 - **Keep each one self-contained**, and inside what this agent can actually
   reach.
 
-## The constraint that surprises people
+## The shared prompt text, and the one thing no check can do for you
 
-**`prompt.task` and `prompt.format` must be byte-identical across every Agent in
-one chart.** Agent CRs have no include mechanism, so shared prompt text can only
-be duplicated; keeping it verbatim is what makes a change a single global replace
-and lets the gate diff-verify it. `persona` and `context` are per-agent.
+**The common shape is one `task` and one `format`, byte-identical in every Agent
+of a chart**, with everything per-agent in `persona` and `context`. Agent CRs
+have no include mechanism, so shared prompt text can only be duplicated - and
+while the copies are identical, a later change is one substitution and a diff
+proves it landed in all of them.
 
-Editing one agent's `task` and not the others fails the gate. That is the point.
+**The other shape is legitimate, and a chart set that models one agent per
+business role tends to reach it.** There, `task` and `format` are a shared
+skeleton with the role's own substance *inside* them: the same four operating
+principles in every agent, and the capability line in the middle of them saying
+what this role may read and write. `format` goes the same way - lines 1 and 4
+identical everywhere, lines 2 and 3 saying what this role leads with.
+
+`asgard-cli verify` used to refuse that shape (R12, byte-identical or fail) and
+no longer does. It failed 22 times across 11 of 12 charts of one such set, and
+nothing short of redesigning 64 prompts could have cleared it.
+
+**So this is the one thing here that nothing checks.** A shared line edited in
+one agent and not the others is invisible - to the tool, and to a reviewer
+reading one file. The replacement was tried and measured: comparing only the
+lines every Agent shares reports 14 drifts on that same chart set, and all 14
+are deliberate - a read-only role whose capability line says "read" where the
+others say "read and write". No rule separates those two, so the discipline is
+yours:
+
+- **copy a block whole**, and when you change it, change every copy in the same
+  edit.
+- **put a diff in front of yourself** before committing a prompt change across
+  several agents - `git diff` over the agent templates is the whole check.
+- if a section is genuinely per-role, it is clearer in `persona` or `context`,
+  where nobody later reads it as a copy that drifted.
 
 ## Verify
 
@@ -218,9 +255,11 @@ asgard-cli verify <project>   # or one step alone, while iterating
 that `gate` supplies, every chart that labels anything fails. `asgard-cli gate
 --help` says why.
 
-The last one is what catches this shape's specific mistakes: two layers on one
-agent, a layer mounted twice, a published agent with fewer than two sample
-questions, and `task`/`format` that have drifted apart.
+The last one is what catches this shape's specific mistakes: an agent with no
+capability source at all, `allowedCubes` on a binding, one agent listing the
+same layer twice, and a published agent with fewer than two sample questions.
+**Prompt text is not among them** - see the section above for the part that is
+yours.
 
 ## Adding a system
 

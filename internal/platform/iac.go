@@ -150,6 +150,17 @@ type Release struct {
 	UpdatedAt            *time.Time         `json:"updated_at"`
 }
 
+// Release states, as the platform names them. A release is Active until
+// somebody starts a teardown; Deleting is the runner working through it, and
+// DeleteFailed is where one that failed a step is parked - with DeleteStep
+// naming the step, which is what makes a retry meaningful rather than a
+// second attempt at the whole thing.
+const (
+	ReleaseActive       = "active"
+	ReleaseDeleting     = "deleting"
+	ReleaseDeleteFailed = "delete_failed"
+)
+
 // Variable is one stored value, addressed by (kind, key).
 //
 // Value is always empty for a secret: the platform does not read one back once
@@ -369,6 +380,69 @@ func (c *Client) GetRelease(ctx context.Context, releaseID string) (*Release, er
 		out:    &out,
 	})
 	return &out, err
+}
+
+// UpdateReleaseInput is what PATCH accepts. The field is a pointer so that
+// "leave it alone" and "set it to false" are different requests - and today
+// auto_apply is the whole of it: the project and the name are fixed at create
+// time and the platform moves neither.
+type UpdateReleaseInput struct {
+	AutoApply *bool `json:"auto_apply,omitempty"`
+}
+
+// UpdateRelease changes a release's mutable settings.
+func (c *Client) UpdateRelease(ctx context.Context, releaseID string, in UpdateReleaseInput) (*Release, error) {
+	var out Release
+	err := c.do(ctx, request{
+		method: http.MethodPatch,
+		path:   "/v1/iac/releases/" + url.PathEscape(releaseID),
+		body:   in,
+		out:    &out,
+	})
+	return &out, err
+}
+
+// DestroyRelease starts the teardown that reaches the cluster: helm uninstall,
+// then the release's Secret and ConfigMap, its RBAC, then the record.
+//
+// It returns as soon as the platform has accepted the work, with the release in
+// `deleting`; the runner walks the steps afterwards and a failure parks it in
+// `delete_failed` with the step that failed in DeleteStep. So what comes back
+// is "started", never "gone", and RetryDestroyRelease is what resumes one.
+func (c *Client) DestroyRelease(ctx context.Context, releaseID string) (*Release, error) {
+	var out Release
+	err := c.do(ctx, request{
+		method: http.MethodPost,
+		path:   "/v1/iac/releases/" + url.PathEscape(releaseID) + "/destroy",
+		out:    &out,
+	})
+	return &out, err
+}
+
+// RetryDestroyRelease resumes a `delete_failed` teardown from the step that
+// failed.
+func (c *Client) RetryDestroyRelease(ctx context.Context, releaseID string) (*Release, error) {
+	var out Release
+	err := c.do(ctx, request{
+		method: http.MethodPost,
+		path:   "/v1/iac/releases/" + url.PathEscape(releaseID) + "/retry-destroy",
+		out:    &out,
+	})
+	return &out, err
+}
+
+// DetachRelease removes the platform side and leaves the cluster alone: the
+// deploy identity's RBAC is revoked and helm's release history is deleted
+// WITHOUT uninstalling, then the record goes with its variables and its runs.
+//
+// Every CR, Secret and ConfigMap the release applied keeps running, for the
+// project UI to own from then on. It is synchronous, and it answers with no
+// release because there is none left to answer with.
+func (c *Client) DetachRelease(ctx context.Context, releaseID string) error {
+	return c.do(ctx, request{
+		method: http.MethodPost,
+		path:   "/v1/iac/releases/" + url.PathEscape(releaseID) + "/detach",
+	})
 }
 
 // GetLiveManifest reads back the objects the release's last helm revision

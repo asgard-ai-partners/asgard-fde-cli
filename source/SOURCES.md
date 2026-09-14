@@ -83,7 +83,7 @@ the clone.
 | finance-ai | supervisor, 3 semantic layers | 13 | "a finance one with three" |
 | buy123 | the minimal flow agent - no Agent CR at all | 8 | not yet cited |
 | auto-post | 28 Plugin CRs, knowledge bases, api workflows | 60 | not yet cited |
-| industry-demo-generator | 12 industries, read/write governance split, a Claude Code plugin of commands + skills | many | not yet cited |
+| industry-demo-generator | 12 industries, read/write governance split, a Claude Code plugin of commands + skills | many | "a 12-industry demo chart set", "one agent per business role" |
 
 ### Which customer each one is
 

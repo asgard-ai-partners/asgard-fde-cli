@@ -337,6 +337,12 @@ flags, this directory's contents and the gate's own subcommands, so it cannot go
 stale - which a list in a markdown file does, and this one had: it named two of
 the twelve Go checks and none of the other ten.
 
+`make gate` runs all of it except `--urls`, which is `make audit-urls`. The
+Makefile **mirrors CI rather than defining it**: `.github/workflows/ci.yml` is
+what decides whether a change merges, so a check added there and not to the
+Makefile is still enforced, and one added to the Makefile alone is a
+convenience.
+
 `--paths` and `go run ./hack doc-paths` are the same rule from the two sides. The
 audit reads what **lands** in a customer repository and fails on a path only we
 have; the script reads the documents that never land - Goal, README, AGENTS,
@@ -876,7 +882,7 @@ Anything a command produces that does not belong in version control goes to
 
 ```bash
 mkdir -p .out
-go build -o .out/asgard-cli ./cmd/asgard-cli
+go build -o .out/asgard-cli ./cmd/asgard-cli   # or: make build
 ```
 
 `.out/` is gitignored and can be deleted at any time: `rm -rf .out`.

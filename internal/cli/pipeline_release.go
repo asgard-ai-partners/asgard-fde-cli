@@ -1,12 +1,15 @@
 package cli
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/term"
 	"gopkg.in/yaml.v3"
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/platform"
@@ -216,8 +219,8 @@ func parseAnnotations(in []string) (map[string]any, error) {
 func newPipelineReleaseCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "release",
-		Short: "Create and inspect a pipeline's releases",
-		Long: `Create and inspect a pipeline's releases.
+		Short: "Create, change and remove a pipeline's releases",
+		Long: `Create, change and remove a pipeline's releases.
 
 A release is one chart deployed into one platform Project's namespace, triggered by the
 rule its entry in ` + "`.asgard-pipeline.yaml`" + ` declares. The declaration names it; the
@@ -227,11 +230,34 @@ run at all.
 
     asgard-cli pipeline projects
     asgard-cli pipeline release create internal-dev --project <id>
-    asgard-cli pipeline release show internal-dev`,
+    asgard-cli pipeline release show internal-dev
+    asgard-cli pipeline release update internal-dev --auto-apply
+
+WHAT IS DECIDED AT CREATE TIME AND WHAT IS NOT. ` + "`create`" + ` takes three things and
+only one of them can be changed afterwards:
+
+    --project      fixed. It decides the namespace, and moving it is a
+                   different release
+    <name>         fixed. The platform matches a trigger to a release by name
+    --auto-apply   changed by ` + "`release update --auto-apply / --no-auto-apply`" + `
+
+That last line is here because the flag is one level deeper than the place
+somebody deciding "how do I set auto-apply" looks first, and a release created
+without it used to be a one-way door out of the CLI and into the Console.
+
+REMOVING ONE IS TWO DIFFERENT ACTS, and they are two commands rather than a
+flag on one: ` + "`destroy`" + ` uninstalls what the release put on the cluster, and
+` + "`detach`" + ` removes the platform side and leaves every CR running.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error { return cmd.Help() },
 	}
-	cmd.AddCommand(newReleaseCreateCmd(), newReleaseShowCmd())
+	cmd.AddCommand(
+		newReleaseCreateCmd(),
+		newReleaseShowCmd(),
+		newReleaseUpdateCmd(),
+		newReleaseDestroyCmd(),
+		newReleaseDetachCmd(),
+	)
 	return cmd
 }
 
@@ -259,7 +285,8 @@ namespace and cannot be changed afterwards.
 
 --auto-apply skips the review stop: a plan that succeeds applies immediately.
 Off by default, and worth leaving off for anything that reaches a cluster
-somebody cares about.
+somebody cares about. It is not decided for good here -
+` + "`release update --auto-apply / --no-auto-apply`" + ` changes it afterwards.
 
 WHAT IT CREATES. The platform prepares the namespace side straight away: this
 release's own Secret and ConfigMap (empty at first), its deploy identity and its
@@ -379,6 +406,274 @@ rather than assumed.`,
 	return cmd
 }
 
+func newReleaseUpdateCmd() *cobra.Command {
+	var (
+		f           pipelineFlags
+		autoApply   bool
+		noAutoApply bool
+	)
+
+	cmd := &cobra.Command{
+		Use:   "update <name>",
+		Short: "Change a release's auto-apply setting",
+		Long: `Change what a release still has that can be changed, which today is auto-apply.
+
+    asgard-cli pipeline release update internal-dev --auto-apply
+    asgard-cli pipeline release update internal-dev --no-auto-apply
+
+--auto-apply skips the review stop: a plan that succeeds applies immediately.
+--no-auto-apply puts the stop back. **One of the two is required**, because a
+command that changes a setting has to be told which way; neither flag is a
+default.
+
+**The project and the name are not here, and cannot be.** The project decides
+the namespace and the platform matches a trigger to a release by name, so moving
+either is a different release rather than an edit to this one. The platform's
+own update accepts auto_apply and nothing else.
+
+IT TAKES EFFECT ON THE NEXT PLAN. The setting is read once, at the moment a
+plan finishes, to decide between applying and stopping for review - so a run
+already waiting for review keeps waiting, and
+` + "`asgard-cli pipeline runs approve <run-id>`" + ` is what releases that one.`,
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if autoApply == noAutoApply {
+				return fmt.Errorf("say which way: --auto-apply or --no-auto-apply, and exactly one of them")
+			}
+			pc, err := f.context(cmd)
+			if err != nil {
+				return err
+			}
+			actingOn(cmd, pc.Session)
+			p, err := resolvePipeline(cmd.Context(), pc, f.pipeline)
+			if err != nil {
+				return err
+			}
+			rel, err := resolveRelease(cmd.Context(), pc, p, args[0])
+			if err != nil {
+				return err
+			}
+
+			updated, err := pc.Client.UpdateRelease(cmd.Context(), rel.ReleaseId, platform.UpdateReleaseInput{
+				AutoApply: &autoApply,
+			})
+			if err != nil {
+				return err
+			}
+
+			out := cmd.OutOrStdout()
+			if f.format == formatJSON {
+				return writeJSON(out, updated)
+			}
+			// Read off what came back rather than off the flag: the flag is
+			// what was asked for and this is what the platform holds.
+			fmt.Fprintf(out, "Release %s now has auto apply %v.\n", updated.Name, updated.AutoApply)
+			if updated.AutoApply {
+				fmt.Fprintf(out, "\nEvery plan that succeeds from now on applies without stopping for review.\n")
+			}
+			return nil
+		},
+	}
+	f.register(cmd, true)
+	cmd.Flags().BoolVar(&autoApply, "auto-apply", false, "apply a successful plan without stopping for review")
+	cmd.Flags().BoolVar(&noAutoApply, "no-auto-apply", false, "stop for review after a successful plan")
+	cmd.MarkFlagsMutuallyExclusive("auto-apply", "no-auto-apply")
+	return cmd
+}
+
+func newReleaseDestroyCmd() *cobra.Command {
+	var (
+		f     pipelineFlags
+		yes   bool
+		retry bool
+	)
+
+	cmd := &cobra.Command{
+		Use:   "destroy <name>",
+		Short: "Uninstall what a release deployed, then remove it",
+		Long: `Uninstall what this release put on the cluster and remove the release.
+
+    asgard-cli pipeline release destroy internal-dev
+    asgard-cli pipeline release destroy internal-dev --retry
+
+THIS REACHES THE CLUSTER. The platform walks helm uninstall, then the release's
+own Secret and ConfigMap, then its deploy identity's RBAC, then the record with
+its variables and its runs. Every CR the release applied goes with it, and
+nothing here can put them back - the chart is in the repository, so a new
+release can deploy them again, but the objects and anything they hold are gone.
+
+**` + "`detach`" + ` is the other half of this choice**: it removes the platform side and
+leaves every CR running. If what you want is to stop the pipeline owning a
+deployment, that one, not this one.
+
+IT IS ASYNCHRONOUS AND THE ANSWER IS "STARTED". The release goes to ` + "`deleting`" + `
+and the runner does the steps; a failure parks it in ` + "`delete_failed`" + ` naming the
+step that failed, which ` + "`release show`" + ` prints. --retry resumes such a teardown
+from that step, is refused on a release that is not in ` + "`delete_failed`" + `, and does
+not ask again - the teardown it resumes was confirmed when it was started.
+
+The platform refuses to start one while a run of this release is in flight;
+wait for it or cancel it.
+
+It asks first. --yes answers, which is the form for a script; with no terminal
+and no --yes it refuses rather than guessing.`,
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			pc, err := f.context(cmd)
+			if err != nil {
+				return err
+			}
+			p, err := resolvePipeline(cmd.Context(), pc, f.pipeline)
+			if err != nil {
+				return err
+			}
+			rel, err := resolveRelease(cmd.Context(), pc, p, args[0])
+			if err != nil {
+				return err
+			}
+
+			out := cmd.OutOrStdout()
+			if retry {
+				if rel.State != platform.ReleaseDeleteFailed {
+					return fmt.Errorf("--retry resumes a teardown that failed, and release %s is %s; run it without --retry to start one",
+						rel.Name, rel.State)
+				}
+			} else if err := confirmRemoval(cmd, yes, rel,
+				fmt.Sprintf("This UNINSTALLS everything release %s has in namespace %s.", rel.Name, rel.Namespace)); err != nil {
+				return err
+			}
+
+			actingOn(cmd, pc.Session)
+			var started *platform.Release
+			if retry {
+				started, err = pc.Client.RetryDestroyRelease(cmd.Context(), rel.ReleaseId)
+			} else {
+				started, err = pc.Client.DestroyRelease(cmd.Context(), rel.ReleaseId)
+			}
+			if err != nil {
+				return err
+			}
+
+			if f.format == formatJSON {
+				return writeJSON(out, started)
+			}
+			fmt.Fprintf(out, "Teardown started; release %s is %s.\n", started.Name, started.State)
+			fmt.Fprintf(out, "\nThe runner does the steps. Watch it here:\n\n"+
+				"    asgard-cli pipeline release show %s\n", started.Name)
+			return nil
+		},
+	}
+	f.register(cmd, true)
+	cmd.Flags().BoolVar(&yes, "yes", false, "do not ask; required when there is no terminal to ask on")
+	cmd.Flags().BoolVar(&retry, "retry", false, "resume a teardown that is parked in delete_failed")
+	return cmd
+}
+
+func newReleaseDetachCmd() *cobra.Command {
+	var (
+		f   pipelineFlags
+		yes bool
+	)
+
+	cmd := &cobra.Command{
+		Use:   "detach <name>",
+		Short: "Remove the release from the platform and leave the cluster running",
+		Long: `Remove the platform's side of this release and leave everything it deployed
+running.
+
+    asgard-cli pipeline release detach internal-dev
+
+WHAT GOES AND WHAT STAYS. The deploy identity's RBAC is revoked, helm's release
+history is deleted **without uninstalling**, and the record goes with its
+variables and its runs. Every CR, Secret and ConfigMap the release applied keeps
+running, for the project UI to own from then on.
+
+So this is the command for "this deployment is no longer the pipeline's", and
+` + "`destroy`" + ` is the one for "this deployment should not exist". Choosing wrong in
+that direction cannot be undone from here.
+
+**What is left behind has no IaC owner.** Helm's record of it is deleted, so
+nothing tracks those objects any more; what the objects still carry is the helm
+ownership metadata of the release that applied them, and that is what decides
+whether some later release can take them over. Know which you want before
+choosing this over ` + "`destroy`" + `.
+
+The platform refuses this while a run is in flight, and on a release that is
+already being destroyed - its error says which.
+
+It is synchronous - when it returns, the release is gone. It asks first; --yes
+answers, and with no terminal and no --yes it refuses rather than guessing.`,
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			pc, err := f.context(cmd)
+			if err != nil {
+				return err
+			}
+			p, err := resolvePipeline(cmd.Context(), pc, f.pipeline)
+			if err != nil {
+				return err
+			}
+			rel, err := resolveRelease(cmd.Context(), pc, p, args[0])
+			if err != nil {
+				return err
+			}
+			if err := confirmRemoval(cmd, yes, rel,
+				fmt.Sprintf("This removes release %s from the platform. What it deployed into namespace %s keeps running.",
+					rel.Name, rel.Namespace)); err != nil {
+				return err
+			}
+
+			actingOn(cmd, pc.Session)
+			if err := pc.Client.DetachRelease(cmd.Context(), rel.ReleaseId); err != nil {
+				return err
+			}
+
+			out := cmd.OutOrStdout()
+			if f.format == formatJSON {
+				return writeJSON(out, map[string]any{"detached": rel.ReleaseId, "name": rel.Name, "namespace": rel.Namespace})
+			}
+			fmt.Fprintf(out, "Release %s is no longer on the platform. What it deployed is still running in %s.\n",
+				rel.Name, rel.Namespace)
+			fmt.Fprintf(out, "\nThe declaration in .asgard-pipeline.yaml is untouched, so an event matching it\n"+
+				"now produces no run at all. Remove the entry, or create the release again.\n")
+			return nil
+		},
+	}
+	f.register(cmd, true)
+	cmd.Flags().BoolVar(&yes, "yes", false, "do not ask; required when there is no terminal to ask on")
+	return cmd
+}
+
+// confirmRemoval asks before a removal, and refuses rather than assuming when
+// there is nobody to ask.
+//
+// `init` treats a non-terminal as "already decided" and proceeds, which is right
+// for writing a skeleton into an empty directory and wrong here: the two
+// commands that use this cannot be undone, and a scheduled job that meant to
+// pass --yes and did not is exactly the caller that must not be guessed for.
+func confirmRemoval(cmd *cobra.Command, yes bool, rel *platform.Release, what string) error {
+	if yes {
+		return nil
+	}
+	out := cmd.OutOrStdout()
+	if !term.IsTerminal(int(os.Stdin.Fd())) {
+		return fmt.Errorf("%s\nThere is no terminal to confirm on; pass --yes to say it is meant", what)
+	}
+	fmt.Fprintf(out, "%s\n\n", what)
+	if rel.LastRun != nil {
+		fmt.Fprintf(out, "Its last run was #%d, %s.\n\n", rel.LastRun.Number, rel.LastRun.State)
+	}
+	ok, err := confirm(bufio.NewReader(os.Stdin), out, "Type y to go ahead:", false)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return fmt.Errorf("nothing was changed")
+	}
+	fmt.Fprintln(out)
+	return nil
+}
+
 // resolveProject turns an id, a name or a namespace into a project id.
 func resolveProject(ctx context.Context, pc *platformContext, want string) (id, label string, err error) {
 	projects, err := pc.Client.ListProjects(ctx)
@@ -422,6 +717,23 @@ func printRelease(out interface{ Write([]byte) (int, error) }, r *platform.Relea
 	fmt.Fprintf(out, "%-16s %s\n", "app configmap", r.AppConfigMapName)
 	fmt.Fprintf(out, "%-16s %v\n", "auto apply", r.AutoApply)
 	fmt.Fprintf(out, "%-16s %s\n", "state", r.State)
+
+	// A release parked mid-teardown reports which step it got to and why it
+	// stopped, because "delete_failed" alone sends somebody to the Console to
+	// find out what this call already returned.
+	if r.DeleteStep != "" {
+		fmt.Fprintf(out, "%-16s %s\n", "teardown step", r.DeleteStep)
+	}
+	if r.DeleteError != "" {
+		fmt.Fprintf(out, "%-16s %s\n", "teardown error", r.DeleteError)
+	}
+	if r.DetachError != "" {
+		fmt.Fprintf(out, "%-16s %s\n", "detach error", r.DetachError)
+	}
+	if r.State == platform.ReleaseDeleteFailed {
+		fmt.Fprintf(out, "\nThe teardown stopped part way. Resume it from the step above:\n\n"+
+			"    asgard-cli pipeline release destroy %s --retry\n", r.Name)
+	}
 
 	if r.Declaration == nil {
 		fmt.Fprintf(out, "%-16s NOT DECLARED\n", "declaration")

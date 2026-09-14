@@ -81,6 +81,12 @@ jobs:
       - name: Goal.md's four points, against the binary
         run: go run ./hack goal
 
+      - name: every alias term is a word the corpus uses
+        run: go run ./hack aliases
+
+      - name: nothing that mounts a database leaves allowWrite unwritten
+        run: go run ./hack write-path
+
       # `go run ./hack tables`, `processors`, `counts`, `coverage`,
       # `spec-key-gap`, `validate-crs` and `hack/verify-references.sh` are
       # deliberately absent: every one needs a clone of somebody else's

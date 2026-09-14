@@ -26,6 +26,7 @@ source/               internal notes that must never ship
 hack/                 the maintainer's gate, in Go: `go run ./hack pass`
 .github/             CI, the tag-driven release, and the PR template
 .goreleaser.yaml      how the binary is built and published
+Makefile              the commands this repo is worked with; `make help`
 ```
 
 ## `internal/` - the code

@@ -747,6 +747,13 @@ reason it failed. A run stops at review unless the release has auto-apply on:
 
     asgard-cli pipeline runs approve <run-id>
 
+**Auto-apply belongs to the release, not to a run**, and it is not fixed at create time:
+
+    asgard-cli pipeline release update <name> --auto-apply
+    asgard-cli pipeline release update <name> --no-auto-apply
+
+It is read when a plan finishes, so a run already waiting for review keeps waiting either way.
+
 **Apply uses the chart and values captured when the plan ran**, not the repository as it is now,
 so a tag moved or a file edited since then changes nothing about a run waiting for review.
 

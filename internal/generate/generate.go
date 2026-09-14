@@ -102,9 +102,10 @@ defaultSemanticLayerEffort: "medium"
 			"    asgard-cli add skillset base --repo <git url>",
 			"  Then reference it from skillSetNames. Nothing is referenced by default,",
 			"  because a name that does not exist is a dangling reference.",
-			"prompt.task and prompt.format must be byte-identical across every agent",
-			"  in this chart - the gate diffs them. Copy from a sibling rather than",
-			"  writing fresh ones.",
+			"prompt.task and prompt.format are the shared block: copy them from a",
+			"  sibling agent rather than writing fresh ones, and change every copy in",
+			"  one edit. Nothing checks this - a line edited in one agent and not the",
+			"  others is invisible to the gate and to a reviewer reading one file.",
 		},
 	},
 	{

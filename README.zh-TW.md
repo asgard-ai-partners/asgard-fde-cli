@@ -31,8 +31,16 @@ GOPRIVATE=github.com/asgard-ai-partners/* \
 ## 開發
 
 ```bash
-go build -o asgard-cli ./cmd/asgard-cli   # build
-./asgard-cli version                      # run
+make build       # .out/asgard-cli
+make install     # 裝到你的 PATH 上
+make gate        # CI 檢查的每一項
+make help        # 其餘的
+```
+
+`make install` 就是 `go install ./cmd/asgard-cli`：binary 會落在 `GOBIN`，沒設的話落在 `go env GOPATH`/bin，裝完會把路徑印出來 —— 而且如果 PATH 上有更前面的同名檔會遮住它，也會一併警告。要裝到別的地方就指名：
+
+```bash
+make install GOBIN=~/.local/bin
 ```
 
 版面：
@@ -140,7 +148,8 @@ Deploy —— 平台，以及它知道的事
   login / logout / whoami
   workspace  list / use <id> / show
   pipeline   connect / connections / repos / create / list / use <id> / show
-             projects / release create|show / releases / deliveries
+             projects / release create|show|update|destroy|detach
+             releases / deliveries
              runs list|get|log|watch|approve|reject|cancel
              variables list|set|unset|sync-declared
              manifest

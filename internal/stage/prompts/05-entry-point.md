@@ -77,10 +77,12 @@ nothing on the cluster refuses one without them and `asgard-cli verify` does
 (R7). Knowing which of the two will stop you decides whether the fix is a chart
 edit or a conversation. `../usecase/agent-hub.md` has why two.
 
-prompt.task and prompt.format must be **byte-identical** across the agents in one
-chart. Agent CRs have no include mechanism, so shared text can only be
-duplicated; verbatim equality is what makes a change a single global replace, and
-the gate diff-checks it. **Also ours, not the platform's.**
+prompt.task and prompt.format are the shared block: Agent CRs have no include
+mechanism, so shared text can only be duplicated, and keeping the copies verbatim
+is what makes a change a single global replace. **Nothing checks it.** The gate
+used to and stopped - a chart that puts per-role substance inside those two
+fields is a real shape and could never pass. `../usecase/agent-hub.md` says what
+that leaves to you.
 
 ## If it is a self-hosted chain
 
@@ -116,7 +118,9 @@ capability fields (`agents`, `skillSetNames`, `pluginNames`, `sourceSetMounts`,
 `credentialMounts`, `hooks`) are on `SandboxBlueprint.spec` and not on
 `Workflow`. Two claims that read as platform rules are **ours** and now say so:
 the two-sampleQuestions minimum (the CRD sets none - `gate` R7 does) and the
-byte-identical prompt text.
+shared prompt text. Corrected 2026-09-14: the second is nobody's rule now. The
+gate checked it, a chart set that interleaves per-role content into `task` and
+`format` could never pass, and the check was removed rather than softened.
 
 **Unchecked:** everything that makes this a decision rather than a lookup - which
 audience forces which shape, that a single public agent needs no subagent, and

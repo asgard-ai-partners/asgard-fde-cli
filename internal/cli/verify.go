@@ -46,9 +46,15 @@ server-side dry run all pass:
     ` + "`" + `self == oldSelf` + "`" + ` and cannot be seen in a render; these are the rest. A
     marker is not a rule: one on a struct several kinds embed is emitted into
     each of their CRDs, which is why the enforced count is far higher
-  - the agent split: at most one semantic layer per Agent, no layer bound twice,
-    no allowedCubes, sampleQuestions on anything published, and prompt.task and
-    prompt.format identical across every Agent in one render
+  - the agent split: every Agent has some source of capability, no Agent lists
+    the same semantic layer twice, no allowedCubes, and sampleQuestions on
+    anything published. **Two things this deliberately no longer checks**: how
+    many layers one Agent mounts, and whether prompt.task and prompt.format are
+    identical across the Agents of one render. Both are shapes the CRD and the
+    platform accept, both have a chart set that means them, and a rule cannot
+    tell either from a mistake -
+    ".agents/skills/asgard-platform/usecase/agent-hub.md" argues for the shape
+    each one departs from
   - the generator's own TODOs, still in the render. **A warning, never a
     failure** - a chart carries them through the whole middle of an onboarding.
     This is the last place between ` + "`asgard-cli add`" + ` and a tag where anybody

@@ -43,8 +43,19 @@ does not have.
 ## Development
 
 ```bash
-go build -o asgard-cli ./cmd/asgard-cli   # build
-./asgard-cli version                      # run
+make build       # .out/asgard-cli
+make install     # onto your PATH
+make gate        # everything CI checks
+make help        # the rest
+```
+
+`make install` is `go install ./cmd/asgard-cli`: the binary lands in `GOBIN`,
+or in `go env GOPATH`/bin when that is unset, and the target says so afterwards
+- along with a warning when something earlier on your PATH will shadow what it
+just installed. To install somewhere else, name it:
+
+```bash
+make install GOBIN=~/.local/bin
 ```
 
 **What lives in which directory is [STRUCTURE.md](STRUCTURE.md)**, and is not
@@ -819,6 +830,7 @@ asgard-cli pipeline create --name <name>        # bind this repository
 asgard-cli pipeline show                        # the pipeline bound to this checkout
 asgard-cli pipeline projects                    # projects a release can deploy into
 asgard-cli pipeline release create <name> --project <id>
+asgard-cli pipeline release update <name> --auto-apply    # the one create-time setting that moves
 asgard-cli pipeline releases                    # created releases, and the ghost rows
 asgard-cli pipeline variables list --release <name>
 asgard-cli pipeline variables set --release <name> --kind secret <key> --from-file <path>
