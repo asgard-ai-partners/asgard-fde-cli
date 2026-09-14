@@ -256,10 +256,13 @@ order not placed.
 
 - [LINE](https://docs.asgard-ai.com/docs/integration/line),
   [Slack](https://docs.asgard-ai.com/docs/integration/slack),
-  [Telegram](https://docs.asgard-ai.com/docs/integration/telegram),
-  [SDK](https://docs.asgard-ai.com/docs/integration/sdk)
+  [Telegram](https://docs.asgard-ai.com/docs/integration/telegram)
   - asgard-docs `f00e0ee`. `integration/Discord.mdx` is an empty file; the
   Discord content is under `integration-with-asgard/`
+- [SDK](https://docs.asgard-ai.com/docs/integration/sdk)
+  - asgard-docs `23409b3`, read 2026-09-14. The page is a two-line pointer at
+  the two SDK guides, and what moved since `f00e0ee` is the form of those two
+  links - nothing this page says rests on it
 - The four pages under `integration-with-asgard/` (api, line, slack, discord)
   - asgard-docs `f00e0ee`. All four are marked `draft`, and they describe an
   interface called "Published -> add integrated" inside a Project, which does not

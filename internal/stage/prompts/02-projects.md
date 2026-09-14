@@ -38,8 +38,11 @@ is built by the customer in the product rather than by us in a chart.
 
 It still lives under `projects/<slug>/` and still deploys to a namespace, so it
 is a project mechanically. What it is not is a project shaped like the rest of
-this: `../guide/entry-point.md` and `../guide/knowledge.md` have nothing to say about it, and `asgard-cli verify`
-will report an Agent with no capability only because there is no Agent.
+this: `../guide/entry-point.md` and `../guide/knowledge.md` have nothing to say
+about it, and `asgard-cli verify` will say `0 agent(s)` and report **R11** - the
+SemanticLayer no Agent binds. Both are correct here and neither is a failure:
+R11 is an observation, because a render cannot tell a layer that is deliberately
+unbound from a read path somebody has not finished.
 `../usecase/mimir-dashboard.md` is the shape.
 
 **A third question is not about the split at all, and gets missed for that
@@ -53,9 +56,10 @@ same `chart:` directory**, differing by `on.pattern`, and each created against a
     - name: <slug>-prod    pattern '^[0-9]+\.[0-9]+\.[0-9]+$'       -> platform project B
 
 The platform project is what decides the namespace, which is why the two have to
-be different ones: it is the same reason `asgard-<workspace>-<project>-<env>` has
-an `-<env>` in it at all. There are no per-environment values files - what
-differs between them is the variables set on each release on the platform.
+be different ones: it is the same reason a deployed namespace reads
+`asgard-<workspace>-<project>-<env>` and carries the `-<env>` at all. There are
+no per-environment values files - what differs between them is the variables set
+on each release on the platform.
 
 **One release is the shape for a POC nobody will maintain.** It is a real answer,
 and worth writing down as one rather than arriving at by not asking. The cost of
@@ -181,20 +185,33 @@ request names a project this repository has, `asgard-cli request` lists it as
     asgard-cli request target <<.RequestID>> <slug>
     asgard-cli request ready <<.RequestID>>          once the audience and the scope are settled
 
-Keep the slug short. It becomes part of every namespace
-names, and Kubernetes caps a name at 63 characters, so names derived from it
-inherit its length.
+Keep the slug short. It becomes part of every release name, and of the
+namespace the platform creates for the project - `asgard-<workspace>-<project>-<env>`
+in the deployments this was written from. A Kubernetes object name is capped at
+63 characters, so everything derived from the slug inherits its length. **This
+tool does not build either name**: the namespace comes back from the platform
+and a chart reads it out of the injected `asgard` block.
 
 Done when: projects/ has a directory per project, the root README table lists
 them, and asgard-cli check is green.
 
-**Checked:** 2026-09-04 - the shapes it names are real (`asgard-cli size` counts
-them off production, the extracts in `../usecase/` assemble each), and the namespace
-pattern `asgard-<workspace>-<project>-<env>` is what this tool derives and what
-the platform consumes. **No CRD claim is made here**, deliberately: which CRs a
-project ends up with belongs to `../guide/read-path.md`, `../guide/entry-point.md` and the extracts.
+**Checked:** 2026-09-14 - the shapes it names are real (`asgard-cli size` counts
+them off production, the extracts in `../usecase/` assemble each); every command
+and flag it writes is in the binary; and the namespace pattern was read off the
+reference deployments rather than off this tool, which does not derive it -
+`asgard-unitech-e-internal-dev`, `asgard-unitech-e-website-prod`,
+`asgard-buy123-shopping-guide-stage`. **No CRD claim is made here**,
+deliberately: which CRs a project ends up with belongs to
+`../guide/read-path.md`, `../guide/entry-point.md` and the extracts.
 
-**Unchecked:** the split rule itself - that a project follows the **audience**
+**Unchecked:** whether the namespace pattern is the platform's rule or a
+convention these workspaces happen to share. One of the three collapses to
+`asgard-<workspace>-<env>`, with no project segment, and nothing here can tell a
+rule with an exception from a convention with one. What is settled is the part
+that matters to a slug: the namespace is the platform's to build, not this
+tool's.
+
+Also unchecked: the split rule itself - that a project follows the **audience**
 rather than the data or the system. That is the most consequential judgement in
 this document and **no source states it**. It comes from the engagement this was
 written in, where splitting on systems produced a chart that two audiences

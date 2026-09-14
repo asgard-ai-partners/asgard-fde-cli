@@ -27,13 +27,14 @@ asgard-cli pipeline runs watch --release <name> --ref <tag>
 condition that is correct now and fatal once somebody tags, which is exactly the
 shape that gets skimmed past:
 
-- **no Syncer** - whether that fails your CD is one `if` in your own workflow.
-  Some count what the chart declares and skip at zero, some wait 180s and exit 1.
-  A production chart runs today with none. Check with
-  `grep -n syncer-name -A15 .github/workflows/*.y*ml`
-- **a declared key with no value on the platform** - correct until somebody has set
-  the namespace, and after that it means the CR works on the cluster while its
-  editor opens as a blank canvas
+- **no Syncer** - the rollout fires the Syncers this release deploys that carry
+  `asgard-ai.com/auto-fire-on-rollout` and waits for them, so with none there is
+  nothing after the dry run: a succeeded run means helm returned. A production
+  chart runs today with none, which is why this warns rather than fails
+- **a CR with no project-environment-id label** - it works on the cluster, and
+  its editor opens as a blank canvas. The platform injects the id as
+  `.Values.asgard.projectEnvironmentId` on every run, so the fix is in the
+  template rather than in a value
 - **R11, a layer with no consumer** - record which kind it is while you still
   know. The reader who finds it later is the one who binds it as a tidy-up
 

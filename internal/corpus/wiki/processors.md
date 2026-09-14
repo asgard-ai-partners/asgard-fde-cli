@@ -519,13 +519,17 @@ Two things worth knowing from their pages:
   [expression-introduction](https://docs.asgard-ai.com/docs/developer-reference/asgard-builtin/expression-introduction),
   [expression-variable](https://docs.asgard-ai.com/docs/developer-reference/asgard-builtin/expression-variable),
   [expression-ecma-script-functions](https://docs.asgard-ai.com/docs/developer-reference/asgard-builtin/expression-ecma-script-functions)
-  - asgard-docs `f00e0ee`. That section was listed here as deliberately not
-  covered, on the grounds that lookup material only goes stale - a judgement made
-  before anyone noticed the ECMA5 limit lives in it
+  - asgard-docs `23409b3`, read 2026-09-11. That section was listed here as
+  deliberately not covered, on the grounds that lookup material only goes stale -
+  a judgement made before anyone noticed the ECMA5 limit lives in it. What moved
+  since `f00e0ee` is a heading anchor and nothing else
 - The pages under `developer-reference/processor/`, whose landing page is
   [introduction](https://docs.asgard-ai.com/docs/developer-reference/processor/introduction)
   - **the bare directory URL 404s**; cite the introduction, not the directory
-  - asgard-docs `f00e0ee` for the prose
+  - asgard-docs `23409b3`, read 2026-09-11. The introduction was rewritten at
+  that commit to follow the editor's node menu rather than the source, which is
+  where the group names, the two Automation Tool nodes being absent from the
+  menu, and `llm-query-database` being CRD-only all come from
 - `effort`'s levels, that an unsupported one fails the turn, and that an empty
   `input` falls back to `prevMessage`: asgard-docs `23409b3`
   `docs/developer-reference/processor/model-llm-completion.mdx` and

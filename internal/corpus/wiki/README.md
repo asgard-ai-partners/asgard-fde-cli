@@ -81,7 +81,7 @@ wherever; what goes into a page is the repository and the commit.
 
 | source | source of truth | read at |
 |---|---|---|
-| product documentation | https://github.com/asgard-ai-platform/asgard-docs | `f00e0ee` (2026-08-31). **Newer and unread: asgard-docs `23409b3` (unread), 2026-09-09**, 286 files, including 17 per-processor reference pages that answer P10 |
+| product documentation | https://github.com/asgard-ai-platform/asgard-docs | `f00e0ee` (2026-08-31) for most pages, `23409b3` (2026-09-09) where a page moved and was re-read - **each citation names its own**, and `go run ./hack coverage --drift` is what lists the readings a move has left unconfirmed. The 286 files between them include 17 per-processor reference pages, which answer P10 |
 | CRD definitions | https://github.com/asgard-ai-platform/asgard-kube | `cbd8d70` (2026-09-11) |
 | processor definitions | https://github.com/asgard-ai-platform/asgard-core (private) | `623ceb50` (2026-09-11). `ProcessorDefinitions` is untouched across the seven commits since `62a696b7`, so the pinned table's source is byte-identical. What those commits DID add is read into `../wiki/tools.md`: a new card tool, and what a query tool does with rows beyond the twenty the model sees |
 

@@ -255,11 +255,23 @@ func driftReport(root, docs string) error {
 	var rows []row
 	width := 0
 
-	// **A citation's commit is on the page that cites it, not on the link.** A
-	// Sources section reads "- [thing](url) - asgard-docs `f00e0ee`", so the
-	// commit governs the block it sits in. Taking every commit named anywhere
-	// in the document over-collects rather than under-collects, and reporting a
-	// re-read as drift is the cheap mistake here.
+	// **A citation's commit is on the entry that cites it, not on the
+	// document.** A Sources section is a list of entries, each naming its own
+	// pages and then the commit they were read at:
+	//
+	//	- [a page](url), [another](url)
+	//	  - asgard-docs `f00e0ee`
+	//
+	// so the commit governs that entry and nothing else. This used to measure
+	// every URL in a document from the document's oldest commit, which
+	// **reports a re-read as drift**: a page re-read at a newer commit and
+	// recorded as such kept being listed, because some other entry on the same
+	// page still stood at the older one - and a check that goes on reporting
+	// work already done teaches the reader to ignore its output.
+	//
+	// A document's oldest is still the fallback, for a URL cited outside any
+	// entry that names a commit. That direction over-collects, which is the
+	// safe one.
 	bodies := materialBodies(root)
 	for _, doc := range sortedKeys(bodies) {
 		body := bodies[doc]
@@ -277,21 +289,36 @@ func driftReport(root, docs string) error {
 		// `23409b3` over `f00e0ee` and under-reported by three pages.
 		oldest := oldestRef(docs, refs)
 		seen := map[string]bool{}
-		for _, u := range docsURL.FindAllString(body, -1) {
-			u = strings.TrimRight(strings.SplitN(u, "#", 2)[0], "/")
-			slug := strings.TrimPrefix(strings.SplitN(u, "docs.asgard-ai.com/", 2)[1], "docs/")
-			if strings.HasPrefix(slug, "img/") || seen[slug] {
-				continue
+		for _, entry := range citationEntries(body) {
+			since := entry.ref
+			if since == "" {
+				since = oldest
 			}
-			seen[slug] = true
-			what := movedSince(docs, index, slug, oldest)
-			if what == "" || what == "?" {
-				continue
+			for _, loc := range docsURL.FindAllStringIndex(entry.text, -1) {
+				// **A URL template is not a citation.** The page tells a reader
+				// to open `.../processor/<name>`, and the match stops at the
+				// `<`, leaving the directory - which is not a page and never
+				// becomes one, so it was reported as moved for ever with
+				// nothing anybody could do about it.
+				if loc[1] < len(entry.text) && entry.text[loc[1]] == '<' {
+					continue
+				}
+				u := entry.text[loc[0]:loc[1]]
+				u = strings.TrimRight(strings.SplitN(u, "#", 2)[0], "/")
+				slug := strings.TrimPrefix(strings.SplitN(u, "docs.asgard-ai.com/", 2)[1], "docs/")
+				if strings.HasPrefix(slug, "img/") || seen[slug] {
+					continue
+				}
+				seen[slug] = true
+				what := movedSince(docs, index, slug, since)
+				if what == "" || what == "?" {
+					continue
+				}
+				if len(doc) > width {
+					width = len(doc)
+				}
+				rows = append(rows, row{doc, slug, since, what})
 			}
-			if len(doc) > width {
-				width = len(doc)
-			}
-			rows = append(rows, row{doc, slug, oldest, what})
 		}
 	}
 	sort.Slice(rows, func(i, j int) bool {
@@ -307,6 +334,68 @@ func driftReport(root, docs string) error {
 	fmt.Println("A page changing does not make the prose wrong - it makes it unconfirmed, and")
 	fmt.Println("this is the size of the re-read.")
 	return nil
+}
+
+// citationEntry is one list entry of a Sources section: the text it spans, and
+// the asgard-docs commit named inside it, if any.
+type citationEntry struct {
+	text string
+	ref  string
+}
+
+// citationEntries splits a document into the list entries a Sources section is
+// written as. An entry starts at a line beginning `- ` in column 0 and runs
+// until the next one or the next heading, so its indented continuation lines -
+// which is where the commit goes - belong to it.
+//
+// **Fenced blocks are dropped first.** `internal/corpus/wiki/README.md` shows
+// the shape of a source block inside a fence, with a real URL and a real
+// commit, and nothing is claimed by it: it is the schema, not a reading. Read
+// as a citation it drifts for ever and can never be cleared, which is the
+// shape of a check that fires on correct material.
+func citationEntries(body string) []citationEntry {
+	var entries []citationEntry
+	var cur *citationEntry
+	fenced := false
+	flush := func() {
+		if cur != nil {
+			cur.ref = firstDocsCommit(cur.text)
+			entries = append(entries, *cur)
+			cur = nil
+		}
+	}
+	for _, line := range strings.Split(body, "\n") {
+		if strings.HasPrefix(strings.TrimSpace(line), "```") {
+			fenced = !fenced
+			flush()
+			continue
+		}
+		if fenced {
+			continue
+		}
+		switch {
+		case strings.HasPrefix(line, "- "):
+			flush()
+			cur = &citationEntry{text: line + "\n"}
+		case strings.HasPrefix(line, "#"):
+			flush()
+			entries = append(entries, citationEntry{text: line + "\n"})
+		case cur != nil && (line == "" || strings.HasPrefix(line, " ") || strings.HasPrefix(line, "\t")):
+			cur.text += line + "\n"
+		default:
+			flush()
+			entries = append(entries, citationEntry{text: line + "\n"})
+		}
+	}
+	flush()
+	return entries
+}
+
+func firstDocsCommit(text string) string {
+	if m := docsCommit.FindStringSubmatch(text); m != nil {
+		return m[1]
+	}
+	return ""
 }
 
 func movedSince(docs string, index map[string]string, slug, since string) string {

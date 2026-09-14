@@ -111,7 +111,7 @@ need a session, and nobody has held this page against a run.
 **Unchecked:** that a step this cannot run is not a step that passed. Nothing
 enforces saying so, and the failure it guards against - a green gate that never
 reached a cluster - has happened once in the engagement this came from. Also
-unchecked: that these four in this order are the whole gate. They are the gate
+unchecked: that these eight in this order are the whole gate. They are the gate
 **this tool implements**; a deployment that fails for a reason none of them
 looks at is the case that would disprove it, and there has been one: a chart
 that passed every step here and failed in the platform's own dry run, on a
