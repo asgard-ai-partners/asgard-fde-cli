@@ -68,3 +68,33 @@ desktop.ini
 # moment one is run in place, and `go:embed all:` would embed it.
 __pycache__/
 *.pyc
+
+# **A scaffolded repository inside this one.** `asgard-cli init` run in this
+# checkout - by hand, or by a check that forgot to cd - writes a whole customer
+# repository here: .agents/skills/ gains the seven design-time skills this repo
+# only ships, and assets/, docs/, projects/, references/, requirements/ and
+# plugins/ appear at the root. It happened once and `git add -A` committed 117
+# files of it. None of these is a directory this repository has of its own, so
+# ignoring them costs nothing and stops the next one.
+#
+# `go run ./hack pass-list` is the other half: it fails when a skill this repo
+# ships is also in .agents/skills/, which is what caught it.
+/.asgard-scaffold.json
+/.asgard-pipeline.yaml
+/.asgard-cli.yaml
+/.claude-plugin/
+/assets/
+/docs/
+/plugins/
+/projects/
+/references/
+/requirements/
+/.agents/skills/asgard-platform/
+/.agents/skills/asgard-fde-onboarding/
+/.agents/skills/db-query/
+/.agents/skills/knowledge-base/
+/.agents/skills/plain-chinese/
+/.agents/skills/proposal-deck/
+/.agents/skills/semantic-layer-modeling/
+/.agents/skills/spec-workflow/
+/.gitattributes
