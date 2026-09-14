@@ -57,6 +57,14 @@ spec:
       configs:
         - name: dataConnector
           value: <<.Connector>>
+        # **Not optional, and not what the name suggests.** query-database
+        # resolves a MISSING allowWrite to TRUE - the definitions give it a
+        # default of true and describe it as permitting INSERT, UPDATE, DELETE
+        # and DDL. So a processor configured by adding only what you want is a
+        # write path, and the rendered chart does not show that it happened.
+        # This shape serves anonymous callers; leave it false.
+        - name: allowWrite
+          value: "false"
         - name: resultField
           value: rows
         - name: sql

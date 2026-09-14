@@ -94,6 +94,11 @@ spec:
       configs:
         - name: dataConnector
           value: dc-<system>
+        # REQUIRED in practice: a MISSING allowWrite resolves to true, and the
+        # definitions describe it as permitting INSERT, UPDATE, DELETE and DDL.
+        # This shape serves anonymous callers - see `../wiki/processors.md`.
+        - name: allowWrite
+          value: "false"
         - name: resultField
           value: <field>
         - name: sql

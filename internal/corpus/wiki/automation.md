@@ -35,12 +35,24 @@ Settings -> Connection still lists a "For Trigger" group (Google Drive, Google
 Sheets, OneDrive, OneDrive Workbook). Those correspond to the removed classes.
 **That group is stale.**
 
-### The cron field takes less than crontab does
+### The cron field is an ordinary crontab, and the CRD checks nothing
 
-The CRD's pattern accepts `*`, one number, or `*/n` per field. Ranges and comma
-lists are both rejected, so `0 9-18 * * *` and `0 9,13,17 * * *` do not apply -
-business hours are every hour or nothing. `helm lint` does not check the pattern;
-the rejection arrives during CD.
+`Trigger.spec.cron.schedule` is a five-field cron expression or an
+`@descriptor`, copied verbatim into the derived CronJob, so the grammar is
+whatever that field accepts - ranges, comma lists and descriptors included.
+
+**The CRD carries no pattern on it, deliberately.** One used to be there and
+had copied cron wrong in both directions: it rejected `0 8,13 * * *`, ranges,
+step-on-range, month and day names and every `@descriptor`, all of which the
+API server accepts, while admitting `*/0 * * * *`, which it does not. What
+checks the expression now is a parse, run by the admission webhook on write and
+again at the public API boundary, so a malformed one comes back with a message
+rather than deploying and never firing. `helm lint` still looks at none of it.
+
+**This is the expensive direction a pinned copy goes stale in.** A constraint
+that is deleted upstream leaves a warning against exactly what the platform now
+accepts, and three places here taught the old one - the same trap is on the
+SourceSet syncer's schedule, which lost the same regex in the same change.
 
 ## API
 

@@ -54,9 +54,11 @@ spec:
 <<end>><<else>>    # No SkillSet in this chart yet, so none is referenced: a name that does not
     # exist is a dangling reference the gate rejects.
     #
-    # An Agent is allowed to have none. But **CD fails a deployed project that
-    # has no Syncer at all**, and a SkillSet brings one, so a project heading for
-    # a deploy wants one:
+    # An Agent is allowed to have none. But a release with no Syncer has
+    # **nothing running after the platform's dry run** - apply fires the Syncers
+    # this release deploys that carry auto-fire-on-rollout and waits for them,
+    # so with none a succeeded run means helm returned. A SkillSet brings one,
+    # so a project heading for a deploy wants one:
     #
     #     asgard-cli add skillset base --repo <git url>
     #

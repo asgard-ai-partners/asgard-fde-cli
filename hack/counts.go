@@ -121,6 +121,75 @@ func kindCount(kind string) func(clone, ref string) int {
 	}
 }
 
+// expressionValues counts the `expression:` values under a path, and how many
+// of them use an arrow function or a declaration.
+//
+// **The value, not the key.** An expression is usually a block scalar, so the
+// line carrying the key says nothing about what is in it.
+//
+// This exists because the numbers behind "Expression is ordinary JavaScript"
+// were taken over a set that left out the deployment writing most of them, and
+// came out as "exactly one arrow function, no `const` anywhere".
+func expressionValues(path string) (total, arrow, decl int) {
+	key := regexp.MustCompile(`^(\s*)-?\s*expression:\s*(.*)$`)
+	declRe := regexp.MustCompile(`\b(?:const|let)\b`)
+	_ = filepath.Walk(path, func(p string, fi os.FileInfo, err error) error {
+		if err != nil || fi.IsDir() {
+			return nil
+		}
+		if strings.Contains(p, string(filepath.Separator)+".git"+string(filepath.Separator)) {
+			return nil
+		}
+		switch filepath.Ext(p) {
+		case ".yaml", ".yml", ".tmpl":
+		default:
+			return nil
+		}
+		data, err := os.ReadFile(p)
+		if err != nil {
+			return nil
+		}
+		lines := strings.Split(string(data), "\n")
+		for i := 0; i < len(lines); i++ {
+			m := key.FindStringSubmatch(lines[i])
+			if m == nil {
+				continue
+			}
+			indent := len(m[1])
+			body := m[2]
+			switch strings.TrimSpace(body) {
+			case "|", "|-", "|+", ">", ">-", "":
+				body = ""
+				j := i + 1
+				for ; j < len(lines); j++ {
+					if strings.TrimSpace(lines[j]) == "" {
+						body += "\n"
+						continue
+					}
+					if len(lines[j])-len(strings.TrimLeft(lines[j], " \t")) <= indent {
+						break
+					}
+					body += lines[j] + "\n"
+				}
+				i = j - 1
+			}
+			total++
+			if strings.Contains(body, "=>") {
+				arrow++
+			}
+			if declRe.MatchString(body) {
+				decl++
+			}
+		}
+		return nil
+	})
+	return
+}
+
+func expressionTotal(path string) int { n, _, _ := expressionValues(path); return n }
+func expressionArrow(path string) int { _, n, _ := expressionValues(path); return n }
+func expressionDecl(path string) int  { _, _, n := expressionValues(path); return n }
+
 type countRow struct {
 	Slug  string
 	Clone string
@@ -133,6 +202,30 @@ type countRow struct {
 
 // Each count: where it comes from, how, and every way this material states it.
 var counts = []countRow{
+	{
+		Slug: "expression-values", How: expressionTotal,
+		What: "`expression:` values in the reference deployments",
+		Says: []string{`(\d+) ` + "`" + `expression:` + "`" + ` values`, `Across (\d+) expression values`},
+		Only: []string{"unitech-e-asgard-kube", "xxentria-asgard-kube", "finance-ai-asgard-kube",
+			"buy123-asgard-kube", "asgard-freyr-kube", "asgard-auto-post-kube",
+			"asgard-industry-demo-generator"},
+	},
+	{
+		Slug: "expression-arrow", How: expressionArrow,
+		What: "of those expression values using an arrow function",
+		Says: []string{`(\d+) use an arrow\s+function`, `(\d+) use an arrow function`},
+		Only: []string{"unitech-e-asgard-kube", "xxentria-asgard-kube", "finance-ai-asgard-kube",
+			"buy123-asgard-kube", "asgard-freyr-kube", "asgard-auto-post-kube",
+			"asgard-industry-demo-generator"},
+	},
+	{
+		Slug: "expression-decl", How: expressionDecl,
+		What: "of those expression values using const or let",
+		Says: []string{`(\d+) use ` + "`" + `const` + "`" + ` or ` + "`" + `let` + "`"},
+		Only: []string{"unitech-e-asgard-kube", "xxentria-asgard-kube", "finance-ai-asgard-kube",
+			"buy123-asgard-kube", "asgard-freyr-kube", "asgard-auto-post-kube",
+			"asgard-industry-demo-generator"},
+	},
 	{
 		Slug: "shopline-l1-pages", Clone: "asgard-freyr-skills",
 		Of:   "shopline-backoffice/references/page-map.md",

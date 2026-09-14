@@ -256,7 +256,7 @@ built, and reversed. They are obvious in the same way again each time.`,
 			{
 				"what an Expression may use",
 				"ECMA5 only, because the documentation says ECMA5",
-				"**That limit is `execute-script`'s Engine field and does not reach an Expression.** Across 520 expression values in the reference charts one evaluates an arrow function, so they are ordinary JavaScript. What none of them uses is `const` or `let`, and the reason is not a restriction: the field holds one expression rather than statements, so a declaration has nowhere to go. Writing an Expression defensively because of the wrong limit costs nothing; **refusing a shape because of it** is the failure - and it has been stated both ways inside one page",
+				"**That limit is `execute-script`'s Engine field and does not reach an Expression.** Across 449 expression values in the reference deployments, 80 use an arrow function and 26 use `const` or `let` - they are ordinary JavaScript. A bare declaration has nowhere to go, because the field holds one expression; an IIFE is how a function body gets in, and it is the form this tool generates. Writing an Expression defensively costs nothing; **refusing a shape because of the wrong limit** is the failure, and this material has stated it both ways inside one page",
 				"../wiki/processors.md",
 			},
 			{

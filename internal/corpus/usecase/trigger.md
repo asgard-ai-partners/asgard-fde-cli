@@ -134,10 +134,11 @@ The Workflow still needs the full workflow-set label set, with
 API-key Secret, and the CronJob.
 
 
-### The cron field takes less than crontab does
+### The cron field is an ordinary crontab
 
 Ranges and comma lists work, and so do `@descriptors` - the two things an
-ordinary crontab reaches for first:
+ordinary crontab reaches for first, and the two a deleted CRD pattern used to
+refuse:
 
 | expression | |
 |---|---|
