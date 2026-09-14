@@ -96,8 +96,17 @@ jobs:
 
 
   build:
-    # Confirm before merging that every platform still builds and the
-    # GoReleaser config is still valid.
+    # **Only on main.** Cross-compiling every platform through GoReleaser takes
+    # three minutes where the rest of CI takes forty seconds, and on a pull
+    # request it answers a question `test` has already answered: whether the
+    # code compiles. What it uniquely checks - that the GoReleaser config is
+    # still valid and every target still links - cannot be broken by a change
+    # that `test` passes without also breaking the merge commit, and that is
+    # where this runs.
+    #
+    # So a pull request gets the fast half and main gets both. `make snapshot`
+    # is the same build on a laptop when a change touches .goreleaser.yaml.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
