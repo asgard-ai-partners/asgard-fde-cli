@@ -1,3 +1,7 @@
+---
+group: The mechanism, and the scale
+description: a runtime skill per area over one middleware and one external platform - what the layering looks like past the first skill
+---
 # A skill library at full size, and what the layers are for
 
 Runtime skills over one commerce middleware and one external commerce
@@ -133,7 +137,10 @@ editor panels and apps inside nested iframes.
 
 That is the number `../usecase/browser-operation.md` means when it says a
 capability was "a skill describing 88 pages plus everything the menu cannot see".
-**Quote it when a customer asks what a system with no API costs.**
+**Quote it as the size of the map, in the same sentence, and never as the cost
+of the integration** - that conflation has already been made on a slide in front
+of a customer, and `../usecase/browser-operation.md` records what it cost. The
+map is the prerequisite; what gets built on it is separate and larger.
 
 ## Read the platform side first
 

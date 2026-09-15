@@ -44,14 +44,28 @@ type Item struct {
 
 // Shape is a deployment shape and what it needs from the customer.
 type Shape struct {
-	Name  string `json:"shape"`
-	What  string `json:"what"`
+	Name string `json:"shape"`
+	What string `json:"what"`
+
+	// Description is the index row: what somebody would come to this document
+	// FOR, as against the title, which says only which shape it is about.
+	//
+	// It exists because the landed index showed the title, and a title does not
+	// tell a reader whether this is the document they need - "external-api"
+	// names the subject and says nothing about the test environment, the rate
+	// limit or the mail credential that are the reasons to open it.
+	//
+	// It is metadata for the index and is not rendered into Document(): a
+	// reader who has arrived is past the question it answers.
+	Description string `json:"description"`
+
 	Items []Item `json:"needs"`
 }
 
 var shapes = []Shape{{
-	Name: "semantic-layer",
-	What: "a database we can read, with an agent asking questions of it",
+	Name:        "semantic-layer",
+	What:        "a database we can read, with an agent asking questions of it",
+	Description: "the connection and the account, whether it is read-only, the outbound addresses that have to go on their allowlist, a description per cube",
 	Items: []Item{
 		{Ask: "host, port, database or schema, and the account name", Why: "there is no connection without them", From: "../guide/requirements.md"},
 		{Ask: "**is that account read-only?** Ask explicitly", Why: "the one offered first usually is not, and finding out later means going back for a second credential", From: "../guide/requirements.md"},
@@ -60,51 +74,57 @@ var shapes = []Shape{{
 		{Ask: "a description of every cube, dimension and measure, in the customer's own words", Why: "the CRD requires a description on each, and it is what the model matches on - not the column name", From: "../usecase/semantic-layer.md"},
 	},
 }, {
-	Name: "external-api",
-	What: "a system with an HTTP API rather than a database",
+	Name:        "external-api",
+	What:        "a system with an HTTP API rather than a database",
+	Description: "the base URL and its credential, whether a test environment exists, the rate limit, and why mail is an HTTP API rather than SMTP",
 	Items: []Item{
 		{Ask: "the base URL, the auth scheme, and a credential for it", Why: "endpoints and non-secret settings become chart values; a token is a secret", From: "../usecase/external-api.md"},
 		{Ask: "**whether there is a test environment**, before designing a mock", Why: "writing into a real test environment proves the fields, the validation rules and the status codes; a mock proves none of them", From: "../usecase/write-path.md"},
 		{Ask: "if it is production-only, **whether they permit testing against it**", Why: "in the meeting, not assumed here - the answer decides whether the first delivery can be proved at all", From: "../wiki/taiwan-channels.md"},
-		{Ask: "the rate limit", Why: "it decides whether a Syncer can keep up, and whether a tool can be called per turn", From: "../guide/requirements.md"},
+		{Ask: "the rate limit", Why: "it decides whether a Syncer can backfill at all", From: "../guide/requirements.md"},
 		{Ask: "**if the system is email — an HTTP mail API and a key for it, plus a sender address already verified with that provider.** Not SMTP credentials", Why: "the platform's only outbound call is HTTPS, so a username, a password and an SMTP host **cannot be used at all** - and that is what gets handed over when you ask for mail access. The verification is their IT's to do, on their schedule, and an unverified sender is refused outright", From: "../wiki/integration.md"},
 	},
 }, {
-	Name: "chat-channel",
-	What: "the agent reached from a chat platform the customer's users already use",
+	Name:        "chat-channel",
+	What:        "the agent reached from a chat platform the customer's users already use",
+	Description: "which channel, asked before anything else because the field is immutable; the credential pair each platform actually takes; the LINE step that gates the rest",
 	Items: []Item{
 		{Ask: "**which channel**, in the same breath as who is on the other end", Why: "`botProviderClass` is immutable once created, so changing it later is a new BotProvider rather than an edit", From: "../guide/requirements.md"},
 		{Ask: "LINE: **that Messaging API is enabled on the Official Account**, before anything else", Why: "it is their step in their console, and it gates every other LINE question. The Channel Secret and Channel Access Token do not exist until it is done", From: "../wiki/integration.md"},
 		{Ask: "LINE: Channel Secret and Channel Access Token — and somebody who can paste a Webhook URL back into the LINE Developers Console and enable Use webhook", Why: "**LINE is the only two-way setup**: Asgard produces a URL that has to go back. The rest only take credentials inward", From: "../wiki/integration.md"},
 		{Ask: "Slack: **an app-level token and a bot token** - the `xapp-` and `xoxb-` pair, not a Client ID", Why: "**those are different credentials, and the wrong one gets asked for.** The client id, client secret, signing secret and scopes are what the platform's own UI flow installs an OAuth app with; a chart's `spec.slack` requires `appToken` and `botToken` and neither of those four. Ask for the client pair as well only if the engagement is going through the UI", From: "../wiki/integration.md"},
-		{Ask: "Discord: the Bot Token, and the bot invited to the server", Why: "the invitation is a step in their Developer Portal, not ours, and a bot that is not invited is silent rather than broken", From: "../wiki/integration.md"},
+		{Ask: "Discord: the Bot Token, and **the bot authorised and invited to the server** in their Developer Portal", Why: "the invitation is their step in their console rather than ours, and none of it is the token - a chart with the right `botToken` still has nowhere to speak", From: "../wiki/integration.md"},
 		{Ask: "Telegram: the Bot Token from BotFather. **The second field is ours, not theirs**", Why: "`spec.telegram` requires `webhookSecretToken` beside the bot token and no documentation page mentions it - it is a secret we choose, so it is not something to ask for, but a CR without it is refused", From: "../wiki/integration.md"},
 		{Ask: "whether anything sits between the channel and us", Why: "an existing bot, a middleware, a support desk already on that channel - it changes the entry point", From: "../guide/requirements.md"},
 	},
 }, {
-	Name: "knowledge-drive",
-	What: "documents the agent reads - manuals, FAQs, pages",
+	Name:        "knowledge-drive",
+	What:        "documents the agent reads - manuals, FAQs, pages",
+	Description: "the documents or the place they live, who keeps them current, how often they change",
 	Items: []Item{
 		{Ask: "the documents themselves, or the place they live and access to it", Why: "a Drive syncs from somewhere; without the source there is nothing to index", From: "../usecase/knowledge-drive.md"},
-		{Ask: "who keeps them current, and how often they change", Why: "it decides the Syncer's schedule, and whether a stale answer is a real risk", From: "../guide/requirements.md"},
+		{Ask: "who keeps them current, and how often they change", Why: "each Syncer carries its own `schedule` and the index its own cron, so the answer sets both - and with incremental sync the same record lands in several dated partitions, where the graph treats a stale one as a fact unless somebody says which copy wins", From: "../usecase/knowledge-drive.md"},
 	},
 }, {
-	Name: "write-path",
-	What: "the agent doing something rather than answering",
+	Name:        "write-path",
+	What:        "the agent doing something rather than answering",
+	Description: "whether a test environment exists, and who is on the other end when the approval gate stops",
 	Items: []Item{
 		{Ask: "**whether there is a test environment**, first", Why: "reaching for a mock before asking loses the strongest version of the first delivery", From: "../usecase/write-path.md"},
 		{Ask: "who is on the other end when the gate stops for approval", Why: "on a public channel the person approving is the visitor, not staff - and what that looks like is a platform unknown", From: "../wiki/platform-unknowns.md"},
 	},
 }, {
-	Name: "browser-operation",
-	What: "a system with no database we can read and no API",
+	Name:        "browser-operation",
+	What:        "a system with no database we can read and no API",
+	Description: "a back-office login, whether a non-production one exists, how many pages and operations actually matter",
 	Items: []Item{
 		{Ask: "a login to the back office, and whether a non-production one exists", Why: "the whole shape is driving their UI; there is nothing else to reach", From: "../usecase/browser-operation.md"},
 		{Ask: "how many pages and operations actually matter", Why: "**SHOPLINE is what this costs: 88 menu-level page entry points mapped before the first useful call, and a second map for everything below them.** One back-office-only system among four sets the cost of the whole item", From: "../wiki/taiwan-channels.md"},
 	},
 }, {
-	Name: "skill-set",
-	What: "skills the deployed agent loads at runtime",
+	Name:        "skill-set",
+	What:        "skills the deployed agent loads at runtime",
+	Description: "the git repository the skills live in, and a token for it if it is private",
 	Items: []Item{
 		{Ask: "a git repository, and a token for it if it is private", Why: "a SkillSet syncs from a repo; a private one needs a PAT the platform can hold", From: "../usecase/skill-set.md"},
 	},
@@ -175,10 +195,15 @@ apply, and the week it takes to find that out is the week you were saving.
 
 // Documents renders every shape, for the export and for the audit that resolves
 // the pointers in them.
-func Documents() []struct{ Name, Body string } {
-	out := make([]struct{ Name, Body string }, 0, len(shapes))
+//
+// Description travels beside the body rather than inside it, because the index
+// that lands beside these documents is rendered from what landed: a caller
+// holding the file has to be able to say what the file is for without parsing
+// it back out of the markdown.
+func Documents() []struct{ Name, Description, Body string } {
+	out := make([]struct{ Name, Description, Body string }, 0, len(shapes))
 	for _, s := range Shapes() {
-		out = append(out, struct{ Name, Body string }{s.Name, s.Document()})
+		out = append(out, struct{ Name, Description, Body string }{s.Name, s.Description, s.Document()})
 	}
 	return out
 }

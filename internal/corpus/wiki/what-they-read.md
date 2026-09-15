@@ -1,3 +1,7 @@
+---
+group: In practice
+description: the picture a customer arrives with, and where it is wrong
+---
 # What the customer read before meeting us
 
 The product site and the overview pages are what a customer has seen by the time

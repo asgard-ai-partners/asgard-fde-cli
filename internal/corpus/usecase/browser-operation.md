@@ -1,3 +1,7 @@
+---
+group: Read paths
+description: a system with no database and no API - only a web UI. The last resort
+---
 # Operating a system through its web UI
 
 The last resort, for a system with **no database you can read and no API** - an
@@ -183,15 +187,50 @@ for the hub shape, or the blueprint under
 `templates/supervisor/<name>/sandbox_blueprint.yaml` for a flow agent - plus a
 `templates/skill_set/sk-<system>-ops.yaml` for the trio:
 
+**The two CRs spell the same two settings differently**, and the blueprint form
+is the one that is easy to get wrong: there is no `managed` block on it, and
+every field on it is a `value` / `expression` / `template` rather than a plain
+boolean or a list - `../usecase/conventions.md` has the rule and the
+comma-separated `*Names`.
+
 ```yaml
-# Agent, or the SandboxBlueprint for a flow agent
+# Agent - a boolean, and a YAML list
 spec:
   managed:
     browser:
       enabled: true
     skillSetNames:
       - sk-<system>-ops
+---
+# SandboxBlueprint, for a flow agent - the same two settings, both as strings
+spec:
+  browser:
+    enabled:
+      value: "true"
+  skillSetNames:
+    value: "sk-<system>-ops"
 ```
+
+A blueprint's `browser.enabled: false` is **not** authoritative: if any Agent it
+resolves turns the browser on, the sandbox opens it anyway.
+
+**The blueprint's other sidecar is `editorServer`, and it is the opposite of
+this one.** The browser sidecar is a screen the **agent** drives; `editorServer`
+starts code-server in the sandbox so a **person** can open an IDE onto the
+sandbox's own filesystem, at `workingDirectory`, after `initCommand` has run.
+Building an agent never reaches for it: the one deployment that sets it runs an
+internal article-authoring workspace a person works in, and leaves it off on the
+blueprint its customers talk to. So a chart you find it in is telling you a human
+is in the loop by hand, not that the agent gained a capability. If an engagement
+ever does need somebody working inside the sandbox, the fields are described in
+asgard-kube's `pkg/apis/asgard/v1alpha1/types.go`, and that is the reference -
+there is no extract, because there is no shape here to teach.
+
+**It is also not the `SourceSetEditorServer` kind**, which is a leased editor
+onto a SourceSet's volume rather than a sandbox's, is its own CR with its own
+lifetime, and is internal to the platform - `../wiki/platform-unknowns.md` P12.
+The two are both code-server and the names are one word apart, so a reader who
+greps for "editor server" and lands on P12 gets an answer about the wrong one.
 
 The skill side is a normal SkillSet trio (`../usecase/skill-set.md`)
 pointing at wherever the skill files live:
@@ -210,6 +249,13 @@ Credentials do not go in the skill. A runtime config file written into the
 sandbox by a hook is how a session gets its base URL and the user's token -
 see `../usecase/flow-agent-supervisor.md` for the hook, including why it
 must be `user-prompt-submit` rather than `session-start`.
+
+**That is the caller's token, and it is the only kind that arrives this way.** A
+hook is an expression stored in the CR spec, so a static service key written by
+one is a key baked into the chart, and nothing else puts a value into the
+sandbox's environment at all. A system that authenticates with a service key is
+reached from a Workflow instead, whatever else recommends this shape -
+`../usecase/external-api.md` has the fields that was read off.
 
 **Where a login cannot be automated, hand the browser to the person.** A real
 user completing the login in the sandbox is a legitimate step, and better than

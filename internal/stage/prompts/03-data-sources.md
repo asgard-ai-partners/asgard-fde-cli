@@ -1,3 +1,6 @@
+---
+description: the ladder for what to ask them for, filling .env without anybody typing a password, introspecting the real schema rather than guessing it
+---
 # Wire up the customer's databases
 
 **This stage is a project that has no DataConnector yet**, so nothing in it
@@ -9,7 +12,8 @@ Missing a connector:
 ## Two ladders, and this page is only one of them
 
     what to ASK THEM FOR      docs > source code > API spec > the DB > the UI
-    how to READ it, below     a database  >  an API  >  a screen
+    how to READ it, below     a database  >  an API or another protocol  >
+                              a screen
 
 They have the same shape and opposite purposes, and an FDE uses both in one
 meeting. **The asking ladder runs first and makes this page easier**: with the
@@ -29,6 +33,12 @@ ladder and why source code sits above a spec.
                                 or a skill teaching the agent to call it
                                 ../usecase/external-api.md
                                 ../usecase/api-oauth.md  (if it needs a token)
+    another protocol         -> a runtime skill, with the agent running the
+                                client in its own sandbox: SSH, SNMP, a vendor
+                                CLI. As good as an API, and open only where the
+                                credential arrives per turn from the caller -
+                                nothing puts a static service key in a sandbox
+                                ../usecase/skill-set.md
     a screen only            -> last resort. Brittle and slow, and it breaks
                                 when the vendor changes their UI. Raise it as
                                 a question before designing around it.
@@ -118,6 +128,8 @@ contract rather than only by convention.
 
 **Unchecked:** the ladder. That source code beats a spec, a database beats an
 API and an API beats a screen is this engagement's ordering of what to reach
-for, and **no source states it** - the pages it points at describe each shape
-without ranking them. Read it as the order that has paid off here, and the last
-rung as the one to raise as a question rather than design around.
+for, and **no source states it**. `../usecase/browser-operation.md` is the one
+page that ranks anything, and only around its own rung - a screen is the last
+resort, and the sandbox running a vendor client beats it. Read the rest as the
+order that has paid off here, and the last rung as the one to raise as a
+question rather than design around.

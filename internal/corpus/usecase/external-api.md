@@ -1,3 +1,7 @@
+---
+group: Read paths
+description: "a source that is an HTTP API, not a database - and the credential that decides whether the agent calls it from a Workflow or from its sandbox"
+---
 # External HTTP APIs
 
 Reading from, and writing to, a system that is not a database - a SaaS platform,
@@ -21,7 +25,7 @@ Per system, take the most capable route it offers:
 |---|---|---|
 | **a database you can read** | the agent composes its own queries and joins across tables | `../usecase/semantic-layer.md` |
 | **an API** | a fixed set of calls, but a real contract - reviewable, and gateable for writes | this extract |
-| **a screen a person clicks** | last resort. Brittle, slow, and it breaks whenever the vendor changes their UI | no extract yet - raise it as a question first |
+| **a screen a person clicks** | last resort. Brittle, slow, and it breaks whenever the vendor changes their UI | `../usecase/browser-operation.md` |
 
 **A system offering both: read from the database, write through the API.** The
 database gives the agent questions nobody thought to expose an endpoint for; the
@@ -68,8 +72,30 @@ Either way the reads stay read-only, and **a write still goes through A**.
 
 For the second case the skill carries what a person would need: how to
 authenticate, which commands are safe, how to read the output, and which
-commands are refused outright. Credentials arrive the same way as for HTTP -
-written into the sandbox by a hook, never baked into the skill.
+commands are refused outright.
+
+**B is only available when the credential arrives per turn, and this is the
+constraint that decides between the two shapes.** A static service key cannot
+reach a sandbox. There is no `env` on `Agent.spec.managed`, on
+`SandboxBlueprint.spec` or on `SkillSet.spec`; the sandbox container's
+environment is a closed list the reconciler builds, and every secret in it is
+the platform's own - the browser and editor passwords, out of a Secret the
+operator manages. `credentialMounts` is not a general mount: its only field is
+`oAuthCredentialName`, it resolves an `OAuthCredential`, and the token lands in
+the directory as `access_token` and nothing else. `extraDirectories` names
+directories to create and carries no content. A `hook` is an expression stored
+in the CR spec, so a key written by one is a key baked into the chart, which
+`../usecase/conventions.md` refuses.
+
+So **a system that needs a static key goes through A**, however well it fits
+B's description otherwise: `Workflow.spec.variables[].valueFrom.secretKeyRef` is
+the only route a service credential has, and a processor config reads it as
+`vars.<name>`. B is for a credential the caller brings - see
+`../usecase/per-turn-credentials.md`. **Checked against asgard-kube `cbd8d70`
+and asgard-core `623ceb50`, 2026-09-15**, by reading the three CRs' fields and
+the sandbox pod's env in `bpoperator/reconciler/sb_reconciler.go`; an engagement
+reached the same answer from the absence of a field, which is the weakest form
+of evidence and the reason this paragraph exists.
 
 ## The shape (A)
 
@@ -345,6 +371,11 @@ lookup and try something else:
 
 > an empty list means the platform does not carry it. Do not go looking another
 > way.
+
+**What is true of the system rather than of this call is the skill's**, not a
+paragraph repeated in every description - and a skill written for a subject the
+tools now cover has to lose whatever they hide.
+`../wiki/tool-description-and-skill.md` is the division.
 
 ## Writes: the approval gate
 

@@ -1,3 +1,7 @@
+---
+group: More entry points and more read paths
+description: a SemanticLayer whose consumer is Data Insight and **no Agent at all**. The shape a later reader breaks by tidying it up
+---
 # A read surface for dashboards, with no agent on it
 
 A SemanticLayer whose consumer is **Data Insight (Mimir)** rather than an Agent.

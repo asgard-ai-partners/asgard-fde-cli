@@ -1,3 +1,7 @@
+---
+group: In practice
+description: "words that mean one thing here, and what the other senses are called. **Check it for the word you searched**: a result in the wrong sense reads exactly like an answer"
+---
 # Words with one meaning here
 
 A word that means two things inside one body of material produces the failure

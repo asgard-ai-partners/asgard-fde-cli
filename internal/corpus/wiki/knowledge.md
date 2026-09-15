@@ -1,3 +1,7 @@
+---
+group: While building
+description: Drive, Context Index, and how Knowledge Base differs
+---
 # Drive and Knowledge Base
 
 Both hold unstructured knowledge and both are live. Drive is what this repo

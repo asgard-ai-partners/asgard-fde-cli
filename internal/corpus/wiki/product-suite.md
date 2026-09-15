@@ -1,3 +1,7 @@
+---
+group: Products and scope
+description: what each product is for, and who uses it
+---
 # Six products
 
 Asgard is not one product but six. Deciding which one a request lands in shapes

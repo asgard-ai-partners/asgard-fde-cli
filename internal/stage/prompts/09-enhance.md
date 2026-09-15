@@ -1,3 +1,6 @@
+---
+description: which project a new capability belongs to, when it needs a spec first, the closing step that gets skipped
+---
 # Add a capability to a repo that is already live
 
 The onboarding is done: every project reads through a shape, is reachable, and

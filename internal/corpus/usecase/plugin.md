@@ -1,3 +1,7 @@
+---
+group: Capabilities and scheduling
+description: capability bundles chosen per request
+---
 # Plugin
 
 A named bundle of capabilities that a blueprint loads by name - and can pick
@@ -56,7 +60,7 @@ Every Plugin's SkillSet points at **one** `ss-skill-repos`, not at a SourceSet o
 its own. That is the opposite of the 1:1:1 rule in
 `../usecase/skill-set.md`, and it is deliberate: the skills live in one
 repository, so a SourceSet per bundle would clone the same repository once per
-bundle. The deployment with 29 has exactly one.
+bundle. The deployment carrying 29 Plugins has exactly one.
 
 The cost is paid on the UI side and paid knowingly - these SkillSets carry no
 `skill-set-name` annotation and no `managed-by: skill-set` label, so the platform
@@ -74,13 +78,21 @@ apiVersion: asgard-ai.com/v1alpha1
 kind: Plugin
 metadata:
   name: pg-<domain>
+  annotations:
+    # Required, and the exemption below does NOT reach it. A Plugin is
+    # something a person sees, so `../usecase/conventions.md` applies in full:
+    # without this the CR applies cleanly and shows up nameless, and the gate
+    # rejects it - which is the only thing that catches it.
+    asgard-ai.com/plugin-name: "<display name>"
   labels:
     {{- include "<chart>.labels" . | nindent 4 }}
 spec:
   skillSets:
     - name: sk-<domain>
   # Written explicitly rather than omitted, so the bundle reads as
-  # "this one carries skills only".
+  # "this one carries skills only". A non-empty toolsets takes the same
+  # `- name: ts-<thing>` entries as skillSets above - a named reference to a
+  # Toolset CR, never the tool's own name.
   toolsets: []
   sourceSetMounts: []
   hooks: []
@@ -109,8 +121,9 @@ Load it from the blueprint:
 
 ## Choosing plugins per request
 
-`pluginNames` is a `ValueExprTemplate` - it takes either a static `value:` or an
-`expression:` of JavaScript evaluated **per turn**, with the BotProvider's
+`pluginNames` is a `ValueExprTemplate`, whose three forms and exactly-one-of
+rule are `../usecase/conventions.md`'s. The one that matters here is
+`expression:` - JavaScript evaluated **per turn**, with the BotProvider's
 payload available as `prevPayload`. So the blueprint can compute the list:
 
 ```yaml
@@ -123,8 +136,9 @@ A base bundle always loads; the caller adds more through the BotProvider payload
 Note the value is a **comma-separated string**, not a list - that is the shape of
 every `*Names` field on a blueprint.
 
-This is what makes 28 bundles tractable. Without it, either every agent carries
-every skill, or there is one agent per combination.
+This is what makes a bundle per subject area and a bundle per house style
+tractable at once. Without it, either every agent carries every skill, or there
+is one agent per combination.
 
 ### Which means the caller chooses the agent's capabilities
 
@@ -161,8 +175,9 @@ the expression will not have changed - only the BotProvider beside it.
 that is not a mistake or a stub. A Plugin is a named bundle of **capabilities**,
 and a bundle of one toolset is a legitimate bundle: it exists so that the tool
 can be selected per request by name, which a toolset on the blueprint cannot be.
-Of the 28, twenty-six wrap exactly one skill set, one wraps two plus a toolset -
-the base - and one wraps a toolset alone.
+Nearly every bundle in that chart wraps exactly one skill set; the base bundle
+and the global one each wrap two plus a toolset, and `pg-public-opinion` wraps
+the toolset alone.
 
 So the question when reaching for a Plugin is not "do I have skills to bundle"
 but **"does this need to be selectable per request"**. If it does, wrap it, even

@@ -1,3 +1,7 @@
+---
+group: While building
+description: Flow Agent against Managed Agent, how to choose, UI-to-CR names
+---
 # Flow Agent and Managed Agent
 
 They are not two of the same thing. A Managed Agent is the configuration of one

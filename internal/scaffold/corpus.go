@@ -35,8 +35,17 @@ const corpusSkillDir = ".agents/skills/asgard-platform"
 // stamp.go, from the other side.
 func corpusJobs() ([]job, error) {
 	var jobs []job
+	// **Where a description cannot be parsed out of the body.** `needs` and
+	// `brief` are Go rather than markdown, so what they render carries no
+	// frontmatter - the description is a field on the struct, and it has to
+	// reach the index some other way than by being read back off the file.
+	described := map[string]string{}
 	add := func(target string, body string) {
 		jobs = append(jobs, job{target: filepath.Join(corpusSkillDir, target), body: []byte(body)})
+	}
+	addDescribed := func(target, description, body string) {
+		add(target, body)
+		described[filepath.Join(corpusSkillDir, target)] = description
 	}
 
 	// Not List: a corpus hides its own bookkeeping from a listing, and some of
@@ -94,12 +103,12 @@ func corpusJobs() ([]job, error) {
 	// shape can be built - and until now it was 125 lines of Go that no grep
 	// could reach.
 	for _, d := range needs.Documents() {
-		add(filepath.Join("needs", d.Name+".md"), d.Body)
+		addDescribed(filepath.Join("needs", d.Name+".md"), d.Description, d.Body)
 	}
 
 	// Four activities, beside the rest for the same reason.
 	for _, d := range brief.Documents() {
-		add(filepath.Join("brief", d.Name+".md"), d.Body)
+		addDescribed(filepath.Join("brief", d.Name+".md"), d.Description, d.Body)
 	}
 
 	// The ten stages, minus the paragraphs that render this repository's own
@@ -119,7 +128,7 @@ func corpusJobs() ([]job, error) {
 	// documents by the question each answers, which is judgement and is worth
 	// reading. This carries what neither can: both halves in one place, as
 	// paths; the rule that turns a pointer into a path; and what is NOT here.
-	index, err := corpusIndex(jobs)
+	index, err := corpusIndex(jobs, described)
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +144,7 @@ func corpusJobs() ([]job, error) {
 // actually written. Reading the corpus again would let the two drift, and the
 // drift that matters is the one where the index names a document the export
 // skipped - a map to a file that is not there is worse than no map.
-func corpusIndex(jobs []job) (string, error) {
+func corpusIndex(jobs []job, described map[string]string) (string, error) {
 	var b strings.Builder
 	b.WriteString(corpusIndexHead)
 
@@ -160,11 +169,24 @@ func corpusIndex(jobs []job) (string, error) {
 			rel := filepath.ToSlash(strings.TrimPrefix(j.target, filepath.Join(corpusSkillDir)+string(filepath.Separator)))
 			name := strings.TrimSuffix(filepath.Base(j.target), ".md")
 			doc := kb.Parse(name, j.body)
-			title := doc.Title
-			if title == "" {
-				title = name
+			// **The description, and the title only when there is none.** A
+			// title says what a document is about; a row in an index has to say
+			// whether it is the one the reader needs, and those are different
+			// claims - "Decide how the work splits into projects" tells nobody
+			// what is inside it. Every document that carries a `description:`
+			// renders that here, which is why the field is on the document and
+			// not in this function.
+			covers := described[j.target]
+			if covers == "" {
+				covers = doc.Description
 			}
-			fmt.Fprintf(&b, "| [`%s`](%s) | %s |\n", rel, rel, title)
+			if covers == "" {
+				covers = doc.Title
+			}
+			if covers == "" {
+				covers = name
+			}
+			fmt.Fprintf(&b, "| [`%s`](%s) | %s |\n", rel, rel, covers)
 		}
 	}
 

@@ -1,3 +1,7 @@
+---
+group: In practice
+description: Asgard's outbound IPs, checking model capability, vocabulary
+---
 # Connectivity, model capability, vocabulary
 
 Things filed under help-community that come up in practice.
@@ -43,16 +47,23 @@ from is not something to rely on.
 
 ### How these are handed over, which is not "in the deck"
 
-**Do not copy them into a customer repository, a proposal, or an email that will
-be forwarded.** Give them directly to the person making the firewall change,
-once, and read them from here when you do.
+**Do not copy them out of this page** - not into a proposal, not into a
+decision record, not into an email that will be forwarded. Give them directly to
+the person making the firewall change, once, and read them from here when you
+do.
+
+**This page is already in the repository**, written by `asgard-cli init` under
+`.agents/skills/asgard-platform/`, and replaced when the CLI's version moves.
+That is what makes it the one copy allowed to exist: a second one, written by
+hand into this engagement's own files, is updated by nobody.
 
 The reason is this material's own core argument, applied to itself. The
 screenshots page refuses to carry images because *a copy in one engagement goes
 stale where nobody is looking* - and an address is the same kind of thing with a
 worse failure. **A stale screenshot is embarrassing; a stale allowlist is the
-customer's connection dropping, and they will come back to us about it.** Every
-copy in a repo, a slide or a mail thread is a copy nobody will update.
+customer's connection dropping, and they will come back to us about it.** A
+slide or a mail thread is a copy nobody will update; this page is a copy the
+CLI replaces.
 
 It also resolves a contradiction that was sitting in plain sight: the
 `proposal-deck` skill forbids **coordinates** on a customer's screen - hostnames,

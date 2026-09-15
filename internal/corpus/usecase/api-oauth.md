@@ -1,3 +1,7 @@
+---
+group: Credentials
+description: "an API that will not take a static key: the two-call token chain"
+---
 # An API that needs a token first
 
 Service-to-service auth against an API that will not take a static key: fetch a

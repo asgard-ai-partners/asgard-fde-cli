@@ -1,3 +1,7 @@
+---
+group: While building
+description: the processor types against the editor's groups; Expression is JavaScript, Template is Handlebars
+---
 # Workflow and Processor
 
 A Workflow is the program that actually runs. In the UI it is a diagram; in a
@@ -55,13 +59,16 @@ Expression is JavaScript, not CEL, and it is **not** restricted to ECMA5 -
 that limit is `execute-script`'s Engine field and applies to a script body, not
 to these. One shipped tenant chart evaluates
 `prevBlobs.map(b => b.blobId).join(',')`, which is the evidence;
-`../wiki/processors.md` carries the count behind it. `||`, `??`, `String()`
+`../wiki/processors.md` says why a deployed expression is the evidence to keep
+rather than a tally of how many use one. `||`, `??`, `String()`
 and `encodeURIComponent` work, as
 do built-in helpers such as `history(0, -1)` and `urlEncode(...)`.
 
-**`const` and `let` are a different question and the answer is don't.** No
-chart uses either, because an Expression field holds one expression rather than
-statements - a declaration has nowhere to go. If you need statements, that is
+**`const` and `let` are a different question, and the answer is that they need a
+wrapper.** An Expression field holds one expression rather than statements, so a
+bare declaration has nowhere to go - the charts write an immediately-invoked
+arrow function around the statements instead, which is the form
+`../wiki/processors.md` sets out. If you want statements without one, that is
 `execute-script`, and there you are back inside ECMA5.
 
 This was once recorded as CEL, and anything written as CEL neither works nor
@@ -131,9 +138,9 @@ built-in functions and the `Blob` shape are in
 [`processors`](../wiki/processors.md). **The ECMA5 limit is `execute-script`'s
 Engine field and does not reach an Expression**, which is the same thing this
 page says above and the deployed charts settle: one of them evaluates an arrow
-function. What no chart uses in an Expression is `const` or `let`, and that is
-structural rather than a limit - the field holds one expression, not
-statements.
+function. `const` and `let` need the immediately-invoked wrapper described
+above, which is structural rather than a limit - the field holds one
+expression, not statements.
 
 ## The editor's canvas is a ConfigMap
 
@@ -153,15 +160,18 @@ data:
       "exit":      {"finish": {"x":1180,"y":140}} }
 ```
 
-The Workflow binds it by annotation - `asgard-ai.com/workflow-config-name` - and
-without one the graph opens as a pile at the origin and somebody drags it apart
-by hand, once per environment.
+The Workflow binds it by annotation - `asgard-ai.com/workflow-config-name`.
 
-**This is the second thing that decides whether a chart-authored Workflow is
-usable in the UI**, and the two fail the same way and are never mentioned
-together:
+**Do not write one for a new chart.** The platform lays the graph out itself
+since workflow-service #336-#340, 2026-08-31, and `source/SOURCES.md`'s
+generational table records the switch: the demo generator hand-writes these and
+the deployments authored after the change do not. A ConfigMap in a chart you are
+reading is the older shape, not a thing you are missing, and hand-written
+positions go stale against a graph anybody edits.
 
-    the ConfigMap missing            the nodes open on top of each other
+**What still decides whether a chart-authored Workflow is usable in the UI is
+the label**, and it fails silently in a way the canvas no longer does:
+
     project-environment-id missing   the editor opens as a blank canvas
 
 One deployment carries one per Workflow. `ConfigMap` is not an

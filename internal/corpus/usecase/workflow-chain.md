@@ -1,3 +1,7 @@
+---
+group: The mechanism, and the scale
+description: "a Workflow with more than one step: the processor types, and what crosses between them"
+---
 # Chaining processors, and the graph that wires them
 
 A Workflow with more than one step: what crosses between the processors, and how
@@ -10,7 +14,10 @@ response, a conversation loop, and a nine-branch content pipeline.
 **Checked:** 2026-09-02, re-read 2026-09-14 across every reference
 deployment. Every construct this page cites is written in at least one of
 them, `??` included; `prevPayload` is in nearly all of them and is how a chain
-passes anything at all.
+passes anything at all. Re-read 2026-09-15 against asgard-kube `cbd8d70` for the
+variable's exactly-one-of and its name pattern, and for the open `labels` map on
+Entry, Exit and Processor - and against every `variables` block and every
+declared exit in the reference deployments.
 
 **Unchecked:** nothing outstanding. The replacement of prevPayload by an http-request is stated in a deployment's own comment in the same words.
 
@@ -66,6 +73,15 @@ metadata:
     asgard-ai.com/workflow-name: "商品搜尋"
 spec:
   variables:
+    # A variable takes exactly one of value and valueFrom. `value` is the
+    # per-environment constant, read as vars.<name> from an expression or a
+    # Handlebars template, so the chart value is written once rather than
+    # repeated in every config that needs it. Every reference deployment
+    # declares locale and timezone this way.
+    - name: locale
+      value: "zh-TW"
+    - name: baseUrl
+      value: {{ .Values.<system>BaseUrl | quote }}
     # The only way a secret reaches a workflow: a config has value, expression
     # or template, and no valueFrom.
     - name: apiKey
@@ -77,6 +93,13 @@ spec:
   entries:
     - name: search
       handlingProcessor: proc-input          # where the run starts
+      # display_name is this node's title on the canvas and description is the
+      # line under it. Both optional - a missing display_name shows the node's
+      # own name - and both worth writing, on entries, exits and processors
+      # alike, because a nine-node graph read by `proc-*` name is unreadable.
+      labels:
+        display_name: Search
+        description: 商品搜尋工具的進入點
       tooling:
         name: search_products
         description: |-
@@ -88,8 +111,11 @@ spec:
           "properties": { "q": { "type": "string" } },
           "required": ["q"] }
 
-  # A tool workflow ends by pushing a message, so it needs no exit. A
-  # conversation loop does.
+  # A run ends when its terminal processor finishes, so `exits: []` is the
+  # ordinary answer for a tool workflow and for a conversation loop alike.
+  # Declare one where a named end is worth showing on the canvas, or where an
+  # exit hands off to another workflow through its handlingWorkflow - and give
+  # it the same display_name / description pair as any other node.
   exits: []
 
   processors:
@@ -273,8 +299,13 @@ relationships:
   half-remembers an allowed value produces a plausible wrong one, and the API
   answers 400 to something that looks fine in the log.
 - **Name processors for what they do, not their type.** `proc-search` beats
-  `http-request-1` in a nine-node graph, and the `labels.display_name` is what
-  the Platform UI shows.
+  `http-request-1` in a nine-node graph, and `labels.display_name` is the node's
+  title on the canvas with `labels.description` as the line under it. Both are
+  optional - a node with neither is drawn under its own `name` - so they are
+  written for the person who opens the graph later rather than for any check,
+  and the reference charts write them as a pair on entries, exits and
+  processors. `../wiki/platform-unknowns.md` P15 is why only these two keys are
+  taught, out of a label map the CRD leaves open.
 - **Keep one Workflow to one job.** Two jobs in one graph share a failure path,
   and then one job's error message answers the other job's caller.
 
@@ -294,6 +325,12 @@ What it cannot check, and what to check by hand:
   read them, and exercise the tool once against the real system.
 - **that a `router` covers its cases.** A value matching no condition and no
   `else` stops the run.
-- **that `relationships` reaches an exit** in a conversation workflow. A tool
-  workflow ends on `push-message` and needs no exit; a loop that never reaches
-  one leaks a channel until `channelMaxIdleMs`.
+- **that a conversation loop reaches an exit.** It does not have to and should
+  not be made to: every supervisor in the reference deployments loops back to
+  `listen-message` and declares `exits: []`, and so does what
+  `asgard-cli add flowagent --supervisor` writes. A run ends when its terminal
+  processor finishes. `channelMaxIdleMs` is not the mechanism somebody reaches
+  for here either - asgard-core `623ceb50` types it as the bound on the Redis
+  message-history cache and says in as many words that it is **not** the channel
+  or transcript lifetime; leaving it unset means the durable channel never
+  expires, which is the design rather than a leak.

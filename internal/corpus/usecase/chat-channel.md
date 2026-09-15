@@ -1,3 +1,7 @@
+---
+group: More entry points and more read paths
+description: LINE, Telegram, Discord or Slack instead of a web widget. **Nothing has run this** - read its provenance line first
+---
 # Reaching the agent from a chat platform
 
 LINE, Telegram, Discord or Slack as the entry point, instead of a web widget or
@@ -132,7 +136,7 @@ spec:
         name: preset-agent-hub
         key: api_key
   line:
-    # Both from the LINE Developers console for this channel. They are NEW keys
+    # Both from the LINE Developers console for this channel. They are NEW
     # keys, so each has to be declared under `appSecret:` and then set - a
     # value set against no declaration is stored and never injected.
     channelAccessToken:
@@ -173,9 +177,10 @@ and add one casually.
 The prompt lives on the Workflow's processor, not on an Agent CR, and a chat
 platform changes what it has to say:
 
-- **The conversation is long-lived and mostly idle.** `channelMaxIdleMs` releases
-  a channel's resources after idle, and a web widget's value is usually wrong
-  here: a widget session ends when the tab closes, a LINE thread does not.
+- **The conversation is long-lived and mostly idle.** A widget session ends when
+  the tab closes and a LINE thread does not, so the prompt cannot assume the
+  previous turn was recent. `channelMaxIdleMs` is not the dial for that -
+  `../usecase/workflow-chain.md` has what it bounds and what it does not.
 - **There is no page around the bot.** A widget can rely on the surrounding page
   for scope; a chat bot cannot, so the prompt has to say what it does *and what
   it does not* in its first turn, or users ask it anything.

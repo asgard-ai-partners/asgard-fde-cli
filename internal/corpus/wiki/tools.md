@@ -1,3 +1,7 @@
+---
+group: While building
+description: MCP Server, Skillset and Plugin; hook events
+---
 # MCP Server, Skillset and Plugin
 
 Three things that are easy to confuse. The difference is what each one holds.
@@ -10,6 +14,9 @@ Three things that are easy to confuse. The difference is what each one holds.
 
 In one line: **an MCP Server is what the agent can do, a Skillset is what it
 should know, and a Plugin is a set of capabilities behind one name.**
+
+**The agent reads both at once**, so a subject the two share needs a rule about
+which one owns a fact: `../wiki/tool-description-and-skill.md`.
 
 ## MCP Server
 

@@ -1,3 +1,6 @@
+---
+description: every deployment shape, grouped by the decision it belongs to - entry point, read path, write path, credentials
+---
 # The extracts
 
 Extracts from Asgard deployments that are already in production, organised by the
@@ -48,7 +51,7 @@ no grouping at all. The CR shapes below are independent of that choice.
 |---|---|
 | [`agent-hub.md`](../usecase/agent-hub.md) | every caller can authenticate; several specialists |
 | [`flow-agent-single.md`](../usecase/flow-agent-single.md) | anonymous audience, one job |
-| [`flow-agent-supervisor.md`](../usecase/flow-agent-supervisor.md) | anonymous or credentialed audience, several specialists |
+| [`flow-agent-supervisor.md`](../usecase/flow-agent-supervisor.md) | anonymous or credentialed audience, several specialists - and the one edge that loses the first message of every new conversation |
 
 **Read paths** - also decided by audience:
 
@@ -57,7 +60,7 @@ no grouping at all. The CR shapes below are independent of that choice.
 | [`semantic-layer.md`](../usecase/semantic-layer.md) | internal audience, open-ended questions |
 | [`fixed-query-tools.md`](../usecase/fixed-query-tools.md) | public audience, a known set of questions |
 | [`knowledge-drive.md`](../usecase/knowledge-drive.md) | knowledge that is documents, not rows |
-| [`external-api.md`](../usecase/external-api.md) | a source that is an HTTP API, not a database |
+| [`external-api.md`](../usecase/external-api.md) | a source that is an HTTP API, not a database - and the credential that decides whether the agent calls it from a Workflow or from its sandbox |
 | [`browser-operation.md`](../usecase/browser-operation.md) | a system with no database and no API - only a web UI. The last resort |
 
 **Write paths** - anything with a side effect:
@@ -95,7 +98,7 @@ above were written:
 | file | when |
 |---|---|
 | [`workflow-chain.md`](../usecase/workflow-chain.md) | a Workflow with more than one step: the processor types, and what crosses between them |
-| [`skill-layers.md`](../usecase/skill-layers.md) | 9 runtime skills over one middleware and one external platform - what the layering looks like past the first skill |
+| [`skill-layers.md`](../usecase/skill-layers.md) | a runtime skill per area over one middleware and one external platform - what the layering looks like past the first skill |
 | [`demo-generation.md`](../usecase/demo-generation.md) | building something that looks like a prospect's business when you have none of their data |
 
 ## Keeping this list complete

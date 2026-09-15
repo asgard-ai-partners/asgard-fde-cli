@@ -1,3 +1,7 @@
+---
+group: The mechanism, and the scale
+description: building something that looks like a prospect's business when you have none of their data
+---
 # A demo, and the pipeline that generates one
 
 Building something that looks like a prospect's business when you have none of
@@ -121,8 +125,12 @@ from the package:
     pkg=$(helm package <industry>/chart/app --app-version dev-0.1.0 -d /tmp | sed 's/.*: //')
     helm upgrade <name> "$pkg" --install -n asgard-demo-<industry> \
 
-**Each industry declares its own `CompletionModel`.** Twenty-four of them across
-the generator - see `../wiki/settings.md` for the class enum and the two
+**Each industry declares its own pair of `CompletionModel` CRs, and nothing in
+any chart names either of them.** Every `completionModelName` across the
+generator resolves to `preset-balanced`, and the one industry that has dropped
+the value entirely still declares the pair - so the CRs are inert, and copying
+the block out of here obtains a provider key for a model no layer and no agent
+will use. `../wiki/settings.md` has that finding, the class enum, and the two
 rules the CRD enforces that helm does not.
 
 **The SQL is the source of truth, not the database.** Data is applied from files

@@ -1,3 +1,6 @@
+---
+description: what each step of the gate is for, the step that only the platform can run, why a skipped step is not a pass
+---
 # Run the acceptance gate
 
 Every project has a read path and an entry point. Run the gate before committing

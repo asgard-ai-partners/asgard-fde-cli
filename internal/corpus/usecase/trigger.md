@@ -1,8 +1,12 @@
+---
+group: Capabilities and scheduling
+description: work on a schedule with nobody watching
+---
 # Trigger
 
 **This is written from one Trigger, in one chart.** `../wiki/coverage.md`
-counts them: of eight rendered reference deployments, exactly one declares a
-Trigger, and it declares one. Every rule below about the cursor, the cold start
+counts them: of the reference deployments that declare CRs at all, exactly one
+declares a Trigger, and it declares one. Every rule below about the cursor, the cold start
 and what a scheduled run may not do is generalised from that single instance,
 and none of it has a second arrangement to check against. Treat the reasoning as
 the transferable part and the specifics as one worked example.

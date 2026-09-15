@@ -131,12 +131,9 @@ func List() ([]kb.Doc, error) { return corpus.List() }
 
 // skipFrontmatter drops the leading --- block, so a search quotes the skill's
 // prose rather than the description it is already being shown beside.
-func skipFrontmatter(body string) string {
-	if !strings.HasPrefix(body, "---\n") {
-		return body
-	}
-	if i := strings.Index(body[4:], "\n---\n"); i >= 0 {
-		return body[4+i+5:]
-	}
-	return body
-}
+//
+// **`kb.Body` is the one that decides where a block ends.** This was a second
+// copy of it, and the two would have disagreed the first time either was
+// corrected - which is not hypothetical: the copy in `kb` was fixed the day
+// this was written, for an unterminated block that swallowed a document.
+func skipFrontmatter(body string) string { return kb.Body(body) }

@@ -1,3 +1,6 @@
+---
+description: a semantic layer or fixed query tools, the layer nobody asks questions of, what zero-parameter does not mean
+---
 # Decide each project's read path
 
 **This stage is a project whose connectors exist and nothing reads through
@@ -59,6 +62,13 @@ queryable in full. That is ours rather than the platform's: the CRD allows the
 field. The reason to refuse it is that a per-agent allowlist makes the exposed
 surface look bounded while the layer underneath keeps growing, so excluding the
 sensitive tables is not the fix - the shape itself is the risk.
+
+**That is the Agent path, and a public audience is rarely on it.** A flow agent
+has no Agent CR, and there `semanticLayer.allowedCubes` on the completion
+processor does narrow - `../usecase/semantic-layer.md` says which binding is
+which. So the case for fixed tools is not that narrowing is impossible; it is
+the paragraph below, that no user input reaches SQL at all. A processor's
+allowlist grows with the layer under it the same way.
 
 With fixed tools, what can be asked is decided by a few statements in version
 control, no user input reaches SQL so the injection surface is zero, and widening
@@ -135,6 +145,10 @@ the difference a column value instead of a tool choice.
 Tool usage guidance goes in each tool's Workflow entries[].tooling.description.
 Toolset.spec.instruction does not exist any more - adding it back passes
 dry-run and then fails the real deploy.
+
+**A description is per tool and a skill is per subject**, and the agent reads
+both at once, so what is true across several of these tools goes in the skill
+instead - `../wiki/tool-description-and-skill.md`.
 
 Done when: every project reads through one shape or the other, and
 asgard-cli check plus asgard-cli verify are green.

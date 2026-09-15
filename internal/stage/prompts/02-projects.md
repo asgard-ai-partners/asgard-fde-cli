@@ -1,3 +1,6 @@
+---
+description: the split follows the audience, ask against watch, two releases of one chart per environment, the table the interview builds
+---
 # Decide how the work splits into projects
 
 How the work splits into projects is decided by interviewing the customer,

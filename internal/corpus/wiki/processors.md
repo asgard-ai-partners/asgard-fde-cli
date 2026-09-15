@@ -1,3 +1,7 @@
+---
+group: While building
+description: what each processor type takes, and the fields that decide behaviour
+---
 # The processors, and the fields that decide behaviour
 
 `../wiki/workflow.md` says which processors exist and how they wire
@@ -149,10 +153,14 @@ warnings scattered through the extracts land:
     Semantic Layer Allow Write
     Semantic Layer Allowed Cubes
 
-**`Allowed Cubes` is the field whose absence is the whole argument against
-mounting a layer for an anonymous audience** - without it, the model composes SQL
-over every cube, and the surface grows each time one is added. See
-`../guide/read-path.md`.
+**`Allowed Cubes` is the field the anonymous-audience argument turns on, and it
+is easy to read backwards.** It is a key here, so on the flow-agent path a layer
+*can* be narrowed - what it is not is a field you get for free: it defaults to
+empty, meaning unrestricted, so a processor configured by adding only what you
+want composes SQL over every cube and the surface grows each time one is added.
+The case against mounting a layer for an anonymous audience rests on no user
+input reaching SQL at all rather than on there being nothing to narrow with.
+`../guide/read-path.md` has both halves.
 
 **The safe field defaults off and the dangerous one defaults on.** In the
 definitions, `semanticLayer.allowQuery` defaults to **false** and
@@ -524,8 +532,15 @@ Two things worth knowing from their pages:
 
 `../usecase/external-api.md` uses `http-request` field by field;
 `../usecase/workflow-chain.md` uses `router` and the entry/exit connection;
-`../usecase/fixed-query-tools.md` uses `query-database`;
-`../usecase/knowledge-drive.md` uses `retrieve-knowledge`.
+`../usecase/fixed-query-tools.md` uses `query-database`.
+
+**No extract uses `retrieve-knowledge`**, and that is the shape of the material
+rather than an omission:
+`../usecase/knowledge-drive.md` is a Drive with a Context Index, which an agent
+queries as a knowledge graph from its sandbox rather than through a processor,
+and `../usecase/knowledge-base.md` - the RAG shape this processor retrieves
+from - is written for reading an older chart and stops at the four CRs.
+`../wiki/knowledge.md` is which of the two a design starts from.
 
 ## Sources
 

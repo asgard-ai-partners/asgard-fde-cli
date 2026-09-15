@@ -1,3 +1,7 @@
+---
+group: In practice
+description: the retail stockout from several angles, plus a Flow Agent help desk
+---
 # Case study: a stockout and a cross-store transfer
 
 The same retail demo project has three case studies describing one event from

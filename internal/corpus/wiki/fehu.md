@@ -1,3 +1,7 @@
+---
+group: Products and scope
+description: billing and usage, how cost is broken down
+---
 # Fehu - billing and usage
 
 AI usage billing. Rarely touched during onboarding, but a customer asking about
@@ -55,8 +59,8 @@ could have been one prompt costs every day it exists.
 
 **The prices themselves are not copied here.** They change, and a stale price in
 front of a customer is worse than none - the same reason this material carries no
-screenshots and no outbound IP addresses. They are in the business-plan
-repository's pricing reference; read them there when asked, and let sales quote.
+screenshots. They are in the business-plan repository's pricing reference; read
+them there when asked, and let sales quote.
 
 ## How cost is broken down
 

@@ -1,3 +1,7 @@
+---
+group: While building
+description: the endpoint and its actions, the SSE sequence, the integration patterns, the SDK
+---
 # API, SSE and the SDK
 
 The whole path for reaching an agent from your own front end. Maps to a
@@ -236,7 +240,9 @@ these, about this one.
 **The console route above is the documentation's and is unconfirmed.** An
 engagement holding the account could not find "Integration", "App settings" or
 anything issuing a key, on 2026-09-14. Either the page moved or it is named
-something else now; `../wiki/platform-unknowns.md` P13 carries it.
+something else now; `../wiki/platform-unknowns.md` P14 carries it, and it is
+not P13 - that one is the resource key a CR reads, which needs no console page
+at all.
 
 ## Before writing the chart
 

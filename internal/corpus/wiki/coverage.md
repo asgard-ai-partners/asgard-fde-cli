@@ -1,3 +1,7 @@
+---
+group: While building
+description: how many deployments each CR shape was read from - which extracts rest on a sample of one
+---
 # Which shapes each reference deployment actually uses
 
 The extracts describe CR shapes. This says how many deployments each shape was
@@ -47,12 +51,12 @@ is generalised from a single instance. It is the most confidently written
 extract with the thinnest sample, and the two facts are worth holding together.
 
 **The knowledge-base shapes come from one deployment too.** `KnowledgeBase`,
-`Loader` and `Source` appear only in auto-post, so `../usecase/knowledge-drive.md`
+`Loader` and `Source` appear only in auto-post, so `../usecase/knowledge-base.md`
 describes auto-post's arrangement of them. That it is the platform's own
 deployment rather than a customer's cuts both ways - it is written by the people
 who built the CRs, and it is not a customer's constraints.
 
-**`Plugin` at 28 in one chart is the opposite problem.** One deployment uses the
+**`Plugin`, many in one chart, is the opposite problem.** One deployment uses the
 shape heavily and no other uses it at all, so there is no second arrangement to
 compare against and no way to tell which of auto-post's choices are the shape
 and which are auto-post.

@@ -1,3 +1,7 @@
+---
+group: In practice
+description: the commerce channels a customer will name, what SHOPLINE cost, and what we have not built
+---
 # The commerce channels a customer will name, and what we have
 
 Written because the same names come up in every engagement here and the answer to
@@ -106,7 +110,7 @@ for a channel skill at full size.
 - `asgard-freyr-skills`, read 2026-09-02: the two SHOPLINE skills, their
   frontmatter and the repository's own skill table
 - Searched the same day across every reference deployment chart for PChome,
-  momo, 蝔皮/Shopee and Coupang: no chart, skill or document mentions one
+  momo, 蝦皮/Shopee and Coupang: no chart, skill or document mentions one
 
 **Unchecked:** which of the other channels offers an open API today. Deliberately
 not recorded - it is the vendor's to answer, it changes, and a stale answer here

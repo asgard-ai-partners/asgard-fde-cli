@@ -1,3 +1,6 @@
+---
+description: the agent hub or your own BotProvider, why a public widget cannot have the hub, the project that needs no entry point at all
+---
 # Decide each project's entry point
 
 **This stage is a project with a read path and no way to reach it.** It is the

@@ -1,3 +1,6 @@
+---
+description: the order to ask in, the answers that looked obvious and were reversed, the two filters before a question becomes a row
+---
 # Turn what the customer said into a request
 
 This is the interview, and it produces a **request** - not a design, not a task,
@@ -587,10 +590,16 @@ choice is theirs: put a desk in front, or drop the requirement. A proposal that
 promises handoff with nothing in the middle is a promise nobody can keep.
 
 Two platform limits worth handing over in the same conversation, because they
-shape what can be asked for: one request gets **30 steps and 3 minutes**, and an
-endpoint serves **5 requests per second**. A troubleshooting conversation that
-consults a knowledge base, then a CRM, then a ticket system, then asks a
-follow-up, can reach 30 steps.
+shape what can be asked for: one request gets **3 minutes**, and an endpoint
+serves **5 requests per second**. A troubleshooting conversation that consults a
+knowledge base, then a CRM, then a ticket system, then asks a follow-up, is what
+runs into them.
+
+**There is a third and it is yours rather than theirs: 30 steps per request.**
+Design against it - a conversation of exactly that shape reaches it - and **do
+not say the number in the room**, because nothing defines what a step is and
+their next question has no answer. `../wiki/platform-unknowns.md` P7 is the open
+question; the three-minute ceiling is the one they can check for themselves.
 
 LINE also needs **two-way setup** - Asgard issues a webhook URL that somebody has
 to paste back into the LINE console and verify - so it needs an owner on their
@@ -1191,8 +1200,10 @@ Then split it into task specs:
 **Checked:** 2026-09-04, re-read 2026-09-11 and 2026-09-14 against asgard-kube
 `cbd8d70` and asgard-docs `23409b3` for the platform claims it
 carries, which are few by design - it is an interview, and the shapes belong to
-the pages it points at. The three numbers handed to a customer - 5 requests per
-second, 3 minutes and 30 steps per request - are the quota page's own. **4c was
+the pages it points at. The three numbers here - 5 requests per second, 3
+minutes and 30 steps per request - are the quota page's own, and only the first
+two are handed to a customer, which is `../wiki/platform-unknowns.md` P7's rule
+rather than this page's. **4c was
 corrected**: it offered "an HTTP endpoint that sends mail" against "they do not",
 and the answer that actually arrives is SMTP credentials, which look like the
 first and are the second. `botProviderClass` is immutable (`self == oldSelf`) and
