@@ -39,6 +39,22 @@ const timeout = 60 * time.Second
 // WorkspaceHeader is the header every workspace-scoped route requires.
 const WorkspaceHeader = "x-asgard-workspace"
 
+// ClientHeader says which of the platform's clients is calling, and
+// ClientName is what this one is.
+//
+// It is sent on every request rather than on the one that needs it, because it
+// is what this program IS rather than something a call decides. What needs it
+// today is `pipeline connect`: the GitHub flow ends on a page in a browser
+// that the web console's flow ends on too, and that page offers a way back
+// INTO the console. Right for somebody who started there; wrong here, where
+// the person is waiting at this terminal. The platform seals this into the
+// flow and hands it back to the callback, which is the only thing that can
+// tell the page which of the two it is talking to.
+const (
+	ClientHeader = "x-asgard-client"
+	ClientName   = "cli"
+)
+
 // Client is an authenticated caller of one platform.
 type Client struct {
 	profile   auth.Profile
@@ -198,6 +214,7 @@ func (c *Client) do(ctx context.Context, req request) error {
 	}
 	httpReq.Header.Set("Authorization", "Bearer "+c.token)
 	httpReq.Header.Set("Accept", "application/json")
+	httpReq.Header.Set(ClientHeader, ClientName)
 	if req.body != nil {
 		httpReq.Header.Set("Content-Type", "application/json")
 	}
