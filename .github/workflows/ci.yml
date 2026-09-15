@@ -87,6 +87,13 @@ jobs:
       - name: nothing that mounts a database leaves allowWrite unwritten
         run: go run ./hack write-path
 
+      # The indexes are rendered from what each document declares about itself,
+      # so a page added without a `group:` is a page no index lists, and a
+      # description edited without re-rendering leaves the two disagreeing.
+      # Needs nothing but this repository, which is why it belongs here.
+      - name: both indexes match the documents they list
+        run: go run ./hack index
+
       # `go run ./hack tables`, `processors`, `counts`, `coverage`,
       # `spec-key-gap`, `validate-crs` and `hack/verify-references.sh` are
       # deliberately absent: every one needs a clone of somebody else's

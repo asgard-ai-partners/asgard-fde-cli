@@ -1,0 +1,665 @@
+{
+  "brief/connect": {
+    "brief/connect": "5c10f5e4fa06",
+    "guide/projects": "5b71dcf4dd59"
+  },
+  "brief/customer-meeting": {
+    "brief/customer-meeting": "db8c28025605",
+    "guide/read-path": "649ec9cbd749",
+    "guide/requirements": "b3a1a8e73ca2",
+    "usecase/write-path": "57a43201aea3",
+    "wiki/fehu": "0b9d77cb5b26",
+    "wiki/integration": "64001e848244",
+    "wiki/operations": "0aa60ed671c6",
+    "wiki/platform-unknowns": "69adae89b0ad",
+    "wiki/settings": "07a546d2d81b",
+    "wiki/tools": "ab1d0f02543f",
+    "wiki/what-they-read": "311be1e3bb9f"
+  },
+  "brief/handover": {
+    "brief/handover": "dbbd2a19882b",
+    "wiki/console": "d2fcb97ff0e2",
+    "wiki/screenshots": "8bf22d7aa723",
+    "wiki/setup-path": "af6cd26be802"
+  },
+  "brief/write-chart": {
+    "brief/write-chart": "4b31d0f7d70e",
+    "guide/read-path": "649ec9cbd749",
+    "usecase/fixed-query-tools": "d52d649eaefe",
+    "usecase/flow-agent-single": "6a1ecb212ff3",
+    "usecase/knowledge-drive": "e25245314c6f",
+    "wiki/crd-rules": "c45a84a66421",
+    "wiki/processors": "f4b29e8ea2a8",
+    "wiki/workflow": "47e9d80c4fcf"
+  },
+  "guide/data-sources": {
+    "guide/data-sources": "b2ac1332042c",
+    "guide/requirements": "b3a1a8e73ca2",
+    "usecase/api-oauth": "3029e4b500b5",
+    "usecase/browser-operation": "f1fb9936c003",
+    "usecase/external-api": "a837774c6baf",
+    "usecase/semantic-layer": "a7f4e911e5a6",
+    "usecase/skill-set": "d540effa9e46"
+  },
+  "guide/deploy": {
+    "guide/deploy": "c911beaba82b",
+    "guide/enhance": "752200cbff58",
+    "guide/idle": "1d22ad7f2d17",
+    "wiki/console": "d2fcb97ff0e2",
+    "wiki/platform-unknowns": "69adae89b0ad"
+  },
+  "guide/enhance": {
+    "guide/data-sources": "b2ac1332042c",
+    "guide/enhance": "752200cbff58",
+    "guide/requirements": "b3a1a8e73ca2",
+    "guide/verify": "bfc28a2ece20",
+    "usecase/mimir-dashboard": "4249981fe515",
+    "usecase/write-path": "57a43201aea3"
+  },
+  "guide/entry-point": {
+    "guide/entry-point": "67e6b94869ef",
+    "guide/read-path": "649ec9cbd749",
+    "usecase/agent-hub": "75f5b55d50f4",
+    "usecase/chat-channel": "b902abedc6c1",
+    "usecase/flow-agent-single": "6a1ecb212ff3",
+    "usecase/flow-agent-supervisor": "c752a8f44bb4",
+    "usecase/mimir-dashboard": "4249981fe515",
+    "wiki/agents": "a303abe12d84"
+  },
+  "guide/idle": {
+    "guide/deploy": "c911beaba82b",
+    "guide/idle": "1d22ad7f2d17",
+    "guide/requirements": "b3a1a8e73ca2"
+  },
+  "guide/knowledge": {
+    "guide/knowledge": "fde418f1df73",
+    "usecase/knowledge-drive": "e25245314c6f",
+    "wiki/knowledge": "d356c853d283"
+  },
+  "guide/projects": {
+    "guide/entry-point": "67e6b94869ef",
+    "guide/knowledge": "fde418f1df73",
+    "guide/projects": "5b71dcf4dd59",
+    "guide/read-path": "649ec9cbd749",
+    "usecase/mimir-dashboard": "4249981fe515",
+    "usecase/write-path": "57a43201aea3"
+  },
+  "guide/read-path": {
+    "guide/read-path": "649ec9cbd749",
+    "guide/requirements": "b3a1a8e73ca2",
+    "usecase/agent-hub": "75f5b55d50f4",
+    "usecase/fixed-query-tools": "d52d649eaefe",
+    "usecase/mimir-dashboard": "4249981fe515",
+    "usecase/per-turn-credentials": "c9c16e81fd15",
+    "usecase/semantic-layer": "a7f4e911e5a6",
+    "usecase/workflow-chain": "018ece79625d",
+    "wiki/tool-description-and-skill": "dd571664351b"
+  },
+  "guide/requirements": {
+    "brief/customer-meeting": "db8c28025605",
+    "guide/data-sources": "b2ac1332042c",
+    "guide/entry-point": "67e6b94869ef",
+    "guide/knowledge": "fde418f1df73",
+    "guide/projects": "5b71dcf4dd59",
+    "guide/read-path": "649ec9cbd749",
+    "guide/requirements": "b3a1a8e73ca2",
+    "usecase/per-turn-credentials": "c9c16e81fd15",
+    "usecase/skill-layers": "957419291226",
+    "wiki/agents": "a303abe12d84",
+    "wiki/automation": "1e481dc93be5",
+    "wiki/fehu": "0b9d77cb5b26",
+    "wiki/integration": "64001e848244",
+    "wiki/operations": "0aa60ed671c6",
+    "wiki/platform-unknowns": "69adae89b0ad",
+    "wiki/product-suite": "8b3ec617f1ac",
+    "wiki/what-they-read": "311be1e3bb9f"
+  },
+  "guide/verify": {
+    "guide/enhance": "752200cbff58",
+    "guide/verify": "bfc28a2ece20",
+    "wiki/crd-rules": "c45a84a66421"
+  },
+  "needs/browser-operation": {
+    "needs/browser-operation": "834b3cbde1db",
+    "usecase/browser-operation": "f1fb9936c003",
+    "wiki/taiwan-channels": "3716c55f56dc"
+  },
+  "needs/chat-channel": {
+    "guide/requirements": "b3a1a8e73ca2",
+    "needs/chat-channel": "d8c2af286d4c",
+    "wiki/integration": "64001e848244"
+  },
+  "needs/external-api": {
+    "guide/requirements": "b3a1a8e73ca2",
+    "needs/external-api": "f440bfba4980",
+    "usecase/external-api": "a837774c6baf",
+    "usecase/write-path": "57a43201aea3",
+    "wiki/integration": "64001e848244",
+    "wiki/taiwan-channels": "3716c55f56dc"
+  },
+  "needs/knowledge-drive": {
+    "needs/knowledge-drive": "c9edc1c98eb3",
+    "usecase/knowledge-drive": "e25245314c6f"
+  },
+  "needs/semantic-layer": {
+    "guide/requirements": "b3a1a8e73ca2",
+    "needs/semantic-layer": "c3b88a122ecc",
+    "usecase/semantic-layer": "a7f4e911e5a6",
+    "wiki/operations": "0aa60ed671c6"
+  },
+  "needs/skill-set": {
+    "needs/skill-set": "39cd133e5c94",
+    "usecase/skill-set": "d540effa9e46"
+  },
+  "needs/write-path": {
+    "needs/write-path": "f81961a2fc53",
+    "usecase/write-path": "57a43201aea3",
+    "wiki/platform-unknowns": "69adae89b0ad"
+  },
+  "root/AGENTS": {
+    "wiki/crd-rules": "c45a84a66421",
+    "wiki/glossary": "c84743b1f9ea",
+    "wiki/index": "bc86660cba28",
+    "wiki/operations": "0aa60ed671c6",
+    "wiki/processors": "f4b29e8ea2a8"
+  },
+  "root/APPROACH": {
+    "wiki/crd-rules": "c45a84a66421",
+    "wiki/glossary": "c84743b1f9ea"
+  },
+  "root/README": {
+    "guide/requirements": "b3a1a8e73ca2",
+    "usecase/semantic-layer": "a7f4e911e5a6",
+    "wiki/glossary": "c84743b1f9ea",
+    "wiki/processors": "f4b29e8ea2a8",
+    "wiki/settings": "07a546d2d81b"
+  },
+  "root/STRUCTURE": {
+    "wiki/glossary": "c84743b1f9ea",
+    "wiki/index": "bc86660cba28",
+    "wiki/screenshots": "8bf22d7aa723"
+  },
+  "root/TASK": {
+    "usecase/conventions": "37eb1b6e45a0",
+    "wiki/platform-unknowns": "69adae89b0ad",
+    "wiki/processors": "f4b29e8ea2a8"
+  },
+  "skill/asgard-fde-onboarding": {
+    "brief/customer-meeting": "db8c28025605",
+    "brief/handover": "dbbd2a19882b",
+    "brief/write-chart": "4b31d0f7d70e",
+    "guide/entry-point": "67e6b94869ef",
+    "guide/knowledge": "fde418f1df73",
+    "guide/read-path": "649ec9cbd749",
+    "guide/requirements": "b3a1a8e73ca2",
+    "skill/asgard-fde-onboarding": "cd4889950471"
+  },
+  "skill/db-query": {
+    "skill/db-query": "1827c0be3a43",
+    "usecase/external-api": "a837774c6baf"
+  },
+  "skill/knowledge-base": {
+    "skill/knowledge-base": "3288cee3f1a1"
+  },
+  "skill/plain-chinese": {
+    "skill/plain-chinese": "95d982ea9c8c"
+  },
+  "skill/proposal-deck": {
+    "guide/read-path": "649ec9cbd749",
+    "guide/requirements": "b3a1a8e73ca2",
+    "skill/proposal-deck": "0eb2446309f9",
+    "usecase/demo-generation": "8e1e00f15f41",
+    "wiki/case-studies": "579aa51cbc2a",
+    "wiki/mimir": "a4b3da33eedb",
+    "wiki/operations": "0aa60ed671c6",
+    "wiki/platform-unknowns": "69adae89b0ad",
+    "wiki/product-suite": "8b3ec617f1ac",
+    "wiki/screenshots": "8bf22d7aa723",
+    "wiki/setup-path": "af6cd26be802"
+  },
+  "skill/semantic-layer-modeling": {
+    "skill/semantic-layer-modeling": "538050a3a85e",
+    "usecase/semantic-layer": "a7f4e911e5a6",
+    "wiki/settings": "07a546d2d81b"
+  },
+  "skill/spec-workflow": {
+    "skill/spec-workflow": "4868ca0c59d1"
+  },
+  "usecase/README": {
+    "usecase/README": "8abb64752b81",
+    "usecase/agent-hub": "75f5b55d50f4",
+    "usecase/api-oauth": "3029e4b500b5",
+    "usecase/browser-operation": "f1fb9936c003",
+    "usecase/chat-channel": "b902abedc6c1",
+    "usecase/conventions": "37eb1b6e45a0",
+    "usecase/demo-generation": "8e1e00f15f41",
+    "usecase/external-api": "a837774c6baf",
+    "usecase/fixed-query-tools": "d52d649eaefe",
+    "usecase/flow-agent-single": "6a1ecb212ff3",
+    "usecase/flow-agent-supervisor": "c752a8f44bb4",
+    "usecase/knowledge-base": "012d4874d417",
+    "usecase/knowledge-drive": "e25245314c6f",
+    "usecase/mimir-dashboard": "4249981fe515",
+    "usecase/per-turn-credentials": "c9c16e81fd15",
+    "usecase/plugin": "9d945dcf8735",
+    "usecase/semantic-layer": "a7f4e911e5a6",
+    "usecase/skill-layers": "957419291226",
+    "usecase/skill-set": "d540effa9e46",
+    "usecase/trigger": "033d4d69ee08",
+    "usecase/workflow-chain": "018ece79625d",
+    "usecase/write-path": "57a43201aea3"
+  },
+  "usecase/agent-hub": {
+    "usecase/agent-hub": "75f5b55d50f4",
+    "usecase/semantic-layer": "a7f4e911e5a6",
+    "wiki/agents": "a303abe12d84"
+  },
+  "usecase/api-oauth": {
+    "usecase/api-oauth": "3029e4b500b5",
+    "usecase/external-api": "a837774c6baf",
+    "usecase/per-turn-credentials": "c9c16e81fd15",
+    "wiki/api": "43635238a1be"
+  },
+  "usecase/browser-operation": {
+    "needs/browser-operation": "834b3cbde1db",
+    "usecase/browser-operation": "f1fb9936c003",
+    "usecase/conventions": "37eb1b6e45a0",
+    "usecase/external-api": "a837774c6baf",
+    "usecase/flow-agent-supervisor": "c752a8f44bb4",
+    "usecase/skill-set": "d540effa9e46",
+    "wiki/agents": "a303abe12d84",
+    "wiki/platform-unknowns": "69adae89b0ad"
+  },
+  "usecase/chat-channel": {
+    "needs/chat-channel": "d8c2af286d4c",
+    "usecase/agent-hub": "75f5b55d50f4",
+    "usecase/chat-channel": "b902abedc6c1",
+    "usecase/workflow-chain": "018ece79625d",
+    "wiki/integration": "64001e848244"
+  },
+  "usecase/conventions": {
+    "usecase/browser-operation": "f1fb9936c003",
+    "usecase/conventions": "37eb1b6e45a0",
+    "usecase/external-api": "a837774c6baf",
+    "usecase/plugin": "9d945dcf8735",
+    "usecase/semantic-layer": "a7f4e911e5a6",
+    "usecase/write-path": "57a43201aea3",
+    "wiki/api": "43635238a1be",
+    "wiki/platform-unknowns": "69adae89b0ad"
+  },
+  "usecase/demo-generation": {
+    "usecase/demo-generation": "8e1e00f15f41",
+    "usecase/mimir-dashboard": "4249981fe515",
+    "usecase/write-path": "57a43201aea3",
+    "wiki/product-suite": "8b3ec617f1ac",
+    "wiki/settings": "07a546d2d81b"
+  },
+  "usecase/external-api": {
+    "needs/external-api": "f440bfba4980",
+    "usecase/browser-operation": "f1fb9936c003",
+    "usecase/conventions": "37eb1b6e45a0",
+    "usecase/external-api": "a837774c6baf",
+    "usecase/per-turn-credentials": "c9c16e81fd15",
+    "usecase/semantic-layer": "a7f4e911e5a6",
+    "wiki/api": "43635238a1be",
+    "wiki/tool-description-and-skill": "dd571664351b",
+    "wiki/tools": "ab1d0f02543f"
+  },
+  "usecase/fixed-query-tools": {
+    "usecase/fixed-query-tools": "d52d649eaefe",
+    "wiki/processors": "f4b29e8ea2a8",
+    "wiki/semantic-model": "e2072910a31f",
+    "wiki/tool-description-and-skill": "dd571664351b"
+  },
+  "usecase/flow-agent-single": {
+    "usecase/chat-channel": "b902abedc6c1",
+    "usecase/flow-agent-single": "6a1ecb212ff3",
+    "wiki/agents": "a303abe12d84"
+  },
+  "usecase/flow-agent-supervisor": {
+    "usecase/conventions": "37eb1b6e45a0",
+    "usecase/flow-agent-single": "6a1ecb212ff3",
+    "usecase/flow-agent-supervisor": "c752a8f44bb4",
+    "wiki/agents": "a303abe12d84",
+    "wiki/green-and-doing-nothing": "06ffaddd2d6a",
+    "wiki/processors": "f4b29e8ea2a8"
+  },
+  "usecase/knowledge-base": {
+    "usecase/knowledge-base": "012d4874d417",
+    "usecase/knowledge-drive": "e25245314c6f",
+    "wiki/coverage": "68547012429c",
+    "wiki/integration": "64001e848244",
+    "wiki/knowledge": "d356c853d283"
+  },
+  "usecase/knowledge-drive": {
+    "needs/knowledge-drive": "c9edc1c98eb3",
+    "usecase/knowledge-drive": "e25245314c6f",
+    "usecase/skill-set": "d540effa9e46",
+    "wiki/knowledge": "d356c853d283"
+  },
+  "usecase/mimir-dashboard": {
+    "usecase/agent-hub": "75f5b55d50f4",
+    "usecase/mimir-dashboard": "4249981fe515",
+    "wiki/mimir": "a4b3da33eedb",
+    "wiki/product-suite": "8b3ec617f1ac",
+    "wiki/semantic-model": "e2072910a31f"
+  },
+  "usecase/per-turn-credentials": {
+    "usecase/api-oauth": "3029e4b500b5",
+    "usecase/per-turn-credentials": "c9c16e81fd15",
+    "wiki/api": "43635238a1be"
+  },
+  "usecase/plugin": {
+    "usecase/conventions": "37eb1b6e45a0",
+    "usecase/plugin": "9d945dcf8735",
+    "usecase/skill-set": "d540effa9e46",
+    "wiki/coverage": "68547012429c",
+    "wiki/tools": "ab1d0f02543f"
+  },
+  "usecase/semantic-layer": {
+    "needs/semantic-layer": "c3b88a122ecc",
+    "usecase/mimir-dashboard": "4249981fe515",
+    "usecase/semantic-layer": "a7f4e911e5a6",
+    "wiki/processors": "f4b29e8ea2a8",
+    "wiki/semantic-model": "e2072910a31f",
+    "wiki/settings": "07a546d2d81b"
+  },
+  "usecase/skill-layers": {
+    "guide/requirements": "b3a1a8e73ca2",
+    "usecase/browser-operation": "f1fb9936c003",
+    "usecase/skill-layers": "957419291226",
+    "usecase/skill-set": "d540effa9e46",
+    "wiki/taiwan-channels": "3716c55f56dc",
+    "wiki/tools": "ab1d0f02543f"
+  },
+  "usecase/skill-set": {
+    "needs/skill-set": "39cd133e5c94",
+    "usecase/external-api": "a837774c6baf",
+    "usecase/plugin": "9d945dcf8735",
+    "usecase/skill-set": "d540effa9e46",
+    "wiki/crd-rules": "c45a84a66421",
+    "wiki/knowledge": "d356c853d283",
+    "wiki/tool-description-and-skill": "dd571664351b",
+    "wiki/tools": "ab1d0f02543f"
+  },
+  "usecase/trigger": {
+    "usecase/trigger": "033d4d69ee08",
+    "wiki/automation": "1e481dc93be5",
+    "wiki/coverage": "68547012429c"
+  },
+  "usecase/workflow-chain": {
+    "usecase/workflow-chain": "018ece79625d",
+    "wiki/green-and-doing-nothing": "06ffaddd2d6a",
+    "wiki/platform-unknowns": "69adae89b0ad",
+    "wiki/processors": "f4b29e8ea2a8",
+    "wiki/workflow": "47e9d80c4fcf"
+  },
+  "usecase/write-path": {
+    "needs/write-path": "f81961a2fc53",
+    "usecase/conventions": "37eb1b6e45a0",
+    "usecase/external-api": "a837774c6baf",
+    "usecase/write-path": "57a43201aea3",
+    "wiki/platform-unknowns": "69adae89b0ad",
+    "wiki/sindri": "187b94b0ac45"
+  },
+  "wiki/README": {
+    "guide/requirements": "b3a1a8e73ca2",
+    "usecase/per-turn-credentials": "c9c16e81fd15",
+    "wiki/README": "60e997b9ae37",
+    "wiki/agents": "a303abe12d84",
+    "wiki/console": "d2fcb97ff0e2",
+    "wiki/fehu": "0b9d77cb5b26",
+    "wiki/glossary": "c84743b1f9ea",
+    "wiki/operations": "0aa60ed671c6",
+    "wiki/product-suite": "8b3ec617f1ac",
+    "wiki/tools": "ab1d0f02543f"
+  },
+  "wiki/agents": {
+    "usecase/agent-hub": "75f5b55d50f4",
+    "usecase/browser-operation": "f1fb9936c003",
+    "usecase/flow-agent-single": "6a1ecb212ff3",
+    "usecase/flow-agent-supervisor": "c752a8f44bb4",
+    "wiki/agents": "a303abe12d84",
+    "wiki/setup-path": "af6cd26be802"
+  },
+  "wiki/api": {
+    "usecase/api-oauth": "3029e4b500b5",
+    "usecase/conventions": "37eb1b6e45a0",
+    "usecase/external-api": "a837774c6baf",
+    "usecase/workflow-chain": "018ece79625d",
+    "wiki/api": "43635238a1be",
+    "wiki/platform-unknowns": "69adae89b0ad",
+    "wiki/processors": "f4b29e8ea2a8"
+  },
+  "wiki/automation": {
+    "usecase/trigger": "033d4d69ee08",
+    "wiki/api": "43635238a1be",
+    "wiki/automation": "1e481dc93be5",
+    "wiki/processors": "f4b29e8ea2a8"
+  },
+  "wiki/case-studies": {
+    "usecase/agent-hub": "75f5b55d50f4",
+    "usecase/flow-agent-single": "6a1ecb212ff3",
+    "usecase/flow-agent-supervisor": "c752a8f44bb4",
+    "usecase/per-turn-credentials": "c9c16e81fd15",
+    "usecase/write-path": "57a43201aea3",
+    "wiki/case-studies": "579aa51cbc2a"
+  },
+  "wiki/console": {
+    "wiki/console": "d2fcb97ff0e2",
+    "wiki/sindri": "187b94b0ac45"
+  },
+  "wiki/coverage": {
+    "usecase/agent-hub": "75f5b55d50f4",
+    "usecase/browser-operation": "f1fb9936c003",
+    "usecase/knowledge-base": "012d4874d417",
+    "usecase/knowledge-drive": "e25245314c6f",
+    "usecase/plugin": "9d945dcf8735",
+    "usecase/trigger": "033d4d69ee08",
+    "wiki/coverage": "68547012429c"
+  },
+  "wiki/crd-rules": {
+    "usecase/fixed-query-tools": "d52d649eaefe",
+    "usecase/knowledge-drive": "e25245314c6f",
+    "usecase/skill-set": "d540effa9e46",
+    "usecase/write-path": "57a43201aea3",
+    "wiki/crd-rules": "c45a84a66421",
+    "wiki/integration": "64001e848244",
+    "wiki/settings": "07a546d2d81b"
+  },
+  "wiki/fehu": {
+    "guide/requirements": "b3a1a8e73ca2",
+    "wiki/fehu": "0b9d77cb5b26",
+    "wiki/knowledge": "d356c853d283",
+    "wiki/settings": "07a546d2d81b"
+  },
+  "wiki/glossary": {
+    "usecase/knowledge-base": "012d4874d417",
+    "usecase/write-path": "57a43201aea3",
+    "wiki/fehu": "0b9d77cb5b26",
+    "wiki/glossary": "c84743b1f9ea",
+    "wiki/taiwan-channels": "3716c55f56dc",
+    "wiki/what-they-read": "311be1e3bb9f"
+  },
+  "wiki/green-and-doing-nothing": {
+    "usecase/conventions": "717aa92437b5",
+    "usecase/flow-agent-supervisor": "c752a8f44bb4",
+    "usecase/skill-set": "d540effa9e46",
+    "usecase/workflow-chain": "018ece79625d",
+    "usecase/write-path": "57a43201aea3",
+    "wiki/green-and-doing-nothing": "06ffaddd2d6a"
+  },
+  "wiki/index": {
+    "usecase/chat-channel": "b902abedc6c1",
+    "usecase/flow-agent-single": "6a1ecb212ff3",
+    "usecase/knowledge-base": "012d4874d417",
+    "usecase/knowledge-drive": "e25245314c6f",
+    "usecase/plugin": "9d945dcf8735",
+    "usecase/semantic-layer": "a7f4e911e5a6",
+    "usecase/skill-layers": "957419291226",
+    "usecase/skill-set": "d540effa9e46",
+    "usecase/trigger": "033d4d69ee08",
+    "wiki/agents": "a303abe12d84",
+    "wiki/api": "43635238a1be",
+    "wiki/automation": "1e481dc93be5",
+    "wiki/case-studies": "579aa51cbc2a",
+    "wiki/console": "d2fcb97ff0e2",
+    "wiki/coverage": "68547012429c",
+    "wiki/crd-rules": "c45a84a66421",
+    "wiki/fehu": "0b9d77cb5b26",
+    "wiki/glossary": "c84743b1f9ea",
+    "wiki/green-and-doing-nothing": "06ffaddd2d6a",
+    "wiki/index": "bc86660cba28",
+    "wiki/integration": "64001e848244",
+    "wiki/knowledge": "d356c853d283",
+    "wiki/mimir": "a4b3da33eedb",
+    "wiki/operations": "0aa60ed671c6",
+    "wiki/platform-unknowns": "69adae89b0ad",
+    "wiki/processors": "f4b29e8ea2a8",
+    "wiki/product-suite": "8b3ec617f1ac",
+    "wiki/screenshots": "8bf22d7aa723",
+    "wiki/semantic-model": "e2072910a31f",
+    "wiki/settings": "07a546d2d81b",
+    "wiki/setup-path": "af6cd26be802",
+    "wiki/sindri": "187b94b0ac45",
+    "wiki/taiwan-channels": "3716c55f56dc",
+    "wiki/tool-description-and-skill": "dd571664351b",
+    "wiki/tools": "ab1d0f02543f",
+    "wiki/what-they-read": "311be1e3bb9f",
+    "wiki/workflow": "47e9d80c4fcf"
+  },
+  "wiki/integration": {
+    "usecase/chat-channel": "b902abedc6c1",
+    "usecase/conventions": "37eb1b6e45a0",
+    "wiki/api": "43635238a1be",
+    "wiki/integration": "64001e848244",
+    "wiki/knowledge": "d356c853d283",
+    "wiki/platform-unknowns": "69adae89b0ad",
+    "wiki/processors": "f4b29e8ea2a8",
+    "wiki/what-they-read": "311be1e3bb9f"
+  },
+  "wiki/knowledge": {
+    "usecase/knowledge-base": "012d4874d417",
+    "usecase/knowledge-drive": "e25245314c6f",
+    "usecase/skill-set": "d540effa9e46",
+    "wiki/crd-rules": "c45a84a66421",
+    "wiki/integration": "64001e848244",
+    "wiki/knowledge": "d356c853d283"
+  },
+  "wiki/mimir": {
+    "usecase/semantic-layer": "a7f4e911e5a6",
+    "wiki/mimir": "a4b3da33eedb"
+  },
+  "wiki/operations": {
+    "guide/requirements": "b3a1a8e73ca2",
+    "wiki/operations": "0aa60ed671c6",
+    "wiki/setup-path": "af6cd26be802",
+    "wiki/workflow": "47e9d80c4fcf"
+  },
+  "wiki/platform-unknowns": {
+    "usecase/conventions": "37eb1b6e45a0",
+    "usecase/external-api": "a837774c6baf",
+    "usecase/write-path": "57a43201aea3",
+    "wiki/platform-unknowns": "69adae89b0ad",
+    "wiki/processors": "f4b29e8ea2a8",
+    "wiki/settings": "07a546d2d81b"
+  },
+  "wiki/processors": {
+    "guide/read-path": "649ec9cbd749",
+    "usecase/external-api": "a837774c6baf",
+    "usecase/fixed-query-tools": "d52d649eaefe",
+    "usecase/knowledge-base": "012d4874d417",
+    "usecase/knowledge-drive": "e25245314c6f",
+    "usecase/workflow-chain": "018ece79625d",
+    "wiki/knowledge": "d356c853d283",
+    "wiki/processors": "f4b29e8ea2a8",
+    "wiki/workflow": "47e9d80c4fcf"
+  },
+  "wiki/product-suite": {
+    "wiki/agents": "a303abe12d84",
+    "wiki/product-suite": "8b3ec617f1ac"
+  },
+  "wiki/screenshots": {
+    "usecase/write-path": "57a43201aea3",
+    "wiki/integration": "64001e848244",
+    "wiki/platform-unknowns": "69adae89b0ad",
+    "wiki/screenshots": "8bf22d7aa723",
+    "wiki/setup-path": "af6cd26be802"
+  },
+  "wiki/semantic-model": {
+    "usecase/fixed-query-tools": "d52d649eaefe",
+    "usecase/semantic-layer": "a7f4e911e5a6",
+    "usecase/write-path": "57a43201aea3",
+    "wiki/processors": "f4b29e8ea2a8",
+    "wiki/semantic-model": "e2072910a31f"
+  },
+  "wiki/settings": {
+    "usecase/external-api": "a837774c6baf",
+    "usecase/semantic-layer": "a7f4e911e5a6",
+    "wiki/automation": "1e481dc93be5",
+    "wiki/fehu": "0b9d77cb5b26",
+    "wiki/platform-unknowns": "69adae89b0ad",
+    "wiki/settings": "07a546d2d81b",
+    "wiki/setup-path": "af6cd26be802"
+  },
+  "wiki/setup-path": {
+    "usecase/agent-hub": "75f5b55d50f4",
+    "usecase/external-api": "a837774c6baf",
+    "usecase/fixed-query-tools": "d52d649eaefe",
+    "usecase/knowledge-drive": "e25245314c6f",
+    "usecase/semantic-layer": "a7f4e911e5a6",
+    "usecase/skill-set": "d540effa9e46",
+    "wiki/agents": "a303abe12d84",
+    "wiki/integration": "64001e848244",
+    "wiki/knowledge": "d356c853d283",
+    "wiki/operations": "0aa60ed671c6",
+    "wiki/screenshots": "8bf22d7aa723",
+    "wiki/semantic-model": "e2072910a31f",
+    "wiki/settings": "07a546d2d81b",
+    "wiki/setup-path": "af6cd26be802",
+    "wiki/sindri": "187b94b0ac45",
+    "wiki/tools": "ab1d0f02543f"
+  },
+  "wiki/sindri": {
+    "usecase/agent-hub": "75f5b55d50f4",
+    "usecase/flow-agent-supervisor": "c752a8f44bb4",
+    "usecase/write-path": "57a43201aea3",
+    "wiki/screenshots": "8bf22d7aa723",
+    "wiki/sindri": "187b94b0ac45"
+  },
+  "wiki/taiwan-channels": {
+    "guide/requirements": "b3a1a8e73ca2",
+    "usecase/browser-operation": "f1fb9936c003",
+    "usecase/external-api": "a837774c6baf",
+    "usecase/skill-layers": "957419291226",
+    "wiki/taiwan-channels": "3716c55f56dc"
+  },
+  "wiki/tool-description-and-skill": {
+    "usecase/external-api": "a837774c6baf",
+    "usecase/fixed-query-tools": "d52d649eaefe",
+    "usecase/skill-set": "d540effa9e46",
+    "wiki/tool-description-and-skill": "dd571664351b",
+    "wiki/tools": "ab1d0f02543f",
+    "wiki/workflow": "47e9d80c4fcf"
+  },
+  "wiki/tools": {
+    "usecase/plugin": "9d945dcf8735",
+    "usecase/skill-set": "d540effa9e46",
+    "wiki/platform-unknowns": "69adae89b0ad",
+    "wiki/tool-description-and-skill": "dd571664351b",
+    "wiki/tools": "ab1d0f02543f"
+  },
+  "wiki/what-they-read": {
+    "wiki/integration": "64001e848244",
+    "wiki/mimir": "a4b3da33eedb",
+    "wiki/processors": "f4b29e8ea2a8",
+    "wiki/product-suite": "8b3ec617f1ac",
+    "wiki/what-they-read": "311be1e3bb9f"
+  },
+  "wiki/workflow": {
+    "usecase/fixed-query-tools": "d52d649eaefe",
+    "usecase/workflow-chain": "018ece79625d",
+    "wiki/processors": "f4b29e8ea2a8",
+    "wiki/workflow": "47e9d80c4fcf"
+  }
+}
