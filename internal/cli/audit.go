@@ -327,6 +327,21 @@ func material() ([]source, error) {
 // document that carried the other route was deleted.
 var bare = regexp.MustCompile("`(wiki|usecase|guide|brief) ([a-z][a-z0-9-]*)`")
 
+// halfPath matches a pointer that has the shape of one and is not one: the
+// path is there, the `.md` is not.
+//
+// **`--links` cannot see this, and that is the whole reason it is here.** That
+// check resolves pointers; a path with no extension is not a pointer to it, so
+// it is neither resolved nor reported - it reads perfectly to a person, goes
+// nowhere, and is invisible to the one check whose job is dead pointers. One
+// was found in a shipped skill, split across a line break, after three passes
+// over that file.
+//
+// The line break is why the newline is in the character class: a pointer
+// wrapped mid-path is the case a reader is least likely to spot and a
+// line-oriented pattern is least likely to match.
+var halfPath = regexp.MustCompile(`\.\./(wiki|usecase|needs|brief|guide)/[\s]*([a-z][a-z0-9-]*)(?:\.md)?`)
+
 // nameOnly matches a backticked token with no kind in front of it at all -
 // `flow-agent-single` rather than `usecase flow-agent-single`.
 //
@@ -361,7 +376,7 @@ func checkBare(out io.Writer, sources []source) error {
 		return err
 	}
 
-	type hit struct{ where, kind, name string }
+	type hit struct{ where, kind, name, why string }
 	var found []hit
 	for _, s := range sources {
 		seen := map[string]bool{}
@@ -371,7 +386,16 @@ func checkBare(out io.Writer, sources []source) error {
 				continue
 			}
 			seen[key] = true
-			found = append(found, hit{s.label + " " + s.name, m[1], m[2]})
+			found = append(found, hit{s.label + " " + s.name, m[1], m[2], ""})
+		}
+		for _, m := range halfPath.FindAllStringSubmatch(s.body, -1) {
+			if !strings.HasSuffix(m[0], ".md") && known[m[1]][m[2]] {
+				key := "half:" + m[1] + "/" + m[2]
+				if !seen[key] {
+					seen[key] = true
+					found = append(found, hit{s.label + " " + s.name, m[1], m[2], "the path is there and the `.md` is not, so `--links` never sees it"})
+				}
+			}
 		}
 		for _, m := range nameOnly.FindAllStringSubmatch(s.body, -1) {
 			// A markdown link label; the path is in the target beside it.
@@ -392,7 +416,7 @@ func checkBare(out io.Writer, sources []source) error {
 					break
 				}
 				seen[key] = true
-				found = append(found, hit{s.label + " " + s.name, kind, name})
+				found = append(found, hit{s.label + " " + s.name, kind, name, ""})
 				break
 			}
 		}
@@ -406,6 +430,11 @@ func checkBare(out io.Writer, sources []source) error {
 		"nothing, reading perfectly.\n\n")
 
 	for _, h := range found {
+		if h.why != "" {
+			fmt.Fprintf(out, "bare  %s -> `../%s/%s` should be `../%s/%s.md` - %s\n",
+				h.where, h.kind, h.name, h.kind, h.name, h.why)
+			continue
+		}
 		fmt.Fprintf(out, "bare  %s -> `%s` should be `../%s/%s.md`\n", h.where, h.name, h.kind, h.name)
 	}
 	fmt.Fprintf(out, "\n%d bare name(s).\n", len(found))

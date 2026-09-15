@@ -31,6 +31,7 @@ var reachesAReader = map[string]map[string]string{
 	},
 	"SemanticLayer": {
 		"instruction": "the model reads this to decide what to query",
+		"summary":     "how the model chooses BETWEEN layers - the tool that lists them returns the name and this, and nothing else",
 	},
 	"SkillSet": {
 		"searchPaths": "a path that is not a skill directory resolves to no skills at all, and nothing else reports it",

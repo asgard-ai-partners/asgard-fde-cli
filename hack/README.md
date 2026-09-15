@@ -199,18 +199,29 @@ are two fields somebody can be refused on.
 **The number behind "the chart half is the least finished of the four."** It
 decides whether an FDE treats what `add` emits as a chart or as a starting
 point, and it stood at "168 spec keys, 52 never mentioned" for a week with no
-method that reproduced either figure. It is 185 and 88 for the widest reference
-chart, 303 and 171 across all nineteen, and both sides are rendered here rather
-than quoted.
+method that reproduced either figure. **Both sides are rendered here rather
+than quoted**, and neither figure is written down anywhere, including in this
+paragraph.
 
 `--missing` is the useful half: it is the worklist for closing the gap.
 
-Two traps it had to be taught. `$ASGARD_DEPLOYMENTS` is somebody's projects
+Three traps it had to be taught. `$ASGARD_DEPLOYMENTS` is somebody's projects
 directory and also holds scratch repositories this tool scaffolded - those pass
 by construction, one of them at 0 keys not written - so only the deployments
-`source/SOURCES.md` declares are counted. And list indices are collapsed, or
+`source/SOURCES.md` declares are counted. List indices are collapsed, or
 `processors.0.configs` and `processors.7.configs` count apart and the gap
 appears to close as a chart grows.
+
+And **the `add` side is a matrix rather than one run per kind**. Several
+templates branch on a flag, so a key inside `--db-class netsuite`, `--private`
+or `--supervisor` is a key `add` writes; running one combination per kind
+counted 48 of them as never written, which is the expensive direction, because
+the number is read before somebody implements one. The combinations are derived
+from the generator - the flags `add` registers, the fields each kind's own
+templates branch on, and the closed vocabularies `generate` declares - so a
+class added upstream is probed without an edit here. Two branches are decided by
+what the chart already holds rather than by anything typed, and those kinds are
+run twice, once in an empty project and once in a seeded one.
 
 ## Recomputing a count that came out of somebody else's document
 

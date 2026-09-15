@@ -27,11 +27,22 @@ spec:
   dataConnectorName: <<.Connector>>
   locale: zh-TW
   timezone: Asia/Taipei
-  # The instruction, and every title and description in this file, are 繁體中文
-  # the MODEL reads to choose what to query - see .agents/skills/plain-chinese/.
-  # This is the one place empty language costs a wrong answer rather than a
-  # clumsy sentence: 「至關重要的訂單資料」tells the model nothing it can select
-  # on, where 「每筆訂單一列,含成立時間與出貨狀態」does.
+  # The summary, the instruction, and every title and description in this file,
+  # are 繁體中文 the MODEL reads to choose what to query - see
+  # .agents/skills/plain-chinese/. This is the one place empty language costs a
+  # wrong answer rather than a clumsy sentence: 「至關重要的訂單資料」tells the
+  # model nothing it can select on, where 「每筆訂單一列,含成立時間與出貨狀態」does.
+  #
+  # summary is how the model chooses BETWEEN layers, not a description of this
+  # one, and it is the same job the Agent CRD gives description. The tool it
+  # lists them with, list_database_semantic_models, returns {model_name,
+  # summary} and NOTHING else - so with a second layer mounted, an empty one
+  # leaves the choice to be made on the CR name alone, before a single cube is
+  # visible. Name the systems and the entities it covers.
+  #
+  # Optional to the apiserver, which is why it goes missing.
+  summary: |-
+    TODO: which systems and entities this layer covers.
   instruction: |-
     TODO: rules a reader cannot get from the column names.
   cubes:

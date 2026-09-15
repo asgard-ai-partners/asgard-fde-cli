@@ -205,13 +205,12 @@ func Of(s Shape, in Inputs) Estimate {
 		crs["Syncer"] += in.Consoles
 	}
 
-	// Every Workflow needs a ConfigMap of node positions, or its graph opens as
-	// a pile at the origin and somebody drags it apart once per environment. It
-	// is not an Asgard CR, which is why it is easy to leave out of a count - and
-	// one deployment carries 80 of them.
-	if crs["Workflow"] > 0 {
-		crs["ConfigMap"] += crs["Workflow"]
-	}
+	// **A Workflow needed a ConfigMap of node positions and no longer does.** The
+	// platform lays the graph out itself, so a chart written now writes none and
+	// an estimate that adds one per Workflow is high by exactly that many. The
+	// older deployments still carry theirs; reading one is not a reason to write
+	// one. `.agents/skills/asgard-platform/wiki/workflow.md` owns the change and
+	// `source/SOURCES.md` dates it.
 
 	total := 0
 	for k, v := range crs {
@@ -327,11 +326,13 @@ var Docs = map[string]string{
 // notACR are the counted things the platform does not define. They are still
 // files somebody writes and a deploy needs, so leaving them out of an estimate
 // makes it wrong by exactly their number.
-var NotACR = map[string]string{
-	"ConfigMap": "one per Workflow, holding the node positions its editor opens with.\n" +
-		"Not an Asgard CR and in no CRD, which is why it is the thing a count\n" +
-		"forgets - `.agents/skills/asgard-platform/wiki/workflow.md`.",
-}
+// **Nothing is in here today, and the entry that was is why it exists.** A
+// Workflow used to need a ConfigMap of node positions - not an Asgard CR, in no
+// CRD, and so the thing an estimate forgot. The platform lays graphs out itself
+// now, so counting one per Workflow makes an estimate wrong in the other
+// direction. The map stays because the shape recurs: a file somebody writes
+// that a deploy needs and no CRD describes.
+var NotACR = map[string]string{}
 
 // Undocumented names the parts with no product documentation page at all, and
 // why each absence matters. A customer's own test plan usually asks for

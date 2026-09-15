@@ -312,6 +312,16 @@ func (x *xref) checkAgent(d Doc) {
 		x.ref(fmt.Sprintf("Agent/%s.semanticLayers", d.Name),
 			"SemanticLayer", digStr(mapOf(sl), "name"))
 	}
+	// **The Agent's mounts are a real list where the blueprint's are a JSON
+	// string**, which is the whole reason this was missed: the blueprint form
+	// has been resolved since this check was written and the Agent form reads
+	// so differently that it looked like a different field. It is not - it
+	// names a SourceSet the same way and fails the same way, silently, with the
+	// agent simply unable to see the files it was given.
+	for _, m := range digList(managed, "sourceSetMounts") {
+		x.ref(fmt.Sprintf("Agent/%s.managed.sourceSetMounts[].sourceSetName", d.Name),
+			"SourceSet", digStr(mapOf(m), "sourceSetName"))
+	}
 }
 
 func (x *xref) checkTrigger(d Doc) {
