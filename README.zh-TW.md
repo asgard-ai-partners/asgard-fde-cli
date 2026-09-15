@@ -43,33 +43,7 @@ make help        # 其餘的
 make install GOBIN=~/.local/bin
 ```
 
-版面：
-
-```
-cmd/asgard-cli/     main；只做 signal handling 與 exit code
-internal/cli/       cobra 指令樹，一個子指令一個檔
-internal/repo/      客戶 repo 由什麼構成 —— 用看的，不用存的
-internal/auth/      OAuth 流程與憑證儲存，那是這支 CLI 唯一放在 repo 外的檔案
-internal/work/      客戶 repo 自己的工作紀錄（request、task spec、open question、決議紀錄）
-internal/kb/        列出、讀取、出處與連結圖的單一實作，所有語料共用
-internal/corpus/    材料本身，用 repo 收到它時的版面擺放
-internal/wiki/      供應平台 wiki，以及旁邊的 aliases 兩張表
-internal/usecase/   部署形狀的擷取檔
-internal/needs/     一個形狀開工前要先跟客戶拿到什麼
-internal/stage/     onboarding 的指引，對 repo 的狀態渲染
-internal/scaffold/  寫出非客戶特有的骨架、design-time skill 與平台語料
-internal/generate/  CR 骨架，接上 chart 已經宣告的東西
-internal/size/      部署形狀，從 production 數出來的
-internal/brief/     一個活動會怎麼做錯，依意圖而非依位置編排
-internal/check/     repo 結構：索引、日期檔名、連結、孤兒頁
-internal/gate/      對已渲染 chart 的不變量檢查（xref、agent 拆分、enum）
-internal/render/    透過 helm 渲染一個 release 的 chart，注入佔位的 asgard 值
-internal/binding/   讀寫 .asgard-cli.yaml，這個 checkout 的平台綁定
-internal/pipelineconfig/ 讀 .asgard-pipeline.yaml，部署宣告
-internal/chart/     讀一個 project **未渲染**的 template，取 (kind, name)
-internal/tool/      解析 helm/kubectl/python3，以及怎麼安裝
-internal/version/   build 資訊（GoReleaser 用 ldflags 注入）
-```
+**哪個目錄放什麼在 [STRUCTURE.md](STRUCTURE.md)**，這裡不重複：一份目錄清單有兩份副本就會漂移，而讀的人分不出哪一份是現在的。
 
 要新增子指令：在 `internal/cli/` 寫一個 `newXxxCmd()`，並在 `root.go` 用 `addTo(cmd, group..., ...)` 註冊。**分組是必填的** —— cobra 對父層沒有的 `GroupID` 會 panic，所以一個指令不可能在沒決定它屬於哪一組的情況下被加進來。
 
@@ -146,6 +120,7 @@ Check —— 這台機器能檢查的全部
 
 Deploy —— 平台，以及它知道的事
   login / logout / whoami
+  profile    list / show / set / remove —— 這支 binary 沒有內建的那些安裝
   workspace  list / use <id> / show
   pipeline   connect / connections / repos / create / list / use <id> / show
              projects / release create|show|update|destroy|detach
@@ -471,20 +446,24 @@ asgard-cli 的散佈方式沒有一種裝得了它們。tar.gz、zip 與 `go ins
 
 `init`、`project`、`request`、`task`、`question`、`decision`、`check` **都不需要這些工具**。`render`、`verify` 與 `gate` 的三個 chart 步驟需要 helm。**kubectl 是選用的**：這個 binary 沒有任何一處跟叢集講話，`doctor` 列它是因為一個在除錯部署的人仍然想知道它在不在。
 
-### 三個檔案
+### 這些檔案
 
-四個，而且每一個都是別人對不同問題的答案。
+六個，而且每一個都是別人對不同問題的答案。
 
 | 檔案 | 誰寫 | 誰讀 | 進版控 |
 |---|---|---|---|
 | `.asgard-pipeline.yaml` | 人 | **平台**，每次 run | 是 |
 | `.asgard-cli.yaml` | `asgard-cli` | 只有 `asgard-cli` | 是 |
+| `.asgard-scaffold.json` | `asgard-cli init` | 只有 `asgard-cli` | 是 |
+| `.agents/skills/.asgard-docs.json` | `asgard-cli skill update` | 只有 `asgard-cli` | 是 |
 | `os.UserConfigDir()/asgard-cli/credentials.json` | `asgard-cli login` | `asgard-cli` | **絕不** |
 | `os.UserConfigDir()/asgard-cli/profiles.json` | `asgard-cli profile set` | `asgard-cli` | **絕不**（但可以直接交給同事） |
 
 **`.asgard-pipeline.yaml` 是宣告檔**，也是一次部署唯一依賴的檔案：有哪些 release、每個部署哪份 chart、什麼觸發它、吃哪些 key。
 
 **`.asgard-cli.yaml` 是綁定檔**：這個 checkout 對到哪個 workspace、哪條 pipeline，就這兩件事。**兩欄都必填、都不推導。**
+
+**兩份紀錄問的是同一個問題的兩半，而且都不是版本檢查。** `.asgard-scaffold.json` 記下這個 binary 出貨的每個檔案（`AGENTS.md` 與設計期 skill）是哪個版本的 CLI 寫的、寫了什麼，所以差異可以報成 `behind`、`edited`、`ahead` 或 `retired`，而不是用猜的。`.asgard-docs.json` 是平台那一半：抓下來的參考素材是哪個版本、抓的當下每個上游的 digest 是什麼。**兩個版本號互不相干**，移動它們的指令也是。
 
 **`credentials.json` 是這支 CLI 唯一放在 repo 外的東西。** 0600、所有 profile 共用一個檔、旁邊什麼都沒有。那裡以前還有一個 `config.json`，存預設 profile、每個 profile 的預設 workspace、以及自訂 profile 的 map；它沒了。每個欄位都是某個旗標或環境變數已經表達過的偏好，而每一個都是升級時要繼續理解的東西。**憑證是唯一真的非放那裡不可的**：它是機密、屬於人而不是屬於 repo、而且推導不出來。
 
@@ -638,4 +617,4 @@ goreleaser release --snapshot --clean --skip=publish
 
 - **CGO**：build 以 `CGO_ENABLED=0` 執行，讓交叉編譯裝得進一台 runner。引入一個 cgo 相依（sqlite 那一類）就得換成 zig cc 或每個平台各一台 runner。
 - **macOS 簽章**：binary 沒有簽章。那之所以撐得住，**正是因為安裝路徑是 CLI 下載** —— `gh` 與 `curl` 不會設 `com.apple.quarantine`，瀏覽器會。把一個 release URL 丟給人點才是會壞的情境，而 `anchore/quill` 是那時候的答案。
-- **每個 PR 都 build 一次 release**：`ci.yml` 的 `build` job 跑 `goreleaser release --snapshot --clean --skip=publish`，所以設定或交叉編譯壞掉會在它變成一個失敗的 tag 之前被抓到。
+- **main 會 build 一次 release，pull request 不會。** `ci.yml` 的 `build` job 在推上 `main` 時跑 `goreleaser release --snapshot --clean --skip=publish`，所以設定或交叉編譯壞掉會在它變成一個失敗的 tag 之前被抓到。pull request 上關掉，是因為它要三分鐘去回答 `test` 四十秒就回答完的問題（程式能不能編），而它獨有的那部分不可能在 merge commit 上壞掉卻沒先在分支上壞掉。改到 `.goreleaser.yaml` 的時候，`make snapshot` 是同一個 build 在筆電上的版本。

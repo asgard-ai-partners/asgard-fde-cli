@@ -63,6 +63,25 @@ which have gone behind. **That a reading happened is nobody's to verify but
 whoever claims it** - write `never` when it has not, because a row that says
 so is worth more than one that reads settled.
 
+**Run `go run ./hack verified` rather than the pass by hand.** It runs the
+checks whose inputs have moved and skips the ones whose have not, recording what
+passed against which inputs under `.out/`. On an unchanged tree the whole gate
+answers in a fraction of a second, and that is not the point: **re-checking what
+did not change is most of why the same parts get read again and again in one
+sitting**, and why a reading backlog looks endless when it is a countable number
+of documents.
+
+**A skip is not a pass**, and it is printed differently for the same reason a
+skipped platform step is. It says this check answered these exact inputs before,
+on this machine - never that the surfaces no check reaches are sound, which is
+where every defect found by reading has come from.
+
+`--all` ignores the record and `--forget` deletes it. Reach for either when you
+have changed something a check reads that its declared classes do not name;
+`reads` in `hack/verified.go` is hand-written and coarse on purpose, and a class
+it gets wrong is the one way this can report a pass for an answer that moved
+underneath it.
+
 **Then run `go run ./hack pass-list`.** It compares no names - the pass is
 printed rather than copied - and what it holds is the part no program can
 derive: that every check says what it needs, that every prose surface in
@@ -161,14 +180,24 @@ way: the set you remember is the set you have been editing, which is not where
 the other copy is. A sweep that names its own files comes back clean over the
 files it never opened, and reads exactly like a sweep that found nothing.
 
+**And the re-read has a worklist rather than a corpus.** `go run ./hack related`
+names the documents that point at the ones a change touched;
+`go run ./hack reconcile` narrows that to the ones whose target has moved since
+anybody read them against it. Record a reading with `reconcile <document>`
+**after** doing it - nothing can check that claim, which is why it is written
+down rather than derived, the same honesty a `**Checked:**` line asks for.
+
 **The same rule one level up: the patterns are not yours either.**
 `go run ./hack introduced` reads the lines THIS change adds and lists every
 count-shaped one, with no phrase list to remember. Over the whole corpus that
 detector reports more than a thousand lines and is useless; over a diff it
 reports a few dozen and is the item above that gets skipped. **Existing counts
-are a backlog no check closes** - they are found by reading, and saying the
-sweep is finished is the claim that keeps being wrong. The ones a change adds
-are bounded, and they are the regression.
+are a backlog found by reading**, and a backlog closes: the corpus is a
+countable number of documents, and one reviewed at a recorded digest does not
+come back until it changes. **Reviewing from zero every time is what makes it
+look endless** - and it is also what makes a pass expensive, because the same
+documents get read again in the same sitting. The ones a change adds are the
+regression, and this is what keeps the backlog from refilling behind you.
 
 ## Holding prose against its source
 

@@ -502,8 +502,9 @@ ok  structure is consistent (1 project(s): [erp])
 conditional CEL rules: a credential that sets neither a literal nor a reference
 or both, a class block missing or doubled, a `toolsetClass` without the block it
 requires. **Every one of those renders, lints and passes a server-side dry-run**,
-and is refused at apply. Forty of the 79 rules are `self == oldSelf` and cannot
-be seen offline at all.
+and is refused at apply. 40 of the 79 `XValidation` markers are
+`self == oldSelf`, comparing a proposal against the object already on the
+cluster, and cannot be seen offline at all.
 
 Naming projects limits the project-scoped checks to those; the repo-wide checks
 always run. It exits non-zero when anything fails, and warnings do not fail it.
@@ -586,7 +587,7 @@ MISSING helm               render a chart (asgard-cli render) and lint it
 ok    kubectl              v1.35.1
 ok    python3 (optional)   Python 3.14.7
 
-helm is not on PATH, and `.agents/skills/asgard-platform/needs/it.md` to render a chart and lint it
+helm is not on PATH ... to render a chart (asgard-cli render) and lint it
 
 Install it with:
 
@@ -841,8 +842,10 @@ asgard-cli pipeline runs approve <run-id>
 platform's answer: it renders the chart, checks every rendered CR against the
 cluster's own CRDs with a server-side dry run, and reports back. That is not
 reproducible here - no cluster credential is ever issued to a client - so the
-loop is: change the chart, check what can be checked locally with `helm lint`
-and `asgard-cli verify`, push, and read the plan back with `runs watch`.
+loop is: change the chart, check what can be checked locally with
+`asgard-cli gate`, push, and read the plan back with `runs watch`. **Not
+`helm lint` by hand** - a bare lint has no reserved asgard values file and fails
+on every chart that labels anything.
 
 Which release a command acts on comes from the name the declaration uses. Which
 workspace, and which pipeline when a repository carries more than one, come from

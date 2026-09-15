@@ -14,9 +14,14 @@ Every body of material, one reader. `kb.Corpus` is that reader and all of them
 declare one; `needs` and `brief` have no files, so they render documents from
 Go structs into an in-memory FS and get the same treatment.
 
-    kb.Doc     Name, Title, Summary, Checked, Unchecked, Links, Sources
-    kb.Link    Kind, Name, Path, Deliberate
-    kb.Corpus  FS, Dir, Docs, ParseDoc, Unlisted, Noun, Command
+    kb.Doc     what a document says about itself
+    kb.Link    one pointer out of it
+    kb.Corpus  one body of material, and how to read it
+
+**The fields are not listed here.** They are a list of what exists, the struct
+is the source, and the copy that used to be here had already lost one field
+before it lost two more - `go doc ./internal/kb Doc` prints them, correct at the
+commit you are standing on.
 
 | body | package | kind |
 |---|---|---|
@@ -30,6 +35,20 @@ Go structs into an in-memory FS and get the same treatment.
 **Add material to one of these, not beside them.** A body with its own reader
 and its own parse drifts from the others and nothing mechanical notices. If new
 material does not fit `kb.Corpus`, change `kb`.
+
+**Almost everything a document declares about itself is parsed from its prose**
+- a `# ` title, a summary paragraph, the two provenance markers. Frontmatter
+carries the exceptions, and there are two: `group:` and `description:`, which is
+what `go run ./hack index` renders both indexes from - the wiki's and the
+extracts'.
+
+**Both are there because they cannot be derived, and nothing else is.** A
+grouping is the question a section asks, and no parse recovers it. A description
+is what somebody would come to the page FOR, which is a different claim from the
+page's opening thesis - deriving one from the other was tried and gives rows like
+"They are not two of the same thing". Everything an index would otherwise repeat
+- the title, the path - is computed, so the only hand-written part of a row is
+the part that is a judgement, and it lives on the page rather than in the index.
 
 `Docs` and `ParseDoc` are how a body that is not one `<name>.md` per document
 joins anyway: a stage is a numbered prompt file, a skill is a directory with
@@ -266,6 +285,41 @@ the old one.
 sections an engagement fills in; markers bound the half this CLI owns and only
 that half is replaced. The digest recorded after a merge says this CLI wrote
 those bytes — true, and not the same as having written all of them.
+
+## Keeping it current
+
+Three things a corpus needs that no static check answers, and each is a listing
+rather than a check because each reports a question.
+
+**What a change owes a re-read.** `go run ./hack related` reads the in-edges of
+every document a change touched, off the same `kb.Link` graph `--links` walks
+from the other end. `--orphans` asks whether anything points at a document; this
+asks what does. A change to one page names about a dozen documents, which is a
+reading somebody does, where "read the corpus again" is a reading they abandon.
+
+**Which of those were ever read against it.** `go run ./hack reconcile` records
+the digest of a target at the moment somebody says they read a pointer against
+it, in `source/reconciled.json`, and reports the pointers whose target has moved
+since. **A document points at itself**, and that edge is its own
+`description:` - an index row is authored rather than derived, so it does not
+follow the page when the page changes, and a row that no longer says what is
+inside a document reads exactly like one that does.
+
+**The record is committed, and the one in `.out/` is not**, which is the whole
+distinction: a reading is a claim about the material and the next person
+inherits it, the way they inherit a `**Checked:**` line; a recorded pass is a
+claim about one machine's tree. There is deliberately no way to record every
+pointer at once - that would write a claim nobody made, which is the
+verdict-in-a-table this repository refuses everywhere else.
+
+**What has already been answered.** `go run ./hack verified` keys each check on
+the digests of the classes of input it reads - the corpus, the Go source, the
+root documents, each upstream clone at its commit - and skips the ones whose
+inputs have not moved. The classes are coarse deliberately: naming the exact
+files a check reads is a second copy of what the check does, kept by hand, and
+it goes stale in the direction that matters. **A skip that lies is worse than
+re-running everything**, so a check that declares no class always runs, and a
+skip is printed differently from a pass.
 
 ## Verification
 

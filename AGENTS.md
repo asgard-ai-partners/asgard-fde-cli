@@ -122,7 +122,15 @@ platform has that shape. `asgard-cli add <kind>` prints both, in that order.
 The shape is the [llm-wiki
 pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) -
 raw sources that are never vendored in, a corpus that is rewritten continuously,
-and a schema a person changes deliberately. `internal/corpus/wiki/README.md`
+and a schema a person changes deliberately. The [Open Knowledge
+Format](https://cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing)
+arrived at the same shape from the other side and is worth reading for the
+vocabulary. **It says of itself that it solves the format and nothing else** -
+going stale, what else a change is owed, and whether what a document points at
+is still there are outside it, and those are what the rules below and their
+checks are; `Goal.md` says why that is the half worth having. Take its
+frontmatter; do not take it as a reason to relax a rule below.
+`internal/corpus/wiki/README.md`
 states it for the wiki and is the longer version; the rules below apply to
 every part, and each has a check that says so, so a rule that stops holding
 shows up in `asgard-cli gate` rather than in a list somebody has to maintain.
@@ -136,6 +144,38 @@ change `kb`. `Docs` and `ParseDoc` are the two hooks for a body that is not one
 `<name>.md` per document - a numbered prompt file, a skill directory with YAML
 frontmatter - and both still come out as `kb.Doc`.
 **Check: `audit-material --unverified`.**
+
+**A document declares two things about itself, and the index is rendered from
+them.** YAML frontmatter, at the very top, and nothing else goes in it:
+
+    ---
+    group: While building
+    description: what each processor type takes, and the fields that decide behaviour
+    ---
+    # The processors, and the fields that decide behaviour
+
+**Both are there because neither can be derived.** A grouping is the question a
+section asks. A description is what somebody would come to the document FOR,
+which is not what it opens by saying - `console.md`'s thesis is "The Console
+does no business work", and what an index owes a reader is "the permission
+layers, the pages that disagree with each other, Workspace settings". Rendering
+the second from the first was tried and gives rows like "They are not two of the
+same thing". Everything else in a row - the title, the path, the order - is
+computed.
+
+**So never edit an index by hand.** `go run ./hack index --write` renders
+`wiki/index.md` and `usecase/README.md` from the documents; the check fails when
+either has drifted. Adding a page is the page and two lines on it. What stays
+written is which sections exist and in what order, and the order of rows inside
+one - that is a reading order rather than an alphabet, it is read back out of
+the file, and a new document is appended so that adding one moves nothing
+somebody arranged.
+
+**A description does not follow its page.** It is authored, so when the page
+changes the row can quietly stop describing it - two did in one sitting. A
+document points at itself in `source/reconciled.json` for exactly that, and
+`go run ./hack reconcile` reports it.
+**Check: `go run ./hack index`.**
 
 **Every pointer is a path**, because every document lands:
 
@@ -358,8 +398,17 @@ emitting a map, so it carries a `platform` key.
 there.** A handful of Go tests cover parsing and matching rules where a wrong
 answer is silent; everything else is checked by reading what ships.
 
+    go run ./hack verified run the gate, skipping what has not changed
     go run ./hack pass     every check, in the order to run them
     go run ./hack list     what each one is for, and what it needs
+
+**`verified` is the one to run.** It keys each check on the digests of the
+classes of input it reads and skips the ones whose inputs have not moved, so a
+pass does not start from zero - which is most of why the same parts get read
+again and again in one sitting. **A skip is printed differently from a pass**,
+and the record lives in `.out/` rather than in the repository, because it is a
+claim about this machine's tree and a shared one would be a claim about
+somebody else's.
 
 **The list is not written down here.** It is derived from the binary's own
 flags, this directory's contents and the gate's own subcommands, so it cannot go
@@ -374,8 +423,8 @@ convenience.
 
 `--paths` and `go run ./hack doc-paths` are the same rule from the two sides. The
 audit reads what **lands** in a customer repository and fails on a path only we
-have; the script reads the documents that never land - Goal, README, AGENTS,
-STRUCTURE, APPROACH, TASK - where naming our own paths is the point, and fails
+have; the script reads the documents that never land - the root documents, both
+READMEs and `hack/`'s own - where naming our own paths is the point, and fails
 when one of them is gone. It checks a package-qualified Go symbol the same way, and
 resolves it **inside the package that owns it** - a search of the whole tree
 cannot tell one package's Index from strings.Index, and it passed a reference
@@ -385,9 +434,11 @@ this file, and it will resolve it. It needs the checkout, which is why it is in
 `hack/`.
 
 **CI runs the checks that need nothing but this repository**: the audits, the
-Go steps, `doc-paths`, `pass-list` and `goal`. The rest need a clone of somebody
-else's repository - and asgard-core is private - so they are the maintainer's to
-run, and `go run ./hack sources` says when one is due. `--urls` is excluded for
+Go steps, and the `hack` checks that read only this tree. **Which ones those
+are is not written here** - `.github/workflows/ci.yml` is the list, and it
+carries a comment naming what it leaves out and why. The rest need a clone of
+somebody else's repository - and asgard-core is private - so they are the
+maintainer's to run, and `go run ./hack sources` says when one is due. `--urls` is excluded for
 its own reason: a third party's outage is not this repository's build failure,
 and a gate that only works online is one that fails on a plane.
 
@@ -406,9 +457,13 @@ Three of the audits are worth a sentence each beyond what `--help` says:
     resolves to nothing, and the reader who follows it cannot tell that from a
     page they failed to find.
   - **`--commands`** is the same thing for the tool itself, and **it reads what
-    is embedded**, which is what an engagement gets. This file, `README.md` and
-    `STRUCTURE.md` are not in it, because they are read from a checkout rather
-    than shipped.
+    is embedded**, which is what an engagement gets - plus these root documents,
+    which `selfsrc.Docs` embeds for exactly this. They land nowhere, so the
+    provenance rules do not reach them; what does reach them is that a command
+    they name has to exist. **A sample of the tool's own output is read as
+    prose**, so a fenced block reproducing a line where `asgard-cli` is followed
+    by an ordinary English word is a reference to a command of that name. Elide
+    it rather than rewriting what the tool prints.
   - **`--urls`** reports rather than fails on a citation that already says the
     link 404s - a page marked `draft: true`, which asgard-docs does not publish -
     so disclosing one is how you keep it.
@@ -484,7 +539,9 @@ and a green build says nothing about them:
 | `--unchecked` | **what every document says it has NOT been held against**, which is the opposite question to `--unverified` and the only one that had no answer: a page whose marker names a whole surface passed the check and nothing put that surface in front of a reader. Every document is expected to have one, so it cannot fail - and it is what `TASK.md` reads its blocked list out of instead of keeping one |
 | `--term <field>` | the sweep for a renamed platform field, across prose and templates. It cannot fail on its own: it only answers a question somebody asks it |
 | `go run ./hack sources` | how far each clone is behind, which is information rather than a verdict |
-| `go run ./hack introduced` | **the count-shaped lines THIS change adds.** Over the corpus the same detector reports more than a thousand lines and would be a rule to delete rather than soften; over a diff it reports a few dozen. Existing counts are a backlog only reading closes, so there is nothing here to go green - what is bounded is the regression |
+| `go run ./hack reconcile` | **which pointers have not been read against their target since it moved.** `--links` says a pointer resolves and `related` says who points at a document; neither says whether the claim behind the pointer was ever checked against what it points at. `source/SOURCES.md` records that for an upstream commit; `source/reconciled.json` records it for a pointer inside the corpus, and it is committed for the same reason - a reading is a claim about the material. Record one with `reconcile <document>` **after** reading it, and note there is deliberately no way to record them all at once - that would be a claim nobody made |
+| `go run ./hack related` | **which documents point at the ones a change touched.** `--orphans` asks whether anything points at a document; this asks what does, off the same graph. It is the re-read a change actually owes, as against the corpus - and it cannot fail, because a pointer is a question rather than a defect |
+| `go run ./hack introduced` | **the count-shaped lines THIS change adds.** Over the corpus the same detector reports more than a thousand lines and would be a rule to delete rather than soften; over a diff it reports a few dozen. Existing counts are a backlog found by reading, and it closes - a document reviewed at a recorded digest does not come back until it changes. This is what stops it refilling behind the reading |
 
 **Checked by nothing, and verified by reading.** This is the group that has
 produced every finding.
@@ -577,9 +634,32 @@ Renumbering the request template's sections silently broke `work.go`, which
 appended status transitions under a heading by its literal number. If a rule was
 being kept by something, changing the shape it keeps is the same change.
 
+**If it is a list, does it say which of its items are load-bearing?**
+**A reference that lists things uniformly invites use of all of them.** Prose
+says what a thing is for and a schema says what shape it takes; **only the
+worked example says how often a thing is right**, and nobody reads an example
+for frequency. A design reference handed an agent thirteen CSS classes as one
+inventory - the deck held up as correct uses six, one of them zero times - and
+the agent filled the rest, because a list of thirteen reads as thirteen things
+worth using.
+
+Two ways out, and both are cheaper than the defect:
+
+    split the list           a working set and a specialised one, so the
+                             specialised ones are opted into rather than
+                             defaulted to
+    put the rule where it    the rule lived in full in one file, in part on the
+    is used                  schema, and not at all on the thing somebody is
+                             looking at while writing the line
+
+**Do not close it by adding a copy at the point of use** - that is a fourth
+home for a fact with three already. Move it, or point at it.
+
 **Does anything point at what you added?**
 Material nothing links to is not read, and the writer never finds out, because
-the file is there. Writing something and pointing at it are separate acts, and
+the file is there. A document with no `group:` is in no index, which
+`go run ./hack index` reports as its own failure rather than leaving to a
+reader. Writing something and pointing at it are separate acts, and
 only the first one feels like finishing. `audit-material --orphans` is the
 mechanical half; grep for the name of what you added is the other.
 
@@ -609,8 +689,10 @@ that ended early.
 What that means in practice, after the last edit and before the question:
 
     every check, again, from the top   not the ones you were watching
-    what else claimed the thing        `audit-material --term`, and let its
-                                       scope be the scope
+    what else claimed the thing        `go run ./hack related` for the
+                                       documents, `reconcile` for the ones not
+                                       read since, `audit-material --term` for
+                                       a word - let their scope be the scope
     what YOU just introduced           `go run ./hack introduced`, then the id
                                        you added, the pointer you moved, the
                                        wording a check matches on
@@ -893,9 +975,11 @@ from the second.
 
 **`internal/gate/processors.go` holds a pinned copy of asgard-core's
 `ProcessorDefinitions`**, so the rule above about which way a pinned copy can go
-stale applies to it - **and that list is demonstrably incomplete**, which
-`internal/corpus/wiki/platform-unknowns.md` P10 records and "would this check
-fire on material that is correct" above has the cost of.
+stale applies to it - **and that list is a subset of what a chart may set rather
+than the config contract**, because a processor declaring dynamic config takes
+keys no definition names. `internal/corpus/wiki/processors.md` is where that is
+recorded, and "would this check fire on material that is correct" above has the
+cost of treating it as closed.
 
 **The reference deployments** - every extract under `internal/corpus/usecase/`
 was taken from one of these, and a claim about how a shape is built should be
