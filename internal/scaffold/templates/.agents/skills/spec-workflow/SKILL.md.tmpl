@@ -64,8 +64,15 @@ Use status flow `draft` -> `ready` -> `in-progress` -> `done`. Do not use `in_pr
      `helm lint` by hand**: without the reserved `asgard` values file the gate supplies, every
      chart that labels anything fails.
   3. `asgard-cli verify <project>`
-  4. `asgard-cli render <release> | kubectl apply --dry-run=server -n <ns> -f -` and
-     then push and read the plan: `asgard-cli pipeline runs watch --release <name> --ref <tag>`
+  4. push and read the plan: `asgard-cli pipeline runs watch --release <name> --ref <tag>`.
+     **This one runs on the platform and is the authoritative half** - no cluster
+     credential is issued to a client, and a local
+     `asgard-cli render <release> | kubectl apply --dry-run=server -n <ns> -f -` does
+     not answer the same question: **a CRD silently prunes a field it does not
+     declare and the dry run still reports success**, so a CR that renders, lints and
+     dry-runs green can still reach the cluster with the field gone.
+     `docs/spec-driven-development.md` has the two checks the platform's own run
+     makes, `crd/dry-run-rejected` and `crd/unknown-field`
 - **The living spec carries the behaviour change**, and a settled decision gets its own record —
   see the converge loop below. A behaviour change that never reached `docs/spec/` is not done.
 - Generated/config/deployment artifacts are updated when required (including `.asgard-pipeline.yaml` and the root README project table, which `asgard-cli check` cross-checks).

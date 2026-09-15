@@ -18,6 +18,14 @@ This skill is the one way this repository reaches a source system, and it is
 > repository, on this laptop. The deployed agent reaches the same databases
 > through a `DataConnector` in the cluster, with credentials the platform
 > provisions. The two are separate mechanisms; see the boundary below.
+>
+> **So `.env` is a property of this laptop, not of being a skill.** A runtime
+> skill runs in the deployed agent's sandbox, whose environment is a closed list
+> the reconciler builds: no `.env`, and no field anywhere that puts an
+> engagement's value into it. A runtime skill written the way this one works
+> deploys cleanly and then tells a person it cannot connect, in a sentence that
+> reads like a missing setting. What each kind can reach is
+> `.agents/skills/asgard-platform/usecase/external-api.md`.
 
 ## When to use
 

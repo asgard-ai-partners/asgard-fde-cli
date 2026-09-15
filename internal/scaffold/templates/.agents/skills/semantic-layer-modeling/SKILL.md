@@ -137,7 +137,7 @@ spec:
 
 ### Conventions that are easy to get wrong
 
-- Write every description to `.agents/skills/plain-chinese/` - a model reads
+- Write every description to `.agents/skills/plain-chinese/SKILL.md` - a model reads
   them to choose a column, so 至關重要 there costs a wrong answer, not a clumsy
   sentence.
 - **`description` on every cube / dimension / measure, in 繁體中文.** This is not decoration — it
@@ -148,6 +148,11 @@ spec:
 - **Run every `sampleQuery` against the live DB before committing it.** A `sampleQuery` that errors
   or returns nonsense actively misleads the agent. Record the row count you observed in the
   `comment` if it helps set expectations.
+- **`effort` and the chart's model are one decision.** `disabled` is the value for a
+  layer whose `completionModelName` is not a reasoning model - that pairing fails
+  every turn rather than being ignored, including the turns that send no effort at
+  all. `../asgard-platform/wiki/settings.md` has why, and it is the reason to settle
+  the model before the layer rather than after it.
 - **`measures` must be present on every cube; its CONTENTS are optional.** The key is
   **required** by the CRD - `measures: []` is a declaration the apiserver accepts, omitting the
   key is rejected outright, and `helm lint` does not see the difference. So `measures: []` is the
@@ -180,7 +185,9 @@ you gather the "known context" a spec needs.
 
 ## Verify
 
-After editing a `SemanticLayer`, run the repo's gate (see the `asgard-cr-verification` skill):
+After editing a `SemanticLayer`, run the repo's gate (the `asgard-cr-verification`
+skill under `.agents/skills/` has what the platform then checks, and
+`asgard-cli skill update` is what writes it, from the platform):
 
 ```bash
 asgard-cli gate               # every local check, the lint step included

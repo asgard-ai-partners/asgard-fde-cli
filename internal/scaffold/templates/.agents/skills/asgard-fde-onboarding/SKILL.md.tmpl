@@ -69,7 +69,7 @@ Not a sequence to follow - a map of what answers what.
 | how to change this repo - layout, conventions, CRD traps | `AGENTS.md` |
 | what the system currently does | `docs/spec/<<.SpecSlug>>/` |
 | why something was decided | `docs/decisions/` |
-| **reading a customer's own system** - list tables, check a column's real values, verify a join | `db-query` skill. Eight connector classes, read-only |
+| **reading a customer's own system** - list tables, check a column's real values, verify a join | `db-query` skill. Read-only, and it names the one `DataConnectorClass` it cannot drive |
 | turning what you found into a `SemanticLayer` or `DataConnector` | `semantic-layer-modeling` skill |
 | **somebody has to give you a credential** | `asgard-cli local-env` - opens a form for them to type it into. **Never ask for a password in the conversation** |
 | **a CR needs a credential at runtime** - a database password, a channel token, a platform resource key | declare its key under `appSecret:` in `.asgard-pipeline.yaml`, then `asgard-cli pipeline variables set --release <r> --kind secret <key> --from-file <path>`. **Both halves, or it is stored and never injected** - and lint, render and the dry run all stay green while the CR resolves to nothing. `asgard-cli add` prints the keys it wrote. A non-secret runtime value goes the same way through `appConfigMap:` |

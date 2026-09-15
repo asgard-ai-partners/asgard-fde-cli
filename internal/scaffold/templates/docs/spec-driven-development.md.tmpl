@@ -144,14 +144,13 @@ asgard-cli gate                                 # lint + render + xref + the ref
 # 3. render + CR cross-reference completeness, then the agent-split invariants
 asgard-cli verify <project>
 
-# 4. against the cluster you deploy to (read-only, needs kubectl)
-asgard-cli render <release> | kubectl apply --dry-run=server -n <ns> -f -
+# 4. the platform's own run, which is the authoritative one
 asgard-cli pipeline runs watch --release <name> --ref <tag>
 ```
 
 Step 3 catches what `helm lint` cannot: an `Agent` referencing a `SemanticLayer`/`Toolset` that does not exist, a `Toolset` pointing at a missing `Workflow`, a `SemanticLayer` pointing at a missing `DataConnector`, a wrong `entry` name on any entrypoint, and the Platform UI metadata whose absence is invisible to every other check.
 
-Step 4 runs on the platform and cannot be run here: no cluster credential is issued to a client. Its dry run answers both questions that used to need two commands — `crd/dry-run-rejected` is "will it be accepted", `crd/unknown-field` is "will it be kept". A CRD silently prunes undeclared fields and a plain dry-run still reports success — `.agents/skills/asgard-platform/wiki/crd-rules.md` has the release it broke.
+Step 4 runs on the platform and cannot be run here: no cluster credential is issued to a client, so `asgard-cli render <release> | kubectl apply --dry-run=server -n <ns> -f -` is a command an engagement has nothing to point at - and it would not answer the question anyway. The platform's run answers both questions that used to need two commands — `crd/dry-run-rejected` is "will it be accepted", `crd/unknown-field` is "will it be kept". A CRD silently prunes undeclared fields and a plain dry-run still reports success — `.agents/skills/asgard-platform/wiki/crd-rules.md` has the release it broke.
 
 Step 1 also checks the `docs/` layer: required files, the living spec module index matching the actual module files, dated record filenames, and every relative markdown link inside `docs/` resolving.
 

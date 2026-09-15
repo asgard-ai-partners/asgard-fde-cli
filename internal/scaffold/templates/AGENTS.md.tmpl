@@ -564,6 +564,25 @@ because the delivery mechanism is completely different.
 | **When** | design time — while authoring CRs | runtime — while answering a user |
 | **How it is delivered** | read straight from the working tree | committed → `SourceSet` syncs the repo → `SkillSet` `searchPaths` selects it → bound by `Agent.managed.skillSetNames` or `SandboxBlueprint.spec.skillSetNames` |
 | **Reaches the cluster?** | never | yes, that is the point |
+| **What it can reach** | this laptop - `.env`, and any network path you have | the sandbox, whose environment is a closed list the reconciler builds. **No value this engagement supplies reaches it** |
+
+**The last row is the one that decides a design; the others decide paperwork.**
+A runtime skill runs in a real environment, so it can do what a Workflow cannot -
+a non-HTTP protocol, a vendor CLI, an API too large to enumerate as tools. What
+it cannot do is hold a static service key: there is no `env` on `Agent`,
+`SandboxBlueprint` or `SkillSet`, `credentialMounts` resolves only an
+`OAuthCredential`, and a hook is an expression in the CR spec. So that route is
+open only when the credential **arrives per turn from the caller**, and a system
+that needs a static key is reached from a Workflow instead. The fields that
+argument was read off are in
+`.agents/skills/asgard-platform/usecase/external-api.md`.
+
+**`.agents/skills/db-query/` reads `.env` because it runs on this laptop, not
+because it is a skill.** It is the skill you meet first and use most, so it is
+the one that teaches by demonstration - and what it demonstrates is true of
+design time only. A runtime skill written the same way deploys cleanly and then
+tells a person it cannot connect, in a sentence that reads like a missing
+setting.
 
 **A SkillSet is a trio, not a CR.** The platform's `POST /v1/skill-set/from-git` creates a
 `SkillSet` + its **own** `SourceSet` + the git `Syncer` that fills it, bound 1:1:1. Several
