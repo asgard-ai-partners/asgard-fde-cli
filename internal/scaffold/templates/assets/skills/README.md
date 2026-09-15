@@ -22,6 +22,19 @@
 | 怎麼到讀者手上 | Syncer 同步進 volume → SkillSet 挑選 → Agent 綁定 | 就在磁碟上,agent 自己載入 |
 | 放什麼 | 客戶的領域知識、業務口徑 | 怎麼建 CR、怎麼查資料庫、怎麼寫中文 |
 | 會進平台嗎 | **會** | **永不** |
+| 碰得到什麼 | sandbox 的環境,那是 reconciler 建好的封閉清單:**這個 engagement 填的值一個都進不去** | 這台筆電:`.env`,以及你連得到的任何網路路徑 |
+
+**決定設計的是最後一列,不是交付方式。** runtime 技能跑在一個真的環境裡,做得到
+Workflow 做不到的事 —— 非 HTTP 的協定、廠商的 CLI、大到不可能一支一支列成 tool 的
+API;做不到的是拿一把固定的服務金鑰:`Agent`、`SandboxBlueprint`、`SkillSet` 都沒有
+`env`,`credentialMounts` 只解得開 `OAuthCredential`,hook 是存在 CR spec 裡的
+expression。所以這條路只有在**憑證由呼叫端逐次帶進來**時才成立,需要固定金鑰的系統
+改走 Workflow。欄位與推導見
+`.agents/skills/asgard-platform/usecase/external-api.md`。
+
+**`.agents/skills/db-query/` 讀 `.env`,是因為它跑在筆電上,不是因為它是技能。**
+照著它的樣子寫一個 runtime 技能,部署會過、檢核會綠,然後 agent 會跟使用者說它連不上
+—— 那句話讀起來像少設了一個設定,但沒有任何設定能設它。
 
 **放錯邊的代價**:把 design-time 的操作指引同步進 runtime(部署後的 agent 拿到一份教它
 改這個 repo 的文件),或反過來讓部署後的 agent 拿不到它真正需要的領域知識。

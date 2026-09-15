@@ -1,3 +1,7 @@
+---
+group: Products and scope
+description: the permission layers, the pages that disagree with each other, Workspace settings
+---
 # Management Console - permissions and Workspace
 
 The Console does no business work. It decides two things: where users enter each
@@ -55,7 +59,7 @@ Things that bite:
 - **Only Data Insight is purchase-based** (Purchase Named User); the rest
   invite directly.
 - The URL slug and the navigation label disagree: Studio is `platform`, Agent Hub
-  is `../wiki/sindri.md`.
+  is `sindri` - the product's own name, which `../wiki/sindri.md` is about.
 
 ### Bound to a resource, or bound to a product
 

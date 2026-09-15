@@ -1,3 +1,6 @@
+---
+description: the release and the values that exist before the first tag, which tag reaches which release, the Console step between a green deploy and a working one
+---
 # Deploy
 
 The local gate is green. **The platform runs the rollout**, and it is the half

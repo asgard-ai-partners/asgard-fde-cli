@@ -1,3 +1,7 @@
+---
+group: In practice
+description: "**it deployed, every check passed, and it does nothing.** The shapes that have happened, why no layer of the toolchain catches them, and which ones now have a rule. Start here when the symptom is silence rather than an error"
+---
 # It deployed, everything is green, and it does nothing
 
 **Every check this tool and this platform run asks whether a CR is legal. None
@@ -15,7 +19,7 @@ kind on purpose: the reader arriving here does not know which kind is at fault.
 | what you see | what it is | where |
 |---|---|---|
 | a tool returns nothing, and the agent answers from memory | processors present, `relationships` absent or partial, so only the entry's `handlingProcessor` runs | `../usecase/workflow-chain.md` |
-| a value is set on the platform and the CR behaves as if it were empty | the key is declared under no release, so it is stored and never injected | `../usecase/conventions.md` |
+| a value is set on the platform and the CR behaves as if it were empty | the key is declared under no release, so it is stored and never injected | `../usecase/write-path.md` |
 | a capability that was working stops, with no change to it | the variable it read is still declared and set, and the thing that read it was replaced | this page, below |
 | an agent has fewer skills than it should | a `searchPaths` entry names a parent directory, which resolves to nothing | `../usecase/skill-set.md` |
 | the very first message on a new channel is never answered, and every message after it is | the entry routes into `listen-message` before anything replies, and reaching a `listen-message` ends the request | `../usecase/flow-agent-supervisor.md` |
@@ -52,11 +56,11 @@ the only ones here that ask about behaviour rather than legality:
 - **the placeholders step** - the generator's own TODOs still in the render,
   which is how a published Agent comes to show `TODO` as its sample questions.
 
-**What still has no check is the third row of the table above**: a declaration
-that was right when it was written and became dead when the shape around it
-changed. Nothing sees drift, because nothing compares what is declared against
-what the render reads. It is the one of the four that only a person notices,
-and only by asking what still uses this.
+**What still has no check is the capability that stops with no change to
+itself**: a declaration that was right when it was written and became dead when
+the shape around it changed. Nothing sees drift, because nothing compares what
+is declared against what the render reads. It is the row above that only a
+person notices, and only by asking what still uses this.
 
 **Checked:** 2026-09-14, from engagements' own reports and the failures
 behind them - a tool whose HTTP call was never wired, a variable left declared
@@ -64,7 +68,7 @@ after the tool that read it was replaced, and a credential nobody could obtain.
 The gate rules named above were written from those and each was held against
 every reference deployment to confirm it reports none of them.
 
-**Unchecked:** that these four are the whole list. They are the ones somebody
-has walked into and written down; the shape of the failure - legal, accepted,
-inert - has no upper bound on how many ways it can happen, and a fifth will
-arrive the same way these did.
+**Unchecked:** that the table is the whole list. Every row is one somebody has
+walked into and written down; the shape of the failure - legal, accepted,
+inert - has no upper bound on how many ways it can happen, and the next one
+will arrive the same way these did.

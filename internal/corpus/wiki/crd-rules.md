@@ -1,3 +1,7 @@
+---
+group: While building
+description: the validations helm lint does not run, and the one the schema cannot express
+---
 # Rules the schema enforces, and one it cannot
 
 The CRDs carry validation beyond required-and-type, written as CEL expressions
@@ -108,10 +112,12 @@ have to move.
     database.columns
 
 **So a Syncer is not repointed, it is replaced.** "Sync from this folder
-instead" is a new Syncer and a deleted one, not an edit - and the cursor goes
-with it, so the new one re-reads from the beginning unless `statePath` is
-handed over deliberately. `../usecase/skill-set.md` writes one; nothing in
-that page said this.
+instead" is a new Syncer and a deleted one, not an edit - and the cursor does
+not come with it, so the replacement re-reads from the beginning unless
+`statePath` is handed over deliberately. `../usecase/knowledge-drive.md` is
+where that costs something, because a database Syncer is the one that keeps a
+cursor; a git Syncer declares no `statePath` at all and re-clones every run,
+which `../usecase/skill-set.md` says at the field.
 
 **The Loader is the same shape, smaller.** `knowledgeBaseName` is immutable, so
 a Loader cannot be pointed at a different knowledge base, along with its

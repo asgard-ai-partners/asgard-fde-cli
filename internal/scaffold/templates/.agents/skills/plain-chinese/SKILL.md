@@ -14,7 +14,9 @@ spent time on us"**, and that costs more than any wording.
 The register rule - prefer a checkable sentence to an adjective - catches empty
 words. It does not catch **shapes**: sentence patterns and section endings that
 give a document away while every individual word survives inspection. Those are
-what this skill is for.
+what this skill is for. The register rule itself is stated in
+`.agents/skills/proposal-deck/SKILL.md` under "The register", and holds for
+everything on the table below, not only a deck.
 
 Adapted from `writing-humanizer` (github.com/shyuan/writing-humanizer), which is
 written for zh-TW essays. Most of it transfers to this work. One rule inverts,
@@ -101,7 +103,7 @@ a plain 是 or a plain verb.
 
 | surface | applies | note |
 |---|---|---|
-| a proposal or discovery deck | yes, **except one rule** - see below | `proposal-deck` owns the rest of how a deck reads |
+| a proposal or discovery deck | yes, **except one rule** - see below | `.agents/skills/proposal-deck/SKILL.md` owns the rest of how a deck reads, including the register rule this page builds on |
 | a reply to a customer's own question | in full | `docs/open-questions.md`, the "What the customer asked us" table |
 | the covering mail, meeting notes they will see | in full | prose, so every rule holds |
 | a CR's `<kind>-name` display annotation | the vocabulary, not the shapes | it is a noun phrase, not a sentence |

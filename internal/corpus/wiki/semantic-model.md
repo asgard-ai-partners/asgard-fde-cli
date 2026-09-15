@@ -1,3 +1,7 @@
+---
+group: While building
+description: the modelling flow, its limits, the Mimir side
+---
 # Semantic Model
 
 Connects a database, has AI understand its structure, and then answers in natural
@@ -75,9 +79,15 @@ Mimir's Data Model button expands the current model's structure:
 ## Semantic Model or fixed query tools
 
 For an anonymous public audience the answer is usually fixed zero-parameter query
-tools rather than a Semantic Model. The reasoning, and what `allowedCubes` does,
-is in `../usecase/fixed-query-tools.md`; the modelling itself is in
-`../usecase/semantic-layer.md`, and opening a write path is in `../usecase/write-path.md`.
+tools rather than a Semantic Model, and `../usecase/fixed-query-tools.md` is that
+shape. The argument turns on `allowedCubes` - the field that would narrow a mounted
+layer, which sits on the binding rather than on the layer. **Which binding
+depends on the path**, and a reader who meets only one concludes no narrowing
+exists: on the Agent path it is the Agent's, and `verify` R4 refuses it there;
+on the flow-agent path it is `semanticLayer.allowedCubes` on the completion
+processor, which `../wiki/processors.md` owns. `../usecase/semantic-layer.md`
+refuses the Agent form along with the modelling itself.
+Opening a write path is `../usecase/write-path.md`.
 
 ## Two join failures nothing local catches
 

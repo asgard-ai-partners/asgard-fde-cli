@@ -1,3 +1,6 @@
+---
+description: every wiki page grouped by the question it answers - start here when you do not know which page has your answer
+---
 # Index
 
     ../wiki/<page>.md
@@ -30,6 +33,7 @@
 | [`crd-rules`](../wiki/crd-rules.md) | the validations helm lint does not run, and the one the schema cannot express |
 | [`platform-unknowns`](../wiki/platform-unknowns.md) | what no source answers, and who to ask |
 | [`coverage`](../wiki/coverage.md) | how many deployments each CR shape was read from - which extracts rest on a sample of one |
+| [`tool-description-and-skill`](../wiki/tool-description-and-skill.md) | a tool's description and a runtime skill reach the model in one context - which of the two owns a fact when both could hold it |
 
 ## In practice
 
@@ -59,15 +63,15 @@ where the judgement is; this table is only the name.
 | Agent Hub > Flow Agent | `Workflow` + `SandboxBlueprint` + `BotProvider`, and **no `Agent`** | `../usecase/flow-agent-single.md` |
 | Agent Hub > Managed Agent | `Agent` | `../wiki/agents.md` |
 | Agent Hub > Configuration > Models | **no CR of its own** - it selects `CompletionModel`s that already exist | `../wiki/settings.md` |
-| Agent Hub > Configuration > Global Directory | a read-only `SourceSet`, mounted through `SandboxBlueprint.extraDirectories` | `../usecase/conventions.md` |
+| Agent Hub > Configuration > Global Directory | **not a chart's to write** - it is edited on that page and shared with every Agent Hub conversation in the platform Project | `../wiki/sindri.md` |
 | Applications (Data Insight & Agent Hub) | **no CR** - a listing of what is already published | `../wiki/integration.md` |
 | Applications > Customized Integration | `BotProvider` | `../usecase/chat-channel.md` |
 | Automation > API | `Workflow`, with the `automation_tool` workflow-set type | `../wiki/automation.md` |
 | Automation > Trigger | `Trigger`, plus the `Workflow` it enters | `../usecase/trigger.md` |
 | Data Insight > Semantic Model | `SemanticLayer` | `../usecase/semantic-layer.md` |
 | Drive | `SourceSet`, one `Syncer` per source | `../usecase/knowledge-drive.md` |
-| Drive > Context Index | `Indexer`, and three CRs the reconciler derives from `spec.contextIndex` | `../wiki/knowledge.md` |
-| Knowledge Base | `KnowledgeBase`; a `Loader` per Auto Load source, a `Source` per item | `../usecase/knowledge-base.md` |
+| Drive > Context Index | **no CR of its own** - `SourceSet.spec.contextIndex`, from which the reconciler derives a `Workflow`, a `SandboxBlueprint` and a `Trigger` | `../wiki/knowledge.md` |
+| Knowledge Base | `KnowledgeBase`; a `Loader` per Auto Load source, a `Source` per item, and an `Indexer` the Source owns per indexer key | `../usecase/knowledge-base.md` |
 | MCP Servers | `Toolset` | `../wiki/tools.md` |
 | Plugins | `Plugin` | `../usecase/plugin.md` |
 | Skillsets | `SkillSet` + its own `SourceSet` + the `Syncer` that fills it | `../usecase/skill-set.md` |
@@ -178,7 +182,7 @@ excludes a whole directory is the shape that does this.
 **"Uncited" is not "unread", and the gap is two families.** The per-processor
 reference pages and the SSE event pages are pointed at **by URL pattern rather
 than by link** - `../wiki/processors.md` gives the pattern and one example,
-`api.md` says "one page per event" and links one. That is deliberate: a link per
+`../wiki/api.md` says "one page per event" and links one. That is deliberate: a link per
 page whose content is a field table would be that many things to keep resolving.
 **So the figure measures how much is linked, not how much has been read**, and
 it is worth knowing which before treating it as a backlog.

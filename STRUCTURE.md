@@ -22,7 +22,7 @@ CLAUDE.md             @AGENTS.md, so the rules load without being asked for
 .agents/skills/       this repo's own maintenance skills, not the ones that ship
 cmd/asgard-cli/       main; signal handling and exit codes only
 internal/             every package, none exported
-source/               internal notes that must never ship
+source/               provenance and reading records; never ships
 hack/                 the maintainer's gate, in Go: `go run ./hack pass`
 .github/             CI, the tag-driven release, and the PR template
 .goreleaser.yaml      how the binary is built and published
@@ -245,9 +245,15 @@ half of it: these are how to work, that is what the platform is.
 records the **generational conflicts**: two charts that disagree in a way that is
 dated rather than a matter of taste.
 
-It lives outside `internal/` deliberately, so `go:embed` cannot reach it even by
-accident. Everything under `internal/` ships to every engagement and names no
-customer; this file is the one place that does.
+`source/reconciled.json` is the other half of the same idea, turned inward: the
+digest each document had when somebody read a pointer against it, which is what
+`go run ./hack reconcile` reports a re-read off. It is committed, because a
+reading is a claim about the material and the next person inherits it - unlike
+`.out/verified.json`, which records what passed on one machine and stays there.
+
+Both live outside `internal/` deliberately, so `go:embed` cannot reach them even
+by accident. Everything under `internal/` ships to every engagement and names no
+customer; `SOURCES.md` is the one place that does.
 
 ## `hack/` - the maintainer's gate
 
@@ -306,13 +312,15 @@ current one. Record the commit you read instead.
 
 ## What is not here
 
-- **Few tests, and what they cover is deliberate.** What there is sits in a
-  handful of packages, all of them on parsing and matching rules where a wrong
-  answer is silent - a credential reference, a reference key, an environment name, a
-  pipeline manifest, a provenance marker. **Prose and material are covered by
-  `audit-material` instead**, which reads what ships rather than a copy of it,
-  and by the gate under `hack/`. `go test ./...` runs in CI alongside `go vet`
-  and `gofmt -l`; see "The gate" in `AGENTS.md`.
+- **Few tests, and where they sit is deliberate: wherever a wrong answer is
+  silent rather than loud.** In the packages that is parsing and matching - a
+  credential reference, an environment name, a pipeline manifest, a provenance
+  marker. In `hack/` it is the checks whose own logic decides what a reader is
+  sent back to, because a digest taken over the wrong bytes reports a pass
+  nobody earned and reads exactly like one somebody did. **Prose and material
+  are covered by `audit-material` instead**, which reads what ships rather than
+  a copy of it. `go test ./...` runs in CI alongside `go vet` and `gofmt -l`;
+  see "The gate" in `AGENTS.md`.
 - **No `.out/` in version control.** It is gitignored and holds anything a command
   produces: hand-built binaries, command output, scratch programs.
 - **No customer data anywhere.** Everything under `internal/` is generic; the

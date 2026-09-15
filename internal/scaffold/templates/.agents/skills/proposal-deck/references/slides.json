@@ -1,12 +1,12 @@
 {
-  "$comment": "Slide deck content contract. Ghost deck test: reading only the titles in order must tell the full argument. Every title is a full declarative assertion, never a topic label. One evidence shape per slide.",
+  "$comment": "THE PROPOSAL'S content contract, and only the proposal's. Ghost deck test: reading only the titles in order must tell the full argument. Every title is a full declarative assertion, never a topic label. One evidence shape per slide. A DISCOVERY deck inverts the title rule and the item bound and keeps no structured copy of its content at all - SKILL.md step 5 says which rules go the other way, and discovery-deck.html beside it is the starting point. Validating a discovery deck against this schema goes green on a deck that has compressed the customer's document into something only its author can read.",
   "type": "object",
   "required": ["title", "audience", "slides"],
   "properties": {
     "title": { "type": "string", "minLength": 2, "maxLength": 80 },
     "subtitle": { "type": "string", "maxLength": 120 },
     "audience": {
-      "$comment": "Who is in the room and the venue: live keynote, investor 1:1, or async share link.",
+      "$comment": "Who is in the room and what they are there to do: whoever decides, for a proposal; whoever will operate it, for a handover.",
       "type": "string",
       "minLength": 4,
       "maxLength": 160
@@ -31,7 +31,7 @@
             "maxLength": 40
           },
           "title": {
-            "$comment": "A page-unique declarative claim, e.g. 'Q3 revenue grew 23% because enterprise deals closed 2x faster'.",
+            "$comment": "A page-unique declarative claim, e.g. 'Q3 revenue grew 23% because enterprise deals closed 2x faster'. It names what is on the page; it does not count it - SKILL.md step 1.",
             "type": "string",
             "minLength": 2,
             "maxLength": 110
@@ -51,7 +51,7 @@
             }
           },
           "cap": {
-            "$comment": "Why this slide matters: a tradeoff, boundary, next step, or insight the visual cannot say. Never restates the title or the diagram.",
+            "$comment": "Why this slide matters: a tradeoff, boundary, next step, or insight the visual cannot say. Never restates the title or the diagram. Optional and exceptional rather than a slot every slide fills - what may go in one, the test it has to pass, and how often a finished deck earns one at all are the .co entry in design.md beside this file.",
             "type": "string",
             "maxLength": 200
           }

@@ -123,6 +123,11 @@ defaultSemanticLayerEffort: "medium"
 			"  to a key nothing injects deploys fine and fails on the first call. The",
 			"  lines above name the keys this wrote; declaring them is the half that",
 			"  gets missed, and no local check can see it.",
+			"tooling.description carries what decides a choice between tools. What is",
+			"  true of the system rather than of this call goes in the skill, once,",
+			"  and a skill written for this subject before the tool existed has to",
+			"  lose whatever the tool now hides:",
+			"    .agents/skills/asgard-platform/wiki/tool-description-and-skill.md",
 		},
 		Values: `
 # <<.DisplayName>>
@@ -137,6 +142,12 @@ defaultSemanticLayerEffort: "medium"
 		Extract:  "fixed-query-tools",
 		Wiki:     "workflow",
 		AlsoRead: []string{"workflow-chain"},
+		After: []string{
+			"tooling.description is per tool: what this one returns, and which sibling",
+			"  it is confused with. What is true of several of them belongs in the",
+			"  agent's skill instead, where it is written and corrected once:",
+			"    .agents/skills/asgard-platform/wiki/tool-description-and-skill.md",
+		},
 	},
 	{
 		Name: "skillset", Summary: "SkillSet with its own SourceSet and git Syncer",
@@ -148,6 +159,12 @@ defaultSemanticLayerEffort: "medium"
 			"searchPaths must name one directory per skill. A parent directory",
 			"  resolves to nothing, and no check catches it - the symptom is an agent",
 			"  with fewer skills than expected.",
+			"The agent reads this skill and the tooling.description of every tool it",
+			"  has in one context, so the two have to divide the subject: anything",
+			"  true across several tools belongs in the skill, and a skill still",
+			"  describing what a tool now hides tells the model to parse a field that",
+			"  never reaches it. Nothing checks the pair:",
+			"    .agents/skills/asgard-platform/wiki/tool-description-and-skill.md",
 		},
 	},
 	{

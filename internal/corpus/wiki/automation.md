@@ -1,3 +1,7 @@
+---
+group: While building
+description: Trigger and API, and why only cron is left
+---
 # Trigger and API
 
 Two entry points that start a run without a user conversation.
@@ -73,7 +77,11 @@ three stages and each is a processor - see [`processors`](../wiki/processors.md)
                                |
       2. whatever it does      query, model, http-request - the ordinary middle
                                |
-      3. automation-tool-response  what the caller gets back
+      3. push-message          what the caller gets back. The documentation
+                               calls this page Response, at
+                               `processor/automation-tool-response`; there is
+                               no `response` type, and a chart writes
+                               `push-message` scoped to `automation_tool`
 
 **Enable the Secret Signature.** Without it the endpoint runs whatever anyone who
 finds the URL sends it, and a webhook URL travels: it is pasted into somebody's
@@ -86,7 +94,10 @@ people:
 
 So an inbound webhook and a person typing reach the platform the same way, and
 `../wiki/api.md` describes the request and its SSE response for both. What
-differs is what is on the other end of the Workflow, not the route in.
+differs is what is on the other end of the Workflow, not the route in. **Do not
+hand that URL to the system that will call it** - two shapes of it are in
+circulation and `../wiki/api.md` says which one to take from the deployment
+instead.
 
 **A webhook and a schedule are not interchangeable** even though both start a run
 with nobody watching. A webhook fires when their system decides; a Trigger fires

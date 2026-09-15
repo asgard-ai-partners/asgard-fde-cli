@@ -1,3 +1,7 @@
+---
+group: Entry points
+description: "anonymous or credentialed audience, several specialists - and the one edge that loses the first message of every new conversation"
+---
 # Supervisor with subagents
 
 A public entry point that delegates to several specialist agents.
@@ -100,8 +104,10 @@ exists for: deployed, green, and quietly dropping traffic.
 this one.** Deployments have `update-context --success--> http-request`, with
 the request's `success` **and** `failure` both going to `push-message`: one turn,
 no waiting, and the failure path says so rather than being silent.
-`../wiki/processors.md` says which relations each type emits, and a
-`relationName` a type never emits is a branch never taken.
+`../wiki/processors.md` has each type's outputs - **and read the warning beside
+them rather than the table alone**: the declared list under-reports Failure
+branches, and `http-request` is one it gets wrong, so a reader checking that
+branch against it would delete the edge this paragraph is about.
 
 Files group as one directory per supervisor:
 
@@ -262,9 +268,10 @@ public one is how that mistake actually happened.
 
 ### `agents` can be an expression, not a list
 
-Several blueprint fields are `ValueExprTemplate`: they take either a static
-`value:` or an `expression:` of JavaScript that the platform evaluates **per
-turn**, with the BotProvider's payload available as `prevPayload`.
+Every blueprint field is a `ValueExprTemplate`, and `../usecase/conventions.md`
+has the three forms and the rule that exactly one of them may be set. The form
+that earns its place here is `expression:` - JavaScript the platform evaluates
+**per turn**, with the BotProvider's payload available as `prevPayload`.
 
 A static list of subagents is the simple case. Computing it lets the caller shape
 the roster per conversation:
@@ -319,7 +326,10 @@ content.
 `adminApiKey` is separate from visitor auth: it guards the admin API, and the
 skeleton reads it straight from `preset-agent-hub` - the Secret the platform
 creates in every namespace - so there is nothing to obtain or declare for it.
-`../usecase/conventions.md` has why, and what the older copying route was.
+`../usecase/conventions.md` has why, what the older copying route was, and how
+far each of the three fields reading that Secret is proved - `adminApiKey` is
+the one that is reasoned rather than run, so confirm it on the first deploy
+rather than when a caller first reaches the admin API.
 
 Also on the BotProvider: `maxUnsupervisedSteps` (30 in one deployment) caps how
 far the orchestrator runs without a human, and `debugMode: on-demand`.

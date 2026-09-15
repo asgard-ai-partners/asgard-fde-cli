@@ -1,3 +1,7 @@
+---
+group: While building
+description: chat platforms, the Applications pages, the architecture
+---
 # Reaching an agent from outside
 
 Four ways.
@@ -45,6 +49,12 @@ verify, and then enable Use webhook on. The rest only take credentials inward.
 enabled on the Official Account, which is the customer's own step in a console
 nobody here can reach. For Taiwanese customers LINE is usually the first one
 asked about.
+
+**Discord has a prerequisite of the same kind, and it is not a credential**: the
+app and its bot are created in the Discord Developer Portal, authorised with
+their permissions, and **invited to the server**. All of it is theirs, in their
+console, and none of it is the token - so a chart holding the right `botToken`
+still has nowhere to speak until somebody does it.
 
 **Discord and Slack get a Connector Pod** rather than a webhook, because both
 hold an outbound WebSocket - `../usecase/chat-channel.md` has what that costs.
@@ -148,7 +158,7 @@ tracks which is right.
 
 Authenticated with an `X-API-KEY` header. The key comes from the project's
 Integration -> App settings page - **the documentation's route, and an
-engagement could not find that page**; `../wiki/platform-unknowns.md` P13 has
+engagement could not find that page**; `../wiki/platform-unknowns.md` P14 has
 it. It is also **not** the credential a CR reads: that one is a platform
 resource key, minted per namespace, and `../usecase/conventions.md` says where
 it comes from.
@@ -267,10 +277,15 @@ order not placed.
   - asgard-docs `23409b3`, read 2026-09-14. The page is a two-line pointer at
   the two SDK guides, and what moved since `f00e0ee` is the form of those two
   links - nothing this page says rests on it
-- The the pages under `integration-with-asgard/` (api, line, slack, discord)
+- The pages under `integration-with-asgard/` (api, line, slack, discord)
   - asgard-docs `f00e0ee`. All four are marked `draft`, and they describe an
   interface called "Published -> add integrated" inside a Project, which does not
   match Odin's current Applications -> Customized Integration. **Possibly stale**
+  - **Discord's own prerequisite** - the app and bot created in the Developer
+  Portal, authorised, and invited to the server - is `integration-with-discord.md`,
+  read 2026-09-15 at asgard-docs `23409b3`. It is the same page and the same
+  `draft: true`; what is recorded here is the customer-side step, which the
+  Applications interface above does not bear on
 - [Authentication](https://docs.asgard-ai.com/docs/developer-reference/authentication)
   and [architecture](https://docs.asgard-ai.com/docs/developer-reference/architecture)
   - asgard-docs `f00e0ee`

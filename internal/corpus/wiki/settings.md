@@ -1,3 +1,7 @@
+---
+group: While building
+description: Completion and Embedding Model, Data Source, Connection
+---
 # Models, data sources and connections
 
 Four things under Odin's Settings. All of them are prerequisites for something
@@ -54,20 +58,48 @@ tested against - and those are good reasons. "We prefer this one" usually is not
 
 **In a chart, a custom model is a `CompletionModel` CR** - the built-in tiers are
 that CR's `builtin` class rather than the absence of one, which is the reading
-that gets this wrong. Three reference deployments declare their own, with the
-provider's key as a secretKeyRef into the release's own Secret - whose name the
-Platform injects, and which a chart never writes out:
+that gets this wrong. **A chart using a built-in tier declares no CR at all**:
+the namespace already carries them under the names `preset-balanced`,
+`preset-complex`, `preset-fast` and `preset-vision`, and every field that takes a
+model takes one of those as a plain string. Three reference deployments declare
+their own, with the provider's key as a secretKeyRef into the release's own
+Secret - whose name the Platform injects, and which a chart never writes out:
 
 | | |
 |---|---|
 | `completionModelClass` | `aoai-chat`, `openai-chat`, `gemini`, `anthropic`, `mistral`, `builtin` |
 | provider block | exactly one of `aoaiChat`, `openaiChat`, `gemini`, `anthropic`, `mistral`, `builtin` |
+| the model | `spec.<provider>.model`, the provider's own model id |
 | the key | `spec.<provider>.apiKey.valueFrom.secretKeyRef` |
 
 **`completionModelClass` is immutable**, so moving a customer from one provider
 to another is a new CR rather than an edit - the same trap as
 `BotProvider.botProviderClass`. The exactly-one rule is a CRD validation, so a CR
 carrying two provider blocks is refused by the apiserver and passes `helm lint`.
+
+**Name the CR after the chart value everything else already reads**, rather than
+writing a name of its own. A chart refers to its model as a string, so the
+deployment that does this cleanly sets the CR's `metadata.name` from the same
+value its workflow configs take - one value, not two. The name is not a
+reference the apiserver resolves: asgard-core `623ceb50` builds it into the model
+router's URL, `.../ns/<namespace>/completion-model/<name>/router`, so **a name
+that matches nothing is a 404 on the first turn rather than anything a chart
+check can see**.
+
+**A declared model that nothing names costs a key and buys nothing.** In the
+demo generator's charts every `CompletionModel` is unreferenced - each layer and
+each agent still names `preset-balanced` - and in the auto-post chart all but one
+are. Copying that block into an engagement's chart obtains a provider key,
+declares an `appSecret`, and changes which model answers nothing at all. Before
+writing the CR, find the field that will name it.
+
+**A model that is not a reasoning model makes the effort setting a failure
+rather than an ignored field.** asgard-core `623ceb50` records the platform's own
+`preset-fast` rejecting the reasoning-effort parameter outright - every turn on
+it failed, including turns that sent none, because the agent supplies its own
+default level - and the deployment bringing its own non-reasoning model pins its
+chart's effort value to `disabled` for the same reason. So the model and the
+effort value are one decision; `../usecase/semantic-layer.md` has the field.
 
 ## Embedding Model
 
@@ -161,6 +193,10 @@ in a chart.
 **Checked:** 2026-09-02, re-read 2026-09-11 against asgard-kube `cbd8d70`
 (`completionModelClass` enum, the immutability rule and the ExactlyOneOf
 validation) and against three deployments that declare their own model.
+Re-read 2026-09-15 against asgard-core `623ceb50` for the `preset-*` names, the
+model router's URL shape and the `preset-fast` effort guard, and against every
+`CompletionModel` CR in those three deployments held against every reference to
+a model name in the same charts.
 
 **Unchecked:** the provider list was held against the CRD; the UI form fields come
 from the product documentation only.

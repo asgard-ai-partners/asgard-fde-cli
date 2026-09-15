@@ -1,3 +1,7 @@
+---
+group: Read paths
+description: internal audience, open-ended questions
+---
 # SemanticLayer
 
 The read surface an agent composes SQL against. **The highest-effort artifact in
@@ -7,7 +11,11 @@ a chart, and the one that most rewards looking at the real database.**
 layer runs to hundreds of cubes.
 
 **Checked:** 2026-09-02 against every SemanticLayer CR in three deployments -
-`completionModelName` is present on all of them - and the CRD.
+`completionModelName` is present on all of them - and the CRD. Re-read
+2026-09-15 against asgard-kube `cbd8d70` for the `Measure` block - the `format`
+enum, `drillMembers`' minimum item count and the rule that `count` is the type
+taking no `sql` - and against every measure in the reference charts that sets
+`filters`, `format` or `drillMembers`.
 
 **Unchecked:** the modelling guidance - cube granularity, what belongs in instruction. Checkable only against a database, and not checked.
 
@@ -53,7 +61,9 @@ layer's `instruction`.
       <- SemanticLayer  sl-<system>
            cubes[]                 one per table
              dimensions[]          one per column you expose
-             measures[]            aggregates, optional
+             measures[]            aggregates. The key is REQUIRED on every
+                                   cube - `measures: []` is accepted, leaving
+                                   the key out is refused at apply
            joins[]
            sampleQueries[]         the analysis views
       <- Agent.managed.semanticLayers[]
@@ -133,6 +143,16 @@ spec:
           title: <human readable>
           description: <what it aggregates>
           type: sum
+          # format: currency | percent - optional, presentation only, and it
+          # names no unit. The charts that set it put the currency in the title.
+        # A measure may carry its own predicate, which is how one business term
+        # gets one definition. `count` is the type that takes no sql.
+        - name: <thing>_count
+          title: <human readable>
+          description: <what it counts, the condition included>
+          type: count
+          filters:
+            - sql: '{CUBE}.<flag> = TRUE'
   joins:
     - name: <from_cube>_<from_dim>_<to_cube>_<to_dim>
       description: <what the relationship is>
@@ -156,7 +176,10 @@ it from a chart value rather than writing a model name into the template.
 
 **`effort` omitted is not the same as `medium`.** Omitting it means the LLM
 processors send no effort parameter at all and the model's own default applies.
-Set it explicitly, from a value.
+Set it explicitly, from a value - and `disabled` where the chart's model is not a
+reasoning model, because that combination fails every turn rather than being
+ignored. `../wiki/settings.md` has why, and it is a reason to settle the model
+before the layer.
 
 **A dimension's `name` is the column its `sql` selects** - `name: ProductId` with
 `sql: '{CUBE}.ProductId'`, never a re-cased alias. Measure names are aggregates
@@ -166,6 +189,22 @@ rather than columns, so they stay descriptive (`total_shipped_qty`).
 language.** This is not decoration: it is what the agent reads to decide which
 column answers a question. **A dimension with no description is effectively
 invisible to the model.**
+
+**A measure's own `filters` are where a business term gets one definition.** A
+`count` narrowed by `{CUBE}.<flag> = TRUE` gives the customer's own phrase a name
+the agent can ask for, instead of every query re-deriving the predicate and some
+of them getting it wrong. It is not a substitute for `instruction`: a filter
+defines one measure, while a rule the model must never break - rows that are
+always excluded, a flag stored as a string - has to hold for every query it
+writes. Put the definition in a filter and the prohibition in `instruction`.
+
+**`drillMembers` is the one optional measure field where an empty list is worse
+than no key.** The key may be omitted, but `drillMembers: []` is refused at
+apply - the inverse of `measures: []` on the cube above it, which is the safe
+form. Only one chart set writes it, always on a cube's row count and always
+listing that cube's identifying dimensions; what reads it is not visible from the
+CRD or from asgard-core, so copy the shape rather than inferring a behaviour
+from it.
 
 **Analysis views go in top-level `sampleQueries[]`** (`comment` + `sql`), never as
 a cube-level `sql:` virtual cube. **Run every one against the live database
@@ -270,6 +309,16 @@ field. Note where it is: `Agent.spec.managed.semanticLayers[]`, never the
 it at all there is nothing to set and nothing to narrow, and the only exposure
 control is which cubes and dimensions the layer declares - see
 `../usecase/mimir-dashboard.md`.
+
+**That is the Agent path and it is not the whole platform.** Where a layer is
+mounted on a completion processor instead - the flow-agent shape, which has no
+`Agent` CR - `semanticLayer.allowedCubes` is a config key that does restrict
+what that processor may compose SQL over, and `../wiki/processors.md` owns it.
+It defaults to empty, so the surface still widens with every cube added; what
+differs is that there is something to take it back with. Reading the paragraph
+above as "nothing narrows a mounted layer, anywhere" is the mistake
+`../wiki/semantic-model.md` weighs when it argues fixed query tools against a
+layer for a public audience.
 
 **`sampleQuestions` on the layer is not this field's counterpart either.** It is
 what Data Insight renders as the buttons under a layer's prompt box, it takes

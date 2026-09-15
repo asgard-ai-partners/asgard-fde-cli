@@ -1,3 +1,7 @@
+---
+group: Capabilities and scheduling
+description: getting skills to a deployed agent
+---
 # SkillSet, SourceSet, Syncer
 
 Getting skills to a deployed agent. **A SkillSet is a trio, not a CR** - and the
@@ -28,6 +32,15 @@ Decide design time or runtime first - they are not interchangeable.
 | when | while authoring CRs | while answering a user |
 | delivery | straight from the working tree | commit -> SourceSet -> SkillSet -> bound by Agent or SandboxBlueprint |
 | reaches the cluster | never | yes, that is the point |
+| can reach | the laptop it runs on - `.env`, and any network path the FDE has | the sandbox's own environment, which is a closed list the reconciler builds |
+
+**The last row is the axis that decides a design; the others decide paperwork.**
+A runtime skill can do what a Workflow cannot - a non-HTTP protocol, a vendor
+CLI, an API too large to enumerate as tools - and cannot hold a static service
+key, so that route is open only when the credential arrives per turn from the
+caller. `../usecase/external-api.md` is the argument and the fields it was read
+off; do not re-derive it from a design-time skill that reads `.env`, which is a
+property of running on a laptop.
 
 Everything below is about the second kind. A skill in the first kind needs no CR
 at all.
@@ -231,6 +244,14 @@ similar figures people mean, the operating procedure for a task.
 **Not** anything expressible as data or as a tool. A skill that says "call the
 API and read the third field" should have been a tool.
 
+**And not what the tools already say.** The agent reads this skill and the
+`tooling.description` of every tool it was given in one context, so a skill
+describing the transport a tool now hides - the base URL, the header, the field
+that needs a second parse - instructs the model to do something it cannot.
+`../wiki/tool-description-and-skill.md` is which of the two owns a fact, and the
+short form is that the skill does: it is per subject where a description is per
+tool.
+
 ### The description is the loading decision
 
 An agent decides whether to load a skill from its `description` alone, so write
@@ -297,7 +318,17 @@ under `appSecret:` in `.asgard-pipeline.yaml`, and then set on the platform.
           secretKeyRef: {name: ..., key: asgard-github-pat-password}
 ```
 
+**The username is a constant, not a secret.** The PAT in `password` is what
+authenticates, so `value: "git"` is written literally and a private repo costs
+exactly **one** declared key. One reference deployment reads the username out of
+the release Secret as well, under `asgard-github-pat-username`; that chart works
+and needs no change, but it is a second key to declare, set and rotate for a
+value that never varies, so do not copy it into a new one.
+
 ## Two labels, and neither reads the other
+
+**The rule is `../wiki/knowledge.md`'s**; what is here is what it costs on this
+shape, and what `add` writes so you do not meet it.
 
     asgard-ai.com/syncer-suspend: "true"        stops the SCHEDULER, and nothing else
     asgard-ai.com/auto-fire-on-rollout: "true"  the deploy fires it once, and waits

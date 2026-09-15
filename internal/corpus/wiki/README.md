@@ -1,3 +1,6 @@
+---
+description: what the wiki is, the rules a page has to satisfy, and which upstream each claim was read from
+---
 # Asgard platform wiki
 
     ../wiki/            every page, as files
@@ -203,20 +206,19 @@ More:
   both times they followed the page in front of them rather than the rule.
 - **Say which layer a statement comes from.** Product documentation describes
   objects in an interface, the CRD describes resources, and the vocabulary is not
-  one to one. Where they diverge, say so on the page - `agents.md` has the
-  table.
+  one to one. Where they diverge, say so on the page - `../wiki/agents.md` has
+  the table.
 - **Mark what is uncertain.** "The documentation does not say" is a useful entry;
   a guess is not.
 - **English.** The sources are zh-TW and the pages are not. The corpus carries
-  one language because **the mapping lives somewhere else** - the alias table on
-  `glossary.md`, which is applied to a query before
-  searching, printing what it actually searched for. It is not because the
-  reader translates first: a query is given in the customer's own
-  words, and translating only after a search came back empty was measurably
-  worse - the glossary carries the table, so a Chinese term matched the row
-  about itself and the reader got the word list instead of the answer. Product
-  labels keep their own names - Managed Agent, Drive, Context Index are what the
-  UI says.
+  one language because **the mapping lives somewhere else** - `../aliases.md`,
+  applied to a query before searching. It is not because the reader translates
+  first: a query is given in the customer's own words, and translating only
+  after a search came back empty was measurably worse. It is also why that
+  table is not a section of a page: while it lived on `../wiki/glossary.md` a
+  Chinese term matched the row about itself and the reader got the word list
+  instead of the answer. Product labels keep their own names - Managed Agent,
+  Drive, Context Index are what the UI says.
 
 ## The index
 
@@ -224,7 +226,7 @@ Two files here are not pages and are not searched:
 
 | file | holds |
 |---|---|
-| `index.md` | the catalogue of pages, by subject, and what is not written yet |
+| `index.md` | the catalogue of pages, by subject, plus every UI name and the CR it is |
 | `aliases.md` | what a customer says, and what to search for |
 
 **An index inside the corpus competes with what it points at.** The alias table
@@ -254,5 +256,7 @@ sets of results are correct.
 
 ## Coverage
 
-`index.md` has a second table listing what has not been written. It is maintained
-alongside the pages that have.
+`index.md` carries it, as one row per source with the denominator in the same
+sentence, and `go run ./hack coverage` in asgard-fde-cli recomputes every
+figure and fails when a row drifts. Nothing here is counted by hand, and the
+list of what is deliberately not covered sits beside it.

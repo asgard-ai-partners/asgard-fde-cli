@@ -1,3 +1,7 @@
+---
+group: Products and scope
+description: Thread, View, Dashboard, Knowledge
+---
 # Mimir - Data Insight
 
 Explores data by conversation and produces charts and dashboards. It reads the

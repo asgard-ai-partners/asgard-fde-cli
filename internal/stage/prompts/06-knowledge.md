@@ -1,3 +1,6 @@
+---
+description: a Drive with contextIndex rather than a KnowledgeBase, the immutable Syncer paths, what a person still has to do after the deploy
+---
 # Decide where unstructured knowledge lives
 
 Optional stage. Do this only if the customer has knowledge that is **not rows in
@@ -5,7 +8,7 @@ a database** - product documents, FAQs, pages on a website.
 
 **Whether they need to see where an answer came from is a customer question, and
 by this stage the interview is over** - so it should already be in the request.
-If it is not, it is a phone call rather than an assumption Citations are
+If it is not, it is a phone call rather than an assumption. Citations are
 available - the sources arrive on the completion event inside the message's
 `template` - but **only if the Workflow is built to return them**, and only if
 the front end reads that field. It is a decision made here, and retrofitting it

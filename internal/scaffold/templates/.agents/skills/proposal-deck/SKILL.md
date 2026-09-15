@@ -98,6 +98,20 @@ Every number carries where it came from:
 - a number we measured - say what was measured and when
 - a number nobody has - leave it out, or put a question on the slide
 
+**And a number that passes all three can still be in the wrong place. A title
+names things; it does not count them.** 「六個指令」 and
+「12 個 CR,14 次部署,4 個坑」 are both accurate, and both spend the three
+seconds a title gets without naming a subject: a reader who has not seen the
+slide learns nothing, and one who has learns nothing new. What they needed was
+「init、project add、add、push、tag、approve」. The quantity goes in the body,
+where it is read rather than counted.
+
+The test takes no judgement and no context - **does the title contain a
+quantity** - which is why it is worth having beside the ones that need a reader.
+**The exception is a discovery deck**, whose titles are the customer's own
+headings unedited: if they counted, keep their count, because the title is
+theirs to have written. Step 5.
+
 ## Step 2 - decide what we are proposing
 
 A deck cannot be written from open questions alone. Between what they said and
@@ -741,11 +755,14 @@ fires then. Use it when re-reading a page, and see the review section above.
 **The test: assume they give you the most specific answer possible, and ask what
 you would do differently.** "Ming issues it" and "Ming spends five hours a
 day on it" are perfect answers that change nothing. **Three of the six were copied out of this material**, not reasoned into
-existence - from filter 0 saying to ask who issues an account, from
-`../asgard-platform/wiki/operations.md` saying to get the name of whoever approves a change, and from
-the LINE integration needing an owner on their side. All three instructions are
-correct **for tracking**. None is slide content, and each now says so where it
-stands, because somebody copying reads one place and not the canonical one.
+existence - from filter 0 saying to ask who issues an account, from an
+instruction to get the name of whoever approves a firewall change, and from
+the LINE integration needing an owner on their side. The first and the third are
+correct **for tracking**; the second is not, and
+`../asgard-platform/wiki/operations.md` refuses it outright - what it tracks is
+whether the allowlist can be changed and whether it has been, never who signs.
+None is slide content, and each now says so where it stands, because somebody
+copying reads one place and not the canonical one.
 
 **And a third came from over-correcting.** Told a minute earlier to describe the
 scene concretely, the FDE added "whose name does this ticket go under" - which in
@@ -931,8 +948,8 @@ into their notes, delete it.
 
 The last two slides are the two filters made visible: what came out as deferred
 scope, with what has to be answered before it comes back, and the questions that
-are ours to chase rather than theirs - the ones `../asgard-platform/wiki/
-platform-unknowns` says nobody has settled. Both are written as sentences a
+are ours to chase rather than theirs - the ones
+`../asgard-platform/wiki/platform-unknowns.md` says nobody has settled. Both are written as sentences a
 reader outside this repository can follow, not as counts of rows.
 
 ### What a handover deck actually walks through
@@ -1171,10 +1188,10 @@ carries in full:
   they do not belong - the checks go green on a deck that has compressed the
   customer's document into something only its author can read. See step 5.
 - **`cap`** is the line that says why the slide matters - a trade-off, a
-  boundary, a next step. It never restates the title, and it is **never the
-  narration**: not where the material came from, not what the slide is about,
-  not what you are about to talk about. If a reader would not copy it into their
-  notes, it does not earn the line.
+  boundary, a next step - and it is **never the narration**. The test, and how
+  often a finished deck earns one at all, are on the class the line is written
+  into: the `.co` entry in `references/design.md`. A slide that looks empty is
+  not a reason to write one.
 - The content contract is `references/slides.json`, and the layouts are
   `cover`, `chapter`, `content`, `quote`, `metrics`, `close`.
 
@@ -1198,6 +1215,7 @@ Ten questions, and the last five are the ones that get skipped:
 1b. Which of the three decks is this? A proposal made while the interview is
     still open is a discovery deck wearing the wrong slide order.
 2. Is every number attributed - their figure, our measurement, or absent?
+2b. Does any title we wrote count something instead of naming it?
 3. Does slide 7 say what is not in scope, specifically enough to point at later?
 4. Is there an implementation noun anywhere, including in a screenshot?
 5. Is another customer recognisable anywhere, including in a screenshot?

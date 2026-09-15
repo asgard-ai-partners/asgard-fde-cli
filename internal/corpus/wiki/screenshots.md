@@ -1,3 +1,7 @@
+---
+group: In practice
+description: which picture answers which question, and the URL to fetch it from
+---
 # Screenshots, and which situation each one is for
 
 Every screenshot of this platform lives in the product documentation. There are
@@ -270,8 +274,8 @@ Not everything does, and assuming otherwise wastes a search:
     The second one is the screen a customer would want to see. **It is the old
     console** - a left nav of Overview / Workflows / Knowledge / Environment /
     Apps, and a card dated 2024/09/20 - and today's Odin has none of those.
-    `integration.md` already flags those pages as possibly stale for the
-    same reason.
+    [`integration.md`](../wiki/integration.md) already flags those pages as
+    possibly stale for the same reason.
 
     So the answer for the first two is still not to use them, but for a
     checkable reason rather than because none exist: **a screenshot of a console

@@ -43,3 +43,23 @@ spec:
   # no reason to be able to change it.
   # sourceSetMounts:
   #   value: '[{"sourceSetName": "ss-<name>", "mountPath": "/knowledge", "readOnly": true}]'
+  #
+  # The specialists. `add flowagent --supervisor` writes the workflow that
+  # delegates and stops here, because who they are and where the line between
+  # them falls is the design -
+  # `.agents/skills/asgard-platform/usecase/flow-agent-supervisor.md` has how
+  # to split them and what each entry may override.
+  #
+  # A JSON string as well, for the same reason as sourceSetMounts above, and
+  # this is the one people write as a YAML list because its contents look like
+  # one. Each entry carries EXACTLY ONE of baseAgentName - an Agent CR in this
+  # chart, every other field on the entry then a delta merged onto it - or
+  # aliasName, a subagent with no CR at all, defined entirely by the entry.
+  # agents:
+  #   value: |-
+  #     [{"baseAgentName": "ag-<specialist>"},
+  #      {"baseAgentName": "ag-<other>"}]
+  #
+  # An `expression:` computes the roster per turn from the caller's payload
+  # instead, and `template:` is the third form. The CRD takes exactly one of
+  # the three, so swapping forms means deleting the one in place.

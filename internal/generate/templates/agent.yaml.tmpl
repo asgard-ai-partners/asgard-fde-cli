@@ -76,3 +76,24 @@ spec:
     # toolsetNames:
     #   - ts-<name>
 <<end>>
+    # Files from a SourceSet, mounted into the shared sandbox pod - and
+    # aggregated onto the orchestrator's, not only this subagent's. The mount
+    # is a choice about what this agent works on, so none is written.
+    #
+    # A REAL YAML LIST here. The same field on a SandboxBlueprint is a
+    # stringified JSON array, and that pair is the one people copy between
+    # wrong - both shapes are side by side in
+    # `.agents/skills/asgard-platform/usecase/conventions.md`, which also has
+    # where a mount may go and the one parent directory that kills the driver.
+    #
+    # sourceSetName, mountPath and readOnly are required on every entry, and
+    # mountPath must match `^/.+`. Two entries resolving to one mountPath are
+    # deduped FIRST-WINS in silence, so the symptom of a collision is a mount
+    # that is simply not there. subPath mounts a slice of the store rather than
+    # all of it - the only mechanism that does - and a rejected one takes the
+    # whole Sandbox not-ready rather than skipping the entry; the same page has
+    # what it rejects.
+    # sourceSetMounts:
+    #   - sourceSetName: ss-<name>
+    #     mountPath: /knowledge
+    #     readOnly: true

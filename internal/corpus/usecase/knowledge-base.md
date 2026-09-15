@@ -1,3 +1,7 @@
+---
+group: More entry points and more read paths
+description: documents through a `KnowledgeBase` rather than a Drive - against [`knowledge-drive.md`](../usecase/knowledge-drive.md), which is the other half of the same decision
+---
 # KnowledgeBase, Loader and Source - the older knowledge path
 
 Documents reaching an agent through a `KnowledgeBase` rather than a Drive: one
@@ -6,6 +10,9 @@ pull.
 
 **Seen in:** exactly one deployment, a content pipeline holding a research corpus
 - three uploaded documents and a scheduled web crawl over encyclopaedia pages.
+It is the platform's own deployment and the only one declaring any of these
+kinds (`../wiki/coverage.md`), which cuts both ways: written by the people who
+built the CRs, and not a customer's constraints.
 
 **Checked:** 2026-09-02 against that chart - the four CRs, the `asgardBaseline`
 class and its API key, `sourceClass: docx` with per-source indexer chunk sizes,
@@ -50,6 +57,9 @@ inertia.
     Source  src-<name>-NNNN           one per document
       spec.knowledgeBaseName          binds it to the base
       spec.sourceClass                docx, and the per-class block below it
+      spec.deletedIndexerKeys         REQUIRED, and `[]` is the ordinary value.
+                                      The CRD refuses removing an indexer from
+                                      the map directly - a key goes here instead
       spec.<class>.indexers.<key>     chunkSize per indexer
       metadata.labels
         asgard-ai.com/queryable       "true" to make it reachable

@@ -45,19 +45,30 @@ type Item struct {
 
 // Activity is something an FDE is about to do.
 type Activity struct {
-	Name  string
-	When  string
-	Lead  string
-	Items []Item
-	Close string
+	Name string
+	// Description is the row this briefing gets in the landed index: what a
+	// reader would come to it FOR, as against the title, which says only its
+	// subject. The index used to show the title, and a title does not tell a
+	// reader whether this is the document they need before the thing they are
+	// about to do - "write-chart" is every chart ever authored, and the
+	// briefing is the decisions that were made the obvious way and reversed.
+	//
+	// It is metadata for the index and is not rendered into the document, which
+	// opens on its own title and `When` line.
+	Description string
+	When        string
+	Lead        string
+	Items       []Item
+	Close       string
 }
 
 // Activities are the ones with a known way to go wrong. The test for adding one
 // is whether somebody has actually got it wrong, not whether it is important.
 var Activities = []Activity{
 	{
-		Name: "customer-meeting",
-		When: "before any conversation with the customer, at any stage",
+		Name:        "customer-meeting",
+		Description: "what gets oversold and undersold in the room - the one network shape, the approval gate, what the platform cannot send, and what must never reach a slide",
+		When:        "before any conversation with the customer, at any stage",
 		Lead: `**The intuitive answer is wrong in both directions, and they cost
 differently.** Undersell - "it cannot tell who they are", "we would have to
 build an approval step", "only the systems you connect to it" - gives away
@@ -92,7 +103,7 @@ edited and re-rendered; a wrong sentence is in their notes.`,
 				"how an anonymous caller is identified",
 				`"they can give us their ticket number and we look it up"`,
 				"**A ticket number is not authentication.** They are usually sequential, so a lookup keyed on one alone lets anybody enumerate other people's cases. Any self-service query on a public channel has to say what identifies the person - and if the answer is a number they type, there is no answer yet",
-				"../guide/read-path.md",
+				"../guide/requirements.md",
 			},
 			{
 				"how a write is tested",
@@ -133,7 +144,7 @@ edited and re-rendered; a wrong sentence is in their notes.`,
 			{
 				"what the limits are",
 				`"30 steps and 3 minutes per request is the limit"`,
-				"Those are **defaults**, raised by contacting sales or service@asgard-ai.com. And **do not quote the step count at all**: nothing defines what a step is, so the next question has no answer",
+				"Those are **defaults**, raised by contacting sales or service@asgard-ai.com. And **do not quote the step count at all**: nothing defines what a step is, so the next question has no answer - which is `../wiki/platform-unknowns.md` P7's rather than this pointer's",
 				"../wiki/integration.md",
 			},
 		},
@@ -161,8 +172,9 @@ theirs *or* our own outbound addresses - and this repository's own bookkeeping,
 question numbers included. The ` + "`proposal-deck`" + ` skill has the rest.`,
 	},
 	{
-		Name: "connect",
-		When: "before binding a fresh checkout to the platform, and before adding a second account or pipeline to one",
+		Name:        "connect",
+		Description: "the questions binding a checkout has to ask a person - workspace, account, repository, pipeline, platform project - and why a list of one is not a default",
+		When:        "before binding a fresh checkout to the platform, and before adding a second account or pipeline to one",
 		Lead: `**Every item below is a question for a person, and every one of them has an
 answer the tool will appear to have already made.** That is the failure mode
 this exists for: not a wrong answer, an unasked question.
@@ -182,7 +194,7 @@ Read this as a checklist and carry an answer back for each line.`,
 			{
 				"which provider account",
 				"the one the workspace already has a connection to",
-				"**The account whose repositories this engagement is about**, which is often not the one connected months ago for something else. A workspace holds one connection per account and may hold several; `--account` names the one you mean, and defaults to the owner of this checkout's origin remote when there is one",
+				"**The account whose repositories this engagement is about**, which is often not the one connected months ago for something else. A workspace holds one connection per account and may hold several; `pipeline connect --account` names the one you mean, and defaults to the owner of this checkout's origin remote when there is one",
 				"asgard-cli pipeline connections",
 			},
 			{
@@ -224,15 +236,16 @@ question it does not ask is one the agent has to. That is what this list is.
 ` + "`asgard-cli gate`" + ` says which of these have been recorded, at any point.`,
 	},
 	{
-		Name: "write-chart",
-		When: "before authoring or editing CRs",
+		Name:        "write-chart",
+		Description: "the decisions that look obvious and were reversed - the public read surface, the anonymous entry point, `allowWrite` defaulting to true, and what a green render does not cover",
+		When:        "before authoring or editing CRs",
 		Lead: `Three decisions in this repository's history were made the obvious way,
 built, and reversed. They are obvious in the same way again each time.`,
 		Items: []Item{
 			{
 				"the read surface for a public audience",
 				"a SemanticLayer, like everything else",
-				"Five zero-parameter query tools. A layer without `allowedCubes` is arbitrary SQL over every cube, and the surface grows by itself each time one is added",
+				"Five zero-parameter query tools. A bound layer is arbitrary SQL over every cube in it and the exposed surface grows by itself every time one is added - `../guide/read-path.md` has why narrowing it with `allowedCubes` is refused rather than overlooked. What a fixed tool buys is that no user input reaches SQL and widening it takes a CR change and a review",
 				"../usecase/fixed-query-tools.md",
 			},
 			{
@@ -268,7 +281,7 @@ built, and reversed. They are obvious in the same way again each time.`,
 			{
 				"whether the chart is enough",
 				"a green render means it is done",
-				"A Workflow needs a `ConfigMap` of node positions or its editor opens as a pile, and `project-environment-id` or the editor opens blank. Neither is an Asgard CR, so nothing in the gate mentions them",
+				"A Workflow needs its `project-environment-id` label or the editor opens blank - not an Asgard CR, so nothing in the gate mentions it. **The node-position `ConfigMap` beside it in an older chart is not the other half of that**: the platform lays the graph out itself now, and hand-written positions go stale against a graph anybody edits",
 				"../wiki/workflow.md",
 			},
 		},
@@ -276,8 +289,9 @@ built, and reversed. They are obvious in the same way again each time.`,
 above is a shape problem, which is why they are here.`,
 	},
 	{
-		Name: "handover",
-		When: "before telling anyone it is live, and before a training session",
+		Name:        "handover",
+		Description: "a green deploy the customer cannot see - the per-resource permission step, the order to walk them through, and which screenshots have to be cropped",
+		When:        "before telling anyone it is live, and before a training session",
 		Lead: `A green deploy is not a working deployment, and the step between them is
 not in this repository.`,
 		Items: []Item{
@@ -354,10 +368,10 @@ func (a Activity) Document() string {
 
 // Documents renders every activity, for the export and for the audit that
 // resolves the pointers in them.
-func Documents() []struct{ Name, Body string } {
-	out := make([]struct{ Name, Body string }, 0, len(Activities))
+func Documents() []struct{ Name, Description, Body string } {
+	out := make([]struct{ Name, Description, Body string }, 0, len(Activities))
 	for _, a := range Activities {
-		out = append(out, struct{ Name, Body string }{a.Name, a.Document()})
+		out = append(out, struct{ Name, Description, Body string }{a.Name, a.Description, a.Document()})
 	}
 	return out
 }

@@ -39,12 +39,12 @@ and whether its source has moved since is what `go run ./hack sources` reports.
 | `extracts-vs-charts` the extracts against the charts they came from | the commits in `source/SOURCES.md`'s **held against** column, which is what makes this reading checkable rather than a date | 2026-09-11 |
 | `wiki-vs-docs` the wiki pages against asgard-docs | **the pages whose citations have moved, which `go run ./hack coverage --drift` names** - now 0, each citation carrying the commit it was held against; the prose citing a page that has not moved stands at its own earlier reading | 2026-09-14 |
 | `packages-help` every package's help against its behaviour | the working tree | 2026-09-11 |
-| `root-documents` Goal, AGENTS, APPROACH, STRUCTURE, README and its Chinese half - the files that state the rules, as opposed to the paths and commands in them | all six read end to end against the binary, the tree and the CRDs, **including AGENTS' questions and its four contradictions**: each one's citable claim was re-checked, the four contradictions are all still described accurately, and the `await` count moved from five of five to seven of seven | 2026-09-14 |
+| `root-documents` Goal, AGENTS, APPROACH, STRUCTURE, TASK, README and its Chinese half - the files that state the rules, as opposed to the paths and commands in them, which `go run ./hack doc-paths` has | every pointer into the corpus opened and the sentence around it held against what that page says now; every Go symbol, command and CI step against the tree; the CEL counts against asgard-kube `cbd8d70` | 2026-09-15 |
 | `needs-and-briefs` the needs lists and briefings - Go rather than markdown, and in no group until now | every platform claim against asgard-kube `cbd8d70`, every command and flag against the binary, and every row's pointer against the document it names | 2026-09-14 |
 | `command-help` every `--help` screen - the largest reader-facing surface, and in no group until now | every screen read end to end; every command, flag and count in them run or recomputed against the binary and the CRDs | 2026-09-14 |
 | `gate-messages` every error and warning string the checks print, and `hack/verify-references.sh` | the ones carrying a claim, against asgard-kube `cbd8d70` and the deployment clones; every reference chart rendered, including the third layout the script had never looked for | 2026-09-14 |
 | `generator-templates` the CR skeletons `add` writes into a customer's chart | every field and claim against asgard-kube `cbd8d70` and asgard-core `623ceb5`; each kind generated, rendered and verified in a scratch repository | 2026-09-14 |
-| `indexes-and-counts` the two indexes, and every count in the material weighed against what a reader does with it | every alias term grepped against the landed tree; the counts that are a claim left to `go run ./hack counts` to recompute, the ones standing in for a yes replaced by a named example, and the rest deleted. The sweep reached every part of the corpus, the stage prompts, the scaffold templates, the design-time skills, every `--help` screen and the root documents. **What is left is check-held or load-bearing**: a figure `counts`, `tables`, `processors`, `coverage` or `shapes` recomputes, a platform quota a customer is sized against, or a number that is itself the argument. **Nothing mechanical stops the next one being written** - a count in prose is indistinguishable from a correct one, which is why the rule is in AGENTS.md rather than in a check | 2026-09-14 |
+| `indexes-and-counts` the two indexes, and every count in the material weighed against what a reader does with it | every alias term grepped against the landed tree; the counts that are a claim left to `go run ./hack counts` to recompute, the ones standing in for a yes replaced by a named example, and the rest deleted. The sweep reached every part of the corpus, the stage prompts, the scaffold templates, the design-time skills, every `--help` screen and the root documents. **What is left is check-held or load-bearing**: a figure `counts`, `tables`, `processors`, `coverage` or `shapes` recomputes, a platform quota a customer is sized against, or a number that is itself the argument. **The backlog closes and the regression is what needs a mechanism** - a document reviewed at a recorded digest does not come back until it changes, while a count added tomorrow is indistinguishable from a correct one, which is what `go run ./hack introduced` reads off the diff | 2026-09-14 |
 | `flag-usage` every flag's usage text against what the flag does | the working tree, every one | 2026-09-11 |
 | `processors-vs-palette` `wiki/processors.md`'s prose, as opposed to its two tables, which `go run ./hack processors` now holds against asgard-core and asgard-docs | the two clones as pulled. **The palette is at second hand and stays there** - asgard-docs records it from a repository nothing here clones, which that page's `**Unchecked:**` marker names | 2026-09-11 |
 | `stage-prompts` the stage prompts' guidance, as opposed to their command claims | read end to end; the platform claims they carry against asgard-kube `cbd8d70` and asgard-docs `23409b3`, and every command and flag they write run against the binary | 2026-09-14 |
@@ -57,19 +57,6 @@ and whether its source has moved since is what `go run ./hack sources` reports.
 **The corpus is over 100,000 words** - wiki pages, extracts, guides, needs
 lists and briefings, as `asgard-cli init` lands them.
 
-**The document count is not written here, and was.** `go run ./hack goal` held
-this file's figure digit for digit, so every page added to the corpus turned the
-check red until somebody retyped a number the check had just computed - and
-**nothing in `Goal.md` asks for that number.** The check invented the
-requirement and the prose carried it to satisfy the check.
-
-What it holds now is what Goal's first point actually claims: that every
-document this binary carries arrives in a repository. It compares the two sets
-by name, so a page that fails to land is reported as itself. The word figure
-stays a **floor** for the same reason it always was - an equality fails on the
-ordinary act of writing a paragraph, and a check that fires on correct work
-teaches people to stop reading it.
-
 **The chart half is the least finished of Goal's four points.** What `add`
 writes is a correct starting point and not a chart: a large share of the spec
 keys the widest reference chart uses are keys it never mentions.
@@ -78,12 +65,53 @@ keys the widest reference chart uses are keys it never mentions.
 sides and prints it, `--missing` is the worklist, and the check fails if the gap
 ever closes - because then this paragraph is what is wrong.
 
-**The write-back path is the one part of the design that is not solved.** The
-corpus is compiled into the binary - correctly, so a stale page is fixed once
-for every engagement rather than rotting inside one - so an engagement that
-learns something cannot write it where it will be read. `issue-report` is the
-way back, and its slow step is the right one: a claim entering material that
-ships to everybody passes a person.
+**Most of a gap can be the measurement.** That check used to run one flag
+combination per kind, so it counted as never written every key living behind a
+flag it did not pass - the `--db-class` class blocks, `--private`'s git auth,
+`--supervisor`'s loop. Close to a third of the figure was artefact, and the
+figure is what somebody would have worked from. It probes the combinations now,
+derived rather than listed: the flags `add` registers, read off its cobra calls;
+per kind, the fields its own templates **branch** on, read off the template
+parse tree rather than a regex, because a field that is only interpolated
+changes a value and never a key path; and for a flag with a closed vocabulary,
+that vocabulary from the generator. Three inputs resist derivation and are
+written down with the reason each does. **A number nobody can reproduce is worse
+than no number**, and this one was being reproduced wrongly by the thing that
+printed it.
+
+**The reading backlog is closed, and how it closed is the useful part.**
+`go run ./hack reconcile` lists every pointer in the corpus nobody has recorded
+a reading for - including each document's own index row, which is a pointer to
+itself. **How much is left is not written here**: the command prints it, in the
+two forms that are not one question - never recorded, and recorded against a
+target that has moved since.
+
+**It closes one document at a time and there is deliberately no way to close it
+at once**, because that would record a claim nobody made. What that cost in
+practice: reading passes run in parallel each move the targets the others were
+reading, so the owed set does not fall monotonically - it went from everything
+to a tail of several dozen and then converged only when one reader worked it
+serially. **Parallel is faster at finding defects and slower at settling
+them**, and a pass that fixes nothing settles immediately.
+
+**The write-back path works, and what is missing is narrower than "a way
+back".** The corpus is compiled into the binary - correctly, so a stale page is
+fixed once for every engagement rather than rotting inside one - and
+`issue-report` is the route out. Counting what has come through it settles the
+question this paragraph used to ask: engagements file, most of them from
+somebody who is not the maintainer, and they close.
+
+**What is actually missing is a shape for a discovery.** The template is a bug
+report, so something an engagement *learned* arrives as a complaint about the
+tool, and the corpus has no slot for a claim only the engagement can verify -
+`../usecase/conventions.md` had to invent "settled / very likely / reasoned" by
+hand to say how far a thing was proved. `.out/write-back.md` carries the
+argument and a recommendation: extend `issue-report` rather than build a second
+route, and give `kb` a `**Proved:**` marker beside `**Checked:**` so an
+engagement's claim lands where every reader meets it. **What would show that
+wrong** is the next two engagements filing discoveries with those sections left
+TODO - which would mean the problem was when a person is asked, not what they
+are asked for.
 
 
 ## Non-goals

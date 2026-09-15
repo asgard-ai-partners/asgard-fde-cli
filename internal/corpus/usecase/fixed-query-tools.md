@@ -1,3 +1,7 @@
+---
+group: Read paths
+description: public audience, a known set of questions
+---
 # Fixed query tools
 
 A `Toolset` of zero-parameter queries. The read path for a **public** audience.
@@ -152,8 +156,15 @@ is `DISTINCT` - in the file's header comment. There is nowhere else for it.
 ## Zero parameters is the whole point
 
 Every tool takes **no arguments**, so no user input ever reaches SQL and the
-injection surface is zero. `query-database`'s `sql` only accepts a static string
-anyway; interpolating a keyword would re-open exactly the hole this shape closes.
+injection surface is zero.
+
+**That is the entry's doing and not the field's.** `sql` is a config like every
+other, so it takes a `value`, an `expression` or a `template` - string-building
+a query out of the payload is available and is exactly the hole this shape
+closes. Where a query genuinely needs a parameter, it is
+`sql.args.<n>.type` and `sql.args.<n>.value` rather than interpolation -
+`../wiki/processors.md` has the numbering, which starts at 1 and stops at the
+first gap.
 
 A query that wants a keyword filter gets rewritten to aggregate instead. One that
 filtered with `ILIKE '%keyword%'` became a `string_agg` returning one row per
@@ -211,6 +222,11 @@ results.
 
 **Say what an empty result means.** "No rows" is not "we do not sell it" unless
 you say so, and the difference is a wrong answer to a customer either way.
+
+**What is true of several of these tools goes in the skill instead**, where it
+is written once rather than in every description that could carry it -
+`../wiki/tool-description-and-skill.md`, which is read before both halves are
+written, because the model reads them together.
 
 ## Fields that are not obvious
 

@@ -25,6 +25,34 @@ type Doc struct {
 	Title   string
 	Summary string
 
+	// Group is the one thing about a document that cannot be derived from it:
+	// which section of its index it belongs under.
+	//
+	// **It is declared rather than derived, and that is deliberate.** A title
+	// is in the body already and the directory says what kind of document this
+	// is - putting either in frontmatter would be a second copy of something
+	// the file carries. A grouping is judgement: it is the question the section
+	// heading asks, and no parse recovers it. So the document declares it and
+	// the index is rendered.
+	//
+	// Empty is not an error. A document with no group lands in the index under
+	// the catch-all, and `go run ./hack index` says which those are.
+	Group string
+
+	// Description is the index row: what somebody would come to this document
+	// FOR, as against what it opens by saying.
+	//
+	// **It is not the summary and cannot be derived from it.** `console.md`
+	// opens "The Console does no business work", which is its thesis; what an
+	// index owes a reader is "the permission layers, the pages that disagree
+	// with each other, Workspace settings". Rendering the first as the second
+	// was tried and gives rows like "They are not two of the same thing".
+	//
+	// It lives here rather than in the index for the reason every other fact
+	// does: the document that is described is the one home for the description,
+	// and the index is rendered from it.
+	Description string
+
 	// Checked and Unchecked are how far this document has been held against a
 	// source, and what has not been. They are separate fields because they are
 	// separate claims and a reader cannot tell them apart from the prose: a
@@ -233,6 +261,68 @@ func SourceURLs(body string) []string {
 
 // Links returns every document this body points at, deduplicated, in the order
 // they first appear, with the ones inside the counterpart section marked.
+// scalar reads one YAML scalar: trimmed, and unquoted when it is quoted.
+//
+// **A value has to be quotable and the quotes must not survive.** YAML needs
+// them around a description containing ": " or opening with a character it
+// reads as syntax, and three of these do; a reader that keeps them prints them
+// into whatever it renders. This is not a YAML parser and does not try to be -
+// it handles the one construct this frontmatter uses, and a value it does not
+// recognise comes back as written rather than half-decoded.
+func scalar(s string) string {
+	s = strings.TrimSpace(s)
+	for _, q := range []string{`"`, "'"} {
+		if len(s) >= 2 && strings.HasPrefix(s, q) && strings.HasSuffix(s, q) {
+			s = s[1 : len(s)-1]
+			if q == `"` {
+				s = strings.ReplaceAll(s, `\"`, `"`)
+			}
+			return s
+		}
+	}
+	return s
+}
+
+// frontmatter splits a document into its frontmatter block and everything
+// below it. ok is false when there is no block, and body is then the whole
+// document.
+//
+// **Two delimiters or none, and the opening one on the first line.** A `---`
+// further down is a horizontal rule, and a block nobody closed is a document
+// with no frontmatter rather than a document that is all of it - Parse read
+// `group:` and `description:` out of the prose of one, and took the value of
+// the last body line that happened to open like a key.
+//
+// **One function decides, because two readers of one format drift**, which is
+// the whole reason this package exists. Parse and Body each had their own test
+// for where a document begins, and they did not agree: the landed copy carried
+// the block and the index grouped the page, or the reader was shown three
+// lines of metadata above the title.
+func frontmatter(s string) (front, body string, ok bool) {
+	if !strings.HasPrefix(s, "---\n") {
+		return "", s, false
+	}
+	front, body, ok = strings.Cut(s[4:], "\n---\n")
+	if !ok {
+		return "", s, false
+	}
+	return front, body, true
+}
+
+// Body is a document without its frontmatter, for anything that shows it to a
+// person.
+//
+// **What lands keeps the frontmatter and what prints does not.** The two are
+// not the same act: a document written into a repository carries the fields an
+// index is rendered from, and `asgard-cli guide <name>` puts the same document
+// on somebody's screen, where three lines of metadata before the title are
+// noise. Stripping it in the reader that loads the file would take it out of
+// both.
+func Body(s string) string {
+	_, body, _ := frontmatter(s)
+	return body
+}
+
 func Links(body string) ([]Link, bool) {
 	deliberate := map[string]bool{}
 	named := false
@@ -498,7 +588,24 @@ func Parse(name string, data []byte) Doc {
 	d := Doc{Name: name}
 	d.Links, d.NamesCounterparts = Links(string(data))
 	d.Sources = SourceURLs(string(data))
-	lines := strings.Split(string(data), "\n")
+
+	// **Frontmatter is optional, and everything below reads the body without
+	// it**, because the title scan skips every line until a `# ` and a YAML
+	// comment is a `# ` line: one in the block was read as the document's
+	// title and the rest of the block as its summary. Reading the fields
+	// first was not enough - the scan has to not see the block at all, which
+	// is what frontmatter returns.
+	front, body, _ := frontmatter(string(data))
+	for _, line := range strings.Split(front, "\n") {
+		if rest, ok := strings.CutPrefix(line, "group:"); ok {
+			d.Group = scalar(rest)
+		}
+		if rest, ok := strings.CutPrefix(line, "description:"); ok {
+			d.Description = scalar(rest)
+		}
+	}
+
+	lines := strings.Split(body, "\n")
 
 	// The markers sit below the opening paragraph, by which point the summary
 	// loop below has already returned, so they need a pass of their own.

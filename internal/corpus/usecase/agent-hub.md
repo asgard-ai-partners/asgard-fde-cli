@@ -1,3 +1,7 @@
+---
+group: Entry points
+description: every caller can authenticate; several specialists
+---
 # Agent hub
 
 Several specialist agents reachable through the platform's own entry point. **You
@@ -113,9 +117,10 @@ yours rather than the tool's.
 
 **No `allowedCubes`** on the binding: an agent may query any table in its own
 layer, and the restriction is which layer it mounts rather than which cubes
-within it. Setting it is a deliberate departure that needs a reason - and the
-reason a *public* audience needs one is why that audience gets fixed query tools
-instead of a layer at all. See `../usecase/semantic-layer.md`.
+within it. `gate` R4 refuses an Agent that sets it, so it is not a departure
+available to a chart that wants one - and a *public* audience, which is the
+audience that would want it, gets fixed query tools instead of a layer at all.
+See `../usecase/semantic-layer.md`.
 
 Zero layers is legal when the agent's capability comes from toolsets instead.
 Zero of both is not - an agent with no capability source at all is almost always

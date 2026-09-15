@@ -1,3 +1,7 @@
+---
+group: While building
+description: "the order: where a credential goes, what to build from it, why Sindri needs no import"
+---
 # From a credential to an agent someone can talk to
 
 Every other page here describes one object. This one describes the **order**,

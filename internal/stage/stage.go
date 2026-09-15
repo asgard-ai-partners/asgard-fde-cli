@@ -413,7 +413,11 @@ func (s Stage) Prompt(state State) (string, error) {
 		return "", fmt.Errorf("read prompt %s: %w", s.promptF, err)
 	}
 
-	tmpl, err := template.New(s.promptF).Delims("<<", ">>").Parse(string(content))
+	// **Printed, so the frontmatter comes off.** `Static` feeds the landed
+	// `guide/<name>.md`, which keeps it for the same reason a wiki page does -
+	// it is what the index is rendered from - so this cannot be done in
+	// `readPrompt`, which both go through.
+	tmpl, err := template.New(s.promptF).Delims("<<", ">>").Parse(kb.Body(string(content)))
 	if err != nil {
 		return "", fmt.Errorf("parse prompt %s: %w", s.promptF, err)
 	}
@@ -456,7 +460,9 @@ func (s Stage) Raw() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("read prompt %s: %w", s.promptF, err)
 	}
-	return string(content), nil
+	// The audits read this to list what a prompt tells somebody to do, and an
+	// imperative is never in the frontmatter.
+	return kb.Body(string(content)), nil
 }
 
 // List returns every piece of guidance a reader can ask for by name. Callers

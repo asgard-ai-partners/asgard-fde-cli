@@ -1,3 +1,7 @@
+---
+group: Entry points
+description: anonymous audience, one job
+---
 # Single-agent flow agent
 
 A public entry point with no subagent at all. The smallest shape that serves an

@@ -1,3 +1,7 @@
+---
+group: Read first
+description: where every CR goes, what it is called, what all of them need
+---
 # Conventions
 
 **Read the platform side first:** the pages in `../wiki/` - what the platform is made
@@ -183,9 +187,15 @@ CR is valid, the dry run passes, apply succeeds, and it fails at runtime.
 platform resource credentials, and **none of them needs a declared key**:
 `asgard-cli add` points each at the Secret the platform mints, which the next
 section is about. A declared key of your own is for a resource that genuinely
-needs a different credential from the namespace's, which is a requirement about
-rotation scope rather than a rule this page can state: the Platform reads
-whatever `secretKeyRef.key` says and never the name itself.
+needs a different credential from the namespace's, and **whether one does is a
+requirement about rotation scope** rather than a rule this page can state: the
+Platform reads whatever `secretKeyRef.key` says and never the name itself.
+
+**That question is only ever about a key you declare.** The namespace's own
+resource credential is one key the platform mints and shares by design, so its
+rotation scope is not an engagement's to decide - `../usecase/write-path.md`
+says the same from the write side, and the two read as contradicting each other
+only if it is unclear which key each is about.
 
 ### Where that credential comes from
 
@@ -228,6 +238,17 @@ documented way to obtain it** - which blocked a first deploy once and is
 `../wiki/platform-unknowns.md` P13. A chart being written now should read the
 Secret rather than copy it.
 
+**A third form you will find on a Toolset is `apiKey: {value: ""}`, and it is
+one chart's answer to a required field.** The CRD requires `apiKey` whatever
+the `toolsetClass` is, so a `workflow-tooling` Toolset - whose tools are
+Workflows in the same chart, with no external service behind them - has no key
+of its own to put there, and one deployment writes an empty string to satisfy
+the constraint, saying so in a comment. It is not a way of switching the
+credential off, and it is not the shape to copy: write the `preset-agent-hub`
+reference above, which costs nothing to declare and is what the platform's own
+preset Toolset carries. Where the tool really does reach an external service,
+that service's own token goes on the backing Workflow's `variables`, not here.
+
 **One caveat on the verification.** The release it was proved on was created
 under a platform admin account, and nothing available here can show whether that
 made its deploy identity broader than an ordinary one. The reasoning above says
@@ -252,8 +273,13 @@ CR breaks the first time it is used.
 
 ## Two field shapes that are easy to get wrong
 
-**`ValueExprTemplate`** takes either a static `value:` or an `expression:` of
-JavaScript evaluated per turn, with the caller's payload as `prevPayload`.
+**`ValueExprTemplate`** is a trio, and the CRD takes **exactly one** of the
+three: a static `value:`, an `expression:` of JavaScript evaluated per turn with
+the caller's payload as `prevPayload`, or a Handlebars `template:`. So swapping
+form is a deletion and a write rather than a write, and anything that reads only
+`value:` - a checker, a grep, a reader - is blind to the other two. It is a
+`SandboxBlueprint` shape and nothing else carries it; asgard-kube's
+`pkg/apis/asgard/v1alpha1/types.go` declares it.
 
 On a `SandboxBlueprint`, the `*Names` fields are **comma-separated strings**, not
 lists, and `sourceSetMounts` is a **JSON string** the controller unmarshals.

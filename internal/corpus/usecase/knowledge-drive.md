@@ -1,11 +1,8 @@
+---
+group: Read paths
+description: knowledge that is documents, not rows
+---
 # Knowledge drive
-
-**The `KnowledgeBase`, `Loader` and `Source` shapes here come from one
-deployment** - auto-post, the platform's own - which is the only one of eight
-that declares any of them (`../wiki/coverage.md`). That cuts both ways: it
-was written by the people who built the CRs, and it is not a customer's
-constraints.
-
 
 Unstructured knowledge - documents, FAQs, web pages - as a mounted `SourceSet`
 with a knowledge graph over it.
@@ -14,6 +11,9 @@ with a knowledge graph over it.
 database, a crawl of its own marketing site, and manually uploaded documents.
 
 **Checked:** 2026-09-02 against a Drive with two Syncers and a contextIndex, and the CRD. Two required Syncer fields and a misplaced column flag were corrected.
+Re-read 2026-09-15 against asgard-kube `cbd8d70` for the `web` class block - its
+two required fields and the exactly-one-of over `urls` and `siteMapUrl` - and
+against that deployment's own web Syncer, which is the second of the two.
 
 **Unchecked:** the contextIndex.prompt guidance. It is advice about the customer's own data and has no source outside the engagement that wrote it.
 
@@ -134,6 +134,41 @@ spec:
         isMaxValueColumn: true
     query: |
       select ... from ...
+---
+apiVersion: asgard-ai.com/v1alpha1
+kind: Syncer
+metadata:
+  name: syn-<name>-pages
+  annotations:
+    asgard-ai.com/syncer-name: "<display name>"
+  labels:
+    # Per Syncer, like the one above - a Drive's two feeds are suspended and
+    # scheduled separately because they cost different amounts to run.
+    asgard-ai.com/syncer-suspend: {{ .Values.<name>Knowledge.pagesSync.suspend | quote }}
+    {{- include "<chart>.labels" . | nindent 4 }}
+spec:
+  sourceSetName: ss-<name>-knowledge
+  destinationPath: "website/"
+  statePath: ".syncer-state/<name>-pages"
+  syncerClass: web
+  schedule: {{ .Values.<name>Knowledge.pagesSync.schedule | quote }}
+  timeZone: Asia/Taipei
+  web:
+    # Both required, neither defaulted: how long a page may take, and how long
+    # to wait after it loads before reading it. A page whose content arrives
+    # after the first paint needs the second one raised.
+    timeoutMs: {{ .Values.<name>Knowledge.pagesSync.timeoutMs }}
+    waitForMs: {{ .Values.<name>Knowledge.pagesSync.waitForMs }}
+    # Exactly one of urls and siteMapUrl, and the list comes from values - see
+    # the page-list rule below.
+    urls:
+      {{- range .Values.<name>Knowledge.pagesSync.urls }}
+      - {{ . | quote }}
+      {{- end }}
+    # maxDepth, limitPerUrl and delayMs left out: omitting them fetches the
+    # listed pages and nothing else. maxDepth is the field that turns the list
+    # into a crawl; delayMs is the throttle to set before pointing one at a
+    # customer's live site.
 ```
 
 **`isMaxValueColumn` and `isIdentifier` sit on a column, not on the `database`
@@ -161,41 +196,18 @@ Mount it read-only from the blueprint:
     value: '[{"sourceSetName": "ss-<name>-knowledge", "mountPath": "/knowledge", "readOnly": true}]'
 ```
 
-## The index runs after the Syncers, not with them
+## Scheduling, and the two labels
 
-`contextIndex.cron` and each Syncer's `schedule` are independent fields and
-nothing orders them. Put the index **after** the Syncers on the same day - the
-deployment runs the two Syncers at 09:00 and the index at 10:00, both
-`Asia/Taipei`.
+**Both are the platform's and `../wiki/knowledge.md` owns them.** Read it for
+why the index goes after the Syncers rather than with them, for the hour a
+deployment actually puts between the two, for the `-ci` suffix the derived CRs
+take - which is what to look for on a cluster when the index is not running -
+and for `syncer-suspend` against `auto-fire-on-rollout`, where a suspended
+Syncer with no auto-fire label never runs at all, with a green gate and a
+succeeded run.
 
-Reversed or simultaneous, the index walks the volume before the day's content
-lands and the graph describes yesterday, every day, without ever failing. An
-incremental `--update` over an unchanged Drive finishes in seconds, so the gap
-costs nothing.
-
-The derived CRs are named after the SourceSet with a `-ci` suffix, so a Drive
-called `ss-<name>-knowledge` produces `ss-<name>-knowledge-ci`. That is what to
-look for on a cluster when the index is not running.
-
-### Two labels, and neither reads the other
-
-`asgard-ai.com/syncer-suspend: "true"` stops the **scheduler**, and nothing
-else. It does not stop a deploy from firing the Syncer, and that is deliberate -
-the skills Syncer relies on exactly that.
-
-What fires it on a deploy is a **second, opt-in label**,
-`asgard-ai.com/auto-fire-on-rollout: "true"`: the platform's apply step fires
-the Syncers of the release that carry it and waits for them. Only that runner
-reads the label; the Syncer module ignores it, and neither label reads the
-other. **A suspended Syncer with no auto-fire label never runs at all**, and the
-symptom is an empty drive or an agent with zero skills - with a green gate, a
-succeeded run and no error anywhere.
-
-**The polarity flipped.** Firing on deploy used to be the default, opted out of
-with `asgard-ai.com/syncer-cd-trigger: "false"` - a label **the platform does
-not read at all**, left from the CD workflows that predate the pipeline. Silence
-is the default now, so noise is what has to be asked for. See
-`../usecase/skill-set.md`.
+`../usecase/skill-set.md` has what those two labels look like on a Syncer
+somebody writes by hand.
 
 ## The pause that is not a delete
 
@@ -267,7 +279,11 @@ writes nothing. Two consequences worth writing into the CR header:
 Syncer, not an edit.
 
 **Keep the web Syncer's page list in version control** rather than enabling a
-deep crawl. What the agent can see should be reviewable.
+deep crawl. What the agent can see should be reviewable, and `siteMapUrl` -
+the other half of the CRD's exactly-one-of with `urls` - hands that decision
+to whoever maintains the site. When more pages are wanted, add them to the
+values list or stand up a second Syncer in sitemap mode; do not raise
+`maxDepth` on the one holding the reviewed list.
 
 **`contextIndex.prompt` is appended** to the platform's own indexing
 instructions, so only domain knowledge belongs there.

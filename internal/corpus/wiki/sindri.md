@@ -1,3 +1,7 @@
+---
+group: Products and scope
+description: Project, delegation, the Sandbox and its files, the governance gate
+---
 # Sindri - Agent Hub
 
 Where published agents run. **Sindri offers no creating or editing** - agents are

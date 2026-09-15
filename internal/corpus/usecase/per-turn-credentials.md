@@ -1,3 +1,7 @@
+---
+group: Credentials
+description: the agent calls **as the person talking to it**, on a short-lived token
+---
 # A credential the caller supplies, per turn
 
 The agent calls a customer API **as the person talking to it**, using a
