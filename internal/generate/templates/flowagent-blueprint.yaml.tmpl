@@ -38,7 +38,25 @@ spec:
   # Then name it here, comma-separated.
   # skillSetNames:
   #   value: "sk-base"
-<<end>>  # A JSON string the controller unmarshals. readOnly is part of the security
+<<end>>  # The Plugin bundles this entry point loads, comma-separated like the two
+  # above. An `expression:` picks them per turn out of the caller's payload,
+  # which is what a bundle is for -
+  # `.agents/skills/asgard-platform/usecase/plugin.md` has both forms, and the
+  # question to settle before the payload decides anything.
+  # pluginNames:
+  #   value: "pg-<domain>"
+  #
+  # The Neko browser sidecar, for an entry point whose only route into a system
+  # is that system's web console. A `value:` string here and a plain boolean on
+  # an Agent CR, and that pair is easy to copy between wrong -
+  # `.agents/skills/asgard-platform/usecase/browser-operation.md` has both
+  # spellings, which of the two settings wins, and when a web UI is the right
+  # route at all.
+  # browser:
+  #   enabled:
+  #     value: "true"
+  #
+  # A JSON string the controller unmarshals. readOnly is part of the security
   # argument, not a detail: an agent that answers questions about knowledge has
   # no reason to be able to change it.
   # sourceSetMounts:

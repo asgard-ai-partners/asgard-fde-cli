@@ -18,6 +18,14 @@ built the CRs, and not a customer's constraints.
 class and its API key, `sourceClass: docx` with per-source indexer chunk sizes,
 and a `web` Loader on a cron schedule - and against the CRD.
 
+**`asgard-cli add` writes none of these, and that is the decision.** The four
+CRs here are a shape to read rather than one to reach for -
+`../wiki/knowledge.md` recommends a Drive with a Context Index for new work, so
+a generator for `KnowledgeBase` would make the older shape the easy one, which
+is the opposite of what the recommendation is for. This page is here because
+somebody will open a chart that has them, not because somebody should write one.
+`asgard-cli add knowledgedrive` is what to run instead.
+
 **Unchecked:** what the retrieval quality difference against a Drive actually is.
 The repository that chose this one records the choice and not the comparison, and
 the deployment that reversed it is a different engagement.
@@ -60,7 +68,7 @@ inertia.
       spec.deletedIndexerKeys         REQUIRED, and `[]` is the ordinary value.
                                       The CRD refuses removing an indexer from
                                       the map directly - a key goes here instead
-      spec.<class>.indexers.<key>     chunkSize per indexer
+      spec.<class>.indexers.<key>     `chunkSize` per indexer
       metadata.labels
         asgard-ai.com/queryable       "true" to make it reachable
 

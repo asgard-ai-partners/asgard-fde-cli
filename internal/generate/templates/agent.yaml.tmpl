@@ -76,6 +76,17 @@ spec:
     # toolsetNames:
     #   - ts-<name>
 <<end>>
+    # The Neko browser sidecar, for a system that has no database to read and
+    # no API - only a web console. The flag is the cheap half; the reference
+    # documents the agent needs to drive that UI are the work, so none is
+    # written here. A plain boolean on an Agent and a `value:` string on a
+    # SandboxBlueprint -
+    # `.agents/skills/asgard-platform/usecase/browser-operation.md` has both
+    # spellings, which of the two settings wins, and when a web UI is the right
+    # route at all.
+    # browser:
+    #   enabled: true
+
     # Files from a SourceSet, mounted into the shared sandbox pod - and
     # aggregated onto the orchestrator's, not only this subagent's. The mount
     # is a choice about what this agent works on, so none is written.
@@ -97,3 +108,4 @@ spec:
     #   - sourceSetName: ss-<name>
     #     mountPath: /knowledge
     #     readOnly: true
+    #     subPath: <dir>/

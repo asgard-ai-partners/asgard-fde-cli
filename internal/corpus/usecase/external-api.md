@@ -140,6 +140,8 @@ metadata:
     {{- include "<chart>.workflowSetLabels" (dict "name" "wf-<verb-noun>" "type" "automation_tool") | nindent 4 }}
     {{- include "<chart>.labels" . | nindent 4 }}
 spec:
+  # A static key for this API goes here, and a config below reads it as
+  # vars.<name> - `../usecase/workflow-chain.md`'s skeleton has the shape.
   variables: []
   entries:
     - name: entry-main

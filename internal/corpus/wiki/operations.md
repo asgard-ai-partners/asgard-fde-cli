@@ -1,6 +1,6 @@
 ---
 group: In practice
-description: Asgard's outbound IPs, checking model capability, vocabulary
+description: Asgard's outbound IPs, checking model capability, the symptoms that turn out to be an account or a setting, vocabulary
 ---
 # Connectivity, model capability, vocabulary
 

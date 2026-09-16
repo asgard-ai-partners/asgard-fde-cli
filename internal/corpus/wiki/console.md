@@ -1,6 +1,6 @@
 ---
 group: Products and scope
-description: the permission layers, the pages that disagree with each other, Workspace settings
+description: the permission layers, the pages that disagree with each other, Workspace settings - and the path each thing sits at, for when the answer is where to click
 ---
 # Management Console - permissions and Workspace
 
@@ -9,6 +9,36 @@ product, and who may use which resource in which product.
 
 Its scope is one Workspace (`/workspace/{workspaceId}`), with no Project layer
 beneath it.
+
+## Where a thing is, as a path
+
+**A page an FDE cannot name a route to is a page they describe instead of
+opening.** The rest of this wiki maps a UI name to the CR behind it; this is the
+other half of the same question, and without it an agent asked "where do I set
+that?" in a meeting can answer with a CR kind and not with somewhere to click.
+
+**Observed, not documented.** These were read off a production Console while
+building a partner deck, 2026-09-15, and no source states them - so treat a
+shape that does not resolve as this page being behind rather than as the reader
+being wrong:
+
+    /workspace/<workspaceId>/overview     the Workspace, and what `.asgard-cli.yaml`
+                                          records is exactly this id
+    app-toolsets/<toolset>/detail         an MCP Server
+    app-skillsets/<skillset>/detail       a Skillset
+    drive/<sourceSet>/detail              a Drive
+    chat-agent/<agent>/detail             a Managed Agent
+
+**The prefix those four hang off is not known**, and neither is the path to a
+Pipeline's Variables tab - that one is reached as Pipelines, the repository's
+name, the release, then the Variables tab, which is a route to describe rather
+than a URL to build. `platform-unknowns.md` P16 carries both, because a link
+assembled from a guessed prefix is the failure that renders identically to a
+correct one and is caught only by somebody clicking it.
+
+**The object name in the path is the CR's own `metadata.name`**, which is why
+these are worth having: an engagement holds that name already, in the chart it
+wrote.
 
 ## Building a resource does not make it visible
 
@@ -128,5 +158,16 @@ extract for it.
   and [manage workspace](https://docs.asgard-ai.com/docs/product-suite/odin/about-odin/introduction/manage-workspace)
   - asgard-docs `f00e0ee`
 
-**Unchecked:** everything here comes from the product documentation. Permissions
-are not in any chart, so none of it could be held against one.
+- The path shapes above were read off a **production Console** on 2026-09-15,
+  while building a partner deck that linked to each of those pages, and the
+  workspace shape was confirmed against the id `.asgard-cli.yaml` records for
+  that engagement. No published source states any of them.
+
+**Checked:** 2026-09-15 for the path shapes only, against the Console they were
+observed in - which is a screen rather than a document, so it carries no commit
+and nothing here can tell you it has not moved since.
+
+**Unchecked:** everything else here comes from the product documentation.
+Permissions are not in any chart, so none of it could be held against one. **The
+prefix the four resource paths hang off was not captured**, so those four are a
+shape to recognise rather than a URL to build - `platform-unknowns.md` P16.

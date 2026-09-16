@@ -1,6 +1,6 @@
 ---
 group: While building
-description: Completion and Embedding Model, Data Source, Connection
+description: Completion and Embedding Model, Data Source, Connection - and which of them a chart writes
 ---
 # Models, data sources and connections
 
@@ -64,6 +64,15 @@ the namespace already carries them under the names `preset-balanced`,
 model takes one of those as a plain string. Three reference deployments declare
 their own, with the provider's key as a secretKeyRef into the release's own
 Secret - whose name the Platform injects, and which a chart never writes out:
+
+**`asgard-cli add` has no `completionmodel` kind, and that is the decision
+rather than a gap.** The common case writes no CR, so a generator for this would
+produce one whenever somebody reached for it - and the uncommon case is a
+contract with a provider: which model id, whose key, and who pays for the
+tokens. None of that is a skeleton's to guess, and a wrong provider block is a
+CR the apiserver accepts and every turn then fails on. The shape is here to copy
+from, which is the right amount of help for a decision somebody has already
+made.
 
 | | |
 |---|---|

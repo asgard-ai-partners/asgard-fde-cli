@@ -517,16 +517,20 @@ whether something happened, that branch belongs in the graph.**
 is in the CRD enum: a Workflow carries
 `spec.entries` and `spec.exits` as their own lists, siblings of
 `spec.processors`. An entry is `{name, handlingProcessor}` - a named way in that
-points at the processor which handles it - and an exit is
-`{name, handlingWorkflow}`, pointing at another workflow's entry. Search a chart
-for a `flow-entry` processor and you will find nothing.
+points at the processor which handles it - and an exit is a named end: `name`,
+optional `labels` for what the canvas shows, and an optional `handlingWorkflow`
+pointing at another workflow's entry. A run reaches one because a relationship
+says so rather than because a processor finished - `../usecase/workflow-chain.md`
+has that shape. Search a chart for a `flow-entry` processor and you will find
+nothing.
 
 Two things worth knowing from their pages:
 
   - **a workflow can have several entries**, which is how one Workflow serves
     more than one caller shape
-  - **an exit connects workflows to each other**, which is the mechanism behind
-    `../usecase/workflow-chain.md`
+  - **an exit carrying a `handlingWorkflow` connects workflows to each other**,
+    which is the mechanism behind `../usecase/workflow-chain.md`. One without it
+    is a name on the canvas and nothing more
 
 ## Corresponding extracts
 
@@ -619,7 +623,10 @@ from - is written for reading an older chart and stops at the four CRs.
   no other deployment
 - The `ProcessorType` enum in asgard-kube
   `pkg/apis/asgard/v1alpha1/types.go`, and `WorkflowSpec` beside it, which is
-  what settles that entries and exits are not processors
+  what settles that entries and exits are not processors. Re-read 2026-09-15 at
+  asgard-kube `cbd8d70` for Exit's own fields - `handlingWorkflow` is optional,
+  which the shape above had as part of what an exit is - and for the
+  exactly-one-of on a relationship's `to`, which is how a run reaches one
 
 **Unchecked:** the field *meanings* come from the product documentation, not
 from a chart that sets them - the names, requiredness, defaults and outputs now
