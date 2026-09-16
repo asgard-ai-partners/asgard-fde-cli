@@ -57,7 +57,26 @@ workspace bound it, and that guessed twice: that a remote called ` + "`origin`" 
 repository's identity - a repository may have several remotes, and which one
 carries that name is nobody's business but its owner's - and that one candidate
 means no choice had to be made. A command with nothing recorded now lists the
-pipelines and stops. Which workspace is ` + "`asgard-cli workspace`" + `.`,
+pipelines and stops. Which workspace is ` + "`asgard-cli workspace`" + `.
+
+WHICH REPOSITORY A PIPELINE READS IS DECIDED AT ` + "`create`" + `, and there is no
+` + "`update`" + ` here that moves it. The platform's own update takes the name, the
+config path and the declaration ref; pointing a pipeline at a different
+repository is a separate operation there - a preflight that reads the
+candidate's ` + "`.asgard-pipeline.yaml`" + ` and compares it against this pipeline
+release by release, then the switch that applies what the preflight showed. The
+Console runs the two together, as Change source.
+
+**That comparison is what makes the switch safe, so a flag here that skipped it
+would be the dangerous half on its own.** Nothing else moves: every release
+keeps its platform Project, its namespace, its variables and its deploy
+identity. So a release whose name the new repository also declares deploys a
+different chart into the namespace the old one is running in; one it does not
+declare stops being declared at all, while everything that release has already
+put on the cluster keeps running; and a name only the new declaration carries
+arrives as a ghost row. ` + "`.asgard-cli.yaml`" + ` records an id and is committed, so
+every checkout that committed that id follows the switch with nothing local
+changing to say so.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error { return cmd.Help() },
 	}
@@ -435,7 +454,11 @@ is exactly why it can be pointed at a working branch.
 
 A missing or invalid ` + "`.asgard-pipeline.yaml`" + ` does not fail the create; it is
 reported on the pipeline as a failed config sync, and fixing the ref or the path
-recovers it.`,
+recovers it.
+
+**The connection and the repository are decided here and nowhere else in this
+tool**; ` + "`asgard-cli pipeline`" + ` says what moving them afterwards takes, and why it
+is not a flag.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			if name == "" {

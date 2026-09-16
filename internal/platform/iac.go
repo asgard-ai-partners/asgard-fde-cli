@@ -830,6 +830,25 @@ func (c *Client) ListRepositories(ctx context.Context, connectionID string) ([]*
 }
 
 // CreatePipelineInput is what binding a repository needs.
+//
+// **ConnectionId and RepositoryId belong here and in no update input.** The
+// platform's own PATCH of a pipeline takes the name, the config path and the
+// config ref and neither of these; moving a pipeline to another repository is
+// a pair of calls of its own - `preflight-repository`, which reads the
+// candidate's declaration and compares it with this pipeline's releases and
+// variables without changing anything, and `change-repository`, which applies
+// what the preflight showed. The config path travels with that pair in the
+// Console rather than through the update, for the reason the pair exists at
+// all: it changes which declaration is in force, and that is what wants
+// comparing before it happens.
+//
+// So an update of a pipeline carries neither field, and a wrapper for the pair
+// is named for the pair. TestNoPipelineUpdateTakesTheBinding holds that, and
+// `pipeline --help` says what it costs to get wrong: the releases keep their
+// namespaces, their variables and their deploy identities across a switch, so
+// the comparison is the whole of the safety. Read against asgard-platform-api
+// bbeedc7, head of develop on 2026-09-16 - internal/models/iac.go, in that
+// repository.
 type CreatePipelineInput struct {
 	Name         string `json:"name"`
 	ConnectionId string `json:"connection_id"`
