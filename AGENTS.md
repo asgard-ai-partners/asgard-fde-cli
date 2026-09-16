@@ -783,6 +783,19 @@ about a git-backed SkillSet should do. **A checker that cries wolf teaches peopl
 to change what it can see rather than what is wrong**, and this material has
 already caused that once, in a customer deck. Delete it; do not soften it.
 
+**Does the report name what it counts, in every category, always?**
+A number with no list is not actionable, and a category that prints only when
+another one is empty is worse than one that never prints: the count goes on
+saying something is owed and the report stops saying what. `reconcile` printed
+its never-recorded pointers only when nothing had moved, so a single moved
+pointer hid every unread one behind "1 never recorded" - and what it hid was a
+pointer added the same afternoon, which is when a pointer is least likely to
+have been read. **Print the strongest category first and cap it rather than
+suppressing it**: a capped list with "and N more" under it is something somebody
+can finish, where a number alone is a thing to believe. The same rule as a skip that lies, one
+layer out - an answer that is right and unusable reads exactly like one that is
+both.
+
 **If it is a pinned copy of the platform's contract, which way can it go stale?**
 **Both ways, and the expensive direction is the one nobody expects.** A
 constraint that loosens upstream leaves a pin that reports correct charts as
@@ -953,6 +966,15 @@ and no material is the state this comparison exists to surface - it just turned
 out, this time, that the answer was "not for an engagement". **Ask before
 writing the page**, because the cost of the two mistakes is not symmetric:
 material for a kind nobody may use invites somebody to use it.
+
+**The same question one level down is `go run ./hack spec-key-gap`**, which asks
+it per spec key rather than per kind, and mechanically. A key a production chart
+uses is written by `add`, named in a commented skeleton where somebody meets it,
+absent on purpose with the document that says why, or nowhere - and only the
+last is a gap. **The third state is a pointer, not an opinion**: the row names
+the document carrying the decision, and the check fails when that document is
+gone or has stopped naming the key. So a key you decide against gets its reason
+written where a reader meets it, the same as a kind does.
 
 ## Reference material lives outside this repo
 

@@ -414,3 +414,40 @@ func mustRoot(t *testing.T) string {
 	}
 	return root
 }
+
+// 10. **A never-recorded pointer is named even when something has moved.**
+//
+// The report used to print the `never` rows only when `moved` was empty, so one
+// moved pointer hid every unread one behind a count: the summary said "1 never
+// recorded" and named neither which nor where. That is the failure this file is
+// otherwise about - the number is right and the thing somebody would act on is
+// gone - and it hid a pointer added the same afternoon, which is exactly when a
+// pointer is least likely to have been read.
+func TestANeverRecordedPointerIsNamedEvenWhenSomethingMoved(t *testing.T) {
+	bodies, out := fixture()
+
+	// One document read, the other never. Then the read one's target moves.
+	record := reconciled{}
+	if _, err := reconcileRecord(record, bodies, out, []string{"usecase/one"}); err != nil {
+		t.Fatal(err)
+	}
+	bodies["wiki/alpha"] = "# Alpha\n\nthe alpha body, rewritten\n"
+
+	text, never, moved := report(t, record, bodies, out)
+	if len(moved) == 0 {
+		t.Fatal("the moved target was not reported, so this proves nothing about hiding")
+	}
+	if len(never) == 0 {
+		t.Fatal("the unread document was not reported as never")
+	}
+	for _, p := range never {
+		if !strings.Contains(text, "never   "+p.from) {
+			t.Errorf("an unrecorded pointer was counted and not named: %s -> %s\n%s", p.from, p.to, text)
+		}
+	}
+	// And the never rows come first, because "nobody has read this" is the
+	// stronger claim of the two and a long moved list is what buries it.
+	if i, j := strings.Index(text, "never   "), strings.Index(text, "moved   "); i > j {
+		t.Errorf("the moved rows are printed before the never rows:\n%s", text)
+	}
+}

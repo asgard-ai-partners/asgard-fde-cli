@@ -42,8 +42,9 @@ func init() {
 //
 // It reports rather than fails, because a document pointing at a changed one is
 // a question and not a defect: the pointer may be about a paragraph nothing
-// touched. What it cannot tell is whether the pointing document was reconciled
-// SINCE - that needs a record per link, and `TASK.md` has what it would take.
+// touched. What it cannot tell on its own is whether the pointing document was
+// read against the change; that is per link rather than per document, and
+// `reconcile` is the record of it.
 func runRelated(args []string) error {
 	root, err := src.Root()
 	if err != nil {
@@ -196,8 +197,9 @@ func relatedReport(w io.Writer, changed []string, in map[string][]string) []stri
 	fmt.Fprintln(w, "\nThat list is the re-read, and it is not the corpus. A pointer is a")
 	fmt.Fprintln(w, "question rather than a defect - it may be about a paragraph nothing")
 	fmt.Fprintln(w, "touched - so this cannot fail, and a short list is not a clean bill.")
-	fmt.Fprintln(w, "What it does not know is whether each was reconciled SINCE the change;")
-	fmt.Fprintln(w, "that needs a record per link, and TASK.md has what it would take.")
+	fmt.Fprintln(w, "This one answers which documents COULD be affected; which of them have")
+	fmt.Fprintln(w, "been read against the change is per link rather than per document, and")
+	fmt.Fprintln(w, "`go run ./hack reconcile` is where that is recorded.")
 	return out
 }
 

@@ -194,7 +194,9 @@ are two fields somebody can be refused on.
 ## How far the generated chart is from a real one
 
     go run ./hack spec-key-gap             recompute, and check TASK.md's claim
-    go run ./hack spec-key-gap --missing   the keys production uses and `add` never writes
+    go run ./hack spec-key-gap --missing   every key production uses that `add` does not
+                                           write, split by what is owed on it
+    go run ./hack spec-key-gap --shown     the ones a commented skeleton names
 
 **The number behind "the chart half is the least finished of the four."** It
 decides whether an FDE treats what `add` emits as a chart or as a starting
@@ -203,7 +205,24 @@ method that reproduced either figure. **Both sides are rendered here rather
 than quoted**, and neither figure is written down anywhere, including in this
 paragraph.
 
-`--missing` is the useful half: it is the worklist for closing the gap.
+**A key `add` does not write is in one of four states, and only one is a gap.**
+Written; named in a commented skeleton, where somebody meets it at the moment
+they would write one; absent on purpose, with the document that carries that
+decision; or nowhere, which is the worklist. Counting the middle two as owed was
+a measurement defect twice over - the number said work was due exactly where the
+work was done.
+
+**The third state is a pointer rather than an opinion.** `decided` in
+`hack/speckeys.go` maps a key to the document that says why it is absent, and
+the check fails when that document is gone or has stopped naming it. A row is
+the judgement and not an enumeration: a decision covers the fields under it, so
+a CR kind `add` never generates does not need every field of it listed. **Do not
+answer a row by writing a commented skeleton for it** - that lowers the number
+by inviting somebody to use the shape the material tells them not to.
+
+What a comment can be read for is the field it names, not the path it sits
+under: a skeleton here is written above the key it belongs to rather than inside
+it, so reconstructing the path attributes it to the previous sibling.
 
 Three traps it had to be taught. `$ASGARD_DEPLOYMENTS` is somebody's projects
 directory and also holds scratch repositories this tool scaffolded - those pass
