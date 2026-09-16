@@ -56,7 +56,10 @@
   }
   .slide:last-child { break-after: auto; }
 
-  .eyebrow {
+  /* Named for what it holds, never for where it sits. A class called "the line
+     under the title" accepts any sentence; one called "what the customer said"
+     rejects a sentence about the slide on sight. */
+  .scene {
     font-family: var(--mono);
     font-size: 9.5pt;
     letter-spacing: 2pt;
@@ -106,7 +109,12 @@
     margin-bottom: 8pt;
   }
 
-  .lead {
+  /* A supporting fact is body text and gets no class. Only the three kinds of
+     content named below have one, so a sentence that is none of them has
+     nowhere to look like it belongs. */
+  p { margin: 0 0 8pt; }
+
+  .said {
     font-family: var(--sans);
     font-size: 12pt;
     font-weight: 400;
@@ -172,19 +180,6 @@
     border-top: 0.3pt solid var(--border);
     padding-top: 8pt;
     margin-top: var(--rhythm-section);
-  }
-
-  .co {
-    font-family: var(--sans);
-    font-size: 11pt;
-    font-weight: 500;
-    line-height: 1.55;
-    letter-spacing: 0.3pt;
-    color: var(--brand);
-    position: absolute;
-    bottom: 12mm;
-    left: 20mm;
-    right: 20mm;
   }
 
   .c2 {
@@ -270,14 +265,14 @@
 <body>
 <section class="slide">
   <h2>這份骨架怎麼用</h2>
-  <p class="lead">從一份真的拿去開會的訪談 deck 抽出來,客戶名詞已中性化,問句用字未改。</p>
+  <p>從一份真的拿去開會的訪談 deck 抽出來,客戶名詞已中性化,問句用字未改。</p>
   <div class="c2" style="margin-top:14pt;">
     <div>
       <h3>頁面結構</h3>
       <p class="mi" style="padding:3pt 0;font-size:10.5pt;">情境頁:客戶原文的流程 + 他自己的兩欄清單,不問任何問題</p>
       <p class="mi" style="padding:3pt 0;font-size:10.5pt;">子題頁:左欄藍字問句,右欄產出,一個子題一頁</p>
       <p class="mi" style="padding:3pt 0;font-size:10.5pt;">藍字就是問句本身,灰字是補充,沒補充就空著</p>
-      <p class="mi" style="padding:3pt 0;font-size:10.5pt;">沒有分類標籤,沒有 cap,沒有講稿</p>
+      <p class="mi" style="padding:3pt 0;font-size:10.5pt;">沒有分類標籤,沒有結語,沒有講稿</p>
     </div>
     <div>
       <h3>產出欄的最後一條一定是失敗行為</h3>
@@ -294,7 +289,7 @@
   <div class="meta">2026-09-03</div>
 </section>
 <section class="slide">
-  <span class="eyebrow">測試情境 N</span>
+  <span class="scene">測試情境 N</span>
   <h2>AI 客服與工單系統整合</h2>
 
   <div style="background:#EEF2F7;border-left:2pt solid #1B365D;padding:7pt 12pt;margin:6pt 0 4pt 0;font-family:var(--mono);font-size:10.5pt;letter-spacing:0.5pt;color:#1B365D;">客戶 → 聊天管道 → Asgard AI → 產品知識 / 工單系統 → 回覆客戶</div>
@@ -320,9 +315,9 @@
   <div class="page-num">02</div>
 </section>
 <section class="slide">
-  <span class="eyebrow">測試情境 N · AI 客服與工單系統整合</span>
+  <span class="scene">測試情境 N · AI 客服與工單系統整合</span>
   <h2>工單系統資料查詢</h2>
-  <p class="lead">客戶問:「可以幫我查目前的維修進度嗎?」</p>
+  <p class="said">客戶問:「可以幫我查目前的維修進度嗎?」</p>
 
   <div class="c2" style="margin-top:12pt;">
     <div>
@@ -347,9 +342,9 @@
     <div class="page-num">04</div>
 </section>
 <section class="slide">
-  <span class="eyebrow">測試情境 N · AI 客服與工單系統整合</span>
+  <span class="scene">測試情境 N · AI 客服與工單系統整合</span>
   <h2>辨識客戶身分</h2>
-  <p class="lead">客戶文件第 2 項寫的是:「希望 AI 可以辨識客戶身分,並透過公司 工單系統 查詢相關資料」</p>
+  <p class="said">客戶文件第 2 項寫的是:「希望 AI 可以辨識客戶身分,並透過公司 工單系統 查詢相關資料」</p>
 
   <div class="c2" style="margin-top:12pt;">
     <div>
@@ -367,9 +362,9 @@
     <div class="page-num">05</div>
 </section>
 <section class="slide">
-  <span class="eyebrow">測試情境 N · AI 客服與工單系統整合</span>
+  <span class="scene">測試情境 N · AI 客服與工單系統整合</span>
   <h2>自動建立報修案件</h2>
-  <p class="lead">客戶反映故障後,AI 詢問是否需要建立報修案件</p>
+  <p>客戶反映故障後,AI 詢問是否需要建立報修案件</p>
 
   <div class="c2" style="margin-top:12pt;">
     <div>
@@ -392,9 +387,9 @@
     <div class="page-num">06</div>
 </section>
 <section class="slide">
-  <span class="eyebrow">測試情境 N · IoT / 網路設備管理</span>
+  <span class="scene">測試情境 N · IoT / 網路設備管理</span>
   <h2>設備操作</h2>
-  <p class="lead">管理人員說:「幫我重新啟動現場設備。」</p>
+  <p class="said">管理人員說:「幫我重新啟動現場設備。」</p>
 
   <div class="c2" style="margin-top:12pt;">
     <div>
@@ -415,10 +410,10 @@
     <div class="page-num">10</div>
 </section>
 <section class="slide">
-  <span class="eyebrow">交付</span>
+  <span class="scene">交付</span>
   <h2>這一輪 Asgard 會交付什麼</h2>
 
-  <p class="lead">無論三個情境最後採用幾個,以下三項在測試期結束時一併交付。</p>
+  <p>無論三個情境最後採用幾個,以下三項在測試期結束時一併交付。</p>
 
   <table class="data" style="margin-top:14pt;">
     <tr><td style="width:30%">Asgard AI Workspace</td><td>平台上的專屬工作空間。三個情境的設定都在裡面,管理人員登入後看得到內容、改得動設定,也看得到用量與計費</td></tr>

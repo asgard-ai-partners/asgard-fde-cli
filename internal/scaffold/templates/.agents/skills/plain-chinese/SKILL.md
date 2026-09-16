@@ -1,6 +1,6 @@
 ---
 name: plain-chinese
-description: Use when writing or reviewing any 繁體中文 that a customer will read - a proposal slide, a reply to their question, a CR display name, a cube description, an agent's prompt. Removes the sentence shapes that mark a document as machine-written even when every word is defensible. 適用於「這段中文讀起來像 AI 寫的」「潤稿」「改得像人寫的」。
+description: Use when writing or reviewing any 繁體中文 that a customer will read - a proposal slide, a reply to their question, a CR display name, a cube description, an agent's prompt. Removes the sentence shapes that mark a document as machine-written even when every word is defensible, and the opposite failure that no register pass catches - a sentence whose subject is only in the writer's head. 適用於「這段中文讀起來像 AI 寫的」「潤稿」「改得像人寫的」「這個在說什麼」「給主詞」。
 version: 1.0.0-template
 alwaysApply: false
 ---
@@ -42,6 +42,36 @@ remains loses no information, it never had any:
 One 意義蓋章 reads as enthusiasm. Every section carrying one is the tell: the
 model is filling the position where a conclusion goes, because it has no
 conclusion.
+
+## The sentence with a hole in it
+
+Every rule above and below is a prohibition on a shape that **appears**. This one
+is the opposite - it is about a noun that is **missing**, which is why none of
+the others reaches it and why it takes a second reader to catch:
+
+    記下是哪一個              哪一個什麼?
+    這個檔案裡只有這兩個編號    什麼編號?
+    那段描述是模型唯一的判斷依據  哪段描述?
+    失敗有四種,只有一種是「查無資料」  四種什麼?
+
+**The test, and you can run it on yourself:**
+
+> **每個句子的主詞,在同一頁上找得到嗎?**
+> 「這個」「那段」「它們」、一個代名詞、一個沒有名詞的數字 - 它的名詞必須在
+> 同一頁出現。只在你腦子裡,或只在上一頁,就把名詞寫出來。
+
+**It does not read as machine-written, which is why it survives a register
+pass** - it reads as somebody talking to themselves. The noun was in your head
+an hour ago and the sentence is still fluent to you; to the reader it has a hole
+in it.
+
+**It is worse on a slide than in prose**, because a slide has no preceding
+paragraph to carry the antecedent. Every line on a slide is read cold.
+
+**Naming the nouns is not the same as removing the count.** Told that
+「12 個 CR,14 次部署,4 個坑」was vague, the fix offered was
+「一支查詢 API、552 份手冊、兩份 FAQ」- which names the nouns and still counts
+them. Both rules apply, and satisfying one is not evidence about the other.
 
 ## The shapes
 
@@ -136,10 +166,17 @@ page is a list. It is that the list says nothing.
 are what the model reaches for - and hunting them mid-draft costs the argument,
 which is the thing that actually matters.
 
-When the document reads correctly end to end, make one pass that asks a single
-question:
+When the document reads correctly end to end, make one pass that asks two
+questions. **The second is not a rewording of the first**, and a pass that asks
+only the first has been run over every draft this skill was corrected on:
 
     這一頁哪裡看得出來是機器寫的?
+    這一頁的每個句子,主詞都在同一頁上找得到嗎?
+
+The first catches a sentence that says too much in a recognisable way. The
+second catches one that says too little - and **that one does not look
+machine-written at all**, which is why asking the first question about it comes
+back clean.
 
 Read it as the customer, who has seen twenty vendor documents this year.
 **List what you find before changing anything.** Naming them is what makes the
