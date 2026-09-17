@@ -194,6 +194,25 @@ asgard-cli guide requirements     # one, read against this repo
 cat .agents/skills/asgard-platform/guide/requirements.md   # the static half
 ```
 
+### The links to this engagement's own systems
+
+A deck for partners is mostly links, and every id in one is already on disk -
+`.asgard-cli.yaml` carries the workspace, the git remote carries the repository.
+Assembling them by hand is the step that goes wrong, because a link is a claim
+that a specific page is worth opening and the weaker versions of it all render
+correctly: the site's root in place of the page, the URL spelled out beside the
+name that is already the link, the link dropped on a guess about who can open it.
+
+```bash
+asgard-cli links                  # what this checkout is bound to
+```
+
+**It prints only what it knows.** The Console is a different host from the API
+and neither implies the other, so the Console is known for the hosted
+installation and unknown for any other; a pipeline's Console path is written
+down nowhere. Those come out as a named absence rather than as a plausible URL.
+It reaches no network and needs no session.
+
 **There is no command that says where the engagement is**, and that is
 deliberate. `project`, `question`, `request` and `task` each read one file back
 to you; none of them derives a position from the others.

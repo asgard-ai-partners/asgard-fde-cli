@@ -6,7 +6,9 @@
 #
 # KnowledgeBase is still a live CRD and a shipping console feature - preferring
 # this Drive is one engagement's experience, not a platform rule. See
-# `.agents/skills/asgard-platform/wiki/knowledge.md`.
+# `.agents/skills/asgard-platform/wiki/knowledge.md` for the comparison, and
+# `.agents/skills/asgard-platform/usecase/knowledge-base.md` for the older
+# shape itself and why `add` has no generator for it.
 apiVersion: asgard-ai.com/v1alpha1
 kind: SourceSet
 metadata:
@@ -61,6 +63,22 @@ spec:
 ---
 # One Syncer per folder that is filled automatically. A folder people upload to
 # by hand needs no Syncer at all.
+#
+# This one is class `database`. A folder filled from the open web is a SECOND
+# Syncer document in this file, of class `web`, and it is left out rather than
+# written because a page list is a decision - a guessed one indexes the wrong
+# site, and nothing downstream reports that:
+#
+#   syncerClass: web
+#   destinationPath: "website/"   # trailing slash, as for a database syncer
+#   web:
+#     timeoutMs: 30000            # both REQUIRED, and neither has a default
+#     waitForMs: 3000             # how long a page gets to settle after loading
+#     urls: [ ... ]               # EXACTLY ONE of urls and siteMapUrl
+#
+# The whole document, the labels it needs, the rest of the syncer classes, and
+# why the page list belongs in the chart rather than behind a siteMapUrl crawl,
+# are in .agents/skills/asgard-platform/usecase/knowledge-drive.md.
 apiVersion: asgard-ai.com/v1alpha1
 kind: Syncer
 metadata:

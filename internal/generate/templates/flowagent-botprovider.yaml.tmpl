@@ -64,6 +64,20 @@ spec:
   # Flip to take the endpoint down without deleting anything.
   disabled: {{ .Values.botProviders.<<.ValuesKey>>.disabled }}
   maxUnsupervisedSteps: 30
+  # Left unset on purpose. It is NOT the channel or the transcript lifetime -
+  # unset means the durable channel never expires, which is the design, and
+  # setting it is what makes a channel and its transcript get deleted once idle.
+  # What it bounds instead is in
+  # `.agents/skills/asgard-platform/usecase/workflow-chain.md`. Milliseconds,
+  # minimum 1.
+  # channelMaxIdleMs: 259200000
+
+  # never | on-demand | always. **Not `always` on a live channel** - it keeps
+  # every turn's reasoning, which is the thing you least want retained on a
+  # channel a customer is talking to. `on-demand` is the one to ship: the
+  # debugging is there when somebody asks for it and off the rest of the time.
+  # `.agents/skills/asgard-platform/usecase/chat-channel.md` has the rest.
+  debugMode: on-demand
   # Guards the admin API. One platform resource key per namespace, shared.
   # **The platform mints this and guarantees the Secret in every namespace**, so
   # there is nothing to obtain and nothing to declare: `preset-agent-hub` /

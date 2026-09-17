@@ -1,6 +1,6 @@
 ---
 name: proposal-deck
-description: Use when deciding what to propose to the customer, or building any deck they will see - a discovery deck taken while the questions are still open, a proposal, a scope review, a phase kick-off, or a handover after the work lands. Covers how the shape is chosen and what phase 1 is, where a deck lives in this repo, which material it is allowed to be built from, the order a proposal argues in, how to say it in the customer's own words without claiming further than the evidence goes, and what must never appear on a customer's screen. The design language and the slide contract are in references/ beside it.
+description: Use when deciding what to propose to the customer, or building any deck they will see - a discovery deck taken while the questions are still open, a proposal, a scope review, a phase kick-off, or a handover after the work lands. Covers how the shape is chosen and what phase 1 is, where a deck lives in this repo, which material it is allowed to be built from, the order a proposal argues in, how to say it in the customer's own words without claiming further than the evidence goes, what must never appear on a customer's screen, and what a link on a slide has to point at. The outline that records what each page rests on is `outline.md` beside it, and the design language and the slide contract are in references/.
 ---
 
 # Proposal decks
@@ -810,9 +810,12 @@ detail empty when there is none**. A title that is a real question stands on its
 own. The labels only existed because the content had been cut into fragments
 that then needed grouping.
 
-**4. Printing the narration.** Nine caption lines, all deleted. Covered above,
-and it still happened - so: **most pages need no caption at all**, and empty is
-better than composed.
+**4. Printing the narration.** Nine caption lines, all deleted - and then the
+same sentence again as a label above the title, as a line under it, and as the
+third column of a table with no class on it at all. **Removing the slot does not remove the
+sentence**, which is why the rule is not a list of banned containers: it is
+`references/design.md`'s "the title is the argument", and it is stated where a
+slide is written rather than here.
 
 **4b. Counting what we deliver instead of describing how it behaves.** The same
 number, rejected one way and accepted the other:
@@ -933,18 +936,19 @@ slides, each saying what we need and what it unlocks. **More slides is not the
 problem; a compressed one is.** This deck is worked through line by line in the
 room, and a page per subject is what makes that possible.
 
-**`cap`: not the narration, and often nothing at all.** The line under a slide is
-for something the reader will write down, and a context slide carrying the
-customer's own words usually needs none - the page is already theirs. Leave it
-empty rather than inventing one. It is never for:
+**A sentence about the slide is not content, wherever you put it.** There is no
+caption, callout or lead field to fill any more - `references/design.md` says why
+- but the sentence does not need a field, and these are the three shapes it
+takes:
 
     no    「以上引號內文字出自你們 8/31 的測試計畫」     where the material came from
     no    「今天要談的,是每個情境要拿到什麼才做得起來」   what we are about to do
     no    「這一頁說明三個情境的差異」                  what this slide is
 
 All three are things you say out loud. Printing what you are about to say wastes
-the line and tells the room you are reading it. If a reader would not copy it
-into their notes, delete it.
+the line and tells the room you are reading it. **If a reader would not copy it
+into their notes, delete it** - and delete it rather than moving it, because the
+next container takes it just as willingly as the last one did.
 
 The last two slides are the two filters made visible: what came out as deferred
 scope, with what has to be answered before it comes back, and the questions that
@@ -1012,6 +1016,26 @@ customer's name reaches a deck, in a corner nobody read.
 Download it into the deck's own `assets/` rather than hot-linking the docs site
 or a path on somebody's machine: the first breaks when the docs are rebuilt, the
 second the moment anyone else opens the deck.
+
+### Links, on a deck that has any
+
+A customer proposal rarely carries one. An internal or partner deck is mostly
+links, and all three ways of getting one wrong render identically - nothing
+catches them but somebody clicking.
+
+- **Do not assemble one by hand.** `asgard-cli links` prints what this checkout
+  is bound to, from the ids already on disk, and prints nothing it would have to
+  guess. What it names as not printed is not printed for a reason - take that
+  rather than building the URL yourself.
+- **A link points at the page being discussed, not at the site it lives on.** A
+  root URL is the version somebody writes when they did not look up the real
+  one.
+- **The name is the link.** A row that already says what the thing is does not
+  also spell the URL out beside it.
+- **Do not infer who can open it.** A private repository is evidence about the
+  repository and about nothing else; partners in the same org have access.
+  **Ask who is in the room before removing a link**, because removing one and
+  leaving prose in its place is the failure that looks most like care.
 
 ### What must never be on a customer's screen
 
@@ -1081,10 +1105,10 @@ afternoon and are invisible until they happen.
 The most expensive mistake made with this skill so far, and it looks like
 diligence while it happens.
 
-A content check reported an eyebrow as missing. It was there - the checker
+A content check reported a scene line as missing. It was there - the checker
 collapses whitespace when comparing CJK, so a cover date running straight into
-the eyebrow made the string unfindable. To turn the check green, the FDE removed
-the sub-numbering from every eyebrow. The check went green. **Every sub-topic
+it made the string unfindable. To turn the check green, the FDE removed the
+sub-numbering from every scene line. The check went green. **Every sub-topic
 slide then claimed the wrong level** - the customer's own numbering says the
 scenario, and the slides were now saying it about a sub-topic of it.
 
@@ -1111,8 +1135,6 @@ printed anywhere. Read the list, fix what is genuinely missing, and stop.
     14 pages to 18 by gaining a line of links. Footers, links and page marks go
     in absolutely positioned elements, and **re-count the pages after every
     edit**
-  - **`.co` and `.footer-mark` overlap**, at 12mm and 10mm. Use one. The
-    template's own example page uses both, so copying it reproduces the bug
   - **`<b>` does nothing.** The CJK faces embed weights 400 and 500 only, so
     bold silently falls back to normal. Write `font-weight: 500`
   - **Do not keep a second copy of the content.** For a proposal, whose text is
@@ -1187,11 +1209,11 @@ carries in full:
   a layout skill's own density checks will enforce them on a discovery deck where
   they do not belong - the checks go green on a deck that has compressed the
   customer's document into something only its author can read. See step 5.
-- **`cap`** is the line that says why the slide matters - a trade-off, a
-  boundary, a next step - and it is **never the narration**. The test, and how
-  often a finished deck earns one at all, are on the class the line is written
-  into: the `.co` entry in `references/design.md`. A slide that looks empty is
-  not a reason to write one.
+- **There is no caption, callout or lead field.** A line about the slide is not
+  content wherever it sits, and `references/design.md`'s "the title is the
+  argument" is the test: cover the title, and if the sentence still says
+  something the slide did not show, it stays. A slide that looks empty is not a
+  reason to write one.
 - The content contract is `references/slides.json`, and the layouts are
   `cover`, `chapter`, `content`, `quote`, `metrics`, `close`.
 
@@ -1209,8 +1231,22 @@ decorated one that does not.
 
 ## Before you send it
 
-Ten questions, and the last five are the ones that get skipped:
+**Run question 0 over every slide, one sentence at a time.** It is the only one
+that has to be run against each sentence rather than each deck, and it is the
+one this skill has been corrected on most: the same sentence has come back as a
+label above a title, as a line under it, as a caption under a screenshot, and as
+the third column of a table that had no class on it at all. The containers were
+deleted; the sentence was not, because it never needed one.
 
+Eleven questions, and the last five are the ones that get skipped:
+
+0. **Cover the title and read the sentence.** Does it still tell you something
+   the slide did not already show? If not, delete it. Every sentence, including
+   one in a table cell, a closing line or a parenthesis - and including one that
+   reads to you as argument rather than as narration, which is the exemption
+   that has failed every time, because a writer files their own reasoning under
+   argument. **Delete it rather than moving it.** Moving it is what produced
+   four of the recurrences above.
 1. Do the titles alone tell the argument?
 1b. Which of the three decks is this? A proposal made while the interview is
     still open is a discovery deck wearing the wrong slide order.
@@ -1239,10 +1275,43 @@ Ten questions, and the last five are the ones that get skipped:
     screens has usually skipped `../asgard-platform/wiki/screenshots.md`, where the
     customer-facing set is.
 
-Then file it: write `README.md` beside the deck saying who it was for, what
-material it came from, and what happened in the room. A deck without that label
-is unusable six months later, because nobody can tell whether it is what was
-proposed or what was agreed.
+## The outline beside the deck
+
+**Write `outline.md` beside the deck, and write it before you edit a slide.**
+`outline.md` beside this skill is the worked one, for the deck beside it. A
+deck without one is unusable six months later, because nobody can tell whether it
+is what was proposed or what was agreed - but the label is the smaller half. The
+outline is where a page's claim is held against the thing it came from, and a
+slide is the one artefact here that carries no provenance of its own.
+
+It opens with who it was for and on what date, then **the argument in its two or
+three beats** - not the page list. If the beats do not survive being read alone,
+the deck has no argument yet and the page list is decoration.
+
+Then one row per page: **what that page does, and what it rests on.** The last
+column is the one that earns the file:
+
+    a diagram      what it actually draws, in enough words to redraw it
+    a screenshot   the exact path it was taken from - product, page, tab - and
+                   what is visible on it
+    a link         where it points
+    a chart file   **the path in this repository, and the rule that the slide
+                   changes when that file does**
+
+That last row is the whole point. A slide that copies a chart's own logic -
+the five outcomes a tool's `proc-response` sorts into, the fields an Agent
+carries - is a copy, and a copy with no pointer back is the thing this
+repository removes everywhere else. Write the path, and write that editing the
+chart means editing the slide.
+
+Two sections close it:
+
+- **How each screenshot was captured, and when to retake it.** A platform
+  release ages every screen, and **an out-of-date screen looks exactly like a
+  current one** - so the rule is to open those pages once before you present.
+- **What is not done**, each item pointing at the open question it is waiting
+  on. A deck shown with a blank box in a diagram is honest; the same deck with
+  nothing recording why is a question nobody asks again.
 
 **Checked:** 2026-09-04. The CR vocabulary in the translation table is real at
 asgard-kube `cbd8d70` - `SkillSet`, `SourceSet` + `Syncer` + `contextIndex`,

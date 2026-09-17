@@ -10,10 +10,10 @@ description: every wiki page grouped by the question it answers - start here whe
 | page | covers |
 |---|---|
 | [`product-suite`](../wiki/product-suite.md) | what each product is for, and who uses it |
-| [`console`](../wiki/console.md) | the permission layers, the pages that disagree with each other, Workspace settings |
+| [`console`](../wiki/console.md) | the permission layers, the pages that disagree with each other, Workspace settings - and the path each thing sits at, for when the answer is where to click |
 | [`sindri`](../wiki/sindri.md) | Project, delegation, the Sandbox and its files, the governance gate |
 | [`mimir`](../wiki/mimir.md) | Thread, View, Dashboard, Knowledge |
-| [`fehu`](../wiki/fehu.md) | billing and usage, how cost is broken down |
+| [`fehu`](../wiki/fehu.md) | billing and usage, how cost is broken down - and which product lets a customer bring their own model |
 
 ## While building
 
@@ -27,8 +27,8 @@ description: every wiki page grouped by the question it answers - start here whe
 | [`automation`](../wiki/automation.md) | Trigger and API, and why only cron is left |
 | [`processors`](../wiki/processors.md) | what each processor type takes, and the fields that decide behaviour |
 | [`workflow`](../wiki/workflow.md) | the processor types against the editor's groups; Expression is JavaScript, Template is Handlebars |
-| [`settings`](../wiki/settings.md) | Completion and Embedding Model, Data Source, Connection |
-| [`integration`](../wiki/integration.md) | chat platforms, the Applications pages, the architecture |
+| [`settings`](../wiki/settings.md) | Completion and Embedding Model, Data Source, Connection - and which of them a chart writes |
+| [`integration`](../wiki/integration.md) | chat platforms, the Applications pages, the architecture - and that there is no mail capability at all |
 | [`api`](../wiki/api.md) | the endpoint and its actions, the SSE sequence, the integration patterns, the SDK |
 | [`crd-rules`](../wiki/crd-rules.md) | the validations helm lint does not run, and the one the schema cannot express |
 | [`platform-unknowns`](../wiki/platform-unknowns.md) | what no source answers, and who to ask |
@@ -40,7 +40,7 @@ description: every wiki page grouped by the question it answers - start here whe
 | page | covers |
 |---|---|
 | [`green-and-doing-nothing`](../wiki/green-and-doing-nothing.md) | **it deployed, every check passed, and it does nothing.** The shapes that have happened, why no layer of the toolchain catches them, and which ones now have a rule. Start here when the symptom is silence rather than an error |
-| [`operations`](../wiki/operations.md) | Asgard's outbound IPs, checking model capability, vocabulary |
+| [`operations`](../wiki/operations.md) | Asgard's outbound IPs, checking model capability, the symptoms that turn out to be an account or a setting, vocabulary |
 | [`taiwan-channels`](../wiki/taiwan-channels.md) | the commerce channels a customer will name, what SHOPLINE cost, and what we have not built |
 | [`glossary`](../wiki/glossary.md) | words that mean one thing here, and what the other senses are called. **Check it for the word you searched**: a result in the wrong sense reads exactly like an answer |
 | [`what-they-read`](../wiki/what-they-read.md) | the picture a customer arrives with, and where it is wrong |

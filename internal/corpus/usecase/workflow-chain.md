@@ -15,9 +15,10 @@ response, a conversation loop, and a nine-branch content pipeline.
 deployment. Every construct this page cites is written in at least one of
 them, `??` included; `prevPayload` is in nearly all of them and is how a chain
 passes anything at all. Re-read 2026-09-15 against asgard-kube `cbd8d70` for the
-variable's exactly-one-of and its name pattern, and for the open `labels` map on
-Entry, Exit and Processor - and against every `variables` block and every
-declared exit in the reference deployments.
+variable's exactly-one-of and its name pattern, for the open `labels` map on
+Entry, Exit and Processor, and for the exactly-one-of on a relationship's `to` -
+and against every `variables` block and every declared exit in the reference
+deployments, where an exit is reached by a relationship naming it.
 
 **Unchecked:** nothing outstanding. The replacement of prevPayload by an http-request is stated in a deployment's own comment in the same words.
 
@@ -116,6 +117,12 @@ spec:
   # Declare one where a named end is worth showing on the canvas, or where an
   # exit hands off to another workflow through its handlingWorkflow - and give
   # it the same display_name / description pair as any other node.
+  #   - name: finish
+  #     labels:
+  #       display_name: Exit
+  # Nothing reaches it by falling off the end: `to` takes exactly one of
+  # processor and exit, so the last hop is routed at it by name -
+  # `to: {exit: finish}`.
   exits: []
 
   processors:

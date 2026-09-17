@@ -14,7 +14,8 @@
 #   1. The endpoint, declared as a chartValue and set on the platform.
 #   2. The request body - measure it against the real API, do not infer it from
 #      the field names on our side.
-#   3. Auth: add the header as a config, reading a secretKeyRef. Do NOT declare
+#   3. Auth: a config has no valueFrom, so a credential is a variable read back
+#      as vars.<name> - the skeleton is beside `variables` below. Do NOT declare
 #      a secretKeyRef for a key infra has not created yet - config evaluation
 #      fails at call time, so it deploys and then breaks on first use.
 apiVersion: asgard-ai.com/v1alpha1
@@ -31,6 +32,18 @@ metadata:
     {{- end }}
     {{- include "<<.Chart>>.labels" . | nindent 4 }}
 spec:
+  # **A credential goes here and nowhere else**: a config has no valueFrom, so a
+  # token is a variable, read back as vars.<name>.
+  # `.agents/skills/asgard-platform/usecase/external-api.md` has why the
+  # alternatives are not it.
+  # - name: apiToken
+  #   valueFrom:
+  #     secretKeyRef:
+  #       name: {{ include "<<.Chart>>.appSecretName" . }}
+  #       key: TODO_the_key_infra_created
+  # and then, on proc-call below:
+  # - name: Authorization
+  #   expression: '"Bearer " + vars.apiToken'
   variables: []
   entries:
     - name: entry-main
@@ -64,6 +77,15 @@ spec:
           that is the failure nothing can check for you.
           Read them together afterwards: asgard-cli verify --tools
         allowUploadFile: false
+  # No exit: the run ends when its last processor finishes. Declare one where a
+  # named end is worth seeing on the canvas, and route the last relationship at
+  # it - `to` takes exactly one of processor and exit.
+  # - name: finish
+  #   labels:
+  #     display_name: Exit
+  # - from: {processor: proc-response, relationName: success}
+  #   to:
+  #     exit: finish
   exits: []
   processors:
     # MUST come first. After http-request, prevPayload is the HTTP response,

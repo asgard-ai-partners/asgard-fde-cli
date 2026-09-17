@@ -1,6 +1,6 @@
 ---
 group: Products and scope
-description: billing and usage, how cost is broken down
+description: billing and usage, how cost is broken down - and which product lets a customer bring their own model
 ---
 # Fehu - billing and usage
 

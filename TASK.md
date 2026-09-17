@@ -34,7 +34,7 @@ and whether its source has moved since is what `go run ./hack sources` reports.
 | surface | read against | when |
 |---|---|---|
 | `glossary-collisions` every word the glossary says has one meaning here, against the help screens and the pages | read 2026-09-14; no check is possible, because which sense a bare word carries needs a reader | 2026-09-14 |
-| `generated-repo-end-to-end` the tool run the way an engagement runs it | `init` through `verify` in a scratch repository, every generated kind rendered; both findings were verdicts, not prose | 2026-09-14 |
+| `generated-repo-end-to-end` the tool run the way an engagement runs it | `init` through `verify` in a scratch repository, every generated kind rendered and the whole render validated against the CRD schemas | 2026-09-15 |
 | `provenance-markers` every `**Checked:**` and `**Seen in:**` line in the corpus | read for what it actually claims: a count on one is not evidence anybody read the source, so the counts are gone and the scope is named instead. The commit each extract was read at lives in `source/SOURCES.md`, which `go run ./hack sources` holds against the clones | 2026-09-14 |
 | `extracts-vs-charts` the extracts against the charts they came from | the commits in `source/SOURCES.md`'s **held against** column, which is what makes this reading checkable rather than a date | 2026-09-11 |
 | `wiki-vs-docs` the wiki pages against asgard-docs | **the pages whose citations have moved, which `go run ./hack coverage --drift` names** - now 0, each citation carrying the commit it was held against; the prose citing a page that has not moved stands at its own earlier reading | 2026-09-14 |
@@ -43,8 +43,9 @@ and whether its source has moved since is what `go run ./hack sources` reports.
 | `needs-and-briefs` the needs lists and briefings - Go rather than markdown, and in no group until now | every platform claim against asgard-kube `cbd8d70`, every command and flag against the binary, and every row's pointer against the document it names | 2026-09-14 |
 | `command-help` every `--help` screen - the largest reader-facing surface, and in no group until now | every screen read end to end; every command, flag and count in them run or recomputed against the binary and the CRDs | 2026-09-14 |
 | `gate-messages` every error and warning string the checks print, and `hack/verify-references.sh` | the ones carrying a claim, against asgard-kube `cbd8d70` and the deployment clones; every reference chart rendered, including the third layout the script had never looked for | 2026-09-14 |
-| `generator-templates` the CR skeletons `add` writes into a customer's chart | every field and claim against asgard-kube `cbd8d70` and asgard-core `623ceb5`; each kind generated, rendered and verified in a scratch repository | 2026-09-14 |
+| `generator-templates` the CR skeletons `add` writes into a customer's chart, and the commented shapes beside them - which ship the same way, because a shape somebody copies by hand is a shape that runs | asgard-kube `cbd8d70` and asgard-core `623ceb5`; every kind generated in a scratch repository, rendered, and the render validated against the CRD schemas | 2026-09-15 |
 | `indexes-and-counts` the two indexes, and every count in the material weighed against what a reader does with it | every alias term grepped against the landed tree; the counts that are a claim left to `go run ./hack counts` to recompute, the ones standing in for a yes replaced by a named example, and the rest deleted. The sweep reached every part of the corpus, the stage prompts, the scaffold templates, the design-time skills, every `--help` screen and the root documents. **What is left is check-held or load-bearing**: a figure `counts`, `tables`, `processors`, `coverage` or `shapes` recomputes, a platform quota a customer is sized against, or a number that is itself the argument. **The backlog closes and the regression is what needs a mechanism** - a document reviewed at a recorded digest does not come back until it changes, while a count added tomorrow is indistinguishable from a correct one, which is what `go run ./hack introduced` reads off the diff | 2026-09-14 |
+| `frontmatter-descriptions` the `description:` each wiki page and extract declares about itself, which `go run ./hack index` renders into a row and holds against the frontmatter - never against the document | each description read against its own page, and against the heading of the group its row sits under: in `usecase/README.md` the heading poses the question and the rows answer it in the same terms, so a row that reads thin on its own can be the right one and rewriting it breaks the comparison | 2026-09-15 |
 | `flag-usage` every flag's usage text against what the flag does | the working tree, every one | 2026-09-11 |
 | `processors-vs-palette` `wiki/processors.md`'s prose, as opposed to its two tables, which `go run ./hack processors` now holds against asgard-core and asgard-docs | the two clones as pulled. **The palette is at second hand and stays there** - asgard-docs records it from a repository nothing here clones, which that page's `**Unchecked:**` marker names | 2026-09-11 |
 | `stage-prompts` the stage prompts' guidance, as opposed to their command claims | read end to end; the platform claims they carry against asgard-kube `cbd8d70` and asgard-docs `23409b3`, and every command and flag they write run against the binary | 2026-09-14 |
@@ -59,25 +60,54 @@ lists and briefings, as `asgard-cli init` lands them.
 
 **The chart half is the least finished of Goal's four points.** What `add`
 writes is a correct starting point and not a chart: a large share of the spec
-keys the widest reference chart uses are keys it never mentions.
+keys the widest reference chart uses are keys it does not write.
 
 **The size is not written here.** `go run ./hack spec-key-gap` renders both
-sides and prints it, `--missing` is the worklist, and the check fails if the gap
-ever closes - because then this paragraph is what is wrong.
+sides and prints it, and the check fails if the gap ever closes - because then
+this paragraph is what is wrong.
 
-**Most of a gap can be the measurement.** That check used to run one flag
-combination per kind, so it counted as never written every key living behind a
-flag it did not pass - the `--db-class` class blocks, `--private`'s git auth,
-`--supervisor`'s loop. Close to a third of the figure was artefact, and the
-figure is what somebody would have worked from. It probes the combinations now,
-derived rather than listed: the flags `add` registers, read off its cobra calls;
-per kind, the fields its own templates **branch** on, read off the template
-parse tree rather than a regex, because a field that is only interpolated
-changes a value and never a key path; and for a flag with a closed vocabulary,
-that vocabulary from the generator. Three inputs resist derivation and are
-written down with the reason each does. **A number nobody can reproduce is worse
-than no number**, and this one was being reproduced wrongly by the thing that
-printed it.
+**A key `add` does not write is in one of four states, and only one of them is
+a gap.** Written; named in a commented skeleton, where somebody meets it at the
+moment they would write one; absent on purpose, with the document that carries
+that decision; or nowhere, which is the worklist. `--missing` prints the fourth
+and lists the other two beside it, and **it is empty**: every spec key a
+production chart uses has a home. What is left is the second state, which is
+where most of the shape a chart needs now lives - a key that is a choice is
+better shown than guessed, and a generator that guesses is worse than one that
+shows the shape and leaves the decision.
+
+**A decision is only as good as the document carrying it.** The third state is
+a list in `hack/speckeys.go`, because no program recovers a judgement from a
+CRD - but what is checked is the pointer, not the judgement: each row names the
+document that says why the key is absent, and the check fails when that document
+is gone or has stopped naming it, the same contract `needs` and `brief` hold.
+Proved by deleting the row a document carries and watching every decision
+resting on it go red.
+
+**Most of a gap can be the measurement, and this one was three separate
+measurement defects.** The check used to run one flag combination per kind, so
+it counted as never written every key living behind a flag it did not pass - the
+`--db-class` class blocks, `--private`'s git auth, `--supervisor`'s loop; close
+to a third of the figure was artefact, and the figure is what somebody would
+have worked from. It probes the combinations now, derived rather than listed:
+the flags `add` registers, read off its cobra calls; per kind, the fields its
+own templates **branch** on, read off the template parse tree rather than a
+regex, because a field that is only interpolated changes a value and never a key
+path; and for a flag with a closed vocabulary, that vocabulary from the
+generator. Second, it could not see a comment, so every key taught where
+somebody meets it counted as owed - the number said work was due exactly where
+the work was done. What a comment can be read for is the field it names, not
+the path it sits under: a skeleton here is written above the key it belongs to
+rather than inside it, so reconstructing the path attributes it to the previous
+sibling. That leaves one limit, and the decided set is what answers it - a
+decision covers the fields under it, so a CR kind `add` never generates does
+not pick up a generic leaf like `key` from another kind's skeleton. Third, it read a customer's own map key as a field: an
+indexer called `idx-00001` was a key `add` "never writes", which is true and
+unfixable, because a generator cannot know what a customer will call theirs.
+Those segments collapse to `<key>` now, which keeps what hangs off them -
+`docx.indexers.<key>.chunkSize` is schema and `docx.indexers.idx-00001.chunkSize`
+is one chart's. **A number nobody can reproduce is worse than no number**, and
+this one was being reproduced wrongly by the thing that printed it.
 
 **The reading backlog is closed, and how it closed is the useful part.**
 `go run ./hack reconcile` lists every pointer in the corpus nobody has recorded

@@ -184,6 +184,7 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 	addTo(cmd, groupAsk,
 		newGuideCmd(),
 		newSizeCmd(),
+		newLinksCmd(),
 		newIssueCmd(),
 	)
 	addTo(cmd, groupBuild,

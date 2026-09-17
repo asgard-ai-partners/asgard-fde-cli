@@ -25,8 +25,8 @@
             "type": "string",
             "enum": ["cover", "chapter", "content", "quote", "metrics", "close"]
           },
-          "eyebrow": {
-            "$comment": "Stable cross-slide section label. Must never restate the title in different words.",
+          "scene": {
+            "$comment": "The scenario this slide belongs to, in the customer's own naming - identical on every slide of one scenario. It is the scenario's name and not this slide's, so a value that changes per slide has become a caption. Never restates the title.",
             "type": "string",
             "maxLength": 40
           },
@@ -49,11 +49,6 @@
               "kind": { "type": "string", "minLength": 2, "maxLength": 40 },
               "insight": { "type": "string", "minLength": 6, "maxLength": 160 }
             }
-          },
-          "cap": {
-            "$comment": "Why this slide matters: a tradeoff, boundary, next step, or insight the visual cannot say. Never restates the title or the diagram. Optional and exceptional rather than a slot every slide fills - what may go in one, the test it has to pass, and how often a finished deck earns one at all are the .co entry in design.md beside this file.",
-            "type": "string",
-            "maxLength": 200
           }
         }
       }

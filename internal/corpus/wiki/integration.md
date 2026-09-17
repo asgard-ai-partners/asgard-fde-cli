@@ -1,6 +1,6 @@
 ---
 group: While building
-description: chat platforms, the Applications pages, the architecture
+description: chat platforms, the Applications pages, the architecture - and that there is no mail capability at all
 ---
 # Reaching an agent from outside
 

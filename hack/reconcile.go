@@ -326,16 +326,20 @@ func reconcileReport(w io.Writer, record reconciled, bodies map[string]string, o
 		}
 	}
 
+	// **Never recorded goes first, and is never withheld.** It used to print
+	// only when nothing had moved, so one moved pointer hid every unread one
+	// behind a count - the report said "1 never recorded" and listed neither
+	// which nor where. A category that disappears when another is non-empty is
+	// the same failure as a skip that lies: the number is right and the thing
+	// somebody would act on is gone.
+	for _, s := range never[:min(len(never), 10)] {
+		fmt.Fprintf(w, "never   %-34s -> %s\n", s.from, s.to)
+	}
+	if len(never) > 10 {
+		fmt.Fprintf(w, "        ... and %d more never recorded\n", len(never)-10)
+	}
 	for _, s := range moved {
 		fmt.Fprintf(w, "moved   %-34s -> %-34s read at %s\n", s.from, s.to, s.was)
-	}
-	if len(never) > 0 && len(moved) == 0 {
-		for _, s := range never[:min(len(never), 10)] {
-			fmt.Fprintf(w, "never   %-34s -> %s\n", s.from, s.to)
-		}
-		if len(never) > 10 {
-			fmt.Fprintf(w, "        ... and %d more never recorded\n", len(never)-10)
-		}
 	}
 
 	fmt.Fprintf(w, "\n%d pointer(s): %d never recorded, %d whose target has moved since.\n",

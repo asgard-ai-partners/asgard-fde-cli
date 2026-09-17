@@ -22,13 +22,6 @@ metadata:
     asgard-ai.com/managed-by: skill-set
     {{- include "<<.Chart>>.labels" . | nindent 4 }}
 spec:
-  # **Nobody issues this key: the platform mints it per namespace.** It is the
-  # `api_key` of the `preset-agent-hub` Secret, generated once and never
-  # rotated, and the same value backs a BotProvider's. The work is to get that
-  # value into this release's own Secret under the name below - declare it
-  # under `appSecret:` and set it with `asgard-cli pipeline variables set`.
-  # It is NOT the X-API-KEY the documentation tells you to create for calling
-  # the API. See `.agents/skills/asgard-platform/usecase/conventions.md`.
   # **The platform mints this and guarantees the Secret in every namespace**, so
   # there is nothing to obtain and nothing to declare: `preset-agent-hub` /
   # `api_key` is created by the namespace reconciler, once, and never rotated.
@@ -84,6 +77,19 @@ spec:
     revision: {{ .Chart.AppVersion | quote }}
     auth:
       type: http
+      # **The username is a constant, not a secret**, so it is written
+      # literally and a private repo costs exactly ONE declared key. The PAT in
+      # `password` below is what authenticates. One reference deployment reads
+      # the username out of the release Secret as well -
+      #
+      #   valueFrom:
+      #     secretKeyRef:
+      #       name: <the release Secret>
+      #       key: asgard-github-pat-username
+      #
+      # - which works and needs no repair there, but it is a second key to
+      # declare, set and rotate for a value that never varies. Do not copy it
+      # into a new chart.
       username:
         value: "git"
       password:

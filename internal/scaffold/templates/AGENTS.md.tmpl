@@ -853,6 +853,15 @@ of the gate you cannot run alone is also the one whose obvious substitute is wro
 
 ## Acceptance Gate
 
+**This gate is the chart's. A deck has its own, and no command runs it.**
+`asgard-cli gate` reads CRs, so nothing here looks at a slide — and the failure a
+deck actually has is a sentence, not a field. Before any deck leaves this
+repository, run `## Before you send it` in `.agents/skills/proposal-deck/SKILL.md`,
+**starting at question 0**, and the second pass in
+`.agents/skills/plain-chinese/SKILL.md`, which asks two questions rather than
+one. Both are per-sentence rather than per-file, and both exist because the same
+correction was made seven times on one draft by a person reading it.
+
 Load the **`asgard-cr-verification`** skill (`.agents/skills/`) and run its gate; release omitted =
 every release. **Any red step stops the work.**
 

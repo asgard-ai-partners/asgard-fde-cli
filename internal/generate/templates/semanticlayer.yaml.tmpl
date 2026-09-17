@@ -60,12 +60,49 @@ spec:
           type: string
       # REQUIRED on every cube, even a cube that is only ever read row by row.
       # An empty list is a declaration the apiserver accepts; omitting the key
-      # is rejected outright, and helm lint does not see the difference.
+      # is rejected outright, and helm lint does not see the difference - but
+      # `[]` is also a layer that answers no question, because a cube with
+      # dimensions and no measures gives the model columns to group by and
+      # nothing to aggregate.
       #
       # Every measure needs sql EXCEPT type: count, which counts rows and takes
       # none. Getting that backwards is a CEL rejection at apply time.
+      #
+      # **This is the entry.** name, title, description and type are required on
+      # every one, and sql joins them for every type but count. `description`
+      # is what the MODEL reads to pick between two measures that aggregate the
+      # same column, so an empty one is a coin flip:
+      #
+      #   - name: revenue              # unique inside the cube
+      #     title: Revenue             # what a person sees
+      #     description: |-
+      #       TODO: net of refunds, or gross? Say which, and in what currency.
+      #     type: sum                  # string|time|boolean|number|number_agg|
+      #                                # count|count_distinct|
+      #                                # count_distinct_approx|sum|avg|min|max
+      #     sql: amount                # required unless type is count
+      #
+      # **The three below are for the case that asks for them, not for every
+      # measure.** Reach for one when the question does: a currency or percent
+      # that a bare number reads wrong, a business term that is one name and one
+      # predicate, or a "show me the rows" that has to expand to something:
+      #
+      #     format: currency           # currency|percent, and nothing else
+      #     filters:
+      #       - sql: "{CUBE}.status = 'paid'"
+      #     drillMembers: [order_id]
       measures: []
-  # Analysis views go here, never as a cube-level sql: virtual cube.
+  # Analysis views go here, never as a cube-level sql: virtual cube. Both
+  # fields of an entry are required.
+  #
+  # Run every one against the live database before committing it, and put the
+  # row count you saw in the comment - a query returning 89 rows sets a
+  # different expectation from one returning 4. One that errors or returns
+  # nonsense actively misleads the agent reading it.
+  #
+  #   - comment: TODO: what it answers, and what the numbers leave out
+  #     sql: |
+  #       select ...
   sampleQueries: []
   # Plain strings. Data Insight renders each as a button under this layer's
   # prompt box and sends it when somebody clicks it, so an empty list is a
@@ -78,7 +115,25 @@ spec:
   # REQUIRED, and the same trap as measures: a single-cube layer still has to
   # say `joins: []` rather than leave the key out.
   #
-  # Each join names a from cube and a to cube with the SAME number of
-  # dimensions on each side - the CRD checks the counts match, so a composite
-  # key has to be spelled out on both.
+  # Every field of an entry is required, and each `cube` is a cube's own `name`
+  # as spelled above. The CRD checks the two `dimensions` lists are the same
+  # length, so a composite key is written out on both sides.
+  #
+  # Verify the relationship with a join query BEFORE writing an entry. Foreign
+  # keys are often absent in older business systems, so a relationship inferred
+  # from column naming is a guess, and a wrong one_to_many fans rows out and
+  # silently inflates every count that crosses it. That failure is invisible in
+  # the column names, which is why
+  # .agents/skills/asgard-platform/usecase/semantic-layer.md says to introspect
+  # the database rather than reason about it.
+  #
+  #   - name: <from_cube>_<from_dim>_<to_cube>_<to_dim>
+  #     description: TODO, in the customer's language
+  #     relationship: one_to_many   # or one_to_one, or many_to_one
+  #     from:
+  #       cube: <schema>.<table_a>
+  #       dimensions: [<col>]
+  #     to:
+  #       cube: <schema>.<table_b>
+  #       dimensions: [<col>]
   joins: []
