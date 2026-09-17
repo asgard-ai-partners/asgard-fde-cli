@@ -1023,10 +1023,13 @@ A customer proposal rarely carries one. An internal or partner deck is mostly
 links, and all three ways of getting one wrong render identically - nothing
 catches them but somebody clicking.
 
+- **Do not assemble one by hand.** `asgard-cli links` prints what this checkout
+  is bound to, from the ids already on disk, and prints nothing it would have to
+  guess. What it names as not printed is not printed for a reason - take that
+  rather than building the URL yourself.
 - **A link points at the page being discussed, not at the site it lives on.** A
   root URL is the version somebody writes when they did not look up the real
-  one. The ids are in the repository you are working in: `.asgard-cli.yaml`
-  carries the workspace, and the git remote carries the owner and name.
+  one.
 - **The name is the link.** A row that already says what the thing is does not
   also spell the URL out beside it.
 - **Do not infer who can open it.** A private repository is evidence about the

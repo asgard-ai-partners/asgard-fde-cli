@@ -222,6 +222,23 @@ asgard-cli guide requirements     # 其中一份，對著這個 repo 讀
 cat .agents/skills/asgard-platform/guide/requirements.md   # 不需要 repo 的那一半
 ```
 
+### 這次 engagement 自己那些系統的連結
+
+給夥伴看的 deck 幾乎都是連結，而每一個 id 都已經在磁碟上 —— `.asgard-cli.yaml`
+記著 workspace，git remote 記著 repository。**手工把它們湊起來就是會出錯的那一步**：
+連結是「這一頁值得打開」的主張，而它比較弱的幾種版本渲染起來都正常 —— 給站台首頁
+而不是正在講的那一頁、在已經是連結的名字旁邊再把網址拼出來、因為猜對方打不開就把
+連結刪掉。
+
+```bash
+asgard-cli links                  # 這份 checkout 綁到哪些東西
+```
+
+**知道什麼才印什麼。** Console 跟 API 是兩個不同的 host，彼此推不出對方，所以
+Console 只有在官方託管的 profile 上才知道；pipeline 的 Console 路徑沒有任何來源寫過。
+那幾條會印成「沒印，因為……」而不是一個看起來很像的網址。它不碰網路，也不需要 session。
+
+
 **沒有任何指令會說「這個 engagement 走到哪裡」**，而且那是刻意的。`project`、`question`、`request`、`task` 各讀一個檔案回來，沒有一個會從其他幾個推導出位置。
 
 ```

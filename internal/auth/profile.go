@@ -90,6 +90,19 @@ const (
 	hostedIssuer      = "https://iam.asgard-ai.com"
 	hostedClientID    = "r21ntx0eb5igyokl3px4"
 	hostedPlatformAPI = "https://platform-api.asgard-ai.com"
+	// **The Console is a different host from the API, and neither implies the
+	// other.** `platform-api.asgard-ai.com` serves this tool;
+	// `platform.asgard-ai.com` is what a person opens. Stripping `-api` happens
+	// to produce one from the other on the hosted installation and is a
+	// coincidence of naming rather than a rule - so this is written down
+	// instead of derived, and there is no fallback for a profile that names its
+	// own API.
+	//
+	// It is not a field on Profile for the same reason the development platform
+	// is not compiled in: an installation that is not this one has a console
+	// wherever its operator put it, and inventing a URL for it produces a link
+	// that resolves to nothing and looks exactly like one that works.
+	hostedConsole = "https://platform.asgard-ai.com"
 )
 
 // Origin says where a resolved field came from, so `profile show` can print it.
@@ -505,6 +518,21 @@ func (p Profile) AuthorizeURL() string { return p.Issuer + "/login/oauth/authori
 // TokenURL is Casdoor's token endpoint, used for both the authorization code
 // exchange and the refresh.
 func (p Profile) TokenURL() string { return p.Issuer + "/api/login/oauth/access_token" }
+
+// ConsoleURL is where a person opens this installation, and ok is false when
+// nothing here knows.
+//
+// **Only the hosted installation has an answer**, because the Console's host is
+// not derivable from the API's and no profile field records it. A caller that
+// gets false says so rather than assembling a URL: the failure mode of a
+// guessed one is a link that renders correctly, is copied onto a slide, and
+// dies in front of a room.
+func (p Profile) ConsoleURL() (string, bool) {
+	if p.PlatformAPI == hostedPlatformAPI {
+		return hostedConsole, true
+	}
+	return "", false
+}
 
 // UserinfoURL is the OIDC userinfo endpoint. It is also what the platform's own
 // IAM calls to verify a bearer token, so a token this endpoint accepts is a

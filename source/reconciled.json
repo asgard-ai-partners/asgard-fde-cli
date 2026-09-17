@@ -11,7 +11,7 @@
     "wiki/fehu": "0b9d77cb5b26",
     "wiki/integration": "64001e848244",
     "wiki/operations": "0aa60ed671c6",
-    "wiki/platform-unknowns": "6f74c2d05030",
+    "wiki/platform-unknowns": "c19969ee4628",
     "wiki/settings": "8a1777986d43",
     "wiki/tools": "ab1d0f02543f",
     "wiki/what-they-read": "311be1e3bb9f"
@@ -46,7 +46,7 @@
     "guide/enhance": "752200cbff58",
     "guide/idle": "1d22ad7f2d17",
     "wiki/console": "30e8b5b6858c",
-    "wiki/platform-unknowns": "6f74c2d05030"
+    "wiki/platform-unknowns": "c19969ee4628"
   },
   "guide/enhance": {
     "guide/data-sources": "b2ac1332042c",
@@ -110,7 +110,7 @@
     "wiki/fehu": "0b9d77cb5b26",
     "wiki/integration": "64001e848244",
     "wiki/operations": "0aa60ed671c6",
-    "wiki/platform-unknowns": "6f74c2d05030",
+    "wiki/platform-unknowns": "c19969ee4628",
     "wiki/product-suite": "8b3ec617f1ac",
     "wiki/what-they-read": "311be1e3bb9f"
   },
@@ -154,7 +154,7 @@
   "needs/write-path": {
     "needs/write-path": "f81961a2fc53",
     "usecase/write-path": "57a43201aea3",
-    "wiki/platform-unknowns": "6f74c2d05030"
+    "wiki/platform-unknowns": "c19969ee4628"
   },
   "root/AGENTS": {
     "wiki/crd-rules": "c45a84a66421",
@@ -181,7 +181,7 @@
   },
   "root/TASK": {
     "usecase/conventions": "37eb1b6e45a0",
-    "wiki/platform-unknowns": "6f74c2d05030",
+    "wiki/platform-unknowns": "c19969ee4628",
     "wiki/processors": "2876b9ca42d9"
   },
   "skill/asgard-fde-onboarding": {
@@ -207,12 +207,12 @@
   "skill/proposal-deck": {
     "guide/read-path": "649ec9cbd749",
     "guide/requirements": "b3a1a8e73ca2",
-    "skill/proposal-deck": "4ad2392f6fd5",
+    "skill/proposal-deck": "a5bb69363750",
     "usecase/demo-generation": "8e1e00f15f41",
     "wiki/case-studies": "579aa51cbc2a",
     "wiki/mimir": "a4b3da33eedb",
     "wiki/operations": "0aa60ed671c6",
-    "wiki/platform-unknowns": "6f74c2d05030",
+    "wiki/platform-unknowns": "c19969ee4628",
     "wiki/product-suite": "8b3ec617f1ac",
     "wiki/screenshots": "8bf22d7aa723",
     "wiki/setup-path": "af6cd26be802"
@@ -268,7 +268,7 @@
     "usecase/flow-agent-supervisor": "c752a8f44bb4",
     "usecase/skill-set": "d540effa9e46",
     "wiki/agents": "a303abe12d84",
-    "wiki/platform-unknowns": "6f74c2d05030"
+    "wiki/platform-unknowns": "c19969ee4628"
   },
   "usecase/chat-channel": {
     "needs/chat-channel": "d8c2af286d4c",
@@ -285,7 +285,7 @@
     "usecase/semantic-layer": "a7f4e911e5a6",
     "usecase/write-path": "57a43201aea3",
     "wiki/api": "43635238a1be",
-    "wiki/platform-unknowns": "6f74c2d05030"
+    "wiki/platform-unknowns": "c19969ee4628"
   },
   "usecase/demo-generation": {
     "usecase/demo-generation": "8e1e00f15f41",
@@ -391,7 +391,7 @@
   "usecase/workflow-chain": {
     "usecase/workflow-chain": "fe30cf24f579",
     "wiki/green-and-doing-nothing": "06ffaddd2d6a",
-    "wiki/platform-unknowns": "6f74c2d05030",
+    "wiki/platform-unknowns": "c19969ee4628",
     "wiki/processors": "2876b9ca42d9",
     "wiki/workflow": "47e9d80c4fcf"
   },
@@ -400,7 +400,7 @@
     "usecase/conventions": "37eb1b6e45a0",
     "usecase/external-api": "f6d7df72ce44",
     "usecase/write-path": "57a43201aea3",
-    "wiki/platform-unknowns": "6f74c2d05030",
+    "wiki/platform-unknowns": "c19969ee4628",
     "wiki/sindri": "187b94b0ac45"
   },
   "wiki/README": {
@@ -429,7 +429,7 @@
     "usecase/external-api": "f6d7df72ce44",
     "usecase/workflow-chain": "fe30cf24f579",
     "wiki/api": "43635238a1be",
-    "wiki/platform-unknowns": "6f74c2d05030",
+    "wiki/platform-unknowns": "c19969ee4628",
     "wiki/processors": "2876b9ca42d9"
   },
   "wiki/automation": {
@@ -515,7 +515,7 @@
     "wiki/knowledge": "d356c853d283",
     "wiki/mimir": "a4b3da33eedb",
     "wiki/operations": "0aa60ed671c6",
-    "wiki/platform-unknowns": "6f74c2d05030",
+    "wiki/platform-unknowns": "c19969ee4628",
     "wiki/processors": "2876b9ca42d9",
     "wiki/product-suite": "8b3ec617f1ac",
     "wiki/screenshots": "8bf22d7aa723",
@@ -535,7 +535,7 @@
     "wiki/api": "43635238a1be",
     "wiki/integration": "64001e848244",
     "wiki/knowledge": "d356c853d283",
-    "wiki/platform-unknowns": "6f74c2d05030",
+    "wiki/platform-unknowns": "c19969ee4628",
     "wiki/processors": "2876b9ca42d9",
     "wiki/what-they-read": "311be1e3bb9f"
   },
@@ -562,7 +562,7 @@
     "usecase/external-api": "f6d7df72ce44",
     "usecase/write-path": "57a43201aea3",
     "wiki/console": "30e8b5b6858c",
-    "wiki/platform-unknowns": "6f74c2d05030",
+    "wiki/platform-unknowns": "c19969ee4628",
     "wiki/processors": "2876b9ca42d9",
     "wiki/settings": "8a1777986d43"
   },
@@ -584,7 +584,7 @@
   "wiki/screenshots": {
     "usecase/write-path": "57a43201aea3",
     "wiki/integration": "64001e848244",
-    "wiki/platform-unknowns": "6f74c2d05030",
+    "wiki/platform-unknowns": "c19969ee4628",
     "wiki/screenshots": "8bf22d7aa723",
     "wiki/setup-path": "af6cd26be802"
   },
@@ -600,7 +600,7 @@
     "usecase/semantic-layer": "a7f4e911e5a6",
     "wiki/automation": "1e481dc93be5",
     "wiki/fehu": "0b9d77cb5b26",
-    "wiki/platform-unknowns": "6f74c2d05030",
+    "wiki/platform-unknowns": "c19969ee4628",
     "wiki/settings": "8a1777986d43",
     "wiki/setup-path": "af6cd26be802"
   },
@@ -647,7 +647,7 @@
   "wiki/tools": {
     "usecase/plugin": "9d945dcf8735",
     "usecase/skill-set": "d540effa9e46",
-    "wiki/platform-unknowns": "6f74c2d05030",
+    "wiki/platform-unknowns": "c19969ee4628",
     "wiki/tool-description-and-skill": "dd571664351b",
     "wiki/tools": "ab1d0f02543f"
   },
