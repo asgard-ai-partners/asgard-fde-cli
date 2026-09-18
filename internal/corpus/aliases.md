@@ -49,9 +49,9 @@ so keeping it in the query would only add a term that lands nowhere.
 | 電商 | commerce, marketplace, channel - and `wiki/taiwan-channels.md` |
 | 庫存 | inventory, stock |
 | 訂單 | order |
-| 客服 | customer service, help desk - and `usecase/chat-channel.md` |
+| 客服 | support, customer service, help desk - and `usecase/chat-channel.md` |
 | 權限 | permission, scope, console - and `wiki/platform-unknowns.md` P1 |
-| 稽核 | audit event - and `wiki/platform-unknowns.md` P2 |
+| 稽核 | audit-log, auditor - and `wiki/platform-unknowns.md` P2 |
 | 報表 | dashboard, report, view - and `usecase/mimir-dashboard.md` |
 | 儀表板 | dashboard - and `usecase/mimir-dashboard.md` |
 | 知識庫 | knowledge, drive, context index |
