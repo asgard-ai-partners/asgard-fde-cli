@@ -14,7 +14,7 @@ import (
 func init() {
 	register("aliases", check{
 		Needs: "this repository",
-		What:  "**every search term `aliases.md` sends a reader to appears somewhere in the corpus** - the half `--links` cannot do, because a row routes by word rather than by path, and a word that lands nowhere reads exactly like a subject the material does not cover",
+		What:  "**every search term `aliases.md` sends a reader to appears somewhere in the corpus, and a search for it reaches the page the row names** - the half `--links` cannot do, because a row routes by word rather than by path. A word that lands nowhere reads exactly like a subject the material does not cover, and a word that lands on an index reads exactly like one that landed on an answer",
 		Run:   runAliases,
 	})
 }
@@ -119,15 +119,26 @@ func runAliases(args []string) error {
 	}
 
 	seen := map[string]string{} // term -> the first row that sends somebody to it
+	// said -> the page the row names, then its search terms. Only rows that
+	// name one can be asked whether a search reaches it.
+	rows := map[string][]string{}
 	for _, m := range aliasRow.FindAllStringSubmatch(string(data), -1) {
 		said := strings.TrimSpace(m[1])
 		if said == "they said" || strings.HasPrefix(said, "---") {
 			continue
 		}
-		for _, t := range aliasTerms(m[2]) {
+		terms := aliasTerms(m[2])
+		for _, t := range terms {
 			if _, ok := seen[t]; !ok {
 				seen[t] = said
 			}
+		}
+		if t := aliasTarget.FindStringSubmatch(m[2]); t != nil && len(terms) > 0 {
+			row := []string{t[1]}
+			for _, x := range terms {
+				row = append(row, strings.ToLower(x))
+			}
+			rows[said] = row
 		}
 	}
 
@@ -141,11 +152,150 @@ func runAliases(args []string) error {
 	for _, d := range dead {
 		fmt.Println(d)
 	}
+	unreached, checked, err := checkAliasRetrieval(root, rows)
+	if err != nil {
+		return err
+	}
+	for _, u := range unreached {
+		fmt.Println(u)
+	}
+
 	fmt.Printf("\n%d search term(s) in the alias table, %d that land nowhere.\n", len(seen), len(dead))
-	if len(dead) > 0 {
-		fmt.Println("\nA translated query that comes back empty reads as a subject nobody covered.")
+	fmt.Printf("%d row(s) name the page that answers them, %d a search does not reach.\n", checked, len(unreached))
+	if len(dead) > 0 || len(unreached) > 0 {
+		fmt.Println("\nA translated query that comes back empty reads as a subject nobody covered,")
+		fmt.Println("and one that returns an index reads exactly like one that returned an answer.")
 		fmt.Println("Point the row at the word a page actually writes, or write the page.")
 		return errFailed
 	}
 	return nil
+}
+
+// aliasTarget is the document a row sends a reader to, when it names one.
+//
+// A row's second cell is search terms, optionally followed by the page that
+// answers them. `--links` resolves that pointer; what it cannot ask is whether
+// a search for those terms actually SURFACES that page, which is the question
+// below.
+var aliasTarget = regexp.MustCompile("`((?:wiki|usecase|needs|brief|guide)/[a-z0-9-]+\\.md)`")
+
+// corpusDocs is the landed tree as one lowered body per document, keyed the way
+// a row names it.
+func corpusDocs(root string) (map[string]string, error) {
+	out := map[string]string{}
+	base := filepath.Join(root, "internal/corpus")
+	err := filepath.Walk(base, func(p string, fi os.FileInfo, err error) error {
+		if err != nil || fi.IsDir() || !strings.HasSuffix(p, ".md") {
+			return nil
+		}
+		rel, relErr := filepath.Rel(base, p)
+		if relErr != nil {
+			return nil
+		}
+		// The query's own source is not a result. See indexPage.
+		if filepath.Base(p) == "aliases.md" {
+			return nil
+		}
+		data, readErr := os.ReadFile(p)
+		if readErr != nil {
+			return nil
+		}
+		out[filepath.ToSlash(rel)] = strings.ToLower(string(data))
+		return nil
+	})
+	return out, err
+}
+
+// indexPage is a document that lists other documents. They are `Unlisted` for
+// the same reason they are ranked apart here: a page naming every subject
+// matches every query.
+//
+// **`aliases.md` is not one of them, because it is not a result at all.** It is
+// where the query comes from - it carries every term in the table by
+// construction, so it scores maximally on every row and reported all of them
+// as unreachable the first time this ran. That is the cry-wolf shape, and the
+// answer is the same one the corpus already applies: the table is `Unlisted`
+// and sits above both halves, so it is excluded from the search rather than
+// ranked in it.
+func indexPage(name string) bool {
+	b := filepath.Base(name)
+	return b == "index.md" || b == "README.md"
+}
+
+// checkAliasRetrieval asks the question `Goal.md` says is the whole engineering
+// problem - **whether an agent searching the customer's words lands on the page
+// that answers them** - and it is the only check that asks it.
+//
+// An agent does not browse an index. It greps, and takes what comes back. So a
+// row that translates a word correctly and sends the reader to a page the search
+// does not surface has moved the failure rather than fixed it: the query returns
+// something, which reads exactly like an answer.
+//
+// **This repository has already paid for the specific failure below.** The alias
+// table used to live among the wiki pages, and because it lists every alias it
+// was reliably the one document carrying every term of a translated query - so a
+// search for a subject returned the word list instead of the page. It was moved
+// out for that, and the rule that keeps it out is here: **no page that lists
+// other pages may outrank the page a row names.**
+//
+// Scored by how many of the row's terms a document contains, which is what a
+// grep gives an agent rather than what a ranker would. A tie counts against the
+// index page, because a tie is enough to put it first in somebody's output.
+func checkAliasRetrieval(root string, rows map[string][]string) ([]string, int, error) {
+	docs, err := corpusDocs(root)
+	if err != nil {
+		return nil, 0, err
+	}
+	var bad []string
+	checked := 0
+	for _, said := range sortedKeys(rows) {
+		terms := rows[said]
+		if len(terms) < 2 {
+			continue
+		}
+		target := terms[0]
+		body, ok := docs[target]
+		if !ok {
+			// `--links` owns a pointer that resolves to nothing; reporting it
+			// here as well would call one defect two.
+			continue
+		}
+		checked++
+		// **Occurrences, not presence.** Scoring a term as present-or-absent
+		// makes an index row that NAMES a page tie with the page ABOUT it -
+		// a description contains its subject's words once, by construction -
+		// and a tie was enough to report thirteen correct rows as broken.
+		// What a grep hands an agent is lines, so the count of lines is the
+		// thing to rank by.
+		score := func(text string) int {
+			n := 0
+			for _, t := range terms[1:] {
+				n += strings.Count(text, t)
+			}
+			return n
+		}
+		want := score(body)
+		if want == 0 {
+			bad = append(bad, fmt.Sprintf(
+				"  %q -> `%s`: that page carries none of the words the row says to search for, so the "+
+					"pointer is right and the search never reaches it", said, target))
+			continue
+		}
+		for _, name := range sortedKeys(docs) {
+			if !indexPage(name) || name == target {
+				continue
+			}
+			// Strictly greater: outranking is what the recorded failure was,
+			// and a tie between a page and a list of pages is not it.
+			if score(docs[name]) > want {
+				bad = append(bad, fmt.Sprintf(
+					"  %q -> `%s`: `%s` matches those words as well or better, and it is a list of pages "+
+						"rather than an answer. An index that outranks a page is how a translated query "+
+						"returns the word list", said, target, name))
+				break
+			}
+		}
+	}
+	sort.Strings(bad)
+	return bad, checked, nil
 }
