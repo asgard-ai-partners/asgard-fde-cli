@@ -135,7 +135,7 @@ somebody who is not the maintainer, and they close.
 report, so something an engagement *learned* arrives as a complaint about the
 tool, and the corpus has no slot for a claim only the engagement can verify -
 `../usecase/conventions.md` had to invent "settled / very likely / reasoned" by
-hand to say how far a thing was proved. `.out/write-back.md` carries the
+hand to say how far a thing was proved. `design/write-back.md` carries the
 argument and a recommendation: extend `issue-report` rather than build a second
 route, and give `kb` a `**Proved:**` marker beside `**Checked:**` so an
 engagement's claim lands where every reader meets it. **What would show that
