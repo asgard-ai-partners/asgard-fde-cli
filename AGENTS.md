@@ -263,6 +263,15 @@ not. `audit-material --links` reads them - their rows carry pointers - and
 `--orphans` deliberately does not count them, because a list that names every
 page makes every page look reached.
 
+**That it stays out of the way is checked now, and it used to be a convention.**
+A row that translates a word correctly and sends a reader somewhere the search
+does not surface has moved the failure rather than fixed it: the query returns
+something, which reads exactly like an answer. So for every row that names the
+page answering it, a search for that row's words has to reach that page, and no
+page listing other pages may outrank it. Two rows were reaching nothing when
+this was first run, both by a word - one page wrote `audit-log event` where the
+row said `audit event`. **Check: `go run ./hack aliases`.**
+
 Do not "fix" the scaffold templates into English. Do not start a second exception
 without saying why it earns one.
 
