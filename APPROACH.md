@@ -365,6 +365,30 @@ them, which is the half a prose search cannot reach.
 What the generator writes is the conventions applied: naming, the display
 annotations, what belongs in `values.yaml` and what stays in the template.
 
+**A field that is a choice gets its shape written into the template as a
+comment, rather than a line telling the author to go and read the extract.** The
+extract still exists and the pointer is still there - they are the reading order
+`add` prints - but the shape somebody needs while typing the field is beside the
+field. The measure entry's required fields, the join's matched dimension
+lists, the web Syncer's timings that have no defaults: each is in
+`internal/generate/templates/` and each is also in the extract it came from.
+
+That looks like the duplication this repository removes everywhere else, and the
+reason it is not is what a pointer costs at the moment of writing. **A skeleton
+is the only place that says how often a thing is right** - prose says what a
+field is for and a schema says what shape it takes, and neither says "most
+layers need none of these three". `AGENTS.md` has that as its own rule -
+"if it is a list, does it say which of its items are load-bearing?" - and the
+deck it came from.
+
+[WikiSkill](https://arxiv.org/abs/2608.27454) measured the same effect from the
+other side and is worth knowing about before anyone thins these comments back
+out: giving its agent access to the wiki **degraded** the skills it produced,
+because knowledge available through a pointer was fetched rather than compiled
+into the artefact. Their conclusion is not that an agent should not read a wiki -
+this tool's first goal is that it can - it is that a pointer is not a substitute
+for the fact at the point of use.
+
 Out of scope deliberately, and Goal.md says why: the namespace and the
 environment id, which the platform injects as `.Values.asgard.*` on every run,
 and whether the thing deploys at all.

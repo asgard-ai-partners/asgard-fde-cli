@@ -90,3 +90,13 @@ Format](https://cloud.google.com/blog/products/data-analytics/how-the-open-knowl
 但**它明說它只解格式**——過期、改一處要連帶改哪些、連過去的東西還在不在,規格都
 沒有機制。那三件事才是這個工具真正在做的:一份可攜但已經不對的知識庫,比沒有更
 危險,因為拿到它的 agent 不會回報失敗,它會把沉默填滿。
+
+**而且那個缺口不是 OKF 一家的。** [WikiSkill](https://arxiv.org/abs/2608.27454)
+把 agent 自己的執行經驗編成一份 wiki,主題完全不同(它寫的是 agent 的行為,我們
+寫的是外部平台),卻走到同一個三層形狀,然後在 Limitations 裡寫下同一句話:它沒有
+自動修剪 wiki 的機制,也沒有任何東西驗證一條記錄還成不成立。
+
+兩份獨立的設計、兩種完全不同的題材,都把「過期」留在規格外面。**那不是巧合:格式
+設計得出來,過期設計不出來** —— 它只能靠記下「這一條是對著哪個版本讀的」,然後有
+東西去比對那個版本有沒有動。`source/SOURCES.md`、`source/reconciled.json` 和
+`go run ./hack sources` 就是那件事,而它們是這個工具唯一沒有前例可抄的部分。
