@@ -181,6 +181,14 @@ It writes nothing and reaches no network.`,
 			fmt.Fprintf(out, "%-14s %-46s %s\n", "platform api", r.PlatformAPI, r.APIFrom)
 			fmt.Fprintf(out, "%-14s %-46s %s\n", "issuer", r.Issuer, r.IssuerFrom)
 			fmt.Fprintf(out, "%-14s %-46s %s\n", "client id", r.ClientID, r.ClientIDFrom)
+			// An empty Console is printed rather than skipped: it is the one
+			// field a profile can legitimately have none of, and a row that
+			// disappears reads as a row nobody needed.
+			shown, from := r.Console, fmt.Sprint(r.ConsoleFrom)
+			if shown == "" {
+				shown, from = "-", "not recorded; --console <url> sets it"
+			}
+			fmt.Fprintf(out, "%-14s %-46s %s\n", "console", shown, from)
 			if w := r.Warning(); w != "" {
 				fmt.Fprintf(out, "\nWARNING: %s\n", w)
 			}
@@ -192,7 +200,7 @@ It writes nothing and reaches no network.`,
 }
 
 func newProfileSetCmd() *cobra.Command {
-	var issuer, clientID, platformAPI string
+	var issuer, clientID, platformAPI, console string
 
 	cmd := &cobra.Command{
 		Use:   "set <name>",
@@ -208,8 +216,17 @@ appears because somebody ran an unrelated command is a file nobody remembers
 agreeing to.
 
 Only the flags given are changed, so a value can be corrected without restating
-the other two. Passing an empty string clears one, which makes it fall back to
+the others. Passing an empty string clears one, which makes it fall back to
 the hosted platform again.
+
+**--console is where a person opens this installation, and nothing derives
+it.** The Console and the API are different hosts - platform.asgard-ai.com and
+platform-api.asgard-ai.com on the hosted one - and that stripping "-api" turns
+one into the other is a coincidence of naming rather than a rule. So a profile
+that names its own API has no Console until this records one, and the commands
+that would send somebody to a page say so instead of guessing. It is also the
+one field that does not fall back to the hosted value on its own: inheriting it
+would point at another organisation's console.
 
 **An on-prem installation sets all three.** Its API and the Casdoor that issues
 tokens for it are the same installation, and a token from one is not accepted by
@@ -240,7 +257,10 @@ against a real Casdoor is a legitimate way to develop.`,
 			if cmd.Flags().Changed("platform-api") {
 				p.PlatformAPI = strings.TrimRight(platformAPI, "/")
 			}
-			if p.Issuer == "" && p.ClientID == "" && p.PlatformAPI == "" && name != auth.DefaultProfileName {
+			if cmd.Flags().Changed("console") {
+				p.Console = strings.TrimRight(console, "/")
+			}
+			if p.Issuer == "" && p.ClientID == "" && p.PlatformAPI == "" && p.Console == "" && name != auth.DefaultProfileName {
 				return fmt.Errorf("profile %q would set none of those values, which is the hosted platform.\n"+
 					"That is what %q already is - use it, or give this one something to change:\n\n"+
 					"    asgard-cli profile set %s --platform-api <url> --issuer <url> --client-id <id>",
@@ -273,6 +293,8 @@ against a real Casdoor is a legitimate way to develop.`,
 	cmd.Flags().StringVar(&platformAPI, "platform-api", "", "the Asgard Platform API's base URL")
 	cmd.Flags().StringVar(&issuer, "issuer", "", "the Casdoor base URL that issues tokens for it")
 	cmd.Flags().StringVar(&clientID, "client-id", "", "the Casdoor application id this CLI presents (not a secret)")
+	cmd.Flags().StringVar(&console, "console", "",
+		"where a PERSON opens this installation, which is a different host from the API and is not derived from it")
 	return cmd
 }
 

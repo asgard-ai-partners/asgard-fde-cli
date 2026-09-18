@@ -96,8 +96,8 @@ it exits non-zero and says so.`,
 				missing = append(missing, fmt.Sprintf(
 					"workspace: %s records none. `asgard-cli workspace use <id>` writes it", binding.FileName))
 			case !known:
-				missing = append(missing, "workspace: the profile in effect names its own API, and the Console's "+
-					"host is not derivable from it. `asgard-cli profile show` says which profile that is")
+				missing = append(missing, "workspace: this profile records no Console, and it is not derivable "+
+					"from the API. `asgard-cli profile set <name> --console <url>` records it")
 			default:
 				fmt.Fprintf(out, "workspace  %s/workspace/%s/overview\n", console, bind.Workspace)
 			}
@@ -106,13 +106,21 @@ it exits non-zero and says so.`,
 			// has an id recorded here and no console path written down
 			// anywhere; a platform project has neither. Printing a guess for
 			// either is the defect this command exists to remove.
-			if bindErr == nil && bind.Pipeline != "" {
+			// **The shapes are known and the ids are not, which is a different
+			// absence from the one this used to report.** wiki/console.md has
+			// the paths; what neither the binding nor the declaration records
+			// is a release id or a platform project id, and both are in the
+			// path rather than optional.
+			if bindErr == nil && bind.Pipeline != "" && known {
 				missing = append(missing, fmt.Sprintf(
-					"pipeline: id %s is recorded, and no source states the Console path for one - "+
-						"wiki/platform-unknowns.md P16", bind.Pipeline))
+					"pipeline: id %s is recorded, and the page is per RELEASE - "+
+						"%s/workspace/<ws>/pipelines/%s/releases/<releaseId> - which nothing here records",
+					bind.Pipeline, console, bind.Pipeline))
 			}
-			missing = append(missing, "project: no platform project id is recorded in this checkout, and the "+
-				"Console path for one is P16 as well")
+			missing = append(missing, "project: the page is /workspace/<ws>/project/<projectId>, and no platform "+
+				"project id is recorded in this checkout - it appears in .asgard-pipeline.yaml only as a comment. "+
+				"Every per-resource page hangs off that same prefix, so a Toolset, Skillset, Drive or Agent link "+
+				"needs it too - wiki/console.md has the shapes")
 
 			if len(missing) > 0 {
 				fmt.Fprintln(out)

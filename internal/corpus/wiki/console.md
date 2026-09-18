@@ -17,28 +17,34 @@ opening.** The rest of this wiki maps a UI name to the CR behind it; this is the
 other half of the same question, and without it an agent asked "where do I set
 that?" in a meeting can answer with a CR kind and not with somewhere to click.
 
-**Observed, not documented.** These were read off a production Console while
-building a partner deck, 2026-09-15, and no source states them - so treat a
-shape that does not resolve as this page being behind rather than as the reader
-being wrong:
+Everything hangs off the Workspace, and every per-resource page hangs off a
+platform Project inside it:
 
-    /workspace/<workspaceId>/overview     the Workspace, and what `.asgard-cli.yaml`
-                                          records is exactly this id
-    app-toolsets/<toolset>/detail         an MCP Server
-    app-skillsets/<skillset>/detail       a Skillset
-    drive/<sourceSet>/detail              a Drive
-    chat-agent/<agent>/detail             a Managed Agent
+    /workspace/<workspaceId>/overview
+    /workspace/<workspaceId>/pipelines/<pipelineId>/releases/<releaseId>
+    /workspace/<workspaceId>/project/<projectId>
+    /workspace/<workspaceId>/project/<projectId>/app-toolsets/<name>/detail
+    /workspace/<workspaceId>/project/<projectId>/app-skillsets/<name>/detail
+    /workspace/<workspaceId>/project/<projectId>/drive/<name>/detail
+    /workspace/<workspaceId>/project/<projectId>/chat-agent/<name>/detail
 
-**The prefix those four hang off is not known**, and neither is the path to a
-Pipeline's Variables tab - that one is reached as Pipelines, the repository's
-name, the release, then the Variables tab, which is a route to describe rather
-than a URL to build. `platform-unknowns.md` P16 carries both, because a link
-assembled from a guessed prefix is the failure that renders identically to a
-correct one and is caught only by somebody clicking it.
-
-**The object name in the path is the CR's own `metadata.name`**, which is why
+**The name in a resource path is the CR's own `metadata.name`**, which is why
 these are worth having: an engagement holds that name already, in the chart it
-wrote.
+wrote. `app-toolsets` is an MCP Server, `drive` is a SourceSet, and `chat-agent`
+is a Managed Agent - the path segments are the UI's vocabulary rather than the
+CRD's, so this table and `index.md`'s UI-name mapping answer different halves.
+
+**The host is not derivable and is not here.** The Console and the Platform API
+are different hosts, and a URL assembled from the wrong one resolves to nothing
+while looking correct. `asgard-cli links` prints these for the checkout it is
+run in, and `asgard-cli profile set --console` is where an installation records
+its own.
+
+**What an engagement does not hold** is the platform project id and a release
+id: both are in the paths above, neither is written into a chart or a binding,
+and a checkout that names its project does so in a comment. So a per-resource
+link is assembled once by hand from the Console and then pasted, which is what
+`links` says rather than guesses.
 
 ## Building a resource does not make it visible
 
@@ -158,16 +164,17 @@ extract for it.
   and [manage workspace](https://docs.asgard-ai.com/docs/product-suite/odin/about-odin/introduction/manage-workspace)
   - asgard-docs `f00e0ee`
 
-- The path shapes above were read off a **production Console** on 2026-09-15,
-  while building a partner deck that linked to each of those pages, and the
-  workspace shape was confirmed against the id `.asgard-cli.yaml` records for
-  that engagement. No published source states any of them.
+- The path shapes above are the hrefs of a partner deck built against a
+  **production Console**, read 2026-09-17. Two were corroborated against the
+  ids that engagement's `.asgard-cli.yaml` records - the workspace and the
+  pipeline - which is what makes them shapes rather than one page's URLs. No
+  published source states any of them.
 
 **Checked:** 2026-09-15 for the path shapes only, against the Console they were
 observed in - which is a screen rather than a document, so it carries no commit
 and nothing here can tell you it has not moved since.
 
 **Unchecked:** everything else here comes from the product documentation.
-Permissions are not in any chart, so none of it could be held against one. **The
-prefix the four resource paths hang off was not captured**, so those four are a
-shape to recognise rather than a URL to build - `platform-unknowns.md` P16.
+Permissions are not in any chart, so none of it could be held against one. **No
+path here was exercised by this tool against a Console** - they were read off a
+document that was, so a segment the product renames breaks them silently.
