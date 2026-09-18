@@ -44,6 +44,19 @@ type Profile struct {
 	// ClientID is the Casdoor application's client id. It is not a secret:
 	// a public client's id is disclosed to the browser on every sign-in.
 	ClientID string `json:"clientId"`
+	// Console is where a PERSON opens this installation, with no trailing
+	// slash. Nothing in this tool calls it; what needs it is every output that
+	// would send somebody to a page rather than name a CR - `asgard-cli links`
+	// above all.
+	//
+	// **It is recorded rather than derived, because the Console and the API are
+	// different hosts and neither implies the other.** On the hosted
+	// installation they are `platform.asgard-ai.com` and
+	// `platform-api.asgard-ai.com`, and that stripping `-api` turns one into
+	// the other is a coincidence of naming. A rule built on it would invent a
+	// URL for every installation that names its own API, and an invented one
+	// resolves, renders and is wrong.
+	Console string `json:"console,omitempty"`
 	// PlatformAPI is the Asgard Platform API's base URL, with no trailing
 	// slash. Paths this CLI calls are appended to it, so it includes no
 	// version segment.
@@ -142,6 +155,7 @@ type Resolved struct {
 	NameFrom     Origin
 	IssuerFrom   Origin
 	ClientIDFrom Origin
+	ConsoleFrom  Origin
 	APIFrom      Origin
 }
 
@@ -197,6 +211,9 @@ const (
 	// ASGARD_TOKEN stay general on purpose: every Asgard service uses the same
 	// Casdoor and the same token, so they are about all of them.
 	EnvPlatformAPI = "ASGARD_PLATFORM_API"
+
+	// EnvConsole overrides where a person opens this installation.
+	EnvConsole = "ASGARD_CONSOLE"
 	// EnvRetiredAPI is what EnvPlatformAPI used to be called. It is read only
 	// to refuse, never to apply - see checkRetiredEnv.
 	EnvRetiredAPI = "ASGARD_API"
@@ -482,6 +499,29 @@ func ResolveWithOrigin(want string) (Resolved, error) {
 		r.PlatformAPI, r.APIFrom = v, FromEnv
 	}
 
+	// **The Console is the one field that does NOT fall back to its hosted
+	// value on its own, and the exception is the point.** Every other field
+	// here inherits per field, which is right for them: a profile naming only
+	// its own API still authenticates against the same Casdoor and accepts the
+	// same token. The Console identifies somebody's installation instead, so
+	// handing a self-hosted profile `platform.asgard-ai.com` would produce a
+	// link into ANOTHER organisation's console - one that resolves, renders,
+	// and is wrong, which is the failure that has no symptom.
+	//
+	// So it is inherited only when the API is the hosted one, and is otherwise
+	// empty until somebody records it. Resolved after the API above, because
+	// the test is against the API that won.
+	if r.PlatformAPI == hostedPlatformAPI {
+		r.Console, r.ConsoleFrom = hostedConsole, FromHosted
+	}
+	if stored.Console != "" {
+		r.Console, r.ConsoleFrom = stored.Console, FromProfileFile
+	}
+	if v := os.Getenv(EnvConsole); v != "" {
+		r.Console, r.ConsoleFrom = v, FromEnv
+	}
+	r.Console = strings.TrimRight(r.Console, "/")
+
 	r.Issuer = strings.TrimRight(r.Issuer, "/")
 	r.PlatformAPI = strings.TrimRight(r.PlatformAPI, "/")
 
@@ -520,18 +560,14 @@ func (p Profile) AuthorizeURL() string { return p.Issuer + "/login/oauth/authori
 func (p Profile) TokenURL() string { return p.Issuer + "/api/login/oauth/access_token" }
 
 // ConsoleURL is where a person opens this installation, and ok is false when
-// nothing here knows.
+// nothing has recorded it.
 //
-// **Only the hosted installation has an answer**, because the Console's host is
-// not derivable from the API's and no profile field records it. A caller that
-// gets false says so rather than assembling a URL: the failure mode of a
-// guessed one is a link that renders correctly, is copied onto a slide, and
-// dies in front of a room.
+// **A caller that gets false says so rather than assembling a URL**: the
+// failure mode of a guessed one is a link that renders correctly, is copied
+// onto a slide, and dies in front of a room. An installation that names its own
+// API records its Console with `asgard-cli profile set --console`.
 func (p Profile) ConsoleURL() (string, bool) {
-	if p.PlatformAPI == hostedPlatformAPI {
-		return hostedConsole, true
-	}
-	return "", false
+	return p.Console, p.Console != ""
 }
 
 // UserinfoURL is the OIDC userinfo endpoint. It is also what the platform's own
