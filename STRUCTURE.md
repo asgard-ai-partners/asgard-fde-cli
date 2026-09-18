@@ -23,11 +23,29 @@ CLAUDE.md             @AGENTS.md, so the rules load without being asked for
 cmd/asgard-cli/       main; signal handling and exit codes only
 internal/             every package, none exported
 source/               provenance and reading records; never ships
+design/               an argument for something not built yet, kept where it
+                      survives - `.out/` is deleted at any time
 hack/                 the maintainer's gate, in Go: `go run ./hack pass`
 .github/             CI, the tag-driven release, and the PR template
 .goreleaser.yaml      how the binary is built and published
 Makefile              the commands this repo is worked with; `make help`
 ```
+
+## `design/` - an argument for something not built yet
+
+A design that has been reasoned through and not implemented, one file each.
+`TASK.md` says what is missing and points here for why the recommended shape is
+that one; **this is not a log**, and nothing here records what the repository
+used to do - that is `git log`.
+
+It exists because the alternative was `.out/`, which is gitignored and which
+`AGENTS.md` says may be deleted at any time. A pointer into it resolves on the
+machine that wrote the file and nowhere else, which is the failure that has no
+symptom: `go run ./hack doc-paths` fails on one now.
+
+A file here is deleted when its design is built or refused - built means
+`APPROACH.md` describes it, refused means `TASK.md`'s non-goals carry the
+decision. Neither leaves anything to keep here.
 
 ## `internal/` - the code
 

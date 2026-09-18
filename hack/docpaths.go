@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/hack/internal/src"
@@ -32,6 +33,61 @@ var docs = []string{
 	"APPROACH.md", "TASK.md", "CLAUDE.md",
 	"hack/README.md", "hack/verify-references.sh",
 	".env.example", ".agents/skills/consistency-checks/SKILL.md",
+}
+
+// A document this repository names that git does not keep.
+//
+// **`os.Stat` passing is not the same as the reader having the file**, and the
+// difference is invisible to whoever wrote the line: a document under `.out/`
+// resolves on the machine that produced it and on no other clone, and
+// `AGENTS.md` says that directory may be deleted at any time. `TASK.md` pointed
+// at a 294-line design argument there, and the check above reported nothing,
+// because the path never matched `pathRe` at all.
+//
+// **It matches a document and not everything ignored, and the boundary is the
+// whole reason it can exist.** Of the paths under `.out/` these documents name,
+// all but one are a thing a command WRITES - the built binary, the ndjson a
+// `hack` step emits, the record `verified` keeps - and failing on those would
+// fire on correct material, which is worse than not checking. What a reader is
+// sent to READ is prose, so the rule is a markdown file that git ignores.
+//
+// What it therefore does not catch: a generated document with another
+// extension, and a tracked document that is merely wrong. The first is a gap;
+// the second is what reading is for.
+var ignoredDocRe = regexp.MustCompile(`([A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)+\.md)`)
+
+// ignoredDocs reports the markdown files named in text that exist and that git
+// does not track, as `git check-ignore` decides.
+func ignoredDocs(root, text string) []string {
+	var cand []string
+	seen := map[string]bool{}
+	for _, m := range ignoredDocRe.FindAllStringSubmatch(text, -1) {
+		p := m[1]
+		if seen[p] {
+			continue
+		}
+		seen[p] = true
+		if _, err := os.Stat(filepath.Join(root, p)); err != nil {
+			continue
+		}
+		cand = append(cand, p)
+	}
+	if len(cand) == 0 {
+		return nil
+	}
+	// One call rather than one per path: check-ignore reads paths on stdin and
+	// prints back the ones it ignores.
+	cmd := exec.Command("git", "-C", root, "check-ignore", "--stdin")
+	cmd.Stdin = strings.NewReader(strings.Join(cand, "\n") + "\n")
+	out, _ := cmd.Output()
+	var bad []string
+	for _, line := range strings.Split(strings.TrimSpace(string(out)), "\n") {
+		if line != "" {
+			bad = append(bad, line)
+		}
+	}
+	sort.Strings(bad)
+	return bad
 }
 
 // A path inside this repository: a directory we own, then a file or directory
@@ -176,6 +232,11 @@ func runDocPaths(args []string) error {
 			fmt.Printf("missing document  %s\n", name)
 			bad++
 			continue
+		}
+		for _, p := range ignoredDocs(root, string(data)) {
+			fmt.Printf("untracked  %s -> `%s` exists here and git ignores it, so it is on no other clone\n",
+				name, p)
+			bad++
 		}
 		for i, line := range strings.Split(string(data), "\n") {
 			for _, m := range pathRe.FindAllStringSubmatch(line, -1) {
