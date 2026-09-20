@@ -74,10 +74,13 @@ Two things to settle before the day it goes live rather than on it:
 
 ## Deploying
 
-This is the first step that needs a remote at all. **Getting the repository onto
-one is not your job**: Asgard is growing its own mechanism for provisioning a
-customer repository and authenticating to it. If there is no remote yet, say so
-and stop - do not `git init`, do not add one, and do not offer to.
+By here there is a remote, because `origin` is the first branch of connecting
+the checkout and `../brief/connect.md` is where it was settled. If there is
+none, that is one question - **ask for the repository's remote URL, which is
+what the pipeline binds** - and it is theirs to answer, not yours to fill in. **What is not yours at all is deciding
+which repository this is**: creating one on the provider, naming it, or
+authenticating to it is Asgard's own mechanism, and a repository an agent
+picked is the one this engagement then carries.
 
     git tag -a dev-0.1.0 -m "dev-0.1.0"
     git push origin dev-0.1.0

@@ -34,7 +34,7 @@ the platform, never in the repository.
     asgard-cli pipeline connect                connect GitHub to this workspace
     asgard-cli pipeline connections            the installations already connected
     asgard-cli pipeline repos --connection X   what one of them can reach
-    asgard-cli pipeline create --name p --repo R
+    asgard-cli pipeline create --name p        bind a repository to a new one
     asgard-cli pipeline list                   the pipelines this workspace has
     asgard-cli pipeline use <id>               record which one this checkout uses
     asgard-cli pipeline show                   the pipeline this checkout records
@@ -165,7 +165,8 @@ func needPipelineError(pc *platformContext, pipelines []*platform.Pipeline) erro
 
 	if len(pipelines) == 0 {
 		fmt.Fprintf(&b, "%s records no pipeline, and workspace %s has none.\n\n", where, pc.Workspace)
-		fmt.Fprintf(&b, "    asgard-cli pipeline create --name <name> --connection <id> --repo <owner/name>\n")
+		fmt.Fprintf(&b, "    asgard-cli pipeline create --name <name> --connection <id>\n")
+		fmt.Fprintf(&b, "        add --repo <owner/name> only when this checkout has no origin remote to derive it from\n")
 		return fmt.Errorf("%s", b.String())
 	}
 
@@ -196,8 +197,9 @@ func needPipelineError(pc *platformContext, pipelines []*platform.Pipeline) erro
 	fmt.Fprintf(&b, "\nBoth of these are normal, and which one this checkout wants is a question for\nwhoever asked for it:\n\n")
 	fmt.Fprintf(&b, "    asgard-cli pipeline use <id>\n")
 	fmt.Fprintf(&b, "        bind to one of the above; committed, so nobody has to choose again\n\n")
-	fmt.Fprintf(&b, "    asgard-cli pipeline create --name <name> --connection <id> --repo <owner/name>\n")
-	fmt.Fprintf(&b, "        a new pipeline, for a repository none of the above is about\n")
+	fmt.Fprintf(&b, "    asgard-cli pipeline create --name <name> --connection <id>\n")
+	fmt.Fprintf(&b, "        a new pipeline, for a repository none of the above is about. It binds\n")
+	fmt.Fprintf(&b, "        this checkout's origin remote; --repo <owner/name> names another\n")
 	fmt.Fprintf(&b, "\n`.agents/skills/asgard-platform/brief/connect.md` is the walk this is one item of, and what each item\ncosts when it is guessed. --pipeline <id> names one for a single run.\n")
 	return fmt.Errorf("%s", b.String())
 }
@@ -658,7 +660,7 @@ another.`,
 				var b strings.Builder
 				fmt.Fprintf(&b, "no pipeline %q in workspace %s", want, pc.Workspace)
 				if len(pipelines) == 0 {
-					fmt.Fprintf(&b, ", which has none.\n\n    asgard-cli pipeline create --name <name> --connection <id> --repo <owner/name>\n")
+					fmt.Fprintf(&b, ", which has none.\n\n    asgard-cli pipeline create --name <name> --connection <id>\n        add --repo <owner/name> only when this checkout has no origin remote to derive it from\n")
 					return fmt.Errorf("%s", b.String())
 				}
 				fmt.Fprintf(&b, ". It has %s:\n", plural(len(pipelines), "pipeline"))
@@ -786,7 +788,32 @@ func printPipelineConfigState(out interface{ Write([]byte) (int, error) }, p *pl
 		fmt.Fprintf(out, "%-14s ok at %s\n", "config", short)
 	default:
 		fmt.Fprintf(out, "%-14s ERROR %s\n", "config", p.LastConfigSync.Error)
+		if hint := configSyncHint(p.LastConfigSync.Error); hint != "" {
+			fmt.Fprintf(out, "%-14s %s\n", "", wrapAt(hint, 62, 15))
+		}
 	}
+}
+
+// configSyncHint says what recovers the one config sync failure whose message
+// names a cause and never the remedy: a repository with no commits.
+//
+// **It is the first thing a pipeline created against a fresh `asgard-cli init`
+// says**, because the declaration is read off the default branch and there is
+// no branch until something is pushed. The same cause then surfaces twice more
+// wearing different words - a release reported NOT DECLARED, a chart value
+// reported ORPHAN - and each of those costs a round trip of "why did that not
+// take effect" while the raw error sits here saying `Git Repository is empty.`
+//
+// **It reads a provider's own words, so it can only be behind**, which is why
+// it adds a line and decides nothing. The text comes from GitHub, through the
+// platform, unparsed; when GitHub rewords it this stops matching and the raw
+// error is all that prints, which is what printed before this existed.
+func configSyncHint(syncErr string) string {
+	if !strings.Contains(strings.ToLower(syncErr), "repository is empty") {
+		return ""
+	}
+	return "the repository has no commits, so there is no branch to read the declaration " +
+		"from. Push, and the next sync picks it up; the pipeline itself is fine."
 }
 
 func newPipelineReleasesCmd() *cobra.Command {

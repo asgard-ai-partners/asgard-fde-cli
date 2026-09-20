@@ -10,6 +10,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
+
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/gitrepo"
 )
 
 // `asgard-cli init` is the one command in this tool written for a person.
@@ -140,6 +142,7 @@ form for a re-run from an agent or from CI.`,
 				return err
 			}
 
+			noteNoOrigin(cmd, root, out)
 			fmt.Fprint(out, handoff)
 			return nil
 		},
@@ -237,6 +240,32 @@ func ensureGit(cmd *cobra.Command, root string, interactive, noGit bool, in *buf
 		fmt.Fprintf(out, "git init failed (%v); run it yourself before committing.\n\n", err)
 	}
 	return nil
+}
+
+// noteNoOrigin closes the loop between this command and the connect that
+// follows it.
+//
+// **This command ends one step before the question the next one opens with.**
+// The connect derives the provider account and the repository from `origin`,
+// so a checkout that has none turns a derivation into a question - and it is
+// asked of whoever is standing here now, by an agent, minutes later. Saying it
+// while they are still at the terminal is the difference between an answer
+// they have ready and one they meet cold.
+//
+// Only inside a checkout. Outside one, `ensureGit` has already said the larger
+// thing, and a second note about a remote on top of "this is not a git
+// repository" is noise.
+func noteNoOrigin(cmd *cobra.Command, root string, out interface{ Write([]byte) (int, error) }) {
+	ctx := cmd.Context()
+	if _, err := gitrepo.Root(ctx, root); err != nil {
+		return
+	}
+	if _, err := gitrepo.OriginURL(ctx, root); err == nil {
+		return
+	}
+	fmt.Fprintf(out, "\nnote: there is no `origin` remote here yet. Connecting derives the provider\n"+
+		"      account and the repository from it, so the first thing you will be asked\n"+
+		"      for is this repository's remote URL.\n")
 }
 
 // confirm asks a yes/no question, with def taken on a bare Enter.

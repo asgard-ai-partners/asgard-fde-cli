@@ -122,10 +122,15 @@ the decision.
 
   - **Sequencing an engagement.** A command reachable only by having reached the
     one before it is a defect - onboardings are not linear.
-  - **Provisioning git.** Not `git init`, not a remote, not authenticating to
-    one; Asgard is growing its own mechanism. Stages 1 and 8 say so too, because
-    an agent that finds no repository offers to make one otherwise. *Reading* a
-    checkout is different and is done.
+  - **Deciding which repository an engagement is about.** Not creating one on a
+    provider, not naming it, not authenticating to one; Asgard is growing its
+    own mechanism. **The boundary is who answers, not whether git is touched** -
+    a remote URL the FDE gives is their answer, and wiring it is the first
+    branch of the connect, which is why `asgard-cli init` also offers `git init`.
+    What is refused is an agent filling that gap by guessing, because the
+    repository a pipeline binds is the one the engagement carries afterwards.
+    `internal/stage/prompts/08-deploy.md` says so at the point it bites.
+    *Reading* a checkout is different again and is done.
   - **Packaging or bundling helm and kubectl.** They are prerequisites, reported
     by `asgard-cli doctor`; a tar.gz, a zip and `go install` carry no dependency
     metadata and never can, and a bundled `kubectl` has to stay within one minor

@@ -1,6 +1,6 @@
 {
   "brief/connect": {
-    "brief/connect": "5c10f5e4fa06",
+    "brief/connect": "47f9b58ceb2e",
     "guide/projects": "5b71dcf4dd59"
   },
   "brief/customer-meeting": {
@@ -42,7 +42,8 @@
     "usecase/skill-set": "d540effa9e46"
   },
   "guide/deploy": {
-    "guide/deploy": "c911beaba82b",
+    "brief/connect": "47f9b58ceb2e",
+    "guide/deploy": "e9f9439798c7",
     "guide/enhance": "752200cbff58",
     "guide/idle": "1d22ad7f2d17",
     "wiki/console": "d2fcb97ff0e2",
@@ -67,7 +68,7 @@
     "wiki/agents": "a303abe12d84"
   },
   "guide/idle": {
-    "guide/deploy": "c911beaba82b",
+    "guide/deploy": "e9f9439798c7",
     "guide/idle": "1d22ad7f2d17",
     "guide/requirements": "b3a1a8e73ca2"
   },

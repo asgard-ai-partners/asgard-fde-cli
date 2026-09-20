@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -118,7 +119,12 @@ What it runs, in order:
            platform still has. It is the step that catches a half-bound
            checkout - ` + "`workspace use`" + ` clears the pipeline line, and this goes
            red rather than waiting for whichever command somebody runs next.
-           Platform facts only: no git remote is read here or anywhere else.
+           The verdict is platform facts only, and no git remote is compared
+           to any of them. The one git fact reported is the origin remote of
+           a checkout with no binding at all, because that is what
+           ` + "`pipeline connect`" + ` and ` + "`pipeline create`" + ` derive their account
+           and repository from - and an agent that cannot see whether there
+           is one asks for what the tool would have derived.
            Needs a session; --offline skips the half that asks
   skills   whether the reference material here still describes the server this
            repository deploys to. Needs a session; --offline skips it
@@ -266,7 +272,11 @@ func printSteps(out io.Writer, steps []stepResult) {
 			fmt.Fprintf(out, "  %s\n", wrapAt(d, 76, 2))
 		}
 		if s.Remedy != "" {
-			fmt.Fprintf(out, "  -> %s\n", s.Remedy)
+			// Wrapped like the details above it. A remedy is usually one
+			// command and fits, but the one that names a branch of the connect
+			// is a sequence, and a sequence that runs off the terminal is read
+			// as far as the edge and no further.
+			fmt.Fprintf(out, "  -> %s\n", wrapAt(s.Remedy, 73, 5))
 		}
 		switch s.Status {
 		case stepFail:
@@ -360,11 +370,18 @@ func gateRepo(root string, only []string) stepResult {
 // which might be `runs approve`. This is a command an agent already runs after
 // every change, so the half state surfaces at the next edit instead.
 //
-// **It reads platform facts and nothing else.** It does not compare the
+// **The verdict is platform facts and nothing else.** It does not compare the
 // pipeline's repository to a git remote: a checkout may have several remotes,
 // and which one is called `origin` is not this tool's business. The gap that
 // leaves - a repository copied wholesale within one workspace - is named in the
 // binding file's own header.
+//
+// **The one git fact it reports decides nothing**, and it is reported only
+// where there is no binding to reach a verdict about. What comes next there is
+// `pipeline connect` and `pipeline create`, both of which derive their account
+// and their repository from `origin` - so an agent that cannot see whether
+// there is one asks for what the tool would have derived, or, the expensive
+// half, asks which repository this is and binds the pipeline to a guess.
 func gateBinding(cmd *cobra.Command, root, profile string, offline bool) stepResult {
 	res := stepResult{Name: "binding"}
 
@@ -376,9 +393,13 @@ func gateBinding(cmd *cobra.Command, root, profile string, offline bool) stepRes
 		// not a repository failing to be something it never claimed to be.
 		res.Status = stepSkip
 		res.Summary = "no " + binding.FileName + ", so this checkout is not bound to a pipeline yet"
-		res.Remedy = "asgard-cli login, then workspace use <id> and pipeline use <id>"
-		// One string, not three lines: this step wraps its own details, and
-		// pre-broken lines come out broken in a different place.
+		// One string per detail, not pre-broken lines: this step wraps its own
+		// details, and pre-broken ones come out broken in a different place.
+		detail, remedy := gateOrigin(cmd.Context(), root)
+		if detail != "" {
+			res.Details = append(res.Details, detail)
+		}
+		res.Remedy = remedy
 		res.Details = append(res.Details,
 			"`asgard-cli init` writes the skeleton and deliberately stops there - it needs no account, "+
 				"so the repository exists before the platform does. Connecting it is a separate act, and "+
@@ -467,6 +488,65 @@ func gateBinding(cmd *cobra.Command, root, profile string, offline bool) stepRes
 	}
 	res.Remedy = "asgard-cli pipeline use <id>"
 	return res
+}
+
+// gateOrigin is the first branch of connecting a checkout, reported at the one
+// moment an agent is about to take it: `origin`, or the absence of one.
+//
+// **Both branches are common and they lead to different sessions.** A
+// repository handed over already wired needs no question asked - `pipeline
+// connect` and `pipeline create` derive their account and their repository
+// from the remote and say so. A fresh `asgard-cli init` has nothing, and the
+// question that fills the gap is **one**: the remote URL, which answers the
+// account, the repository name and whether it exists at once. Asking those
+// separately gets one of them guessed, and the name a pipeline binds is the
+// one the engagement carries afterwards.
+//
+// It returns the remedy as well as the detail, because the remedy is the half
+// that changes: with no remote, signing in is not the next thing to do.
+//
+// Everything here degrades the way `gitrepo` does. No git, no checkout, or a
+// remote in a shape this does not read all come back as no detail at all and
+// the ordinary remedy, because a gate that guesses about somebody's checkout
+// is worse than one that says nothing about it.
+func gateOrigin(ctx context.Context, root string) (detail, remedy string) {
+	const connect = "asgard-cli login, then workspace use <id> and pipeline use <id>"
+
+	// Not a checkout at all is a different sentence, and `asgard-cli init`
+	// already says it while somebody is still at the terminal. Telling a
+	// directory that is not a repository to add a remote to it is a step out
+	// of order.
+	if _, err := gitrepo.Root(ctx, root); err != nil {
+		return "", connect
+	}
+	remoteURL, err := gitrepo.OriginURL(ctx, root)
+	if errors.Is(err, gitrepo.ErrNoOrigin) {
+		return "**no `origin` remote**, so `pipeline connect` and `pipeline create` have nothing to " +
+				"derive an account or a repository from. Ask for this repository's remote URL - one " +
+				"URL is the whole answer - then set it and push. Push, not only add: the pipeline reads " +
+				"its declaration off the default branch, and a repository with no commits fails its " +
+				"first config sync.",
+			"git remote add origin <url> and push, then " + connect
+	}
+	if err != nil {
+		return "", connect
+	}
+	// **The URL itself is never printed**, only what was read out of it. A
+	// remote may carry a token in its userinfo - `https://x:<token>@host/o/n`
+	// is an ordinary thing to find in a checkout - and gate output is pasted
+	// into issues. `FullName` and `RemoteHost` both drop it.
+	host := gitrepo.RemoteHost(remoteURL)
+	full, ok := gitrepo.FullName(remoteURL)
+	if !ok {
+		where := "this checkout's origin remote"
+		if host != "" {
+			where = "origin, on " + host + ","
+		}
+		return where + " is not a shape this reads as owner/name, so `pipeline connect` " +
+			"and `pipeline create` need --account and --repo given.", connect
+	}
+	return fmt.Sprintf("origin is %s on %s, and `pipeline connect` and `pipeline create` derive --account "+
+		"and --repo from it. Neither has to be asked for or passed.", full, host), connect
 }
 
 // gateShipped asks whether the material this CLI ships into a repository is
