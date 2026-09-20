@@ -1,9 +1,10 @@
 // Package gitrepo reads the checkout the CLI is standing in.
 //
 // This is not the git integration TASK.md rules out. That non-goal is about
-// provisioning - `git init`, adding a remote, authenticating to one - because
-// Asgard grows its own mechanism for handing a customer a repository, and an
-// agent that offers to set one up gets in the way of it. Reading what a
+// deciding which repository an engagement is about - creating one on a
+// provider, naming it, authenticating to it - because Asgard grows its own
+// mechanism for handing a customer a repository, and an agent that fills that
+// gap by guessing binds a pipeline to the guess. Reading what a
 // checkout already says is a different thing, and it is what keeps platform
 // identifiers out of the customer's repository: the pipeline a command acts on
 // is found by matching the origin remote against the workspace's pipelines,

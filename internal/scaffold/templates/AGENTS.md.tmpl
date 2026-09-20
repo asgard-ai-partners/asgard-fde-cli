@@ -90,7 +90,10 @@ asgard-cli gate      # says exactly what is missing, at any point
 ```
 
 While `.asgard-cli.yaml` is absent, the `binding` step reports "not bound to a
-pipeline yet" and the `skills` step reports no session.
+pipeline yet" and the `skills` step reports no session. **The `binding` step
+also reports this checkout's `origin`**, or that there is none, because that is
+the first branch of the walk below and it decides whether the walk asks a
+question at all.
 
 **Read the checklist before running any of it:**
 
@@ -107,6 +110,16 @@ what each has cost when it was guessed instead.
 Then walk the FDE through it:
 
 ```bash
+git remote -v                         # origin? then --account and --repo below are
+                                      #   derived from it - do not ask for either
+                                      # none? this is the ONE question to ask:
+                                      #   "what is this repo's git remote URL?"
+                                      #   git remote add origin <url>
+                                      #   git push -u origin <branch>
+                                      # push, not only add: the pipeline reads the
+                                      #   declaration off the default branch, and a
+                                      #   repository with no commits fails its first
+                                      #   config sync
 asgard-cli login                      # opens a browser AND prints the URL
 asgard-cli workspace list             # show it; they choose
 asgard-cli workspace use <id>
@@ -116,7 +129,9 @@ asgard-cli pipeline list              # ask which of these is this engagement's,
                                       #     asgard-cli pipeline use <id>
                                       #   it is none of them:
                                       #     asgard-cli pipeline create --name <n> \
-                                      #       --connection <id> --repo <owner/name>
+                                      #       --connection <id>
+                                      #   --repo only when there is no origin to
+                                      #     derive it from; same for --account above
                                       # both record it in .asgard-cli.yaml; neither
                                       # follows the other
 asgard-cli pipeline projects          # empty? that is where a new customer starts:

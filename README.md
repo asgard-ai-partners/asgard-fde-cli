@@ -106,6 +106,10 @@ Run `git init` here? [Y/n]
   ...
 45 created in /path/to/acme-asgard-kube
 
+note: there is no `origin` remote here yet. Connecting derives the provider
+      account and the repository from it, so the first thing you will be asked
+      for is this repository's remote URL.
+
 Now open this directory in your coding agent and say:
 
     Connect this repo to the Asgard platform

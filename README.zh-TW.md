@@ -160,6 +160,10 @@ Run `git init` here? [Y/n]
   ...
 45 created in /path/to/acme-asgard-kube
 
+note: there is no `origin` remote here yet. Connecting derives the provider
+      account and the repository from it, so the first thing you will be asked
+      for is this repository's remote URL.
+
 Now open this directory in your coding agent and say:
 
     Connect this repo to the Asgard platform
@@ -591,7 +595,7 @@ asgard-cli workspace show            # 這裡適用哪一個、為什麼是它
 asgard-cli pipeline connect                # 把 GitHub 接到這個 workspace
 asgard-cli pipeline connections            # 已經接上的 installation
 asgard-cli pipeline repos --connection X   # 其中一個看得到哪些 repo
-asgard-cli pipeline create --name p --connection <id> --repo R
+asgard-cli pipeline create --name p        # 綁一個 repo 到新的 pipeline
 asgard-cli pipeline list                   # 這個 workspace 有哪些 pipeline
 asgard-cli pipeline use <id>               # 記下這個 checkout 用哪一條
 asgard-cli pipeline show                   # 這個 checkout 記著的那一條

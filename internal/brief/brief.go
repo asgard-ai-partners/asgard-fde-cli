@@ -173,7 +173,7 @@ question numbers included. The ` + "`proposal-deck`" + ` skill has the rest.`,
 	},
 	{
 		Name:        "connect",
-		Description: "the questions binding a checkout has to ask a person - workspace, account, repository, pipeline, platform project - and why a list of one is not a default",
+		Description: "the questions binding a checkout has to ask a person - workspace, account, repository, pipeline, platform project - which of them `origin` answers on its own, and why a list of one is not a default",
 		When:        "before binding a fresh checkout to the platform, and before adding a second account or pipeline to one",
 		Lead: `**Every item below is a question for a person, and every one of them has an
 answer the tool will appear to have already made.** That is the failure mode
@@ -183,7 +183,16 @@ A list of one reads as a default no matter what the prose next to it says, and
 saying "nothing is guessed, including from a list of one" in six places did not
 stop an agent binding the only pipeline in a workspace - its name resembled the
 directory, and the person wanted a new pipeline against a different repository.
-Read this as a checklist and carry an answer back for each line.`,
+Read this as a checklist and carry an answer back for each line.
+
+**One item is not a question when the checkout has already answered it**, and
+it says so inside itself rather than leaving the reader to work it out: the
+remote called origin decides the provider account and the repository, and both
+commands that need them derive them from it. A question asked where the answer
+was already on disk is not a harmless extra question - it is how an FDE was
+handed three options their own answer made irrelevant, and it is the same
+failure as an unasked one, because neither of them is the question that
+mattered.`,
 		Items: []Item{
 			{
 				"which workspace",
@@ -206,7 +215,7 @@ Read this as a checklist and carry an answer back for each line.`,
 			{
 				"which repository",
 				"the one this directory is named after",
-				"**Ask.** A fresh `init` checkout often has no remote at all, and a directory name is not a repository. `pipeline repos` lists what the installation actually grants - a repository missing from it was not granted, which is fixed on GitHub and not here",
+				"**Look at `origin` before asking anything.** When it is set, do not ask: `pipeline connect` and `pipeline create` both derive the account and the repository from it, and both say on stderr what they took. When there is none - the ordinary state of a fresh `init` - **ask for the repository's remote URL, which is what the pipeline binds and the whole of what has to be asked**: one URL answers the account, the name and whether the repository exists, and an FDE pastes one faster than they read the questions it replaces. Do not decompose it; a directory name is not a repository, and the name a pipeline binds is the one this engagement carries afterwards. Then set it and **push**, because the pipeline reads its declaration off the default branch and a repository with no commits fails its first config sync. `pipeline repos` lists what the installation actually grants - a repository missing from it was not granted, which is fixed on GitHub and not here",
 				"asgard-cli pipeline repos",
 			},
 			{
