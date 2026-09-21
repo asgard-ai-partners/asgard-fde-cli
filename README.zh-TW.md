@@ -11,13 +11,38 @@ Asgard FDE 的命令列工具（`asgard-cli`）。
 所以每一條安裝路徑都需要憑證，而最短的那條用的是 `gh` 已經握著的：
 
 ```bash
-gh release download --repo asgard-ai-partners/asgard-fde-cli \
-  --pattern '*_darwin_arm64.tar.gz' --output - | tar xz asgard-cli
-sudo mv asgard-cli /usr/local/bin/
+repo=asgard-ai-partners/asgard-fde-cli
+os=$(uname -s | tr '[:upper:]' '[:lower:]')
+arch=$(uname -m | sed 's/x86_64/amd64/; s/aarch64/arm64/')
+# 一個 binary 同時服務兩種 Mac；其他平台是分架構的。
+[ "$os" = darwin ] && arch=all
+
+gh release download --repo "$repo" --pattern "*_${os}_${arch}.tar.gz" \
+  --output - | tar xz asgard-cli
+sudo install -m 0755 asgard-cli /usr/local/bin/asgard-cli
 asgard-cli doctor          # 告訴你 helm 在不在 PATH 上
 ```
 
-把 pattern 換成你的平台 —— 資產涵蓋 darwin / linux / windows 的 amd64 / arm64，Debian 或 RPM 主機可以改用 `.deb` / `.rpm`。**用 CLI 下載的檔案不會像瀏覽器下載那樣被 Gatekeeper 隔離**，所以不需要 `xattr` 那一套。
+它拿的是最新的 release，因為 `gh release download` 不給 tag 就是這個行為。資產涵蓋 darwin / linux / windows 的 amd64 / arm64，Debian 或 RPM 主機可以改用 `.deb` / `.rpm`。**Mac 上那個 `.pkg` 雙擊就把同一個 binary 裝好**，對沒有 `gh` 的人是更短的路。
+
+**每一個資產都會再上傳一份不帶版本號的副本**，所以有一個網址可以跨版本一直用：
+
+    https://github.com/asgard-ai-partners/asgard-fde-cli/releases/latest/download/asgard-cli_darwin_all.tar.gz
+
+**等這個 repo 公開之後**那就是一個 `curl` 的事；還是 private 的時候那個網址需要 token，`gh` 是比較短的路。
+
+### macOS 可能卡住或殺掉第一次執行
+
+這些 binary 只有 ad-hoc 簽章 —— 那是 Go 的 linker 為了讓它們跑得起來而加的 —— 而且**沒有經過 notarization**，所以 macOS 會掃描第一次執行。同一個資產、同一台機器、都用 `gh` 下載，三種情況都出現過:立刻跑、卡了好幾分鐘才跑、以及被 exit 137 殺掉且零輸出、下一次才正常。**瀏覽器下載才是穩定會失敗的那個** —— 它加上的 quarantine 標記每次都是 exit 137。
+
+所以如果它看起來什麼都沒做，是這件事而不是工具壞了:
+
+```bash
+xattr -d com.apple.quarantine ./asgard-cli   # 只有瀏覽器下載的才需要
+./asgard-cli version                          # 然後再試第二次
+```
+
+**這要靠 notarize release 來修，不是靠 workaround**，在那之前:安裝值得在需要它之前先做完,而不是在會議中途。
 
 如果你本來就會編 Go，只要 git 進得去這個 private repo，module 直接可用：
 

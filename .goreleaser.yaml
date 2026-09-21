@@ -30,9 +30,20 @@ builds:
       - -X github.com/asgard-ai-partners/asgard-fde-cli/internal/version.date={{ .CommitDate }}
     mod_timestamp: "{{ .CommitTimestamp }}"
 
+# **One binary for both Macs.** A tar.gz per architecture makes the person
+# downloading it decide whether their Mac is Intel or Apple silicon, and the
+# cost of getting it wrong is an exec format error rather than a message. The
+# universal build is what the .pkg wraps, and `replace: false` keeps the
+# per-architecture archives for anyone scripting against their names.
+universal_binaries:
+  - id: darwin-universal
+    ids: [asgard-cli]
+    replace: false
+    name_template: asgard-cli
+
 archives:
   - id: default
-    ids: [asgard-cli]
+    ids: [asgard-cli, darwin-universal]
     # e.g. asgard-fde-cli_1.2.0_darwin_arm64.tar.gz
     name_template: >-
       {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}
@@ -119,14 +130,32 @@ release:
 
     ```bash
     gh release download {{ .Tag }} --repo asgard-ai-partners/asgard-fde-cli \
-      --pattern '*_darwin_arm64.tar.gz' --output - | tar xz asgard-cli
+      --pattern '*_darwin_all.tar.gz' --output - | tar xz asgard-cli
     sudo mv asgard-cli /usr/local/bin/
     asgard-cli doctor
     ```
 
-    Swap the pattern for your own platform - the assets cover darwin / linux /
-    windows on amd64 / arm64. On Debian or RPM hosts the `.deb` and `.rpm`
-    below install the same binary.
+    `darwin_all` serves both Intel and Apple silicon, so there is nothing to
+    choose. Swap the pattern for your own platform otherwise - the assets cover
+    darwin / linux / windows on amd64 / arm64. On Debian or RPM hosts the
+    `.deb` and `.rpm` below install the same binary, and on a Mac the `.pkg`
+    puts it on your PATH by double-clicking.
+
+    ### On a Mac, do not download it in a browser
+
+    **A browser marks the file, and macOS then kills it with no message at
+    all** - no dialog, no error, exit code 137, and sometimes the file is gone
+    from disk. It looks exactly like a broken program. The binaries here are
+    ad-hoc signed, which is what Go's linker does so they can run at all, and
+    they are not notarized.
+
+    `gh` and `curl` do not mark the file, which is why the command above works.
+    If you already have a copy that was downloaded in a browser, or that
+    somebody sent you, clear the mark and it runs:
+
+    ```bash
+    xattr -d com.apple.quarantine ./asgard-cli    # or the .pkg
+    ```
 
     A downloaded-by-CLI file is not quarantined by Gatekeeper the way a
     browser download is, so no `xattr` dance is needed.

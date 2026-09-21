@@ -31,3 +31,76 @@ jobs:
           # Uncomment once the Homebrew tap is enabled, and add a PAT of the
           # same name to the repo secrets.
           # HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+
+      # **A version in the filename is a URL nobody can write down.** GitHub
+      # serves `/releases/latest/download/<name>`, which always resolves to the
+      # newest release - but only for an exact name, and every asset above
+      # carries its version. So each is uploaded a second time without one,
+      # which is what makes a documented install command survive a release.
+      #
+      # Copies rather than renames: the versioned names are what somebody
+      # scripting against a specific release already depends on.
+      - name: Publish version-less copies, so one URL always works
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          mkdir -p latest
+          for f in dist/*.tar.gz dist/*.zip dist/*.deb dist/*.rpm dist/*.apk; do
+            [ -e "$f" ] || continue
+            base=$(basename "$f")
+            # asgard-fde-cli_0.1.2_darwin_all.tar.gz -> asgard-cli_darwin_all.tar.gz
+            stable="asgard-cli_${base#*_${version}_}"
+            cp "$f" "latest/$stable"
+          done
+          ls latest
+          gh release upload "$GITHUB_REF_NAME" latest/* --clobber
+
+  # **The .pkg is a separate job because `pkgbuild` is macOS-only**, and the
+  # rest of the release cross-compiles fine on Linux in a fraction of the time.
+  # It takes the universal binary the job above already published rather than
+  # rebuilding, so what the installer carries is the artifact that shipped.
+  macos-pkg:
+    needs: goreleaser
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the installer
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+
+          # The universal archive, so the installer serves both Macs and
+          # nobody has to know which one they have.
+          gh release download "$GITHUB_REF_NAME" --pattern '*_darwin_all.tar.gz' --output - \
+            | tar xz asgard-cli
+
+          mkdir -p root/usr/local/bin
+          install -m 0755 asgard-cli root/usr/local/bin/asgard-cli
+
+          pkgbuild --root root \
+            --identifier com.asgard-ai.asgard-cli \
+            --version "$version" \
+            --install-location / \
+            component.pkg
+          productbuild --package component.pkg "asgard-cli-${version}.pkg"
+
+          # **Unsigned, and that is not cosmetic.** macOS kills a quarantined
+          # binary that is not notarized - no dialog, no message, exit 137 -
+          # so this installer helps somebody who already has the file and does
+          # nothing for somebody who downloads it in a browser. Signing needs
+          # a Developer ID Installer certificate and notarytool credentials;
+          # the steps for both are below, commented, next to where they go.
+          #
+          # productsign --sign "Developer ID Installer: <team>" \
+          #   "asgard-cli-${version}.pkg" "asgard-cli-${version}-signed.pkg"
+          # xcrun notarytool submit "asgard-cli-${version}-signed.pkg" \
+          #   --apple-id "$APPLE_ID" --team-id "$TEAM_ID" \
+          #   --password "$APP_SPECIFIC_PASSWORD" --wait
+          # xcrun stapler staple "asgard-cli-${version}-signed.pkg"
+
+          gh release upload "$GITHUB_REF_NAME" "asgard-cli-${version}.pkg" --clobber
