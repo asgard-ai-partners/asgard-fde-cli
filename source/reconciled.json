@@ -1,6 +1,6 @@
 {
   "brief/connect": {
-    "brief/connect": "47f9b58ceb2e",
+    "brief/connect": "db3dbd6f3ac9",
     "guide/projects": "5b71dcf4dd59"
   },
   "brief/customer-meeting": {
@@ -42,7 +42,7 @@
     "usecase/skill-set": "d540effa9e46"
   },
   "guide/deploy": {
-    "brief/connect": "47f9b58ceb2e",
+    "brief/connect": "db3dbd6f3ac9",
     "guide/deploy": "e9f9439798c7",
     "guide/enhance": "752200cbff58",
     "guide/idle": "1d22ad7f2d17",
