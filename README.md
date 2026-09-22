@@ -17,16 +17,51 @@ So every install path needs credentials, and the shortest one uses the ones
 `gh` already holds:
 
 ```bash
-gh release download --repo asgard-ai-partners/asgard-fde-cli \
-  --pattern '*_darwin_arm64.tar.gz' --output - | tar xz asgard-cli
-sudo mv asgard-cli /usr/local/bin/
+repo=asgard-ai-partners/asgard-fde-cli
+os=$(uname -s | tr '[:upper:]' '[:lower:]')
+arch=$(uname -m | sed 's/x86_64/amd64/; s/aarch64/arm64/')
+# One binary serves both Macs; every other platform is per-architecture.
+[ "$os" = darwin ] && arch=all
+
+gh release download --repo "$repo" --pattern "*_${os}_${arch}.tar.gz" \
+  --output - | tar xz asgard-cli
+sudo install -m 0755 asgard-cli /usr/local/bin/asgard-cli
 asgard-cli doctor          # says whether helm is on PATH
 ```
 
-Swap the pattern for your platform - assets cover darwin / linux / windows on
-amd64 / arm64, and Debian or RPM hosts can take the `.deb` / `.rpm` instead.
-A file downloaded by a CLI is not quarantined by Gatekeeper the way a browser
-download is, so no `xattr` step is needed.
+It takes the newest release, because `gh release download` with no tag does.
+Assets cover darwin / linux / windows on amd64 / arm64, and Debian or RPM hosts
+can take the `.deb` / `.rpm` instead. **On a Mac the `.pkg` installs the same
+binary by double-clicking**, which is the shorter path for somebody who does not
+have `gh`.
+
+**Every asset is also published without its version in the name**, so one URL
+keeps working across releases:
+
+    https://github.com/asgard-ai-partners/asgard-fde-cli/releases/latest/download/asgard-cli_darwin_all.tar.gz
+
+That is a plain `curl` away **once this repository is public**; while it is
+private the URL needs a token and `gh` is the shorter path.
+
+### macOS may stall or kill the first run
+
+The binaries are ad-hoc signed - what Go's linker does so they run at all - and
+**they are not notarized**, so macOS scans the first execution. The same asset,
+downloaded with `gh` on one machine, did all three of these: ran immediately,
+stalled for minutes and then ran, and was killed with exit 137 and no output
+before working on the next attempt. **A browser download is the reliable
+failure** - the quarantine mark it adds got exit 137 every time.
+
+So if it appears to do nothing, it is this rather than the tool:
+
+```bash
+xattr -d com.apple.quarantine ./asgard-cli   # only if a browser downloaded it
+./asgard-cli version                          # and try a second time
+```
+
+**This is fixed by notarizing the release, not by a workaround**, and until that
+is done an install is worth doing before somebody needs the tool rather than
+during a meeting.
 
 If you already build Go, the module works directly once git can reach the
 private repo:
