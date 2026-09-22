@@ -167,10 +167,14 @@ the decision.
     of the cluster's API server.
   - **Pinning a helm major.** `doctor` warns instead - `versionNote` in
     `internal/cli/doctor.go` says why a pin would fail an install that works.
-  - **A Homebrew tap and a Scoop bucket**, while the audience is internal. A tap
-    is a second repository whoever installs has to be able to read, and this one
-    is private. `.goreleaser.yaml` carries the whole argument and the
-    configuration, commented out; going public is what makes it worth revisiting.
+  - **A Homebrew tap and a Scoop bucket**, and **the reason recorded here has
+    expired.** A tap is a second repository whoever installs has to be able to
+    read, and the objection was that this one was private - which it is not any
+    more. `.goreleaser.yaml` carries the argument and the configuration,
+    commented out, and enabling them is now a decision about whether a package
+    manager is worth a second repository to keep in step rather than something
+    blocked. Until somebody takes it, the version-less asset URL is what a
+    documented install command uses.
   - **Anything that talks to a cluster.** No cluster credential is ever issued to
     a client, which is also why a rendered CR's CEL and pattern validation cannot
     happen here.

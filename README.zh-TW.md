@@ -6,9 +6,21 @@ Asgard FDE 的命令列工具（`asgard-cli`）。
 
 ## 安裝
 
-**這個 repo 是 private，它的每一個 release 也是。** GitHub 的 release 完全繼承 repo 的可見性：頁面、release notes、每一個附件都只有有讀取權限的帳號拿得到，未登入請求資產 URL 拿到的是 **404 而不是 403**。這裡的東西不會發佈到任何其他地方 —— 沒有 Homebrew tap、沒有 Scoop bucket、沒有套件庫（理由見[發佈](#發佈)）。
+**一行指令，而且網址不帶版本號**，所以跨版本一直有效 —— GitHub 會把
+`/releases/latest/download/<檔名>` 解析到最新的 release：
 
-所以每一條安裝路徑都需要憑證，而最短的那條用的是 `gh` 已經握著的：
+```bash
+curl -fsSL https://github.com/asgard-ai-partners/asgard-fde-cli/releases/latest/download/asgard-cli_darwin_all.tar.gz \
+  | tar xz asgard-cli
+sudo install -m 0755 asgard-cli /usr/local/bin/asgard-cli
+asgard-cli doctor          # 告訴你 helm 在不在 PATH 上
+```
+
+把 `darwin_all` 換成 `linux_amd64`、`linux_arm64` 或 `windows_amd64`。
+`darwin_all` 同時服務 Intel 與 Apple silicon，所以 Mac 上沒有東西要選，
+而那個 `.pkg` 雙擊就把同一個 binary 裝好。
+
+想讓它自己認平台，或是要特定版本而不是最新的：
 
 ```bash
 repo=asgard-ai-partners/asgard-fde-cli
@@ -23,13 +35,7 @@ sudo install -m 0755 asgard-cli /usr/local/bin/asgard-cli
 asgard-cli doctor          # 告訴你 helm 在不在 PATH 上
 ```
 
-它拿的是最新的 release，因為 `gh release download` 不給 tag 就是這個行為。資產涵蓋 darwin / linux / windows 的 amd64 / arm64，Debian 或 RPM 主機可以改用 `.deb` / `.rpm`。**Mac 上那個 `.pkg` 雙擊就把同一個 binary 裝好**，對沒有 `gh` 的人是更短的路。
-
-**每一個資產都會再上傳一份不帶版本號的副本**，所以有一個網址可以跨版本一直用：
-
-    https://github.com/asgard-ai-partners/asgard-fde-cli/releases/latest/download/asgard-cli_darwin_all.tar.gz
-
-**等這個 repo 公開之後**那就是一個 `curl` 的事；還是 private 的時候那個網址需要 token，`gh` 是比較短的路。
+這條也是拿最新的 release，因為 `gh release download` 不給 tag 就是這個行為。Debian 或 RPM 主機可以改用 `.deb` / `.rpm`。
 
 ### macOS 可能卡住或殺掉第一次執行
 
@@ -44,11 +50,10 @@ xattr -d com.apple.quarantine ./asgard-cli   # 只有瀏覽器下載的才需要
 
 **這要靠 notarize release 來修，不是靠 workaround**，在那之前:安裝值得在需要它之前先做完,而不是在會議中途。
 
-如果你本來就會編 Go，只要 git 進得去這個 private repo，module 直接可用：
+如果你本來就會編 Go，module 直接可用：
 
 ```bash
-GOPRIVATE=github.com/asgard-ai-partners/* \
-  go install github.com/asgard-ai-partners/asgard-fde-cli/cmd/asgard-cli@latest
+go install github.com/asgard-ai-partners/asgard-fde-cli/cmd/asgard-cli@latest
 ```
 
 `asgard-cli version` 報的是 release 編進去的值；不帶 ldflags 的 `go build` 會退回 module 與 VCS metadata，而不是宣稱一個它沒有的版號。
@@ -486,7 +491,7 @@ asgard-cli doctor                      # 哪些外部工具在這裡，不在的
 
 ### helm 與 kubectl 是前置條件，不是相依
 
-asgard-cli 的散佈方式沒有一種裝得了它們。tar.gz、zip 與 `go install` 都不帶相依 metadata、也永遠不會帶；而宣告在 Homebrew tap 或 Scoop bucket 上的相依只涵蓋用那種方式安裝的人 —— 而那是沒有人，因為對一個 private repo 來說那些通道是**刻意關掉的**。宣告一個不成立的保證，讀起來就像一個保證。
+asgard-cli 的散佈方式沒有一種裝得了它們。tar.gz、zip 與 `go install` 都不帶相依 metadata、也永遠不會帶；而宣告在 Homebrew tap 或 Scoop bucket 上的相依只涵蓋用那種方式安裝的人 —— 而那是沒有人，因為那些通道目前還是**關掉的**。宣告一個不成立的保證，讀起來就像一個保證。
 
 所以 binary 本身就是那個機制。每個需要 helm 的指令都先透過 `internal/tool` 解析它，不在就帶著這台機器的安裝指令拒絕；`asgard-cli doctor` 一次報告全部。
 
@@ -653,14 +658,10 @@ goreleaser check
 goreleaser release --snapshot --clean --skip=publish
 ```
 
-### private，以及「通道關掉」是從它推導出來的
+### 關掉的通道，以及那個已經過期的理由
 
-每一個 release 都是 private，因為 repo 是。在使用者還是內部的階段，那**不是要繞過的限制而是重點**，但它決定了安裝路徑 —— 所以 release notes 帶的是一行 `gh release download` 而不是 `brew install`。
+**這個 repo 現在是公開的，而「通道關掉」的整個論證前提是它不公開。** Homebrew tap 或 Scoop bucket 是第二個 repo，安裝的人必須讀得到;把它也設成 private，等於每個使用者都要對一個需要憑證的 repo 跑 `brew tap`，比它要取代的那一行下載指令更麻煩。**那個反對理由已經不存在了。**
 
-`.goreleaser.yaml` 底部有現成的 **Homebrew tap** 與 **Scoop bucket** 區塊，而它們維持註解狀態。tap 或 bucket 是第二個 repo，安裝的人必須讀得到；把它也設成 private，等於每個使用者都要對一個需要憑證的 repo 跑 `brew tap`，比它要取代的那一行下載指令更麻煩，而服務的對象又比 tap 存在的理由更小。使用者定為內部限定，2026-09-06。**如果將來要公開，開啟它們是第一件要回頭做的事** —— 區塊與它們的前置條件（`HOMEBREW_TAP_TOKEN`、`SCOOP_BUCKET_TOKEN`）都留在原地。
+`.goreleaser.yaml` 底部的 **Homebrew tap** 與 **Scoop bucket** 區塊還是註解狀態，前置條件也都寫著(`HOMEBREW_TAP_TOKEN`、`SCOOP_BUCKET_TOKEN`)。剩下要決定的是「一個套件管理器值不值得多維護一個 repo」—— 不再是「能不能做」。**而且 tap 會順便解掉 macOS 第一次執行的問題**，因為 Homebrew 會清掉那個沒 notarize 的 binary 被殺掉的 quarantine 標記;notarize release 則是對每一條安裝路徑都有效。
 
-其他值得知道的事：
-
-- **CGO**：build 以 `CGO_ENABLED=0` 執行，讓交叉編譯裝得進一台 runner。引入一個 cgo 相依（sqlite 那一類）就得換成 zig cc 或每個平台各一台 runner。
-- **macOS 簽章**：binary 沒有簽章。那之所以撐得住，**正是因為安裝路徑是 CLI 下載** —— `gh` 與 `curl` 不會設 `com.apple.quarantine`，瀏覽器會。把一個 release URL 丟給人點才是會壞的情境，而 `anchore/quill` 是那時候的答案。
-- **main 會 build 一次 release，pull request 不會。** `ci.yml` 的 `build` job 在推上 `main` 時跑 `goreleaser release --snapshot --clean --skip=publish`，所以設定或交叉編譯壞掉會在它變成一個失敗的 tag 之前被抓到。pull request 上關掉，是因為它要三分鐘去回答 `test` 四十秒就回答完的問題（程式能不能編），而它獨有的那部分不可能在 merge commit 上壞掉卻沒先在分支上壞掉。改到 `.goreleaser.yaml` 的時候，`make snapshot` 是同一個 build 在筆電上的版本。
+在那個決定做出來之前，安裝指令就是那個不帶版本號的資產網址 —— 它解析到最新的 release，而且不需要 token。
