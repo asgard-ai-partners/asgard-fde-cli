@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -276,7 +277,18 @@ func printSteps(out io.Writer, steps []stepResult) {
 			// command and fits, but the one that names a branch of the connect
 			// is a sequence, and a sequence that runs off the terminal is read
 			// as far as the edge and no further.
-			fmt.Fprintf(out, "  -> %s\n", wrapAt(s.Remedy, 73, 5))
+			//
+			// **A newline in a remedy is the author saying it is already
+			// broken**, and every line after the first is printed as it was
+			// written. `wrapAt` reflows on `strings.Fields`, so a line it
+			// touches loses its indent and can be split mid-command - the
+			// install one-liner came out with its `| sh` alone on the next
+			// line, which is not a command anybody can copy.
+			lines := strings.Split(s.Remedy, "\n")
+			fmt.Fprintf(out, "  -> %s\n", wrapAt(lines[0], 73, 5))
+			for _, l := range lines[1:] {
+				fmt.Fprintf(out, "     %s\n", strings.TrimLeft(l, " "))
+			}
 		}
 		switch s.Status {
 		case stepFail:
@@ -302,6 +314,29 @@ func printSteps(out io.Writer, steps []stepResult) {
 }
 
 // ── the steps ────────────────────────────────────────────────────────────
+
+// newerWriters lists the versions this repository's record names that are not
+// the running one, newest first.
+//
+// **Read off disk, so it costs nothing and works on a plane.** The record says
+// which CLI version wrote each shipped file, so a repository somebody has run a
+// newer binary in already carries the answer - the one case where this tool can
+// say a newer release exists without asking anybody.
+func newerWriters(root string) []string {
+	writers, err := scaffold.Writers(root)
+	if err != nil {
+		return nil
+	}
+	running := version.Get().Version
+	var out []string
+	for _, w := range writers {
+		if w != "" && w != running {
+			out = append(out, w)
+		}
+	}
+	sort.Sort(sort.Reverse(sort.StringSlice(out)))
+	return out
+}
 
 func gateTools() stepResult {
 	if _, err := tool.Helm.Path(); err != nil {
@@ -640,7 +675,17 @@ func gateShipped(root string) stepResult {
 		res.Status = stepWarn
 		res.Summary = fmt.Sprintf("%d file(s) here were written by a NEWER asgard-cli than this one (%s)",
 			len(by[scaffold.Ahead]), version.Get().Version)
+		// **Name the version and give the command.** This is the one place that
+		// knows a newer binary exists without asking anything over a network -
+		// the record says which version wrote each file - and a remedy saying
+		// "upgrade" without saying to what, or how, leaves the reader to find
+		// both.
 		res.Remedy = "upgrade asgard-cli; the repository is fine and this binary is behind it"
+		if ahead := newerWriters(root); len(ahead) > 0 {
+			res.Remedy = fmt.Sprintf(
+				"this repository was written by %s; the repository is fine and this binary is behind it:\n    %s",
+				strings.Join(ahead, ", "), installCommand())
+		}
 	case len(by[scaffold.Edited]) > 0:
 		res.Status = stepWarn
 		res.Summary = fmt.Sprintf("%d shipped file(s) were changed here; the rest is what this CLI carries",

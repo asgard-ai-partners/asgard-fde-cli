@@ -263,9 +263,12 @@ func warnIfShippedStale(cmd *cobra.Command) {
 
 	errOut := cmd.ErrOrStderr()
 	if n := counts[scaffold.Ahead]; n > 0 {
+		// The command rather than the word "upgrade": `installCommand` is the
+		// one place that spells it, so this line, the gate's remedy and the
+		// README cannot come to disagree about what to run.
 		fmt.Fprintf(errOut, "\n%d file(s) here were written by a newer asgard-cli than this one (%s)\n"+
-			"    upgrade asgard-cli; this repository is ahead of the binary, not behind it\n",
-			n, version.Get().Version)
+			"this repository is ahead of the binary, not behind it:\n    %s\n",
+			n, version.Get().Version, installCommand())
 	}
 
 	var parts []string
