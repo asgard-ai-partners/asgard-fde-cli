@@ -348,7 +348,19 @@ func Write(root string, projects []string, force bool) ([]Result, error) {
 			continue
 		}
 
-		if force {
+		// **`--force` reaches only what this CLI owns outright**, which is what
+		// `shipped` decides and what the sentence above it has always said:
+		// everything else in the skeleton is meant to be edited, so a
+		// difference there is the engagement's work rather than drift.
+		//
+		// Until this asked, the default was to overwrite everything and each
+		// exception was added one file at a time. `accumulators` below is what
+		// is left of that approach, and it did not scale: the second time this
+		// happened it took six files, five of which the record never claimed,
+		// and none of which were on the list. **A whitelist of what not to
+		// destroy is the wrong polarity** - it is only ever as complete as the
+		// last incident.
+		if force && isShipped {
 			if err := writeFile(target, content, executable(j.target)); err != nil {
 				return nil, err
 			}
@@ -567,6 +579,12 @@ var accumulators = map[string]bool{
 	// The record agrees - `.asgard-scaffold.json` claims `AGENTS.md` and no
 	// other top-level file, so `--force` was replacing something nothing said
 	// it had written.
+	//
+	// **This list is no longer the protection, and adding to it is no longer
+	// the fix.** `--force` reaches only what `shipped` claims, so every file
+	// here is already covered by being absent from that. What is left is depth:
+	// if a path is ever added to `shipped` by mistake, a name here still stops
+	// the overwrite. Adding a file here and nothing else is what failed twice.
 	pipelineconfig.FileName: true,
 
 	filepath.Join("docs", "open-questions.md"):             true,
@@ -574,6 +592,15 @@ var accumulators = map[string]bool{
 	filepath.Join("requirements", "tasks", "_index.md"):    true,
 	filepath.Join("docs", "decisions", "README.md"):        true,
 }
+
+// OwnedByCLI reports whether `--force` may replace a path.
+//
+// **Exported so a test can ask the question rather than list paths.** The
+// previous version of this protection was a list of names, and a list is only
+// ever as complete as the last incident - it missed six files the second time.
+// A test that walks the skeleton and asks this covers a file added to the
+// scaffold without being edited.
+func OwnedByCLI(target string) bool { return shipped(target) }
 
 // shipped reports whether a file is material this CLI owns outright - written
 // once and never edited by the engagement, the way a wiki page is never edited
@@ -586,6 +613,18 @@ func shipped(target string) bool {
 	case strings.HasPrefix(t, ".agents/skills/"):
 		return true
 	case t == "AGENTS.md":
+		return true
+	// **Somebody else's layout, so nobody here edits it.** The Claude Code
+	// plugin and its marketplace manifest have a schema this repository does
+	// not own, and `CLAUDE.md` is one line pointing at AGENTS.md. Naming them
+	// is what keeps `--force` able to update them now that it reaches nothing
+	// else - and a file left out of this list stops being updated silently,
+	// because `gate` reports staleness only for what is shipped.
+	case strings.HasPrefix(t, "plugins/asgard-fde/"):
+		return true
+	case t == filepath.ToSlash(filepath.Join(".claude-plugin", "marketplace.json")):
+		return true
+	case t == "CLAUDE.md":
 		return true
 	}
 	return false

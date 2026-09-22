@@ -14,15 +14,16 @@
 <!-- 這張表由 `asgard-cli init` 與 `asgard-cli project add` 維護,清單直接讀 repo 本身
      (.asgard-pipeline.yaml 的 chart 路徑 ∪ projects/ 底下的資料夾),
      不另存一份。兩個標記之間的內容
-     每次 scaffold 都會重寫。說明欄要填的話,填在標記外面的段落。
+     每次 scaffold 都會重寫,所以這張表只有工具推導得出來的兩欄。
+     每個 project 做什麼,寫在標記外面 —— 寫在裡面的下一次 init 就沒了。
      asgard-cli check 會比對這張表與 projects/ 底下實際的資料夾。
 
      這裡不列部署目標:一份 chart 部署到哪裡是 .asgard-pipeline.yaml 裡的 Release
      決定的,一份 chart 可以有好幾個。`asgard-cli pipeline releases` 是現況。 -->
 
-| Project | 目錄 | 說明 |
-|---|---|---|
-<<range .Projects>>| `<<.Slug>>` | `projects/<<.Slug>>/` | TODO |
+| Project | 目錄 |
+|---|---|
+<<range .Projects>>| `<<.Slug>>` | `projects/<<.Slug>>/` |
 <<end>><<if not .Projects>>
 > 還沒有 project。用 `asgard-cli project add <slug>` 新增 —— 它會連 chart 骨架一起寫。
 <<end>>
