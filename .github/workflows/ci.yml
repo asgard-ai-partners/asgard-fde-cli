@@ -34,6 +34,61 @@ jobs:
       - name: go test
         run: go test ./...
 
+      # **Every platform the release builds for compiles here, even the ones
+      # nothing runs here.** `replace_windows.go` is behind a build tag, so a
+      # break in it is invisible to every step above and would surface as a
+      # release nobody can build.
+      - name: the other platforms still compile
+        run: |
+          GOOS=windows GOARCH=amd64 go vet ./...
+          GOOS=darwin  GOARCH=arm64 go vet ./...
+
+
+  # **The platform-specific halves, run where they apply.** Replacing a running
+  # binary is one rename on Unix and two on Windows, the install script is a
+  # different script on each, and none of that is exercised by a Linux job -
+  # `replace_windows.go` had never been RUN anywhere until this existed.
+  #
+  # Scoped to the packages that carry OS-specific behaviour rather than the
+  # whole tree: the corpus and the checks over it are the same everywhere, and
+  # running them three times says nothing the Linux job has not already said.
+  platforms:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: go test
+        run: go test ./internal/selfupdate/ ./internal/cli/ ./internal/scaffold/
+
+      # The installer, run end to end into a scratch directory: it downloads
+      # the newest release, verifies it and executes what it got. It is the
+      # only thing that checks the asset name this platform asks for against
+      # the asset the release actually carries.
+      - name: install.ps1 installs the newest release
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        env:
+          ASGARD_INSTALL_DIR: ${{ runner.temp }}\asgard-cli-install
+        run: ./install.ps1
+
+      - name: install.sh installs the newest release
+        if: matrix.os == 'macos-latest'
+        run: |
+          set -eu
+          dir="${RUNNER_TEMP}/asgard-cli-install"
+          mkdir -p "$dir"
+          sed "s|^dir=/usr/local/bin$|dir=$dir|" install.sh > "${RUNNER_TEMP}/install.sh"
+          sh "${RUNNER_TEMP}/install.sh"
+
 
   material:
     # The corpus gates. **A flag that is not wired here is not enforced**, and

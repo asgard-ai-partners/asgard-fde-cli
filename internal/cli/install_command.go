@@ -17,6 +17,8 @@ func installCommand() string {
 	switch runtime.GOOS {
 	case "darwin", "linux":
 		return "curl -fsSL https://raw.githubusercontent.com/asgard-ai-partners/asgard-fde-cli/main/install.sh | sh"
+	case "windows":
+		return "irm https://raw.githubusercontent.com/asgard-ai-partners/asgard-fde-cli/main/install.ps1 | iex"
 	}
 	return "see https://github.com/asgard-ai-partners/asgard-fde-cli/releases/latest"
 }

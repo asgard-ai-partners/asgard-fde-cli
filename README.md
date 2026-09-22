@@ -12,6 +12,17 @@ Command line tool for Asgard FDE (`asgard-cli`).
 curl -fsSL https://raw.githubusercontent.com/asgard-ai-partners/asgard-fde-cli/main/install.sh | sh
 ```
 
+**On Windows, in PowerShell:**
+
+```powershell
+irm https://raw.githubusercontent.com/asgard-ai-partners/asgard-fde-cli/main/install.ps1 | iex
+```
+
+`install.ps1` is the Windows half and makes the same decisions: it verifies the
+download against the release's own checksums, installs under `%LOCALAPPDATA%`
+and adds that to your user PATH. Installing where the user owns the files needs
+no elevation and is what lets `asgard-cli update` replace the binary later.
+
 It takes the newest release for this platform, **verifies the download against
 the release's own checksums**, installs to `/usr/local/bin`, and then runs the
 binary once - because macOS scans a newly written unnotarized binary on first
@@ -136,6 +147,12 @@ directory you cannot write needs `sudo asgard-cli update`, and a `go build`
 binary has no release to be compared against. The line every command prints
 names whichever of those applies to your install rather than one command for
 everybody.
+
+**On Windows it takes two renames rather than one.** A running `.exe` cannot be
+written or deleted, but it can be renamed, so the old binary is moved aside to
+`asgard-cli.exe.old` and the new one takes its name - and the displaced file
+cannot be removed until the process running from it exits, so a later run
+sweeps it. Seeing one beside the binary after an update is that, not a failure.
 
 **Nothing replaces the binary without being asked.** A CLI that overwrites
 itself in the background has to pick a moment and every moment is somebody
