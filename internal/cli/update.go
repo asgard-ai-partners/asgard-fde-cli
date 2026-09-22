@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -134,6 +135,16 @@ func notOursToReplace(target string) string {
 	case strings.Contains(slash, "/nix/store/"):
 		return "Nix"
 	}
+	// **The distribution's directories, which the .deb and the .rpm install
+	// into.** The filesystem standard reserves /usr/bin and /bin for the
+	// package manager and /usr/local for locally installed software, so the
+	// path is the answer and no package database has to be consulted for it.
+	// Replacing a file dpkg or rpm records leaves that database naming a
+	// version that is not there, which `dpkg -V` then reports as a damaged
+	// package.
+	if dir := filepath.ToSlash(filepath.Dir(slash)); distroDirs[dir] {
+		return packageManager()
+	}
 	// `go install` writes here, and the module path is the way to move it.
 	//
 	// **Both sides are resolved before they are compared.** `selfPath` already
@@ -152,6 +163,29 @@ func notOursToReplace(target string) string {
 		}
 	}
 	return ""
+}
+
+// distroDirs are the directories a package manager owns.
+//
+// /usr/local/bin is deliberately absent: the standard reserves it for software
+// installed outside the package manager, which is where `install.sh` puts this
+// and is why an install made that way can replace itself.
+var distroDirs = map[string]bool{
+	"/usr/bin": true, "/bin": true, "/usr/sbin": true, "/sbin": true,
+}
+
+// packageManager names the one on this machine, by what is on PATH.
+//
+// **The tool is the question, not the distribution.** Naming Ubuntu would be
+// wrong on Debian and on Mint and right by accident on both, where dpkg is the
+// thing that actually records the file.
+func packageManager() string {
+	for _, tool := range []string{"dpkg", "rpm", "apk"} {
+		if _, err := exec.LookPath(tool); err == nil {
+			return tool
+		}
+	}
+	return "your package manager"
 }
 
 func goBinDirs() []string {
@@ -179,8 +213,27 @@ func upgradeWith(owner string) string {
 		return "go install github.com/asgard-ai-partners/asgard-fde-cli/cmd/asgard-cli@latest"
 	case "Nix":
 		return "update it the way the rest of your profile is updated"
+	case "dpkg":
+		return fmt.Sprintf("curl -fLO %s && sudo dpkg -i %s", packageURL("deb"), packageAsset("deb"))
+	case "rpm":
+		return fmt.Sprintf("sudo rpm -U %s", packageURL("rpm"))
+	case "apk":
+		return fmt.Sprintf("curl -fLO %s && sudo apk add --allow-untrusted %s", packageURL("apk"), packageAsset("apk"))
+	case "your package manager":
+		return "reinstall it with whatever installed it, or take the tarball into /usr/local/bin"
 	}
 	return installCommand()
+}
+
+// packageAsset and packageURL name this platform's Linux package in the newest
+// release. The name carries no version, so the URL keeps working across
+// releases - the same property the tarball download relies on.
+func packageAsset(format string) string {
+	return fmt.Sprintf("asgard-cli_%s_%s.%s", runtime.GOOS, runtime.GOARCH, format)
+}
+
+func packageURL(format string) string {
+	return "https://github.com/asgard-ai-partners/asgard-fde-cli/releases/latest/download/" + packageAsset(format)
 }
 
 // notWritable says why the target cannot be replaced from here, or "".

@@ -3,6 +3,7 @@ package cli
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -182,6 +183,58 @@ func TestWhoOwnsTheBinaryDecidesHowItIsUpgraded(t *testing.T) {
 				t.Errorf("upgradeWith(%q) = %q, want %q", owner, got, tc.upgrade)
 			}
 		})
+	}
+}
+
+// **The .deb and the .rpm install into /usr/bin, and that is the distribution's
+// directory.** Replacing a file dpkg records leaves its database naming a
+// version that is not on disk, which `dpkg -V` then reports as a damaged
+// package - so the path alone decides it, with no package database consulted.
+//
+// /usr/local/bin is the other half of the same rule: the filesystem standard
+// reserves it for software installed outside the package manager, which is
+// where `install.sh` puts this, and is what makes an install made that way one
+// that can replace itself.
+func TestTheDistributionsDirectoriesAreNotOursToReplace(t *testing.T) {
+	for _, path := range []string{
+		"/usr/bin/asgard-cli",
+		"/bin/asgard-cli",
+		"/usr/sbin/asgard-cli",
+		"/sbin/asgard-cli",
+	} {
+		if notOursToReplace(path) == "" {
+			t.Errorf("%s was treated as ours to replace, and a package manager records it", path)
+		}
+	}
+	for _, path := range []string{
+		"/usr/local/bin/asgard-cli",
+		"/opt/asgard/bin/asgard-cli",
+	} {
+		if got := notOursToReplace(path); got != "" {
+			t.Errorf("notOursToReplace(%s) = %q, and nothing else owns that path", path, got)
+		}
+	}
+}
+
+// Each package manager gets the command that actually moves its own copy, and
+// each names the version-less asset so the URL keeps working across releases.
+func TestEachPackageManagerGetsItsOwnUpgradeCommand(t *testing.T) {
+	cases := map[string][]string{
+		"dpkg": {"dpkg -i", "asgard-cli_" + runtime.GOOS + "_" + runtime.GOARCH + ".deb"},
+		"rpm":  {"rpm -U", "asgard-cli_" + runtime.GOOS + "_" + runtime.GOARCH + ".rpm"},
+		"apk":  {"apk add", "asgard-cli_" + runtime.GOOS + "_" + runtime.GOARCH + ".apk"},
+	}
+	for tool, wants := range cases {
+		got := upgradeWith(tool)
+		for _, want := range wants {
+			if !strings.Contains(got, want) {
+				t.Errorf("upgradeWith(%q) = %q, which does not mention %q", tool, got, want)
+			}
+		}
+		// A version in the URL is a URL that stops working at the next release.
+		if strings.Contains(got, "/download/asgard-cli_0.") {
+			t.Errorf("upgradeWith(%q) = %q, which pins a version in the asset name", tool, got)
+		}
 	}
 }
 

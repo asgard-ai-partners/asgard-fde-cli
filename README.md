@@ -6,18 +6,26 @@ Command line tool for Asgard FDE (`asgard-cli`).
 
 ## Install
 
-**On a Mac, one command:**
+**On macOS or Linux, one command:**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/asgard-ai-partners/asgard-fde-cli/main/install.sh | sh
 ```
 
-It takes the newest release, **verifies the download against the release's own
-checksums**, installs to `/usr/local/bin`, and then runs the binary once -
-because macOS scans a newly written unnotarized binary on first execution, and
-that scan is better spent inside an installer than in front of a customer.
-`install.sh` at the repository root is what runs, and it is worth reading before
-piping anything into a shell.
+It takes the newest release for this platform, **verifies the download against
+the release's own checksums**, installs to `/usr/local/bin`, and then runs the
+binary once - because macOS scans a newly written unnotarized binary on first
+execution, and that scan is better spent inside an installer than in front of a
+customer. `install.sh` at the repository root is what runs, and it is worth
+reading before piping anything into a shell.
+
+**`/usr/local/bin` on Linux too, and that is the point rather than a default.**
+The `.deb` and the `.rpm` install into `/usr/bin`, which is the package
+manager's, and a binary there cannot replace itself - `asgard-cli update`
+refuses rather than leaving dpkg describing a version that is not on disk. The
+filesystem standard reserves `/usr/local` for software installed outside the
+package manager, so an install made this way is one that updates itself
+afterwards.
 
 Everything below is the same thing done by hand.
 
@@ -34,6 +42,20 @@ asgard-cli doctor          # says whether helm is on PATH
 Swap `darwin_all` for `linux_amd64`, `linux_arm64` or `windows_amd64`.
 `darwin_all` serves both Intel and Apple silicon, so there is nothing to choose
 on a Mac, and the `.pkg` installs the same binary by double-clicking.
+
+On Debian or Ubuntu the `.deb` is one command, and RPM and Alpine hosts have
+their own:
+
+```bash
+arch=$(dpkg --print-architecture)      # amd64 or arm64
+curl -fLO https://github.com/asgard-ai-partners/asgard-fde-cli/releases/latest/download/asgard-cli_linux_${arch}.deb
+sudo dpkg -i asgard-cli_linux_${arch}.deb
+```
+
+That puts it in `/usr/bin`, so **upgrades go through dpkg rather than through
+`asgard-cli update`** - which is what the update command will tell you if you
+run it there. Take the tarball or the installer instead if you would rather the
+tool kept itself current.
 
 If you would rather have the platform detected for you, or you want a specific
 release rather than the newest:

@@ -10,7 +10,12 @@ import "runtime"
 // with cannot drift into three different answers - which is the failure this
 // repository removes everywhere else.
 func installCommand() string {
-	if runtime.GOOS == "darwin" {
+	// **Both Unixes, because the installer handles both.** It picks the asset
+	// for the platform, verifies it the same way, and installs to
+	// /usr/local/bin rather than to the package manager's directory - which is
+	// what makes an install made this way one that `update` can replace.
+	switch runtime.GOOS {
+	case "darwin", "linux":
 		return "curl -fsSL https://raw.githubusercontent.com/asgard-ai-partners/asgard-fde-cli/main/install.sh | sh"
 	}
 	return "see https://github.com/asgard-ai-partners/asgard-fde-cli/releases/latest"

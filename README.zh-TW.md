@@ -6,13 +6,15 @@ Asgard FDE 的命令列工具（`asgard-cli`）。
 
 ## 安裝
 
-**Mac 上一行指令：**
+**macOS 或 Linux 上一行指令：**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/asgard-ai-partners/asgard-fde-cli/main/install.sh | sh
 ```
 
-它拿最新的 release、**對著那個 release 自己的 checksums 驗過**、裝到 `/usr/local/bin`，然後把 binary 跑一次 —— 因為 macOS 對一個剛寫下來、沒 notarize 的 binary 會在第一次執行時掃描，而那個掃描花在安裝程式裡比花在客戶面前好。跑的是 repo 根目錄的 `install.sh`，在把任何東西 pipe 進 shell 之前值得先讀它。
+它拿這個平台最新的 release、**對著那個 release 自己的 checksums 驗過**、裝到 `/usr/local/bin`，然後把 binary 跑一次 —— 因為 macOS 對一個剛寫下來、沒 notarize 的 binary 會在第一次執行時掃描，而那個掃描花在安裝程式裡比花在客戶面前好。跑的是 repo 根目錄的 `install.sh`，在把任何東西 pipe 進 shell 之前值得先讀它。
+
+**Linux 上也是裝到 `/usr/local/bin`，這是刻意的而不是預設值。** `.deb` 和 `.rpm` 裝到 `/usr/bin`，那是套件管理員的目錄，在那裡的 binary 沒辦法換掉自己 —— `asgard-cli update` 會拒絕，而不是留下一個「dpkg 說是這版、磁碟上不是」的狀態。檔案系統標準把 `/usr/local` 保留給套件管理員以外裝的軟體，所以用這條裝起來的，之後就能自己更新。
 
 下面是同一件事的手動版。
 
@@ -45,7 +47,17 @@ sudo install -m 0755 asgard-cli /usr/local/bin/asgard-cli
 asgard-cli doctor          # 告訴你 helm 在不在 PATH 上
 ```
 
-這條也是拿最新的 release，因為 `gh release download` 不給 tag 就是這個行為。Debian 或 RPM 主機可以改用 `.deb` / `.rpm`。
+這條也是拿最新的 release，因為 `gh release download` 不給 tag 就是這個行為。
+
+Debian / Ubuntu 用 `.deb` 一行就好，RPM 與 Alpine 也各有自己的：
+
+```bash
+arch=$(dpkg --print-architecture)      # amd64 或 arm64
+curl -fLO https://github.com/asgard-ai-partners/asgard-fde-cli/releases/latest/download/asgard-cli_linux_${arch}.deb
+sudo dpkg -i asgard-cli_linux_${arch}.deb
+```
+
+這會裝到 `/usr/bin`，所以**升級要走 dpkg，不是走 `asgard-cli update`** —— 你在那裡跑 update 的話它就是這樣告訴你的。想讓工具自己保持在最新版，就用 tarball 或上面那個安裝script。
 
 ### macOS 可能卡住或殺掉第一次執行
 
