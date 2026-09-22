@@ -125,8 +125,15 @@ release:
   footer: |
     ## Install
 
-    One command, and it always takes the newest release - the URL carries no
-    version, so it keeps working:
+    On a Mac, one command - it verifies the download against the checksums
+    below and gets the first-run scan over with:
+
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/asgard-ai-partners/asgard-fde-cli/main/install.sh | sh
+    ```
+
+    By hand, or on another platform - the URL carries no version, so it keeps
+    working:
 
     ```bash
     curl -fsSL https://github.com/asgard-ai-partners/asgard-fde-cli/releases/latest/download/asgard-cli_darwin_all.tar.gz \

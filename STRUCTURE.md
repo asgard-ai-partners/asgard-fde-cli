@@ -28,6 +28,8 @@ design/               an argument for something not built yet, kept where it
 hack/                 the maintainer's gate, in Go: `go run ./hack pass`
 .github/             CI, the tag-driven release, and the PR template
 .goreleaser.yaml      how the binary is built and published
+install.sh            the one-command macOS install; it is piped into a shell
+                      from a URL, so it verifies what it downloaded
 Makefile              the commands this repo is worked with; `make help`
 ```
 

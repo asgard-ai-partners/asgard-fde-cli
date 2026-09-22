@@ -34,6 +34,14 @@ type Tool struct {
 	Alternatives []string
 
 	// Purpose is what asgard-cli needs it for, shown by doctor.
+	//
+	// **A bare infinitive, because it is read in two positions.** `doctor`
+	// prints it as a column, where any form reads; `NotFoundError` puts it
+	// after "needs it to", where anything else does not. Two of the three were
+	// noun phrases and rendered as "needs it to reading a cluster by hand" and
+	// "needs it to the db-query skill" - correct in the column nobody
+	// complained about, wrong in the sentence a customer meets when the tool
+	// is missing.
 	Purpose string
 
 	// Optional marks a tool the acceptance gate does not need.
@@ -68,7 +76,7 @@ var (
 		// unknown-field check moved to the platform's plan when the Pipeline
 		// landed, and no client is given cluster credentials - so kubectl is
 		// something an FDE may want by hand and the gate never asks for.
-		Purpose:     "reading a cluster by hand; no check here needs it",
+		Purpose:     "read a cluster by hand; no check here needs it",
 		Optional:    true,
 		VersionArgs: []string{"version", "--client", "--output=json"},
 		version:     kubectlVersion,
@@ -80,7 +88,7 @@ var (
 	Python = Tool{
 		Name:         "python3",
 		Alternatives: []string{"python"},
-		Purpose:      "the db-query skill, which reads a customer's source systems",
+		Purpose:      "run the db-query skill, which reads a customer's source systems",
 		Optional:     true,
 		VersionArgs:  []string{"--version"},
 		brew:         "python",
