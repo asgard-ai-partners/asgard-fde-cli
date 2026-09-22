@@ -6,7 +6,17 @@ Asgard FDE 的命令列工具（`asgard-cli`）。
 
 ## 安裝
 
-**一行指令，而且網址不帶版本號**，所以跨版本一直有效 —— GitHub 會把
+**Mac 上一行指令：**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/asgard-ai-partners/asgard-fde-cli/main/install.sh | sh
+```
+
+它拿最新的 release、**對著那個 release 自己的 checksums 驗過**、裝到 `/usr/local/bin`，然後把 binary 跑一次 —— 因為 macOS 對一個剛寫下來、沒 notarize 的 binary 會在第一次執行時掃描，而那個掃描花在安裝程式裡比花在客戶面前好。跑的是 repo 根目錄的 `install.sh`，在把任何東西 pipe 進 shell 之前值得先讀它。
+
+下面是同一件事的手動版。
+
+**網址不帶版本號**，所以跨版本一直有效 —— GitHub 會把
 `/releases/latest/download/<檔名>` 解析到最新的 release：
 
 ```bash

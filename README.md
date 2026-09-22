@@ -6,8 +6,23 @@ Command line tool for Asgard FDE (`asgard-cli`).
 
 ## Install
 
-**One command, and the URL carries no version**, so it keeps working across
-releases - GitHub resolves `/releases/latest/download/<name>` to the newest:
+**On a Mac, one command:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/asgard-ai-partners/asgard-fde-cli/main/install.sh | sh
+```
+
+It takes the newest release, **verifies the download against the release's own
+checksums**, installs to `/usr/local/bin`, and then runs the binary once -
+because macOS scans a newly written unnotarized binary on first execution, and
+that scan is better spent inside an installer than in front of a customer.
+`install.sh` at the repository root is what runs, and it is worth reading before
+piping anything into a shell.
+
+Everything below is the same thing done by hand.
+
+**The URL carries no version**, so it keeps working across releases - GitHub
+resolves `/releases/latest/download/<name>` to the newest:
 
 ```bash
 curl -fsSL https://github.com/asgard-ai-partners/asgard-fde-cli/releases/latest/download/asgard-cli_darwin_all.tar.gz \
