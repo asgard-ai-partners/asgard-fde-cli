@@ -84,6 +84,34 @@ go install github.com/asgard-ai-partners/asgard-fde-cli/cmd/asgard-cli@latest
 falls back to the module and VCS metadata rather than claiming a version it
 does not have.
 
+### Staying current
+
+**Every command asks whether a newer release is published, at most once every
+two hours**, and prints one line on stderr when the answer is yes. The answer
+is recorded in `update-check.json` beside the profiles - never in a customer's
+repository, which is somebody else's checkout and is committed - and the
+question is asked alongside the command rather than in front of it, so the
+runs that ask are not slower than the ones that read the cached answer.
+
+```bash
+asgard-cli version --check     ask now, and hear it when nothing is newer
+```
+
+**Nothing replaces the binary on its own.** A CLI that overwrites itself has to
+pick a moment and every moment is somebody else's - a package manager's
+database goes out of step, a running `.exe` is locked, `/usr/local/bin` is
+usually root's - so it prints the install command above and leaves the moment
+to you.
+
+It is off wherever stderr is not a terminal, so a CI log and a piped stderr get
+nothing and make no call. `ASGARD_NO_UPDATE_CHECK` turns off the background one
+everywhere else; `--check` still answers.
+
+A repository can also say it on its own, with no network at all:
+`.asgard-scaffold.json` records which version wrote each file this CLI ships,
+so a checkout somebody has already run a newer binary in is one `asgard-cli
+gate` away from naming that version.
+
 ## Development
 
 ```bash

@@ -68,6 +68,20 @@ go install github.com/asgard-ai-partners/asgard-fde-cli/cmd/asgard-cli@latest
 
 `asgard-cli version` 報的是 release 編進去的值；不帶 ldflags 的 `go build` 會退回 module 與 VCS metadata，而不是宣稱一個它沒有的版號。
 
+### 保持在最新版
+
+**每個指令都會問一次有沒有更新的 release，但每兩小時最多問一次**，答案是「有」的時候在 stderr 印一行。答案記在 profiles 旁邊的 `update-check.json` —— 不會記進客戶的 repository，那是別人的 checkout 而且會被 commit 進去 —— 而且這個問題是跟指令並行問的，不是擋在指令前面，所以真的去問的那一次不會比讀快取的那些慢。
+
+```bash
+asgard-cli version --check     現在就問，而且沒有更新版時也會告訴你
+```
+
+**沒有任何東西會自己換掉這個 binary。** 一個會覆寫自己的 CLI 得挑一個時機，而每個時機都是別人的 —— 套件管理員的資料庫會對不上、執行中的 `.exe` 是鎖住的、`/usr/local/bin` 通常是 root 的 —— 所以它印出上面那行安裝指令，把時機留給你。
+
+stderr 不是終端機的地方它就是關的，所以 CI 的 log 與被導到管線的 stderr 什麼都不會拿到，也不會發出任何請求。其他地方用 `ASGARD_NO_UPDATE_CHECK` 關掉背景那次；`--check` 照樣會回答。
+
+repository 自己也講得出來，而且完全不需要網路：`.asgard-scaffold.json` 記了這個 CLI 送出的每個檔案是哪一版寫的，所以一個已經被更新版跑過的 checkout，跑 `asgard-cli gate` 就會把那個版號講出來。
+
 ## 開發
 
 ```bash

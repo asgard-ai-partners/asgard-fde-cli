@@ -125,7 +125,11 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 	var templateDir string
 	cmd.PersistentFlags().StringVar(&templateDir, "template-dir", "",
 		"read stage prompts from this directory instead of the embedded copies, per file; for iterating on prompt text")
+	// Started here and read in PersistentPostRun, so the question costs the
+	// command nothing: see startUpdateCheck.
+	var updates updateCheck
 	cmd.PersistentPreRunE = func(c *cobra.Command, _ []string) error {
+		updates = startUpdateCheck(c)
 		if templateDir == "" {
 			stage.SetOverrideDir("")
 			return nil
@@ -160,6 +164,10 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 		// to have been reached, so unlike the line above it is not silent on
 		// the commands that never leave the machine.
 		warnIfShippedStale(c)
+		// And the same argument once more for the binary itself. Everything
+		// above is about material this binary put in a repository; this one is
+		// about the binary, which nothing in a repository can be behind.
+		warnIfNewerRelease(c, updates)
 	}
 
 	// The command tree, grouped. **The grouping is the source, not a rendering
