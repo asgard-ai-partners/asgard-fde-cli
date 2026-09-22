@@ -684,7 +684,7 @@ func gateShipped(root string) stepResult {
 		if ahead := newerWriters(root); len(ahead) > 0 {
 			res.Remedy = fmt.Sprintf(
 				"this repository was written by %s; the repository is fine and this binary is behind it:\n    %s",
-				strings.Join(ahead, ", "), installCommand())
+				strings.Join(ahead, ", "), upgradeCommand())
 		}
 	case len(by[scaffold.Edited]) > 0:
 		res.Status = stepWarn

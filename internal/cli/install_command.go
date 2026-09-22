@@ -15,3 +15,26 @@ func installCommand() string {
 	}
 	return "see https://github.com/asgard-ai-partners/asgard-fde-cli/releases/latest"
 }
+
+// upgradeCommand is what THIS installation should run to move to the newest
+// release, which is not the same answer for everybody.
+//
+// **A message that names a command the reader cannot run is the same as no
+// message.** `asgard-cli update` replaces the binary in place and is the answer
+// for an install this tool made; a package manager's copy is that package
+// manager's to move; a binary in a directory the user cannot write needs to be
+// run as somebody who can; and when none of that can be worked out, the
+// installer is what always works.
+func upgradeCommand() string {
+	target, err := selfPath()
+	if err != nil {
+		return installCommand()
+	}
+	if owner := notOursToReplace(target); owner != "" {
+		return upgradeWith(owner)
+	}
+	if notWritable(target) != "" {
+		return elevated()
+	}
+	return "asgard-cli update"
+}

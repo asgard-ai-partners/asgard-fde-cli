@@ -69,7 +69,7 @@ prints the command instead.`,
 				case r.Latest == "":
 					fmt.Fprintf(out, "\nCould not reach the release list, so whether a newer one exists is unknown.\n")
 				case r.Newer:
-					fmt.Fprintf(out, "\nasgard-cli %s is published. To take it:\n    %s\n", r.Latest, installCommand())
+					fmt.Fprintf(out, "\nasgard-cli %s is published. To take it:\n    %s\n", r.Latest, upgradeCommand())
 				default:
 					fmt.Fprintf(out, "\nThe newest release is %s.\n", r.Latest)
 				}

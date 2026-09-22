@@ -115,5 +115,5 @@ func warnIfNewerRelease(cmd *cobra.Command, uc updateCheck) {
 		return
 	}
 	fmt.Fprintf(cmd.ErrOrStderr(), "\nasgard-cli %s is published; this is %s\n    %s\n",
-		res.Latest, res.Running, installCommand())
+		res.Latest, res.Running, upgradeCommand())
 }

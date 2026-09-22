@@ -62,6 +62,7 @@ change, and a stale number reads as a fact.
 | `gate` | the invariant checks on a rendered chart - xref, agent split, deployability, enums, constraints, conditional CEL shapes |
 | `scaffold` | writes the non-customer-specific tree, serves the design-time skills inside it, writes the platform corpus under `.agents/skills/asgard-platform/`, and keeps `.asgard-scaffold.json` - the record of which CLI wrote the files this binary ships |
 | `auth` | the OAuth 2.0 + PKCE sign-in and the credential store, which is the only file this CLI keeps outside a repository |
+| `selfupdate` | whether a newer release is published, cached beside the profiles, and the download-verify-run-rename that replaces this binary with it. **It never writes into a repository** - the answer is about the install rather than about an engagement |
 | `work` | the customer repo's own records: requests, task specs, open questions and decisions |
 | `check` | repository structure: indexes, dated names, links, orphan pages |
 | `platform` | the platform API client: workspaces, the whole `/v1/iac` surface, and `/v1/docs` |

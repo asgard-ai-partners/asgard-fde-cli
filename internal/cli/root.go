@@ -223,12 +223,13 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 		newSkillCmd(),
 	)
 
-	// Ungrouped, and they belong there. `version` answers a question about the
-	// binary rather than about an engagement, and `audit-material` is hidden -
-	// its reader edits this material, and the help belongs to whoever is
-	// onboarding a customer.
+	// Ungrouped, and they belong there. `version` and `update` answer a
+	// question about the binary rather than about an engagement, and
+	// `audit-material` is hidden - its reader edits this material, and the
+	// help belongs to whoever is onboarding a customer.
 	cmd.AddCommand(
 		newVersionCmd(),
+		newUpdateCmd(),
 		newAuditCmd(),
 	)
 

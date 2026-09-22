@@ -268,7 +268,7 @@ func warnIfShippedStale(cmd *cobra.Command) {
 		// README cannot come to disagree about what to run.
 		fmt.Fprintf(errOut, "\n%d file(s) here were written by a newer asgard-cli than this one (%s)\n"+
 			"this repository is ahead of the binary, not behind it:\n    %s\n",
-			n, version.Get().Version, installCommand())
+			n, version.Get().Version, upgradeCommand())
 	}
 
 	var parts []string

@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -138,3 +140,85 @@ func TestTheHelpScreenQuotesTheConstantsRatherThanRepeatingThem(t *testing.T) {
 type discard struct{}
 
 func (discard) Write(p []byte) (int, error) { return len(p), nil }
+
+// **A binary inside somebody else's tree is theirs to replace**, and each of
+// those gets the command that actually moves it rather than one that would
+// leave a package manager describing a version that is not there.
+func TestWhoOwnsTheBinaryDecidesHowItIsUpgraded(t *testing.T) {
+	cases := []struct {
+		name, path, owner, upgrade string
+	}{
+		{
+			"Homebrew on Apple silicon",
+			"/opt/homebrew/Cellar/asgard-cli/0.1.2/bin/asgard-cli",
+			"Homebrew", "brew upgrade asgard-cli",
+		},
+		{
+			"Homebrew on Linux",
+			"/home/linuxbrew/.linuxbrew/Cellar/asgard-cli/0.1.2/bin/asgard-cli",
+			"Homebrew", "brew upgrade asgard-cli",
+		},
+		{
+			"a Nix store path",
+			"/nix/store/abc123-asgard-cli-0.1.2/bin/asgard-cli",
+			"Nix", "update it the way the rest of your profile is updated",
+		},
+		{
+			"an install this tool made",
+			"/usr/local/bin/asgard-cli",
+			"", "",
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			owner := notOursToReplace(tc.path)
+			if owner != tc.owner {
+				t.Fatalf("notOursToReplace(%s) = %q, want %q", tc.path, owner, tc.owner)
+			}
+			if tc.owner == "" {
+				return
+			}
+			if got := upgradeWith(owner); got != tc.upgrade {
+				t.Errorf("upgradeWith(%q) = %q, want %q", owner, got, tc.upgrade)
+			}
+		})
+	}
+}
+
+// `go install` writes into GOBIN, and the module path is how that one moves.
+//
+// **Both sides are resolved before they are compared.** The running binary's
+// path has its symlinks resolved, so an unresolved GOBIN matches nothing - and
+// on macOS every path under /var is reached through one, which is where this
+// was first seen to miss.
+func TestAGoInstallBuildIsRecognisedThroughASymlink(t *testing.T) {
+	root := t.TempDir()
+
+	real := filepath.Join(root, "real", "bin")
+	if err := os.MkdirAll(real, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	link := filepath.Join(root, "link")
+	if err := os.Symlink(filepath.Join(root, "real"), link); err != nil {
+		t.Skipf("no symlinks here: %v", err)
+	}
+
+	// GOBIN as the user set it, through the link; the binary as `selfPath`
+	// would report it, resolved.
+	t.Setenv("GOBIN", filepath.Join(link, "bin"))
+	t.Setenv("GOPATH", "")
+
+	resolved, err := filepath.EvalSymlinks(filepath.Join(link, "bin", "asgard-cli"))
+	if err != nil {
+		// The file does not exist, so resolve the directory and rejoin.
+		dir, derr := filepath.EvalSymlinks(filepath.Join(link, "bin"))
+		if derr != nil {
+			t.Fatalf("resolve: %v", derr)
+		}
+		resolved = filepath.Join(dir, "asgard-cli")
+	}
+
+	if got := notOursToReplace(resolved); got != "go install" {
+		t.Errorf("notOursToReplace(%s) = %q, want %q", resolved, got, "go install")
+	}
+}

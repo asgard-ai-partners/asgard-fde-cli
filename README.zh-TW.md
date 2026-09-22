@@ -70,13 +70,18 @@ go install github.com/asgard-ai-partners/asgard-fde-cli/cmd/asgard-cli@latest
 
 ### 保持在最新版
 
-**每個指令都會問一次有沒有更新的 release，但每兩小時最多問一次**，答案是「有」的時候在 stderr 印一行。答案記在 profiles 旁邊的 `update-check.json` —— 不會記進客戶的 repository，那是別人的 checkout 而且會被 commit 進去 —— 而且這個問題是跟指令並行問的，不是擋在指令前面，所以真的去問的那一次不會比讀快取的那些慢。
-
 ```bash
-asgard-cli version --check     現在就問，而且沒有更新版時也會告訴你
+asgard-cli update              直接更新到最新的 release
+asgard-cli version --check     只問有沒有更新版，什麼都不改
 ```
 
-**沒有任何東西會自己換掉這個 binary。** 一個會覆寫自己的 CLI 得挑一個時機，而每個時機都是別人的 —— 套件管理員的資料庫會對不上、執行中的 `.exe` 是鎖住的、`/usr/local/bin` 通常是 root 的 —— 所以它印出上面那行安裝指令，把時機留給你。
+**每個指令都會問一次有沒有更新的 release，但每兩小時最多問一次**，答案是「有」的時候在 stderr 印一行。答案記在 profiles 旁邊的 `update-check.json` —— 不會記進客戶的 repository，那是別人的 checkout 而且會被 commit 進去 —— 而且這個問題是跟指令並行問的，不是擋在指令前面，所以真的去問的那一次不會比讀快取的那些慢。
+
+`update` 會就地換掉這個 binary：抓這個平台那個不帶版號的 asset、**用雜湊而不是檔名**對著那個 release 自己的 checksums 驗過、**在原地先把新的 binary 跑起來，確認它會動之後才 rename 蓋過舊的**。順序就是安全性本身 —— 被 macOS 殺掉的 build、下載到一半的檔、裡面沒有東西的壓縮檔，全都在「還沒動到任何東西」的階段就失敗，所以結果只會是新版或是原本那個，不會是一個跑不起來的 binary。在 macOS 上這也是那次 Gatekeeper 掃描被花掉的地方，比花在客戶面前好。
+
+**它會拒絕，而不是猜**，而且每一種拒絕都會講該跑什麼：套件管理員裝的那份由套件管理員自己更新、寫不進去的目錄要 `sudo asgard-cli update`、`go build` 出來的 binary 沒有可以比對的 release。每個指令印的那一行講的是「你這個安裝該跑哪一個」，不是對所有人講同一句。
+
+**但沒有人叫它，它不會自己換。** 一個在背景覆寫自己的 CLI 得挑一個時機，而每個時機都是別人的 —— 指令跑到一半、會議中途，或是套件管理員還以為那個檔是它的。
 
 stderr 不是終端機的地方它就是關的，所以 CI 的 log 與被導到管線的 stderr 什麼都不會拿到，也不會發出任何請求。其他地方用 `ASGARD_NO_UPDATE_CHECK` 關掉背景那次；`--check` 照樣會回答。
 
@@ -183,6 +188,10 @@ Deploy —— 平台，以及它知道的事
              variables list|set|unset|sync-declared
              manifest
   skill      status / update
+
+不分組 —— 關於這個 binary 而不是關於某個 engagement
+  version [--check]      這個 build 是什麼，以及有沒有更新的 release
+  update                 就地換成最新的 release
 
 （另有隱藏指令 audit-material，是給維護這份語料的人用的，不是給客戶 onboarding 用的。）
 ```

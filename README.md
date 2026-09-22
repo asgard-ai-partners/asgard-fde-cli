@@ -86,6 +86,11 @@ does not have.
 
 ### Staying current
 
+```bash
+asgard-cli update              take the newest release
+asgard-cli version --check     ask whether there is one, and change nothing
+```
+
 **Every command asks whether a newer release is published, at most once every
 two hours**, and prints one line on stderr when the answer is yes. The answer
 is recorded in `update-check.json` beside the profiles - never in a customer's
@@ -93,15 +98,27 @@ repository, which is somebody else's checkout and is committed - and the
 question is asked alongside the command rather than in front of it, so the
 runs that ask are not slower than the ones that read the cached answer.
 
-```bash
-asgard-cli version --check     ask now, and hear it when nothing is newer
-```
+`update` replaces this binary in place: it takes the version-less asset for
+this platform, verifies the download against that release's own checksums by
+HASH rather than by name, **runs the new binary where it landed, and only then
+renames it over the old one.** The order is what makes it safe - a build macOS
+kills, a truncated download or an archive with nothing in it all fail before
+anything has been replaced, so the outcome is either the new version or exactly
+what was there before, never a binary that does not run. On macOS it is also
+where the Gatekeeper scan of a newly written unnotarized binary is spent, which
+is better than spending it in front of a customer.
 
-**Nothing replaces the binary on its own.** A CLI that overwrites itself has to
-pick a moment and every moment is somebody else's - a package manager's
-database goes out of step, a running `.exe` is locked, `/usr/local/bin` is
-usually root's - so it prints the install command above and leaves the moment
-to you.
+**It refuses rather than guessing**, and each refusal names what to run
+instead: a package manager's copy is that package manager's to move, a
+directory you cannot write needs `sudo asgard-cli update`, and a `go build`
+binary has no release to be compared against. The line every command prints
+names whichever of those applies to your install rather than one command for
+everybody.
+
+**Nothing replaces the binary without being asked.** A CLI that overwrites
+itself in the background has to pick a moment and every moment is somebody
+else's - mid-command, mid-meeting, or while a package manager believes it owns
+the file.
 
 It is off wherever stderr is not a terminal, so a CI log and a piped stderr get
 nothing and make no call. `ASGARD_NO_UPDATE_CHECK` turns off the background one
