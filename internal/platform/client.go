@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/auth"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/version"
 )
 
 // timeout bounds one API call.
@@ -54,6 +55,21 @@ const (
 	ClientHeader = "x-asgard-client"
 	ClientName   = "cli"
 )
+
+// clientValue is what the header carries: the client, and the version of it.
+//
+// **The version rides on every call rather than on an endpoint of its own.**
+// A client too old to know about a version endpoint never calls one, which is
+// exactly the client worth telling - so the fact travels on the requests every
+// version already makes. A development build says so in its own version string
+// and is left as it is; there is nothing to gain by hiding it from the server
+// that is about to behave differently for it.
+func clientValue() string {
+	if v := version.Get().Version; v != "" {
+		return ClientName + "/" + v
+	}
+	return ClientName
+}
 
 // Client is an authenticated caller of one platform.
 type Client struct {
@@ -214,7 +230,7 @@ func (c *Client) do(ctx context.Context, req request) error {
 	}
 	httpReq.Header.Set("Authorization", "Bearer "+c.token)
 	httpReq.Header.Set("Accept", "application/json")
-	httpReq.Header.Set(ClientHeader, ClientName)
+	httpReq.Header.Set(ClientHeader, clientValue())
 	if req.body != nil {
 		httpReq.Header.Set("Content-Type", "application/json")
 	}
