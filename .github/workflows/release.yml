@@ -76,7 +76,13 @@ jobs:
 
           # The universal archive, so the installer serves both Macs and
           # nobody has to know which one they have.
-          gh release download "$GITHUB_REF_NAME" --pattern '*_darwin_all.tar.gz' --output - \
+          #
+          # **The exact name, not a glob.** `*_darwin_all.tar.gz` matched two
+          # assets once the job above began uploading version-less copies -
+          # the versioned archive and its copy - and `--output -` refuses more
+          # than one. The version-less name is the one guaranteed to exist,
+          # because that step runs in the job this one waits for.
+          gh release download "$GITHUB_REF_NAME" --pattern 'asgard-cli_darwin_all.tar.gz' --output - \
             | tar xz asgard-cli
 
           mkdir -p root/usr/local/bin
