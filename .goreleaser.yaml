@@ -125,15 +125,19 @@ release:
   footer: |
     ## Install
 
-    This repository is private, so every asset below needs an authenticated
-    request. `gh` already has your credentials:
+    One command, and it always takes the newest release - the URL carries no
+    version, so it keeps working:
 
     ```bash
-    gh release download {{ .Tag }} --repo asgard-ai-partners/asgard-fde-cli \
-      --pattern '*_darwin_all.tar.gz' --output - | tar xz asgard-cli
-    sudo mv asgard-cli /usr/local/bin/
+    curl -fsSL https://github.com/asgard-ai-partners/asgard-fde-cli/releases/latest/download/asgard-cli_darwin_all.tar.gz \
+      | tar xz asgard-cli
+    sudo install -m 0755 asgard-cli /usr/local/bin/asgard-cli
     asgard-cli doctor
     ```
+
+    Swap `darwin_all` for `linux_amd64`, `linux_arm64` or `windows_amd64`.
+    `darwin_all` serves both Intel and Apple silicon, so there is nothing to
+    choose on a Mac.
 
     `darwin_all` serves both Intel and Apple silicon, so there is nothing to
     choose. Swap the pattern for your own platform otherwise - the assets cover
@@ -172,7 +176,7 @@ release:
 # ---------------------------------------------------------------------------
 # The channels below are OFF, and while this tool is internal they stay off.
 #
-# **They do not fit a private repository.** A Homebrew tap or a Scoop bucket is
+# **The reason these were refused has gone.** A Homebrew tap or a Scoop bucket is
 # a second repository that has to be readable by whoever installs; making that
 # one private too means every user runs `brew tap` against a repo needing
 # credentials, which is more setup than the `gh release download` line the

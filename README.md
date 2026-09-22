@@ -6,15 +6,22 @@ Command line tool for Asgard FDE (`asgard-cli`).
 
 ## Install
 
-**This repository is private, and so is every release of it.** A GitHub release
-takes the visibility of its repository: the page, the notes and every asset are
-reachable only by an account with read access, and an unauthenticated request
-for an asset URL gets a 404 rather than a 403. Nothing is published anywhere
-else - no Homebrew tap, no Scoop bucket, no package repository (see
-[Releasing](#releasing) for why).
+**One command, and the URL carries no version**, so it keeps working across
+releases - GitHub resolves `/releases/latest/download/<name>` to the newest:
 
-So every install path needs credentials, and the shortest one uses the ones
-`gh` already holds:
+```bash
+curl -fsSL https://github.com/asgard-ai-partners/asgard-fde-cli/releases/latest/download/asgard-cli_darwin_all.tar.gz \
+  | tar xz asgard-cli
+sudo install -m 0755 asgard-cli /usr/local/bin/asgard-cli
+asgard-cli doctor          # says whether helm is on PATH
+```
+
+Swap `darwin_all` for `linux_amd64`, `linux_arm64` or `windows_amd64`.
+`darwin_all` serves both Intel and Apple silicon, so there is nothing to choose
+on a Mac, and the `.pkg` installs the same binary by double-clicking.
+
+If you would rather have the platform detected for you, or you want a specific
+release rather than the newest:
 
 ```bash
 repo=asgard-ai-partners/asgard-fde-cli
@@ -29,19 +36,8 @@ sudo install -m 0755 asgard-cli /usr/local/bin/asgard-cli
 asgard-cli doctor          # says whether helm is on PATH
 ```
 
-It takes the newest release, because `gh release download` with no tag does.
-Assets cover darwin / linux / windows on amd64 / arm64, and Debian or RPM hosts
-can take the `.deb` / `.rpm` instead. **On a Mac the `.pkg` installs the same
-binary by double-clicking**, which is the shorter path for somebody who does not
-have `gh`.
-
-**Every asset is also published without its version in the name**, so one URL
-keeps working across releases:
-
-    https://github.com/asgard-ai-partners/asgard-fde-cli/releases/latest/download/asgard-cli_darwin_all.tar.gz
-
-That is a plain `curl` away **once this repository is public**; while it is
-private the URL needs a token and `gh` is the shorter path.
+That takes the newest release too, because `gh release download` with no tag
+does. Debian or RPM hosts can take the `.deb` / `.rpm` instead.
 
 ### macOS may stall or kill the first run
 
@@ -63,12 +59,10 @@ xattr -d com.apple.quarantine ./asgard-cli   # only if a browser downloaded it
 is done an install is worth doing before somebody needs the tool rather than
 during a meeting.
 
-If you already build Go, the module works directly once git can reach the
-private repo:
+If you already build Go, the module works directly:
 
 ```bash
-GOPRIVATE=github.com/asgard-ai-partners/* \
-  go install github.com/asgard-ai-partners/asgard-fde-cli/cmd/asgard-cli@latest
+go install github.com/asgard-ai-partners/asgard-fde-cli/cmd/asgard-cli@latest
 ```
 
 `asgard-cli version` reports what a release built; a `go build` with no ldflags
@@ -629,8 +623,8 @@ The local half is `asgard-cli gate`; the authority is the plan report.
 Nothing about how asgard-cli is distributed can install them. A tar.gz, a zip and
 `go install` carry no dependency metadata and never can, and a dependency
 declared on a Homebrew tap or a Scoop bucket would only cover people who install
-that way - which is nobody, because those channels are deliberately off for a
-private repository (see [Releasing](#private-and-the-channels-that-off-follows-from)).
+that way - which is nobody, because those channels are still off (see
+[Releasing](#the-channels-that-are-off-and-the-reason-that-expired)).
 Declaring one anyway would read as a guarantee that does not hold.
 
 So the binary is the mechanism. Every command that needs helm resolves it through
@@ -945,22 +939,24 @@ goreleaser check
 goreleaser release --snapshot --clean --skip=publish
 ```
 
-### Private, and the channels that off follows from
+### The channels that are off, and the reason that expired
 
-Every release is private because the repository is. That is not a limitation to
-work around while the audience is internal - it is the point - but it does
-decide the install path, which is why the release notes carry a
-`gh release download` line rather than a `brew install` one.
+**This repository is public, and the argument for the channels being off was
+that it was not.** A Homebrew tap or a Scoop bucket is a second repository
+whoever installs has to be able to read, and making that one private too meant
+every user running `brew tap` against a repo needing credentials - more setup
+than the download line it would replace. That objection is gone.
 
 The bottom of `.goreleaser.yaml` has ready-made **Homebrew tap** and **Scoop
-bucket** blocks, and they stay commented out. A tap or a bucket is a second
-repository that whoever installs has to be able to read; making that one private
-too means every user runs `brew tap` against a repo needing credentials, which
-is more setup than the one-line download it would replace, for a smaller
-audience than a tap exists to serve. Audience decided internal-only, 2026-09-06.
-**If this ever goes public, enabling them is the first thing to revisit** - the
-blocks and their prerequisites (`HOMEBREW_TAP_TOKEN`, `SCOOP_BUCKET_TOKEN`) are
-left in place for that.
+bucket** blocks, still commented out, with their prerequisites named
+(`HOMEBREW_TAP_TOKEN`, `SCOOP_BUCKET_TOKEN`). What is left to decide is whether
+a package manager earns a second repository to keep in step - not whether it is
+possible. **A tap would also fix the macOS first-run problem**, because Homebrew
+clears the quarantine mark that an unnotarized binary is killed for; notarizing
+the release fixes it for every install path instead.
+
+Until that is taken, the install command is the version-less asset URL, which
+resolves to the newest release and needs no token.
 
 Other things worth knowing:
 
