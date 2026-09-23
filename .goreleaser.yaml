@@ -97,16 +97,14 @@ changelog:
     - title: Others
       order: 999
 
-# THIS REPOSITORY IS PRIVATE, AND SO IS EVERY RELEASE OF IT. GitHub gives a
-# release the visibility of the repository it belongs to: the page, the notes
-# and every asset below are reachable only by an account with read access, and
-# an unauthenticated request for an asset URL gets a 404 rather than a 403.
-# Nothing here is published to anywhere else - see the note at the bottom of
-# this file about the channels that would.
+# The repository is public, and so is every release of it: the page, the notes
+# and every asset below are reachable with no account, which is what lets
+# `install.sh` and the version-less URLs work with a plain curl. Nothing here is
+# published anywhere else - see the note at the bottom of this file about the
+# channels that would.
 #
-# That makes the footer the install instructions. Somebody landing on a release
-# page cannot `brew install` this and cannot curl the tarball without a token,
-# so the page has to say what does work.
+# That makes the footer the install instructions. Nobody landing on a release
+# page can `brew install` this, so the page has to say what does work.
 #
 # **The footer is read by somebody installing a binary, and nothing else belongs
 # in it.** v0.1.0 shipped with a paragraph in it explaining why the download
@@ -146,11 +144,8 @@ release:
     `darwin_all` serves both Intel and Apple silicon, so there is nothing to
     choose on a Mac.
 
-    `darwin_all` serves both Intel and Apple silicon, so there is nothing to
-    choose. Swap the pattern for your own platform otherwise - the assets cover
-    darwin / linux / windows on amd64 / arm64. On Debian or RPM hosts the
-    `.deb` and `.rpm` below install the same binary, and on a Mac the `.pkg`
-    puts it on your PATH by double-clicking.
+    On Debian or RPM hosts the `.deb` and `.rpm` below install the same
+    binary, and on a Mac the `.pkg` puts it on your PATH by double-clicking.
 
     ### On a Mac, do not download it in a browser
 
@@ -168,28 +163,24 @@ release:
     xattr -d com.apple.quarantine ./asgard-cli    # or the .pkg
     ```
 
-    A downloaded-by-CLI file is not quarantined by Gatekeeper the way a
-    browser download is, so no `xattr` dance is needed.
-
     ### Or from source, if you already build Go
 
     ```bash
-    GOPRIVATE=github.com/asgard-ai-partners/* \
-      go install github.com/asgard-ai-partners/asgard-fde-cli/cmd/asgard-cli@{{ .Tag }}
+    go install github.com/asgard-ai-partners/asgard-fde-cli/cmd/asgard-cli@{{ .Tag }}
     ```
 
     {{ if .PreviousTag }}**Full diff**: https://github.com/asgard-ai-partners/asgard-fde-cli/compare/{{ .PreviousTag }}...{{ .Tag }}{{ end }}
 
 # ---------------------------------------------------------------------------
-# The channels below are OFF, and while this tool is internal they stay off.
+# The channels below are OFF, and that is now a decision nobody has taken
+# rather than one that was refused.
 #
-# **The reason these were refused has gone.** A Homebrew tap or a Scoop bucket is
-# a second repository that has to be readable by whoever installs; making that
-# one private too means every user runs `brew tap` against a repo needing
-# credentials, which is more setup than the `gh release download` line the
-# release notes already give them - for a smaller audience than the tap exists
-# to serve. Audience decided internal-only, john 2026-09-06. If this ever goes
-# public, enabling them is the first thing to revisit.
+# **The reason they were refused has gone.** A Homebrew tap or a Scoop bucket is
+# a second repository that has to be readable by whoever installs, and while
+# this one was private that meant every user running `brew tap` against a repo
+# needing credentials - more setup than the release notes' own install line.
+# The repository is public now, so what is left is whether a package manager is
+# worth a second repository to keep in step with this one.
 #
 # None of them declares helm or kubectl as a dependency, deliberately. A
 # dependency only fires on a package-manager install, so it would cover a

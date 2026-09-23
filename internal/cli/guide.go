@@ -18,8 +18,9 @@ import (
 // this is the third of three.
 func newGuideCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "guide [name]",
-		Short: "Read the guidance for one decision",
+		Use:         "guide [name]",
+		Annotations: touchesNoNetwork(),
+		Short:       "Read the guidance for one decision",
 		Long: `Read the guidance for one decision. With no argument, list all of it.
 
 Each of these is a decision somebody has to make, with the answer that has been

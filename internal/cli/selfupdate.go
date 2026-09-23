@@ -83,12 +83,35 @@ func wantsUpdateCheck(cmd *cobra.Command) bool {
 	// own wording, and a second answer underneath it reads as a second
 	// question. Completion runs are a shell's, not a person's.
 	for c := cmd; c != nil; c = c.Parent() {
+		if isOffline(c) {
+			return false
+		}
 		switch c.Name() {
 		case "version", "help", "completion", cobra.ShellCompRequestCmd, cobra.ShellCompNoDescRequestCmd:
 			return false
 		}
 	}
 	return true
+}
+
+// offlineAnnotation marks a command that touches no network, so the background
+// check does not ask on it either.
+//
+// **A request whose failure is silent is still a request.** It goes out from
+// whatever network the command is run on, and the half that answers in a
+// meeting - `init`, `size`, `guide` - is run on the customer's. So the mark is
+// on the command rather than in a list here: the command is where its help
+// makes the promise, and `TestAnOfflineClaimIsKept` holds the two together.
+const offlineAnnotation = "asgard-cli/offline"
+
+// touchesNoNetwork returns the annotation that marks a command as touching no network.
+func touchesNoNetwork() map[string]string {
+	return map[string]string{offlineAnnotation: "true"}
+}
+
+// isOffline says whether c is marked as touching no network.
+func isOffline(c *cobra.Command) bool {
+	return c.Annotations[offlineAnnotation] == "true"
 }
 
 // warnIfNewerRelease prints the one line, if the answer arrived and is yes.

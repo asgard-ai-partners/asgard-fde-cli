@@ -29,8 +29,9 @@ func newLinksCmd() *cobra.Command {
 	var profile string
 
 	cmd := &cobra.Command{
-		Use:   "links",
-		Short: "The URLs of the systems this checkout is bound to",
+		Use:         "links",
+		Annotations: touchesNoNetwork(),
+		Short:       "The URLs of the systems this checkout is bound to",
 		Long: `Print the repository and platform URLs for this engagement, from the ids already recorded.
 
     asgard-cli links
