@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/auth"
@@ -40,8 +41,8 @@ func TestEveryRequestSaysWhichClientIsCalling(t *testing.T) {
 	if err != nil {
 		t.Fatalf("do: %v", err)
 	}
-	if v := got.Get(ClientHeader); v != ClientName {
-		t.Errorf("%s = %q, want %q", ClientHeader, v, ClientName)
+	if v := got.Get(ClientHeader); v != clientValue() {
+		t.Errorf("%s = %q, want %q", ClientHeader, v, clientValue())
 	}
 	// The call that takes no workspace sends it too: what this program is does
 	// not depend on which route it is calling.
@@ -53,7 +54,27 @@ func TestEveryRequestSaysWhichClientIsCalling(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("do: %v", err)
 	}
-	if v := got.Get(ClientHeader); v != ClientName {
-		t.Errorf("unscoped %s = %q, want %q", ClientHeader, v, ClientName)
+	if v := got.Get(ClientHeader); v != clientValue() {
+		t.Errorf("unscoped %s = %q, want %q", ClientHeader, v, clientValue())
+	}
+}
+
+// **The header carries the version, and the client is still readable without
+// parsing it.** The server has to be able to tell a CLI from the web console by
+// looking at the front of the value, and it has to be able to tell WHICH CLI
+// without a second call - a client too old to know about a version endpoint
+// never calls one, so the version travels on the requests every version
+// already makes.
+func TestTheClientHeaderCarriesTheVersion(t *testing.T) {
+	v := clientValue()
+	if !strings.HasPrefix(v, ClientName) {
+		t.Errorf("%q does not begin with %q, so a prefix match stops recognising the CLI", v, ClientName)
+	}
+	if v == ClientName {
+		t.Errorf("%q carries no version, which is the whole point of the value", v)
+	}
+	name, ver, ok := strings.Cut(v, "/")
+	if !ok || name != ClientName || ver == "" {
+		t.Errorf("%q is not <client>/<version>", v)
 	}
 }

@@ -578,12 +578,11 @@ So every requirement of this shape belongs to that middle layer, not to us:
     "ten questions per user per day"      the desk counts
 
 With a website the middle layer is obvious, because the site is already there.
-With LINE it often does not exist - but **how much LINE gives you for free is
-unresolved**, so do not walk in saying it cannot be done. What is certain is that
-LINE gives the bot no signal that a person has taken over, so the pause/resume
-state and the counters live outside the platform either way. Ask who owns the
-LINE Official Account and what their agents use today, and check LINE's current
-documentation for that account. See `../wiki/integration.md`.
+On a chat platform it is whatever they already run on that account, so **ask who
+owns the account and what their agents use on it today, for the middle-layer
+row** - not whether the platform supports handoff, which it does not either way.
+Whatever that surface turns out to be, the pause/resume state and the counters
+live outside Asgard. See `../wiki/integration.md`.
 
 If the answer is "nothing", say so plainly rather than designing around it. The
 choice is theirs: put a desk in front, or drop the requirement. A proposal that

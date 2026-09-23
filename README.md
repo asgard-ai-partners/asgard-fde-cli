@@ -6,18 +6,37 @@ Command line tool for Asgard FDE (`asgard-cli`).
 
 ## Install
 
-**On a Mac, one command:**
+**On macOS or Linux, one command:**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/asgard-ai-partners/asgard-fde-cli/main/install.sh | sh
 ```
 
-It takes the newest release, **verifies the download against the release's own
-checksums**, installs to `/usr/local/bin`, and then runs the binary once -
-because macOS scans a newly written unnotarized binary on first execution, and
-that scan is better spent inside an installer than in front of a customer.
-`install.sh` at the repository root is what runs, and it is worth reading before
-piping anything into a shell.
+**On Windows, in PowerShell:**
+
+```powershell
+irm https://raw.githubusercontent.com/asgard-ai-partners/asgard-fde-cli/main/install.ps1 | iex
+```
+
+`install.ps1` is the Windows half and makes the same decisions: it verifies the
+download against the release's own checksums, installs under `%LOCALAPPDATA%`
+and adds that to your user PATH. Installing where the user owns the files needs
+no elevation and is what lets `asgard-cli update` replace the binary later.
+
+It takes the newest release for this platform, **verifies the download against
+the release's own checksums**, installs to `/usr/local/bin`, and then runs the
+binary once - because macOS scans a newly written unnotarized binary on first
+execution, and that scan is better spent inside an installer than in front of a
+customer. `install.sh` at the repository root is what runs, and it is worth
+reading before piping anything into a shell.
+
+**`/usr/local/bin` on Linux too, and that is the point rather than a default.**
+The `.deb` and the `.rpm` install into `/usr/bin`, which is the package
+manager's, and a binary there cannot replace itself - `asgard-cli update`
+refuses rather than leaving dpkg describing a version that is not on disk. The
+filesystem standard reserves `/usr/local` for software installed outside the
+package manager, so an install made this way is one that updates itself
+afterwards.
 
 Everything below is the same thing done by hand.
 
@@ -34,6 +53,20 @@ asgard-cli doctor          # says whether helm is on PATH
 Swap `darwin_all` for `linux_amd64`, `linux_arm64` or `windows_amd64`.
 `darwin_all` serves both Intel and Apple silicon, so there is nothing to choose
 on a Mac, and the `.pkg` installs the same binary by double-clicking.
+
+On Debian or Ubuntu the `.deb` is one command, and RPM and Alpine hosts have
+their own:
+
+```bash
+arch=$(dpkg --print-architecture)      # amd64 or arm64
+curl -fLO https://github.com/asgard-ai-partners/asgard-fde-cli/releases/latest/download/asgard-cli_linux_${arch}.deb
+sudo dpkg -i asgard-cli_linux_${arch}.deb
+```
+
+That puts it in `/usr/bin`, so **upgrades go through dpkg rather than through
+`asgard-cli update`** - which is what the update command will tell you if you
+run it there. Take the tarball or the installer instead if you would rather the
+tool kept itself current.
 
 If you would rather have the platform detected for you, or you want a specific
 release rather than the newest:
@@ -83,6 +116,57 @@ go install github.com/asgard-ai-partners/asgard-fde-cli/cmd/asgard-cli@latest
 `asgard-cli version` reports what a release built; a `go build` with no ldflags
 falls back to the module and VCS metadata rather than claiming a version it
 does not have.
+
+### Staying current
+
+```bash
+asgard-cli update              take the newest release
+asgard-cli version --check     ask whether there is one, and change nothing
+```
+
+**Every command asks whether a newer release is published, at most once every
+two hours**, and prints one line on stderr when the answer is yes. The answer
+is recorded in `update-check.json` beside the profiles - never in a customer's
+repository, which is somebody else's checkout and is committed - and the
+question is asked alongside the command rather than in front of it, so the
+runs that ask are not slower than the ones that read the cached answer.
+
+`update` replaces this binary in place: it takes the version-less asset for
+this platform, verifies the download against that release's own checksums by
+HASH rather than by name, **runs the new binary where it landed, and only then
+renames it over the old one.** The order is what makes it safe - a build macOS
+kills, a truncated download or an archive with nothing in it all fail before
+anything has been replaced, so the outcome is either the new version or exactly
+what was there before, never a binary that does not run. On macOS it is also
+where the Gatekeeper scan of a newly written unnotarized binary is spent, which
+is better than spending it in front of a customer.
+
+**It refuses rather than guessing**, and each refusal names what to run
+instead: a package manager's copy is that package manager's to move, a
+directory you cannot write needs `sudo asgard-cli update`, and a `go build`
+binary has no release to be compared against. The line every command prints
+names whichever of those applies to your install rather than one command for
+everybody.
+
+**On Windows it takes two renames rather than one.** A running `.exe` cannot be
+written or deleted, but it can be renamed, so the old binary is moved aside to
+`asgard-cli.exe.old` and the new one takes its name - and the displaced file
+cannot be removed until the process running from it exits, so a later run
+sweeps it. Seeing one beside the binary after an update is that, not a failure.
+
+**Nothing replaces the binary without being asked.** A CLI that overwrites
+itself in the background has to pick a moment and every moment is somebody
+else's - mid-command, mid-meeting, or while a package manager believes it owns
+the file.
+
+It is off wherever stderr is not a terminal, so a CI log and a piped stderr get
+nothing and make no call. `ASGARD_NO_UPDATE_CHECK` turns off the background one
+everywhere else; `--check` still answers.
+
+A repository can also say it on its own, with no network at all:
+`.asgard-scaffold.json` records which version wrote each file this CLI ships,
+so a checkout somebody has already run a newer binary in is one `asgard-cli
+gate` away from naming that version.
 
 ## Development
 

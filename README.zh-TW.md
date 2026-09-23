@@ -6,13 +6,23 @@ Asgard FDE 的命令列工具（`asgard-cli`）。
 
 ## 安裝
 
-**Mac 上一行指令：**
+**macOS 或 Linux 上一行指令：**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/asgard-ai-partners/asgard-fde-cli/main/install.sh | sh
 ```
 
-它拿最新的 release、**對著那個 release 自己的 checksums 驗過**、裝到 `/usr/local/bin`，然後把 binary 跑一次 —— 因為 macOS 對一個剛寫下來、沒 notarize 的 binary 會在第一次執行時掃描，而那個掃描花在安裝程式裡比花在客戶面前好。跑的是 repo 根目錄的 `install.sh`，在把任何東西 pipe 進 shell 之前值得先讀它。
+**Windows 上，在 PowerShell 裡：**
+
+```powershell
+irm https://raw.githubusercontent.com/asgard-ai-partners/asgard-fde-cli/main/install.ps1 | iex
+```
+
+`install.ps1` 是 Windows 那一半，做的判斷一樣：對著 release 自己的 checksums 驗過、裝到 `%LOCALAPPDATA%` 底下、把那個路徑加進使用者的 PATH。裝在使用者自己擁有的地方不需要提權，而且這正是之後 `asgard-cli update` 能就地換掉它的原因。
+
+它拿這個平台最新的 release、**對著那個 release 自己的 checksums 驗過**、裝到 `/usr/local/bin`，然後把 binary 跑一次 —— 因為 macOS 對一個剛寫下來、沒 notarize 的 binary 會在第一次執行時掃描，而那個掃描花在安裝程式裡比花在客戶面前好。跑的是 repo 根目錄的 `install.sh`，在把任何東西 pipe 進 shell 之前值得先讀它。
+
+**Linux 上也是裝到 `/usr/local/bin`，這是刻意的而不是預設值。** `.deb` 和 `.rpm` 裝到 `/usr/bin`，那是套件管理員的目錄，在那裡的 binary 沒辦法換掉自己 —— `asgard-cli update` 會拒絕，而不是留下一個「dpkg 說是這版、磁碟上不是」的狀態。檔案系統標準把 `/usr/local` 保留給套件管理員以外裝的軟體，所以用這條裝起來的，之後就能自己更新。
 
 下面是同一件事的手動版。
 
@@ -45,7 +55,17 @@ sudo install -m 0755 asgard-cli /usr/local/bin/asgard-cli
 asgard-cli doctor          # 告訴你 helm 在不在 PATH 上
 ```
 
-這條也是拿最新的 release，因為 `gh release download` 不給 tag 就是這個行為。Debian 或 RPM 主機可以改用 `.deb` / `.rpm`。
+這條也是拿最新的 release，因為 `gh release download` 不給 tag 就是這個行為。
+
+Debian / Ubuntu 用 `.deb` 一行就好，RPM 與 Alpine 也各有自己的：
+
+```bash
+arch=$(dpkg --print-architecture)      # amd64 或 arm64
+curl -fLO https://github.com/asgard-ai-partners/asgard-fde-cli/releases/latest/download/asgard-cli_linux_${arch}.deb
+sudo dpkg -i asgard-cli_linux_${arch}.deb
+```
+
+這會裝到 `/usr/bin`，所以**升級要走 dpkg，不是走 `asgard-cli update`** —— 你在那裡跑 update 的話它就是這樣告訴你的。想讓工具自己保持在最新版，就用 tarball 或上面那個安裝script。
 
 ### macOS 可能卡住或殺掉第一次執行
 
@@ -67,6 +87,27 @@ go install github.com/asgard-ai-partners/asgard-fde-cli/cmd/asgard-cli@latest
 ```
 
 `asgard-cli version` 報的是 release 編進去的值；不帶 ldflags 的 `go build` 會退回 module 與 VCS metadata，而不是宣稱一個它沒有的版號。
+
+### 保持在最新版
+
+```bash
+asgard-cli update              直接更新到最新的 release
+asgard-cli version --check     只問有沒有更新版，什麼都不改
+```
+
+**每個指令都會問一次有沒有更新的 release，但每兩小時最多問一次**，答案是「有」的時候在 stderr 印一行。答案記在 profiles 旁邊的 `update-check.json` —— 不會記進客戶的 repository，那是別人的 checkout 而且會被 commit 進去 —— 而且這個問題是跟指令並行問的，不是擋在指令前面，所以真的去問的那一次不會比讀快取的那些慢。
+
+`update` 會就地換掉這個 binary：抓這個平台那個不帶版號的 asset、**用雜湊而不是檔名**對著那個 release 自己的 checksums 驗過、**在原地先把新的 binary 跑起來，確認它會動之後才 rename 蓋過舊的**。順序就是安全性本身 —— 被 macOS 殺掉的 build、下載到一半的檔、裡面沒有東西的壓縮檔，全都在「還沒動到任何東西」的階段就失敗，所以結果只會是新版或是原本那個，不會是一個跑不起來的 binary。在 macOS 上這也是那次 Gatekeeper 掃描被花掉的地方，比花在客戶面前好。
+
+**它會拒絕，而不是猜**，而且每一種拒絕都會講該跑什麼：套件管理員裝的那份由套件管理員自己更新、寫不進去的目錄要 `sudo asgard-cli update`、`go build` 出來的 binary 沒有可以比對的 release。每個指令印的那一行講的是「你這個安裝該跑哪一個」，不是對所有人講同一句。
+
+**Windows 上是兩次 rename 而不是一次。** 執行中的 `.exe` 不能被寫也不能被刪，但可以改名，所以舊的先搬去 `asgard-cli.exe.old`，新的接手那個名字 —— 而那個被搬開的檔，在還在跑它的 process 結束之前刪不掉，所以是下一次執行時才掃掉。更新完在 binary 旁邊看到一個 `.old` 是這個原因，不是失敗。
+
+**但沒有人叫它，它不會自己換。** 一個在背景覆寫自己的 CLI 得挑一個時機，而每個時機都是別人的 —— 指令跑到一半、會議中途，或是套件管理員還以為那個檔是它的。
+
+stderr 不是終端機的地方它就是關的，所以 CI 的 log 與被導到管線的 stderr 什麼都不會拿到，也不會發出任何請求。其他地方用 `ASGARD_NO_UPDATE_CHECK` 關掉背景那次；`--check` 照樣會回答。
+
+repository 自己也講得出來，而且完全不需要網路：`.asgard-scaffold.json` 記了這個 CLI 送出的每個檔案是哪一版寫的，所以一個已經被更新版跑過的 checkout，跑 `asgard-cli gate` 就會把那個版號講出來。
 
 ## 開發
 
@@ -169,6 +210,10 @@ Deploy —— 平台，以及它知道的事
              variables list|set|unset|sync-declared
              manifest
   skill      status / update
+
+不分組 —— 關於這個 binary 而不是關於某個 engagement
+  version [--check]      這個 build 是什麼，以及有沒有更新的 release
+  update                 就地換成最新的 release
 
 （另有隱藏指令 audit-material，是給維護這份語料的人用的，不是給客戶 onboarding 用的。）
 ```
