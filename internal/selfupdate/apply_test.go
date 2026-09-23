@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -67,9 +68,16 @@ func TestTheBinaryComesOutOfEitherArchiveShape(t *testing.T) {
 	dir := t.TempDir()
 	const body = "#!/bin/sh\necho hello\n"
 
+	// **Named the way the release names it, which is not the same on every
+	// platform.** The Windows archive carries asgard-cli.exe and `extract`
+	// looks for exactly that, so a test that hardcodes the Unix name passes
+	// everywhere it is not needed and fails on the one platform whose archive
+	// is different.
+	binary := "asgard-cli" + exeSuffix()
+
 	t.Run("tar.gz", func(t *testing.T) {
 		archive := filepath.Join(dir, "a.tar.gz")
-		writeTarGz(t, archive, map[string]string{"README.md": "x", "asgard-cli": body})
+		writeTarGz(t, archive, map[string]string{"README.md": "x", binary: body})
 
 		dest := filepath.Join(dir, "out-tar")
 		if err := extract(archive, dest); err != nil {
@@ -82,7 +90,7 @@ func TestTheBinaryComesOutOfEitherArchiveShape(t *testing.T) {
 
 	t.Run("zip", func(t *testing.T) {
 		archive := filepath.Join(dir, "a.zip")
-		writeZip(t, archive, map[string]string{"README.md": "x", "asgard-cli": body})
+		writeZip(t, archive, map[string]string{"README.md": "x", binary: body})
 
 		dest := filepath.Join(dir, "out-zip")
 		if err := extract(archive, dest); err != nil {
@@ -137,6 +145,14 @@ func TestReplaceSwapsTheContentAndKeepsTheModeThatWasThere(t *testing.T) {
 	}
 	if string(got) != "new" {
 		t.Errorf("target holds %q, want %q", got, "new")
+	}
+	// **The mode half is a Unix claim and is only made there.** Windows has no
+	// POSIX permission bits - `os.Chmod` there toggles the read-only flag and
+	// nothing else, and what makes a file executable is its extension - so
+	// asserting a carried-across 0775 is asserting something the platform does
+	// not have. `replace_windows.go` carries no chmod for the same reason.
+	if runtime.GOOS == "windows" {
+		return
 	}
 	info, err := os.Stat(target)
 	if err != nil {
