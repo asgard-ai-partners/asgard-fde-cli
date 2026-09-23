@@ -3,6 +3,7 @@ package cli
 import (
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"testing"
@@ -14,7 +15,8 @@ import (
 )
 
 // The background check asks on an ordinary command and stays out of the way of
-// the three runs where an answer is somebody else's or nobody's.
+// the runs where an answer is somebody else's or nobody's, and of the commands
+// that touch no network.
 //
 // **`version` is the one that matters.** It carries `--check`, which asks the
 // same question with its own wording, and a second answer printed underneath
@@ -49,6 +51,10 @@ func TestWhichRunsAskWhetherANewerReleaseExists(t *testing.T) {
 		{"version does not, because --check is its own answer", find("version"), false},
 		{"help does not", find("help"), false},
 		{"a completion run is a shell's, not a person's", find("completion"), false},
+		{"init does not, because it answers with no network", find("init"), false},
+		{"size does not, for the same reason", find("size"), false},
+		{"guide does not, for the same reason", find("guide"), false},
+		{"a marked subcommand does not", find("profile", "show"), false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -64,6 +70,30 @@ func TestWhichRunsAskWhetherANewerReleaseExists(t *testing.T) {
 			t.Fatalf("%s set and the check still wanted to run", selfupdate.EnvDisable)
 		}
 	})
+}
+
+// A command whose help says it touches no network is marked, so the background
+// check keeps the promise too. The help is where the claim is made and the mark
+// is what the check reads, and a claim added to one without the other is a
+// command that says it is offline and asks GitHub anyway.
+//
+// Only a claim a command makes about itself counts - a sentence opening "It
+// touches no network", or "Nothing here reaches the network". A help screen describing the rule, or
+// what another command does, is a mention, and the root is left out for that
+// reason: its help says what `init` does.
+func TestAnOfflineClaimIsKept(t *testing.T) {
+	claim := regexp.MustCompile(`(?m)(^|[.!?]\s+|\*\*)It\b[^.]{0,30}\b(touches|reaches) no network|Nothing here reaches the network`)
+	root := NewRootCmd()
+	var walk func(c *cobra.Command)
+	walk = func(c *cobra.Command) {
+		for _, sub := range c.Commands() {
+			if claim.MatchString(sub.Long) && !isOffline(sub) {
+				t.Errorf("%q says it touches no network and is not marked with touchesNoNetwork()", sub.CommandPath())
+			}
+			walk(sub)
+		}
+	}
+	walk(root)
 }
 
 // A check that has not answered by the time the command has is dropped rather

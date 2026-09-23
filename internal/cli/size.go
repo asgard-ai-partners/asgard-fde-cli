@@ -13,8 +13,9 @@ func newSizeCmd() *cobra.Command {
 	var in size.Inputs
 
 	cmd := &cobra.Command{
-		Use:   "size [shape]",
-		Short: "What one capability is made of, before it is written",
+		Use:         "size [shape]",
+		Annotations: touchesNoNetwork(),
+		Short:       "What one capability is made of, before it is written",
 		Long: `Estimate a capability's shape and size from what the interview established.
 
 "How many agents, how many projects" is the first question a proposal is asked

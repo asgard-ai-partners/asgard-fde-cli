@@ -54,8 +54,8 @@ Swap `darwin_all` for `linux_amd64`, `linux_arm64` or `windows_amd64`.
 `darwin_all` serves both Intel and Apple silicon, so there is nothing to choose
 on a Mac, and the `.pkg` installs the same binary by double-clicking.
 
-On Debian or Ubuntu the `.deb` is one command, and RPM and Alpine hosts have
-their own:
+On Debian or Ubuntu the `.deb` is one command; RPM and Alpine hosts take the
+`.rpm` or the `.apk` from the same release the same way:
 
 ```bash
 arch=$(dpkg --print-architecture)      # amd64 or arm64
@@ -124,9 +124,9 @@ asgard-cli update              take the newest release
 asgard-cli version --check     ask whether there is one, and change nothing
 ```
 
-**Every command asks whether a newer release is published, at most once every
-two hours**, and prints one line on stderr when the answer is yes. The answer
-is recorded in `update-check.json` beside the profiles - never in a customer's
+**Every command that can reach a network asks whether a newer release is
+published, at most once every two hours**, and prints one line on stderr when
+the answer is yes. The answer is recorded in `update-check.json` beside the profiles - never in a customer's
 repository, which is somebody else's checkout and is committed - and the
 question is asked alongside the command rather than in front of it, so the
 runs that ask are not slower than the ones that read the cached answer.
@@ -160,8 +160,11 @@ else's - mid-command, mid-meeting, or while a package manager believes it owns
 the file.
 
 It is off wherever stderr is not a terminal, so a CI log and a piped stderr get
-nothing and make no call. `ASGARD_NO_UPDATE_CHECK` turns off the background one
-everywhere else; `--check` still answers.
+nothing and make no call. **A command whose help says it touches no network
+never asks** - `init`, `size` and `guide` among them, the half that answers in a
+meeting - because a request that fails silently still leaves from the meeting's
+network. `ASGARD_NO_UPDATE_CHECK` turns off the background one everywhere else;
+`--check` still answers.
 
 A repository can also say it on its own, with no network at all:
 `.asgard-scaffold.json` records which version wrote each file this CLI ships,

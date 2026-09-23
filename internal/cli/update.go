@@ -43,8 +43,8 @@ describing a version that is no longer there.
     asgard-cli update              take the newest release
     asgard-cli version --check     ask whether there is one, and change nothing
 
-Every command already says when a newer release is published, at most once every
-` + selfupdate.IntervalText() + `. This is the command that acts on it.`,
+Every command that can reach a network already says when a newer release is
+published, at most once every ` + selfupdate.IntervalText() + `. This is the command that acts on it.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			out, errOut := cmd.OutOrStdout(), cmd.ErrOrStderr()

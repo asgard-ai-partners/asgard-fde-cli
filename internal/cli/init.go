@@ -41,8 +41,9 @@ func newInitCmd() *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use:   "init",
-		Short: "Write the repository skeleton here, so a coding agent can take over",
+		Use:         "init",
+		Annotations: touchesNoNetwork(),
+		Short:       "Write the repository skeleton here, so a coding agent can take over",
 		Long: `Write the Asgard repository skeleton into this directory.
 
     mkdir acme-asgard-kube && cd acme-asgard-kube

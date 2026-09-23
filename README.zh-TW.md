@@ -57,7 +57,7 @@ asgard-cli doctor          # 告訴你 helm 在不在 PATH 上
 
 這條也是拿最新的 release，因為 `gh release download` 不給 tag 就是這個行為。
 
-Debian / Ubuntu 用 `.deb` 一行就好，RPM 與 Alpine 也各有自己的：
+Debian / Ubuntu 用 `.deb` 一行就好；RPM 與 Alpine 用同一個 release 裡的 `.rpm` 或 `.apk`，做法一樣：
 
 ```bash
 arch=$(dpkg --print-architecture)      # amd64 或 arm64
@@ -65,7 +65,7 @@ curl -fLO https://github.com/asgard-ai-partners/asgard-fde-cli/releases/latest/d
 sudo dpkg -i asgard-cli_linux_${arch}.deb
 ```
 
-這會裝到 `/usr/bin`，所以**升級要走 dpkg，不是走 `asgard-cli update`** —— 你在那裡跑 update 的話它就是這樣告訴你的。想讓工具自己保持在最新版，就用 tarball 或上面那個安裝script。
+這會裝到 `/usr/bin`，所以**升級要走 dpkg，不是走 `asgard-cli update`** —— 你在那裡跑 update 的話它就是這樣告訴你的。想讓工具自己保持在最新版，就用 tarball 或上面那個安裝腳本。
 
 ### macOS 可能卡住或殺掉第一次執行
 
@@ -95,7 +95,7 @@ asgard-cli update              直接更新到最新的 release
 asgard-cli version --check     只問有沒有更新版，什麼都不改
 ```
 
-**每個指令都會問一次有沒有更新的 release，但每兩小時最多問一次**，答案是「有」的時候在 stderr 印一行。答案記在 profiles 旁邊的 `update-check.json` —— 不會記進客戶的 repository，那是別人的 checkout 而且會被 commit 進去 —— 而且這個問題是跟指令並行問的，不是擋在指令前面，所以真的去問的那一次不會比讀快取的那些慢。
+**每個可能碰到網路的指令都會問一次有沒有更新的 release，但每兩小時最多問一次**，答案是「有」的時候在 stderr 印一行。答案記在 profiles 旁邊的 `update-check.json` —— 不會記進客戶的 repository，那是別人的 checkout 而且會被 commit 進去 —— 而且這個問題是跟指令並行問的，不是擋在指令前面，所以真的去問的那一次不會比讀快取的那些慢。
 
 `update` 會就地換掉這個 binary：抓這個平台那個不帶版號的 asset、**用雜湊而不是檔名**對著那個 release 自己的 checksums 驗過、**在原地先把新的 binary 跑起來，確認它會動之後才 rename 蓋過舊的**。順序就是安全性本身 —— 被 macOS 殺掉的 build、下載到一半的檔、裡面沒有東西的壓縮檔，全都在「還沒動到任何東西」的階段就失敗，所以結果只會是新版或是原本那個，不會是一個跑不起來的 binary。在 macOS 上這也是那次 Gatekeeper 掃描被花掉的地方，比花在客戶面前好。
 
@@ -105,7 +105,7 @@ asgard-cli version --check     只問有沒有更新版，什麼都不改
 
 **但沒有人叫它，它不會自己換。** 一個在背景覆寫自己的 CLI 得挑一個時機，而每個時機都是別人的 —— 指令跑到一半、會議中途，或是套件管理員還以為那個檔是它的。
 
-stderr 不是終端機的地方它就是關的，所以 CI 的 log 與被導到管線的 stderr 什麼都不會拿到，也不會發出任何請求。其他地方用 `ASGARD_NO_UPDATE_CHECK` 關掉背景那次；`--check` 照樣會回答。
+stderr 不是終端機的地方它就是關的，所以 CI 的 log 與被導到管線的 stderr 什麼都不會拿到，也不會發出任何請求。**說明裡寫著不碰網路的指令永遠不問** —— `init`、`size`、`guide` 都是，它們是在會議上、沒有網路也要回答的那一半 —— 因為一個失敗了也不出聲的請求，仍然是從會議現場的網路發出去的。其他地方用 `ASGARD_NO_UPDATE_CHECK` 關掉背景那次；`--check` 照樣會回答。
 
 repository 自己也講得出來，而且完全不需要網路：`.asgard-scaffold.json` 記了這個 CLI 送出的每個檔案是哪一版寫的，所以一個已經被更新版跑過的 checkout，跑 `asgard-cli gate` 就會把那個版號講出來。
 

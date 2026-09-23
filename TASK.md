@@ -39,7 +39,7 @@ and whether its source has moved since is what `go run ./hack sources` reports.
 | `extracts-vs-charts` the extracts against the charts they came from | the commits in `source/SOURCES.md`'s **held against** column, which is what makes this reading checkable rather than a date | 2026-09-11 |
 | `wiki-vs-docs` the wiki pages against asgard-docs | **the pages whose citations have moved, which `go run ./hack coverage --drift` names** - now 0, each citation carrying the commit it was held against; the prose citing a page that has not moved stands at its own earlier reading | 2026-09-14 |
 | `packages-help` every package's help against its behaviour | the working tree | 2026-09-11 |
-| `root-documents` Goal, AGENTS, APPROACH, STRUCTURE, TASK, README and its Chinese half - the files that state the rules, as opposed to the paths and commands in them, which `go run ./hack doc-paths` has | every pointer into the corpus opened and the sentence around it held against what that page says now; every Go symbol, command and CI step against the tree; the CEL counts against asgard-kube `cbd8d70` | 2026-09-15 |
+| `root-documents` Goal, AGENTS, APPROACH, STRUCTURE, TASK, README and its Chinese half - the files that state the rules, as opposed to the paths and commands in them, which `go run ./hack doc-paths` has | Goal, AGENTS and TASK read end to end against each other; everything the seven gained since the previous reading held against the working tree and the binary - every command, flag, path and install claim, and the update check's offline promise run under a terminal. The CEL counts stand at their earlier reading, against asgard-kube `cbd8d70` | 2026-09-23 |
 | `needs-and-briefs` the needs lists and briefings - Go rather than markdown, and in no group until now | every platform claim against asgard-kube `cbd8d70`, every command and flag against the binary, and every row's pointer against the document it names | 2026-09-14 |
 | `command-help` every `--help` screen - the largest reader-facing surface, and in no group until now | every screen read end to end; every command, flag and count in them run or recomputed against the binary and the CRDs | 2026-09-14 |
 | `gate-messages` every error and warning string the checks print, and `hack/verify-references.sh` | the ones carrying a claim, against asgard-kube `cbd8d70` and the deployment clones; every reference chart rendered, including the third layout the script had never looked for | 2026-09-14 |
@@ -145,6 +145,13 @@ wrong** is the next two engagements filing discoveries with those sections left
 TODO - which would mean the problem was when a person is asked, not what they
 are asked for.
 
+**A Homebrew tap and a Scoop bucket are a decision nobody has taken, not a
+refusal.** They were refused while the repository was private, because a tap is
+a second repository whoever installs has to be able to read; that reason went
+when it became public. `.goreleaser.yaml` carries the configuration, commented
+out, and what is left to decide is whether a package manager is worth a second
+repository to keep in step. Until somebody takes it, the version-less asset URL
+is what a documented install command uses.
 
 ## Non-goals
 
@@ -169,14 +176,6 @@ the decision.
     of the cluster's API server.
   - **Pinning a helm major.** `doctor` warns instead - `versionNote` in
     `internal/cli/doctor.go` says why a pin would fail an install that works.
-  - **A Homebrew tap and a Scoop bucket**, and **the reason recorded here has
-    expired.** A tap is a second repository whoever installs has to be able to
-    read, and the objection was that this one was private - which it is not any
-    more. `.goreleaser.yaml` carries the argument and the configuration,
-    commented out, and enabling them is now a decision about whether a package
-    manager is worth a second repository to keep in step rather than something
-    blocked. Until somebody takes it, the version-less asset URL is what a
-    documented install command uses.
   - **Anything that talks to a cluster.** No cluster credential is ever issued to
     a client, which is also why a rendered CR's CEL and pattern validation cannot
     happen here.
@@ -189,8 +188,11 @@ the decision.
 
 **The offline rule has a boundary rather than being absolute.** `init`, `size`
 and `guide` answer with no network, no repository and no login, because the
-question they answer is asked in a meeting. `login` and `pipeline` are the
-exception, and the first half must never acquire it.
+question they answer is asked in a meeting. `login`, `pipeline`, `update` and
+`version --check` are the exception, and the first half must never acquire it -
+which is also why the background check for a newer release skips every command
+marked as touching no network rather than trying and failing quietly
+(`touchesNoNetwork` in `internal/cli/selfupdate.go`).
 
 ## Open questions
 

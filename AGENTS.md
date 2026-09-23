@@ -525,8 +525,9 @@ reproduce. So a green run is evidence about the checks and almost none about
 the material, and reporting it as a verdict on the repository tells the reader
 the opposite of what it means.
 
-**`TASK.md` is where that is read from.** "What is not done" is the list, every
-line names what it is waiting for, and "The consistency pass" is the scope of
+**`TASK.md` is where that is read from.** "What is not done" names the command
+that prints the list - `asgard-cli audit-material --unchecked`, every document's
+own marker - rather than keeping one, and "The consistency pass" is the scope of
 the current pass. If either has an entry, the answer is "the checks pass and
 these are open", never "green".
 

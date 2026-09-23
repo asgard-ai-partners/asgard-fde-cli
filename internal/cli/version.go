@@ -27,12 +27,13 @@ Use --json when a script needs to read the values.
 
     asgard-cli version --check     ask whether a newer release is published
 
-**Every command asks the same question, at most once every ` + selfupdate.IntervalText() + `**, and says one
-line when the answer is yes. The answer is recorded beside the profiles rather
-than in any repository, the question is asked beside the command rather than in
-front of it, and a run that does not get an answer inside its own short leash
-drops it rather than waiting. --check asks now regardless, and is the only way
-to hear that nothing is newer.
+**Every command that can reach a network asks the same question, at most once
+every ` + selfupdate.IntervalText() + `**, and says one line when the answer is yes. The answer is
+recorded beside the profiles rather than in any repository, the question is
+asked beside the command rather than in front of it, and a run that does not get
+an answer inside its own short leash drops it rather than waiting. A command
+whose help says it touches no network never asks. --check asks now regardless,
+and is the only way to hear that nothing is newer.
 
 Failure is silent: no network, a rate limit or a proxy answering with HTML are
 none of them a reason for this command to behave differently, and a warning

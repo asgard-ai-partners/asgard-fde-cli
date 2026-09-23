@@ -140,8 +140,9 @@ func newProfileShowCmd() *cobra.Command {
 	var format string
 
 	cmd := &cobra.Command{
-		Use:   "show [name]",
-		Short: "Report a profile's values, and where each came from",
+		Use:         "show [name]",
+		Annotations: touchesNoNetwork(),
+		Short:       "Report a profile's values, and where each came from",
 		Long: `Report the values a profile resolves to, and **where each one came from**.
 
     asgard-cli profile show              whichever applies now
