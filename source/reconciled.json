@@ -6,10 +6,10 @@
   "brief/customer-meeting": {
     "brief/customer-meeting": "db8c28025605",
     "guide/read-path": "649ec9cbd749",
-    "guide/requirements": "b3a1a8e73ca2",
+    "guide/requirements": "c2f1ed2d860d",
     "usecase/write-path": "57a43201aea3",
     "wiki/fehu": "0b9d77cb5b26",
-    "wiki/integration": "64001e848244",
+    "wiki/integration": "5196a670d9bb",
     "wiki/operations": "0aa60ed671c6",
     "wiki/platform-unknowns": "33c849bea366",
     "wiki/settings": "8a1777986d43",
@@ -34,7 +34,7 @@
   },
   "guide/data-sources": {
     "guide/data-sources": "b2ac1332042c",
-    "guide/requirements": "b3a1a8e73ca2",
+    "guide/requirements": "c2f1ed2d860d",
     "usecase/api-oauth": "3029e4b500b5",
     "usecase/browser-operation": "f1fb9936c003",
     "usecase/external-api": "f6d7df72ce44",
@@ -52,7 +52,7 @@
   "guide/enhance": {
     "guide/data-sources": "b2ac1332042c",
     "guide/enhance": "752200cbff58",
-    "guide/requirements": "b3a1a8e73ca2",
+    "guide/requirements": "c2f1ed2d860d",
     "guide/verify": "bfc28a2ece20",
     "usecase/mimir-dashboard": "4249981fe515",
     "usecase/write-path": "57a43201aea3"
@@ -70,7 +70,7 @@
   "guide/idle": {
     "guide/deploy": "e9f9439798c7",
     "guide/idle": "1d22ad7f2d17",
-    "guide/requirements": "b3a1a8e73ca2"
+    "guide/requirements": "c2f1ed2d860d"
   },
   "guide/knowledge": {
     "guide/knowledge": "fde418f1df73",
@@ -87,7 +87,7 @@
   },
   "guide/read-path": {
     "guide/read-path": "649ec9cbd749",
-    "guide/requirements": "b3a1a8e73ca2",
+    "guide/requirements": "c2f1ed2d860d",
     "usecase/agent-hub": "75f5b55d50f4",
     "usecase/fixed-query-tools": "d52d649eaefe",
     "usecase/mimir-dashboard": "4249981fe515",
@@ -103,13 +103,13 @@
     "guide/knowledge": "fde418f1df73",
     "guide/projects": "5b71dcf4dd59",
     "guide/read-path": "649ec9cbd749",
-    "guide/requirements": "b3a1a8e73ca2",
+    "guide/requirements": "c2f1ed2d860d",
     "usecase/per-turn-credentials": "c9c16e81fd15",
     "usecase/skill-layers": "957419291226",
     "wiki/agents": "a303abe12d84",
     "wiki/automation": "1e481dc93be5",
     "wiki/fehu": "0b9d77cb5b26",
-    "wiki/integration": "64001e848244",
+    "wiki/integration": "5196a670d9bb",
     "wiki/operations": "0aa60ed671c6",
     "wiki/platform-unknowns": "33c849bea366",
     "wiki/product-suite": "8b3ec617f1ac",
@@ -126,16 +126,16 @@
     "wiki/taiwan-channels": "3716c55f56dc"
   },
   "needs/chat-channel": {
-    "guide/requirements": "b3a1a8e73ca2",
+    "guide/requirements": "c2f1ed2d860d",
     "needs/chat-channel": "d8c2af286d4c",
-    "wiki/integration": "64001e848244"
+    "wiki/integration": "5196a670d9bb"
   },
   "needs/external-api": {
-    "guide/requirements": "b3a1a8e73ca2",
+    "guide/requirements": "c2f1ed2d860d",
     "needs/external-api": "f440bfba4980",
     "usecase/external-api": "f6d7df72ce44",
     "usecase/write-path": "57a43201aea3",
-    "wiki/integration": "64001e848244",
+    "wiki/integration": "5196a670d9bb",
     "wiki/taiwan-channels": "3716c55f56dc"
   },
   "needs/knowledge-drive": {
@@ -143,7 +143,7 @@
     "usecase/knowledge-drive": "e25245314c6f"
   },
   "needs/semantic-layer": {
-    "guide/requirements": "b3a1a8e73ca2",
+    "guide/requirements": "c2f1ed2d860d",
     "needs/semantic-layer": "c3b88a122ecc",
     "usecase/semantic-layer": "a7f4e911e5a6",
     "wiki/operations": "0aa60ed671c6"
@@ -169,7 +169,7 @@
     "wiki/glossary": "c84743b1f9ea"
   },
   "root/README": {
-    "guide/requirements": "b3a1a8e73ca2",
+    "guide/requirements": "c2f1ed2d860d",
     "usecase/semantic-layer": "a7f4e911e5a6",
     "wiki/glossary": "c84743b1f9ea",
     "wiki/processors": "2876b9ca42d9",
@@ -192,7 +192,7 @@
     "guide/entry-point": "67e6b94869ef",
     "guide/knowledge": "fde418f1df73",
     "guide/read-path": "649ec9cbd749",
-    "guide/requirements": "b3a1a8e73ca2",
+    "guide/requirements": "c2f1ed2d860d",
     "skill/asgard-fde-onboarding": "cd4889950471"
   },
   "skill/db-query": {
@@ -207,7 +207,7 @@
   },
   "skill/proposal-deck": {
     "guide/read-path": "649ec9cbd749",
-    "guide/requirements": "b3a1a8e73ca2",
+    "guide/requirements": "c2f1ed2d860d",
     "skill/proposal-deck": "a5bb69363750",
     "usecase/demo-generation": "8e1e00f15f41",
     "wiki/case-studies": "579aa51cbc2a",
@@ -276,7 +276,7 @@
     "usecase/agent-hub": "75f5b55d50f4",
     "usecase/chat-channel": "b902abedc6c1",
     "usecase/workflow-chain": "fe30cf24f579",
-    "wiki/integration": "64001e848244"
+    "wiki/integration": "5196a670d9bb"
   },
   "usecase/conventions": {
     "usecase/browser-operation": "f1fb9936c003",
@@ -330,7 +330,7 @@
     "usecase/knowledge-base": "603a342d156f",
     "usecase/knowledge-drive": "e25245314c6f",
     "wiki/coverage": "68547012429c",
-    "wiki/integration": "64001e848244",
+    "wiki/integration": "5196a670d9bb",
     "wiki/knowledge": "d356c853d283"
   },
   "usecase/knowledge-drive": {
@@ -367,7 +367,7 @@
     "wiki/settings": "8a1777986d43"
   },
   "usecase/skill-layers": {
-    "guide/requirements": "b3a1a8e73ca2",
+    "guide/requirements": "c2f1ed2d860d",
     "usecase/browser-operation": "f1fb9936c003",
     "usecase/skill-layers": "957419291226",
     "usecase/skill-set": "d540effa9e46",
@@ -405,7 +405,7 @@
     "wiki/sindri": "187b94b0ac45"
   },
   "wiki/README": {
-    "guide/requirements": "b3a1a8e73ca2",
+    "guide/requirements": "c2f1ed2d860d",
     "usecase/per-turn-credentials": "c9c16e81fd15",
     "wiki/README": "60e997b9ae37",
     "wiki/agents": "a303abe12d84",
@@ -466,11 +466,11 @@
     "usecase/skill-set": "d540effa9e46",
     "usecase/write-path": "57a43201aea3",
     "wiki/crd-rules": "c45a84a66421",
-    "wiki/integration": "64001e848244",
+    "wiki/integration": "5196a670d9bb",
     "wiki/settings": "8a1777986d43"
   },
   "wiki/fehu": {
-    "guide/requirements": "b3a1a8e73ca2",
+    "guide/requirements": "c2f1ed2d860d",
     "wiki/fehu": "0b9d77cb5b26",
     "wiki/knowledge": "d356c853d283",
     "wiki/settings": "8a1777986d43"
@@ -512,7 +512,7 @@
     "wiki/glossary": "c84743b1f9ea",
     "wiki/green-and-doing-nothing": "06ffaddd2d6a",
     "wiki/index": "af1dffeca258",
-    "wiki/integration": "64001e848244",
+    "wiki/integration": "5196a670d9bb",
     "wiki/knowledge": "d356c853d283",
     "wiki/mimir": "a4b3da33eedb",
     "wiki/operations": "0aa60ed671c6",
@@ -534,10 +534,11 @@
     "usecase/chat-channel": "b902abedc6c1",
     "usecase/conventions": "37eb1b6e45a0",
     "wiki/api": "43635238a1be",
-    "wiki/integration": "64001e848244",
+    "wiki/integration": "5196a670d9bb",
     "wiki/knowledge": "d356c853d283",
     "wiki/platform-unknowns": "33c849bea366",
     "wiki/processors": "2876b9ca42d9",
+    "wiki/taiwan-channels": "3716c55f56dc",
     "wiki/what-they-read": "311be1e3bb9f"
   },
   "wiki/knowledge": {
@@ -545,7 +546,7 @@
     "usecase/knowledge-drive": "e25245314c6f",
     "usecase/skill-set": "d540effa9e46",
     "wiki/crd-rules": "c45a84a66421",
-    "wiki/integration": "64001e848244",
+    "wiki/integration": "5196a670d9bb",
     "wiki/knowledge": "d356c853d283"
   },
   "wiki/mimir": {
@@ -553,7 +554,7 @@
     "wiki/mimir": "a4b3da33eedb"
   },
   "wiki/operations": {
-    "guide/requirements": "b3a1a8e73ca2",
+    "guide/requirements": "c2f1ed2d860d",
     "wiki/operations": "0aa60ed671c6",
     "wiki/setup-path": "af6cd26be802",
     "wiki/workflow": "47e9d80c4fcf"
@@ -584,7 +585,7 @@
   },
   "wiki/screenshots": {
     "usecase/write-path": "57a43201aea3",
-    "wiki/integration": "64001e848244",
+    "wiki/integration": "5196a670d9bb",
     "wiki/platform-unknowns": "33c849bea366",
     "wiki/screenshots": "8bf22d7aa723",
     "wiki/setup-path": "af6cd26be802"
@@ -613,7 +614,7 @@
     "usecase/semantic-layer": "a7f4e911e5a6",
     "usecase/skill-set": "d540effa9e46",
     "wiki/agents": "a303abe12d84",
-    "wiki/integration": "64001e848244",
+    "wiki/integration": "5196a670d9bb",
     "wiki/knowledge": "d356c853d283",
     "wiki/operations": "0aa60ed671c6",
     "wiki/screenshots": "8bf22d7aa723",
@@ -631,7 +632,7 @@
     "wiki/sindri": "187b94b0ac45"
   },
   "wiki/taiwan-channels": {
-    "guide/requirements": "b3a1a8e73ca2",
+    "guide/requirements": "c2f1ed2d860d",
     "usecase/browser-operation": "f1fb9936c003",
     "usecase/external-api": "f6d7df72ce44",
     "usecase/skill-layers": "957419291226",
@@ -653,7 +654,7 @@
     "wiki/tools": "ab1d0f02543f"
   },
   "wiki/what-they-read": {
-    "wiki/integration": "64001e848244",
+    "wiki/integration": "5196a670d9bb",
     "wiki/mimir": "a4b3da33eedb",
     "wiki/processors": "2876b9ca42d9",
     "wiki/product-suite": "8b3ec617f1ac",
