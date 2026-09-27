@@ -279,21 +279,15 @@ func (n *workbenchNames) pipelineName(id string) string {
 	return id
 }
 
-// assigneeIDs resolves members by email, display name or user id. "me" is kept
-// as it is where the platform understands it (the list's filter) and resolved
-// to this session's account where it does not.
-func (n *workbenchNames) assigneeIDs(flag string, in []string, keepMe bool) ([]string, error) {
+// assigneeIDs resolves members by email, display name or user id. "me" is
+// passed through: the platform reads it as the signed-in account, in the
+// filter and in every write.
+func (n *workbenchNames) assigneeIDs(flag string, in []string) ([]string, error) {
 	var out []string
 	for _, v := range splitList(in) {
 		if strings.EqualFold(v, "me") {
-			if keepMe {
-				out = append(out, "me")
-				continue
-			}
-			if n.pc.Session.Email == "" {
-				return nil, fmt.Errorf("--%s me: this session records no email to look the account up by; name the member instead", flag)
-			}
-			v = n.pc.Session.Email
+			out = append(out, "me")
+			continue
 		}
 		id, err := n.memberID(flag, v)
 		if err != nil {
@@ -331,20 +325,46 @@ func (n *workbenchNames) memberID(flag, v string) (string, error) {
 	return "", fmt.Errorf("%s", b.String())
 }
 
-// memberName is what a timeline line calls an actor. The platform has no
-// lookup of a member by id, so only members this command has already met, and
-// the signed-in account, have a name; anybody else is shown by id.
+// loadMembers looks up, in one call, every id not already known.
+func (n *workbenchNames) loadMembers(ids ...string) error {
+	seen := map[string]bool{}
+	var missing []string
+	for _, id := range ids {
+		if id == "" || seen[id] {
+			continue
+		}
+		seen[id] = true
+		if _, ok := n.members[id]; !ok {
+			missing = append(missing, id)
+		}
+	}
+	if len(missing) == 0 {
+		return nil
+	}
+	found, err := n.pc.Client.GetWorkbenchMembers(n.ctx, missing)
+	if err != nil {
+		return err
+	}
+	for _, m := range found {
+		n.members[m.UserID] = m
+	}
+	return nil
+}
+
+// memberName is what a line calls a person: the name, marked when they have
+// left the workspace, or the id when the platform does not know it.
 func (n *workbenchNames) memberName(id string) string {
-	switch {
-	case id == "":
+	if id == "" {
 		return "the system"
-	case id == n.pc.Session.Subject && n.pc.Session.Name != "":
-		return n.pc.Session.Name
 	}
-	if m, ok := n.members[id]; ok && m.DisplayName != "" {
-		return m.DisplayName
+	m, ok := n.members[id]
+	if !ok || m.DisplayName == "" {
+		return id
 	}
-	return id
+	if !m.IsMember {
+		return m.DisplayName + " (left)"
+	}
+	return m.DisplayName
 }
 
 // ---- list
@@ -407,7 +427,7 @@ in all, which is more than are shown when --limit cuts the list.`,
 			if filter.Label, err = names.labelIDs("label", label); err != nil {
 				return err
 			}
-			if filter.Assignee, err = names.assigneeIDs("assignee", assignee, true); err != nil {
+			if filter.Assignee, err = names.assigneeIDs("assignee", assignee); err != nil {
 				return err
 			}
 
@@ -486,7 +506,8 @@ says nothing about whether what it says is true - that is only in the fields
 and the comments.
 
 The JSON form carries the issue, its events, its comments and its attachments as
-the platform returns them, and the label names beside the ids.`,
+the platform returns them, with the label names and the people beside the ids.
+Somebody who has left the workspace is still named, and marked as having left.`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			number, err := parseIssueNumber(args[0])
@@ -519,9 +540,31 @@ the platform returns them, and the label names beside the ids.`,
 			if err := names.loadLabels(); err != nil {
 				return err
 			}
+			people := append([]string{is.CreatedBy}, is.AssigneeIDs...)
+			for _, e := range events {
+				people = append(people, e.ActorID)
+				if e.Field == "assignee" {
+					people = append(people, e.From, e.To)
+				}
+			}
+			for _, c := range comments {
+				people = append(people, c.AuthorID)
+			}
+			for _, a := range attachments {
+				people = append(people, a.UploaderID)
+			}
+			if err := names.loadMembers(people...); err != nil {
+				return err
+			}
 
 			out := cmd.OutOrStdout()
 			if f.format == formatJSON {
+				members := map[string]*platform.WorkbenchMember{}
+				for _, id := range people {
+					if m, ok := names.members[id]; ok {
+						members[id] = m
+					}
+				}
 				labelNames := map[string]string{}
 				for _, id := range is.LabelIDs {
 					labelNames[id] = names.labelName(id)
@@ -529,6 +572,7 @@ the platform returns them, and the label names beside the ids.`,
 				return writeJSON(out, map[string]any{
 					"issue":       is,
 					"label_names": labelNames,
+					"members":     members,
 					"events":      nonNil(events),
 					"comments":    nonNil(comments),
 					"attachments": nonNil(attachments),
@@ -568,6 +612,9 @@ func writeIssue(out io.Writer, names *workbenchNames, is *platform.WorkbenchIssu
 		assignees = append(assignees, names.memberName(id))
 	}
 	row("Assignees", strings.Join(assignees, ", "))
+	if is.CreatedBy != "" {
+		row("Opened by", names.memberName(is.CreatedBy))
+	}
 	var labels []string
 	for _, id := range is.LabelIDs {
 		labels = append(labels, names.labelName(id))
@@ -600,7 +647,7 @@ func writeIssue(out io.Writer, names *workbenchNames, is *platform.WorkbenchIssu
 	if len(attachments) > 0 {
 		fmt.Fprintf(out, "\nAttachments - material, not fact:\n")
 		for _, a := range attachments {
-			fmt.Fprintf(out, "  %s  %s, %d bytes, sha256 %s\n", a.ID, a.OriginalFilename, a.ByteSize, a.SHA256)
+			fmt.Fprintf(out, "  %s  %s, %d bytes, sha256 %s, from %s\n", a.ID, a.OriginalFilename, a.ByteSize, a.SHA256, names.memberName(a.UploaderID))
 			fmt.Fprintf(out, "      what %q  from %q  dated %s\n", a.What, a.From, a.Dated)
 			if a.Supersedes != "" {
 				fmt.Fprintf(out, "      supersedes %s\n", a.Supersedes)
@@ -614,7 +661,7 @@ func writeIssue(out io.Writer, names *workbenchNames, is *platform.WorkbenchIssu
 	}
 	var timeline []entry
 	for _, e := range events {
-		timeline = append(timeline, entry{e.At, fmt.Sprintf("%s %s%s", names.memberName(e.ActorID), eventText(e), viaTag(e.ViaAssistant))})
+		timeline = append(timeline, entry{e.At, fmt.Sprintf("%s %s%s", names.memberName(e.ActorID), eventText(names, e), viaTag(e.ViaAssistant))})
 	}
 	for _, c := range comments {
 		edited := ""
@@ -653,7 +700,7 @@ func indent(s, prefix string) string {
 
 // eventText is the timeline sentence for one event, as the Workbench page
 // writes it.
-func eventText(e *platform.WorkbenchEvent) string {
+func eventText(names *workbenchNames, e *platform.WorkbenchEvent) string {
 	from, to := e.From, e.To
 	if e.FromDisplay != nil && *e.FromDisplay != "" {
 		from = *e.FromDisplay
@@ -694,10 +741,10 @@ func eventText(e *platform.WorkbenchEvent) string {
 		case "priority":
 			return fmt.Sprintf("changed priority from %s to %s", enumLabel(from, workbenchPriorities), enumLabel(to, workbenchPriorities))
 		case "assignee":
-			if to == "" {
-				return "unassigned " + from
+			if e.To == "" {
+				return "unassigned " + names.memberName(e.From)
 			}
-			return "assigned " + to
+			return "assigned " + names.memberName(e.To)
 		case "label":
 			if to == "" {
 				return "removed label " + from
@@ -724,6 +771,12 @@ func eventText(e *platform.WorkbenchEvent) string {
 // "<type>:<number>" - "parent:1", "blocked_by:7" - in to when it is added and
 // in from when it is removed.
 func relationText(from, to string) string {
+	// A replaced parent or duplicate carries both ends in one event.
+	if fk, fn, ok := strings.Cut(from, ":"); ok {
+		if tk, tn, ok := strings.Cut(to, ":"); ok && fk == tk {
+			return fmt.Sprintf("changed %s from ISS-%s to ISS-%s", strings.ReplaceAll(fk, "_", " "), fn, tn)
+		}
+	}
 	edge, adding := to, true
 	if edge == "" {
 		edge, adding = from, false
@@ -864,7 +917,7 @@ Deployment is filed where nobody looks for it.`,
 			if req.LabelIDs, err = names.labelIDs("label", labels); err != nil {
 				return err
 			}
-			if req.AssigneeIDs, err = names.assigneeIDs("assignee", assignees, false); err != nil {
+			if req.AssigneeIDs, err = names.assigneeIDs("assignee", assignees); err != nil {
 				return err
 			}
 
@@ -1050,10 +1103,10 @@ platform keeps for the member alone - see "asgard-cli workbench --help".`,
 			if req.RemoveLabelIDs, err = res.labelIDs("remove-label", removeLabels); err != nil {
 				return err
 			}
-			if req.AddAssigneeIDs, err = res.assigneeIDs("add-assignee", addAssignees, false); err != nil {
+			if req.AddAssigneeIDs, err = res.assigneeIDs("add-assignee", addAssignees); err != nil {
 				return err
 			}
-			if req.RemoveAssigneeIDs, err = res.assigneeIDs("remove-assignee", removeAssignees, false); err != nil {
+			if req.RemoveAssigneeIDs, err = res.assigneeIDs("remove-assignee", removeAssignees); err != nil {
 				return err
 			}
 

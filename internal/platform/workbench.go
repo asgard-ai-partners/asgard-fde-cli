@@ -40,6 +40,9 @@ const (
 	// WorkbenchIssueLocked is a comment on a locked issue by somebody who is
 	// not a workspace admin (403).
 	WorkbenchIssueLocked = "workbench_issue_locked"
+	// WorkbenchParentAlreadySet is a sub-issue added to a parent while it
+	// already has another one (400).
+	WorkbenchParentAlreadySet = "workbench_parent_already_set"
 )
 
 // workbenchErrorText says what a Workbench refusal means, for the ones where
@@ -61,6 +64,9 @@ func workbenchErrorText(e *APIError, msg string) (string, bool) {
 	case e.ErrorCode == WorkbenchIssueLocked:
 		return fmt.Sprintf("the platform answered %d (%s): the issue is locked, and only workspace admins may comment on it. "+
 			"Its fields can still be changed", e.Status, WorkbenchIssueLocked), true
+	case e.ErrorCode == WorkbenchParentAlreadySet:
+		return fmt.Sprintf("the platform answered %d (%s): an issue has at most one parent, and that one already has another. "+
+			"Nothing was written. Clear it first with --parent 0 on the sub-issue, or leave it where it is", e.Status, WorkbenchParentAlreadySet), true
 	case e.Status == http.StatusForbidden:
 		return fmt.Sprintf("not allowed (%d %s); the Workbench is open to every member of the workspace, so this account "+
 			"is probably not a member of it, or the action needs workspace administration", e.Status, msg), true
@@ -169,6 +175,10 @@ type WorkbenchMember struct {
 	UserID      string `json:"user_id"`
 	DisplayName string `json:"display_name"`
 	Email       string `json:"email"`
+	// IsMember is false for somebody who has left the workspace; the name is
+	// still there, because the timeline still names them. Only set by
+	// GetWorkbenchMembers.
+	IsMember bool `json:"is_member"`
 }
 
 // WorkbenchAttachment is one file attached to an issue, with its provenance
@@ -362,6 +372,25 @@ func (c *Client) SearchWorkbenchMembers(ctx context.Context, q string) ([]*Workb
 	var out []*WorkbenchMember
 	err := c.do(ctx, request{method: http.MethodGet, path: "/v1/workbench/members", query: url.Values{"q": {q}}, out: &out})
 	return out, err
+}
+
+// membersPerCall is the most ids the lookup takes at once.
+const membersPerCall = 50
+
+// GetWorkbenchMembers looks members up by user id, including those who have
+// left. An id the platform does not recognise comes back with no name.
+func (c *Client) GetWorkbenchMembers(ctx context.Context, ids []string) ([]*WorkbenchMember, error) {
+	var out []*WorkbenchMember
+	for start := 0; start < len(ids); start += membersPerCall {
+		end := min(start+membersPerCall, len(ids))
+		var batch []*WorkbenchMember
+		q := url.Values{"ids": {strings.Join(ids[start:end], ",")}}
+		if err := c.do(ctx, request{method: http.MethodGet, path: "/v1/workbench/members", query: q, out: &batch}); err != nil {
+			return nil, err
+		}
+		out = append(out, batch...)
+	}
+	return out, nil
 }
 
 // ListWorkbenchAttachments returns the attachments an issue still has, oldest

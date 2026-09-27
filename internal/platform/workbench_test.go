@@ -144,3 +144,34 @@ func TestWorkbenchDownloadChecksIntegrity(t *testing.T) {
 		t.Errorf("got %q, %q, %v; want the bytes and their sha256", buf.String(), sum, err)
 	}
 }
+
+// The member lookup takes at most 50 ids a call, so a longer list is split
+// rather than refused.
+func TestWorkbenchMembersAreLookedUpInBatches(t *testing.T) {
+	var calls []int
+	c := workbenchTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		ids := strings.Split(r.URL.Query().Get("ids"), ",")
+		calls = append(calls, len(ids))
+		var b strings.Builder
+		b.WriteString(`{"success":true,"data":[`)
+		for i, id := range ids {
+			if i > 0 {
+				b.WriteString(",")
+			}
+			b.WriteString(`{"user_id":"` + id + `","display_name":"n","is_member":true}`)
+		}
+		b.WriteString(`]}`)
+		_, _ = w.Write([]byte(b.String()))
+	})
+	ids := make([]string, 120)
+	for i := range ids {
+		ids[i] = "u" + string(rune('a'+i%26)) + strings.Repeat("x", i/26)
+	}
+	got, err := c.GetWorkbenchMembers(context.Background(), ids)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 120 || len(calls) != 3 || calls[0] != 50 || calls[2] != 20 {
+		t.Errorf("got %d members over calls %v, want 120 over [50 50 20]", len(got), calls)
+	}
+}
