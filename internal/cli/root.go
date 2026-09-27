@@ -219,6 +219,7 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 		newWhoamiCmd(),
 		newProfileCmd(),
 		newWorkspaceCmd(),
+		newWorkbenchCmd(),
 		newPipelineCmd(),
 		newSkillCmd(),
 	)

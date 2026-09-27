@@ -695,6 +695,24 @@ asgard-cli pipeline runs watch --release <name> --ref <tag>
 
 **一次推送什麼都沒產生時，`pipeline deliveries` 是唯一會解釋自己的地方。** 一個從未被建立的 run 不會留下自己的紀錄，所以當一個 tag 看起來被忽略了，原因只在那裡。
 
+### `workbench`
+
+讀寫這個 workspace 在 Workbench 上的 issue（FDE 與客戶在平台上一起追工作的地方），並把附件歸檔進 repo。
+
+```bash
+asgard-cli workbench list --status in_progress --label blocked
+asgard-cli workbench show ISS-12
+asgard-cli workbench create --type question --title "<要有人回答的事>"
+asgard-cli workbench update ISS-12 --status in_review --add-label data-source
+asgard-cli workbench pull --deployment <pipeline>   # 附件拉進 references/
+```
+
+**每一筆寫入都以登入者的助手身分送出**：帶 `X-Asgard-Via-Assistant: true`，權限仍然是登入者本人，時間軸會標「via Asgard AI」。平台只留給本人做的操作（留言、Pin、Lock、管理 label、刪除），這個指令不提供，平台也會拒絕助手這樣做。
+
+**這不是 `question`、`request`、`task`。** 那三個是客戶 repo 裡 engagement 自己的紀錄；Workbench 是平台的，也是客戶看得到的。
+
+`pull` 把每個附件原樣存到 `references/workbench/ISS-<n>/<attachment id>/`，先比對平台記錄的 SHA-256，再把 what、from、dated 寫進 `references/_index.md`（與 `reference add` 寫的是同一種列）。已歸檔的檔案永遠不會被覆寫。
+
 ## 發佈
 
 發佈由 [GoReleaser](https://goreleaser.com) 驅動。推一個 tag 觸發 `.github/workflows/release.yml`：

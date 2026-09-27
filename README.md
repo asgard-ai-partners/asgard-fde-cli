@@ -1019,6 +1019,34 @@ A secret's value can only be given with `--from-file` (or `--from-file -` for
 standard input): a value typed as an argument is in the shell history and in the
 process list. Files are read verbatim, so a PEM keeps its newlines.
 
+### `workbench`
+
+Read and write the issues on the workspace's Workbench - the tracker the FDE and
+the customer work through on the platform - and file their attachments.
+
+```bash
+asgard-cli workbench list --status in_progress --label blocked
+asgard-cli workbench show ISS-12
+asgard-cli workbench create --type question --title "<what has to be answered>"
+asgard-cli workbench update ISS-12 --status in_review --add-label data-source
+asgard-cli workbench pull --deployment <pipeline>   # attachments into references/
+```
+
+**Every write is made as the member's assistant**: it carries
+`X-Asgard-Via-Assistant: true`, so the platform authorizes it as the signed-in
+account and the timeline says "via Asgard AI". What the platform keeps for the
+member alone - comments, pinning, locking, labels, deleting - this command does
+not offer, and the platform refuses it from an assistant.
+
+**This is not `question`, `request` or `task`.** Those are the engagement's own
+records in the customer's repository; the Workbench is the platform's, and it is
+what the customer sees.
+
+`pull` files each attachment byte-identical under
+`references/workbench/ISS-<n>/<attachment id>/`, checks its SHA-256 against the
+platform's record, and writes what, from and dated into `references/_index.md`,
+the same row `reference add` writes. It never overwrites a filed copy.
+
 ## Releasing
 
 Releases are driven by [GoReleaser](https://goreleaser.com). Pushing a tag triggers
