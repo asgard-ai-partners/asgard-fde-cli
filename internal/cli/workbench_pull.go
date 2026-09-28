@@ -77,6 +77,7 @@ It writes into the checkout, so it has to be run inside one that
 				}
 				numbers = append(numbers, n)
 			}
+			var deployments []string
 			if deployment != "" {
 				// Every issue about the Deployment, in every status: an
 				// attachment on a done issue is still material somebody filed.
@@ -84,24 +85,16 @@ It writes into the checkout, so it has to be run inside one that
 				if err != nil {
 					return err
 				}
-				found, _, err := pc.Client.ListWorkbenchIssues(ctx, platform.WorkbenchIssueFilter{Deployment: []string{id}}, 0)
-				if err != nil {
-					return err
-				}
-				for _, is := range found {
-					numbers = append(numbers, is.Number)
-				}
+				deployments = []string{id}
+			}
+			attachments, err := pc.Client.ListWorkspaceAttachments(ctx, deployments, numbers)
+			if err != nil {
+				return err
 			}
 
 			var results []pullResult
-			for _, n := range numbers {
-				attachments, err := pc.Client.ListWorkbenchAttachments(ctx, n)
-				if err != nil {
-					return err
-				}
-				for _, a := range attachments {
-					results = append(results, pullOne(cmd, pc.Client, root, a))
-				}
+			for _, a := range attachments {
+				results = append(results, pullOne(cmd, pc.Client, root, a))
 			}
 
 			out := cmd.OutOrStdout()
@@ -115,7 +108,7 @@ It writes into the checkout, so it has to be run inside one that
 				if results == nil {
 					results = []pullResult{}
 				}
-				if err := writeJSON(out, map[string]any{"issues": numbers, "attachments": results}); err != nil {
+				if err := writeJSON(out, map[string]any{"attachments": results}); err != nil {
 					return err
 				}
 				if failed > 0 {
@@ -124,7 +117,7 @@ It writes into the checkout, so it has to be run inside one that
 				return nil
 			}
 			if len(results) == 0 {
-				fmt.Fprintf(out, "No attachments on %s.\n", plural(len(numbers), "issue"))
+				fmt.Fprintf(out, "No attachments to pull.\n")
 				return nil
 			}
 			for _, r := range results {

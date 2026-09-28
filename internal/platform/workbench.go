@@ -65,7 +65,7 @@ func workbenchErrorText(e *APIError, msg string) (string, bool) {
 		return fmt.Sprintf("the platform answered %d (%s): the issue is locked, and only workspace admins may comment on it. "+
 			"Its fields can still be changed", e.Status, WorkbenchIssueLocked), true
 	case e.ErrorCode == WorkbenchParentAlreadySet:
-		return fmt.Sprintf("the platform answered %d (%s): an issue has at most one parent, and that one already has another. "+
+		return fmt.Sprintf("the platform answered %d (%s): the sub-issue already has a parent, and an issue has at most one. "+
 			"Nothing was written. Clear it first with --parent 0 on the sub-issue, or leave it where it is", e.Status, WorkbenchParentAlreadySet), true
 	case e.Status == http.StatusForbidden:
 		return fmt.Sprintf("not allowed (%d %s); the Workbench is open to every member of the workspace, so this account "+
@@ -399,6 +399,37 @@ func (c *Client) ListWorkbenchAttachments(ctx context.Context, number int64) ([]
 	var out []*WorkbenchAttachment
 	err := c.do(ctx, request{method: http.MethodGet, path: issuePath(number) + "/attachments", out: &out})
 	return out, err
+}
+
+// ListWorkspaceAttachments returns the attachments that still exist on the
+// named issues or on the issues about the named Deployments (pipeline ids;
+// "none" is issues about none), across every page. A nil filter on both
+// returns every attachment in the workspace.
+func (c *Client) ListWorkspaceAttachments(ctx context.Context, deployments []string, issues []int64) ([]*WorkbenchAttachment, error) {
+	var out []*WorkbenchAttachment
+	token := ""
+	for {
+		q := url.Values{"page_size": {strconv.Itoa(workbenchPageSize)}}
+		for _, d := range deployments {
+			q.Add("deployment", d)
+		}
+		for _, n := range issues {
+			q.Add("issue", strconv.FormatInt(n, 10))
+		}
+		if token != "" {
+			q.Set("page_token", token)
+		}
+		var batch []*WorkbenchAttachment
+		var paging CursorPaging
+		if err := c.do(ctx, request{method: http.MethodGet, path: "/v1/workbench/attachments", query: q, out: &batch, cursor: &paging}); err != nil {
+			return nil, err
+		}
+		out = append(out, batch...)
+		if paging.NextPageToken == "" || len(batch) == 0 {
+			return out, nil
+		}
+		token = paging.NextPageToken
+	}
 }
 
 // ErrChecksumMismatch is a download whose bytes do not hash to what the
