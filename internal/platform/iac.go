@@ -208,11 +208,26 @@ type VariableDiff struct {
 
 // ResourceDiff is the plan report's row for one rendered CR.
 type ResourceDiff struct {
-	ApiVersion  string `json:"api_version"`
-	Kind        string `json:"kind"`
-	Name        string `json:"name"`
-	Change      string `json:"change"`
+	ApiVersion string `json:"api_version"`
+	Kind       string `json:"kind"`
+	Name       string `json:"name"`
+	Change     string `json:"change"`
+	// UpdateCause says why an update is one: UpdateCauseVersionBump or
+	// "content". Empty on every other change, and on a run planned before
+	// the platform recorded it - which reads as content.
+	UpdateCause string `json:"update_cause,omitempty"`
 	UnifiedDiff string `json:"unified_diff,omitempty"`
+}
+
+// UpdateCauseVersionBump marks an update whose only differences are version
+// labels moving from the previous release's version to this run's. A tag
+// moves them on every resource a chart labels, whether or not anything else
+// changed.
+const UpdateCauseVersionBump = "version_bump"
+
+// VersionBump reports whether d is an update that only moved the version.
+func (d *ResourceDiff) VersionBump() bool {
+	return d.Change == "update" && d.UpdateCause == UpdateCauseVersionBump
 }
 
 // DryRunResult is the server-side dry run's outcome.
@@ -229,6 +244,10 @@ type PlanReport struct {
 	Resources []*ResourceDiff `json:"resources,omitempty"`
 	DryRun    *DryRunResult   `json:"dry_run,omitempty"`
 	NoChanges bool            `json:"no_changes"`
+	// The version the previous release was deployed with (empty on a first
+	// release) and the one this run deploys.
+	PreviousAppVersion string `json:"previous_app_version,omitempty"`
+	AppVersion         string `json:"app_version,omitempty"`
 }
 
 // RunStep is one of the six fixed steps.
