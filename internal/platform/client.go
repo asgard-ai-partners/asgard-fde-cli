@@ -105,12 +105,18 @@ type APIError struct {
 	Path       string
 	Message    string
 	ReasonCode int32
+	// ErrorCode is `details.error_code`, which the Workbench routes set to say
+	// which of several reasons behind one status this is. Empty elsewhere.
+	ErrorCode string
 }
 
 func (e *APIError) Error() string {
 	msg := e.Message
 	if msg == "" {
 		msg = http.StatusText(e.Status)
+	}
+	if text, ok := workbenchErrorText(e, msg); ok {
+		return text
 	}
 	switch e.Status {
 	case http.StatusUnauthorized:
@@ -170,12 +176,16 @@ func Unauthorized(err error) bool {
 
 // envelope is the platform's response wrapper. Every route answers in it, and
 // an error answers in a shape that overlaps it, so one struct reads both.
+//
+// Paging is kept raw because the platform pages in two shapes: an index and a
+// size on most routes, and a cursor on the Workbench ones.
 type envelope struct {
 	Data       json.RawMessage `json:"data"`
-	Paging     *Paging         `json:"paging"`
+	Paging     json.RawMessage `json:"paging"`
 	Message    string          `json:"message"`
 	Success    bool            `json:"success"`
 	ReasonCode int32           `json:"reason_code"`
+	Details    json.RawMessage `json:"details"`
 }
 
 // Paging is the platform's page descriptor.
@@ -202,6 +212,11 @@ type request struct {
 	out any
 	// paging receives the `paging` field when the caller wants it.
 	paging *Paging
+	// cursor receives the `paging` field of a cursor-paged route.
+	cursor *CursorPaging
+	// viaAssistant marks the request as the Workbench assistant's; see
+	// ViaAssistantHeader.
+	viaAssistant bool
 	// noWorkspace skips the workspace header, for the routes that take none.
 	noWorkspace bool
 	// project sets the project header, for the routes scoped to one.
@@ -243,6 +258,9 @@ func (c *Client) do(ctx context.Context, req request) error {
 	if req.project != "" {
 		httpReq.Header.Set(ProjectHeader, req.project)
 	}
+	if req.viaAssistant {
+		httpReq.Header.Set(ViaAssistantHeader, "true")
+	}
 
 	resp, err := c.http.Do(httpReq)
 	if err != nil {
@@ -271,6 +289,7 @@ func (c *Client) do(ctx context.Context, req request) error {
 		if decodeErr == nil {
 			apiErr.Message = env.Message
 			apiErr.ReasonCode = env.ReasonCode
+			apiErr.ErrorCode = errorCode(env.Details)
 		} else {
 			// A body that is not the envelope is a gateway or proxy answering,
 			// not the API. Keeping a slice of it is what tells those apart.
@@ -283,8 +302,19 @@ func (c *Client) do(ctx context.Context, req request) error {
 			req.method, endpoint, resp.Status, truncate(string(raw), 200))
 	}
 
-	if req.paging != nil && env.Paging != nil {
-		*req.paging = *env.Paging
+	if len(env.Paging) > 0 && string(env.Paging) != "null" {
+		var target any
+		switch {
+		case req.paging != nil:
+			target = req.paging
+		case req.cursor != nil:
+			target = req.cursor
+		}
+		if target != nil {
+			if err := json.Unmarshal(env.Paging, target); err != nil {
+				return fmt.Errorf("%s %s answered with paging this build does not understand: %w", req.method, endpoint, err)
+			}
+		}
 	}
 	if req.out == nil || len(env.Data) == 0 || string(env.Data) == "null" {
 		return nil
@@ -315,6 +345,18 @@ func (c *Client) ListWorkspaces(ctx context.Context) ([]Workspace, error) {
 		noWorkspace: true,
 	})
 	return out, err
+}
+
+// errorCode reads `details.error_code`, or nothing. details is free-form, so a
+// shape that is not an object is not an error here: it just carries no code.
+func errorCode(details json.RawMessage) string {
+	var d struct {
+		ErrorCode string `json:"error_code"`
+	}
+	if len(details) == 0 || json.Unmarshal(details, &d) != nil {
+		return ""
+	}
+	return d.ErrorCode
 }
 
 func truncate(s string, n int) string {
