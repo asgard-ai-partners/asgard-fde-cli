@@ -22,19 +22,19 @@ const workbenchRefDir = "workbench"
 
 func newWorkbenchPullCmd() *cobra.Command {
 	var (
-		f          workbenchFlags
-		issues     []string
-		deployment string
+		f        workbenchFlags
+		issues   []string
+		pipeline string
 	)
 	cmd := &cobra.Command{
 		Use:   "pull",
-		Short: "File an issue's or a Deployment's attachments into references/",
+		Short: "File an issue's or a pipeline's attachments into references/",
 		Long: `Download the attachments that still exist on the named issues, or on every issue
-about one Deployment, into this repository's references/, and record each in
+about one pipeline, into this repository's references/, and record each in
 ` + "`references/_index.md`" + ` with the what, from and dated its uploader gave it.
 
     asgard-cli workbench pull --issue ISS-12
-    asgard-cli workbench pull --deployment support-bot
+    asgard-cli workbench pull --pipeline support-bot
 
 Each lands at references/workbench/ISS-<n>/<attachment id>/<original name>,
 **byte-identical**, and its SHA-256 is checked against what the platform
@@ -53,11 +53,11 @@ into a requirement is somebody reading it and recording a question or a request.
 Every row starts verified: no, the same as "asgard-cli reference add".
 
 It writes into the checkout, so it has to be run inside one that
-"asgard-cli init" wrote. Exactly one of --issue and --deployment is required.`,
+"asgard-cli init" wrote. Exactly one of --issue and --pipeline is required.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			if (len(issues) == 0) == (deployment == "") {
-				return fmt.Errorf("name what to pull: --issue ISS-N (repeatable) or --deployment <pipeline>, one of the two")
+			if (len(issues) == 0) == (pipeline == "") {
+				return fmt.Errorf("name what to pull: --issue ISS-N (repeatable) or --pipeline <name or id>, one of the two")
 			}
 			root, err := loadRepo()
 			if err != nil {
@@ -77,17 +77,17 @@ It writes into the checkout, so it has to be run inside one that
 				}
 				numbers = append(numbers, n)
 			}
-			var deployments []string
-			if deployment != "" {
-				// Every issue about the Deployment, in every status: an
+			var pipelines []string
+			if pipeline != "" {
+				// Every issue about the pipeline, in every status: an
 				// attachment on a done issue is still material somebody filed.
-				id, err := newWorkbenchNames(ctx, pc).pipelineID("deployment", deployment, false)
+				id, err := newWorkbenchNames(ctx, pc).pipelineID("pipeline", pipeline, false)
 				if err != nil {
 					return err
 				}
-				deployments = []string{id}
+				pipelines = []string{id}
 			}
-			attachments, err := pc.Client.ListWorkspaceAttachments(ctx, deployments, numbers)
+			attachments, err := pc.Client.ListWorkspaceAttachments(ctx, pipelines, numbers)
 			if err != nil {
 				return err
 			}
@@ -136,7 +136,7 @@ It writes into the checkout, so it has to be run inside one that
 	}
 	f.register(cmd)
 	cmd.Flags().StringSliceVar(&issues, "issue", nil, "an issue whose attachments to pull (ISS-N); repeat or comma-separate for several")
-	cmd.Flags().StringVar(&deployment, "deployment", "", "pull the attachments of every issue about this Deployment, by pipeline name or id")
+	cmd.Flags().StringVar(&pipeline, "pipeline", "", "pull the attachments of every issue about this pipeline, by name or id; never taken from the checkout's binding")
 	return cmd
 }
 

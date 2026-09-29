@@ -175,3 +175,25 @@ func TestWorkbenchMembersAreLookedUpInBatches(t *testing.T) {
 		t.Errorf("got %d members over calls %v, want 120 over [50 50 20]", len(got), calls)
 	}
 }
+
+// The pipeline filter goes out as pipeline_id. The platform ignores a query
+// key it does not know, so a wrong one is not an error: it is a list that
+// quietly stops being filtered, and a pull that fetches the whole workspace.
+func TestWorkbenchPipelineFilterIsSentAsPipelineID(t *testing.T) {
+	var got []string
+	c := workbenchTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		got = append(got, r.URL.Path+"?"+strings.Join(r.URL.Query()["pipeline_id"], ","))
+		_, _ = w.Write([]byte(`{"success":true,"data":[]}`))
+	})
+	ctx := context.Background()
+	if _, _, err := c.ListWorkbenchIssues(ctx, WorkbenchIssueFilter{Pipeline: []string{"p1", "none"}}, 0); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := c.ListWorkspaceAttachments(ctx, []string{"p1"}, nil); err != nil {
+		t.Fatal(err)
+	}
+	want := []string{"/v1/workbench/issues?p1,none", "/v1/workbench/attachments?p1"}
+	if strings.Join(got, " ") != strings.Join(want, " ") {
+		t.Errorf("sent %v, want %v", got, want)
+	}
+}

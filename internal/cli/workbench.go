@@ -42,9 +42,13 @@ keeps its own state. The Workbench is the platform's, and it is what the
 customer sees.
 
 The workspace is resolved as for every platform command: --workspace, then
-ASGARD_WORKSPACE, then the checkout's binding. Labels, Deployments and
+ASGARD_WORKSPACE, then the checkout's binding. Labels, pipelines and
 assignees are named the way a person names them - a label's name, a
-pipeline's name, an email - and translated to ids here; an id works as well.`,
+pipeline's name, an email - and translated to ids here; an id works as well.
+
+**--pipeline is what the Workbench page calls a Deployment**: the pipeline an
+issue is about, the same one "asgard-cli pipeline list" lists. Unlike the
+pipeline commands' --pipeline, it is never taken from the checkout's binding.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error { return cmd.Help() },
 	}
@@ -249,8 +253,8 @@ func (n *workbenchNames) labelName(id string) string {
 	return id
 }
 
-// pipelineID resolves a Deployment by pipeline id or name. allowNone lets the
-// list's "none" through, which selects issues about no Deployment.
+// pipelineID resolves a pipeline by id or name. allowNone lets the list's
+// "none" through, which selects issues about no pipeline.
 func (n *workbenchNames) pipelineID(flag, v string, allowNone bool) (string, error) {
 	if allowNone && strings.EqualFold(v, "none") {
 		return "none", nil
@@ -371,11 +375,11 @@ func (n *workbenchNames) memberName(id string) string {
 
 func newWorkbenchListCmd() *cobra.Command {
 	var (
-		f                                          workbenchFlags
-		status, types, priority, deployment, label []string
-		assignee                                   []string
-		q, sortBy                                  string
-		limit                                      int
+		f                                        workbenchFlags
+		status, types, priority, pipeline, label []string
+		assignee                                 []string
+		q, sortBy                                string
+		limit                                    int
 	)
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -386,7 +390,7 @@ Every filter takes several values, repeated or comma-separated; values within on
 filter are ORed and the filters are ANDed:
 
     asgard-cli workbench list --status backlog,to_do --type question
-    asgard-cli workbench list --deployment none            about no Deployment
+    asgard-cli workbench list --pipeline none              about no pipeline
     asgard-cli workbench list --assignee me --label blocked
     asgard-cli workbench list --q ISS-12                   by number, or a title fragment
 
@@ -417,12 +421,12 @@ in all, which is more than are shown when --limit cuts the list.`,
 					return err
 				}
 			}
-			for _, d := range splitList(deployment) {
-				id, err := names.pipelineID("deployment", d, true)
+			for _, p := range splitList(pipeline) {
+				id, err := names.pipelineID("pipeline", p, true)
 				if err != nil {
 					return err
 				}
-				filter.Deployment = append(filter.Deployment, id)
+				filter.Pipeline = append(filter.Pipeline, id)
 			}
 			if filter.Label, err = names.labelIDs("label", label); err != nil {
 				return err
@@ -461,7 +465,7 @@ in all, which is more than are shown when --limit cuts the list.`,
 	fl.StringSliceVar(&status, "status", nil, "status: backlog, to_do, ready, in_progress, pending_fix, in_review, done")
 	fl.StringSliceVar(&types, "type", nil, "type: question, request, task, bug, feedback")
 	fl.StringSliceVar(&priority, "priority", nil, "priority: urgent, high, normal, low")
-	fl.StringSliceVar(&deployment, "deployment", nil, "the Deployment an issue is about, by pipeline name or id; none for issues about no Deployment")
+	fl.StringSliceVar(&pipeline, "pipeline", nil, "the pipeline an issue is about, by name or id; none for issues about no pipeline")
 	fl.StringSliceVar(&label, "label", nil, "label name or id")
 	fl.StringSliceVar(&assignee, "assignee", nil, "assignee by email, name or user id; me for the signed-in account")
 	fl.StringVar(&q, "q", "", "a title fragment, or an issue number such as ISS-12")
@@ -605,7 +609,7 @@ func writeIssue(out io.Writer, names *workbenchNames, is *platform.WorkbenchIssu
 	row("Type", enumLabel(is.Type, workbenchTypes))
 	row("Priority", enumLabel(is.Priority, workbenchPriorities))
 	if is.PipelineID != "" {
-		row("Deployment", names.pipelineName(is.PipelineID)+" ("+is.PipelineID+")")
+		row("Pipeline", names.pipelineName(is.PipelineID)+" ("+is.PipelineID+")")
 	}
 	var assignees []string
 	for _, id := range is.AssigneeIDs {
@@ -757,9 +761,9 @@ func eventText(names *workbenchNames, e *platform.WorkbenchEvent) string {
 			return "set due date to " + to
 		case "pipeline":
 			if to == "" {
-				return "detached it from " + from
+				return "detached it from pipeline " + from
 			}
-			return "set the Deployment to " + to
+			return "set the pipeline to " + to
 		case "relation":
 			return relationText(e.From, e.To)
 		}
@@ -847,10 +851,10 @@ func (b *bodyFlags) read(cmd *cobra.Command) (string, bool, error) {
 
 func newWorkbenchCreateCmd() *cobra.Command {
 	var (
-		f                                             workbenchFlags
-		body                                          bodyFlags
-		title, typ, status, priority, deployment, due string
-		labels, assignees                             []string
+		f                                           workbenchFlags
+		body                                        bodyFlags
+		title, typ, status, priority, pipeline, due string
+		labels, assignees                           []string
 	)
 	cmd := &cobra.Command{
 		Use:   "create",
@@ -861,7 +865,7 @@ Asgard AI.
 
     asgard-cli workbench create --type question \
       --title "Which ERP holds the RMA status codes?" \
-      --body-file ./q.md --deployment support-bot --label data-source
+      --body-file ./q.md --pipeline support-bot --label data-source
 
 --type and --title are required. The type decides what the body is for:
 
@@ -873,9 +877,9 @@ Asgard AI.
     feedback   a user's reaction to an AI answer, when it arrived some other way
 
 Everything else is optional: the status defaults to backlog and the priority to
-normal. **The Deployment is never assumed**, not even from the checkout's
+normal. **The pipeline is never assumed**, not even from the checkout's
 binding - an issue can be about none, and one filed against the wrong
-Deployment is filed where nobody looks for it.`,
+pipeline is filed where nobody looks for it.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			if strings.TrimSpace(title) == "" {
@@ -909,8 +913,8 @@ Deployment is filed where nobody looks for it.`,
 			}
 			ctx := cmd.Context()
 			names := newWorkbenchNames(ctx, pc)
-			if deployment != "" {
-				if req.PipelineID, err = names.pipelineID("deployment", deployment, false); err != nil {
+			if pipeline != "" {
+				if req.PipelineID, err = names.pipelineID("pipeline", pipeline, false); err != nil {
 					return err
 				}
 			}
@@ -941,7 +945,7 @@ Deployment is filed where nobody looks for it.`,
 	fl.StringVar(&typ, "type", "", "question, request, task, bug or feedback (required)")
 	fl.StringVar(&status, "status", "", "the status to open it in; defaults to backlog")
 	fl.StringVar(&priority, "priority", "", "urgent, high, normal or low; defaults to normal")
-	fl.StringVar(&deployment, "deployment", "", "the Deployment it is about, by pipeline name or id; defaults to none")
+	fl.StringVar(&pipeline, "pipeline", "", "the pipeline it is about, by name or id; defaults to none")
 	fl.StringSliceVar(&labels, "label", nil, "a label, by name or id; repeat or comma-separate for several")
 	fl.StringSliceVar(&assignees, "assignee", nil, "an assignee by email, name or user id, or me; repeat for several")
 	fl.StringVar(&due, "due", "", "the due date, YYYY-MM-DD")
@@ -954,7 +958,7 @@ func newWorkbenchUpdateCmd() *cobra.Command {
 	var (
 		f                                                          workbenchFlags
 		body                                                       bodyFlags
-		title, typ, status, priority, deployment, due              string
+		title, typ, status, priority, pipeline, due                string
 		addLabels, removeLabels, addAssignees, removeAssignees     []string
 		parent, duplicateOf                                        string
 		addBlockedBy, removeBlockedBy, addSubIssue, removeSubIssue []string
@@ -968,13 +972,13 @@ is, and the timeline records everything named here as one action.
     asgard-cli workbench update ISS-12 --status in_review
     asgard-cli workbench update ISS-12 --add-label blocked --add-assignee pat@example.com
     asgard-cli workbench update ISS-12 --parent ISS-3 --add-blocked-by ISS-7
-    asgard-cli workbench update ISS-12 --due "" --deployment ""     clear both
+    asgard-cli workbench update ISS-12 --due "" --pipeline ""       clear both
 
 **There is no close.** An issue ends by moving to done and starts again by
 moving out of it; "we will not do this" is the not planned label and a move to
 done, and a duplicate is --duplicate-of.
 
-An empty --due removes the due date, an empty --deployment detaches the issue,
+An empty --due removes the due date, an empty --pipeline detaches the issue,
 and --parent 0 or --duplicate-of 0 clears that relation. Labels and assignees
 change by what is added and what is removed, at most 20 of each; a removed
 assignee need not still be a member.
@@ -1078,7 +1082,7 @@ platform keeps for the member alone - see "asgard-cli workbench --help".`,
 					changed = true
 				}
 			}
-			if !changed && !fl.Changed("deployment") {
+			if !changed && !fl.Changed("pipeline") {
 				return fmt.Errorf("nothing to change; name at least one field. \"asgard-cli workbench update --help\" lists them")
 			}
 
@@ -1088,10 +1092,10 @@ platform keeps for the member alone - see "asgard-cli workbench --help".`,
 			}
 			ctx := cmd.Context()
 			res := newWorkbenchNames(ctx, pc)
-			if fl.Changed("deployment") {
+			if fl.Changed("pipeline") {
 				id := ""
-				if deployment != "" {
-					if id, err = res.pipelineID("deployment", deployment, false); err != nil {
+				if pipeline != "" {
+					if id, err = res.pipelineID("pipeline", pipeline, false); err != nil {
 						return err
 					}
 				}
@@ -1134,7 +1138,7 @@ platform keeps for the member alone - see "asgard-cli workbench --help".`,
 	fl.StringVar(&typ, "type", "", "question, request, task, bug or feedback")
 	fl.StringVar(&status, "status", "", "backlog, to_do, ready, in_progress, pending_fix, in_review or done")
 	fl.StringVar(&priority, "priority", "", "urgent, high, normal or low")
-	fl.StringVar(&deployment, "deployment", "", "the Deployment it is about, by pipeline name or id; empty detaches it")
+	fl.StringVar(&pipeline, "pipeline", "", "the pipeline it is about, by name or id; empty detaches it")
 	fl.StringVar(&due, "due", "", "the due date, YYYY-MM-DD; empty removes it")
 	fl.StringSliceVar(&addLabels, "add-label", nil, "add a label, by name or id; repeat or comma-separate for several")
 	fl.StringSliceVar(&removeLabels, "remove-label", nil, "remove a label, by name or id")

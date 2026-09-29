@@ -1029,7 +1029,7 @@ asgard-cli workbench list --status in_progress --label blocked
 asgard-cli workbench show ISS-12
 asgard-cli workbench create --type question --title "<what has to be answered>"
 asgard-cli workbench update ISS-12 --status in_review --add-label data-source
-asgard-cli workbench pull --deployment <pipeline>   # attachments into references/
+asgard-cli workbench pull --pipeline <name>         # attachments into references/
 ```
 
 **Every write is made as the member's assistant**: it carries

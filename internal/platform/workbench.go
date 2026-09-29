@@ -91,7 +91,7 @@ type WorkbenchIssue struct {
 	Type        string `json:"type"`
 	Status      string `json:"status"`
 	Priority    string `json:"priority"`
-	// PipelineID is the Deployment the issue is about; empty when none.
+	// PipelineID is the pipeline the issue is about; empty when none.
 	PipelineID       string                     `json:"pipeline_id"`
 	AssigneeIDs      []string                   `json:"assignee_ids"`
 	LabelIDs         []string                   `json:"label_ids"`
@@ -204,8 +204,8 @@ type WorkbenchIssueFilter struct {
 	Status   []string
 	Type     []string
 	Priority []string
-	// Deployment holds pipeline ids; "none" selects issues about none.
-	Deployment []string
+	// Pipeline holds pipeline ids; "none" selects issues about none.
+	Pipeline []string
 	// Assignee holds user ids; "me" is the signed-in user.
 	Assignee []string
 	// Label holds label ids.
@@ -224,7 +224,7 @@ func (f WorkbenchIssueFilter) query() url.Values {
 	add("status", f.Status)
 	add("type", f.Type)
 	add("priority", f.Priority)
-	add("deployment", f.Deployment)
+	add("pipeline_id", f.Pipeline)
 	add("assignee", f.Assignee)
 	add("label", f.Label)
 	if f.Q != "" {
@@ -402,16 +402,16 @@ func (c *Client) ListWorkbenchAttachments(ctx context.Context, number int64) ([]
 }
 
 // ListWorkspaceAttachments returns the attachments that still exist on the
-// named issues or on the issues about the named Deployments (pipeline ids;
+// named issues or on the issues about the named pipelines (pipeline ids;
 // "none" is issues about none), across every page. A nil filter on both
 // returns every attachment in the workspace.
-func (c *Client) ListWorkspaceAttachments(ctx context.Context, deployments []string, issues []int64) ([]*WorkbenchAttachment, error) {
+func (c *Client) ListWorkspaceAttachments(ctx context.Context, pipelines []string, issues []int64) ([]*WorkbenchAttachment, error) {
 	var out []*WorkbenchAttachment
 	token := ""
 	for {
 		q := url.Values{"page_size": {strconv.Itoa(workbenchPageSize)}}
-		for _, d := range deployments {
-			q.Add("deployment", d)
+		for _, p := range pipelines {
+			q.Add("pipeline_id", p)
 		}
 		for _, n := range issues {
 			q.Add("issue", strconv.FormatInt(n, 10))

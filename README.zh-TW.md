@@ -704,7 +704,7 @@ asgard-cli workbench list --status in_progress --label blocked
 asgard-cli workbench show ISS-12
 asgard-cli workbench create --type question --title "<要有人回答的事>"
 asgard-cli workbench update ISS-12 --status in_review --add-label data-source
-asgard-cli workbench pull --deployment <pipeline>   # 附件拉進 references/
+asgard-cli workbench pull --pipeline <name>         # 附件拉進 references/
 ```
 
 **每一筆寫入都以登入者的助手身分送出**：帶 `X-Asgard-Via-Assistant: true`，權限仍然是登入者本人，時間軸會標「via Asgard AI」。平台只留給本人做的操作（留言、Pin、Lock、管理 label、刪除），這個指令不提供，平台也會拒絕助手這樣做。
