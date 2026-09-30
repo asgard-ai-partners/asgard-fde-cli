@@ -2,12 +2,14 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/auth"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/browser"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/platform"
 )
@@ -32,6 +34,7 @@ func newPipelineConnectCmd() *cobra.Command {
 		noBrowser bool
 		account   string
 		wait      time.Duration
+		cont      bool
 	)
 
 	cmd := &cobra.Command{
@@ -89,6 +92,19 @@ account, so a rule that one installation belongs to one workspace would have
 meant a GitHub organisation could serve one workspace. Each workspace holds its
 own connection to the same installation, and they do not see each other's.
 
+IN THE WORKBENCH ASSISTANT'S SANDBOX it is two steps, because the agent reads a
+command's output only when the command ends, and a link printed before a
+five-minute wait would reach the member five minutes late:
+
+    asgard-cli pipeline connect --account acme    prints the link, and ends
+    asgard-cli pipeline connect --continue        waits for the connection, as the
+                                                  desktop's wait does
+
+The link is for the member's OWN browser - it is on GitHub, which their browser
+is signed in to - never the sandbox's. When the flow needs a second page
+(installing the app on an account that does not have it), --continue ends with
+that link, and the next --continue picks up from there. Nothing is opened here.
+
 AND ONE WORKSPACE, AS MANY ACCOUNTS. The other direction is a connection each:
 run this once per account, and the workspace ends up holding one connection per
 installation, which is what "pipeline create --connection" chooses between.
@@ -111,6 +127,15 @@ way in was the list of installations you already reach.`,
 			}
 			actingOn(cmd, pc.Session)
 			ctx := cmd.Context()
+			if cont {
+				if !auth.SandboxMode() {
+					return errors.New("--continue is the second step of the Workbench sandbox's connect; on a desktop the command itself waits")
+				}
+				if wait <= 0 {
+					wait = connectTimeout
+				}
+				return continueConnectInSandbox(cmd, pc, f.format, wait)
+			}
 
 			// Snapshot first. The new connection is identified by not having
 			// been there, which needs no cooperation from the provider's flow
@@ -138,6 +163,10 @@ way in was the list of installations you already reach.`,
 				wanted, _, _ = strings.Cut(pc.RepoFullName, "/")
 				fmt.Fprintf(cmd.ErrOrStderr(),
 					"no --account, so the owner of this checkout's origin remote is used: %s\n", wanted)
+			}
+
+			if auth.SandboxMode() {
+				return startConnectInSandbox(cmd, pc, before, wanted)
 			}
 
 			// Identify first, always. Which way in is right depends on
@@ -183,19 +212,11 @@ way in was the list of installations you already reach.`,
 			if err != nil {
 				return err
 			}
-
-			out := cmd.OutOrStdout()
-			if f.format == formatJSON {
-				return writeJSON(out, created)
-			}
-			fmt.Fprintf(out, "Connected %s (%s), installation %s, connection %s.\n",
-				created.AccountLogin, created.AccountType, created.InstallationId, created.ConnectionId)
-			// The id is on the line above. A suggestion that cannot be run as
-			// printed costs a round trip for nothing, and `pipeline repos`
-			// refuses without --connection on purpose - nothing is assumed
-			// from a list of one, including a list of one connection.
-			fmt.Fprintf(out, "\n`asgard-cli pipeline repos --connection %s` lists what it can reach; a\nrepository missing from that list is one the installation was not granted,\nwhich is changed on the provider rather than here.\n", created.ConnectionId)
-			return nil
+			// The connection id is printed with the next command to run: a
+			// suggestion that cannot be run as printed costs a round trip, and
+			// `pipeline repos` refuses without --connection on purpose -
+			// nothing is assumed from a list of one connection.
+			return printConnected(cmd, f.format, created)
 		},
 	}
 
@@ -206,6 +227,8 @@ way in was the list of installations you already reach.`,
 		"which provider account to connect; defaults to the owner of this checkout's origin remote")
 	cmd.Flags().DurationVar(&wait, "wait", connectTimeout,
 		"how long to wait for the connection to appear before giving up")
+	cmd.Flags().BoolVar(&cont, "continue", false,
+		"in the Workbench sandbox: wait for the connection the previous connect started, after the member opened its link")
 	return cmd
 }
 
@@ -379,6 +402,9 @@ func installFirst(
 	noBrowser bool,
 	wait time.Duration,
 ) (*platform.VcsConnection, error) {
+	if auth.SandboxMode() {
+		return nil, installInSandbox(cmd, pc, before, account)
+	}
 	ctx := cmd.Context()
 	msg := cmd.ErrOrStderr()
 

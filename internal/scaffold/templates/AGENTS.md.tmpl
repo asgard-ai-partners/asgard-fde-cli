@@ -146,6 +146,12 @@ Seven things to know while doing it:
   URL is the fallback for when nothing opened, and it is there every time so
   that recovering needs no second run; hand it over then. `--no-browser` is for
   a machine with no desktop at all, not for a machine you are borrowing.
+  **In the platform's Workbench assistant sandbox** (`ASGARD_SANDBOX_MODE=true`)
+  neither opens anything: there is nothing to log in to, and
+  `asgard-cli pipeline connect` prints a link and ends. Give the member that
+  link to open in their own browser - never the sandbox's - then run
+  `asgard-cli pipeline connect --continue`, which notices the connection by
+  itself.
 - **`asgard-cli pipeline connect` can block on somebody else.** It installs a
   GitHub App, which in many organisations needs an admin. Say so and stop, rather
   than retrying: waiting a day for the right person is the normal outcome.
@@ -234,7 +240,7 @@ stays a command is what reads *this repository*:
 | `grep -ril "<term>" .agents/skills/asgard-platform/` | **start here for a question.** The wiki, the shapes, what to get from the customer, the briefs and the guidance are all files there. Read its `aliases.md` first if the question was asked in another language |
 | `.agents/skills/asgard-platform/usecase/` | **before authoring any CR.** How each shape is built, taken from deployments already in production: when to use it, the skeleton, the fields that are not obvious, and what the mistake cost someone. The same documents are in `.agents/skills/asgard-platform/usecase/`, so grep finds a shape from what the customer asked for |
 | `asgard-cli check` | one step of `gate`, when that is the step you are fixing |
-| `asgard-cli local-env` | **somebody has to give you a credential.** Opens a form on 127.0.0.1 for them to type it into, and reports back which keys were filled - never the values. Re-read `.env` after it, since they can add keys |
+| `asgard-cli local-env` | **somebody has to give you a credential.** Opens a form on 127.0.0.1 for them to type it into, and reports back which keys were filled - never the values. Re-read `.env` after it, since they can add keys. In the Workbench assistant's sandbox it opens the form in the sandbox's browser and ends: call `open_sandbox_browser` so the member takes it over, then `asgard-cli local-env --wait` |
 | `asgard-cli project add <slug>` | the engagement discovers a new project |
 | `asgard-cli init` | **when this CLI has moved on.** It wrote this skeleton and re-running is safe: files that already exist are left alone and reported, so edits to this file survive. `--force` takes the newer shipped material |
 | `asgard-cli skill update` | **when the platform says the reference material here is behind.** It writes what the Asgard server this repository deploys to actually enforces - the processor catalogue and its config keys - into `.agents/skills/`. Commit what it writes; the diff is the changelog |

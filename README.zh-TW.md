@@ -605,6 +605,7 @@ OAuth 2.0 authorization code ＋ PKCE，走 loopback redirect，那是 RFC 8252 
 - **每個請求都帶 `X-Asgard-Via-Assistant: true`**，讀取也一樣。
 - **git 走 workspace 的 GitHub Connection**：`asgard-cli pipeline git-auth` 讓這個 CLI 成為 git 在 github.com 唯一的 credential helper，每次 fetch／push 拿一張只限那個 repo、由 GitHub App 簽的 token，不寫進磁碟。push 要 workspace 管理權限；`asgard-cli pipeline repo create` 在組織的 Connection 底下建新 repo。
 - **`init` 拒絕在 `/work` 本身執行**，那裡並排放著所有 repo。
+- **不會開本機瀏覽器，因為沒有本機。** 網際網路上的頁面（GitHub 的安裝與授權頁）印成連結，給成員在自己的瀏覽器開：`pipeline connect` 印出連結就結束，`pipeline connect --continue` 等 Connection 出現。只有 sandbox 連得到的頁面（`local-env` 在 127.0.0.1 的表單）用 CDP 在 sandbox 瀏覽器、成員看得到的那個分頁打開；助手用 `open_sandbox_browser` 交給成員，`local-env --wait` 每次等幾分鐘直到存檔。兩步之間表單 server 在背景跑。
 
 ### `profile`
 

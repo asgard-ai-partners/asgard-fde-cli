@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/sandbox"
 )
 
 // The Workbench assistant runs this CLI inside a sandbox on the platform, as
@@ -19,8 +21,9 @@ import (
 // the variable is absent and none of this is reached.
 const (
 	// EnvSandboxMode is set to "true" by the Workbench assistant's sandbox
-	// image. Any other value is as if it were absent.
-	EnvSandboxMode = "ASGARD_SANDBOX_MODE"
+	// image. Any other value is as if it were absent. Declared in
+	// internal/sandbox, which the browser can import.
+	EnvSandboxMode = sandbox.EnvMode
 	// EnvSessionFile relocates the session file, for testing.
 	EnvSessionFile = "ASGARD_SESSION_FILE"
 	// DefaultSessionFile is where the sandbox's hook writes the session. /tmp
@@ -37,7 +40,7 @@ const FromSandbox Origin = "the Workbench sandbox's session file"
 
 // SandboxMode reports whether this process runs in the Workbench assistant's
 // sandbox.
-func SandboxMode() bool { return os.Getenv(EnvSandboxMode) == "true" }
+func SandboxMode() bool { return sandbox.Enabled() }
 
 // SandboxSession is the session file's content.
 //
