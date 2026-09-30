@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/auth"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/localenv"
 )
 
@@ -18,6 +20,9 @@ func newLocalEnvCmd() *cobra.Command {
 		noBrowser bool
 		terminal  bool
 		timeout   time.Duration
+		wait      bool
+		waitFor   time.Duration
+		serveBG   bool
 	)
 
 	cmd := &cobra.Command{
@@ -68,13 +73,38 @@ nobody can withdraw it from.
 **With no browser** - a container, a locked-down server - the URL is printed for
 you to open, over an SSH port forward if that is what it takes. Where even that
 is not possible, ` + "`--terminal`" + ` asks for each value at the prompt instead, and
-does not echo the secrets.`,
+does not echo the secrets.
+
+**In the Workbench assistant's sandbox it is two steps**, because the agent reads
+a command's output only when the command ends, and one command runs at most ten
+minutes:
+
+    asgard-cli local-env --focus UOF_DB_PASSWORD   serves the form in the background,
+                                                   opens it in the sandbox's browser,
+                                                   and ends
+    (the agent calls open_sandbox_browser, so the member takes over that browser)
+    asgard-cli local-env --wait                    waits for the save; after a few
+                                                   minutes says it is still waiting,
+                                                   and is run again
+
+The member fills the form in the sandbox's browser, because the page listens on
+the sandbox's 127.0.0.1 and nothing else can reach it. --terminal has no terminal
+to ask at there.`,
 		Args:    cobra.NoArgs,
 		GroupID: groupBuild,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			root, err := envRoot()
 			if err != nil {
 				return err
+			}
+			if wait {
+				if !auth.SandboxMode() {
+					return errors.New("--wait is the second step of the Workbench sandbox's form; on a desktop local-env itself waits")
+				}
+				return waitLocalEnvInSandbox(cmd, root, waitFor)
+			}
+			if terminal && auth.SandboxMode() {
+				return errors.New("--terminal needs somebody at a terminal, and the Workbench sandbox has none; the form opens in the sandbox's browser instead")
 			}
 			file, err := localenv.Load(root)
 			if err != nil {
@@ -97,6 +127,12 @@ does not echo the secrets.`,
 
 			opts := localenv.Options{
 				File: file, Focus: focus, Timeout: timeout, NoBrowser: noBrowser,
+			}
+			if serveBG {
+				return serveLocalEnvInBackground(cmd, root, opts)
+			}
+			if auth.SandboxMode() {
+				return startLocalEnvInSandbox(cmd, root, focus, timeout)
 			}
 
 			var res localenv.Result
@@ -124,6 +160,12 @@ does not echo the secrets.`,
 		"ask for each value at the prompt, for a machine that cannot reach a browser at all")
 	f.DurationVar(&timeout, "timeout", 15*time.Minute,
 		"give up if nothing is saved by then, so a tab holding credentials does not outlive the task")
+	f.BoolVar(&wait, "wait", false,
+		"in the Workbench sandbox: wait for the form opened by the previous local-env to be saved")
+	f.DurationVar(&waitFor, "wait-for", localEnvWaitDefault,
+		"with --wait: how long this call waits before saying it is still waiting; keep it under the agent's command limit")
+	f.BoolVar(&serveBG, localEnvServeFlag, false, "internal: the Workbench sandbox's background form server")
+	_ = f.MarkHidden(localEnvServeFlag)
 
 	return cmd
 }
