@@ -22,11 +22,11 @@ The engagement is the only party that has seen it, and the next engagement will
 hit the same thing. This is the half the corpus exists for, and it is what
 Goal's fourth point is a route for.
 
-  - **The platform-minted resource api key can be read by cross-object
-    reference.** `preset-agent-hub` / `api_key`, referenced directly from a
-    SourceSet, a Toolset or a BotProvider. Nothing documented it; a deploy was
-    blocked on obtaining a value nobody could obtain. It is now
-    `internal/corpus/usecase/conventions.md` and it narrowed
+  - **The resource api key is the engagement's own, and a random value is the
+    answer when nothing outside the platform calls the resource.** Nothing
+    documented where the value comes from; a deploy was blocked on obtaining
+    a value nobody could obtain. It is now
+    `internal/corpus/usecase/conventions.md` and it answered
     `internal/corpus/wiki/platform-unknowns.md` P13.
   - **A `~/.claude` mount kills the driver**, and **a writable store needs its
     own Syncer-less SourceSet** - both read off deployment clones rather than
@@ -201,10 +201,9 @@ does, which is why it is here rather than dismissed in a line.
 engagement-sourced claim into a page, writes a third marker instead of a
 paragraph:
 
-    **Proved:** a SourceSet reading `preset-agent-hub` / `api_key` by
-    cross-object reference, on a deployed namespace, 2026-09-14 - applied,
-    Ready, Syncers ran. Settled. The Toolset form is proved to the server-side
-    dry run only: very likely. The BotProvider form is reasoned.
+    **Proved:** a `~/.claude` mount kills the driver - reported by a
+    deployment that hit it in production, then re-read in the platform
+    source. Settled.
 
 **What the tool does.** `kb.ParseDoc` gains one entry in the map it already
 has - `**Proved:**` beside `**Checked:**` and `**Unchecked:**`. One reader, one

@@ -156,8 +156,8 @@ spec:
   apiKey:
     valueFrom:
       secretKeyRef:
-        name: preset-agent-hub
-        key: api_key
+        name: {{ include "<chart>.appSecretName" . }}
+        key: asgard_resource_api_key
   tools:
     - entrypoint:
         entry: entry-main
@@ -267,13 +267,15 @@ dry run.
 
 ### One credential or several is a requirement, not a convention
 
-A platform resource credential is one key for the whole namespace - the
-`api_key` of `preset-agent-hub` - and `asgard-cli add` points every CR of that
-kind straight at it, so rotation scope is not a decision an engagement makes
-here: the platform owns that key and shares it by design
-(`../usecase/conventions.md`). A token for the **external** service is its own
-key either way, is the engagement's to obtain, and is only ever a
-`secretKeyRef` into the release's own Secret.
+A platform resource credential is `asgard_resource_api_key` in the release's
+own Secret, and `asgard-cli add` points the Toolset at it. It is the
+engagement's to set - a random value when nothing calls the Toolset from
+outside the platform - and whether a write Toolset gets a key of its own,
+separate from the read side's, is a rotation-scope requirement
+(`../usecase/conventions.md`). It is never `preset-agent-hub`, which is Agent
+Hub's. A token for the **external** service is its own key either way, is the
+engagement's to obtain, and is only ever a `secretKeyRef` into the release's
+own Secret.
 
 **Do not declare a `secretKeyRef` for a key that is not both declared and set.**
 Config evaluation fails at call time, not at apply time, so the chart deploys

@@ -22,23 +22,23 @@ metadata:
     asgard-ai.com/managed-by: skill-set
     {{- include "<<.Chart>>.labels" . | nindent 4 }}
 spec:
-  # **The platform mints this and guarantees the Secret in every namespace**, so
-  # there is nothing to obtain and nothing to declare: `preset-agent-hub` /
-  # `api_key` is created by the namespace reconciler, once, and never rotated.
-  # The platform's own preset Toolset, SourceSet and BotProvider read it the
-  # same way. **Proved end to end for a SourceSet** - applied, Ready, its
-  # Syncers ran - and to the server-side dry run for a Toolset, 2026-09-14. A
-  # BotProvider's adminApiKey is the same field resolved by the same code and
-  # has not been exercised.
-  #
-  # It is NOT the X-API-KEY the documentation tells you to create for calling
-  # the API from outside - see
+  # **This release's own resource key**, declared under `appSecret:` in
+  # .asgard-pipeline.yaml. edgeserver checks it as `X-API-KEY` on this
+  # resource's own endpoints, and the platform's own callers read it back from
+  # the CR, so nothing else has to know it. When no use case calls those
+  # endpoints from outside the platform, set a random value and ask nobody:
+  #   openssl rand -hex 32 | tr -d '\n' | asgard-cli pipeline variables set \
+  #     --release <release> --kind secret asgard_resource_api_key --from-file -
+  # Set it before the first deploy: a key missing from the Secret resolves to an
+  # empty string, and an empty key matches a request that sends none.
+  # Never `preset-agent-hub`: that is Agent Hub's own credential. Nor is this the
+  # X-API-KEY the documentation tells you to create. See
   # `.agents/skills/asgard-platform/usecase/conventions.md`.
   apiKey:
     valueFrom:
       secretKeyRef:
-        name: preset-agent-hub
-        key: api_key
+        name: {{ include "<<.Chart>>.appSecretName" . }}
+        key: asgard_resource_api_key
 ---
 apiVersion: asgard-ai.com/v1alpha1
 kind: Syncer
