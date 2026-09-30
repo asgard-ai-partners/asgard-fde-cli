@@ -38,10 +38,12 @@ an attachment or a comment - and this command has none of them, because the
 platform refuses them from an assistant; the member does those in the
 Workbench page.
 
-**This is not "asgard-cli question", "request" or "task".** Those read and
-write the records in the customer's repository, which is where the engagement
-keeps its own state. The Workbench is the platform's, and it is what the
-customer sees.
+**This is not "asgard-cli question", "request" or "task", and not
+"asgard-cli issue-report".** The first three are the engagement's own records
+in the customer's repository; issue-report is a public GitHub issue about this
+tool. The Workbench is the platform's, and it is what the customer sees.
+
+` + trackersHelp + `
 
 The workspace is resolved as for every platform command: --workspace, then
 ASGARD_WORKSPACE, then the checkout's binding. Labels, pipelines and
@@ -873,12 +875,19 @@ Asgard AI.
 
 --type and --title are required. The type decides what the body is for:
 
-    question   something that has to be answered before work can go on - say
-               what, why it is needed, and who can answer it
+    question   something that has to be answered or supplied before work can
+               go on - say what, why it is needed, and who can answer it. A
+               blocker on the customer's side during the build is one
     request    one thing the customer wants, in the customer's own words
     task       a unit of work, with scope and acceptance
-    bug        what is wrong after go-live: expected, actual, how to reproduce
+    bug        what is wrong after go-live in the customer's deployment:
+               expected, actual, how to reproduce. Never a failure of this
+               tool itself - that is "asgard-cli issue-report"
     feedback   a user's reaction to an AI answer, when it arrived some other way
+
+**The customer reads what this opens.** Whether a thing belongs here, in the
+repository's own records or upstream is decided by who has to act on it:
+"asgard-cli workbench --help" has the table.
 
 Everything else is optional: the status defaults to backlog and the priority to
 normal. **The pipeline is never assumed**, not even from the checkout's
