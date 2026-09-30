@@ -615,6 +615,8 @@ asgard-cli size flow-agent-single --databases 2 --queries 4
 **`issue-report`** is how a gap in this tool gets filed, and it is the only way
 what an engagement learned reaches the next one. The gap does not belong in the
 customer repository: a note in one engagement is a note one engagement has.
+It is for the tool, never for the customer: the repository is public, and what
+is wrong in the customer's systems goes on the Workbench (see `workbench`).
 
 ```bash
 asgard-cli issue-report               # the URL, and what a report has to say
@@ -1069,9 +1071,22 @@ member alone - pinning, locking, labels, deleting an issue, an attachment or a
 comment - this command does not offer, and the platform refuses it from an
 assistant.
 
-**This is not `question`, `request` or `task`.** Those are the engagement's own
-records in the customer's repository; the Workbench is the platform's, and it is
-what the customer sees.
+**This is not `question`, `request` or `task`, and not `issue-report`.** Which
+of the three places a thing goes is decided by who has to act on it:
+
+| who has to act on it | where | command |
+|---|---|---|
+| the customer's side has to see, answer, supply or decide it - or something is wrong in what is live | the workspace's Workbench (the customer reads it) | `workbench create` |
+| whoever builds next needs it: the spec, the design, an open decision | the customer repository's records | `question add`, `request add`, `task add` |
+| the makers of this tool, or of the platform behind it | upstream, a public GitHub issue | `issue-report --new` |
+
+A failure of this tool is never a Workbench `bug` - that type is what is wrong
+in the customer's deployment, and the customer reads it. Nothing about the
+customer goes upstream, because that repository is public. In the Workbench
+assistant's sandbox nothing is filed upstream at all: `issue-report` says so
+and `--new` refuses, because the member there may be the customer's own staff.
+The same table is in `asgard-cli workbench --help` and in the `AGENTS.md` that
+`init` writes.
 
 `pull` files each attachment byte-identical under
 `references/workbench/ISS-<n>/<attachment id>/`, checks its SHA-256 against the

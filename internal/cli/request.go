@@ -30,7 +30,13 @@ request, and everything after it arrives the same way.
 
 The record is a file in the customer repository, ` + "`" + work.RequestDir + `/REQ-xxx-<name>.md` + "`" + `,
 registered in ` + "`" + work.RequestIndex + "`" + `. Nothing is stored in this CLI: the repo is
-where the next agent looks, so the repo is where the state lives.`,
+where the next agent looks, so the repo is where the state lives.
+
+**These are the engagement's own records, and the customer does not see
+them.** What somebody on the customer's side has to see, answer or supply goes
+on the workspace's Workbench (asgard-cli workbench create); a gap in this tool
+goes upstream (asgard-cli issue-report). "asgard-cli workbench --help" has the
+table for which is which.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := checkFormat(format); err != nil {

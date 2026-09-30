@@ -1,11 +1,13 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"io"
 
 	"github.com/spf13/cobra"
 
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/auth"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/check"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/repo"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/version"
@@ -22,11 +24,21 @@ func newIssueCmd() *cobra.Command {
 		Short: "How to report a gap in this tool, from wherever you found it",
 		Long: `How to file what this tool got wrong, or did not know.
 
+**Not from the Workbench assistant's sandbox**: nothing is filed from there -
+see the end of this page.
+
 You are probably in a customer repository. **The gap does not belong there** - a
 note in one engagement's docs is a note one engagement has, and the next one
 starts over. It belongs upstream, where a fix reaches every engagement in one
 release. Same reason this material is compiled into the binary rather than
 copied into your repo.
+
+**This is for the tool, never for the customer.** The repository is public.
+What is wrong in the customer's systems or in what they run goes on the
+Workbench (asgard-cli workbench create), and what the engagement records for
+itself stays in this repository - the table below is the whole rule.
+
+` + trackersHelp + `
 
 FILE ONE WHEN
 
@@ -35,6 +47,7 @@ FILE ONE WHEN
   - you did what a page said and it was wrong in front of a customer
   - a number or a claim here did not match what you saw
   - you needed something in a meeting that this tool does not have
+  - a command failed, or its message blamed the wrong thing
 
 Do not wait to be sure it is a defect. "I could not find X and I do not know
 whether it exists" is useful: it is either a missing page or a wrong signpost,
@@ -109,10 +122,25 @@ actually collected.
 
 **Read what it produced before filing it.** The rule above about never pasting
 a customer's content applies to what this generated exactly as much as to what
-you write.`,
+you write.
+
+IN THE WORKBENCH ASSISTANT'S SANDBOX (` + auth.EnvSandboxMode + `=true)
+
+Nothing is filed from there, and --new refuses. The person in the conversation
+is a workspace member, who may be the customer's own staff, and this repository
+is public. Tell them what did not work and how to get past it, and that
+whoever they work with at Asgard can report it; an Asgard engineer reports it
+from their own machine.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			out := cmd.OutOrStdout()
+			if auth.SandboxMode() {
+				if draft {
+					return errSandboxIssueReport
+				}
+				fmt.Fprintln(out, sandboxIssueReport)
+				return nil
+			}
 			if draft {
 				return writeReport(out)
 			}
@@ -132,6 +160,21 @@ you write.`,
 
 	return cmd
 }
+
+// sandboxIssueReport is what issue-report says in the Workbench assistant's
+// sandbox instead of where to file. The member there may be the customer's own
+// staff, the repository is public, and there is no gh to file with - so a
+// report drafted there is either never filed or filed by the wrong person.
+const sandboxIssueReport = `Nothing is filed upstream from the Workbench assistant's sandbox.
+
+Tell the member what did not work and how to get past it, and that whoever
+they work with at Asgard can report it; an Asgard engineer reports the tool's
+gap from their own machine. Do not open a Workbench bug for
+it either: that is for what is wrong in the customer's deployment, and the
+customer reads it.`
+
+var errSandboxIssueReport = errors.New("issue-report --new does not write a report in the Workbench assistant's sandbox: " +
+	"nothing is filed upstream from here. Tell the member what did not work and how to get past it")
 
 // writeReport emits the issue body.
 //

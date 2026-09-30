@@ -30,7 +30,13 @@ making the wrong assumption first.
 
 **Read this before designing anything.** The fastest way to do damage in a
 repository somebody else started is to design past a question they already knew
-was open.`,
+was open.
+
+**These are the engagement's own records, and the customer does not see
+them.** What somebody on the customer's side has to see, answer or supply goes
+on the workspace's Workbench (asgard-cli workbench create); a gap in this tool
+goes upstream (asgard-cli issue-report). "asgard-cli workbench --help" has the
+table for which is which.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := checkFormat(format); err != nil {
