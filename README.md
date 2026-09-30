@@ -875,6 +875,16 @@ talking to it. The image sets `ASGARD_SANDBOX_MODE=true`, and then:
   `ASGARD_TOKEN` still wins, and `--workspace` and `ASGARD_WORKSPACE` still come
   before the session's workspace, which comes before a checkout's binding.
 - **Every request carries `X-Asgard-Via-Assistant: true`**, reads included.
+- **Every change is stamped for the page.** With
+  `ASGARD_CLI_SIDE_EFFECT_TIMESTAMP_FILE` set (the image sets
+  `/work/.asgard/side-effect-at`), each call that changed something on the
+  platform - an issue opened, a comment, a pipeline or release written, a Run
+  approved, a connection that appeared - rewrites that file with
+  `{"at":"<RFC 3339 UTC>"}`, so the Workbench page watching it refetches. Reads,
+  refusals and the repository tokens git asks for are not stamped. The
+  directory is created when missing, and a stamp that cannot be written is a
+  warning, never a failed command. Only `at` is promised; a reader ignores keys
+  it does not know.
 - **git goes through the workspace's GitHub Connection**:
   `asgard-cli pipeline git-auth` makes this CLI git's only github.com credential
   helper, and each fetch or push gets a token for exactly that repository,

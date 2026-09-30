@@ -78,8 +78,9 @@ type CreatedRepository struct {
 func (c *Client) CreateRepository(ctx context.Context, connectionID, name, description string, public bool) (*CreatedRepository, error) {
 	var out CreatedRepository
 	err := c.do(ctx, request{
-		method: http.MethodPost,
-		path:   "/v1/iac/connections/" + url.PathEscape(connectionID) + "/repositories",
+		method:     http.MethodPost,
+		sideEffect: true,
+		path:       "/v1/iac/connections/" + url.PathEscape(connectionID) + "/repositories",
 		body: map[string]any{
 			"name":        name,
 			"description": description,

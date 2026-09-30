@@ -297,7 +297,7 @@ type CreateWorkbenchIssueRequest struct {
 // CreateWorkbenchIssue opens an issue, as the member's assistant.
 func (c *Client) CreateWorkbenchIssue(ctx context.Context, body CreateWorkbenchIssueRequest) (*WorkbenchIssue, error) {
 	var out WorkbenchIssue
-	err := c.do(ctx, request{method: http.MethodPost, path: "/v1/workbench/issues", body: body, out: &out, viaAssistant: true})
+	err := c.do(ctx, request{method: http.MethodPost, path: "/v1/workbench/issues", body: body, out: &out, viaAssistant: true, sideEffect: true})
 	return &out, err
 }
 
@@ -331,7 +331,7 @@ type UpdateWorkbenchIssueRequest struct {
 // member's assistant.
 func (c *Client) UpdateWorkbenchIssue(ctx context.Context, number int64, body UpdateWorkbenchIssueRequest) (*WorkbenchIssue, error) {
 	var out WorkbenchIssue
-	err := c.do(ctx, request{method: http.MethodPatch, path: issuePath(number), body: body, out: &out, viaAssistant: true})
+	err := c.do(ctx, request{method: http.MethodPatch, path: issuePath(number), body: body, out: &out, viaAssistant: true, sideEffect: true})
 	return &out, err
 }
 
@@ -506,7 +506,7 @@ func (c *Client) CreateWorkbenchComment(ctx context.Context, number int64, body,
 		req["status"] = status
 	}
 	var out WorkbenchComment
-	err := c.do(ctx, request{method: http.MethodPost, path: issuePath(number) + "/comments", body: req, out: &out, viaAssistant: true})
+	err := c.do(ctx, request{method: http.MethodPost, path: issuePath(number) + "/comments", body: req, out: &out, viaAssistant: true, sideEffect: true})
 	return &out, err
 }
 
@@ -554,6 +554,7 @@ func (c *Client) UploadWorkbenchAttachment(ctx context.Context, number int64, fi
 	resp, err := c.doRaw(ctx, rawRequest{
 		method:       http.MethodPost,
 		path:         issuePath(number) + "/attachments",
+		sideEffect:   true,
 		body:         pr,
 		contentType:  mw.FormDataContentType(),
 		viaAssistant: true,
