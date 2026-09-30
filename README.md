@@ -861,6 +861,26 @@ With no browser - CI, a container, an agent sandbox - set `ASGARD_TOKEN` to an
 access token instead. It bypasses the store completely, reading nothing from
 disk and writing nothing to it.
 
+### The Workbench assistant's sandbox
+
+The platform's Workbench assistant runs this CLI inside a sandbox, as the member
+talking to it. The image sets `ASGARD_SANDBOX_MODE=true`, and then:
+
+- **The identity is the session file** the platform writes at the start of every
+  turn (`/tmp/.asgard/session.json`, 0600; `ASGARD_SESSION_FILE` moves it): the
+  member's access token, the platform's address, and the workspace of the
+  conversation. There is nothing to `login` to, and `login` says so.
+  `ASGARD_TOKEN` still wins, and `--workspace` and `ASGARD_WORKSPACE` still come
+  before the session's workspace, which comes before a checkout's binding.
+- **Every request carries `X-Asgard-Via-Assistant: true`**, reads included.
+- **git goes through the workspace's GitHub Connection**:
+  `asgard-cli pipeline git-auth` makes this CLI git's only github.com credential
+  helper, and each fetch or push gets a token for exactly that repository,
+  signed by the GitHub App and never written to disk. Pushing needs workspace
+  administration; `asgard-cli pipeline repo create` makes a new repository
+  under an organization's connection.
+- **`init` refuses `/work` itself**, which holds every repository side by side.
+
 ### `profile`
 
 **If you use the hosted Asgard platform, you need none of this.** With no file
@@ -1029,14 +1049,17 @@ asgard-cli workbench list --status in_progress --label blocked
 asgard-cli workbench show ISS-12
 asgard-cli workbench create --type question --title "<what has to be answered>"
 asgard-cli workbench update ISS-12 --status in_review --add-label data-source
+asgard-cli workbench comment ISS-12 --body-file draft.md
+asgard-cli workbench attach ISS-12 minutes.pdf --what "<what it is>" --from "<a role>" --dated <YYYY-MM-DD>
 asgard-cli workbench pull --pipeline <name>         # attachments into references/
 ```
 
 **Every write is made as the member's assistant**: it carries
 `X-Asgard-Via-Assistant: true`, so the platform authorizes it as the signed-in
 account and the timeline says "via Asgard AI". What the platform keeps for the
-member alone - comments, pinning, locking, labels, deleting - this command does
-not offer, and the platform refuses it from an assistant.
+member alone - pinning, locking, labels, deleting an issue, an attachment or a
+comment - this command does not offer, and the platform refuses it from an
+assistant.
 
 **This is not `question`, `request` or `task`.** Those are the engagement's own
 records in the customer's repository; the Workbench is the platform's, and it is
@@ -1046,6 +1069,21 @@ what the customer sees.
 `references/workbench/ISS-<n>/<attachment id>/`, checks its SHA-256 against the
 platform's record, and writes what, from and dated into `references/_index.md`,
 the same row `reference add` writes. It never overwrites a filed copy.
+
+### `audit-log`
+
+The workspace's audit log, as Asgard Console's Explore records it, read with
+your own session - so Console decides who may read it (a workspace owner or a
+platform admin).
+
+```bash
+asgard-cli audit-log summary --days 7    # counted by event, account, project, agent
+asgard-cli audit-log query --days 1      # the events, as JSON Lines
+asgard-cli audit-log dictionary          # the names behind the raw keys
+```
+
+Rows carry raw keys only, there is no success/failure dimension (events are
+named), and the data lags by up to about 20 minutes.
 
 ## Releasing
 

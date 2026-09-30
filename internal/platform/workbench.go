@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -24,9 +25,10 @@ import (
 // **It grants nothing.** Authorization is still the signed-in member's; what
 // it changes is that the timeline says "via Asgard AI", and that the platform
 // refuses the handful of actions only a member may take - deleting, pinning,
-// locking, managing labels, deleting an attachment, and every comment write.
-// The CLI sends it on every Workbench write, because whoever is running this
-// command is an agent acting for the member, and the timeline should say so.
+// locking, managing labels, deleting an attachment or a comment. The CLI sends
+// it on every Workbench write, because whoever is running this command is an
+// agent acting for the member, and the timeline should say so; in the
+// Workbench sandbox it sends it on every request.
 const ViaAssistantHeader = "X-Asgard-Via-Assistant"
 
 // The error codes the Workbench routes put in `details.error_code`.
@@ -59,7 +61,7 @@ func workbenchErrorText(e *APIError, msg string) (string, bool) {
 	case e.ErrorCode == WorkbenchAssistantForbidden:
 		return fmt.Sprintf("the platform answered %d (%s): this CLI writes to the Workbench as the member's assistant, "+
 			"and this action is one only the member may take - deleting, pinning or locking an issue, managing labels, "+
-			"deleting an attachment, or writing a comment. Nothing was written. Ask the member to do it in the Workbench page",
+			"deleting an attachment or a comment. Nothing was written. Ask the member to do it in the Workbench page",
 			e.Status, WorkbenchAssistantForbidden), true
 	case e.ErrorCode == WorkbenchIssueLocked:
 		return fmt.Sprintf("the platform answered %d (%s): the issue is locked, and only workspace admins may comment on it. "+
@@ -67,6 +69,9 @@ func workbenchErrorText(e *APIError, msg string) (string, bool) {
 	case e.ErrorCode == WorkbenchParentAlreadySet:
 		return fmt.Sprintf("the platform answered %d (%s): the sub-issue already has a parent, and an issue has at most one. "+
 			"Nothing was written. Clear it first with --parent 0 on the sub-issue, or leave it where it is", e.Status, WorkbenchParentAlreadySet), true
+	case e.Status == http.StatusForbidden && strings.HasPrefix(e.Path, "/v1/workbench/audit-log"):
+		return fmt.Sprintf("not allowed to read the audit log (%d %s): Asgard Console decides who may, and it takes a "+
+			"workspace owner or a platform admin (IAM action audit-log/read). Say so rather than reporting an empty log", e.Status, msg), true
 	case e.Status == http.StatusForbidden:
 		return fmt.Sprintf("not allowed (%d %s); the Workbench is open to every member of the workspace, so this account "+
 			"is probably not a member of it, or the action needs workspace administration", e.Status, msg), true
@@ -452,6 +457,9 @@ func (c *Client) DownloadWorkbenchAttachment(ctx context.Context, a *WorkbenchAt
 	httpReq.Header.Set("Authorization", "Bearer "+c.token)
 	httpReq.Header.Set(ClientHeader, clientValue())
 	httpReq.Header.Set(WorkspaceHeader, c.workspace)
+	if c.assistant {
+		httpReq.Header.Set(ViaAssistantHeader, "true")
+	}
 
 	// A download can outlast the per-call timeout on a slow link, and the
 	// bytes are bounded by the platform's own upload limit.
@@ -487,4 +495,79 @@ func (c *Client) DownloadWorkbenchAttachment(ctx context.Context, a *WorkbenchAt
 
 func issuePath(number int64) string {
 	return "/v1/workbench/issues/" + strconv.FormatInt(number, 10)
+}
+
+// CreateWorkbenchComment posts a comment on an issue, as the member's
+// assistant. status, when set, is "comment and mark as done": the comment and
+// the status move land in one batch or not at all.
+func (c *Client) CreateWorkbenchComment(ctx context.Context, number int64, body, status string) (*WorkbenchComment, error) {
+	req := map[string]string{"body": body}
+	if status != "" {
+		req["status"] = status
+	}
+	var out WorkbenchComment
+	err := c.do(ctx, request{method: http.MethodPost, path: issuePath(number) + "/comments", body: req, out: &out, viaAssistant: true})
+	return &out, err
+}
+
+// WorkbenchAttachmentUpload is what an upload names about the file, under
+// the names `asgard-cli reference add` uses.
+type WorkbenchAttachmentUpload struct {
+	// What the file is.
+	What string
+	// From is who gave it - a role, not a person's name.
+	From string
+	// Dated is the document's own date, YYYY-MM-DD.
+	Dated string
+	// Supersedes is the id of an earlier attachment of the same issue this
+	// one is a newer version of; empty for a first version.
+	Supersedes string
+}
+
+// UploadWorkbenchAttachment attaches the file at r (named filename) to an
+// issue, byte for byte, as the member's assistant.
+func (c *Client) UploadWorkbenchAttachment(ctx context.Context, number int64, filename string, r io.Reader, meta WorkbenchAttachmentUpload) (*WorkbenchAttachment, error) {
+	pr, pw := io.Pipe()
+	mw := multipart.NewWriter(pw)
+	go func() {
+		err := func() error {
+			for _, f := range [][2]string{{"what", meta.What}, {"from", meta.From}, {"dated", meta.Dated}, {"supersedes", meta.Supersedes}} {
+				if f[1] == "" {
+					continue
+				}
+				if err := mw.WriteField(f[0], f[1]); err != nil {
+					return err
+				}
+			}
+			part, err := mw.CreateFormFile("file", filename)
+			if err != nil {
+				return err
+			}
+			if _, err := io.Copy(part, r); err != nil {
+				return err
+			}
+			return mw.Close()
+		}()
+		pw.CloseWithError(err)
+	}()
+
+	resp, err := c.doRaw(ctx, rawRequest{
+		method:       http.MethodPost,
+		path:         issuePath(number) + "/attachments",
+		body:         pr,
+		contentType:  mw.FormDataContentType(),
+		viaAssistant: true,
+		// An upload can outlast the per-call timeout on a slow link; the
+		// platform bounds its size.
+		noTimeout: true,
+	})
+	if err != nil {
+		_ = pr.CloseWithError(err)
+		return nil, err
+	}
+	var out WorkbenchAttachment
+	if err := decodeEnvelope(resp, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
 }

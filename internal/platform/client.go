@@ -77,6 +77,11 @@ type Client struct {
 	token     string
 	workspace string
 	http      *http.Client
+	// assistant marks every request as the Workbench assistant's: a session
+	// from the sandbox's session file is by definition the assistant acting
+	// for the member, so every call it makes is one, not only the Workbench
+	// writes.
+	assistant bool
 }
 
 // New builds a client from a resolved session. The workspace may be empty for
@@ -88,6 +93,7 @@ func New(session *auth.Session, workspace string) *Client {
 		token:     session.Token,
 		workspace: workspace,
 		http:      &http.Client{Timeout: timeout},
+		assistant: session.Source == auth.SourceSandbox,
 	}
 }
 
@@ -122,10 +128,18 @@ func (e *APIError) Error() string {
 	case http.StatusUnauthorized:
 		return fmt.Sprintf("the platform rejected the session (%d %s); run `asgard-cli login`", e.Status, msg)
 	case http.StatusForbidden:
+		if e.ErrorCode == IacAppPermissionNotGranted {
+			// Not the member's role: the GitHub App itself lacks the
+			// permission, which nobody in the workspace can grant from here.
+			return fmt.Sprintf("the GitHub App was not granted what this needs (%d %s): %s. "+
+				"An owner of the GitHub organization has to accept the App's requested permissions on its "+
+				"installation (GitHub -> the organization's Settings -> GitHub Apps -> the App -> review the "+
+				"permission request); nothing in the workspace changes that", e.Status, IacAppPermissionNotGranted, msg)
+		}
 		// Members may read a pipeline and edit variables; approving, running and
 		// deleting need workspace administration. Saying so here saves reading
 		// the permission matrix to find out which half a command needed.
-		return fmt.Sprintf("not allowed (%d %s); viewing a pipeline and editing variables are open to workspace members, and running, approving and deleting need workspace administration", e.Status, msg)
+		return fmt.Sprintf("not allowed (%d %s); viewing a pipeline and editing variables are open to workspace members, and running, approving, deleting, pushing and creating repositories need workspace administration", e.Status, msg)
 	case http.StatusNotFound:
 		return fmt.Sprintf("not found (%d %s): %s %s", e.Status, msg, e.Method, e.Path)
 	}
@@ -258,7 +272,7 @@ func (c *Client) do(ctx context.Context, req request) error {
 	if req.project != "" {
 		httpReq.Header.Set(ProjectHeader, req.project)
 	}
-	if req.viaAssistant {
+	if req.viaAssistant || c.assistant {
 		httpReq.Header.Set(ViaAssistantHeader, "true")
 	}
 
