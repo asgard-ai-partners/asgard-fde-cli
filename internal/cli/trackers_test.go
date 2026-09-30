@@ -26,19 +26,14 @@ func TestFilingCommandsCarryTheTrackersTable(t *testing.T) {
 	}
 }
 
-func TestIssueReportFilesNothingFromTheSandbox(t *testing.T) {
+// The sandbox reports the tool's gaps like anywhere else: it is where the
+// assistant meets the CLI most, so it is where the feedback is.
+func TestIssueReportWorksInTheSandbox(t *testing.T) {
 	sandboxEnv(t, "https://platform-api.example.test")
-	out, _, err := runCLI(t, "", "issue-report")
-	if err != nil || !strings.Contains(out, "Nothing is filed upstream") || strings.Contains(out, "gh issue create") {
+	if out, _, err := runCLI(t, "", "issue-report"); err != nil || !strings.Contains(out, "issue-report --new") {
 		t.Errorf("issue-report in the sandbox: %q %v", out, err)
 	}
-	out, _, err = runCLI(t, "", "issue-report", "--new")
-	if err == nil || out != "" {
-		t.Errorf("issue-report --new in the sandbox wrote %q, err %v", out, err)
-	}
-
-	t.Setenv(auth.EnvSandboxMode, "")
-	if out, _, err := runCLI(t, "", "issue-report"); err != nil || !strings.Contains(out, "gh issue create") {
-		t.Errorf("issue-report outside the sandbox: %q %v", out, err)
+	if out, _, err := runCLI(t, "", "issue-report", "--new"); err != nil || !strings.Contains(out, "## 2) The state I was in") {
+		t.Errorf("issue-report --new in the sandbox: %q %v", out, err)
 	}
 }

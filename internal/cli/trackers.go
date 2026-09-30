@@ -8,9 +8,7 @@ package cli
 // help said it was not question/request/task, issue-report never named the
 // Workbench, and both call a defect a bug. Agents given only that text, and
 // asked where eight ordinary situations go, filed a customer-side blocker in
-// the repository where the customer never sees it, and in the assistant's
-// sandbox drafted a public upstream report for a member who may be the
-// customer's own staff.
+// the repository where the customer never sees it.
 const trackersHelp = `WHERE A THING IS FILED - decided by who has to act on it
 
     the workspace's Workbench - the customer reads it
@@ -45,11 +43,9 @@ const trackersHelp = `WHERE A THING IS FILED - decided by who has to act on it
     write the ISS-N in the spec so each is found from the other. The same
     goes for a question the customer has to answer that also shapes the
     design.
-  - **In the Workbench assistant's sandbox nothing is filed upstream**, and
-    what the member has to keep track of goes on the Workbench. The member may
-    be the customer's own staff, and a repository record reaches nobody until
-    somebody with administration pushes it. When the tool itself fails, tell
-    the member what did not work and how to get past it, and that whoever
-    they work with at Asgard can report it; saying on the issue that the work
-    is blocked is still fine. An Asgard engineer reports it from their own
-    machine.`
+  - **In the Workbench assistant's sandbox** what the member has to keep
+    track of goes on the Workbench: a repository record reaches nobody until
+    somebody with administration pushes it. A gap in the tool is still
+    reported with asgard-cli issue-report, as anywhere else - and the member
+    may be the customer's own staff, so the rule about their content holds
+    there as much as here.`
