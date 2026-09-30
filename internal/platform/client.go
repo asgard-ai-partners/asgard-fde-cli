@@ -235,6 +235,11 @@ type request struct {
 	noWorkspace bool
 	// project sets the project header, for the routes scoped to one.
 	project string
+	// sideEffect marks a call that changes something on the platform; a 2xx
+	// answer stamps EnvSideEffectFile. Marked per call rather than inferred
+	// from the method: some POSTs only read (an audit query, a repository
+	// token for git).
+	sideEffect bool
 }
 
 // do makes one call and unwraps the envelope.
@@ -310,6 +315,9 @@ func (c *Client) do(ctx context.Context, req request) error {
 			apiErr.Message = truncate(string(raw), 200)
 		}
 		return apiErr
+	}
+	if req.sideEffect {
+		NoteSideEffect()
 	}
 	if decodeErr != nil {
 		return fmt.Errorf("%s %s answered %s with something that is not the platform's response envelope: %s",

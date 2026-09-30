@@ -23,6 +23,8 @@ type rawRequest struct {
 	viaAssistant bool
 	// noTimeout lifts the per-call timeout, for an answer that streams.
 	noTimeout bool
+	// sideEffect: as request.sideEffect.
+	sideEffect bool
 }
 
 // doRaw makes one call and returns the response for a 2xx, which the caller
@@ -65,6 +67,9 @@ func (c *Client) doRaw(ctx context.Context, req rawRequest) (*http.Response, err
 		return nil, fmt.Errorf("call %s %s: %w", req.method, endpoint, err)
 	}
 	if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
+		if req.sideEffect {
+			NoteSideEffect()
+		}
 		return resp, nil
 	}
 	defer resp.Body.Close()

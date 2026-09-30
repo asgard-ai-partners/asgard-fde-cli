@@ -283,6 +283,9 @@ func waitForConnection(
 			lastErr = nil
 			for _, c := range conns {
 				if !before[c.ConnectionId] {
+					// The platform made this connection in its callback, so no
+					// call of ours was the side effect; seeing it appear is.
+					platform.NoteSideEffect()
 					return c, nil, false, nil
 				}
 			}
@@ -303,6 +306,7 @@ func waitForConnection(
 					// It connected, and the listing has not caught up. Fetch it
 					// rather than reporting a bare id.
 					if c, gerr := pc.Client.GetConnection(ctx, status.ConnectionId); gerr == nil {
+						platform.NoteSideEffect()
 						return c, nil, false, nil
 					}
 				}
