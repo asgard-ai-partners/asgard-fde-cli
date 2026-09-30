@@ -56,14 +56,13 @@ func Placeholder(r Result) string {
 	return strings.Join(append(append([]string{}, r.Problems...), r.Warnings...), "\n")
 }
 
-// **The Secret the platform guarantees is not a dangling reference.**
+// **The platform's own credential is reported, and says what to read instead.**
 //
-// A chart that reads `preset-agent-hub` / `api_key` needs no value obtained and
-// no key declared - which is the whole point, since the value has no documented
-// route out of the namespace. Verified against a deployed namespace before this
-// was relaxed: admission accepted it, apply succeeded, the SourceSet came up
-// Ready and its Syncer was provisioned.
-func TestPlatformOwnedSecretIsNotDangling(t *testing.T) {
+// `preset-agent-hub` resolves, applies and comes up Ready, so lint, the dry run
+// and the plan are all green on a chart that reads it - which binds that chart
+// to Agent Hub's key, one the engagement cannot rotate without breaking Agent
+// Hub. The gate is the only step that can say so.
+func TestPlatformInternalSecretIsReported(t *testing.T) {
 	doc := Doc{Kind: "SourceSet", Name: "ss-rma", Spec: map[string]any{
 		"apiKey": map[string]any{"valueFrom": map[string]any{
 			"secretKeyRef": map[string]any{"name": "preset-agent-hub", "key": "api_key"},
@@ -72,16 +71,25 @@ func TestPlatformOwnedSecretIsNotDangling(t *testing.T) {
 	opts := Options{Release: "cs-dev", DeclaredKeys: map[string]map[string]bool{
 		"secretKeyRef": {}, "configMapKeyRef": {},
 	}}
-	if got := Placeholder(CredentialRefs([]Doc{doc}, opts)); got != "" {
-		t.Errorf("the platform's own Secret was reported:\n%s", got)
+	got := Placeholder(CredentialRefs([]Doc{doc}, opts))
+	for _, want := range []string{"Agent Hub's own credential", "asgard_resource_api_key", "openssl rand"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("a reference to preset-agent-hub did not say %q:\n%s", want, got)
+		}
+	}
+	// One finding, not a second "declares it for no release" for `api_key`:
+	// the fix is to stop reading that Secret, not to declare its key.
+	if strings.Contains(got, "declares it for no release") {
+		t.Errorf("asked to declare a key in the platform's own Secret:\n%s", got)
 	}
 
-	// **The common error still fails.** A name that is neither the release's
-	// own object nor the platform's resolves to nothing, and says so only at
-	// runtime.
-	doc.Spec["apiKey"].(map[string]any)["valueFrom"].(map[string]any)["secretKeyRef"].(map[string]any)["name"] = "some-other-secret"
-	if got := Placeholder(CredentialRefs([]Doc{doc}, opts)); got == "" {
-		t.Error("a Secret that is nobody's was not reported")
+	// **The shape to write is clean.**
+	doc.Spec["apiKey"].(map[string]any)["valueFrom"].(map[string]any)["secretKeyRef"] = map[string]any{
+		"name": "iac-cs-dev-app-secret", "key": "asgard_resource_api_key",
+	}
+	opts.DeclaredKeys["secretKeyRef"]["asgard_resource_api_key"] = true
+	if got := Placeholder(CredentialRefs([]Doc{doc}, opts)); got != "" {
+		t.Errorf("the release's own resource key was reported:\n%s", got)
 	}
 }
 
@@ -130,10 +138,10 @@ func TestCredentialRefsReportsADeclaredKeyNothingReads(t *testing.T) {
 }
 
 // **A key read only through the platform's own Secret is not a reader of the
-// release's declaration.** `preset-agent-hub` carries `api_key`, which the
-// platform mints and nobody declares; a release that also declares its own
-// `api_key` has one nothing reads, and the exemption must not hide that.
-func TestPlatformOwnedReadDoesNotSatisfyADeclaration(t *testing.T) {
+// release's declaration.** `preset-agent-hub` carries `api_key`; a release that
+// also declares its own `api_key` has one nothing reads, and the finding about
+// the platform Secret must not hide that.
+func TestPlatformInternalReadDoesNotSatisfyADeclaration(t *testing.T) {
 	doc := Doc{Kind: "SourceSet", Name: "ss-rma", Spec: map[string]any{
 		"apiKey": map[string]any{"valueFrom": map[string]any{
 			"secretKeyRef": map[string]any{"name": "preset-agent-hub", "key": "api_key"},

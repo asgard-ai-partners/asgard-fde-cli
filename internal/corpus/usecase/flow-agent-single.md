@@ -101,8 +101,8 @@ spec:
   adminApiKey:
     valueFrom:
       secretKeyRef:
-        name: preset-agent-hub
-        key: api_key
+        name: {{ include "<chart>.appSecretName" . }}
+        key: asgard_resource_api_key
   generic:
     authMode: none          # anonymous visitors; see the security argument below
 ---

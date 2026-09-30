@@ -81,8 +81,22 @@ func CredentialRefs(docs []Doc, opts Options) Result {
 				// says that about itself; `add` generates the reference and
 				// leaves the declaring to somebody, and nothing said when it
 				// was not done.
-				if key, _ := block["key"].(string); key != "" &&
-					!render.PlatformOwnedObjects[got] && (expect == "" || got == expect) {
+				// **The platform's own credential is not this chart's.** It
+				// resolves, applies and comes up Ready, so nothing downstream
+				// says a word; what it costs is a key the engagement cannot
+				// rotate without breaking Agent Hub, shared with every platform
+				// function in the namespace.
+				if render.PlatformInternalSecrets[got] {
+					msg := fmt.Sprintf("%s/%s: %s.name is %q, Agent Hub's own credential - read %s from this release's Secret instead",
+						kind, name, ref, got, render.ResourceAPIKey)
+					if !seen[msg] {
+						seen[msg] = true
+						warnings = append(warnings, msg)
+					}
+					continue
+				}
+
+				if key, _ := block["key"].(string); key != "" && (expect == "" || got == expect) {
 					read[ref][key] = true
 					if opts.DeclaredKeys != nil && !opts.DeclaredKeys[ref][key] {
 						msg := fmt.Sprintf("%s/%s: %s reads key %q, and %s declares it for no release",
@@ -94,7 +108,7 @@ func CredentialRefs(docs []Doc, opts Options) Result {
 					}
 				}
 
-				if expect == "" || got == expect || render.PlatformOwnedObjects[got] {
+				if expect == "" || got == expect {
 					continue
 				}
 				msg := fmt.Sprintf("%s/%s: %s.name is %q, and the only %s this release has is %q",
@@ -156,6 +170,16 @@ func CredentialRefs(docs []Doc, opts Options) Result {
 		sort.Strings(warnings)
 		for i, w := range warnings {
 			if strings.Contains(w, "and nothing in this render reads it") {
+				continue
+			}
+			if strings.Contains(w, "Agent Hub's own credential") {
+				warnings[i] = w + fmt.Sprintf(". It is never rotated because Agent Hub depends on the same value, so a chart reading it "+
+					"cannot rotate its own key and shares its blast radius with every platform function in the "+
+					"namespace. Write `name: {{ include \"<chart>.appSecretName\" . }}`, `key: %s`, declare the "+
+					"key under `appSecret:`, and when no use case calls this resource from outside the platform, "+
+					"set a random value: `openssl rand -hex 32 | tr -d '\\n' | asgard-cli pipeline variables set "+
+					"--release <release> --kind secret %s --from-file -`",
+					render.ResourceAPIKey, render.ResourceAPIKey)
 				continue
 			}
 			if strings.Contains(w, "declares it for no release") {

@@ -141,8 +141,8 @@ spec:
   apiKey:
     valueFrom:
       secretKeyRef:
-        name: preset-agent-hub
-        key: api_key
+        name: {{ include "<chart>.appSecretName" . }}
+        key: asgard_resource_api_key
   tools:
     - entrypoint:
         entry: entry-main

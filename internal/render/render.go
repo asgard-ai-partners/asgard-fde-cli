@@ -63,12 +63,29 @@ type Result struct {
 	Values    []string
 }
 
-// AsgardValues is the `asgard` block the platform injects into every run.
+// PlatformInternalSecrets are Secrets the platform provisions in every namespace
+// for its own components, which a chart must not reference.
 //
-// The names are the contract - a chart reads them and never writes a namespace,
-// a secret name or an environment id down - so they are listed here in full
-// rather than assembled, and a local render supplies the shape with placeholder
-// contents.
+// **`preset-agent-hub` is Agent Hub's credential, not an engagement's.** The
+// namespace reconciler creates it once with an `api_key` it generates and never
+// rotates, because Agent Hub holds the same value outside the cluster. A CR that
+// reads it is bound to a key the engagement cannot rotate - rotating it breaks
+// Agent Hub - and whose leak exposes the namespace's platform functions rather
+// than one chart. It resolves, applies and comes up Ready, so nothing downstream
+// reports it; the gate is the one place that can.
+//
+// **It lives here with the rest of the naming contract** so the gate and the
+// generator read one list.
+var PlatformInternalSecrets = map[string]bool{
+	"preset-agent-hub": true,
+}
+
+// ResourceAPIKey is the conventional key in the release's own Secret for a
+// platform resource credential - `SourceSet.apiKey`, `Toolset.apiKey`,
+// `BotProvider.adminApiKey`. The value is the engagement's own: when no use case
+// calls the resource with it, a random value is the whole answer.
+const ResourceAPIKey = "asgard_resource_api_key"
+
 // HelmReleaseName is the helm release the Platform installs for a declared
 // release name, and AppSecretName / AppConfigMapName are the two objects it
 // creates and maintains for that release.
@@ -78,25 +95,6 @@ type Result struct {
 // naming rule is how a chart came to point at `app-secret`, a name that is real
 // in the Terraform-provisioned demo namespaces and absent from every Release
 // namespace.
-// PlatformOwnedObjects are the Secrets and ConfigMaps the platform provisions in
-// every namespace, which a chart references directly rather than copying out of.
-//
-// **`preset-agent-hub` holds the resource credential.** The namespace reconciler
-// creates it once with an `api_key` it generates and never rotates, and the
-// platform's own preset Toolset, SourceSet and BotProvider read it the same way.
-// A chart that reads it needs no value obtained, nothing declared under
-// `appSecret:` and nobody asked - which matters because the value has no
-// documented route out of the namespace.
-//
-// **It lives here with the rest of the naming contract** rather than in the two
-// packages that consult it. `internal/gate` must not report a reference to one
-// as dangling, and `internal/generate` must not tell an engagement to declare a
-// key that is already in one; those are the same fact, and two copies of it
-// drift the first time the platform adds a second object.
-var PlatformOwnedObjects = map[string]bool{
-	"preset-agent-hub": true,
-}
-
 func HelmReleaseName(releaseName string) string { return "iac-" + releaseName }
 
 // AppSecretName is the Release's own Secret.
@@ -107,6 +105,12 @@ func AppConfigMapName(releaseName string) string {
 	return HelmReleaseName(releaseName) + "-app-config"
 }
 
+// AsgardValues is the `asgard` block the platform injects into every run.
+//
+// The names are the contract - a chart reads them and never writes a namespace,
+// a secret name or an environment id down - so they are listed here in full
+// rather than assembled, and a local render supplies the shape with placeholder
+// contents.
 func AsgardValues(releaseName, namespace string) map[string]any {
 	helm := HelmReleaseName(releaseName)
 	if namespace == "" {

@@ -2,12 +2,14 @@ package cli
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/generate"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/pipelineconfig"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/render"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/repo"
 )
 
@@ -154,6 +156,15 @@ Run "asgard-cli add" with no arguments to list the kinds.`,
 				if len(configKeys) > 0 {
 					fmt.Fprintf(out, "  appConfigMap:  %s\n", strings.Join(configKeys, ", "))
 					fmt.Fprintf(out, "    asgard-cli pipeline variables set --release <release> --kind %s %s <value>\n", kindConfig, configKeys[0])
+				}
+				// **The resource key is nobody's to supply.** It is this
+				// release's own, and asking the customer what to put there is
+				// a question with no answer that stops the first deploy.
+				if slices.Contains(secretKeys, render.ResourceAPIKey) {
+					fmt.Fprintf(out, "  %s is this release's own: when no use case calls the resource with it from outside\n", render.ResourceAPIKey)
+					fmt.Fprintf(out, "  the platform, set a random value and ask nobody. Set it before the first deploy - a key missing\n")
+					fmt.Fprintf(out, "  from the Secret resolves to an empty string, which matches a request that sends none:\n")
+					fmt.Fprintf(out, "    openssl rand -hex 32 | tr -d '\\n' | asgard-cli pipeline variables set --release <release> --kind %s %s --from-file -\n", kindSecret, render.ResourceAPIKey)
 				}
 				fmt.Fprintf(out, "  A value set against no declaration is stored and never injected - `variables list` calls it ORPHAN,\n")
 				fmt.Fprintf(out, "  and lint, render and the server dry run all stay green while the CR resolves to nothing.\n")

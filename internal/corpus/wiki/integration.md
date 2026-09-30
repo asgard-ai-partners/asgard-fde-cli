@@ -150,8 +150,8 @@ Authenticated with an `X-API-KEY` header. The key comes from the project's
 Integration -> App settings page - **the documentation's route, and an
 engagement could not find that page**; `../wiki/platform-unknowns.md` P14 has
 it. It is also **not** the credential a CR reads: that one is a platform
-resource key, minted per namespace, and `../usecase/conventions.md` says where
-it comes from.
+resource key, the engagement's own value on the release, and
+`../usecase/conventions.md` says what to set it to.
 
 The response is Server-Sent Events; the connection stays open and carries agent
 messages, system events and end-user messages.

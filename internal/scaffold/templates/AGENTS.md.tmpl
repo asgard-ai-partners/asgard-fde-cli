@@ -828,15 +828,19 @@ reader or to delete the declaration, and deciding which is the point of the warn
 
 Which keys, and how many, is **this deployment's design**, not a rule this file can state:
 
-- **The platform's own resource credential is not one of these.** `SourceSet.apiKey`,
-  `Toolset.apiKey` and `BotProvider.apiKey` read `preset-agent-hub` / `api_key`, a Secret the
-  platform mints per namespace, and `asgard-cli add` writes that reference directly. **Nothing is
-  declared for it and no value has to be obtained** — declaring an `asgard_resource_api_key` of
-  your own creates a key nothing reads and a value nobody can supply. Use a declared key only
-  where a resource genuinely needs a different credential from the namespace's own, which is a
-  requirement — rotation scope and blast radius are the question — so it belongs in
-  `requirements/`. The Platform never reads a key's name; it reads whatever `secretKeyRef.key`
-  says.
+- `asgard_resource_api_key` — the platform resource credential: `SourceSet.apiKey`,
+  `Toolset.apiKey`, `BotProvider.adminApiKey`, and `generic.apiKey` on a BotProvider with
+  `authMode: api-key`. `asgard-cli add` writes the reference. **It is this release's own value,
+  so nobody is asked for it.** When no use case calls the resource from outside the platform, set
+  a random value yourself, before the first deploy:
+  `openssl rand -hex 32 | tr -d '\n' | asgard-cli pipeline variables set --release <release> --kind secret asgard_resource_api_key --from-file -`.
+  A key missing from the Secret resolves to an empty string, and an empty key lets through a
+  request that sends none. When a caller does need it — a BotProvider's front end, a script
+  managing a SourceSet's volume through edgeserver — generate it the same way and hand it over.
+  **Never reference `preset-agent-hub`**: that is Agent Hub's own credential, never rotated,
+  and `asgard-cli gate` reports it. Separate keys per resource are a requirement — rotation
+  scope and blast radius are the question — so they belong in `requirements/`. The Platform
+  never reads a key's name; it reads whatever `secretKeyRef.key` says.
 - `asgard-github-pat-password` — only when a git `Syncer` clones a **private** repo.
 - one `<system>_db_password` per database. `asgard-cli add dataconnector` prints the exact key
   names it wrote.
