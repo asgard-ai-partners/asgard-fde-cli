@@ -597,6 +597,15 @@ OAuth 2.0 authorization code ＋ PKCE，走 loopback redirect，那是 RFC 8252 
 
 沒有瀏覽器的時候（CI、容器、agent sandbox）改設 `ASGARD_TOKEN`。它**完全繞過儲存**，不讀磁碟也不寫磁碟。
 
+### Workbench 助手的 sandbox
+
+平台上的 Workbench 助手會在 sandbox 裡以正在對話的成員身分跑這個 CLI。image 設了 `ASGARD_SANDBOX_MODE=true`，於是：
+
+- **身分來自 session 檔**：平台每一回合開始時寫進 `/tmp/.asgard/session.json`（0600；`ASGARD_SESSION_FILE` 可改位置），內容是成員的 access token、平台位址和這段對話所在的 workspace。沒有東西要 `login`，`login` 會直接說明。`ASGARD_TOKEN` 仍然優先；`--workspace` 與 `ASGARD_WORKSPACE` 仍排在 session 的 workspace 前面，session 的 workspace 又排在 checkout 的 binding 前面。
+- **每個請求都帶 `X-Asgard-Via-Assistant: true`**，讀取也一樣。
+- **git 走 workspace 的 GitHub Connection**：`asgard-cli pipeline git-auth` 讓這個 CLI 成為 git 在 github.com 唯一的 credential helper，每次 fetch／push 拿一張只限那個 repo、由 GitHub App 簽的 token，不寫進磁碟。push 要 workspace 管理權限；`asgard-cli pipeline repo create` 在組織的 Connection 底下建新 repo。
+- **`init` 拒絕在 `/work` 本身執行**，那裡並排放著所有 repo。
+
 ### `profile`
 
 **如果你用的是代管的 Asgard 平台，這一整節你都不需要。** 完全沒有這個檔的時候，每個指令都會連到它 —— 那就是 `default` 的意思，也是它之所以是預設的理由。這些指令是為了兩種**這個 binary 不可能知道**的安裝：**地端部署**，以及**跑在本機的 stack**。
@@ -704,14 +713,28 @@ asgard-cli workbench list --status in_progress --label blocked
 asgard-cli workbench show ISS-12
 asgard-cli workbench create --type question --title "<要有人回答的事>"
 asgard-cli workbench update ISS-12 --status in_review --add-label data-source
+asgard-cli workbench comment ISS-12 --body-file draft.md
+asgard-cli workbench attach ISS-12 minutes.pdf --what "<是什麼>" --from "<角色>" --dated <YYYY-MM-DD>
 asgard-cli workbench pull --pipeline <name>         # 附件拉進 references/
 ```
 
-**每一筆寫入都以登入者的助手身分送出**：帶 `X-Asgard-Via-Assistant: true`，權限仍然是登入者本人，時間軸會標「via Asgard AI」。平台只留給本人做的操作（留言、Pin、Lock、管理 label、刪除），這個指令不提供，平台也會拒絕助手這樣做。
+**每一筆寫入都以登入者的助手身分送出**：帶 `X-Asgard-Via-Assistant: true`，權限仍然是登入者本人，時間軸會標「via Asgard AI」。平台只留給本人做的操作（Pin、Lock、管理 label、刪除 issue／附件／留言），這個指令不提供，平台也會拒絕助手這樣做。
 
 **這不是 `question`、`request`、`task`。** 那三個是客戶 repo 裡 engagement 自己的紀錄；Workbench 是平台的，也是客戶看得到的。
 
 `pull` 把每個附件原樣存到 `references/workbench/ISS-<n>/<attachment id>/`，先比對平台記錄的 SHA-256，再把 what、from、dated 寫進 `references/_index.md`（與 `reference add` 寫的是同一種列）。已歸檔的檔案永遠不會被覆寫。
+
+### `audit-log`
+
+這個 workspace 的稽核紀錄，也就是 Asgard Console › Explore 記下的內容，用你自己的 session 讀——所以誰能讀由 Console 決定（workspace owner 或平台管理員）。
+
+```bash
+asgard-cli audit-log summary --days 7    # 依事件、帳號、專案、agent 計數
+asgard-cli audit-log query --days 1      # 事件本身，JSON Lines
+asgard-cli audit-log dictionary          # raw key 背後的顯示名
+```
+
+每一列只有 raw key；沒有成功／失敗這個維度（事件是具名的）；資料最多延遲約 20 分鐘。
 
 ## 發佈
 

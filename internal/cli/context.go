@@ -27,6 +27,7 @@ type WorkspaceSource string
 const (
 	fromFlag    WorkspaceSource = "--workspace"
 	fromEnv     WorkspaceSource = auth.EnvWorkspace
+	fromSandbox WorkspaceSource = "the Workbench session"
 	fromBinding WorkspaceSource = binding.FileName
 )
 
@@ -71,7 +72,14 @@ type contextOptions struct {
 //
 //  1. --workspace
 //  2. ASGARD_WORKSPACE
-//  3. the checkout's `.asgard-cli.yaml`
+//  3. in the Workbench sandbox, the workspace the member is talking to the
+//     assistant in (the session file)
+//  4. the checkout's `.asgard-cli.yaml`
+//
+// The sandbox's workspace ranks above the checkout's binding: the member
+// asked the assistant in one workspace, and a repository cloned into /work
+// that was bound to another is not a reason to act there. When the two
+// disagree the command says so.
 //
 // The order puts the two explicit forms above the committed file on purpose.
 // A file that says a customer's workspace and a flag that says a test one
@@ -108,6 +116,11 @@ func resolveContext(cmd *cobra.Command, opts contextOptions) (*platformContext, 
 	ws, source, err := resolveWorkspace(ctx, session, pc, opts.Workspace)
 	if err != nil {
 		return nil, err
+	}
+	if source == fromSandbox && pc.Binding != nil && pc.Binding.Workspace != "" && pc.Binding.Workspace != ws {
+		fmt.Fprintf(cmd.ErrOrStderr(),
+			"note: this checkout's %s names workspace %s; acting in %s, the workspace this Workbench conversation is in. Pass --workspace to act in the other one\n",
+			binding.FileName, pc.Binding.Workspace, ws)
 	}
 	pc.Workspace, pc.WorkspaceSource = ws, source
 	pc.Client = platform.New(session, ws)
@@ -163,6 +176,9 @@ func resolveWorkspace(
 	}
 	if env := os.Getenv(auth.EnvWorkspace); env != "" {
 		return env, fromEnv, nil
+	}
+	if session.SandboxWorkspace != "" {
+		return session.SandboxWorkspace, fromSandbox, nil
 	}
 	if pc.Binding != nil && pc.Binding.Workspace != "" {
 		return pc.Binding.Workspace, fromBinding, nil

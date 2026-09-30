@@ -4,11 +4,27 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 
 	"github.com/spf13/cobra"
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/auth"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/platform"
 )
+
+// inSandboxSession reports whether the identity comes from the Workbench
+// sandbox's session file rather than from a sign-in: sandbox mode, and no
+// ASGARD_TOKEN overriding it.
+func inSandboxSession() bool {
+	return auth.SandboxMode() && os.Getenv(auth.EnvToken) == ""
+}
+
+// sandboxIdentityNote is what login and logout say in the Workbench sandbox,
+// where neither has anything to do.
+const sandboxIdentityNote = `This is the Workbench assistant's sandbox: the platform supplies the member's
+identity on every turn (the session file ` + auth.DefaultSessionFile + `), so there is nothing to
+sign in to or out of. Every command already acts as the member, in the workspace
+this conversation is in. "asgard-cli whoami" shows who that is.`
 
 // profileFlag is the name of the flag that selects a platform environment.
 const profileFlag = "profile"
@@ -74,6 +90,10 @@ platform, so forgetting it was set meant a command reaching a customer's
 platform believing it was the test one - and an exported variable is visible in
 the shell that set it, where a file under the user's config directory is not.
 
+IN THE WORKBENCH ASSISTANT'S SANDBOX (` + auth.EnvSandboxMode + `=true) there is nothing to sign in
+to: the platform supplies the member's identity, and this command says so and
+exits.
+
 WITH NO BROWSER - CI, a container, an agent sandbox - do not use this command.
 Set ASGARD_TOKEN to an access token instead: it bypasses the store completely,
 reading nothing from disk and writing nothing to it. Over SSH, --no-browser plus
@@ -87,6 +107,10 @@ not carry the state value this run generated - which means it was not this run's
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			if err := checkFormat(format); err != nil {
 				return err
+			}
+			if inSandboxSession() {
+				fmt.Fprintln(cmd.OutOrStdout(), sandboxIdentityNote)
+				return nil
 			}
 			r, err := auth.ResolveWithOrigin(profile)
 			if err != nil {
@@ -165,10 +189,17 @@ same thing both times.
     asgard-cli logout --profile onprem   forget one installation's
     asgard-cli logout --all              forget every profile's
 
---all does not take --profile, because it means every one of them.`,
+--all does not take --profile, because it means every one of them.
+
+In the Workbench assistant's sandbox there is no stored session, and this says
+so.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			out := cmd.OutOrStdout()
+			if inSandboxSession() {
+				fmt.Fprintln(out, sandboxIdentityNote)
+				return nil
+			}
 
 			if all {
 				if profile != "" {
@@ -245,6 +276,11 @@ With ASGARD_TOKEN set, that token is the session: nothing is read from the store
 and --local has nothing recorded to report, so it says only which profile and
 where the token came from.
 
+In the Workbench assistant's sandbox the session is the member's, from the
+session file the platform writes every turn: it reports that member and the
+workspace of the conversation, and without --local confirms the platform still
+accepts the token.
+
 It exits non-zero when there is no session, when it has expired past renewing,
 and when the platform rejects it.`,
 		Args: cobra.NoArgs,
@@ -258,6 +294,24 @@ and when the platform rejects it.`,
 			}
 			out := cmd.OutOrStdout()
 
+			if session.Source == auth.SourceSandbox {
+				// No sign-in happened here, so the issuer's userinfo is the
+				// wrong question - the session file already names the member.
+				// What is worth asking is whether the platform still takes
+				// the token.
+				checked := false
+				if !local {
+					if _, err := platform.New(session, "").ListWorkspaces(cmd.Context()); err != nil {
+						return fmt.Errorf("the platform did not accept the Workbench session: %w", err)
+					}
+					checked = true
+				}
+				return reportWhoami(out, format, session, auth.Userinfo{
+					Sub:         session.Subject,
+					Email:       session.Email,
+					DisplayName: session.Name,
+				}, checked)
+			}
 			if local {
 				return reportWhoami(out, format, session, auth.Userinfo{
 					Sub:         session.Subject,
@@ -301,6 +355,7 @@ func reportWhoami(out io.Writer, format string, s *auth.Session, info auth.Useri
 			"issuer":       s.Profile.Issuer,
 			"platform_api": s.Profile.PlatformAPI,
 			"source":       string(s.Source),
+			"workspace":    s.SandboxWorkspace,
 			"subject":      info.Sub,
 			"email":        info.Email,
 			"name":         who,
@@ -316,6 +371,14 @@ func reportWhoami(out io.Writer, format string, s *auth.Session, info auth.Useri
 	}
 	if s.Source == auth.SourceEnv {
 		fmt.Fprintf(out, "%-9s %s\n", "token", "from "+auth.EnvToken+", not the credential store")
+	}
+	if s.Source == auth.SourceSandbox {
+		fmt.Fprintf(out, "%-9s %s\n", "workspace", s.SandboxWorkspace)
+		fmt.Fprintf(out, "%-9s %s\n", "token", "from the Workbench session file "+auth.SessionFilePath())
+		if !checked {
+			fmt.Fprintf(out, "\nRead from the session file; the platform was not asked. Drop --local to\nconfirm it still accepts the session.\n")
+		}
+		return nil
 	}
 	if !checked {
 		fmt.Fprintf(out, "\nRead from the credential store; the platform was not asked. Drop --local to\nconfirm the session is still accepted.\n")

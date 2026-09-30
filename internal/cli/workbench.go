@@ -27,13 +27,15 @@ answer. Each one is ISS-N, numbered across the whole workspace.
     asgard-cli workbench show ISS-12
     asgard-cli workbench create --type question --title "Which ERP holds the RMA codes?"
     asgard-cli workbench update ISS-12 --status in_review --add-label data-source
+    asgard-cli workbench comment ISS-12 --body "Waiting on the customer's DBA."
+    asgard-cli workbench attach ISS-12 minutes.pdf --what "kickoff minutes" --from "customer PM" --dated 2026-09-29
 
 **Every write is made as the member's assistant.** The platform authorizes it
 as the signed-in account, exactly as if the member had made it, and the
 timeline marks it "via Asgard AI". Some actions the platform keeps for the
 member alone - deleting, pinning or locking an issue, managing labels, deleting
-an attachment, and every comment - and this command has none of them, because
-the platform refuses them from an assistant; the member does those in the
+an attachment or a comment - and this command has none of them, because the
+platform refuses them from an assistant; the member does those in the
 Workbench page.
 
 **This is not "asgard-cli question", "request" or "task".** Those read and
@@ -57,6 +59,8 @@ pipeline commands' --pipeline, it is never taken from the checkout's binding.`,
 		newWorkbenchShowCmd(),
 		newWorkbenchCreateCmd(),
 		newWorkbenchUpdateCmd(),
+		newWorkbenchCommentCmd(),
+		newWorkbenchAttachCmd(),
 		newWorkbenchPullCmd(),
 	)
 	return cmd
@@ -983,8 +987,9 @@ and --parent 0 or --duplicate-of 0 clears that relation. Labels and assignees
 change by what is added and what is removed, at most 20 of each; a removed
 assignee need not still be a member.
 
-**A comment is not something this command writes**, nor anything else the
-platform keeps for the member alone - see "asgard-cli workbench --help".`,
+A comment is "asgard-cli workbench comment", a file is "asgard-cli workbench
+attach"; what the platform keeps for the member alone is in
+"asgard-cli workbench --help".`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			number, err := parseIssueNumber(args[0])
