@@ -742,11 +742,11 @@ Three places, and **who has to act on it** decides which:
   it on the Workbench as well - ask, rather than assume - write the ISS-N in
   the spec so each is found from the other. The same goes for a question the
   customer has to answer that also shapes the design.
-- **In the Workbench assistant's sandbox** (`ASGARD_SANDBOX_MODE=true`) nothing
-  is filed upstream, and what the member has to keep track of goes on the
-  Workbench. When the tool itself fails there, tell the member what did not
-  work and how to get past it, and that whoever they work with at Asgard can
-  report it.
+- **In the Workbench assistant's sandbox** (`ASGARD_SANDBOX_MODE=true`) what
+  the member has to keep track of goes on the Workbench: a repository record
+  reaches nobody until somebody with administration pushes it. A gap in the
+  tool is still reported with `asgard-cli issue-report`, with the same rule
+  about the customer's content - the member may be the customer's own staff.
 
 Filing in either place is asked first, like everything that leaves this
 checkout.

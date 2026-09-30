@@ -730,7 +730,7 @@ asgard-cli workbench pull --pipeline <name>         # 附件拉進 references/
 | 下一個接手建置的人需要：spec、設計、還沒定的決定 | 客戶 repo 裡的紀錄 | `question add`、`request add`、`task add` |
 | 這支工具或它背後平台的維護者 | 上游，公開的 GitHub issue | `issue-report --new` |
 
-這支工具本身出錯，絕不是 Workbench 的 `bug`：那個 type 是客戶的部署哪裡壞了，客戶會讀到。跟客戶有關的東西一律不上上游，因為那個 repo 是公開的。在 Workbench 助手的 sandbox 裡完全不上報：`issue-report` 會這樣說，`--new` 會拒絕，因為那裡的 member 可能是客戶自己的人。同一張表也在 `asgard-cli workbench --help` 和 `init` 寫出的 `AGENTS.md` 裡。
+這支工具本身出錯，絕不是 Workbench 的 `bug`：那個 type 是客戶的部署哪裡壞了，客戶會讀到。跟客戶有關的東西一律不上上游，因為那個 repo 是公開的。在 Workbench 助手的 sandbox 裡，member 要追蹤的事放 Workbench；工具本身的缺口一樣用 `issue-report` 回報。同一張表也在 `asgard-cli workbench --help` 和 `init` 寫出的 `AGENTS.md` 裡。
 
 `pull` 把每個附件原樣存到 `references/workbench/ISS-<n>/<attachment id>/`，先比對平台記錄的 SHA-256，再把 what、from、dated 寫進 `references/_index.md`（與 `reference add` 寫的是同一種列）。已歸檔的檔案永遠不會被覆寫。
 

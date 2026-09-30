@@ -1083,8 +1083,8 @@ of the three places a thing goes is decided by who has to act on it:
 A failure of this tool is never a Workbench `bug` - that type is what is wrong
 in the customer's deployment, and the customer reads it. Nothing about the
 customer goes upstream, because that repository is public. In the Workbench
-assistant's sandbox nothing is filed upstream at all: `issue-report` says so
-and `--new` refuses, because the member there may be the customer's own staff.
+assistant's sandbox, what the member has to keep track of goes on the
+Workbench, and a gap in the tool is still reported with `issue-report`.
 The same table is in `asgard-cli workbench --help` and in the `AGENTS.md` that
 `init` writes.
 
