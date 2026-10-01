@@ -92,7 +92,7 @@ FILING - three places, decided by who has to act on it: the workspace's
 Workbench for what the customer's side has to see, answer or supply, or what
 is wrong in what is live ("asgard-cli workbench"); this repository's records
 for what the next builder needs ("question", "request", "task"); upstream for
-a gap in this tool ("asgard-cli issue-report"), which is a public repository
+a gap in this tool ("asgard-cli issue-report"), which goes to the maintainers
 and never carries the customer's content. "asgard-cli workbench --help" has
 the table.
 

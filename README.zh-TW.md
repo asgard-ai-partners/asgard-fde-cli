@@ -502,11 +502,12 @@ mkdir -p /tmp/asgard && cd /tmp/asgard && asgard-cli init
 **`size`** 是一個能力被寫出來之前由什麼構成 —— 提案被問的第一個問題，也是報價的基礎。數字來自 production 的部署而不是推理，那在直覺答案錯的地方最重要：**flow-agent 那幾種形狀裡完全沒有 `Agent` CR。**
 
 **`issue-report`** 是這支工具的缺口怎麼被回報，也是一個 engagement 學到的東西唯一能傳到下一個的路徑。那個缺口不屬於客戶 repo：寫在一個 engagement 裡的筆記，就只有那一個 engagement 有。
-它只回報工具的事，絕不回報客戶的事：repo 是公開的，客戶系統的問題放 Workbench（見 `workbench`）。
+它以 User Feedback 送到維護者的 Sentry project，只有維護者看得到，不是這個公開 repo 的 issue。它只回報工具的事，絕不回報客戶的事：客戶系統的問題放 Workbench（見 `workbench`）。
 
 ```bash
-asgard-cli issue-report               # 網址，以及一份報告要寫什麼
-asgard-cli issue-report --new         # 證據已經填好的 body
+asgard-cli issue-report                          # 怎麼回報，以及一份報告要寫什麼
+asgard-cli issue-report --new > report.md        # 證據已經填好的 body
+asgard-cli issue-report --send report.md --email you@example.com   # 每個 TODO 都回答了之後送出
 ```
 
 ### `check`
@@ -729,9 +730,9 @@ asgard-cli workbench pull --pipeline <name>         # 附件拉進 references/
 |---|---|---|
 | 客戶那邊要看、要回答、要提供或要決定，或是已上線的東西壞了 | workspace 的 Workbench（客戶看得到） | `workbench create` |
 | 下一個接手建置的人需要：spec、設計、還沒定的決定 | 客戶 repo 裡的紀錄 | `question add`、`request add`、`task add` |
-| 這支工具或它背後平台的維護者 | 上游，公開的 GitHub issue | `issue-report --new` |
+| 這支工具或它背後平台的維護者 | 上游，只有維護者看得到的 feedback | `issue-report --new`，再 `--send` |
 
-這支工具本身出錯，絕不是 Workbench 的 `bug`：那個 type 是客戶的部署哪裡壞了，客戶會讀到。跟客戶有關的東西一律不上上游，因為那個 repo 是公開的。在 Workbench 助手的 sandbox 裡，member 要追蹤的事放 Workbench；工具本身的缺口一樣用 `issue-report` 回報。同一張表也在 `asgard-cli workbench --help` 和 `init` 寫出的 `AGENTS.md` 裡。
+這支工具本身出錯，絕不是 Workbench 的 `bug`：那個 type 是客戶的部署哪裡壞了，客戶會讀到。跟客戶有關的東西一律不上上游，因為報告會離開 engagement，送進第三方的服務。在 Workbench 助手的 sandbox 裡，member 要追蹤的事放 Workbench；工具本身的缺口一樣用 `issue-report` 回報。同一張表也在 `asgard-cli workbench --help` 和 `init` 寫出的 `AGENTS.md` 裡。
 
 `pull` 把每個附件原樣存到 `references/workbench/ISS-<n>/<attachment id>/`，先比對平台記錄的 SHA-256，再把 what、from、dated 寫進 `references/_index.md`（與 `reference add` 寫的是同一種列）。已歸檔的檔案永遠不會被覆寫。
 

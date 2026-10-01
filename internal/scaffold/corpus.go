@@ -256,7 +256,8 @@ filing rather than working around. **Nothing an engagement learns reaches the
 next one any other way** - this material is compiled into the binary, so a note
 in one repository is a note one repository has:
 
-    asgard-cli issue-report --new
+    asgard-cli issue-report --new > report.md
+    asgard-cli issue-report --send report.md
 
 ## Staleness
 

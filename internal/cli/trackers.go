@@ -21,8 +21,8 @@ const trackersHelp = `WHERE A THING IS FILED - decided by who has to act on it
         when whoever builds next needs it: the spec, the design, an open
         decision
 
-    upstream - a PUBLIC GitHub issue
-        asgard-cli issue-report --new
+    upstream - a feedback only the tool's maintainers read
+        asgard-cli issue-report --new, then --send
         when the makers of asgard-cli, or of the platform behind it, have
         to fix something
 
@@ -33,7 +33,8 @@ const trackersHelp = `WHERE A THING IS FILED - decided by who has to act on it
     command that failed, or blamed the wrong thing, is the tool's - the
     maintainers route it on if the platform is at fault.
   - **Nothing about the customer goes upstream**: not their systems, their
-    deployment, their data or their people - that repository is public. Their
+    deployment, their data or their people - a report leaves the engagement
+    for a third party's service, read by people who are not the customer's. Their
     ERP failing, what they still owe, the bot they run answering wrongly: each
     is a Workbench issue (a question while it blocks the build, a bug once it
     is live).

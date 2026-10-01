@@ -725,7 +725,7 @@ Three places, and **who has to act on it** decides which:
 |---|---|---|
 | the customer's side has to see, answer, supply or decide it - or something is wrong in what is live | the workspace's **Workbench** (the customer reads it) | `asgard-cli workbench create` |
 | whoever builds next needs it: the spec, the design, an open decision | **this repository's records** | `asgard-cli question add`, `request add`, `task add` |
-| the makers of `asgard-cli`, or of the platform behind it | **upstream**, a public GitHub issue | `asgard-cli issue-report --new` |
+| the makers of `asgard-cli`, or of the platform behind it | **upstream**, a feedback only the maintainers read | `asgard-cli issue-report --new`, then `--send` |
 
 - **A failure of `asgard-cli` is never a Workbench bug**, not even when it
   happened while working on an issue. The Workbench's `bug` type is what is
@@ -733,8 +733,8 @@ Three places, and **who has to act on it** decides which:
   tool upstream; on the issue, say at most that the work is blocked. A command
   that failed, or blamed the wrong thing, is the tool's - the maintainers
   route it on if the platform is at fault.
-- **Nothing about the customer goes upstream** - that repository is public.
-  Their ERP failing, what they still owe, the bot they run answering wrongly:
+- **Nothing about the customer goes upstream** - a report leaves this
+  engagement for a third party's service. Their ERP failing, what they still owe, the bot they run answering wrongly:
   each is a Workbench issue (a `question` while it blocks the build, a `bug`
   once it is live).
 - **One thing can need two places.** What the customer asked for is a request
@@ -760,7 +760,7 @@ on the Workbench: the customer reads that, and the gap is the tool's.
 
     asgard-cli issue-report
 
-It says where to file and what to put in - and the part that gets left out is
+It says how to write the report and send it, and what to put in - and the part that gets left out is
 worth naming twice: **the state you were in**, so somebody can stand where you
 stood, and **where the answer actually turned out to be**, because a page that
 does not exist and a page nobody can find need different repairs.

@@ -40,8 +40,8 @@ Workbench page.
 
 **This is not "asgard-cli question", "request" or "task", and not
 "asgard-cli issue-report".** The first three are the engagement's own records
-in the customer's repository; issue-report is a public GitHub issue about this
-tool. The Workbench is the platform's, and it is what the customer sees.
+in the customer's repository; issue-report is a report to this tool's
+maintainers about the tool. The Workbench is the platform's, and it is what the customer sees.
 
 ` + trackersHelp + `
 
