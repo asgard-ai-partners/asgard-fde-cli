@@ -196,7 +196,7 @@ func refuseObviouslyWrongRoot(root string) error {
 	// would make it one repository that swallows all the others - a
 	// declaration is found by walking up, so every repository below would
 	// read it as its own.
-	if auth.SandboxMode() && filepath.Clean(root) == sandboxWorkDir {
+	if auth.SandboxMode() && filepath.ToSlash(filepath.Clean(root)) == sandboxWorkDir {
 		return fmt.Errorf(
 			"refusing to write the skeleton into %s itself: in the Workbench sandbox it holds every repository side by side\n\n"+
 				"    mkdir %s/<customer>-asgard-kube && cd %s/<customer>-asgard-kube\n"+

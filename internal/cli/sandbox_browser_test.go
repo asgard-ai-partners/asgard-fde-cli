@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -22,6 +23,9 @@ import (
 // --wait reads the background server's outcome: key names only, and "still
 // waiting" before the caller's limit rather than a hang.
 func TestLocalEnvWaitReadsTheState(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("the form server runs only in the Workbench sandbox, which is Linux; processAlive is a stub on Windows")
+	}
 	dir := t.TempDir()
 	t.Setenv(auth.EnvSessionFile, filepath.Join(dir, "session.json"))
 	root := "/work/acme"
@@ -110,8 +114,8 @@ func TestConnectInTheSandboxIsTwoSteps(t *testing.T) {
 	if p.Stage != "attach" || p.State != "S1" || p.Account != "acme" || p.Workspace != "ws-sb" || len(p.Before) != 1 || p.Before[0] != "c-old" {
 		t.Errorf("pending %+v", p)
 	}
-	info, _ := os.Stat(connectPendingPath())
-	if info.Mode().Perm() != 0o600 {
+	// Windows has no Unix permission bits to check.
+	if info, _ := os.Stat(connectPendingPath()); runtime.GOOS != "windows" && info.Mode().Perm() != 0o600 {
 		t.Errorf("pending is %v, want 0600", info.Mode().Perm())
 	}
 	if _, _, err := runCLI(t, "", "pipeline", "connect", "--continue", "--workspace", "other"); err == nil || !strings.Contains(err.Error(), "ws-sb") {
