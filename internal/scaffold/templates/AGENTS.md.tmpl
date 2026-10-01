@@ -68,7 +68,8 @@ does not answer the next:
 - creating anything on the platform - a project, a pipeline, a connection, a
   release. The name is chosen once and kept, so a name picked in a hurry is one
   the engagement keeps.
-- filing an issue, or writing anywhere outside this checkout.
+- filing an issue - on the workspace's Workbench or upstream - or writing
+  anywhere outside this checkout.
 
 No reply is not approval. If you asked and got no answer, the act is still not
 approved, and the next instruction that arrives does not answer the question
@@ -142,6 +143,12 @@ Seven things to know while doing it:
   URL is the fallback for when nothing opened, and it is printed every time so
   that recovering needs no second run; hand it over then. `--no-browser` is for
   a machine with no desktop at all, not for a machine you are borrowing.
+  In the platform's Workbench assistant sandbox (`ASGARD_SANDBOX_MODE=true`)
+  neither opens anything: there is nothing to log in to, and
+  `asgard-cli pipeline connect` prints a link and ends. Give the member that
+  link to open in their own browser, not the sandbox's, then run
+  `asgard-cli pipeline connect --continue`, which notices the connection by
+  itself.
 - `asgard-cli pipeline connect` can block on somebody else. It installs a
   GitHub App, which in many organisations needs an admin. Say so and stop
   rather than retrying; waiting a day for the right person is normal.
@@ -225,12 +232,13 @@ commands are for reading this repository:
 | `.agents/skills/asgard-platform/brief/<what>.md` | before a meeting, a chart change or a handover. The activity you are about to do, and how it has been got wrong |
 | `asgard-cli question` | what nobody has answered yet, and who each is waiting on. Read this before designing anything |
 | `asgard-cli request`, `asgard-cli task` | what the customer asked for, and the task specs open against it |
+| `asgard-cli workbench` | the tracker the customer sees. The workspace's issues (ISS-N): what the customer's side has to answer or supply, what is wrong in what is live. Read with `list` / `show`; `create`, `comment` and `attach` are filing, and asked first. See "Where a thing is filed" |
 | `asgard-cli project` | what each chart declares, and what it still lacks. It reports no step, because there is none |
 | `asgard-cli guide <name>` | the guidance for one decision; `asgard-cli guide` lists it |
 | `grep -ril "<term>" .agents/skills/asgard-platform/` | start here for a question. The wiki, the shapes, what to get from the customer, the briefs and the guidance are all files there. Read its `aliases.md` first if the question was asked in another language |
 | `.agents/skills/asgard-platform/usecase/` | before authoring any CR. How each shape is built, taken from deployments already in production: when to use it, the skeleton, the fields that are not obvious, and what the mistake cost someone. The same documents are in `.agents/skills/asgard-platform/usecase/`, so grep finds a shape from what the customer asked for |
 | `asgard-cli check` | one step of `gate`, when that is the step you are fixing |
-| `asgard-cli local-env` | somebody has to give you a credential. Opens a form on 127.0.0.1 for them to type it into, and reports back which keys were filled - never the values. Re-read `.env` after it, since they can add keys |
+| `asgard-cli local-env` | somebody has to give you a credential. Opens a form on 127.0.0.1 for them to type it into, and reports back which keys were filled - never the values. Re-read `.env` after it, since they can add keys. In the Workbench assistant's sandbox it opens the form in the sandbox's browser and ends: call `open_sandbox_browser` so the member takes it over, then `asgard-cli local-env --wait` |
 | `asgard-cli project add <slug>` | the engagement discovers a new project |
 | `asgard-cli init` | when this CLI has a newer version. It wrote this skeleton and re-running is safe: files that already exist are left alone and reported, so edits to this file survive. `--force` takes the newer shipped material |
 | `asgard-cli skill update` | when the platform says the reference material here is behind. It writes what the Asgard server this repository deploys to actually enforces - the processor catalogue and its config keys - into `.agents/skills/`. Commit what it writes; the diff is the changelog |
@@ -711,18 +719,53 @@ key gets a lint warning and is overridden.
 `Workflow`, `CompletionModel` and `Trigger` only. It is injected, so it does not have to be
 fetched after the namespace exists and pasted into a per-environment values file.
 
+## Where a thing is filed
+
+Three places. Who has to act on it decides which:
+
+| who has to act on it | where | command |
+|---|---|---|
+| the customer's side has to see, answer, supply or decide it - or something is wrong in what is live | the workspace's Workbench (the customer reads it) | `asgard-cli workbench create` |
+| whoever builds next needs it: the spec, the design, an open decision | this repository's records | `asgard-cli question add`, `request add`, `task add` |
+| the makers of `asgard-cli`, or of the platform behind it | upstream, a feedback only the maintainers read | `asgard-cli issue-report --new`, then `--send` |
+
+- A failure of `asgard-cli` goes upstream, not on the Workbench as a bug,
+  even when it happened while working on an issue. The Workbench's `bug` type
+  is for what is wrong in the customer's deployment, and the customer reads
+  it. Report the tool upstream; on the issue, say at most that the work is
+  blocked. A command that failed, or blamed the wrong thing, belongs to the
+  tool; the maintainers route it on if the platform is at fault.
+- Nothing about the customer goes upstream: a report leaves this engagement
+  for a third party's service. Their ERP failing, what they still owe, the bot
+  they run answering wrongly: each is a Workbench issue (a `question` while it
+  blocks the build, a `bug` once it is live).
+- One thing can need two places. What the customer asked for is a request
+  spec here, because the spec is what gets built from. If the customer also
+  follows it on the Workbench (ask; do not assume), write the ISS-N in the
+  spec so each is found from the other. The same goes for a question the
+  customer has to answer that also shapes the design.
+- In the Workbench assistant's sandbox (`ASGARD_SANDBOX_MODE=true`), what the
+  member has to keep track of goes on the Workbench: a repository record
+  reaches nobody until somebody with administration pushes it. Report a gap in
+  the tool with `asgard-cli issue-report`, with the same rule about the
+  customer's content; the member may be the customer's own staff.
+
+Filing in either place is asked first, like everything that leaves this
+checkout.
+
 ## When the tool is wrong
 
 `asgard-cli` carries the platform knowledge, and some of it will be wrong or
 missing. Do not fix that here. A note in this repository helps only this
-engagement; the next one starts with the same gap.
+engagement; the next one starts with the same gap. Do not put it on the
+Workbench either: the customer reads that, and the gap is in the tool.
 
     asgard-cli issue-report
 
-It says where to file and what to put in. Two parts are often left out: the
-state you were in, so somebody can reproduce it, and where the answer turned
-out to be, because a page that does not exist and a page nobody can find need
-different repairs.
+It says how to write the report and send it, and what to put in. Two parts are
+often left out: the state you were in, so somebody can reproduce it, and where
+the answer turned out to be, because a page that does not exist and a page
+nobody can find need different repairs.
 
 File even when unsure: "I looked for X and could not tell whether it exists" is
 either a missing page or a wrong signpost, and both are fixes.
@@ -791,15 +834,19 @@ the declaration, and you have to decide which.
 
 Which keys, and how many, is this deployment's design, not a rule this file can state:
 
-- The platform's own resource credential is not one of these. `SourceSet.apiKey`,
-  `Toolset.apiKey` and `BotProvider.apiKey` read `preset-agent-hub` / `api_key`, a Secret the
-  platform mints per namespace, and `asgard-cli add` writes that reference directly. Nothing is
-  declared for it and no value has to be obtained — declaring an `asgard_resource_api_key` of
-  your own creates a key nothing reads and a value nobody can supply. Use a declared key only
-  where a resource needs a different credential from the namespace's own. That is a
-  requirement — rotation scope and blast radius are the question — so it belongs in
-  `requirements/`. The Platform never reads a key's name; it reads whatever `secretKeyRef.key`
-  says.
+- `asgard_resource_api_key` — the platform resource credential: `SourceSet.apiKey`,
+  `Toolset.apiKey`, `BotProvider.adminApiKey`, and `generic.apiKey` on a BotProvider with
+  `authMode: api-key`. `asgard-cli add` writes the reference. It is this release's own value,
+  so nobody is asked for it. When no use case calls the resource from outside the platform, set
+  a random value yourself, before the first deploy:
+  `asgard-cli pipeline variables set --release <release> --kind secret asgard_resource_api_key --random`.
+  A key missing from the Secret resolves to an empty string, and an empty key lets through a
+  request that sends none. When a caller does need it — a BotProvider's front end, a script
+  managing a SourceSet's volume through edgeserver — generate it the same way and hand it over.
+  Never reference `preset-agent-hub`: that is Agent Hub's own credential, never rotated,
+  and `asgard-cli gate` reports it. Separate keys per resource are a requirement — rotation
+  scope and blast radius are the question — so they belong in `requirements/`. The Platform
+  never reads a key's name; it reads whatever `secretKeyRef.key` says.
 - `asgard-github-pat-password` — only when a git `Syncer` clones a private repo.
 - one `<system>_db_password` per database. `asgard-cli add dataconnector` prints the exact key
   names it wrote.

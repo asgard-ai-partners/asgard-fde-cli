@@ -43,7 +43,7 @@ field rules to the CRD; point at them instead.
 > into a repository under `.agents/skills/asgard-platform/`, with the
 > extracts beside them. Do not edit that copy: it is generated, and the next
 > `init` replaces it when the binary's version moves. A correction goes back
-> through `asgard-cli issue-report --new`.
+> through `asgard-cli issue-report --new`, then `--send`.
 >
 > The copy is there because an agent in a customer repository finds what it
 > knows under `.agents/skills/`, and `grep -r` answers "which document says

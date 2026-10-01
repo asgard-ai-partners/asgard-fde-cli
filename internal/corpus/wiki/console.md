@@ -176,7 +176,10 @@ Account and name management has moved to the Management Console.
 
 ## The audit log
 
-The Console's Explore page queries the audit log. Each audit event carries who and where - product, namespace,
+The Console's Explore page queries the audit log, and `asgard-cli audit-log`
+reads the same log from the command line (`summary`, `query`, `dictionary`).
+Only a workspace owner or a platform admin may read it (IAM action
+`audit-log/read`); anyone else gets a 403. Each audit event carries who and where - product, namespace,
 BotProvider, channel, run and session, and a user identity hint rather than a
 name - then the workflow, processor, model, subagent, Toolset and tool it
 concerns, and the content: the prompt, the reply, or a tool call's arguments

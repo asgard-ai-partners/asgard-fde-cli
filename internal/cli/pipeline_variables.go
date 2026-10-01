@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"os"
@@ -202,6 +204,7 @@ func newVariablesSetCmd() *cobra.Command {
 		v           variableFlags
 		kind        string
 		fromFile    string
+		random      bool
 		description string
 	)
 
@@ -214,6 +217,7 @@ func newVariablesSetCmd() *cobra.Command {
     asgard-cli pipeline variables set --release dev --kind config recipients a@x,b@y
     asgard-cli pipeline variables set --release dev --kind secret db_password --from-file ./pw
     printf '%s' "$PASSWORD" | asgard-cli pipeline variables set --release dev --kind secret db_password --from-file -
+    asgard-cli pipeline variables set --release dev --kind secret asgard_resource_api_key --random
 
 --kind is chart_value by default, and is what the declaration lists the key
 under: chartValues, appSecret or appConfigMap.
@@ -223,6 +227,11 @@ standard input with --from-file -, because a value typed as an argument is in
 the shell history and in the process list of every other user on the machine.
 Reading from a file also keeps a PEM intact: a file is read verbatim, with its newlines
 and its trailing newline, and neither is trimmed.
+
+--random is for a secret nobody issues - a key whose value only has to be
+unguessable, like asgard_resource_api_key. It generates 32 random bytes as 64
+hex characters, with no newline, the same on every operating system, and never
+prints them.
 
 Saving changes only the platform's copy. A run is what sends it to the cluster.`,
 		Args: cobra.RangeArgs(1, 2),
@@ -234,7 +243,7 @@ Saving changes only the platform's copy. A run is what sends it to the cluster.`
 				return fmt.Errorf("no kind %q; one of %s, %s, %s", kind, kindChartValue, kindSecret, kindConfig)
 			}
 
-			value, err := readVariableValue(cmd, args, kind, fromFile)
+			value, err := readVariableValue(cmd, args, kind, fromFile, random)
 			if err != nil {
 				return err
 			}
@@ -268,7 +277,9 @@ Saving changes only the platform's copy. A run is what sends it to the cluster.`
 	cmd.Flags().StringVar(&kind, "kind", kindChartValue,
 		"which list the declaration names this key under: chart_value, secret or config")
 	cmd.Flags().StringVar(&fromFile, "from-file", "",
-		"read the value from this file verbatim, or from standard input with -; required for a secret")
+		"read the value from this file verbatim, or from standard input with -; required for a secret unless --random")
+	cmd.Flags().BoolVar(&random, "random", false,
+		"generate the value: 32 random bytes as hex, for a secret nobody issues; never printed")
 	cmd.Flags().StringVar(&description, "description", "",
 		"a note stored with the value; omitted leaves any existing one alone")
 	return cmd
@@ -276,8 +287,26 @@ Saving changes only the platform's copy. A run is what sends it to the cluster.`
 
 // readVariableValue takes the value from an argument or a file, and refuses the
 // combinations that would be ambiguous or unsafe.
-func readVariableValue(cmd *cobra.Command, args []string, kind, fromFile string) (string, error) {
+func readVariableValue(cmd *cobra.Command, args []string, kind, fromFile string, random bool) (string, error) {
 	hasArg := len(args) == 2
+
+	// **Generated here, not by a shell.** The obvious recipe pipes `openssl
+	// rand` through `tr` into --from-file -, and neither exists on a stock
+	// Windows - where PowerShell's pipe would also re-encode the text and add
+	// a CRLF that nothing trims.
+	if random {
+		switch {
+		case kind != kindSecret:
+			return "", fmt.Errorf("--random is for --kind %s: a generated value nobody knows is only useful as a credential", kindSecret)
+		case hasArg || fromFile != "":
+			return "", fmt.Errorf("--random and a value both given; one of them is being ignored, so say which")
+		}
+		b := make([]byte, 32)
+		if _, err := rand.Read(b); err != nil {
+			return "", fmt.Errorf("generate the value: %w", err)
+		}
+		return hex.EncodeToString(b), nil
+	}
 
 	switch {
 	case hasArg && fromFile != "":
@@ -285,10 +314,10 @@ func readVariableValue(cmd *cobra.Command, args []string, kind, fromFile string)
 	case kind == kindSecret && hasArg:
 		return "", fmt.Errorf(
 			"a secret's value cannot be an argument: it would be in the shell history and in the process\n" +
-				"list of every other user on this machine. Use --from-file <path>, or --from-file - to read\n" +
-				"it from standard input")
+				"list of every other user on this machine. Use --from-file <path>, --from-file - to read\n" +
+				"it from standard input, or --random to generate one")
 	case !hasArg && fromFile == "":
-		return "", fmt.Errorf("no value; pass one as an argument, or --from-file <path>")
+		return "", fmt.Errorf("no value; pass one as an argument, --from-file <path>, or --random for a secret nobody issues")
 	case hasArg:
 		return args[1], nil
 	}

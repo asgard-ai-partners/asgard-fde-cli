@@ -168,8 +168,9 @@ legacy route that skips the subscription check and the metering;
 
 Authenticated with an `X-API-KEY` header carrying the BotProvider's own
 `spec.generic.apiKey` - `../wiki/api.md` has the check. It
-is not the credential a CR reads: that one is a platform resource key,
-minted per namespace, and `../usecase/conventions.md` says where it comes from.
+is not the credential a CR reads: that one is a platform resource key, the
+engagement's own value on the release, and `../usecase/conventions.md` says
+what to set it to.
 A generic integration released through the UI has no key field: the platform
 issues its key at creation, and it can only be replaced by regenerating it.
 

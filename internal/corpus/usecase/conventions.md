@@ -28,8 +28,6 @@ asgard-core `internal/constants.go`, asgard-core
 rest of the house style have no external source to check against. The list of
 display annotations is held against `asgard-cli verify`, not against its
 authority, workflow-service `internal/shared.go`, which no clone here has.
-Whether a release created by a non-admin account reads the minted Secret the
-same way needs such a release on a live cluster.
 
 Where every CR goes, what it is called, and what all of them need.
 Read this once; the shape extracts assume it.
@@ -210,88 +208,78 @@ points at an object that is not in that namespace, and nothing catches it - the
 CR is valid, the dry run passes, apply succeeds, and it fails at runtime.
 
 `SourceSet.apiKey`, `Toolset.apiKey` and `BotProvider.adminApiKey` are all
-platform resource credentials, and none of them needs a declared key:
-`asgard-cli add` points each at the Secret the platform mints, which the next
-section is about. A declared key of your own is for a resource that genuinely
-needs a different credential from the namespace's, and whether one does is a
-requirement about rotation scope rather than a rule this page can state: the
-Platform reads whatever `secretKeyRef.key` says and never the name itself.
-
-That question is only ever about a key you declare. The namespace's own
-resource credential is one key the platform mints and shares by design, so its
-rotation scope is not an engagement's to decide - `../usecase/write-path.md`
-says the same from the write side, and the two read as contradicting each other
-only if it is unclear which key each is about.
-
-### Where that credential comes from
-
-Nobody issues it. The platform mints it, once per namespace. When the
-namespace is reconciled the platform creates a Secret named
-`preset-agent-hub` holding one key, `api_key`, whose value it generates - and
-that one value backs both `BotProvider.apiKey` and `SourceSet.apiKey`. It is
-deliberately stable: created when missing and never rotated on a version bump,
-because Agent Hub holds the same key outside the cluster.
-
-So read it where it is, and there is nothing to obtain:
+platform resource credentials. `asgard_resource_api_key` is the
+conventional key for them in the release's own Secret, and `asgard-cli add`
+points each at it:
 
     apiKey:
       valueFrom:
         secretKeyRef:
-          name: preset-agent-hub
-          key: api_key
+          name: {{ include "<chart>.appSecretName" . }}
+          key: asgard_resource_api_key
 
-Nothing to declare under `appSecret:`, nothing to set with `pipeline variables
-set`, nobody to ask. The platform's own preset Toolset, SourceSet and
-BotProvider read it exactly this way, and `asgard-cli add` now writes it.
+declared under `appSecret:` on the release. Whether several resources share
+that one key or need separate ones is a requirement about rotation scope, not a
+rule this page can state: the Platform reads whatever `secretKeyRef.key` says
+and never the name itself.
 
-A SourceSet, a Toolset and a BotProvider's `adminApiKey` all read the Secret
-this way: the platform resolves each `ValueSource` with the same code, reading
-the Secret by name. The namespace role grants `get` on every Secret in the
-namespace with no `resourceNames` restriction, so the release's own deploy
-identity is not what reads it.
+### What the key is, and what to set it to
 
-The older route is not wrong, just unnecessary. The reference deployments
-copy the value into the release's own Secret under `asgard_resource_api_key`,
-declared under `appSecret:`. Those charts work and need no change. What that
-route costs is a value somebody has to obtain first, and no public route
-returns it (below) - which blocked a first deploy once. A chart being written
-now should read the Secret rather than copy it.
+Nobody issues it, because it is the engagement's own. edgeserver checks it
+as the `X-API-KEY` on that one resource's own endpoints - a SourceSet's volume
+API, a Toolset's `/manifest` and `/mcp`, a BotProvider's admin `/history` - and
+the platform's own callers (Agent Hub, the console's file explorer, the
+processor calling a tool) read it back from the CR at runtime rather than
+holding a copy. Nothing compares it to any other credential.
+asgard-core `internal/edgeserver/middleware/` has each check, and
+asgard-core `internal/bpcontroller/server/ss_controller.go`
+`GetSourceSetManifest` is how Agent Hub fetches a SourceSet's.
 
-A third form you will find on a Toolset is `apiKey: {value: ""}`, and it is
-one chart's answer to a required field. The CRD requires `apiKey` whatever
-the `toolsetClass` is, so a `workflow-tooling` Toolset - whose tools are
-Workflows in the same chart, with no external service behind them - has no key
-of its own to put there, and one deployment writes an empty string to satisfy
-the constraint, saying so in a comment. It is not a way of switching the
-credential off, and it is not the shape to copy: write the `preset-agent-hub`
-reference above, which costs nothing to declare and is what the platform's own
-preset Toolset carries. Where the tool really does reach an external service,
-that service's own token goes on the backing Workflow's `variables`, not here.
+**Checked:** against asgard-core `ac37944`.
 
-One caveat on the verification. The release it was proved on was created
-under a platform admin account, and nothing available here can show whether that
-made its deploy identity broader than an ordinary one. The reasoning above says
-it should not matter - the identity is not the reader - but a confirmation from
-a release created by a non-admin account is what would close it.
+So when no use case calls those endpoints from outside the platform, set a
+random value and ask nobody:
+
+    asgard-cli pipeline variables set --release <release> --kind secret asgard_resource_api_key --random
+
+`--random` generates 32 random bytes as hex in the CLI itself, so it is the
+same on every operating system and needs no `openssl`.
+
+For most charts that is the whole answer, not a placeholder to come back to.
+The platform does the same for the keys it generates itself.
+
+A use case needs the value only for custom development against the resource
+directly: a script or service that manages a SourceSet's volume through
+edgeserver, an MCP client calling a Toolset, a reader of a BotProvider's
+history. That caller is handed the value the engagement set, which is why it
+is the engagement's to set and to rotate.
+
+Three cautions:
+
+  - Set it before the first deploy. A key missing from the Secret resolves
+    to an empty string, and an empty key matches a request that sends no
+    `X-API-KEY` at all - the resource is open, and nothing reports it.
+    `apiKey: {value: ""}`, which one deployment writes on a Toolset to satisfy
+    the required field, is the same open door. An mcp-server Toolset fails
+    differently: its proxy pod does not start.
+  - A Toolset's key is also the key of the per-tool BotProviders the platform
+    derives from it, so whoever holds it can call those tools directly.
+  - Rotating a key that is in use has a cost. Agent Hub caches a
+    SourceSet's client, so a rotated key can read as 401 until it restarts.
+
+Never reference `preset-agent-hub`. The platform creates that Secret in
+every namespace for Agent Hub: one generated `api_key`, created when missing
+and never rotated, because Agent Hub depends on the same value. A chart that
+reads it resolves, applies and comes up Ready, and is bound to a key the
+engagement cannot rotate without breaking Agent Hub; a leak of it exposes every
+platform function in the namespace rather than one chart. `asgard-cli gate`
+reports it.
 
 This is not the API key the product documentation tells you to create, and
 the two are easy to read as one. That one is the `X-API-KEY` header for calling
 the Asgard API from outside, which carries the BotProvider's own
-`spec.generic.apiKey` - `../wiki/api.md`. A CR calling back into the platform
-uses the resource credential above.
-
-No public route reads the minted value out, so do not design on having
-it. It is a Kubernetes Secret the platform's namespace reconciler creates
-with a random value, this tool is never given a cluster credential, and
-`pipeline manifest` reads back only what the helm release deployed, which that
-Secret is not. In asgard-core the only code returning it is two internal gRPC
-methods on bpcontroller, `GetBotProviderManifest` and `GetSourceSetManifest`,
-and bpcontroller has no ingress; the edge server compares it against a header
-and never returns it - asgard-core `478cf5d6`
-asgard-core `internal/bpoperator/reconciler/ns_reconciler.go` (`createAgentHubSecret`),
-asgard-core `internal/bpcontroller/server/bp_controller.go`,
-asgard-core `internal/edgeserver/component/gin.go`. The services calling those two methods
-are outside asgard-core and were not read.
+`spec.generic.apiKey` - `../wiki/api.md`. A resource credential is the value
+the engagement sets above, which no console page issues.
 
 Do not declare a `secretKeyRef` for a key that does not exist yet. Config
 evaluation fails at call time, not at apply time, so the chart deploys and the

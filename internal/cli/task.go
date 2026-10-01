@@ -33,7 +33,13 @@ live systems, so they are reviewed before the change, not after.
 
 The record is a file in the customer repository, ` + "`" + work.TaskDir + `/TASK-xxx-<name>.md` + "`" + `,
 registered in ` + "`" + work.TaskIndex + "`" + `. Task IDs are global across projects, so two
-branches that number from their own project collide.`,
+branches that number from their own project collide.
+
+These are the engagement's own records, and the customer does not see them.
+What somebody on the customer's side has to see, answer or supply goes on the
+workspace's Workbench (asgard-cli workbench create); a gap in this tool goes
+upstream (asgard-cli issue-report). "asgard-cli workbench --help" has the table
+for which is which.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := checkFormat(format); err != nil {

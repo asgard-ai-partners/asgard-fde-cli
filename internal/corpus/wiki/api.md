@@ -258,9 +258,9 @@ owner. Keep it out of front-end code, version control and anywhere public. A
 separate `spec.adminApiKey` guards the history route.
 
 This is not the credential a CR uses. `SourceSet.apiKey`, `Toolset.apiKey`
-and `BotProvider.adminApiKey` take a platform resource credential, which the
-platform mints per namespace and no console page issues -
-`../usecase/conventions.md` has where that one comes from. The two are easily
+and `BotProvider.adminApiKey` take a platform resource credential, which is the
+engagement's own value on the release and no console page issues -
+`../usecase/conventions.md` has what to set it to. The two are easily
 confused.
 
 `../wiki/integration.md` has the Release panel that generates it.

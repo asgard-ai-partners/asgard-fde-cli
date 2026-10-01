@@ -178,8 +178,8 @@ spec:
   apiKey:
     valueFrom:
       secretKeyRef:
-        name: preset-agent-hub
-        key: api_key
+        name: {{ include "<chart>.appSecretName" . }}
+        key: asgard_resource_api_key
 ---
 apiVersion: asgard-ai.com/v1alpha1
 kind: Syncer

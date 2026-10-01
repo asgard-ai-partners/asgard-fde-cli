@@ -87,6 +87,14 @@ derived from the earliest missing CR kind. What answers "what now" is those
 records, plus guidance by name with "asgard-cli guide <name>" or
 by grep over the material.
 
+FILING - three places, decided by who has to act on it: the workspace's
+Workbench for what the customer's side has to see, answer or supply, or what
+is wrong in what is live ("asgard-cli workbench"); this repository's records
+for what the next builder needs ("question", "request", "task"); upstream for
+a gap in this tool ("asgard-cli issue-report"), which goes to the maintainers
+and never carries the customer's content. "asgard-cli workbench --help" has
+the table.
+
 Work arrives as a request: one thing the customer wants that the agent cannot do
 today. "asgard-cli request add" opens one, and every status the engagement keeps
 lives in the customer's repository, never in this tool, so the agent that opens
@@ -218,6 +226,8 @@ Run "asgard-cli <command> --help" for details on an individual command.`,
 		newWhoamiCmd(),
 		newProfileCmd(),
 		newWorkspaceCmd(),
+		newWorkbenchCmd(),
+		newAuditLogCmd(),
 		newPipelineCmd(),
 		newSkillCmd(),
 	)

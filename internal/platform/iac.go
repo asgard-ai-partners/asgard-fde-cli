@@ -208,11 +208,26 @@ type VariableDiff struct {
 
 // ResourceDiff is the plan report's row for one rendered CR.
 type ResourceDiff struct {
-	ApiVersion  string `json:"api_version"`
-	Kind        string `json:"kind"`
-	Name        string `json:"name"`
-	Change      string `json:"change"`
+	ApiVersion string `json:"api_version"`
+	Kind       string `json:"kind"`
+	Name       string `json:"name"`
+	Change     string `json:"change"`
+	// UpdateCause says why an update is one: UpdateCauseVersionBump or
+	// "content". Empty on every other change, and on a run planned before
+	// the platform recorded it - which reads as content.
+	UpdateCause string `json:"update_cause,omitempty"`
 	UnifiedDiff string `json:"unified_diff,omitempty"`
+}
+
+// UpdateCauseVersionBump marks an update whose only differences are version
+// labels moving from the previous release's version to this run's. A tag
+// moves them on every resource a chart labels, whether or not anything else
+// changed.
+const UpdateCauseVersionBump = "version_bump"
+
+// VersionBump reports whether d is an update that only moved the version.
+func (d *ResourceDiff) VersionBump() bool {
+	return d.Change == "update" && d.UpdateCause == UpdateCauseVersionBump
 }
 
 // DryRunResult is the server-side dry run's outcome.
@@ -229,6 +244,10 @@ type PlanReport struct {
 	Resources []*ResourceDiff `json:"resources,omitempty"`
 	DryRun    *DryRunResult   `json:"dry_run,omitempty"`
 	NoChanges bool            `json:"no_changes"`
+	// The version the previous release was deployed with (empty on a first
+	// release) and the one this run deploys.
+	PreviousAppVersion string `json:"previous_app_version,omitempty"`
+	AppVersion         string `json:"app_version,omitempty"`
 }
 
 // RunStep is one of the six fixed steps.
@@ -344,9 +363,10 @@ func (c *Client) GetPipeline(ctx context.Context, pipelineID string) (*Pipeline,
 func (c *Client) RefreshConfig(ctx context.Context, pipelineID string) (*Pipeline, error) {
 	var out Pipeline
 	err := c.do(ctx, request{
-		method: http.MethodPost,
-		path:   "/v1/iac/pipelines/" + url.PathEscape(pipelineID) + "/refresh-config",
-		out:    &out,
+		method:     http.MethodPost,
+		sideEffect: true,
+		path:       "/v1/iac/pipelines/" + url.PathEscape(pipelineID) + "/refresh-config",
+		out:        &out,
 	})
 	return &out, err
 }
@@ -394,10 +414,11 @@ type UpdateReleaseInput struct {
 func (c *Client) UpdateRelease(ctx context.Context, releaseID string, in UpdateReleaseInput) (*Release, error) {
 	var out Release
 	err := c.do(ctx, request{
-		method: http.MethodPatch,
-		path:   "/v1/iac/releases/" + url.PathEscape(releaseID),
-		body:   in,
-		out:    &out,
+		method:     http.MethodPatch,
+		sideEffect: true,
+		path:       "/v1/iac/releases/" + url.PathEscape(releaseID),
+		body:       in,
+		out:        &out,
 	})
 	return &out, err
 }
@@ -412,9 +433,10 @@ func (c *Client) UpdateRelease(ctx context.Context, releaseID string, in UpdateR
 func (c *Client) DestroyRelease(ctx context.Context, releaseID string) (*Release, error) {
 	var out Release
 	err := c.do(ctx, request{
-		method: http.MethodPost,
-		path:   "/v1/iac/releases/" + url.PathEscape(releaseID) + "/destroy",
-		out:    &out,
+		method:     http.MethodPost,
+		sideEffect: true,
+		path:       "/v1/iac/releases/" + url.PathEscape(releaseID) + "/destroy",
+		out:        &out,
 	})
 	return &out, err
 }
@@ -424,9 +446,10 @@ func (c *Client) DestroyRelease(ctx context.Context, releaseID string) (*Release
 func (c *Client) RetryDestroyRelease(ctx context.Context, releaseID string) (*Release, error) {
 	var out Release
 	err := c.do(ctx, request{
-		method: http.MethodPost,
-		path:   "/v1/iac/releases/" + url.PathEscape(releaseID) + "/retry-destroy",
-		out:    &out,
+		method:     http.MethodPost,
+		sideEffect: true,
+		path:       "/v1/iac/releases/" + url.PathEscape(releaseID) + "/retry-destroy",
+		out:        &out,
 	})
 	return &out, err
 }
@@ -440,8 +463,9 @@ func (c *Client) RetryDestroyRelease(ctx context.Context, releaseID string) (*Re
 // release because there is none left to answer with.
 func (c *Client) DetachRelease(ctx context.Context, releaseID string) error {
 	return c.do(ctx, request{
-		method: http.MethodPost,
-		path:   "/v1/iac/releases/" + url.PathEscape(releaseID) + "/detach",
+		method:     http.MethodPost,
+		sideEffect: true,
+		path:       "/v1/iac/releases/" + url.PathEscape(releaseID) + "/detach",
 	})
 }
 
@@ -500,10 +524,11 @@ type VariableWrite struct {
 func (c *Client) PutVariables(ctx context.Context, releaseID string, writes []VariableWrite) ([]*Variable, error) {
 	var out []*Variable
 	err := c.do(ctx, request{
-		method: http.MethodPut,
-		path:   "/v1/iac/releases/" + url.PathEscape(releaseID) + "/variables",
-		body:   map[string]any{"variables": writes},
-		out:    &out,
+		method:     http.MethodPut,
+		sideEffect: true,
+		path:       "/v1/iac/releases/" + url.PathEscape(releaseID) + "/variables",
+		body:       map[string]any{"variables": writes},
+		out:        &out,
 	})
 	return out, err
 }
@@ -511,7 +536,8 @@ func (c *Client) PutVariables(ctx context.Context, releaseID string, writes []Va
 // DeleteVariable removes one stored value.
 func (c *Client) DeleteVariable(ctx context.Context, releaseID, kind, key string) error {
 	return c.do(ctx, request{
-		method: http.MethodDelete,
+		method:     http.MethodDelete,
+		sideEffect: true,
 		path: "/v1/iac/releases/" + url.PathEscape(releaseID) +
 			"/variables/" + url.PathEscape(kind) + "/" + url.PathEscape(key),
 	})
@@ -522,9 +548,10 @@ func (c *Client) DeleteVariable(ctx context.Context, releaseID, kind, key string
 func (c *Client) AddDeclaredKeys(ctx context.Context, releaseID string) ([]*Variable, error) {
 	var out []*Variable
 	err := c.do(ctx, request{
-		method: http.MethodPost,
-		path:   "/v1/iac/releases/" + url.PathEscape(releaseID) + "/variables/add-declared",
-		out:    &out,
+		method:     http.MethodPost,
+		sideEffect: true,
+		path:       "/v1/iac/releases/" + url.PathEscape(releaseID) + "/variables/add-declared",
+		out:        &out,
 	})
 	return out, err
 }
@@ -597,10 +624,11 @@ func (c *Client) GetStepLog(ctx context.Context, runID, step string) (*StepLog, 
 func (c *Client) CreateRun(ctx context.Context, releaseID, ref string) (*Run, error) {
 	var out Run
 	err := c.do(ctx, request{
-		method: http.MethodPost,
-		path:   "/v1/iac/releases/" + url.PathEscape(releaseID) + "/runs",
-		body:   map[string]any{"ref": ref},
-		out:    &out,
+		method:     http.MethodPost,
+		sideEffect: true,
+		path:       "/v1/iac/releases/" + url.PathEscape(releaseID) + "/runs",
+		body:       map[string]any{"ref": ref},
+		out:        &out,
 	})
 	return &out, err
 }
@@ -622,10 +650,11 @@ func (c *Client) reviewRun(ctx context.Context, runID, action, comment string) (
 	}
 	var out Run
 	err := c.do(ctx, request{
-		method: http.MethodPost,
-		path:   "/v1/iac/runs/" + url.PathEscape(runID) + "/" + action,
-		body:   body,
-		out:    &out,
+		method:     http.MethodPost,
+		sideEffect: true,
+		path:       "/v1/iac/runs/" + url.PathEscape(runID) + "/" + action,
+		body:       body,
+		out:        &out,
 	})
 	return &out, err
 }
@@ -638,9 +667,10 @@ func (c *Client) reviewRun(ctx context.Context, runID, action, comment string) (
 func (c *Client) CancelRun(ctx context.Context, runID string) (*Run, error) {
 	var out Run
 	err := c.do(ctx, request{
-		method: http.MethodPost,
-		path:   "/v1/iac/runs/" + url.PathEscape(runID) + "/cancel",
-		out:    &out,
+		method:     http.MethodPost,
+		sideEffect: true,
+		path:       "/v1/iac/runs/" + url.PathEscape(runID) + "/cancel",
+		out:        &out,
 	})
 	return &out, err
 }
@@ -866,10 +896,11 @@ type CreatePipelineInput struct {
 func (c *Client) CreatePipeline(ctx context.Context, in CreatePipelineInput) (*Pipeline, error) {
 	var out Pipeline
 	err := c.do(ctx, request{
-		method: http.MethodPost,
-		path:   "/v1/iac/pipelines",
-		body:   in,
-		out:    &out,
+		method:     http.MethodPost,
+		sideEffect: true,
+		path:       "/v1/iac/pipelines",
+		body:       in,
+		out:        &out,
 	})
 	return &out, err
 }
@@ -886,10 +917,11 @@ type CreateReleaseInput struct {
 func (c *Client) CreateRelease(ctx context.Context, pipelineID string, in CreateReleaseInput) (*Release, error) {
 	var out Release
 	err := c.do(ctx, request{
-		method: http.MethodPost,
-		path:   "/v1/iac/pipelines/" + url.PathEscape(pipelineID) + "/releases",
-		body:   in,
-		out:    &out,
+		method:     http.MethodPost,
+		sideEffect: true,
+		path:       "/v1/iac/pipelines/" + url.PathEscape(pipelineID) + "/releases",
+		body:       in,
+		out:        &out,
 	})
 	return &out, err
 }
@@ -999,8 +1031,9 @@ func (c *Client) BeginGitHubAttach(ctx context.Context) (*BeginInstall, error) {
 func (c *Client) AttachInstallation(ctx context.Context, attachState, installationID string) (*VcsConnection, error) {
 	var out VcsConnection
 	err := c.do(ctx, request{
-		method: http.MethodPost,
-		path:   "/v1/iac/connections/attach",
+		method:     http.MethodPost,
+		sideEffect: true,
+		path:       "/v1/iac/connections/attach",
 		body: map[string]string{
 			"attach_state":    attachState,
 			"installation_id": installationID,
@@ -1054,10 +1087,11 @@ func (c *Client) CreateProject(ctx context.Context, name string, annotations map
 	}
 	var out Project
 	err := c.do(ctx, request{
-		method: http.MethodPost,
-		path:   "/v1/project",
-		body:   body,
-		out:    &out,
+		method:     http.MethodPost,
+		sideEffect: true,
+		path:       "/v1/project",
+		body:       body,
+		out:        &out,
 	})
 	return &out, err
 }

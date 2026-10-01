@@ -3,20 +3,28 @@ package cli
 import (
 	"fmt"
 	"io"
+	"net/http"
+	"os"
+	"regexp"
+	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/check"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/feedback"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/repo"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/scaffold"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/version"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/work"
 )
 
-const issueRepo = "asgard-ai-partners/asgard-fde-cli"
-
 func newIssueCmd() *cobra.Command {
-	var draft bool
+	var (
+		draft       bool
+		send        string
+		email, name string
+	)
 
 	cmd := &cobra.Command{
 		Use:   "issue-report",
@@ -28,6 +36,18 @@ note in one engagement's docs reaches only that engagement, and a fix upstream
 reaches every engagement in one release. This material is compiled into the
 binary rather than copied into your repo for the same reason.
 
+It goes to the maintainers alone. --send delivers it as a User Feedback in the
+maintainers' Sentry project, which nobody outside them reads, not as an issue
+on this tool's repository, which is public.
+
+It is for the tool, never for the customer. A report leaves the engagement for
+a third party's service. What is wrong in the customer's
+systems or in what they run goes on the Workbench (asgard-cli workbench
+create), and what the engagement records for itself stays in this repository -
+the table below is the whole rule.
+
+` + trackersHelp + `
+
 FILE ONE WHEN
 
   - you searched for something, found nothing, and it turned out to exist
@@ -35,6 +55,7 @@ FILE ONE WHEN
   - you did what a page said and it was wrong in front of a customer
   - a number or a claim here did not match what you saw
   - you needed something in a meeting that this tool does not have
+  - a command failed, or its message blamed the wrong thing
 
 Do not wait to be sure it is a defect. "I could not find X and I do not know
 whether it exists" is useful: it is either a missing page or a wrong signpost,
@@ -81,7 +102,8 @@ memory of today.
      For a discovery rather than a defect: something the platform does that
      the material does not say, which you found out on a deployment. Write the
      claim and the shape it was seen on, never the customer. For a discovery,
-     sections 3 to 5 are optional.
+     sections 3 to 5 are optional; for a defect, this one is, and you can
+     delete it.
 
 NEVER PASTE THE CUSTOMER'S CONTENT
 
@@ -95,13 +117,15 @@ DO NOT FILE
   - "the documentation should be better". Name the sentence that misled you
   - a report with no state in it. Nobody can act on "find did not work"
 
---new WRITES THE REPORT
+--new WRITES THE REPORT, --send FILES IT
 
 --new emits the report body with section 2, the state you were in, filled in
-from what this tool can observe, and the other sections marked TODO:
+from what this tool can observe, sections 1, 3, 4 and 5 marked TODO, and
+section 6 left as an optional placeholder:
 
     asgard-cli issue-report --new > report.md
-    asgard-cli issue-report --new | gh issue create --repo asgard-ai-partners/asgard-fde-cli --body-file -
+    (fill in every TODO)
+    asgard-cli issue-report --send report.md --email you@example.com
 
 Section 2 comes from the tool's own record rather than your account: the version, what the
 charts declare, what "asgard-cli check" says, how many questions, requests
@@ -109,32 +133,115 @@ and task specs are open, and the paths of shipped files this repository has
 edited in place - paths only, never their contents. The line the report closes with names what was
 actually collected.
 
-Read what it produced before filing it. The rule above about never pasting a
+--send refuses a report that still has a "TODO - " marker in it, and names
+the sections. A section you cannot answer is answered by saying so - "I never
+found it" is an answer to section 4 - not by leaving the marker. Section 6 is
+optional and carries no marker: fill it in, delete it, or leave it as written.
+--send reads the file, or stdin when the file is "-", and prints the id Sentry
+filed it under; quote that id when you follow it up. Without --email nobody
+can answer you, and with no network it fails and leaves the file where it
+was, to send later.
+
+Read what it produced before sending it. The rule above about never pasting a
 customer's content applies to generated text as well as to what you write.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			out := cmd.OutOrStdout()
+			if draft && send != "" {
+				return fmt.Errorf("--new writes a report and --send files one: write it, fill it in, then send it")
+			}
 			if draft {
 				return writeReport(out)
 			}
-			fmt.Fprintf(out, "File it at:\n\n  https://github.com/%s/issues/new\n\n", issueRepo)
-			fmt.Fprintf(out, "Or, with `gh` authenticated:\n\n"+
-				"  gh issue create --repo %s\n\n", issueRepo)
-			fmt.Fprintf(out, "Paste this line so nobody has to ask:\n\n  asgard-cli %s\n\n",
-				version.Get().String())
-			fmt.Fprintf(out, "Or have the body written for you, with this repository's own\nstate already in it:\n\n  asgard-cli issue-report --new\n\n")
-			fmt.Fprintf(out, "What to put in it: `asgard-cli issue-report --help`.\n"+
-				"A worked example: https://github.com/%s/issues/9\n", issueRepo)
+			if send != "" {
+				return sendReport(cmd, send, email, name)
+			}
+			fmt.Fprintf(out, "Write the report, with this repository's own state already in it:\n\n"+
+				"  asgard-cli issue-report --new > report.md\n\n")
+			fmt.Fprintf(out, "Fill in every TODO, then send it to the maintainers:\n\n"+
+				"  asgard-cli issue-report --send report.md --email you@example.com\n\n")
+			fmt.Fprintf(out, "It arrives as a Sentry User Feedback that only the maintainers read.\n"+
+				"What to put in it: `asgard-cli issue-report --help`.\n")
 			return nil
 		},
 	}
 
 	cmd.Flags().BoolVar(&draft, "new", false, "write the report body, with this repository's own state filled in")
+	cmd.Flags().StringVar(&send, "send", "", `send this report file to the maintainers ("-" reads stdin)`)
+	cmd.Flags().StringVar(&email, "email", "", "with --send: where the maintainers can answer you (default: nowhere)")
+	cmd.Flags().StringVar(&name, "name", "", "with --send: your name (default: none)")
 
 	return cmd
 }
 
-// writeReport emits the issue body.
+// todoSection matches the header of a numbered report section.
+var todoSection = regexp.MustCompile(`(?m)^## (\d)\)`)
+
+// sendReport files the report at path as a Sentry User Feedback.
+//
+// It refuses one still carrying --new's TODO markers: a report sent with them
+// is the complaint the help says not to file, and the sender is the only
+// person who can fill them in.
+func sendReport(cmd *cobra.Command, path, email, name string) error {
+	var (
+		body []byte
+		err  error
+	)
+	if path == "-" {
+		body, err = io.ReadAll(cmd.InOrStdin())
+	} else {
+		body, err = os.ReadFile(path)
+	}
+	if err != nil {
+		return fmt.Errorf("read report: %w", err)
+	}
+	report := strings.TrimSpace(string(body))
+	if report == "" {
+		return fmt.Errorf("%s is empty: write it with asgard-cli issue-report --new", path)
+	}
+	if open := unfilled(report); len(open) > 0 {
+		return fmt.Errorf("%s still has a TODO in section %s: answer each one, or say why you cannot, before sending",
+			path, strings.Join(open, ", "))
+	}
+
+	fmt.Fprintf(cmd.ErrOrStderr(), "sending to the asgard-cli maintainers' Sentry User Feedback\n")
+	client := &http.Client{Timeout: 30 * time.Second}
+	id, err := feedback.Send(cmd.Context(), client, feedback.Report{
+		Body:    report + "\n",
+		Email:   email,
+		Name:    name,
+		Release: "asgard-cli@" + version.Get().Version,
+	})
+	if err != nil {
+		return fmt.Errorf("%w (the report is still at %s; send it again later)", err, path)
+	}
+	fmt.Fprintf(cmd.OutOrStdout(), "Sent. Sentry filed it as %s - quote that when you follow it up.\n", id)
+	if email == "" {
+		fmt.Fprintf(cmd.OutOrStdout(), "No --email was given, so the maintainers have no way to answer you.\n")
+	}
+	return nil
+}
+
+// unfilled names the sections that still hold a "TODO - " marker.
+func unfilled(report string) []string {
+	var open []string
+	idx := todoSection.FindAllStringSubmatchIndex(report, -1)
+	for i, m := range idx {
+		end := len(report)
+		if i+1 < len(idx) {
+			end = idx[i+1][0]
+		}
+		if strings.Contains(report[m[1]:end], "TODO - ") {
+			open = append(open, report[m[2]:m[3]])
+		}
+	}
+	if len(idx) == 0 && strings.Contains(report, "TODO - ") {
+		open = append(open, "(no section headers)")
+	}
+	return open
+}
+
+// writeReport emits the report body.
 //
 // The sections are the ones in this command's help, in that order. The tool
 // fills what it can observe and marks the rest TODO.
@@ -198,10 +305,14 @@ func writeReport(out io.Writer) error {
 
 // writeLearned emits section 6, for a discovery rather than a defect. It is
 // always present, because a defect report sometimes carries one too.
+//
+// Its placeholder deliberately carries no "TODO - " marker: the section is
+// optional, so a report sent with it untouched is complete, and --send's
+// check (unfilled) must not refuse it.
 func writeLearned(out io.Writer) {
 	fmt.Fprintf(out, "## 6) What I now know\n\n"+
-		"TODO, or delete this section if there is nothing. The claim, and the\n"+
-		"shape it was seen on (never the customer).\n\n")
+		"Optional: delete this section if there is nothing. For a discovery,\n"+
+		"the claim, and the shape it was seen on (never the customer).\n\n")
 }
 
 // writeEdited lists the shipped files this repository changed in place, by

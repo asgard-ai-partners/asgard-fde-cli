@@ -39,6 +39,8 @@ the platform, never in the repository.
     asgard-cli pipeline use <id>               record which one this checkout uses
     asgard-cli pipeline show                   the pipeline this checkout records
     asgard-cli pipeline releases               its releases, and the ghost rows
+    asgard-cli pipeline repo create <name>     a new repository under a connection's organization
+    asgard-cli pipeline git-auth               in the Workbench sandbox: git pushes through the connection
 
 These commands are a wrapper over the platform's API and hold no rules of their
 own. The checking runs on the platform, because the most important checks -
@@ -92,6 +94,9 @@ changing to say so.`,
 		newPipelineReleasesCmd(),
 		newPipelineRunsCmd(),
 		newPipelineVariablesCmd(),
+		newPipelineRepoCmd(),
+		newPipelineGitAuthCmd(),
+		newPipelineGitCredentialCmd(),
 	)
 	return cmd
 }

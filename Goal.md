@@ -50,14 +50,13 @@ namespace 建好、去把 id 抄進一個 per-env 的 values 檔)少了一整條
 做 dry run,那是本機做不到的:client 從頭到尾不會拿到叢集憑證。這個工具做的是
 另外那一半 —— 過得了 dry run、runtime 才炸的那一類檢查,以及把 Plan 的結果讀回來。
 
-## 4. 查不到需要的知識時,Agent 從 asgard-cli 的輸出就知道去哪裡發 issue
+## 4. 查不到需要的知識時,Agent 從 asgard-cli 的輸出就知道去哪裡回報
 
-給它 repo 的網址,並教它怎麼發:
+回報送到維護者的 Sentry User Feedback,不是公開 repo 的 issue,因為報告是在
+engagement 進行中寫的。
 
-    https://github.com/asgard-ai-partners/asgard-fde-cli
-
-`asgard-cli issue-report` 印出網址和 `gh issue create`;`--help` 說一份報告要
-寫什麼;`--new` 直接產出已經填好證據的 body。
+`asgard-cli issue-report` 印出怎麼寫、怎麼送;`--help` 說一份報告要寫什麼;
+`--new` 直接產出已經填好證據的 body;`--send` 把它送出去。
 
 **要從工具自己的輸出講出來**,不能要 agent 自己想到有這條路。這裡的「prompt」
 指工具印出來的指引,不是 LLM 的 system prompt。

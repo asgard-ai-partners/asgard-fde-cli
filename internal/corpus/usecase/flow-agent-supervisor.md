@@ -159,15 +159,15 @@ spec:
   adminApiKey:
     valueFrom:
       secretKeyRef:
-        name: preset-agent-hub
-        key: api_key
+        name: {{ include "<chart>.appSecretName" . }}
+        key: asgard_resource_api_key
   generic:
     authMode: api-key       # or none, for an anonymous audience
     apiKey:
       valueFrom:
         secretKeyRef:
-          name: preset-agent-hub
-          key: api_key
+          name: {{ include "<chart>.appSecretName" . }}
+          key: asgard_resource_api_key
 ---
 apiVersion: asgard-ai.com/v1alpha1
 kind: SandboxBlueprint
@@ -336,13 +336,16 @@ content.
                         read-only mounts - across every subagent, because
                         their tools are the supervisor's too.
     authMode: api-key   a caller that can hold a credential, sending the value
-                        the skeleton reads from `preset-agent-hub` as its
-                        X-API-KEY.
+                        the skeleton reads from the release's own Secret as
+                        its X-API-KEY.
 
-`adminApiKey` is separate from visitor auth: it guards the admin API, and the
-skeleton reads it straight from `preset-agent-hub` - the Secret the platform
-creates in every namespace - so there is nothing to obtain or declare for it.
-`../usecase/conventions.md` has why, and what the older copying route was.
+`adminApiKey` is separate from visitor auth: it guards the admin API
+(`/history`), and the skeleton reads it, like `generic.apiKey`, from
+`asgard_resource_api_key` in the release's own Secret. With `authMode: api-key`
+that value is what the caller sends, so it is generated and handed to the
+caller; with `authMode: none` nothing outside the platform needs it and a
+random value is the whole answer. `../usecase/conventions.md` has both, and why
+it is never `preset-agent-hub`.
 
 Also on the BotProvider: `maxUnsupervisedSteps` (30 in one deployment, and the
 platform default) caps how many processor hand-offs one request may make -

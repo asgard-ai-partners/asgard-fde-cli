@@ -77,6 +77,11 @@ type Client struct {
 	token     string
 	workspace string
 	http      *http.Client
+	// assistant marks every request as the Workbench assistant's: a session
+	// from the sandbox's session file is by definition the assistant acting
+	// for the member, so every call it makes is one, not only the Workbench
+	// writes.
+	assistant bool
 }
 
 // New builds a client from a resolved session. The workspace may be empty for
@@ -88,6 +93,7 @@ func New(session *auth.Session, workspace string) *Client {
 		token:     session.Token,
 		workspace: workspace,
 		http:      &http.Client{Timeout: timeout},
+		assistant: session.Source == auth.SourceSandbox,
 	}
 }
 
@@ -105,6 +111,9 @@ type APIError struct {
 	Path       string
 	Message    string
 	ReasonCode int32
+	// ErrorCode is `details.error_code`, which the Workbench routes set to say
+	// which of several reasons behind one status this is. Empty elsewhere.
+	ErrorCode string
 }
 
 func (e *APIError) Error() string {
@@ -112,14 +121,25 @@ func (e *APIError) Error() string {
 	if msg == "" {
 		msg = http.StatusText(e.Status)
 	}
+	if text, ok := workbenchErrorText(e, msg); ok {
+		return text
+	}
 	switch e.Status {
 	case http.StatusUnauthorized:
 		return fmt.Sprintf("the platform rejected the session (%d %s); run `asgard-cli login`", e.Status, msg)
 	case http.StatusForbidden:
+		if e.ErrorCode == IacAppPermissionNotGranted {
+			// Not the member's role: the GitHub App itself lacks the
+			// permission, which nobody in the workspace can grant from here.
+			return fmt.Sprintf("the GitHub App was not granted what this needs (%d %s): %s. "+
+				"An owner of the GitHub organization has to accept the App's requested permissions on its "+
+				"installation (GitHub -> the organization's Settings -> GitHub Apps -> the App -> review the "+
+				"permission request); nothing in the workspace changes that", e.Status, IacAppPermissionNotGranted, msg)
+		}
 		// Members may read a pipeline and edit variables; approving, running and
 		// deleting need workspace administration. Saying so here saves reading
 		// the permission matrix to find out which half a command needed.
-		return fmt.Sprintf("not allowed (%d %s); viewing a pipeline and editing variables are open to workspace members, and running, approving and deleting need workspace administration", e.Status, msg)
+		return fmt.Sprintf("not allowed (%d %s); viewing a pipeline and editing variables are open to workspace members, and running, approving, deleting, pushing and creating repositories need workspace administration", e.Status, msg)
 	case http.StatusNotFound:
 		return fmt.Sprintf("not found (%d %s): %s %s", e.Status, msg, e.Method, e.Path)
 	}
@@ -170,12 +190,16 @@ func Unauthorized(err error) bool {
 
 // envelope is the platform's response wrapper. Every route answers in it, and
 // an error answers in a shape that overlaps it, so one struct reads both.
+//
+// Paging is kept raw because the platform pages in two shapes: an index and a
+// size on most routes, and a cursor on the Workbench ones.
 type envelope struct {
 	Data       json.RawMessage `json:"data"`
-	Paging     *Paging         `json:"paging"`
+	Paging     json.RawMessage `json:"paging"`
 	Message    string          `json:"message"`
 	Success    bool            `json:"success"`
 	ReasonCode int32           `json:"reason_code"`
+	Details    json.RawMessage `json:"details"`
 }
 
 // Paging is the platform's page descriptor.
@@ -202,10 +226,20 @@ type request struct {
 	out any
 	// paging receives the `paging` field when the caller wants it.
 	paging *Paging
+	// cursor receives the `paging` field of a cursor-paged route.
+	cursor *CursorPaging
+	// viaAssistant marks the request as the Workbench assistant's; see
+	// ViaAssistantHeader.
+	viaAssistant bool
 	// noWorkspace skips the workspace header, for the routes that take none.
 	noWorkspace bool
 	// project sets the project header, for the routes scoped to one.
 	project string
+	// sideEffect marks a call that changes something on the platform; a 2xx
+	// answer stamps EnvSideEffectFile. Marked per call rather than inferred
+	// from the method: some POSTs only read (an audit query, a repository
+	// token for git).
+	sideEffect bool
 }
 
 // do makes one call and unwraps the envelope.
@@ -243,6 +277,9 @@ func (c *Client) do(ctx context.Context, req request) error {
 	if req.project != "" {
 		httpReq.Header.Set(ProjectHeader, req.project)
 	}
+	if req.viaAssistant || c.assistant {
+		httpReq.Header.Set(ViaAssistantHeader, "true")
+	}
 
 	resp, err := c.http.Do(httpReq)
 	if err != nil {
@@ -271,6 +308,7 @@ func (c *Client) do(ctx context.Context, req request) error {
 		if decodeErr == nil {
 			apiErr.Message = env.Message
 			apiErr.ReasonCode = env.ReasonCode
+			apiErr.ErrorCode = errorCode(env.Details)
 		} else {
 			// A body that is not the envelope is a gateway or proxy answering,
 			// not the API. Keeping a slice of it is what tells those apart.
@@ -278,13 +316,27 @@ func (c *Client) do(ctx context.Context, req request) error {
 		}
 		return apiErr
 	}
+	if req.sideEffect {
+		NoteSideEffect()
+	}
 	if decodeErr != nil {
 		return fmt.Errorf("%s %s answered %s with something that is not the platform's response envelope: %s",
 			req.method, endpoint, resp.Status, truncate(string(raw), 200))
 	}
 
-	if req.paging != nil && env.Paging != nil {
-		*req.paging = *env.Paging
+	if len(env.Paging) > 0 && string(env.Paging) != "null" {
+		var target any
+		switch {
+		case req.paging != nil:
+			target = req.paging
+		case req.cursor != nil:
+			target = req.cursor
+		}
+		if target != nil {
+			if err := json.Unmarshal(env.Paging, target); err != nil {
+				return fmt.Errorf("%s %s answered with paging this build does not understand: %w", req.method, endpoint, err)
+			}
+		}
 	}
 	if req.out == nil || len(env.Data) == 0 || string(env.Data) == "null" {
 		return nil
@@ -315,6 +367,18 @@ func (c *Client) ListWorkspaces(ctx context.Context) ([]Workspace, error) {
 		noWorkspace: true,
 	})
 	return out, err
+}
+
+// errorCode reads `details.error_code`, or nothing. details is free-form, so a
+// shape that is not an object is not an error here: it just carries no code.
+func errorCode(details json.RawMessage) string {
+	var d struct {
+		ErrorCode string `json:"error_code"`
+	}
+	if len(details) == 0 || json.Unmarshal(details, &d) != nil {
+		return ""
+	}
+	return d.ErrorCode
 }
 
 func truncate(s string, n int) string {

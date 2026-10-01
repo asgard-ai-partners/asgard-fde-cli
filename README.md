@@ -594,11 +594,16 @@ asgard-cli size flow-agent-single --databases 2 --queries 4
 
 `issue-report` files a gap in this tool, and it is the only way what one
 engagement learned reaches the next. The gap does not belong in the customer
-repository, where only that engagement would see it.
+repository, where only that engagement would see it. `--send` sends it as a
+User Feedback to the maintainers' Sentry project, which only they read, not as
+an issue on this repository, which is public. It is for the tool, never for the
+customer: what is wrong in the customer's systems goes on the Workbench (see
+`workbench`).
 
 ```bash
-asgard-cli issue-report               # the URL, and what a report has to say
-asgard-cli issue-report --new         # a body with the evidence already in it
+asgard-cli issue-report                          # the route, and what a report has to say
+asgard-cli issue-report --new > report.md        # a body with the evidence already in it
+asgard-cli issue-report --send report.md --email you@example.com   # once every TODO is answered
 ```
 
 The report ends with "What I now know", for a discovery rather than a defect:
@@ -833,6 +838,49 @@ With no browser - CI, a container, an agent sandbox - set `ASGARD_TOKEN` to an
 access token instead. It bypasses the store completely, reading nothing from
 disk and writing nothing to it.
 
+### The Workbench assistant's sandbox
+
+The platform's Workbench assistant runs this CLI inside a sandbox, as the member
+talking to it. The image sets `ASGARD_SANDBOX_MODE=true`, and then:
+
+- The identity is the session file the platform writes at the start of every
+  turn (`/tmp/.asgard/session.json`, 0600; `ASGARD_SESSION_FILE` moves it): the
+  member's access token, the platform's address, and the workspace of the
+  conversation. There is nothing to `login` to, and `login` says so.
+  `ASGARD_TOKEN` still wins, and `--workspace` and `ASGARD_WORKSPACE` still come
+  before the session's workspace, which comes before a checkout's binding.
+- Every request carries `X-Asgard-Via-Assistant: true`, reads included.
+- Every change is stamped for the page. With
+  `ASGARD_CLI_SIDE_EFFECT_TIMESTAMP_FILE` set (the image sets
+  `/work/.asgard/side-effect-at`), each call that changed something on the
+  platform - an issue opened, a comment, a pipeline or release written, a Run
+  approved, a connection that appeared - rewrites that file with
+  `{"at":"<RFC 3339 UTC>"}`, so the Workbench page watching it refetches. Reads,
+  refusals and the repository tokens git asks for are not stamped. The
+  directory is created when missing, and a stamp that cannot be written is a
+  warning, never a failed command. Only `at` is promised; a reader ignores keys
+  it does not know.
+- git goes through the workspace's GitHub Connection:
+  `asgard-cli pipeline git-auth` makes this CLI git's only github.com credential
+  helper, and each fetch or push gets a token for exactly that repository,
+  signed by the GitHub App and never written to disk. Pushing needs workspace
+  administration; `asgard-cli pipeline repo create` makes a new repository
+  under an organization's connection.
+- `init` refuses `/work` itself, which holds every repository side by side.
+- Nothing opens the desktop's browser, because there is none. A page on the
+  internet - GitHub's install and authorize pages - is printed as a link for the
+  member's own browser: `pipeline connect --account <login>` prints it and ends,
+  and `pipeline connect --continue` waits for the connection. The account (the
+  organisation or user the app is installed on, not the person authorizing) is
+  the member's to name: without one, and without an origin remote to take it
+  from, connect starts nothing and says to ask; `--continue --account <login>`
+  supplies it later on the same authorization, and an account that does not have
+  the app yet leads to its install page. A page only the sandbox
+  can reach - `local-env`'s form on 127.0.0.1 - is opened in the sandbox's browser
+  over CDP, in the tab the member sees; the agent hands it over with
+  `open_sandbox_browser`, and `local-env --wait` waits for the save, a few minutes
+  per call. The form server runs in the background between the two.
+
 ### `profile`
 
 If you use the hosted Asgard platform, you need none of this. With no file
@@ -956,6 +1004,7 @@ asgard-cli pipeline release update <name> --auto-apply    # the one create-time 
 asgard-cli pipeline releases                    # created releases, and the ghost rows
 asgard-cli pipeline variables list --release <name>
 asgard-cli pipeline variables set --release <name> --kind secret <key> --from-file <path>
+asgard-cli pipeline variables set --release <name> --kind secret <key> --random    # a secret nobody issues
 asgard-cli pipeline runs watch --release <name> --ref <tag>
 asgard-cli pipeline runs approve <run-id>
 ```
@@ -986,6 +1035,66 @@ deploys to a customer.
 A secret's value can only be given with `--from-file` (or `--from-file -` for
 standard input): a value typed as an argument is in the shell history and in the
 process list. Files are read verbatim, so a PEM keeps its newlines.
+
+### `workbench`
+
+Read and write the issues on the workspace's Workbench - the tracker the FDE and
+the customer work through on the platform - and file their attachments.
+
+```bash
+asgard-cli workbench list --status in_progress --label blocked
+asgard-cli workbench show ISS-12
+asgard-cli workbench create --type question --title "<what has to be answered>"
+asgard-cli workbench update ISS-12 --status in_review --add-label data-source
+asgard-cli workbench comment ISS-12 --body-file draft.md
+asgard-cli workbench attach ISS-12 minutes.pdf --what "<what it is>" --from "<a role>" --dated <YYYY-MM-DD>
+asgard-cli workbench pull --pipeline <name>         # attachments into references/
+```
+
+Every write is made as the member's assistant: it carries
+`X-Asgard-Via-Assistant: true`, so the platform authorizes it as the signed-in
+account and the timeline says "via Asgard AI". What the platform keeps for the
+member alone - pinning, locking, labels, deleting an issue, an attachment or a
+comment - this command does not offer, and the platform refuses it from an
+assistant.
+
+This is not `question`, `request` or `task`, and not `issue-report`. Which
+of the three places a thing goes is decided by who has to act on it:
+
+| who has to act on it | where | command |
+|---|---|---|
+| the customer's side has to see, answer, supply or decide it - or something is wrong in what is live | the workspace's Workbench (the customer reads it) | `workbench create` |
+| whoever builds next needs it: the spec, the design, an open decision | the customer repository's records | `question add`, `request add`, `task add` |
+| the makers of this tool, or of the platform behind it | upstream, a feedback only the maintainers read | `issue-report --new`, then `--send` |
+
+A failure of this tool is never a Workbench `bug` - that type is what is wrong
+in the customer's deployment, and the customer reads it. Nothing about the
+customer goes upstream, because a report leaves the engagement for a third
+party's service. In the Workbench
+assistant's sandbox, what the member has to keep track of goes on the
+Workbench, and a gap in the tool is still reported with `issue-report`.
+The same table is in `asgard-cli workbench --help` and in the `AGENTS.md` that
+`init` writes.
+
+`pull` files each attachment byte-identical under
+`references/workbench/ISS-<n>/<attachment id>/`, checks its SHA-256 against the
+platform's record, and writes what, from and dated into `references/_index.md`,
+the same row `reference add` writes. It never overwrites a filed copy.
+
+### `audit-log`
+
+The workspace's audit log, as Asgard Console's Explore records it, read with
+your own session - so Console decides who may read it (a workspace owner or a
+platform admin).
+
+```bash
+asgard-cli audit-log summary --days 7    # counted by event, account, project, agent
+asgard-cli audit-log query --days 1      # the events, as JSON Lines
+asgard-cli audit-log dictionary          # the names behind the raw keys
+```
+
+Rows carry raw keys only, there is no success/failure dimension (events are
+named), and the data lags by up to about 20 minutes.
 
 ## Releasing
 

@@ -37,6 +37,11 @@ type Session struct {
 	Subject string
 	Email   string
 	Name    string
+
+	// SandboxWorkspace is the workspace the Workbench assistant's session file
+	// names: the one the member is talking to the assistant in. Empty outside
+	// a sandbox.
+	SandboxWorkspace string
 }
 
 // NeedsLoginError reports a command that needs a session where there is none,
@@ -82,6 +87,12 @@ func Resolve(ctx context.Context, profileName string) (*Session, error) {
 
 	if token := os.Getenv(EnvToken); token != "" {
 		return &Session{Profile: p, ProfileFrom: from, Token: token, Source: SourceEnv}, nil
+	}
+	// In the Workbench sandbox the platform supplies the member's identity,
+	// and there is nothing in the store: its home is the sandbox's, not the
+	// member's. ASGARD_TOKEN above still wins, for testing one by hand.
+	if SandboxMode() {
+		return sandboxSession(r)
 	}
 
 	cred, err := LoadCredential(p)

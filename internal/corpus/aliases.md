@@ -15,7 +15,7 @@ does not match the material as the customer said it.
 Every row is a term somebody searched for. Add one when a search came back
 empty and the subject turned out to exist under another name; that is the only
 test, and a row nobody has needed is a guess. File it with
-`asgard-cli issue-report --new` as well, so every engagement gets it.
+`asgard-cli issue-report --new`, then `--send`, so every engagement gets it.
 
 Point a row at a page where one page answers it: the pointer is checked by
 `asgard-cli audit-material --links`, which a bare word would not be.

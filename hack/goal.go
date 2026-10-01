@@ -234,11 +234,11 @@ func runGoal(args []string) error {
 
 	// ── Goal 4: the way back in, out of the tool's own output ────────────
 	//
-	// The URL has to be in what the tool prints, not only in a document
-	// somebody has to think to open.
+	// How to send it has to be in what the tool prints, not only in a
+	// document somebody has to think to open.
 	if stdout, _, _ := runCLI(binary, tmp, "issue-report"); !strings.Contains(stdout,
-		"github.com/asgard-ai-partners/asgard-fde-cli") {
-		add("4: `issue-report` does not print the repository URL")
+		"issue-report --send") {
+		add("4: `issue-report` does not print how to send a report")
 	}
 	if stdout, _, err := runCLI(binary, tmp, "issue-report", "--new"); err != nil || len(stdout) < 400 {
 		add("4: `issue-report --new` did not write a report body")

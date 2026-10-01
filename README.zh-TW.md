@@ -498,10 +498,12 @@ mkdir -p /tmp/asgard && cd /tmp/asgard && asgard-cli init
 `size` 列出一個能力寫出來之前由什麼構成，這是提案最先被問的問題，也是報價的基礎。數字來自 production 的部署而不是推理，這在直覺答案錯的地方最重要：flow-agent 那幾種形狀裡完全沒有 `Agent` CR。
 
 `issue-report` 說明這支工具的缺口怎麼回報，這也是一個 engagement 學到的東西傳到下一個的唯一途徑。缺口不要記在客戶 repo 裡：寫在某個 engagement 裡的筆記，只有那個 engagement 看得到。
+`--send` 把它以 User Feedback 送到維護者的 Sentry project，只有維護者看得到，不是這個公開 repo 的 issue。它只回報工具的事，不回報客戶的事：客戶系統的問題放 Workbench（見 `workbench`）。
 
 ```bash
-asgard-cli issue-report               # 網址，以及一份報告要寫什麼
-asgard-cli issue-report --new         # 證據已經填好的 body
+asgard-cli issue-report                          # 怎麼回報，以及一份報告要寫什麼
+asgard-cli issue-report --new > report.md        # 證據已經填好的 body
+asgard-cli issue-report --send report.md --email you@example.com   # 每個 TODO 都回答了之後送出
 ```
 
 報告最後一節是「What I now know」，用來回報一個發現而不是缺陷：在部署上查到、平台會做但素材沒寫的事。
@@ -594,6 +596,17 @@ OAuth 2.0 authorization code ＋ PKCE，走 loopback redirect，這是 RFC 8252 
 代管平台以外的 profile 用 [`asgard-cli profile`](#profile) 寫。`ASGARD_PLATFORM_API`、`ASGARD_ISSUER`、`ASGARD_CLIENT_ID` 仍然可以逐欄位覆蓋生效的 profile，用於一次性的情況。
 
 沒有瀏覽器的時候（CI、容器、agent sandbox）改設 `ASGARD_TOKEN`。它完全不經過儲存，不讀也不寫磁碟。
+
+### Workbench 助手的 sandbox
+
+平台上的 Workbench 助手會在 sandbox 裡以正在對話的成員身分跑這個 CLI。image 設了 `ASGARD_SANDBOX_MODE=true`，於是：
+
+- 身分來自 session 檔：平台每一回合開始時寫進 `/tmp/.asgard/session.json`（0600；`ASGARD_SESSION_FILE` 可改位置），內容是成員的 access token、平台位址和這段對話所在的 workspace。沒有東西要 `login`，`login` 會直接說明。`ASGARD_TOKEN` 仍然優先；`--workspace` 與 `ASGARD_WORKSPACE` 仍排在 session 的 workspace 前面，session 的 workspace 又排在 checkout 的 binding 前面。
+- 每個請求都帶 `X-Asgard-Via-Assistant: true`，讀取也一樣。
+- 每一次改動都會通知畫面。 有設 `ASGARD_CLI_SIDE_EFFECT_TIMESTAMP_FILE` 時（image 設成 `/work/.asgard/side-effect-at`），只要一個呼叫在平台上改了東西，就會把 `{"at":"<RFC 3339 UTC>"}` 覆寫進那個檔，監看這個檔的 Workbench 頁面就會 refetch。算改動的包括：開 issue、留言、寫 pipeline 或 release、approve Run、出現新的 connection。讀取、被拒絕的請求，以及 git 要的 repo token 都不算。資料夾不存在時會自動建立；寫不進去只印 warning，不會讓指令失敗。檔案內容只保證有 `at`，讀的一方遇到不認得的 key 要忽略。
+- git 走 workspace 的 GitHub Connection：`asgard-cli pipeline git-auth` 讓這個 CLI 成為 git 在 github.com 唯一的 credential helper，每次 fetch／push 拿一張只限那個 repo、由 GitHub App 簽的 token，不寫進磁碟。push 要 workspace 管理權限；`asgard-cli pipeline repo create` 在組織的 Connection 底下建新 repo。
+- `init` 拒絕在 `/work` 本身執行，那裡並排放著所有 repo。
+- 不會開本機瀏覽器，因為沒有本機。 網際網路上的頁面（GitHub 的安裝與授權頁）印成連結，給成員在自己的瀏覽器開：`pipeline connect --account <login>` 印出連結就結束，`pipeline connect --continue` 等 Connection 出現。帳號指的是 App 安裝所在的組織或使用者，不是按授權的人，要由成員自己指定：沒帶帳號、也沒有 origin remote 可以拿時，connect 不會開始，而是提醒先去問成員；之後用 `--continue --account <login>` 補上即可，沿用同一次授權；指定的帳號還沒裝 App 的話，會接著給安裝頁。只有 sandbox 連得到的頁面（`local-env` 在 127.0.0.1 的表單）用 CDP 在 sandbox 瀏覽器、成員看得到的那個分頁打開；助手用 `open_sandbox_browser` 交給成員，`local-env --wait` 每次等幾分鐘直到存檔。兩步之間表單 server 在背景跑。
 
 ### `profile`
 
@@ -692,6 +705,46 @@ asgard-cli pipeline runs watch --release <name> --ref <tag>
 一次 run 有六步：`checkout → lint → variables → render_dry_run → review → apply`。`review` 由人執行。它之前的全部是 plan，plan 找到的一切都在它的報告裡。
 
 一次推送沒有產生任何 run 時，只有 `pipeline deliveries` 會說明原因。從未建立的 run 不會留下紀錄，所以一個 tag 看起來被忽略時，要去那裡看。
+
+### `workbench`
+
+讀寫這個 workspace 在 Workbench 上的 issue（FDE 與客戶在平台上一起追工作的地方），並把附件歸檔進 repo。
+
+```bash
+asgard-cli workbench list --status in_progress --label blocked
+asgard-cli workbench show ISS-12
+asgard-cli workbench create --type question --title "<要有人回答的事>"
+asgard-cli workbench update ISS-12 --status in_review --add-label data-source
+asgard-cli workbench comment ISS-12 --body-file draft.md
+asgard-cli workbench attach ISS-12 minutes.pdf --what "<是什麼>" --from "<角色>" --dated <YYYY-MM-DD>
+asgard-cli workbench pull --pipeline <name>         # 附件拉進 references/
+```
+
+每一筆寫入都以登入者的助手身分送出：帶 `X-Asgard-Via-Assistant: true`，權限仍然是登入者本人，時間軸會標「via Asgard AI」。平台只留給本人做的操作（Pin、Lock、管理 label、刪除 issue／附件／留言），這個指令不提供，平台也會拒絕助手這樣做。
+
+這不是 `question`、`request`、`task`，也不是 `issue-report`。 一件事放三個地方的哪一個，看的是誰要處理它：
+
+| 誰要處理 | 放哪裡 | 指令 |
+|---|---|---|
+| 客戶那邊要看、要回答、要提供或要決定，或是已上線的東西壞了 | workspace 的 Workbench（客戶看得到） | `workbench create` |
+| 下一個接手建置的人需要：spec、設計、還沒定的決定 | 客戶 repo 裡的紀錄 | `question add`、`request add`、`task add` |
+| 這支工具或它背後平台的維護者 | 上游，只有維護者看得到的 feedback | `issue-report --new`，再 `--send` |
+
+這支工具本身出錯，絕不是 Workbench 的 `bug`：那個 type 是客戶的部署哪裡壞了，客戶會讀到。跟客戶有關的東西一律不上上游，因為報告會離開 engagement，送進第三方的服務。在 Workbench 助手的 sandbox 裡，member 要追蹤的事放 Workbench；工具本身的缺口一樣用 `issue-report` 回報。同一張表也在 `asgard-cli workbench --help` 和 `init` 寫出的 `AGENTS.md` 裡。
+
+`pull` 把每個附件原樣存到 `references/workbench/ISS-<n>/<attachment id>/`，先比對平台記錄的 SHA-256，再把 what、from、dated 寫進 `references/_index.md`（與 `reference add` 寫的是同一種列）。已歸檔的檔案永遠不會被覆寫。
+
+### `audit-log`
+
+這個 workspace 的稽核紀錄，也就是 Asgard Console › Explore 記下的內容，用你自己的 session 讀——所以誰能讀由 Console 決定（workspace owner 或平台管理員）。
+
+```bash
+asgard-cli audit-log summary --days 7    # 依事件、帳號、專案、agent 計數
+asgard-cli audit-log query --days 1      # 事件本身，JSON Lines
+asgard-cli audit-log dictionary          # raw key 背後的顯示名
+```
+
+每一列只有 raw key；沒有成功／失敗這個維度（事件是具名的）；資料最多延遲約 20 分鐘。
 
 ## 發佈
 

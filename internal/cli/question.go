@@ -29,7 +29,13 @@ done. The living spec describes what is, not what nobody knows. So without
 making the wrong assumption first.
 
 Read this before designing anything, so you do not design past a question
-somebody already knew was open.`,
+somebody already knew was open.
+
+These are the engagement's own records, and the customer does not see them.
+What somebody on the customer's side has to see, answer or supply goes on the
+workspace's Workbench (asgard-cli workbench create); a gap in this tool goes
+upstream (asgard-cli issue-report). "asgard-cli workbench --help" has the table
+for which is which.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := checkFormat(format); err != nil {

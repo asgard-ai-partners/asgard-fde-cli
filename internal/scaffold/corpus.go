@@ -255,7 +255,8 @@ File a page that is wrong, or a question these files do not answer, rather
 than working around it. This material is compiled into the binary, so a note in
 one repository reaches no other engagement:
 
-    asgard-cli issue-report --new
+    asgard-cli issue-report --new > report.md
+    asgard-cli issue-report --send report.md
 
 ## Staleness
 

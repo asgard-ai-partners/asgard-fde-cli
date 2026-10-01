@@ -30,6 +30,11 @@ type Options struct {
 	// NoBrowser prints the URL instead of opening it - a container, an SSH
 	// session, or somebody who would rather paste it themselves.
 	NoBrowser bool
+	// OnReady, when set, is told the page's URL once the server listens, and
+	// takes the place of opening a browser and printing the URL: the caller
+	// decides who sees it. It is how the Workbench sandbox runs the form in a
+	// process of its own and hands the page to the member separately.
+	OnReady func(url string)
 }
 
 // Result is what changed, by key name.
@@ -154,17 +159,14 @@ func Serve(ctx context.Context, opts Options, out io.Writer) (Result, error) {
 		}
 	}()
 
-	fmt.Fprintf(out, "editing %s at\n\n    %s\n\n", opts.File.Path, url)
-	if opts.NoBrowser {
-		fmt.Fprintf(out, "open it yourself; over SSH, forward the port first:\n"+
-			"    ssh -L %s:%s <host>\n", portOf(addr), addr)
-	} else if err := browser.Open(url); err != nil {
-		fmt.Fprintf(out, "could not open a browser (%v), so open the URL above yourself\n", err)
+	if opts.OnReady != nil {
+		opts.OnReady(url)
+	} else {
+		presentForm(ctx, out, opts, url, addr)
 	}
-	fmt.Fprintf(out, "the page closes this server when you save; it also stops on its own after %s\n",
-		opts.Timeout.Round(time.Second))
 
 	var saveErr error
+
 	select {
 	case saveErr = <-done:
 	case <-ctx.Done():
@@ -184,6 +186,20 @@ func Serve(ctx context.Context, opts Options, out io.Writer) (Result, error) {
 		return Result{}, saveErr
 	}
 	return diff(before, opts.File), nil
+}
+
+// presentForm puts the page in front of whoever fills it in and says how long
+// it stays.
+func presentForm(ctx context.Context, out io.Writer, opts Options, url, addr string) {
+	fmt.Fprintf(out, "editing %s at\n\n    %s\n\n", opts.File.Path, url)
+	if opts.NoBrowser {
+		fmt.Fprintf(out, "open it yourself; over SSH, forward the port first:\n"+
+			"    ssh -L %s:%s <host>\n", portOf(addr), addr)
+	} else if _, err := browser.Present(ctx, url, false); err != nil {
+		fmt.Fprintf(out, "could not open a browser (%v), so open the URL above yourself\n", err)
+	}
+	fmt.Fprintf(out, "the page closes this server when you save; it also stops on its own after %s\n",
+		opts.Timeout.Round(time.Second))
 }
 
 // errCancelled is the page saying it is done without saving.

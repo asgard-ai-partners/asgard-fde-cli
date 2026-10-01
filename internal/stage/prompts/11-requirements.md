@@ -1195,4 +1195,4 @@ from the "obvious answer" table rather than restated.
 **Unchecked:** filter 0 - "does the answer change what we build" - and the
 question ladder under it are this material's own judgement, and no source states
 them. A question that fails filter 0 and still mattered is worth filing:
-`asgard-cli issue-report --new`.
+`asgard-cli issue-report --new`, then `--send`.

@@ -2,12 +2,14 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/auth"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/browser"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/platform"
 )
@@ -32,6 +34,7 @@ func newPipelineConnectCmd() *cobra.Command {
 		noBrowser bool
 		account   string
 		wait      time.Duration
+		cont      bool
 	)
 
 	cmd := &cobra.Command{
@@ -90,7 +93,22 @@ they do not see each other's.
 One workspace can hold many accounts: run this once per account, and the
 workspace ends up holding one connection per installation, which is what
 "pipeline create --connection" chooses between. Already holding a connection
-does not stop this command.`,
+does not stop this command.
+
+In the Workbench assistant's sandbox it is two steps. The agent reads a
+command's output only when the command ends, so a link printed before a
+five-minute wait would reach the member five minutes late:
+
+    asgard-cli pipeline connect --account acme    prints the link, and ends
+                                                  (--account is required here:
+                                                  ask the member which account)
+    asgard-cli pipeline connect --continue        waits for the connection, as the
+                                                  desktop's wait does
+
+The link is for the member's own browser, which is signed in to GitHub, not
+the sandbox's. When the flow needs a second page (installing the app on an
+account that does not have it), --continue ends with that link, and the next
+--continue picks up from there. Nothing is opened in the sandbox.`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			provider := platform.ProviderGitHub
@@ -108,6 +126,15 @@ does not stop this command.`,
 			}
 			actingOn(cmd, pc.Session)
 			ctx := cmd.Context()
+			if cont {
+				if !auth.SandboxMode() {
+					return errors.New("--continue is the second step of the Workbench sandbox's connect; on a desktop the command itself waits")
+				}
+				if wait <= 0 {
+					wait = connectTimeout
+				}
+				return continueConnectInSandbox(cmd, pc, f.format, wait, account)
+			}
 
 			// Snapshot first. The new connection is identified by not having
 			// been there, which needs no cooperation from the provider's flow
@@ -137,6 +164,19 @@ does not stop this command.`,
 					"no --account, so the owner of this checkout's origin remote is used: %s\n", wanted)
 			}
 
+			if auth.SandboxMode() {
+				if wanted == "" {
+					// Asked BEFORE the link, not after: an authorization started
+					// with no account to attach ends in "name the account" once the
+					// member has already clicked, and the agent's way out used to be
+					// a second link and a second authorization. Which account is
+					// the member's to say - it is never inferred, not even when
+					// they reach exactly one.
+					return errSandboxConnectNeedsAccount
+				}
+				return startConnectInSandbox(cmd, pc, before, wanted)
+			}
+
 			// Identify first, always. Which way in is right depends on
 			// whether the app is already installed on the account, and that is
 			// a fact the caller may not have.
@@ -156,7 +196,7 @@ does not stop this command.`,
 			}
 			fmt.Fprintf(msg, "Open this URL and authorize, so the provider can say what you can connect:\n\n    %s\n\n", install.InstallUrl)
 			if install.ExpiresAt != nil {
-				fmt.Fprintf(msg, "The link expires %s.\n", install.ExpiresAt.Local().Format("15:04"))
+				fmt.Fprintf(msg, "The link expires %s.\n", expiryLabel(*install.ExpiresAt))
 			}
 			fmt.Fprintf(msg, "Waiting for the connection to appear...\n")
 
@@ -180,19 +220,11 @@ does not stop this command.`,
 			if err != nil {
 				return err
 			}
-
-			out := cmd.OutOrStdout()
-			if f.format == formatJSON {
-				return writeJSON(out, created)
-			}
-			fmt.Fprintf(out, "Connected %s (%s), installation %s, connection %s.\n",
-				created.AccountLogin, created.AccountType, created.InstallationId, created.ConnectionId)
-			// The id is on the line above. A suggestion that cannot be run as
-			// printed costs a round trip for nothing, and `pipeline repos`
-			// refuses without --connection on purpose - nothing is assumed
-			// from a list of one, including a list of one connection.
-			fmt.Fprintf(out, "\n`asgard-cli pipeline repos --connection %s` lists what it can reach; a\nrepository missing from that list is one the installation was not granted,\nwhich is changed on the provider rather than here.\n", created.ConnectionId)
-			return nil
+			// The connection id is printed with the next command to run: a
+			// suggestion that cannot be run as printed costs a round trip, and
+			// `pipeline repos` refuses without --connection on purpose -
+			// nothing is assumed from a list of one connection.
+			return printConnected(cmd, f.format, created)
 		},
 	}
 
@@ -200,9 +232,12 @@ does not stop this command.`,
 	cmd.Flags().BoolVar(&noBrowser, "no-browser", false,
 		"do not open a browser; the URL is printed either way")
 	cmd.Flags().StringVar(&account, "account", "",
-		"which provider account to connect; defaults to the owner of this checkout's origin remote")
+		"the GitHub organisation or user the app installation belongs to - the account being connected, not the person authorizing; "+
+			"defaults to the owner of this checkout's origin remote. In the Workbench sandbox it is required, and --continue takes it too")
 	cmd.Flags().DurationVar(&wait, "wait", connectTimeout,
 		"how long to wait for the connection to appear before giving up")
+	cmd.Flags().BoolVar(&cont, "continue", false,
+		"in the Workbench sandbox: wait for the connection the previous connect started, after the member opened its link")
 	return cmd
 }
 
@@ -257,6 +292,9 @@ func waitForConnection(
 			lastErr = nil
 			for _, c := range conns {
 				if !before[c.ConnectionId] {
+					// The platform made this connection in its callback, so no
+					// call of ours was the side effect; seeing it appear is.
+					platform.NoteSideEffect()
 					return c, nil, false, nil
 				}
 			}
@@ -277,6 +315,7 @@ func waitForConnection(
 					// It connected, and the listing has not caught up. Fetch it
 					// rather than reporting a bare id.
 					if c, gerr := pc.Client.GetConnection(ctx, status.ConnectionId); gerr == nil {
+						platform.NoteSideEffect()
 						return c, nil, false, nil
 					}
 				}
@@ -335,11 +374,26 @@ func attachNamedAccount(
 		}
 		fmt.Fprintf(msg, "  %s (%s) - %s%s\n", in.AccountLogin, in.AccountType, repositoryScope(in.RepositorySelection), held)
 	}
+	// The list is what is ALREADY installed, so on its own it reads as the
+	// whole choice - and it was taken as one: an agent connected the only org
+	// listed, for a member who never got to say which org they meant. Another
+	// account is one flag away; say so every time the list is shown.
+	fmt.Fprintf(msg, "\nThese are the accounts the app is already installed on. To connect a different\n"+
+		"organisation or personal account, name it with --account%s: the app's install\n"+
+		"page comes next, where the member picks that account, and the result is checked\n"+
+		"against the name before anything is connected.\n", continueHint())
 
 	if account == "" {
 		// Nothing to match and nothing to install towards either: which account
 		// this engagement is about is the one fact neither the checkout nor the
 		// provider supplied.
+		if auth.SandboxMode() {
+			// The authorization above still stands: the account is all that is
+			// missing, so the remedy is this same step with it, not a new link.
+			return nil, errors.New("no account to connect. The member's authorization still stands - do not start over.\n" +
+				"Ask the member which GitHub organisation or personal account to connect (listed above, or another one), then run\n" +
+				"    asgard-cli pipeline connect --continue --account <login>")
+		}
 		return nil, fmt.Errorf(
 			"no --account, and this is not a git checkout with a recognisable origin remote.\n" +
 				"Name the account to connect with --account; the ones you reach are listed above")
@@ -376,6 +430,9 @@ func installFirst(
 	noBrowser bool,
 	wait time.Duration,
 ) (*platform.VcsConnection, error) {
+	if auth.SandboxMode() {
+		return nil, installInSandbox(cmd, pc, before, account)
+	}
 	ctx := cmd.Context()
 	msg := cmd.ErrOrStderr()
 
@@ -503,4 +560,19 @@ func findInstallation(installations []*platform.UserInstallation, account string
 // wrong connects an account nobody asked for.
 func isGitHubHost(host string) bool {
 	return host == "github.com" || host == "www.github.com"
+}
+
+// continueHint is how --account is passed at the point the account list is
+// shown: in the sandbox that is the second step, on a desktop a fresh run.
+func continueHint() string {
+	if auth.SandboxMode() {
+		return " (asgard-cli pipeline connect --continue --account <login>)"
+	}
+	return " (asgard-cli pipeline connect --account <login>)"
+}
+
+// expiryLabel names the zone: a bare "20:54" was read in the member's zone by
+// an agent relaying it from a UTC sandbox.
+func expiryLabel(t time.Time) string {
+	return t.Local().Format("15:04 MST")
 }

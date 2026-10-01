@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/auth"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/gitrepo"
 )
 
@@ -190,8 +191,22 @@ func refuseObviouslyWrongRoot(root string) error {
 	if filepath.Dir(root) == root {
 		return fmt.Errorf("refusing to write the skeleton into the filesystem root (%s)", root)
 	}
+	// In the Workbench assistant's sandbox, the working directory holds
+	// every repository the member works on, side by side. A skeleton there
+	// would make it one repository that swallows all the others - a
+	// declaration is found by walking up, so every repository below would
+	// read it as its own.
+	if auth.SandboxMode() && filepath.Clean(root) == sandboxWorkDir {
+		return fmt.Errorf(
+			"refusing to write the skeleton into %s itself: in the Workbench sandbox it holds every repository side by side\n\n"+
+				"    mkdir %s/<customer>-asgard-kube && cd %s/<customer>-asgard-kube\n"+
+				"    asgard-cli init", sandboxWorkDir, sandboxWorkDir, sandboxWorkDir)
+	}
 	return nil
 }
+
+// sandboxWorkDir is the Workbench sandbox's working directory.
+const sandboxWorkDir = "/work"
 
 // ensureGit offers to make this a git repository.
 //

@@ -1520,7 +1520,7 @@ func listUnchecked(out io.Writer) error {
 	}
 	fmt.Fprintf(out, "%d of %d document(s) name something they have not been held against.\n",
 		said, total)
-	fmt.Fprintf(out, "\nIf you found out one of these on a deployment, file it: asgard-cli issue-report --new\n")
+	fmt.Fprintf(out, "\nIf you found out one of these on a deployment, file it: asgard-cli issue-report --new, then --send\n")
 	return nil
 }
 

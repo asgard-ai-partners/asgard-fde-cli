@@ -133,7 +133,10 @@ it.
 }
 
 func newRunsGetCmd() *cobra.Command {
-	var f pipelineFlags
+	var (
+		f            pipelineFlags
+		versionBumps bool
+	)
 
 	cmd := &cobra.Command{
 		Use:   "get <run-id>",
@@ -144,6 +147,12 @@ The report's parts are the lint findings, the variable changes, the resource
 changes as a diff per CR, and the server-side dry run. A run that
 failed also carries the reason and which step produced it, so the first thing to
 read is the top, not the log.
+
+A tag moves the version labels a chart stamps on every resource, so most
+updates of a release are nothing else. The platform marks those "version bump"
+and they are folded into one line under resources, with the two versions;
+--version-bumps lists them one by one. Every other update is a change of
+content and is always listed. --format json carries every row either way.
 
 Exit code is 1 when the run failed, so a script can branch on it.`,
 		Args: cobra.ExactArgs(1),
@@ -162,7 +171,7 @@ Exit code is 1 when the run failed, so a script can branch on it.`,
 					return err
 				}
 			} else {
-				printRun(out, run)
+				printRun(out, run, versionBumps)
 			}
 			if platform.Failed(run.State) {
 				return ErrSilent
@@ -171,8 +180,14 @@ Exit code is 1 when the run failed, so a script can branch on it.`,
 		},
 	}
 	f.register(cmd, false)
+	cmd.Flags().BoolVar(&versionBumps, versionBumpsFlag, false, versionBumpsUsage)
 	return cmd
 }
+
+const (
+	versionBumpsFlag  = "version-bumps"
+	versionBumpsUsage = "list every update that only moves the version, instead of folding them into one line"
+)
 
 func newRunsLogCmd() *cobra.Command {
 	var f pipelineFlags
@@ -225,6 +240,8 @@ func newRunsWatchCmd() *cobra.Command {
 		commit  string
 		runID   string
 		appear  time.Duration
+
+		versionBumps bool
 	)
 
 	cmd := &cobra.Command{
@@ -253,6 +270,9 @@ target unless you tagged HEAD; and the run summaries carry no commit, so
 matching on one costs a request per run per poll.
 
 --release alone follows that release's newest run. --run follows one by id.
+
+The plan report is printed as "pipeline runs get" prints it: updates that only
+move the version are folded into one line, and --version-bumps lists them.
 
 If no run appears, this says which of two cases it is. When there are runs it
 lists them - the push was received, and the search was for the wrong name. When
@@ -292,7 +312,7 @@ failure: the plan is good and a person has to approve it.`,
 					return err
 				}
 			} else {
-				printRun(out, final)
+				printRun(out, final, versionBumps)
 			}
 			if platform.Failed(final.State) {
 				return ErrSilent
@@ -306,6 +326,7 @@ failure: the plan is good and a person has to approve it.`,
 	cmd.Flags().StringVar(&commit, "commit", "", "wait for the run of this commit SHA, which a push may not have created yet")
 	cmd.Flags().StringVar(&runID, "run", "", "follow this run id, instead of finding one")
 	cmd.Flags().DurationVar(&appear, "appear-timeout", appearTimeout, "how long to wait for a run of --commit to appear")
+	cmd.Flags().BoolVar(&versionBumps, versionBumpsFlag, false, versionBumpsUsage)
 	return cmd
 }
 
@@ -577,8 +598,9 @@ run does not queue behind the stuck one.`,
 }
 
 // printRun renders a run for a reader: the header, the steps, then whichever of
-// the report's parts have anything in them.
-func printRun(out io.Writer, r *platform.Run) {
+// the report's parts have anything in them. Updates that only move the version
+// are folded into one line unless versionBumps asks for each of them.
+func printRun(out io.Writer, r *platform.Run, versionBumps bool) {
 	fmt.Fprintf(out, "run          #%d  %s\n", r.Number, r.State)
 	fmt.Fprintf(out, "release      %s\n", r.ReleaseName)
 	fmt.Fprintf(out, "trigger      %s %s\n", r.Trigger, r.Ref)
@@ -602,6 +624,8 @@ func printRun(out io.Writer, r *platform.Run) {
 	}
 	if rep.NoChanges {
 		fmt.Fprintf(out, "\nplan: no changes\n")
+	} else if versionOnly(rep) {
+		fmt.Fprintf(out, "\nplan: only version labels change%s; review is still required\n", versionSpan(rep, " (%s)"))
 	}
 	if len(rep.Lint) > 0 {
 		fmt.Fprintf(out, "\nlint\n")
@@ -621,8 +645,23 @@ func printRun(out io.Writer, r *platform.Run) {
 	}
 	if len(rep.Resources) > 0 {
 		fmt.Fprintf(out, "\nresources\n")
+		bumps := 0
 		for _, res := range rep.Resources {
-			fmt.Fprintf(out, "  %-10s %-24s %-40s\n", res.Change, res.Kind, res.Name)
+			if res.VersionBump() {
+				bumps++
+				if !versionBumps {
+					continue
+				}
+			}
+			fmt.Fprintf(out, "  %-12s %-24s %-40s\n", resourceChangeLabel(res), res.Kind, res.Name)
+		}
+		if bumps > 0 && !versionBumps {
+			noun := "resources"
+			if bumps == 1 {
+				noun = "resource"
+			}
+			fmt.Fprintf(out, "  %-12s %d %s, version labels only%s  (--%s lists them)\n",
+				versionBumpLabel, bumps, noun, versionSpan(rep, "  %s"), versionBumpsFlag)
 		}
 	}
 	if rep.DryRun != nil && !rep.DryRun.Ok {
@@ -638,6 +677,47 @@ func printRun(out io.Writer, r *platform.Run) {
 		fmt.Fprintf(out, "\nWaiting for review. Apply uses the chart and values captured at plan time.\n")
 		fmt.Fprintf(out, "    asgard-cli pipeline runs approve %s\n", r.RunId)
 	}
+}
+
+const versionBumpLabel = "version bump"
+
+// resourceChangeLabel is what the change column says: an update that only
+// moves the version reads "version bump", everything else its change.
+func resourceChangeLabel(d *platform.ResourceDiff) string {
+	if d.VersionBump() {
+		return versionBumpLabel
+	}
+	return d.Change
+}
+
+// versionOnly reports whether the only thing the plan would change is version
+// labels: at least one version bump, every other resource unchanged, and no
+// variable changed. Such a run still waits for review.
+func versionOnly(rep *platform.PlanReport) bool {
+	bumps := 0
+	for _, res := range rep.Resources {
+		switch {
+		case res.VersionBump():
+			bumps++
+		case res.Change != "unchanged":
+			return false
+		}
+	}
+	for _, v := range rep.Variables {
+		if v.Change != "unchanged" {
+			return false
+		}
+	}
+	return bumps > 0
+}
+
+// versionSpan formats "<previous> -> <this>" through layout, or returns ""
+// when the report does not name both versions.
+func versionSpan(rep *platform.PlanReport, layout string) string {
+	if rep.PreviousAppVersion == "" || rep.AppVersion == "" {
+		return ""
+	}
+	return fmt.Sprintf(layout, rep.PreviousAppVersion+" -> "+rep.AppVersion)
 }
 
 func short(sha string) string {

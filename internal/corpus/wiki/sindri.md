@@ -88,7 +88,9 @@ Weekly or Custom. A Directory is required, so a Project with none cannot have a
 Routine. Scheduled runs start a few minutes after the set time, not on it. Each
 run is a whole conversation, kept in the Routine's history for 90 days, and a
 run that stops to ask the user something waits until somebody replies. A
-Routine can be paused with its Active box or run at once with Run now.
+Routine can be paused with its Active box or run at once with Run now. A
+paused Routine drops out of the Routines list page until Show disabled is
+ticked there.
 
 A Routine is not a chart's to write: no CR describes it, and it lives in the
 Project it was created in. It is the answer when a customer wants an agent's
@@ -164,8 +166,9 @@ is `../usecase/agent-hub.md` and `../usecase/flow-agent-supervisor.md`.
   [general](https://docs.asgard-ai.com/docs/product-suite/sindri/features/settings/general)
   and [personalization](https://docs.asgard-ai.com/docs/product-suite/sindri/features/settings/personalization)
   - asgard-docs `6261fdff`
-- [Routines](https://docs.asgard-ai.com/docs/product-suite/sindri/features/routines),
-  [retail stockout transfer](https://docs.asgard-ai.com/docs/product-suite/sindri/case-studies/retail-stockout-transfer)
+- [Routines](https://docs.asgard-ai.com/docs/product-suite/sindri/features/routines)
+  - asgard-docs `7243a623`
+- [retail stockout transfer](https://docs.asgard-ai.com/docs/product-suite/sindri/case-studies/retail-stockout-transfer)
   and [Configuration](https://docs.asgard-ai.com/docs/product-suite/odin/features/agent-hub-configuration)
   - asgard-docs `6261fdff`
 

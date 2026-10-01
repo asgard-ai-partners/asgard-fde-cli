@@ -150,8 +150,8 @@ spec:
   adminApiKey:                    # guards the admin API, separate from the channel
     valueFrom:
       secretKeyRef:
-        name: preset-agent-hub
-        key: api_key
+        name: {{ include "<chart>.appSecretName" . }}
+        key: asgard_resource_api_key
   line:
     # Both from the LINE Developers console for this channel. They are NEW
     # keys, so each has to be declared under `appSecret:` and then set - a
