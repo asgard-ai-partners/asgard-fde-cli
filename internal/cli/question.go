@@ -28,15 +28,14 @@ done. The living spec describes what is, not what nobody knows. So without
 ` + "`" + work.QuestionFile + "`" + ` the question is rediscovered by the next person, usually by
 making the wrong assumption first.
 
-**Read this before designing anything.** The fastest way to do damage in a
-repository somebody else started is to design past a question they already knew
-was open.
+Read this before designing anything, so you do not design past a question
+somebody already knew was open.
 
-**These are the engagement's own records, and the customer does not see
-them.** What somebody on the customer's side has to see, answer or supply goes
-on the workspace's Workbench (asgard-cli workbench create); a gap in this tool
-goes upstream (asgard-cli issue-report). "asgard-cli workbench --help" has the
-table for which is which.`,
+These are the engagement's own records, and the customer does not see them.
+What somebody on the customer's side has to see, answer or supply goes on the
+workspace's Workbench (asgard-cli workbench create); a gap in this tool goes
+upstream (asgard-cli issue-report). "asgard-cli workbench --help" has the table
+for which is which.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := checkFormat(format); err != nil {
@@ -149,12 +148,12 @@ func printWaiting(out io.Writer, state stage.State) {
 		fmt.Fprintf(out, "  %-3d %s\n", byOwner[o], o)
 	}
 	if unowned > 0 {
-		fmt.Fprintf(out, "  %-3d **nobody named** - a question with no owner is not tracked,\n"+
-			"      it is just written down\n", unowned)
+		fmt.Fprintf(out, "  %-3d nobody named - a question with no owner is not tracked,\n"+
+			"      only written down\n", unowned)
 	}
 
-	fmt.Fprintf(out, "\nThat is a normal state and not a gap. What is worth checking while it\nlasts:\n\n"+
-		"  - the questions that are **ours** rather than theirs - anything for the\n"+
+	fmt.Fprintf(out, "\nThat is a normal state. What to check while it lasts:\n\n"+
+		"  - the questions that are ours rather than theirs - anything for the\n"+
 		"    platform team gets asked before the next meeting, not during it.\n"+
 		"    `.agents/skills/asgard-platform/wiki/platform-unknowns.md`\n"+
 		"  - whether the meeting has something to take into it - the\n"+
@@ -181,8 +180,8 @@ already answer is not one - answer it instead.
     asgard-cli question add "which of the two stock figures is authoritative" \
       --blocks REQ-001 --ask "the warehouse lead"
 
---ask matters more than it looks: a question with no owner is a wish. --blocks is
-what makes it findable from the work it is holding up.
+Always set --ask: a question with no owner does not get answered. --blocks makes
+it findable from the work it is holding up.
 
 This is not the place to park a question to avoid asking it. If the customer can
 answer it in the next meeting, it belongs in that agenda, not in a table.`,
@@ -214,7 +213,7 @@ answer it in the next meeting, it belongs in that agenda, not in a table.`,
 	}
 
 	cmd.Flags().StringVar(&blocks, "blocks", "", "what this holds up - a REQ or TASK id, or a decision in words (defaults to empty)")
-	cmd.Flags().StringVar(&ask, "ask", "", "who can answer it (defaults to empty, and a question with no owner is a wish)")
+	cmd.Flags().StringVar(&ask, "ask", "", "who can answer it (defaults to empty; a question with no owner does not get answered)")
 
 	return cmd
 }
@@ -227,9 +226,8 @@ func newQuestionAnsweredCmd() *cobra.Command {
 		Short: "Move a question to the answered table",
 		Long: `Move a question to the answered table, with the answer and today's date.
 
-The row moves rather than being deleted. That a question was once open is what
-explains the shape of the design that answered it, and deleting the row leaves
-the design looking arbitrary.
+The row moves rather than being deleted, because the open question explains
+the shape of the design that answered it.
 
     asgard-cli question answered 3 "location 608 only, the row's own is stale" \
       --decision 2026-09-04-safety-stock-source.md

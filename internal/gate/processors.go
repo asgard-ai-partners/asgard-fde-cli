@@ -22,11 +22,10 @@ import (
 // 2097 and beyond. The table's source is byte-identical, so the marker moves
 // without the table changing - which is the only case where that is honest.
 //
-// It is a pinned copy, and it is also **incomplete**: `await` is documented on
-// `stream-llm-completion-message`, set in five production deployments, and
-// declared in neither this file's source nor the CRD. So treat it as the set of
-// keys the definitions know about, never as the set a chart may use.
-const processorDefsRead = "2026-09-11, asgard-core 623ceb50, against asgard-kube cbd8d70"
+// It is a pinned copy, and it is incomplete: a processor with dynamic config
+// takes keys no definition names. Treat it as the set of keys the definitions
+// know about, never as the set a chart may use.
+const processorDefsRead = "asgard-core 478cf5d6, against asgard-kube 3da0365"
 
 // processorDef holds only what a rule reads. It carried five more fields -
 // optional keys, defaults, whether extra keys are allowed, and the declared
@@ -68,16 +67,9 @@ var processorDefs = map[string]processorDef{
 //	    and the scaffold itself shipped a Workflow whose only LLM processor had
 //	    no completionModel - it rendered, it verified, and it could not run.
 //
-// **There is no W3.** It was written - flag a key the contract does not declare
-// on a processor that takes no arbitrary keys - and it fired on five of five
-// production charts, every time for `await`. `await` is documented with real
-// semantics on `stream-llm-completion-message` and set in five separate
-// deployments, and it is in neither `ProcessorDefinitions` nor the CRD. So
-// **the definitions are a subset of what the runtime accepts, not the config
-// contract**, and a rule built on treating them as complete calls correct
-// charts wrong. It was deleted rather than tuned: a checker that cries wolf
-// teaches people to change what it can see rather than what is wrong, which
-// this material has already caused once.
+// There is no W3, a rule flagging a key the definitions do not declare: the
+// definitions are a subset of what the runtime accepts, not the config
+// contract, so such a rule would call correct charts wrong.
 //
 // The counterpart to W2 is what it deliberately does not check: a required key
 // that *does* have a default is left alone, because omitting it is legal. That

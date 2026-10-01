@@ -10,9 +10,9 @@
     一  每個情境要先拿到什麼才做得起來 - 一個子題一頁,左欄是問句本身
     二  問完之後那一頁的產出是什麼,包括查不到的時候它會怎麼回答
 
-**A discovery deck's beats are the customer's, not ours.** The two above are
-read off their own document and their own wording; a proposal's beats would be
-conclusions, and `SKILL.md` step 5 is where that inverts.
+A discovery deck's beats come from the customer. The two above are taken from
+their own document and their own wording. A proposal's beats would be
+conclusions; `SKILL.md` step 5 covers the difference.
 
 ## The pages
 
@@ -29,36 +29,34 @@ conclusions, and `SKILL.md` step 5 is where that inverts.
 
 ## What each page rests on
 
-**3, 4, 5, 6 carry the customer's own naming**, including 「工單系統」 and
-「聊天管道」 rather than the CR kinds behind them. That is the discovery deck's
-rule and not a stylistic choice - `SKILL.md` step 5 has why a proposal's
-implementation nouns are wrong here too.
+Pages 3, 4, 5 and 6 use the customer's own naming, including 「工單系統」 and
+「聊天管道」, not the CR kinds behind them. This is a rule for discovery decks;
+`SKILL.md` step 5 says why a proposal's implementation nouns are wrong here too.
 
-**4, 5 and 7 open with `.said`**, which takes somebody's actual words and
-nothing else. Three more lines on these pages were sentences about the slide
-rather than quotes; they are plain body text now, and question 0 of
-`## Before you send it` is what found them.
+Pages 4, 5 and 7 open with `.said`, which holds somebody's actual words and
+nothing else. Sentences about the slide are plain body text, not `.said`;
+question 0 of `## Before you send it` checks for this.
 
-**Every 產出 column ends with a failure behaviour** - 查不到就說查不到, and page
+Every 產出 column ends with a failure behaviour - 查不到就說查不到 - and page
 1 says why: in a customer-service scenario that line persuades more than any
 capability does. A page whose 產出 column has no failure line is not finished.
 
-**The questions are the left column and they are the page.** A sub-topic page is
-one question per `h3`, blue, with the grey supporting line under it only where
-there is one. The heading is the question itself rather than a label for it.
+The questions are the left column and the main content of the page. A sub-topic
+page is one question per `h3`, blue, with the grey supporting line under it only
+where there is one. The heading is the question itself, not a label for it.
 
 ## Screenshots, and when to retake them
 
-This deck has none, which is the discovery shape working: it asks rather than
-shows. A deck that does carry them records, per screenshot, the exact path it
-was taken from and what is visible on it - **a platform release ages every
-screen, and an out-of-date screen looks exactly like a current one.**
+This deck has none, because a discovery deck asks rather than shows. A deck that
+does carry them records, per screenshot, the exact path it was taken from and
+what is visible on it. A platform release can change any screen, and nothing on
+an out-of-date screenshot shows that it is out of date.
 
 ## Not done
 
-- **No proposal is worked here.** `references/design.md` says the same about its
+- No proposal is worked here. `references/design.md` says the same about its
   own class table: the split between a working set and a specialised one is
   evidence about a discovery deck, and nothing states how a proposal differs
   page by page.
-- **The 產出 wording is one engagement's.** It reads well and no second
-  engagement has been held against it.
+- The 產出 wording comes from one engagement. No second engagement has been
+  held against it.

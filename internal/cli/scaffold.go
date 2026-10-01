@@ -148,11 +148,11 @@ func runScaffold(cmd *cobra.Command, root string, force bool) error {
 	if len(edited) > 0 {
 		reportShipped(out, edited, "differ from what this CLI last wrote to them, so somebody here\n"+
 			"changed them:")
-		fmt.Fprintf(out, "\nThey were left alone. `--force` would discard those changes, which is\n"+
-			"worth knowing before running it: the scaffolded AGENTS.md ships a project\n"+
-			"list whose rows say `TODO: what it does`, and answering one is exactly\n"+
-			"this state. A correction to shipped material belongs upstream, in the\n"+
-			"CLI, rather than in a file the next `--force` replaces.\n")
+		fmt.Fprintf(out, "\nThey were left alone. `--force` would discard those changes. For example,\n"+
+			"the scaffolded AGENTS.md ships a project list whose rows say\n"+
+			"`TODO: what it does`, and filling one in puts the file in this state.\n"+
+			"A correction to shipped material belongs upstream, in the CLI, rather\n"+
+			"than in a file the next `--force` replaces.\n")
 	}
 
 	if len(ahead) > 0 {
@@ -175,9 +175,9 @@ func runScaffold(cmd *cobra.Command, root string, force bool) error {
 	if len(retired) > 0 {
 		reportShipped(out, retired, "were written here by an asgard-cli that shipped them, and this one\n"+
 			"does not:")
-		fmt.Fprintf(out, "\nNothing compares them against anything any more, so whatever they say is\n"+
-			"what they will keep saying. Read them and delete them; a scaffold does not\n"+
-			"remove files from a customer's repository on its own.\n")
+		fmt.Fprintf(out, "\nNothing checks them any more, so they will not be updated. Read them and\n"+
+			"delete them; a scaffold does not remove files from a customer's repository\n"+
+			"on its own.\n")
 	}
 
 	if len(preserved) > 0 {

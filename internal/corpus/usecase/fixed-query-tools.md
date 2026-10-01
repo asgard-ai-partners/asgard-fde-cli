@@ -4,29 +4,29 @@ description: public audience, a known set of questions
 ---
 # Fixed query tools
 
-A `Toolset` of zero-parameter queries. The read path for a **public** audience.
+A `Toolset` of zero-parameter queries. The read path for a public audience.
 
 **Seen in:** a public catalogue widget whose tools cover products,
 categories, locations, recommendations and downloads.
 
-**Checked:** 2026-09-02 against every tool in one Toolset - all of them carry a zero-parameter inputSchema - and the CRD.
+**Checked:** against every tool in one Toolset - all of them carry a zero-parameter inputSchema - and the CRD. What a tool manifest hands the model against asgard-core `478cf5d6` `internal/bpcontroller/server/bp_controller.go`; the absence of `Toolset.spec.instruction` against asgard-kube `3da0365` `crd/asgard-ai.com_toolsets.yaml`.
 
-**Unchecked:** the guidance on writing a tool description. Nothing mechanical checks whether it names the tool it could be confused with.
+**Unchecked:** whether the description guidance changes which tool a model picks. That shows only against a running agent.
 
-**Read the platform side first:** `../wiki/semantic-model.md` -
+Read the platform side first: `../wiki/semantic-model.md` -
 what a Semantic Model is, how it is built, and its limits. This page assumes you have.
 
 ## When this shape, and when not
 
-Use it when the audience is **anonymous**. What can be asked is then decided by a
+Use it when the audience is anonymous. What can be asked is then decided by a
 few statements in version control, no user input reaches SQL, and widening it
 takes a CR change and a review.
 
-Do **not** use it for an internal audience with open-ended questions - you will
+Do not use it for an internal audience with open-ended questions - you will
 end up writing a tool per question. A semantic layer is the right shape there.
 
-The trade is deliberate: the agent can only answer what the queries return, and
-that is the property being bought.
+The agent can only answer what the queries return, and that limit is
+deliberate.
 
 ## The shape
 
@@ -44,11 +44,11 @@ One Workflow per tool, each with its own entry name. The Toolset points at
 
 That writes the structure below with the fields that fail silently already in
 place - the display annotation, the labels the UI needs, the current field names.
-**Copying the skeleton by hand is where those get lost**, because nothing tells
-you they are missing: not helm lint, not CRD validation, not a server dry-run.
+When the skeleton is copied by hand these get lost, and nothing reports them
+missing: not helm lint, not CRD validation, not a server dry-run.
 
-The generated file marks the judgement calls TODO. Those are what the rest of
-this page is about.
+The generated file marks the judgement calls TODO. The rest of this page covers
+them.
 
 ## The skeleton
 
@@ -153,14 +153,14 @@ spec:
 Put the reasoning - why this projection, which soft-delete filter, why a `COUNT`
 is `DISTINCT` - in the file's header comment. There is nowhere else for it.
 
-## Zero parameters is the whole point
+## Zero parameters
 
-Every tool takes **no arguments**, so no user input ever reaches SQL and the
+Every tool takes no arguments, so no user input ever reaches SQL and the
 injection surface is zero.
 
-**That is the entry's doing and not the field's.** `sql` is a config like every
+The entry provides that, not the field. `sql` is a config like every
 other, so it takes a `value`, an `expression` or a `template` - string-building
-a query out of the payload is available and is exactly the hole this shape
+a query out of the payload is possible, and it is the hole this shape
 closes. Where a query genuinely needs a parameter, it is
 `sql.args.<n>.type` and `sql.args.<n>.value` rather than interpolation -
 `../wiki/processors.md` has the numbering, which starts at 1 and stops at the
@@ -175,10 +175,11 @@ product, and the agent picks from the result.
 ## Do not ship two tools that differ only in projection
 
 Two tools on the same FROM/JOIN differing only in which columns they return force
-each one's `description` to name the other as the alternative - **and that is
-exactly where a model picks wrong**.
+each one's `description` to name the other as the alternative, and that is
+where a model picks wrong.
 
-Merge them, and make the difference a **column value** instead of a tool choice.
+
+Merge them, and make the difference a column value instead of a tool choice.
 "Do I want the empty categories?" becomes `product_count = 0` rather than a
 second tool. One deployment merged tools together this way, and recorded that
 the merge also settled a real inconsistency: the two queries had used
@@ -189,12 +190,12 @@ what existed.
 
 ### Which queries become tools
 
-Start from **what the audience actually asks**, not from what the database can
+Start from what the audience actually asks, not from what the database can
 answer. For a public catalogue that is a short list: what do you sell, how are
 they grouped, where are you, what fits my situation, where do I download the
 spec. Five questions, five tools.
 
-A useful test: **could a person answer this from one screen of the website?** If
+A useful test: could a person answer this from one screen of the website? If
 yes it is probably a tool. If it needs judgement or comparison, it belongs to a
 knowledge source instead.
 
@@ -204,50 +205,52 @@ obvious.
 
 ### Writing `tooling.description`
 
-The model picks a tool from this text alone, so it carries three things:
+The model picks a tool from its `tooling.name`, this text and its inputSchema -
+the only parts of a tool manifest that describe the tool - and a zero-parameter inputSchema says
+nothing, so this text carries three things:
 
     <what it returns>, <how many rows>, and <when to reach for it>
 
     列出全部 10 個服務據點的名稱、地址、電話。
     客戶問「你們在哪裡有據點」「花蓮有沒有」「電話幾號」時用這支。
 
-**Say the row count**, measured. It tells the model whether to expect a
+Say the row count, measured. It tells the model whether to expect a
 complete list or a sample, and it tells the next reader whether the query still
 does what it claims.
 
-**Say what the tool does not do.** A zero-parameter tool returns everything and
+Say what the tool does not do. A zero-parameter tool returns everything and
 the model filters afterwards - if that is not said, it will wait for a filter
 parameter that does not exist, or call the tool repeatedly hoping for different
 results.
 
-**Say what an empty result means.** "No rows" is not "we do not sell it" unless
+Say what an empty result means. "No rows" is not "we do not sell it" unless
 you say so, and the difference is a wrong answer to a customer either way.
 
-**What is true of several of these tools goes in the skill instead**, where it
+What is true of several of these tools goes in the skill instead, where it
 is written once rather than in every description that could carry it -
 `../wiki/tool-description-and-skill.md`, which is read before both halves are
 written, because the model reads them together.
 
 ## Fields that are not obvious
 
-**`Toolset.spec.instruction` does not exist.** It was removed from the CRD. Tool
+`Toolset.spec.instruction` does not exist. It was removed from the CRD. Tool
 usage guidance lives in each tool's Workflow, in
 `entries[].tooling.description`.
 
-Do not add it back: **the CRD silently prunes it, `kubectl apply
+Do not add it back: the CRD silently prunes it, `kubectl apply
 --dry-run=server` reports success, and then helm's server-side apply fails the
-deploy** with `field not declared in schema`. That cost a broken release once,
+deploy with `field not declared in schema`. That cost a broken release once,
 after passing every dry run.
 
-**The 口徑 lives in the SQL now.** With no `instruction` field, anything a reader
+The 口徑 lives in the SQL now. With no `instruction` field, anything a reader
 needs to know - soft deletes, how a category path is built, why a `COUNT` is
 `DISTINCT` - goes in the header comment of the tool's file.
 
-**Measure the row counts and write them down.** A tool's description saying "89
+Measure the row counts and write them down. A tool's description saying "89
 products" sets the agent's expectations; a stale number is worse than none, so
 note when it was measured.
 
-**Every tool workflow needs the full workflow-set label set**, with
+Every tool workflow needs the full workflow-set label set, with
 `workflow-set-type: automation_tool` - that is also what a Toolset's tool picker
 filters on.
 
@@ -262,10 +265,10 @@ asgard-cli gate               # every local check, the lint step included
 asgard-cli verify <project>   # or one step alone, while iterating
 ```
 
-**Never run `helm lint` by hand**: without the reserved `asgard` values file
+Never run `helm lint` by hand: without the reserved `asgard` values file
 that `gate` supplies, every chart that labels anything fails. `asgard-cli gate
 --help` says why.
 
-The xref check resolves every `(workflow, entry)` pair. **A wrong `entry` name is
-as fatal as a wrong workflow name and apply catches neither**, so both halves are
+The xref check resolves every `(workflow, entry)` pair. A wrong `entry` name is
+as fatal as a wrong workflow name and apply catches neither, so both halves are
 checked.

@@ -4,34 +4,34 @@ description: the split follows the audience, ask against watch, two releases of 
 # Decide how the work splits into projects
 
 How the work splits into projects is decided by interviewing the customer,
-not by looking at their systems. The output is a decision, not code.
+not by looking at their systems. The output is a decision; no code is written
+in this stage.
 
 <<with .InterviewRequests>><<range .>>  <<.ID>>  <<.Title>>
 <<end>>
 That request has no target project yet, and deciding it is this stage. The output
-is a decision, not code.<<else>>No request is open, so this page is being read out of order. This stage is the
+is a decision; no code is written here.<<else>>No request is open, so this page is being read out of order. This stage is the
 interview that decides how the work splits into projects, and it starts from
 something a customer asked for: `asgard-cli request add "<what they asked for>"`.
 
 The interview that produces one is `../guide/requirements.md`.<<end>>
 
-A **project** is one Helm chart deployed to one namespace, and it always lives
+A project is one Helm chart deployed to one namespace, and it always lives
 under this workspace at `projects/<slug>/` - `asgard-cli project add` puts it
 there. There is nothing to decide about where it goes.
 
-The split itself is not about tidiness - it follows the audience, because two
-audiences need different entry points and different read paths, and those cannot
-be shared:
+The split follows the audience. Two audiences need different entry points and
+different read paths, and those cannot be shared:
 
   internal, authenticated callers   -> the platform's agent hub, semantic layers
   public, anonymous visitors        -> your own BotProvider, fixed query tools
 
-So the question that decides the split is **who is on the other end**, asked once
-per capability the customer wants.
+The question that decides the split is who is on the other end, asked once per
+capability the customer wants.
 
-**A second question decides whether it is a project at all.** What do they do
-with the answer - ask it in the moment, or watch the same numbers every day? The
-second is a **Mimir dashboard**: a chart of DataConnector and SemanticLayer with
+A second question decides whether it is a project at all: what do they do with
+the answer - ask it in the moment, or watch the same numbers every day? The
+second is a Mimir dashboard: a chart of DataConnector and SemanticLayer with
 no entry point, no Agent and nothing to publish, and the deliverable after that
 is built by the customer in the product rather than by us in a chart.
 
@@ -40,49 +40,47 @@ is built by the customer in the product rather than by us in a chart.
     both    -> one model, two deliveries. Do not merge them into one estimate
 
 It still lives under `projects/<slug>/` and still deploys to a namespace, so it
-is a project mechanically. What it is not is a project shaped like the rest of
-this: `../guide/entry-point.md` and `../guide/knowledge.md` have nothing to say
-about it, and `asgard-cli verify` will say `0 agent(s)` and report **R11** - the
-SemanticLayer no Agent binds. Both are correct here and neither is a failure:
+is a project mechanically, but it is not shaped like the rest of this page:
+`../guide/entry-point.md` and `../guide/knowledge.md` have nothing to say
+about it, and `asgard-cli verify` will say `0 agent(s)` and report R11 - the
+SemanticLayer no Agent binds. Both are expected here and neither is a failure.
 R11 is an observation, because a render cannot tell a layer that is deliberately
 unbound from a read path somebody has not finished.
 `../usecase/mimir-dashboard.md` is the shape.
 
-**A third question is not about the split at all, and gets missed for that
-reason: how many environments.** A project is one chart, and that chart normally
-deploys more than once - `dev` and `prod` at least. Those are not two projects
-and not two charts. They are **two releases in `.asgard-pipeline.yaml` naming the
-same `chart:` directory**, differing by `on.pattern`, and each created against a
-**different platform project**:
+A third question is how many environments. It is not about the split, and it is
+often missed. A project is one chart, and that chart normally deploys more than
+once - `dev` and `prod` at least. Those are one project and one chart, with two
+releases in `.asgard-pipeline.yaml` naming the same `chart:` directory, differing
+by `on.pattern`, and each created against a different platform project:
 
     - name: <slug>-dev     pattern '^dev-[0-9]+\.[0-9]+\.[0-9]+$'   -> platform project A
     - name: <slug>-prod    pattern '^[0-9]+\.[0-9]+\.[0-9]+$'       -> platform project B
 
-The platform project is what decides the namespace, which is why the two have to
-be different ones: it is the same reason a deployed namespace reads
+The platform project decides the namespace, so the two have to be different
+ones. That is also why a deployed namespace reads
 `asgard-<workspace>-<project>-<env>` and carries the `-<env>` at all. There are
 no per-environment values files - what differs between them is the variables set
 on each release on the platform.
 
-**One release is the shape for a POC nobody will maintain.** It is a real answer,
-and worth writing down as one rather than arriving at by not asking. The cost of
-getting there by not asking is that it surfaces the first time somebody needs a
-staging deploy, when the platform project, the namespace and the release name are
-already the ones production uses. `asgard-cli gate` warns about a chart that one
-release names when that release says which environment it is, which is that
-mistake exactly.
+One release is the shape for a POC nobody will maintain. That is a valid answer;
+write it down as a decision. If nobody asks, the problem appears the first time
+somebody needs a staging deploy, when the platform project, the namespace and the
+release name are already the ones production uses. `asgard-cli gate` warns when a
+chart is named by only one release and that release says which environment it
+is.
 
 ## What to ask the customer
 
   - Which business systems hold the data an agent would need to read?
-    Get the system's name, what it is for, and **how it can be reached** - this
-    last one decides the whole integration, so do not leave it vague:
+    Get the system's name, what it is for, and how it can be reached. The last
+    one decides the whole integration, so get a specific answer:
 
         "Is this one of ours, and can we read its database directly?"
         "Does it have an API? Who has the credentials and the docs?"
         "If neither - is the only way in a person clicking through a screen?"
 
-    Ask it about **every** system, including the ones that sound obvious. A
+    Ask it about every system, including the ones that sound obvious. A
     warehouse system that turns out to have a REST API is a different design
     from one that only has a database, and both are different from one that
     only has a web console.
@@ -90,16 +88,17 @@ mistake exactly.
     anonymous visitors on a public page?
   - Is any of the knowledge unstructured - product documents, FAQs, pages on a
     website - rather than rows in a database?
-  - Is there anything the agent should be able to **change**, not just read?
+  - Is there anything the agent should be able to change, not just read?
     Every write path needs a spec and human approval, so find out early.
-  - **Which environments does this have to run in** - is there a staging or UAT
-    the customer expects to see it in before production, and who signs off there?
-    Ask it even when the answer is obviously "just prod": that is a decision, and
-    the release names and platform projects are cheap now and expensive later.
+  - Which environments does this have to run in - is there a staging or UAT the
+    customer expects to see it in before production, and who signs off there?
+    Ask it even when the answer is obviously "just prod". That answer is a
+    decision, and the release names and platform projects are cheap to change now
+    and expensive later.
 
 ## Build this table as you ask
 
-It is the whole output of the interview, and the split falls straight out of it:
+It is the whole output of the interview, and the split follows from it:
 
 | system | what it holds | how to reach it | who asks | what they want | read or write |
 |---|---|---|---|---|---|
@@ -107,11 +106,11 @@ It is the whole output of the interview, and the split falls straight out of it:
 | a marketplace | 該通路的庫存與訂單 | REST API, theirs | 內部,登入 | 跨通路比較 | read + write |
 | 官網型錄 | 產品、分類、規格 | PostgreSQL, ours | 匿名訪客 | 產品查詢 | read |
 
-*Composed from several engagements rather than taken from one, deliberately.
-Nothing shipped in this tool describes a particular customer's systems, and a
-worked example is the easiest place for that rule to slip.*
+*Composed from several engagements rather than taken from one. Nothing shipped
+in this tool describes a particular customer's systems, and that includes worked
+examples.*
 
-**"How to reach it" has a preference order, and it is not a matter of taste:**
+"How to reach it" has a fixed preference order:
 
     1. a database we can read      most capable: the agent composes its own
                                    queries and joins across tables
@@ -120,25 +119,25 @@ worked example is the easiest place for that rule to slip.*
     3. a screen a person clicks    last resort: brittle, slow, and it breaks
                                    whenever the vendor changes their UI
 
-Take the highest one available **per system**, and expect a mix. Ask whether the
+Take the highest one available per system, and expect a mix. Ask whether the
 customer already has something that has done this consolidation for them - a
 middleware layer, an OMS, a warehouse that already pulls the channels in. If they
 do, several external systems collapse into one database, and that changes the
 design more than any other single answer.
 
-**Group the rows by "who asks", not by system.** Each distinct audience is a
+Group the rows by "who asks", not by system. Each distinct audience is a
 project, because an audience determines the entry point and the read path and
 those cannot be shared. Two systems read by the same audience belong in one
 project; one system read by both audiences is read twice, through two shapes.
 
-A row wanting **write** is not a project decision but a warning: every write path
+A row wanting write does not change the split; treat it as a warning. Every write path
 needs its own spec and human approval, and the standing architecture is
 read-only. Note it and move on - `../usecase/write-path.md` is where the
 approval gate is described, when it comes to designing one.
 
 ## What to write down
 
-**The table goes into the request**, section 3 of
+The table goes into the request, section 3 of
 `requirements/requests/<<.RequestID>>-*.md`, and the audience you settled
 on goes into its Meta as the target project. That file already carries the date
 and the status, which is why the interview output belongs there rather than in a
@@ -146,34 +145,33 @@ loose note.
 
 Then, in this order:
 
-  1. **Anything the interview did not settle**, one question each:
+  1. Anything the interview did not settle, one question each:
 
          asgard-cli question add "<question>" --blocks <<.RequestID>> --ask "<who>"
 
-     Do it the moment a question blocks a decision. Not in your head, and not
-     buried in a task spec - a task's open questions disappear when it reaches
-     `done`, while `asgard-cli question` prints this file.
+     Do it as soon as a question blocks a decision, and do not put it in a task
+     spec instead: a task's open questions disappear when it reaches `done`,
+     while `asgard-cli question` prints this file.
 
-  2. **The split, as a decision record:**
+  2. The split, as a decision record:
 
          asgard-cli decision add "how the work splits into projects" --module architecture.md
 
-     Fill in **why the rejected split was rejected**. That sentence is the only
-     part of the document nobody can reconstruct later. The command stamps the
-     date and links the record from the living spec, so neither is yours to
-     remember.
+     Fill in why the rejected split was rejected; nobody can reconstruct that
+     later. The command stamps the date and links the record from the living
+     spec.
 
-  3. **The raw discussion**, in `docs/meeting-notes/YYYY-MM-DD-<topic>.md`, if it
+  3. The raw discussion, in `docs/meeting-notes/YYYY-MM-DD-<topic>.md`, if it
      was long enough to be worth keeping. Optional: a decision record can cite a
      GitHub issue or a direct instruction instead.
 
-  4. **The first module of the living spec**, `docs/spec/<<.SpecSlug>>/architecture.md`:
+  4. The first module of the living spec, `docs/spec/<<.SpecSlug>>/architecture.md`:
      the table, the audience of each project, and the invariants that hold from
      day one (which systems are read-only, where any write path points). This is
      what the next person reads to understand the system.
 
-     **Add it to the module index in `docs/spec/<<.SpecSlug>>/README.md` in the
-     same change.** `asgard-cli check` compares that index against the files
+     Add it to the module index in `docs/spec/<<.SpecSlug>>/README.md` in the
+     same change. `asgard-cli check` compares that index against the files
      actually present, so a module written without being indexed turns the gate
      red.
 
@@ -183,7 +181,7 @@ Then, in this order:
 
 Then point the request at it. That is what moves this stage on: until the
 request names a project this repository has, `asgard-cli request` lists it as
-**`no project yet`** and says its audience has not been decided.
+`no project yet` and says its audience has not been decided.
 
     asgard-cli request target <<.RequestID>> <slug>
     asgard-cli request ready <<.RequestID>>          once the audience and the scope are settled
@@ -191,33 +189,26 @@ request names a project this repository has, `asgard-cli request` lists it as
 Keep the slug short. It becomes part of every release name, and of the
 namespace the platform creates for the project - `asgard-<workspace>-<project>-<env>`
 in the deployments this was written from. A Kubernetes object name is capped at
-63 characters, so everything derived from the slug inherits its length. **This
-tool does not build either name**: the namespace comes back from the platform
+63 characters, so everything derived from the slug inherits its length. This
+tool does not build either name: the namespace comes back from the platform
 and a chart reads it out of the injected `asgard` block.
 
 Done when: projects/ has a directory per project, the root README table lists
 them, and asgard-cli check is green.
 
-**Checked:** 2026-09-14 - the shapes it names are real (`asgard-cli size` counts
+**Checked:** the shapes it names are real (`asgard-cli size` counts
 them off production, the extracts in `../usecase/` assemble each); every command
 and flag it writes is in the binary; and the namespace pattern was read off the
 reference deployments rather than off this tool, which does not derive it -
 `asgard-unitech-e-internal-dev`, `asgard-unitech-e-website-prod`,
-`asgard-buy123-shopping-guide-stage`. **No CRD claim is made here**,
-deliberately: which CRs a project ends up with belongs to
+`asgard-buy123-shopping-guide-stage` (the first two were destroyed when that
+deployment was archived; the pattern stands as read). No CRD claim is made here:
+which CRs a project ends up with belongs to
 `../guide/read-path.md`, `../guide/entry-point.md` and the extracts.
 
-**Unchecked:** whether the namespace pattern is the platform's rule or a
-convention these workspaces happen to share. One of the three collapses to
-`asgard-<workspace>-<env>`, with no project segment, and nothing here can tell a
-rule with an exception from a convention with one. What is settled is the part
-that matters to a slug: the namespace is the platform's to build, not this
-tool's.
-
-Also unchecked: the split rule itself - that a project follows the **audience**
-rather than the data or the system. That is the most consequential judgement in
-this document and **no source states it**. It comes from the engagement this was
-written in, where splitting on systems produced a chart that two audiences
-shared and one of them had to be taken back out. A reader whose customer has one
-audience and six systems should get one project, and if that reads wrong here,
-the rule is what to argue with.
+**Unchecked:** whether `asgard-<workspace>-<project>-<env>` is the platform's
+rule or a convention these workspaces share: the Platform API that builds the
+namespace is in no repository here, so the three namespaces above are the only
+evidence. Also unchecked: the split rule itself - that a project follows the
+audience rather than the data or the system - which no source states; a reader
+whose customer has one audience and six systems should get one project.

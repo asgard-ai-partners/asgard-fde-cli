@@ -1,6 +1,6 @@
 # <<.DisplayName>> —— 知識 Drive
 #
-# Unstructured knowledge: documents, FAQs, pages. NOT anything a query answers
+# Unstructured knowledge: documents, FAQs, pages. Not anything a query answers
 # exactly - counts, prices, stock, contact details belong to a query tool, and
 # putting them here makes the agent paraphrase a number it should have read.
 #
@@ -20,12 +20,12 @@ metadata:
     # because this is a phrase rather than a sentence.
     asgard-ai.com/source-set-description: "TODO: what knowledge this holds"
   labels:
-    # To pause indexing, set this label. Do NOT remove the contextIndex field -
+    # To pause indexing, set this label. Do not remove the contextIndex field -
     # clearing it tears down the derived CRs and renames the index aside.
     asgard-ai.com/context-index-suspend: {{ .Values.<<.ValuesKey>>.contextIndex.suspend | quote }}
     {{- include "<<.Chart>>.labels" . | nindent 4 }}
 spec:
-  # **This release's own resource key**, declared under `appSecret:` in
+  # This release's own resource key, declared under `appSecret:` in
   # .asgard-pipeline.yaml. edgeserver checks it as `X-API-KEY` on this
   # resource's own endpoints, and the platform's own callers read it back from
   # the CR, so nothing else has to know it. When no use case calls those
@@ -43,7 +43,7 @@ spec:
         name: {{ include "<<.Chart>>.appSecretName" . }}
         key: asgard_resource_api_key
   # No member registry: what is in the Drive is whatever its Syncers write, plus
-  # anything uploaded by hand. The paths are the truth.
+  # anything uploaded by hand. The paths are the only record.
   #
   # Setting contextIndex derives three same-named CRs that mount the Drive
   # writable and build the knowledge graph on a cron.
@@ -64,17 +64,17 @@ spec:
 # One Syncer per folder that is filled automatically. A folder people upload to
 # by hand needs no Syncer at all.
 #
-# This one is class `database`. A folder filled from the open web is a SECOND
-# Syncer document in this file, of class `web`, and it is left out rather than
-# written because a page list is a decision - a guessed one indexes the wrong
-# site, and nothing downstream reports that:
+# This one is class `database`. A folder filled from the open web is a second
+# Syncer document in this file, of class `web`. It is not written here because
+# the page list has to be chosen - a guessed one indexes the wrong site, and
+# nothing downstream reports that:
 #
 #   syncerClass: web
 #   destinationPath: "website/"   # trailing slash, as for a database syncer
 #   web:
-#     timeoutMs: 30000            # both REQUIRED, and neither has a default
+#     timeoutMs: 30000            # both required, and neither has a default
 #     waitForMs: 3000             # how long a page gets to settle after loading
-#     urls: [ ... ]               # EXACTLY ONE of urls and siteMapUrl
+#     urls: [ ... ]               # exactly one of urls and siteMapUrl
 #
 # The whole document, the labels it needs, the rest of the syncer classes, and
 # why the page list belongs in the chart rather than behind a siteMapUrl crawl,
@@ -88,11 +88,11 @@ metadata:
   labels:
     # Two switches, and neither reads the other.
     #
-    # suspend stops the scheduler. auto-fire-on-rollout is read ONLY by the
+    # suspend stops the scheduler. auto-fire-on-rollout is read only by the
     # platform's apply step, which fires this Syncer once per deploy and waits
     # for it - firing works on a suspended CronJob. So suspend plus auto-fire
     # is a Syncer that runs on deploys and never on a clock, and a suspended
-    # Syncer WITHOUT auto-fire never runs at all.
+    # Syncer without auto-fire never runs at all.
     #
     # Auto-fire is set here so the first deploy loads the drive, rather than
     # the drive staying empty until the next scheduled tick.
@@ -104,7 +104,7 @@ spec:
   # Relative path inside the volume: no leading /, no . or .. segment, no //.
   # Must end with / for a database or web syncer.
   destinationPath: "data/"
-  # Where the incremental cursor lives. Must NOT end with /.
+  # Where the incremental cursor lives. Must not end with /.
   statePath: ".syncer-state/<<.Name>>-db"
   syncerClass: database
   schedule: {{ .Values.<<.ValuesKey>>.dbSync.schedule | quote }}
@@ -117,7 +117,7 @@ spec:
     #
     # Both flags belong to a column. isMaxValueColumn written one level up,
     # beside dataConnectorName, is an unknown field: the apiserver drops it
-    # without a word and the Syncer then re-reads the whole table every run.
+    # silently and the Syncer then re-reads the whole table every run.
     columns:
       - name: TODO
         # The primary key. A schema-level marker only, but it records which

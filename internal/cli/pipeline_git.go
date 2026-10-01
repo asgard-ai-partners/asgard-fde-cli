@@ -27,8 +27,8 @@ import (
 
 // errNotInSandbox is what the sandbox-only commands say anywhere else.
 var errNotInSandbox = errors.New("this command is for the Workbench assistant's sandbox (" + auth.EnvSandboxMode +
-	"=true), where nobody has a GitHub login. On your own machine git already uses your own GitHub credentials, " +
-	"and the pipeline's GitHub App is not a way around them")
+	"=true), where nobody has a GitHub login. On your own machine git uses your own GitHub credentials; " +
+	"use those, not the pipeline's GitHub App")
 
 // gitCredentialUser is the username GitHub expects with an installation
 // token.
@@ -55,10 +55,10 @@ It writes to the user's global git config:
 The helper list is reset first so this CLI is the only source of a github.com
 credential: a helper configured elsewhere would answer with another identity.
 It warns when a url.<base>.insteadOf rule or ~/.netrc would send github.com
-traffic around the helper, and leaves both alone - they are somebody's
-configuration, not this command's.
+traffic around the helper, and leaves both unchanged, because this command did
+not write them.
 
-**Fetching needs a workspace member; pushing needs workspace administration**:
+Fetching needs a workspace member; pushing needs workspace administration:
 the push credential writes to the repository as the GitHub App, and a push to a
 Deployment's branch or tag starts a Run. A member's push is refused by GitHub.
 
@@ -299,7 +299,7 @@ One of the two is required ("asgard-cli pipeline connections" lists them).
 It needs workspace administration, and it works only for an organization: a
 GitHub App cannot create a repository under a person's account, so there the
 person creates it on GitHub and connects it. A name already taken is an error.
-**It is never retried**: a create whose answer was lost has still happened,
+It is never retried: a create whose answer was lost has still happened,
 so look before trying again.
 
 In the Workbench sandbox, "asgard-cli pipeline git-auth" then lets git push to it.`,

@@ -1,29 +1,28 @@
 # hack/
 
-This is the maintainer's gate, and **it is Go**: one binary with a subcommand
+This is the maintainer's gate, written in Go: one binary with a subcommand
 each, run as `go run ./hack <check>`.
 
     go run ./hack pass     the whole pass, derived rather than written down
     go run ./hack list     every check, and what each one needs
 
-**A check that is not compiled is a check nobody runs until it is wrong.** Most
-of these run only by hand, so an error in a branch nobody takes survives for
-weeks - AGENTS.md has the five that got through while they were scripts, every
-one of them a compile error in Go. Porting them also found a number the Python
-had been wrong about *and was validating a page against*: it counted distinct
-CEL rules by matching `rule:` with a regular expression over raw YAML, so two
+The checks are compiled so that errors surface at build time. Most of them run
+only by hand, so an error in a rarely taken branch would otherwise survive for
+weeks; AGENTS.md lists the five that got through while they were scripts, each
+of them a compile error in Go. Porting them also corrected a number the Python
+version had wrong and was validating a page against: it counted distinct CEL
+rules by matching `rule:` with a regular expression over raw YAML, so two
 spellings of one rule counted as two.
 
-**One shell script is left.** `verify-references.sh` drives helm and this
-repository's own binary over the reference charts, and rewriting that in Go buys
-nothing.
+One shell script is left. `verify-references.sh` drives helm and this
+repository's own binary over the reference charts, and rewriting that in Go
+would gain nothing.
 
 ## Where the upstream clones are
 
-Every check here needs one, and **the paths used to be written into the scripts
-and into this file** - true on one machine, wrong on every other, and the
-reason `go run ./hack tables` went eight upstream commits without being run. One
-environment variable per source, and a default that is one person's layout:
+Every check here needs one. Each source is located by one environment variable,
+with a default that matches one person's layout. Do not write a local path into
+a script or this file; it is true on one machine and wrong on every other.
 
     go run ./hack sources      what each one resolves to, and how far behind it is
     go run ./hack tables       the pinned gate tables against the CRDs
@@ -36,36 +35,32 @@ environment variable per source, and a default that is one person's layout:
     ASGARD_CORE          the processor definitions the CRDs come from
     ASGARD_DEPLOYMENTS   the directory holding the reference deployment clones
 
-**Nothing here clones or pulls.** A check that fetched would turn "read at this
-commit" into "read at whatever was there when the script ran", which is the one
-thing the provenance rule exists to prevent. `git -C <path> pull` is the
-reader's act, and `go run ./hack sources` tells you when it is due.
+Nothing here clones or pulls. A check that fetched would change "read at this
+commit" into "read at whatever was there when the script ran", which the
+provenance rule forbids. Run `git -C <path> pull` yourself; `go run ./hack sources`
+tells you when it is due.
 
 This repository's own tooling. Not shipped, not embedded, and not the same thing
 as `.agents/skills/db-query/scripts/`, which `asgard-cli init` writes into a
 customer repo - that one reads the customer's own source systems, and is
 described in `README.md`.
 
-Everything here answers one question: **is what this repo emits still accepted by
-the platform contract?** `helm lint`, `asgard-cli check` and a server-side
-dry-run do not answer it. The dry-run is worse than silent, because it drops a
-field it does not recognise and reports success while helm's own server-side
-apply refuses.
+Everything here answers one question: is what this repo emits still accepted by
+the platform contract? `helm lint`, `asgard-cli check` and a server-side
+dry-run do not answer it. The dry-run is misleading: it drops a field it does
+not recognise and reports success, while helm's own server-side apply refuses.
 
 ## Reading every instruction at once
 
     asgard-cli audit-material [--ask] [--unmarked] [--crossref]
 
-**In the binary, not here.** It began as a script in this directory and was
-moved, for a reason worth keeping: an audit that only runs on the maintainer's
-machine only finds what the maintainer can see. What a maintainer finds by
-reading is inconsistency; what costs money is somebody following an instruction
-into a wall, and that person has the binary and not this repository. Now they can
-run it at the moment they hit one.
+This lives in the binary, not here. It began as a script in this directory and
+was moved because the people who follow an instruction and find it wrong have
+the binary and not this repository, so they can run it when that happens.
 
-It also reads the **embedded** material, which is what an engagement gets. A
-script over `internal/corpus/wiki/*.md` audits the input instead, and the thing
-being audited is what somebody actually read.
+It also reads the embedded material, which is what an engagement gets. A script
+over `internal/corpus/wiki/*.md` would audit the source files instead of what
+somebody actually read.
 
 Hidden from `--help`, because its reader edits this material and the help output
 belongs to whoever is onboarding a customer.
@@ -74,35 +69,33 @@ belongs to whoever is onboarding a customer.
 
     go run ./hack/dotenv-agreement
 
-There have to be two: `asgard-cli local-env` writes the file in Go, the
-db-query scripts read it in python. A format with two implementations and
-nothing comparing them drifts silently, and the way it surfaces is the worst
-kind - the form shows one value and the query connects with another.
+There are two: `asgard-cli local-env` writes the file in Go, and the db-query
+scripts read it in python. If they drift apart, the form shows one value and the
+query connects with another, so this compares them.
 
 It also checks that a save changes the one value it was asked to change and
-nothing else. **That file is edited by hand as well**, and a note somebody left
-for the next reader is worth as much as the value beside it. Two ways to lose
-one have already been caught here: a trailing comment dropped when its line was
-rewritten, and a quoted value re-spelled bare on a line nobody had touched -
-which is also a meaning change to any shell that sources it.
+nothing else, because the file is also edited by hand and comments in it must
+survive. It has caught two ways of losing one: a trailing comment dropped when
+its line was rewritten, and a quoted value re-spelled bare on a line nobody had
+touched, which also changes its meaning to any shell that sources it.
 
-Needs python3. Without it the python half reports as **skipped**, not passed.
+Needs python3. Without it the python half reports as skipped, not passed.
 
 ## Running the gate over the deployments its rules came from
 
     hack/verify-references.sh [parent-dir]        default: ..
     ASGARD_CLI=.out/asgard-cli hack/verify-references.sh ~/projects/asgard
 
-**The gate had never been run over the charts its rules were written from.** It
-was run over charts this tool generates, which pass by construction, and over a
-scratch repository. The first time somebody rendered the six reference
-deployments through it, `gate` R1b was wrong about nine Agents in a running
-deployment: it counted a semantic layer and a Toolset as capability sources and
-not a `SkillSet`, so every subagent of a flow-agent supervisor was told it had
-"no source of capability at all" while it had one.
+This runs the gate over the charts its rules were written from. Charts this tool
+generates pass by construction, so they do not test the rules. The first time
+the six reference deployments were rendered through it, `gate` R1b was wrong
+about nine Agents in a running deployment: it counted a semantic layer and a
+Toolset as capability sources and not a `SkillSet`, so every subagent of a
+flow-agent supervisor was told it had "no source of capability at all" while it
+had one.
 
-**A count is not a pass.** Read what each finding says, because three kinds turn
-up and they need opposite responses:
+Read what each finding says rather than only counting them. Three kinds turn up,
+and they need different responses:
 
     a rule that is wrong             fix the rule - R1b was this
     a chart that is wrong            tell whoever owns it
@@ -114,8 +107,8 @@ questions whose answer can live in the owning repository rather than in the CR,
 and there is nowhere to record one now: `.asgard-config.json` held
 `olapOnlyLayers` and the sampleQuestions exemption, and none of the four
 reference repos still carries it. So a finding may be answered somewhere this
-run cannot see. **That is a reason to read a finding, not to discount one.** It
-was used to discount R1b once, and R1b was a bug.
+run cannot see. Read the finding anyway before discounting it: R1b was
+discounted this way once, and it was a bug.
 
 ## Checking a change against the CRDs
 
@@ -130,7 +123,7 @@ mkdir -p .out/crdjson
 for f in $KUBE/crd/*.yaml; do yq -o=json "$f" > .out/crdjson/$(basename $f .yaml).json; done
 ```
 
-**What the templates emit.** Build a throwaway repository, add every kind, render
+What the templates emit: build a throwaway repository, add every kind, render
 both environments, validate each:
 
 ```bash
@@ -140,7 +133,7 @@ asgard-cli render <release> --quiet | yq -o=json -I=0 '.' > .out/dev.ndjson
 go run ./hack validate-crs .out/dev.ndjson
 ```
 
-**What the extracts teach.** These are what somebody copies by hand, so they are
+What the extracts teach: these are what somebody copies by hand, so they are
 checked the same way. They are chart fragments rather than parseable YAML, so
 they are defused first - Helm actions and `<placeholder>` text become sentinels
 the validator knows not to report on:
@@ -158,8 +151,8 @@ commit in the PR body - `.github/pull_request_template.md` asks for them.
     go run ./hack tables
 
 `internal/gate` holds three copies of the platform contract, extracted from
-asgard-kube's **Go types**. The Go types are not the contract; the generated
-CRDs are, and the two are not the same document. `status` carries three values
+asgard-kube's Go types. The contract is the generated CRDs, and they differ
+from the Go types. `status` carries three values
 in the Asgard types and six in the CRD, because Kubernetes' own condition
 schema uses that field name - the wrong three sat in the enum table for a day.
 
@@ -168,22 +161,21 @@ reports as absent from the CRD is not automatically a bug - `baseAgentName`
 lives inside a JSON string rather than in the schema - but it is always
 something to explain rather than leave.
 
-**It also holds every CEL-rule count this repository states**, for the same
-reason and against the same trap: 79 is the `XValidation` markers in the Go
+It also holds every CEL-rule count this repository states, for the same reason: 79 is the `XValidation` markers in the Go
 types, 231 is what the generator emits from them, and this material had the
 marker count written down as the CRDs' own for a week.
 
-**And every required field of a per-class block**, which is the set an FDE asks
-a customer for. `BotProvider.spec.telegram` requires `webhookSecretToken`
+It also holds every required field of a per-class block, which is the set an
+FDE asks a customer for. `BotProvider.spec.telegram` requires `webhookSecretToken`
 beside `botToken`, no documentation page mentions it, and this material listed
 "the Bot Token" - half the ask, and a CR that is refused. Matched across
 everything that ships rather than the prose alone, because a field can be
 taught by the generator that writes it, and on a word boundary, because a
 substring test passes `region` on the word "regional".
 
-**And every immutable field.** 41 of the enforced rules are `self == oldSelf`,
-carried on 40 kind-and-property pairs across twelve kinds, and nothing offline
-can tell you a chart will be refused at apply - but **which fields they are** is
+It also holds every immutable field. 41 of the enforced rules are `self == oldSelf`,
+carried on 40 kind-and-property pairs across twelve kinds. Nothing offline can
+tell you a chart will be refused at apply, but which fields are immutable is
 computable, and an immutable field nobody has written down is one an FDE meets
 after the tag is pushed. So this checks that `wiki/crd-rules.md` names all
 eleven class fields, states the Syncer's 21 and the total, and that no immutable
@@ -198,27 +190,25 @@ are two fields somebody can be refused on.
                                            write, split by what is owed on it
     go run ./hack spec-key-gap --shown     the ones a commented skeleton names
 
-**The number behind "the chart half is the least finished of the four."** It
-decides whether an FDE treats what `add` emits as a chart or as a starting
-point, and it stood at "168 spec keys, 52 never mentioned" for a week with no
-method that reproduced either figure. **Both sides are rendered here rather
-than quoted**, and neither figure is written down anywhere, including in this
-paragraph.
+This measures the claim, in APPROACH.md, that the chart half is the least finished of the four.
+It decides whether an FDE treats what `add` emits as a chart or as a starting
+point. It stood at "168 spec keys, 52 never mentioned" for a week with no method
+that reproduced either figure, so both sides are now rendered here and neither
+figure is written down anywhere.
 
-**A key `add` does not write is in one of four states, and only one is a gap.**
-Written; named in a commented skeleton, where somebody meets it at the moment
+A key `add` does not write is in one of four states, and only the last is a gap:
+written; named in a commented skeleton, where somebody meets it at the moment
 they would write one; absent on purpose, with the document that carries that
-decision; or nowhere, which is the worklist. Counting the middle two as owed was
-a measurement defect twice over - the number said work was due exactly where the
-work was done.
+decision; or nowhere, which is the worklist. Do not count the middle two as
+owed.
 
-**The third state is a pointer rather than an opinion.** `decided` in
+The third state is recorded as a pointer. `decided` in
 `hack/speckeys.go` maps a key to the document that says why it is absent, and
 the check fails when that document is gone or has stopped naming it. A row is
 the judgement and not an enumeration: a decision covers the fields under it, so
-a CR kind `add` never generates does not need every field of it listed. **Do not
-answer a row by writing a commented skeleton for it** - that lowers the number
-by inviting somebody to use the shape the material tells them not to.
+a CR kind `add` never generates does not need every field of it listed. Do not
+answer a row by writing a commented skeleton for it: that lowers the number by
+inviting somebody to use a shape the material tells them not to.
 
 What a comment can be read for is the field it names, not the path it sits
 under: a skeleton here is written above the key it belongs to rather than inside
@@ -231,11 +221,11 @@ by construction, one of them at 0 keys not written - so only the deployments
 `processors.0.configs` and `processors.7.configs` count apart and the gap
 appears to close as a chart grows.
 
-And **the `add` side is a matrix rather than one run per kind**. Several
+The `add` side is a matrix rather than one run per kind. Several
 templates branch on a flag, so a key inside `--db-class netsuite`, `--private`
 or `--supervisor` is a key `add` writes; running one combination per kind
-counted 48 of them as never written, which is the expensive direction, because
-the number is read before somebody implements one. The combinations are derived
+counted 48 of them as never written, which overstates the gap that somebody
+reads before implementing one. The combinations are derived
 from the generator - the flags `add` registers, the fields each kind's own
 templates branch on, and the closed vocabularies `generate` declares - so a
 class added upstream is probed without an edit here. Two branches are decided by
@@ -247,16 +237,14 @@ run twice, once in an empty project and once in a seeded one.
     go run ./hack counts           against the clones as they stand
     go run ./hack counts --dump    print what upstream counts, and stop
 
-**A number copied out of a document that states its own count is the cheapest
-thing in this material to get wrong, and the most expensive to notice**: nothing
-about "88" reads differently from "93". A pass that set out to recount SHOPLINE's
-back-office map took a figure off a different tally and wrote it into seven
-places, where it sat for a week looking exactly as authoritative as the truth.
+A number copied out of a document that states its own count is easy to get
+wrong and hard to notice: "88" reads no differently from "93". A pass that set
+out to recount SHOPLINE's back-office map took a figure off a different tally
+and wrote it into seven places, where it stayed for a week.
 
 So each of those counts is recomputed from the clone, and every place this
-material states one has to agree. **A claim whose wording has drifted out of
-every pattern is a failure rather than a pass** - that is how a count stops
-being checked without anybody deciding to stop checking it.
+material states one has to agree. A claim whose wording no longer matches any
+pattern fails, so that a count cannot silently stop being checked.
 
 ## Re-walking the processor definitions
 
@@ -266,8 +254,8 @@ being checked without anybody deciding to stop checking it.
 `wiki/processors.md` is the most claim-dense page in the corpus - thirteen
 processors, their required keys, their defaults, their outputs, and which keys
 an author may set - and every one of those claims belongs to a file in somebody
-else's repository. **The two tables on it have two different owners, and they
-disagree on purpose:**
+else's repository. The two tables on it have different owners, and they are
+expected to differ:
 
     the definitions table   asgard-core `internal/constants.go` -
                             what the runtime validates a Workflow against
@@ -277,16 +265,11 @@ disagree on purpose:**
 So each table is checked against its own owner and never against the other. A
 processor appearing or vanishing fails: the page says thirteen in four places.
 
-**The literal is walked by brace depth rather than matched by pattern.** An
-earlier pattern-based extraction of that same literal attributed one
-processor's fields to the next, and a table confidently wrong about `allowWrite`
-is worse than no table at all. Every identifier must resolve to a string or the
-script exits - an unresolved one means the literal grew a shape the walk does
-not understand, which is exactly when its output must not be trusted.
-
-Writing it found six things reading had missed, including `validate-payload`'s
-`schema` marked as having a default it does not have - which told a reader that
-omitting it was a silent choice when it is a rejected CR.
+The literal is walked by brace depth rather than matched by pattern, because a
+pattern attributes one processor's fields to the next. Every identifier
+must resolve to a string or the script exits: an unresolved one means the
+literal grew a shape the walk does not understand, and its output cannot be
+trusted.
 
 ## What this catches that nothing else does
 

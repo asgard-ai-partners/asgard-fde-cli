@@ -35,12 +35,12 @@ func newProfileCmd() *cobra.Command {
     asgard-cli profile set <name> ...    write one
     asgard-cli profile remove <name>     forget one
 
-**If you use the hosted Asgard platform, you need none of this.** With no file
-at all, every command reaches it - that is what ` + "`" + auth.DefaultProfileName + "`" + ` means, and it is
+If you use the hosted Asgard platform, you need none of this. With no file
+at all, every command reaches it; that is what ` + "`" + auth.DefaultProfileName + "`" + ` means, and it is
 why it is the default. These commands exist for the two cases this binary
 cannot know about: an on-prem installation, and a stack running locally.
 
-A profile holds these values, and **each falls back on its own**:
+A profile holds these values, and each falls back on its own:
 
     --platform-api    where the Asgard Platform API is
     --issuer          the Casdoor that issues tokens for it
@@ -52,9 +52,8 @@ Platform API against a real Casdoor and wrong for an on-prem installation - so
 the identity provider disagree about where they are from.
 
 Which profile applies is ` + "`--profile`" + `, then ` + "`" + auth.EnvProfile + "`" + `, then ` + "`" + auth.DefaultProfileName + "`" + `.
-**Nothing records a current profile**, deliberately: a preference stored on one
-machine is invisible there and absent on every other, and this directory just
-finished being emptied of those.
+Nothing records a current profile. A preference stored on one machine is
+invisible there and absent on every other.
 
 The file is ` + "`profiles.json`" + `, beside the credentials. It holds no secret - a
 client id is disclosed to the browser on every sign-in - so it can be handed to
@@ -143,14 +142,14 @@ func newProfileShowCmd() *cobra.Command {
 		Use:         "show [name]",
 		Annotations: touchesNoNetwork(),
 		Short:       "Report a profile's values, and where each came from",
-		Long: `Report the values a profile resolves to, and **where each one came from**.
+		Long: `Report the values a profile resolves to, and where each one came from.
 
     asgard-cli profile show              whichever applies now
     asgard-cli profile show onprem-dev   a particular one
 
-The provenance is the useful half. A profile that sets one value and inherits
-the rest looks exactly like a complete one, and the failure it causes
-arrives at the far end as a permission error rather than as a mismatch.
+The provenance matters most. A profile that sets one value and inherits the
+rest looks like a complete one, and the failure it causes shows up as a
+permission error rather than as a mismatch.
 
 It writes nothing and reaches no network.`,
 		Args: cobra.MaximumNArgs(1),
@@ -211,25 +210,23 @@ func newProfileSetCmd() *cobra.Command {
     asgard-cli profile set onprem --platform-api https://asgard.acme.internal \
         --issuer https://iam.acme.internal --client-id abc123
 
-**This is the only command that creates the file**, and it creates it only when
-run. Nothing writes it as a side effect of doing something else: a file that
-appears because somebody ran an unrelated command is a file nobody remembers
-agreeing to.
+This is the only command that creates the file. Nothing else writes it as a
+side effect.
 
 Only the flags given are changed, so a value can be corrected without restating
 the others. Passing an empty string clears one, which makes it fall back to
 the hosted platform again.
 
-**--console is where a person opens this installation, and nothing derives
-it.** The Console and the API are different hosts - platform.asgard-ai.com and
-platform-api.asgard-ai.com on the hosted one - and that stripping "-api" turns
-one into the other is a coincidence of naming rather than a rule. So a profile
+--console is where a person opens this installation, and nothing derives it.
+The Console and the API are different hosts - platform.asgard-ai.com and
+platform-api.asgard-ai.com on the hosted one - and removing "-api" from one to
+get the other is not a rule other installations follow. So a profile
 that names its own API has no Console until this records one, and the commands
 that would send somebody to a page say so instead of guessing. It is also the
 one field that does not fall back to the hosted value on its own: inheriting it
 would point at another organisation's console.
 
-**An on-prem installation sets all three.** Its API and the Casdoor that issues
+An on-prem installation sets all three. Its API and the Casdoor that issues
 tokens for it are the same installation, and a token from one is not accepted by
 the other - so setting the API alone leaves you signing in against the hosted
 Casdoor and presenting that token to somebody else's server. The command says so

@@ -23,25 +23,22 @@ func newProjectCmd() *cobra.Command {
 		Long: `List this repository's projects and what each chart declares.
 
 The list is the repository itself: the chart paths ` + "`" + pipelineconfig.FileName + "`" + ` names,
-and the directories under ` + "`" + `projects/` + "`" + `. Nothing records it separately, so
-nothing can disagree with it.
+and the directories under ` + "`" + `projects/` + "`" + `. Nothing records it separately.
 
-**It says what each chart HAS, and nothing about what it lacks.** That used to
-be measured against a "shape" recorded per project - a note of what somebody
-intended to build - and this tool has no way to check such a note and no
-business judging it. A chart with a SemanticLayer and no Agent may be finished
-or unfinished, and the files cannot tell you which.
+It says what each chart has, and nothing about what it lacks. A chart with a
+SemanticLayer and no Agent may be finished or unfinished, and the files cannot
+tell you which.
 
 A project is the unit of deployment: one Helm chart, one namespace per
 environment. An onboarding usually starts before the split is known, so projects
 are added as the engagement discovers them.
 
-**A chart with fewer kinds than another is not behind it.** A chart is built
-in whatever order the engagement finds the answers, so what this lists is what
-is declared and not a distance from anything.
+A chart with fewer kinds than another is not necessarily less complete. Charts
+are built in whatever order the engagement finds the answers, so this lists
+only what is declared.
 
-Declared is not deployed. Whether a finished chart is waiting
-for its first tag or has been live for a month is not a fact about files.`,
+It also does not say what is deployed. Whether a finished chart is waiting for
+its first tag or has been live for a month cannot be read from the files.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := checkFormat(format); err != nil {
@@ -106,10 +103,10 @@ func newProjectAddCmd() *cobra.Command {
 		Long: `Write a project's chart skeleton under ` + "`" + `projects/<slug>/chart/app` + "`" + `.
 
 A project is one Helm chart. Which releases deploy it, and to which platform
-project, is declared in ` + "`" + pipelineconfig.FileName + "`" + ` - **this writes the chart, and
-declaring its releases is a separate step that this does not do.**
+project, is declared in ` + "`" + pipelineconfig.FileName + "`" + `. This command writes the chart
+only; declaring its releases is a separate step.
 
-**One chart usually carries one release per environment.** ` + "`" + `<slug>-dev` + "`" + ` and
+One chart usually carries one release per environment. ` + "`" + `<slug>-dev` + "`" + ` and
 ` + "`" + `<slug>-prod` + "`" + ` name the same chart directory here and differ by their trigger
 pattern; what separates them at deploy time is that each is bound to a different
 platform project, and a platform project is what decides the namespace. A single
@@ -119,9 +116,8 @@ The slug ends up in the names of the objects the chart renders, so keep it
 short: Kubernetes caps a name at 63 characters and names derived from this
 inherit its length.
 
-**Nothing records the project anywhere else.** It exists because the directory
-exists and because the declaration names its chart; there is no third list to
-keep in step, and no way for one to disagree with the others.
+Nothing records the project anywhere else. It exists because the directory
+exists and the declaration names its chart.
 
 Existing files are left alone, so this is safe to re-run.`,
 		Args: cobra.ExactArgs(1),
@@ -170,7 +166,7 @@ Existing files are left alone, so this is safe to re-run.`,
 				"the platform project whose namespace it deploys into. A chart that no release\n"+
 				"names deploys nowhere, and nothing here will say so.\n",
 				pipelineconfig.FileName)
-			fmt.Fprintf(out, "\n**Usually one release per environment, not one release.** %s-dev and\n"+
+			fmt.Fprintf(out, "\nUsually one release per environment, not one release. %s-dev and\n"+
 				"%s-prod share this chart directory and differ by on.pattern, each bound to a\n"+
 				"DIFFERENT platform project, which is what gives them different namespaces.\n"+
 				"One release is right for a POC nobody will maintain, and for nothing else.\n",

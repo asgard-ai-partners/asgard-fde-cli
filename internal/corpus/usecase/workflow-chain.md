@@ -11,35 +11,36 @@ mechanism every other shape is built out of.
 **Seen in:** a two-call mail sender, a search tool that reshapes its API's
 response, a conversation loop, and a nine-branch content pipeline.
 
-**Checked:** 2026-09-02, re-read 2026-09-14 across every reference
+**Checked:** across every reference
 deployment. Every construct this page cites is written in at least one of
 them, `??` included; `prevPayload` is in nearly all of them and is how a chain
-passes anything at all. Re-read 2026-09-15 against asgard-kube `cbd8d70` for the
+passes anything at all. Also against asgard-kube `cbd8d70` for the
 variable's exactly-one-of and its name pattern, for the open `labels` map on
 Entry, Exit and Processor, and for the exactly-one-of on a relationship's `to` -
 and against every `variables` block and every declared exit in the reference
 deployments, where an exit is reached by a relationship naming it.
+What crosses between processors against asgard-core `478cf5d6`:
+what each processor copies forward and adds, in asgard-core `internal/processor/task/`,
+and where `prevPayload` is written - only in asgard-core `internal/bpcontroller/server/bp_controller.go`.
 
-**Unchecked:** nothing outstanding. The replacement of prevPayload by an http-request is stated in a deployment's own comment in the same words.
-
-**Read the platform side first:** `../wiki/workflow.md` -
-the processor types and the ways a config takes a value. This page assumes you have.
+Read the platform side first: `../wiki/workflow.md` covers the processor types
+and the ways a config takes a value. This page assumes you have read it.
 
 ## When this shape, and when not
 
-You are already in it. A single-processor Workflow is the exception, not the rule
-- a tool that does one HTTP call still wants three processors, because the third
-is what tells the agent whether the first worked.
+Almost every Workflow is a chain. A single-processor Workflow is the exception:
+a tool that does one HTTP call still needs three processors, because the third
+tells the agent whether the first worked.
 
-Reach for **more** processors when:
+Add more processors when:
 
-- **a step's output is another step's input** - a token, a search result to
+- a step's output is another step's input - a token, a search result to
   reshape, an id to look up.
-- **the flow branches on a value** - use a `router`.
-- **failure has to be reported rather than swallowed.** This is the common one and
-  the one that gets left out.
+- the flow branches on a value - use a `router`.
+- failure has to be reported rather than swallowed. This is the common case and
+  the one most often left out.
 
-Do **not** add processors to express what a prompt should decide. A workflow node
+Do not add processors to express what a prompt should decide. A workflow node
 per conversation topic puts the routing in two places: one deployment removed its
 topic workflows and let the orchestrator route from the prompt instead. Keep the
 conversation graph minimal - greet, listen, answer, back to listen, plus a
@@ -56,7 +57,7 @@ Each writes a working chain with its relationships already wired, and
 starting from an empty `spec` - the parts that fail silently (the display
 annotation, the workflow-set labels, the environment id) are already right.
 
-**Check what you add is wired.** A Workflow whose processors carry no
+Check that what you add is wired. A Workflow whose processors carry no
 `relationships` is legal, passes every check, and answers nothing: the run
 reaches the entry's `handlingProcessor` and stops there, with the rest dead.
 `gate` W3 reports exactly that, and
@@ -126,8 +127,9 @@ spec:
   exits: []
 
   processors:
-    # (1) Copy the arguments into context BEFORE any http-request runs, because
-    #     an http-request replaces prevPayload with its own result.
+    # (1) Copy the arguments into named context values first, where they are
+    #     trimmed and validated once. prevPayload itself survives the
+    #     http-request; its result goes to httpResponse.
     - name: proc-input
       type: update-context
       configs:
@@ -194,9 +196,9 @@ It goes in `projects/<project>/chart/app/templates/workflow/wf-<name>.yaml`, or
 
 ## The processor types
 
-**The list lives in `../wiki/processors.md`**, held against the platform's own
-definitions. It is not restated here: a second copy drifts, and a reader who
-meets both cannot tell which one is current.
+The list lives in `../wiki/processors.md`, held against the platform's own
+definitions. It is not restated here, so that there is one copy to keep
+current.
 
 In practice a handful carry almost everything: `query-database` and
 `push-message` dominate the real charts, with `update-context` and
@@ -206,31 +208,34 @@ In practice a handful carry almost everything: `query-database` and
 
 | name | holds | when it changes |
 |---|---|---|
-| `prevPayload` | the tool call's arguments, or the previous message's data | replaced by an `http-request`'s result |
+| `prevPayload` | the tool call's arguments, or the previous message's data | when a request or a new turn arrives - an `http-request` leaves it in place |
 | `prevMessage` | the previous user message | on each `listen-message` |
 | `prevBlobs` | files the user uploaded | on upload |
-| `httpResponse` | **the most recent** HTTP response | after every `http-request` |
+| `httpResponse` | the most recent successful HTTP response | after every `http-request` that succeeds |
 | `prevError` | why the previous processor failed | on a `failure` branch |
 | `vars.<name>` | a `variables` entry, including secrets | never |
 | anything an `update-context` set | by the name you gave it | when you set it again |
 
-**Configs are evaluated immediately before their processor runs.** That is what
+These are the ones a chain passes along; every key in the channel's context is
+in scope, including `prevToolCalls` after an agent, and `../wiki/processors.md`
+has the full set.
+
+Configs are evaluated immediately before their processor runs. That is what
 makes a two-call chain work - at the second call's config time, `httpResponse` is
-still the first call's - and it is also why inserting a processor between them
-loses the value. It also means **a broken expression is a runtime failure on
-first use, not a deploy failure**: nothing evaluates configs at apply time.
+still the first call's, because every other processor copies the context
+forward when it succeeds - and it is also why inserting another `http-request`
+between them loses the value. Evaluation at run time also means a broken
+expression is a runtime failure on first use, not a deploy failure: nothing
+evaluates configs at apply time.
 
 ### `expression` is JavaScript
 
 Arrow functions, `const`, `String()`, `encodeURIComponent`, `JSON.stringify`,
 `??`, `.map()` - every real chart uses them, and none of them is CEL.
 
-This was worth stating because the two sources once disagreed: the platform
-documentation described `expression` as a CEL expression while every chart wrote
-JavaScript, so anyone who trusted the docs wrote something that could not work and
-had no way to see why. **Both now say JavaScript** - the product documentation
-states it directly, and the CRD makes no claim either way. The rule is unchanged;
-only the reason to distrust the docs has gone.
+The platform documentation once described `expression` as a CEL expression
+while every chart wrote JavaScript. It now says JavaScript directly, and the CRD
+makes no claim either way.
 
 Write JavaScript, and the idiom the charts use is an immediately-invoked arrow
 function when there is more than one statement:
@@ -266,7 +271,7 @@ Relation names:
 | most types | `success`, `failure` |
 | `router` | one per condition you define in its configs, plus a built-in `else` |
 
-A `router` is the only type with dynamic relations: each config's **name** is a
+A `router` is the only type with dynamic relations: each config's name is a
 relation, and its expression decides whether that branch is taken.
 
 ```yaml
@@ -284,36 +289,44 @@ relationships:
   - from: {processor: route, relationName: else}        ; to: {processor: default}
 ```
 
-### Two disciplines that are not optional
+### Two required rules
 
-1. **Every processor that can fail needs a `failure` relationship.** Without one
+1. Every processor that can fail needs a `failure` relationship. Without one
    the run stops there. A tool call that stops has returned nothing, which the
-   model reads as an empty answer rather than an error - and then it tells the
-   user something that did not happen. This is the single most common omission.
-2. **A tool's last processor reports success or failure explicitly**, as a field
+   model reads as an empty answer rather than an error, and then it tells the
+   user something that did not happen. This is the most common omission.
+2. A tool's last processor reports success or failure explicitly, as a field
    the prompt is told to read (`ok: true|false`). The status code is not visible
    to the model; only what you push is.
 
 ## Designing the chain
 
-- **Reshape the response before the model sees it.** An API's raw JSON has
+- Reshape the response before the model sees it. An API's raw JSON has
   fields the model will quote, ids in the wrong type, and nesting it will get
   wrong. One deployment measured that its search API returned numeric ids while
-  the downstream tool needed strings, and cast in the workflow rather than hoping
-  - **write down what you measured**, with the date, because the next person
-  cannot tell a deliberate cast from a leftover.
-- **Validate an enum in `update-context`, not in the prompt.** A model that
+  the downstream tool needed strings, and cast in the workflow. Write down what
+  you measured, with the date, because the next person cannot tell a deliberate
+  cast from a leftover.
+- Validate an enum in `update-context`, not in the prompt. A model that
   half-remembers an allowed value produces a plausible wrong one, and the API
   answers 400 to something that looks fine in the log.
-- **Name processors for what they do, not their type.** `proc-search` beats
+- Name processors for what they do, not their type. `proc-search` beats
   `http-request-1` in a nine-node graph, and `labels.display_name` is the node's
   title on the canvas with `labels.description` as the line under it. Both are
   optional - a node with neither is drawn under its own `name` - so they are
   written for the person who opens the graph later rather than for any check,
   and the reference charts write them as a pair on entries, exits and
-  processors. `../wiki/platform-unknowns.md` P15 is why only these two keys are
-  taught, out of a label map the CRD leaves open.
-- **Keep one Workflow to one job.** Two jobs in one graph share a failure path,
+  processors. The runtime reads no label key on any workflow element - the
+  maps are open in the CRD and asgard-core `478cf5d6` never indexes one - so
+  these two are taught because the charts and the documentation's examples
+  carry them, for the canvas, and nothing else is. Not
+  `entries.labels.default`: the entry a conversation starts at is the
+  BotProvider's `spec.entrypoint.entry`, matched by exact name, and a name that
+  matches no entry fails the request - there is no automatic default, one entry
+  or several (asgard-core `internal/bpcontroller/server/bp_controller.go`). Not
+  `relationships.labels` either, where a generator writes a `relationship_id`
+  that nothing reads.
+- Keep one Workflow to one job. Two jobs in one graph share a failure path,
   and then one job's error message answers the other job's caller.
 
 ## Verify
@@ -327,17 +340,17 @@ the Platform UI has nothing to list.
 
 What it cannot check, and what to check by hand:
 
-- **that every `failure` has a relationship.** Nothing enforces it.
-- **that expressions parse.** They are strings until called. Render the chart and
+- that every `failure` has a relationship. Nothing enforces it.
+- that expressions parse. They are strings until called. Render the chart and
   read them, and exercise the tool once against the real system.
-- **that a `router` covers its cases.** A value matching no condition and no
+- that a `router` covers its cases. A value matching no condition and no
   `else` stops the run.
-- **that a conversation loop reaches an exit.** It does not have to and should
+- that a conversation loop reaches an exit. It does not have to and should
   not be made to: every supervisor in the reference deployments loops back to
   `listen-message` and declares `exits: []`, and so does what
   `asgard-cli add flowagent --supervisor` writes. A run ends when its terminal
   processor finishes. `channelMaxIdleMs` is not the mechanism somebody reaches
   for here either - asgard-core `623ceb50` types it as the bound on the Redis
-  message-history cache and says in as many words that it is **not** the channel
+  message-history cache and says explicitly that it is not the channel
   or transcript lifetime; leaving it unset means the durable channel never
-  expires, which is the design rather than a leak.
+  expires, which is intended, not a leak.

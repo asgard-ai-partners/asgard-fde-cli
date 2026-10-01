@@ -55,21 +55,12 @@ func kindsIn(repo string) (map[string]bool, int, error) {
 	kinds := map[string]bool{}
 	charts := chartDirs(repo)
 	for _, chart := range charts {
-		var values string
-		for _, v := range []string{"values-prod.yaml", "values-dev.yaml"} {
-			if _, err := os.Stat(filepath.Join(chart, v)); err == nil {
-				values = filepath.Join(chart, v)
-				break
-			}
-		}
-		if values == "" {
-			continue
-		}
-		out, err := exec.Command("helm", "template", filepath.Join(chart, "app"), "-f", values).Output()
+		values, err := referenceValues(chart)
 		if err != nil {
-			continue
+			return nil, 0, err
 		}
-		for _, m := range kindLine.FindAllStringSubmatch(string(out), -1) {
+		out := helmRender(filepath.Join(chart, "app"), values)
+		for _, m := range kindLine.FindAllStringSubmatch(out, -1) {
 			if m[1] == "ConfigMap" || m[1] == "Secret" {
 				continue
 			}

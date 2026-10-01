@@ -25,8 +25,8 @@ func newSkillCmd() *cobra.Command {
 		Short: "Fetch the reference material for the Asgard server this repository deploys to",
 		Long: `Fetch the reference material for the Asgard server this repository deploys to.
 
-**These are design-time skills**, under ` + "`.agents/skills/`" + `, read by the coding
-agent while it authors a chart. They are **not** the runtime skills under
+These are design-time skills, under ` + "`.agents/skills/`" + `, read by the coding
+agent while it authors a chart. They are not the runtime skills under
 ` + "`assets/skills/`" + ` that a Syncer feeds to a deployed agent - nothing here touches
 those, and the bare word means the runtime ones everywhere else in this
 material. The glossary has the pair.
@@ -40,21 +40,19 @@ what they default to. Those are not in this binary and must not be.
 
 ` + "`status`" + ` also reports the OTHER half of the material in a repository - the
 skills this binary ships, which no platform is party to - because nobody asks
-the freshness question in halves. ` + "`update`" + ` does not touch that half: it is
+whether the material is current for only one half. ` + "`update`" + ` does not touch that half: it is
 written by ` + "`asgard-cli init`" + ` and checked by ` + "`asgard-cli gate`" + `'s ` + "`shipped`" + ` step.
 
 The version is a number the platform declares and a person increments. It is
-not a digest of the material, deliberately: several upstreams feed it - a
-cluster's CRDs, the runtime's own constants, the written documents - and any of
-them can move for a cosmetic reason. Deriving the version from them would tell
-every repository in the world that it was behind because a map iterated
-differently. So the number is a claim somebody makes, and it only goes up.
+not a digest of the material: several upstreams feed it - a cluster's CRDs,
+the runtime's own constants, the written documents - and any of them can
+change for a cosmetic reason, such as a map iterating in a different order.
+The number only goes up.
 
-The consequence worth knowing: the material can change without the number
-moving. ` + "`skill status`" + ` says so when it does, and ` + "`skill update`" + ` writes what the
+As a result, the material can change without the number moving. ` + "`skill status`" + ` says so when it does, and ` + "`skill update`" + ` writes what the
 platform has now whatever the number says.
 
-**The reason it is fetched is on-prem.** Asgard runs as a hosted platform and,
+The material is fetched because of on-prem installations. Asgard runs as a hosted platform and,
 for some customers, on their own hardware. A customer's server can be several
 versions behind this CLI or ahead of it, and a document saying what
 ` + "`llm-completion`" + ` takes is only true of one of them. Compiled into the binary,
@@ -67,26 +65,23 @@ The files land in ` + "`.agents/skills/`" + ` (or ` + "`.claude/skills/`" + ` wh
 already uses that), and they are meant to be committed: whoever clones the
 repository, and whatever agent works in it, then has them without a fetch.
 
-**Once fetched, they stay in the directory they were fetched into.** Which of
+Once fetched, they stay in the directory they were fetched into. Which of
 the two it is is decided by where the record already is, not by which directory
-happens to exist - ` + "`asgard-cli init`" + ` creates ` + "`.agents/skills`" + ` whether or not
-anything has been fetched, and a repository that had fetched into
-` + "`.claude/skills`" + ` used to change directory the moment somebody scaffolded it,
-leaving everything it had fetched behind in the one an agent's runtime still
-reads. A copy sitting in the directory that is NOT in use is reported by
-` + "`skill status`" + ` and fails ` + "`asgard-cli gate`" + `, because nothing updates it and
-nothing else would ever mention it.
+exists - ` + "`asgard-cli init`" + ` creates ` + "`.agents/skills`" + ` whether or not
+anything has been fetched, so a repository that fetched into ` + "`.claude/skills`" + `
+keeps using it. A copy in the directory that is not in use is reported by
+` + "`skill status`" + ` and fails ` + "`asgard-cli gate`" + `, because nothing updates it.
 
-**And "committed" is checked rather than asserted.** A great many repositories
-carry a ` + "`.claude/`" + ` line in their ` + "`.gitignore`" + `, which excludes one of the two
-directories - so where an ignore rule covers the material, that is said instead
-of telling somebody to commit what git will not take.
+Whether the files can be committed is checked. Many repositories carry a
+` + "`.claude/`" + ` line in their ` + "`.gitignore`" + `, which excludes one of the two
+directories, so where an ignore rule covers the material the command says so
+instead of telling somebody to commit what git will not take.
 
-They are generated and say so. **Do not edit them** - the next update overwrites
-them, and an edit is a claim about the server that the server did not make. An
-edited file is reported rather than silently replaced.
+They are generated and say so. Do not edit them: the next update overwrites
+them, and an edit states something about the server that the server did not.
+An edited file is reported rather than silently replaced.
 
-What they do not contain is judgement. They are shape - names, types, defaults -
+They do not contain judgement. They describe shape - names, types, defaults -
 not which mistakes apply cleanly and fail at runtime. That is what the
 hand-written skills beside them are for.`,
 		Args: cobra.NoArgs,
@@ -129,22 +124,18 @@ It writes nothing and always exits 0. The question it answers is whether an
 agent working here is reading facts about the server it deploys to, or facts
 about some other version of Asgard.
 
-Two versions that differ is not a warning about the past - the material was
-right when it was written. It means the server has moved since, and what an
-agent reads here now describes something else.
+If the two versions differ, the material was right when it was written and
+the server has changed since, so what an agent reads here describes a
+different version.
 
-**With no session it still answers the half that needs no platform**, and says
-so on the platform line instead of failing. This help has always said the
-command exits 0; that was untrue in exactly the situations - a CI runner, an
-agent sandbox, a plane - where the local half is the only one available.
+With no session it still answers the half that needs no platform, and says so
+on the platform line instead of failing. This applies on a CI runner, in an
+agent sandbox or offline, where only the local half is available.
 
-**It reports two halves, because there are two.** Above is the platform's
-material and the version it declares. Below it is the material this CLI ships -
-AGENTS.md and the design-time skills - and which version of the binary wrote
-what is here. **The two version numbers are unrelated**, the remedies are
-different commands, and this used to answer only the first: somebody asking
-whether the material here was current got a confident answer about one half and
-no hint that the other existed. ` + "`asgard-cli gate`" + ` names the individual files.`,
+It reports two halves. Above is the platform's material and the version it
+declares. Below it is the material this CLI ships - AGENTS.md and the
+design-time skills - and which version of the binary wrote what is here. The
+two version numbers are unrelated, and the remedies are different commands. ` + "`asgard-cli gate`" + ` names the individual files.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			if err := checkFormat(format); err != nil {
@@ -258,9 +249,9 @@ no hint that the other existed. ` + "`asgard-cli gate`" + ` names the individual
 			}
 
 			if note := skillsDirIgnoredNote(cmd, repoRoot, root); note != "" {
-				fmt.Fprintf(out, "\n%s.\nThe files are on disk so that a clone has them without a fetch, and an\n"+
-					"ignore rule takes that away while every version number above still reads\n"+
-					"as current.\n", strings.ToUpper(note[:1])+note[1:])
+				fmt.Fprintf(out, "\n%s.\nThe files are on disk so that a clone has them without a fetch. An ignore\n"+
+					"rule prevents that, even though every version number above reads as\n"+
+					"current.\n", strings.ToUpper(note[:1])+note[1:])
 			}
 			printOtherRoots(out, repoRoot, root)
 			printShippedStatus(out, repoRoot)
@@ -414,14 +405,13 @@ func newSkillUpdateCmd() *cobra.Command {
     asgard-cli skill update
     asgard-cli skill update --check    write nothing; exit 1 if it would
 
-Every file is written, not only the changed ones: a partial write leaves a
-repository holding two versions at once, and the record beside them would then
-be true of neither.
+Every file is written, not only the changed ones: a partial write would leave
+the repository holding two versions at once, with a record that matches
+neither.
 
-**Commit what it writes.** The point of the files being on disk is that whoever
-clones this repository has them without a fetch, and that a change to them shows
-up in a diff - which is the changelog. A config key that becomes required is one
-changed line in a review.
+Commit what it writes. The files are on disk so that whoever clones this
+repository has them without a fetch, and so that a change to them shows up in a
+diff. A config key that becomes required is one changed line in a review.
 
 A file that was edited by hand since it was last written is reported and left
 alone. ` + "`--force`" + ` overwrites it. These files are generated and say so at the
@@ -430,7 +420,7 @@ in the material - which belongs upstream, in the server, not in a file the next
 update replaces.
 
 --check is for a gate. It exits 1 when the repository is not holding what the
-server has, which is the state where an agent's next CR is written against facts
+server has, because then an agent's next CR would be written against facts
 that no longer hold.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
@@ -595,8 +585,8 @@ func commitAdvice(cmd *cobra.Command, repoRoot, root string) string {
 		return " Commit them."
 	}
 	return "\n\nAn ignore rule excludes that directory, so git will not take them and a\n" +
-		"fresh clone will not have them - which is the entire reason they are written\n" +
-		"to disk rather than fetched on demand. Either commit the directory\n" +
+		"fresh clone will not have them, although that is why they are written to\n" +
+		"disk rather than fetched on demand. Either commit the directory\n" +
 		"deliberately (`git add -f`) or fetch into one that is tracked:\n\n" +
 		"    asgard-cli skill update --dir .agents/skills"
 }

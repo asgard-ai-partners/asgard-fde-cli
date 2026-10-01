@@ -31,21 +31,19 @@ in it, then needs no --workspace. The platform never reads it - a run reads the
 declaration and the chart, and nothing else - so nothing there can make a
 deployment succeed or fail.
 
-**Changing it clears the pipeline recorded beside it**, because a pipeline
+Changing it clears the pipeline recorded beside it, because a pipeline
 belongs to one workspace and means nothing in another. ` + "`asgard-cli pipeline use`" + `
-is what fills the line back in, and until it does, every pipeline command
-refuses to run and says so. That is deliberate: refusing is the safe half-state,
-and the alternative - carrying on against whichever pipeline of the new
-workspace looked closest - is how something gets deployed that nobody chose.
+fills the line back in, and until then every pipeline command refuses to run
+and says so, rather than picking a pipeline of the new workspace and deploying
+something nobody chose.
 
 Which workspace and which pipeline are the two things neither the repository nor
 the platform can answer alone; the releases, their keys and their triggers are
-all in the declaration. Neither is guessed, and neither is guessed from a list
-of one.
+all in the declaration. Neither is guessed, even from a list of one.
 
 Overriding is --workspace or ASGARD_WORKSPACE, both of which outrank the file.
-That direction is the safe one: acting on a test workspace when the customer's
-was meant costs a confusing error, and the reverse deploys to a customer.`,
+An override that points at a test workspace by mistake produces a confusing
+error; one that points at a customer's workspace by mistake deploys there.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error { return cmd.Help() },
 	}
@@ -64,14 +62,13 @@ func newWorkspaceListCmd() *cobra.Command {
 		Short: "List the workspaces this account can reach",
 		Long: `List the workspaces this account can reach on the platform.
 
-This is the one platform call that needs no workspace, which makes it both the
-way to find an id and the way to check that a session works for the API rather
-than only for the sign-in service.
+This is the one platform call that needs no workspace. Use it to find an id,
+and to check that a session works for the API and not only for the sign-in
+service.
 
 It marks the one that currently applies, so a wrong binding is visible here
 without running anything that would act on it. Nothing is marked when nothing
-has been chosen, including when this account can reach exactly one: a list of
-one is still a list.`,
+has been chosen, including when this account can reach exactly one.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			if err := checkFormat(format); err != nil {
@@ -146,31 +143,27 @@ could name only one of them.
 
     asgard-cli workspace use 1862431170889781248
 
-**An id is a long decimal number, around 19 digits - not a UUID.** If what you
+An id is a long decimal number, around 19 digits - not a UUID. If what you
 have looks like ` + "`7ab7f523-3cd9-...`" + `, it is the wrong value; ` + "`asgard-cli workspace list`" + `
 prints the right ones for the account you are signed in as.
 
-**Never copy one out of another customer's repository, or out of an example.**
+Never copy one out of another customer's repository, or out of an example.
 It is a live production identifier, and a wrong one binds this repository to
-somebody else's workspace - where the commands will work, which is what makes it
-expensive.
+somebody else's workspace, where the commands will still succeed.
 
-**It writes a file in the repository and nothing outside it.** A machine-wide
-default used to be recordable with --default, and it is gone: it was invisible
-on the machine that had it and absent on every other, so the same command in the
-same checkout did different things for two people. Outside a checkout, name the
+It writes a file in the repository and nothing outside it. There is no
+machine-wide default, so the same command in the same checkout does the same
+thing for everyone. Outside a checkout, name the
 workspace with --workspace or export ASGARD_WORKSPACE - both are visible where
 they are set.
 
-**Moving to a different workspace clears the pipeline line.** A pipeline belongs
-to one workspace, so the id recorded beside it is not a pipeline of the new one -
-it is either absent there, or, worse, an id that happens to exist and points at
-somebody else's repository. Clearing it leaves the checkout in a state where
-every pipeline command refuses and names the remedy, which is the failure being
-brought forward to the next command instead of waiting for a destructive one.
-` + "`asgard-cli pipeline use <id>`" + ` fills it in. **Commit both lines together**: a
-commit carrying a new workspace and the old pipeline is a state that never
-existed on anybody's disk.
+Moving to a different workspace clears the pipeline line. A pipeline belongs
+to one workspace, so the id recorded beside it is not a pipeline of the new one:
+it is either absent there, or an id that happens to exist and points at
+somebody else's repository. Once it is cleared, every pipeline command refuses
+and names the remedy, so the problem shows up on the next command rather than
+on a destructive one. ` + "`asgard-cli pipeline use <id>`" + ` fills it in. Commit both
+lines together, so no commit pairs the new workspace with the old pipeline.
 
 Recording the same workspace again changes nothing and clears nothing.
 
@@ -239,7 +232,7 @@ choice - the first command that acts on it reports a bad one anyway.`,
 					"where this checkout now deploys. Nothing was guessed in its place.\n", previous, workspaceID)
 				fmt.Fprintf(out, "\nUntil a pipeline is recorded, every `asgard-cli pipeline` command here refuses\nto run and lists the candidates:\n\n")
 				fmt.Fprintf(out, "    asgard-cli pipeline list\n    asgard-cli pipeline use <id>\n")
-				fmt.Fprintf(out, "\nCommit both lines together. A commit carrying the new workspace and the old\npipeline is a pairing that never existed on anybody's disk.\n")
+				fmt.Fprintf(out, "\nCommit both lines together, so no commit pairs the new workspace with the\nold pipeline.\n")
 				return nil
 			}
 
@@ -265,16 +258,15 @@ func newWorkspaceShowCmd() *cobra.Command {
 		Short: "Report which workspace applies here, and why",
 		Long: `Report which workspace applies here, and why that one.
 
-The reason is the useful half. A command that acted in the wrong workspace is
-the failure the resolution order exists to prevent, and the order is:
---workspace, then ASGARD_WORKSPACE, then the checkout's .asgard-cli.yaml. That
-is the whole list. **There is no last resort and no machine-wide
-default**: every answer is either on the command line or in a committed file, so
+The reason matters most, because the resolution order exists to stop a
+command acting in the wrong workspace. The order is: --workspace, then
+ASGARD_WORKSPACE, then the checkout's .asgard-cli.yaml. There is no last resort
+and no machine-wide default: every answer is either on the command line or in a committed file, so
 two people in the same checkout get the same one.
 
-The "origin remote" line is a statement about this checkout and nothing more.
-Nothing compares it to anything: which remote somebody calls origin is their
-business, and a repository may have several.
+The "origin remote" line describes this checkout only. Nothing compares it to
+anything, because which remote somebody calls origin is up to them, and a
+repository may have several.
 
 It names the workspace without acting on it, so it is safe to run first when a
 command is about to do something that matters.`,

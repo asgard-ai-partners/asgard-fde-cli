@@ -6,16 +6,14 @@ description: The acceptance gate. One command, before every tag.
 asgard-cli gate
 ```
 
-**One command, not a list.** A repository of CRs has no compiler, and the thing
-an agent runs after every edit has to be one command whose definition lives in
-the binary. A count of the steps written into a file like this one is a copy of
-something the binary owns, so run the command and read what it reports rather
-than checking a number here.
+A repository of CRs has no compiler, so the check an agent runs after every edit
+is one command whose definition lives in the binary. Run it and read what it
+reports; this file does not list a step count.
 
 It runs, in order: `tools`, `repo`, `shipped`, `binding`, `skills`, `lint`,
-`render`, `verify`. **A skip is printed differently from a pass** - the steps
-that need the platform report as skipped when there is no session, and a step
-that did not run is not a step that passed.
+`render`, `verify`. A skip is printed differently from a pass: the steps that
+need the platform report as skipped when there is no session. A skipped step
+did not pass.
 
 What it cannot reach needs a cluster, and
 `.agents/skills/asgard-platform/guide/verify.md` says what that is. The
@@ -25,20 +23,19 @@ authority is the plan:
 asgard-cli pipeline runs watch --release <name> --ref <tag>
 ```
 
-**Read the warnings, do not just check the exit code.** A warning here is a
-condition that is correct now and fatal once somebody tags, which is exactly the
-shape that gets skimmed past:
+Read the warnings as well as the exit code. A warning here is a condition that
+is correct now and fatal once somebody tags:
 
-- **no Syncer** - the rollout fires the Syncers this release deploys that carry
+- no Syncer - the rollout fires the Syncers this release deploys that carry
   `asgard-ai.com/auto-fire-on-rollout` and waits for them, so with none there is
   nothing after the dry run: a succeeded run means helm returned. A production
   chart runs today with none, which is why this warns rather than fails
-- **a CR with no project-environment-id label** - it works on the cluster, and
+- a CR with no project-environment-id label - it works on the cluster, and
   its editor opens as a blank canvas. The platform injects the id as
   `.Values.asgard.projectEnvironmentId` on every run, so the fix is in the
   template rather than in a value
-- **R11, a layer with no consumer** - record which kind it is while you still
-  know. The reader who finds it later is the one who binds it as a tidy-up
+- R11, a layer with no consumer - record which kind it is while you still
+  know. Otherwise a later reader may bind it as a tidy-up
 
 Then the review no rule can do:
 
@@ -47,5 +44,5 @@ asgard-cli verify --tools
 ```
 
 Read every tool description together, the way the model gets them - one list, no
-other context, deciding which answers the question. The failure this catches is
-two descriptions that are each accurate and do not say which to prefer.
+other context, deciding which answers the question. This catches two
+descriptions that are each accurate and do not say which to prefer.

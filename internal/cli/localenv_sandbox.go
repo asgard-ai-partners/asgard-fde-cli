@@ -137,7 +137,7 @@ func startLocalEnvInSandbox(cmd *cobra.Command, root string, focus []string, tim
 		return fmt.Errorf("the form server did not start; its log is %s", logPath)
 	}
 	if st.Done {
-		return fmt.Errorf("the form server stopped as it started: %s", st.Error)
+		return fmt.Errorf("the form server stopped right after starting: %s", st.Error)
 	}
 
 	out := cmd.OutOrStdout()
@@ -211,7 +211,7 @@ func waitLocalEnvInSandbox(cmd *cobra.Command, root string, wait time.Duration) 
 		}
 		if !processAlive(st.PID) {
 			_ = os.Remove(statePath)
-			return errors.New("the form server is gone without an answer - the sandbox may have been stopped while it waited. " +
+			return errors.New("the form server is gone and left no result; the sandbox may have been stopped while it waited. " +
 				"`asgard-cli local-env` opens the form again; nothing was written")
 		}
 		if time.Now().After(deadline) {

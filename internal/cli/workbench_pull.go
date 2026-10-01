@@ -37,19 +37,20 @@ about one pipeline, into this repository's references/, and record each in
     asgard-cli workbench pull --pipeline support-bot
 
 Each lands at references/workbench/ISS-<n>/<attachment id>/<original name>,
-**byte-identical**, and its SHA-256 is checked against what the platform
+byte-identical, and its SHA-256 is checked against what the platform
 recorded before anything is written - a file that does not match is not filed.
 The attachment id is in the path because a customer's second version usually
 has the first one's name, and both are kept so that they can be diffed.
 
-**Running it again is safe.** An attachment already filed with the same bytes is
+Running it again is safe. An attachment already filed with the same bytes is
 skipped; one whose path is taken by different bytes is reported and left alone,
 because the filed copy is evidence and is never overwritten. An attachment
 deleted on the platform is not pulled, and one pulled before it was deleted
 stays where it is.
 
-**Filing is not reading.** An attachment is material, not fact: what turns it
-into a requirement is somebody reading it and recording a question or a request.
+A filed attachment has not been read yet, and its content is not established
+fact. It becomes a requirement when somebody reads it and records a question or
+a request.
 Every row starts verified: no, the same as "asgard-cli reference add".
 
 It writes into the checkout, so it has to be run inside one that
@@ -127,7 +128,7 @@ It writes into the checkout, so it has to be run inside one that
 				}
 				fmt.Fprintln(out)
 			}
-			fmt.Fprintf(out, "\nFiling is not reading: record what each one leaves open with \"asgard-cli question add\".\n")
+			fmt.Fprintf(out, "\nThese are filed but not read yet: read each one and record what it leaves open with \"asgard-cli question add\".\n")
 			if failed > 0 {
 				return fmt.Errorf("%s not filed; see above", plural(failed, "attachment"))
 			}

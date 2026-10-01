@@ -31,13 +31,13 @@ func newLocalEnvCmd() *cobra.Command {
 		Long: `Open a form for the ` + "`.env`" + ` at the repository root, so that whoever holds a
 credential can type it in themselves.
 
-**A coding agent must never ask anybody to say a password to it.** Not in the
-conversation, not "paste it and I will remove it after" - a credential that has
-been through a transcript has to be treated as disclosed. But the alternative
-has been to ask a person who may not be an engineer to open a dotfile, find the
-right line, and mind the whitespace, which is a request that fails.
+A coding agent must never ask anybody to give it a password, in the
+conversation or as "paste it and I will remove it after". A credential that has
+been through a transcript has to be treated as disclosed. Asking a person who
+may not be an engineer to open a dotfile, find the right line and mind the
+whitespace usually fails as well.
 
-So the agent writes the keys it needs, with the values left empty, and this
+The agent writes the keys it needs, with the values left empty, and this
 opens a form to fill them in:
 
     asgard-cli local-env
@@ -48,34 +48,32 @@ closes as soon as the form is saved. The URL carries a one-time token, the
 server answers to no other host name, and the page is served under a policy
 that lets it talk to nothing but the process that served it.
 
-**What comes back here is a list of key names.** Never a value - not on save,
-not in an error, not in the summary. That is the whole point of the command:
-the values reach the file and stop there.
+What this command reports is a list of key names. It never prints a value,
+on save, in an error or in the summary: the values are written to the file and
+nowhere else.
 
-` + "`--focus`" + ` highlights the keys you are waiting for. **It does not hide the
-others**, deliberately: the person filling this in may know about a second
-database nobody has mentioned yet, and a form that shows them only what was
-asked for is a form that cannot tell you about it. They can add keys too, which
-is why the agent should re-read ` + "`.env`" + ` afterwards rather than assume it got
-back exactly what it asked for.
+` + "`--focus`" + ` highlights the keys you are waiting for. It does not hide the
+others, because the person filling this in may know about a second database
+nobody has mentioned yet. They can add keys too, so the agent should re-read
+` + "`.env`" + ` afterwards rather than assume it got back exactly what it asked for.
 
-**The kinds of credential, and this is only one of them:**
+There are three kinds of credential, and this command handles only the first:
 
     design time         this .env, on this machine       the customer, or you
     pipeline variables  the platform, per release        asgard-cli pipeline variables set
     runtime secret      a Kubernetes Secret in a cluster the platform provisions it
 
-The value is often the same string, because it is the same database. How each
-is set is not, and reading one to obtain another - a cluster Secret to get a
-design-time password, say - is how a production credential ends up somewhere
+The value is often the same string, because it is the same database, but each
+is set differently. Do not read one to obtain another, such as a cluster Secret
+to get a design-time password: that puts a production credential somewhere
 nobody can withdraw it from.
 
-**With no browser** - a container, a locked-down server - the URL is printed for
+With no browser, such as in a container or on a locked-down server, the URL is printed for
 you to open, over an SSH port forward if that is what it takes. Where even that
 is not possible, ` + "`--terminal`" + ` asks for each value at the prompt instead, and
 does not echo the secrets.
 
-**In the Workbench assistant's sandbox it is two steps**, because the agent reads
+In the Workbench assistant's sandbox it takes two steps, because the agent reads
 a command's output only when the command ends, and one command runs at most ten
 minutes:
 
@@ -104,7 +102,7 @@ to ask at there.`,
 				return waitLocalEnvInSandbox(cmd, root, waitFor)
 			}
 			if terminal && auth.SandboxMode() {
-				return errors.New("--terminal needs somebody at a terminal, and the Workbench sandbox has none; the form opens in the sandbox's browser instead")
+				return errors.New("--terminal needs a terminal, and the Workbench sandbox has none; run local-env without it and the form opens in the sandbox's browser")
 			}
 			file, err := localenv.Load(root)
 			if err != nil {

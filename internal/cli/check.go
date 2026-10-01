@@ -29,22 +29,21 @@ repo up:
     inside docs/ resolving
   - every "asgard-cli <command>" this repository's own documents name is a
     command this build has. "scaffold" never overwrites a file it has already
-    written, which is right - an FDE edits them - so a command renamed in the
-    tool leaves every repository already scaffolded pointing at the old name,
-    and nothing else notices
+    written, because an FDE edits them, so a command renamed in the tool leaves
+    every repository already scaffolded pointing at the old name, and no other
+    check reports it
 
 Naming projects limits the project-scoped checks to those; the repo-wide checks
 always run. Exits non-zero when anything fails.
 
-**This is the ` + "`repo`" + ` step of ` + "`asgard-cli gate`" + `**, and the one step that needs
+This is the ` + "`repo`" + ` step of ` + "`asgard-cli gate`" + `, and the one step that needs
 no helm. Run ` + "`gate`" + ` after changing anything - it runs this and the rest in
 order, and reports a step it could not run as skipped rather than passed. Run
 this one alone while you are fixing what it found.
 
---format json emits the findings as records. This is the gate an agent is
-trying to turn green, so it is the one place where recovering a problem from
-aligned columns is most likely: a warning and an error are the same shape in
-text and differ only in a word at the left margin, and only one of them fails.`,
+--format json emits the findings as records, with errors and warnings in
+separate arrays. In text, a warning and an error differ only in the word at the
+left margin, and only an error fails, so an agent should read the JSON.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := checkFormat(format); err != nil {
 				return err

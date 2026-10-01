@@ -30,7 +30,7 @@ answer. Each one is ISS-N, numbered across the whole workspace.
     asgard-cli workbench comment ISS-12 --body "Waiting on the customer's DBA."
     asgard-cli workbench attach ISS-12 minutes.pdf --what "kickoff minutes" --from "customer PM" --dated 2026-09-29
 
-**Every write is made as the member's assistant.** The platform authorizes it
+Every write is made as the member's assistant. The platform authorizes it
 as the signed-in account, exactly as if the member had made it, and the
 timeline marks it "via Asgard AI". Some actions the platform keeps for the
 member alone - deleting, pinning or locking an issue, managing labels, deleting
@@ -38,10 +38,10 @@ an attachment or a comment - and this command has none of them, because the
 platform refuses them from an assistant; the member does those in the
 Workbench page.
 
-**This is not "asgard-cli question", "request" or "task", and not
-"asgard-cli issue-report".** The first three are the engagement's own records
-in the customer's repository; issue-report is a report to this tool's
-maintainers about the tool. The Workbench is the platform's, and it is what the customer sees.
+The Workbench is separate from "asgard-cli question", "request" and "task",
+which are the engagement's own records in the customer's repository, and from
+"asgard-cli issue-report", which reports a problem with this tool to its
+maintainers. The Workbench belongs to the platform, and the customer sees it.
 
 ` + trackersHelp + `
 
@@ -50,7 +50,7 @@ ASGARD_WORKSPACE, then the checkout's binding. Labels, pipelines and
 assignees are named the way a person names them - a label's name, a
 pipeline's name, an email - and translated to ids here; an id works as well.
 
-**--pipeline is what the Workbench page calls a Deployment**: the pipeline an
+--pipeline is what the Workbench page calls a Deployment: the pipeline an
 issue is about, the same one "asgard-cli pipeline list" lists. Unlike the
 pipeline commands' --pipeline, it is never taken from the checkout's binding.`,
 		Args: cobra.NoArgs,
@@ -511,9 +511,9 @@ timeline - the system's events and the comments, merged oldest first.
     asgard-cli workbench show 12 --format json
 
 A line marked "via Asgard AI" was written by an assistant acting for the member
-named on it. **An attachment is material, not fact**: that a file is attached
-says nothing about whether what it says is true - that is only in the fields
-and the comments.
+named on it. An attachment is source material: attaching a file does not make
+its content true. What the issue has established is in the fields and the
+comments.
 
 The JSON form carries the issue, its events, its comments and its attachments as
 the platform returns them, with the label names and the people beside the ids.
@@ -655,7 +655,7 @@ func writeIssue(out io.Writer, names *workbenchNames, is *platform.WorkbenchIssu
 	}
 
 	if len(attachments) > 0 {
-		fmt.Fprintf(out, "\nAttachments - material, not fact:\n")
+		fmt.Fprintf(out, "\nAttachments (source material, not established fact):\n")
 		for _, a := range attachments {
 			fmt.Fprintf(out, "  %s  %s, %d bytes, sha256 %s, from %s\n", a.ID, a.OriginalFilename, a.ByteSize, a.SHA256, names.memberName(a.UploaderID))
 			fmt.Fprintf(out, "      what %q  from %q  dated %s\n", a.What, a.From, a.Dated)
@@ -836,7 +836,7 @@ func (b *bodyFlags) read(cmd *cobra.Command) (string, bool, error) {
 	fl := cmd.Flags()
 	switch {
 	case fl.Changed("body") && fl.Changed("body-file"):
-		return "", false, fmt.Errorf("--body and --body-file are two answers to one question; pass one")
+		return "", false, fmt.Errorf("pass --body or --body-file, not both")
 	case fl.Changed("body-file"):
 		var raw []byte
 		var err error
@@ -885,14 +885,14 @@ Asgard AI.
                tool itself - that is "asgard-cli issue-report"
     feedback   a user's reaction to an AI answer, when it arrived some other way
 
-**The customer reads what this opens.** Whether a thing belongs here, in the
+The customer reads what this opens. Whether a thing belongs here, in the
 repository's own records or upstream is decided by who has to act on it:
 "asgard-cli workbench --help" has the table.
 
 Everything else is optional: the status defaults to backlog and the priority to
-normal. **The pipeline is never assumed**, not even from the checkout's
-binding - an issue can be about none, and one filed against the wrong
-pipeline is filed where nobody looks for it.`,
+normal. The pipeline is never assumed, not even from the checkout's binding:
+an issue can be about none, and nobody looks for an issue under the wrong
+pipeline.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			if strings.TrimSpace(title) == "" {
@@ -987,7 +987,7 @@ is, and the timeline records everything named here as one action.
     asgard-cli workbench update ISS-12 --parent ISS-3 --add-blocked-by ISS-7
     asgard-cli workbench update ISS-12 --due "" --pipeline ""       clear both
 
-**There is no close.** An issue ends by moving to done and starts again by
+There is no close action. An issue ends by moving to done and starts again by
 moving out of it; "we will not do this" is the not planned label and a move to
 done, and a duplicate is --duplicate-of.
 

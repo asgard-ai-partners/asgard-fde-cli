@@ -32,18 +32,18 @@ reads it renders rather than failing on a missing key.
     asgard-cli render internal-dev > .out/rendered.yaml
     asgard-cli render internal-dev | asgard-cli verify --rendered -
 
-**WHAT THIS RENDERS IS NOT WHAT WILL DEPLOY.** A run renders on the platform,
+What this renders is not what will deploy. A run renders on the platform,
 with the release's real values and real ids, and then checks every resulting CR
 against the cluster's own CRDs with a server-side dry run. This renders with
-placeholders and checks nothing at all. It is for the loop that is too fast to
-involve a push - does the template compile, does it produce the objects I meant
-- and the authoritative answer is always the plan report:
+placeholders and checks nothing. Use it for quick checks that do not need a
+push - does the template compile, does it produce the objects I meant. The
+authoritative answer is always the plan report:
 
     asgard-cli pipeline runs watch --release <name> --ref <tag>
 
 The values a run would take from the platform are not fetched. Coercing a stored
-string to the type its declaration gives it is the platform's rule, and a second
-copy of that rule here would disagree with it the first time either changed. Use
+string to the type its declaration gives it is the platform's rule, and this
+command does not keep a copy of it. Use
 -f to supply them by hand when a template needs them to render at all.
 
 Everything except the manifests goes to stderr, so it pipes.
@@ -51,12 +51,12 @@ Everything except the manifests goes to stderr, so it pipes.
 It needs helm on PATH and nothing else; ` + "`asgard-cli doctor`" + ` says whether it is
 there.
 
-**It renders only, and there is no install path.** A Syncer pins its revision to
+It renders only; there is no install path. A Syncer pins its revision to
 the chart's appVersion and only a run stamps a real ref in, so a local helm
 upgrade would write the placeholder as a git ref that does not exist and the
 Syncer would fail to clone on every run afterwards.
 
-**This is the ` + "`render`" + ` step of ` + "`asgard-cli gate`" + `**, which renders every release
+This is the ` + "`render`" + ` step of ` + "`asgard-cli gate`" + `, which renders every release
 and then checks what came out. Run this one alone when you want the manifests
 themselves rather than a verdict on them.`,
 		// `render <project> <env>` was the old form. It is gone with the

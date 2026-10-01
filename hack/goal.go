@@ -15,7 +15,7 @@ import (
 func init() {
 	register("goal", check{
 		Needs: "this repository - **the capability, not the material**",
-		What:  "**Goal.md's four points against the binary** - the corpus landing offline with no repository, its size as TASK.md states it, a grep finding things in it, the needs files and the deck's rules, a chart written and passing `check`, and the issue route coming out of the tool's own output",
+		What:  "**Goal.md's four points against the binary** - the corpus landing offline with no repository, its size as APPROACH.md states it, a grep finding things in it, the needs files and the deck's rules, a chart written and passing `check`, and the issue route coming out of the tool's own output",
 		Run:   runGoal,
 	})
 }
@@ -108,12 +108,8 @@ func runGoal(args []string) error {
 	// answerable without anybody writing a number down: what the binary
 	// carries and what arrives in the directory are both countable here.
 	//
-	// This used to hold TASK.md's "N documents" digit for digit, and **nothing
-	// in Goal.md asks for that number.** The check invented the requirement,
-	// TASK.md carried the number to satisfy it, and every page added to the
-	// corpus then turned the check red until somebody retyped it. A count that
-	// exists only because a checker demands it is a coupling between prose and
-	// the tree with no claim behind it.
+	// It holds no document count: Goal.md asks for none, and a count a checker
+	// demands only couples prose to the tree.
 	//
 	// What is worth failing on is a document that does not arrive.
 	// **Names, not counts.** Comparing two numbers means keeping an exclusion
@@ -167,7 +163,7 @@ func runGoal(args []string) error {
 		}
 	}
 
-	task, err := os.ReadFile(filepath.Join(root, "TASK.md"))
+	task, err := os.ReadFile(filepath.Join(root, "APPROACH.md"))
 	if err != nil {
 		return err
 	}
@@ -177,7 +173,7 @@ func runGoal(args []string) error {
 	// worth failing on: material that has gone missing.
 	claim := regexp.MustCompile(`(?:over\s+)?([\d,]+)\s*\n?\s*words`).FindStringSubmatch(string(task))
 	if claim == nil {
-		add("1: TASK.md gives no size for the corpus at all, so nothing says when material has gone")
+		add("1: APPROACH.md gives no size for the corpus at all, so nothing says when material has gone")
 	} else {
 		words, _ := strconv.Atoi(strings.ReplaceAll(claim[1], ",", ""))
 		got := 0
@@ -186,7 +182,7 @@ func runGoal(args []string) error {
 			got += len(strings.Fields(string(data)))
 		}
 		if got < words {
-			add("1: TASK.md says over %s words and the landed corpus has %s. "+
+			add("1: APPROACH.md says over %s words and the landed corpus has %s. "+
 				"Material has gone rather than grown.", comma(words), comma(got))
 		}
 	}

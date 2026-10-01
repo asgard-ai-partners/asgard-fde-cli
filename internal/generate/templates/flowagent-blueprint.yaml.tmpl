@@ -1,11 +1,11 @@
 # <<.DisplayName>> —— 能力宣告
 #
 # Everything this entry point can do is declared here, one CR out from the
-# workflow. Searching the Workflow CRD for the link finds nothing, which has
-# produced a wrong conclusion before.
+# workflow. The Workflow CRD does not contain the link, so searching it finds
+# nothing.
 #
-# A single-purpose agent needs NO subagent. Adding one only makes the
-# orchestrator restate the question and restate the answer back. Several
+# A single-purpose agent needs no subagent. Adding one only makes the
+# orchestrator restate the question and the answer. Several
 # specialists is a different shape -
 # `.agents/skills/asgard-platform/usecase/flow-agent-supervisor.md`.
 apiVersion: asgard-ai.com/v1alpha1
@@ -27,8 +27,8 @@ spec:
 <<else>>  # No SkillSet in this chart yet, so none is referenced: a name that does not
   # exist is a dangling reference, and the gate rejects it.
   #
-  # A release with no Syncer has **nothing running after the platform's dry
-  # run**: apply fires the Syncers this release deploys that carry
+  # A release with no Syncer has nothing running after the platform's dry
+  # run: apply fires the Syncers this release deploys that carry
   # auto-fire-on-rollout and waits for them, so with none a succeeded run means
   # helm returned. A SkillSet brings one, so a project heading for a deploy
   # wants one:
@@ -40,7 +40,7 @@ spec:
   #   value: "sk-base"
 <<end>>  # The Plugin bundles this entry point loads, comma-separated like the two
   # above. An `expression:` picks them per turn out of the caller's payload,
-  # which is what a bundle is for -
+  # which is what a bundle is for.
   # `.agents/skills/asgard-platform/usecase/plugin.md` has both forms, and the
   # question to settle before the payload decides anything.
   # pluginNames:
@@ -48,7 +48,7 @@ spec:
   #
   # The Neko browser sidecar, for an entry point whose only route into a system
   # is that system's web console. A `value:` string here and a plain boolean on
-  # an Agent CR, and that pair is easy to copy between wrong -
+  # an Agent CR, and people copy one into the other -
   # `.agents/skills/asgard-platform/usecase/browser-operation.md` has both
   # spellings, which of the two settings wins, and when a web UI is the right
   # route at all.
@@ -56,21 +56,20 @@ spec:
   #   enabled:
   #     value: "true"
   #
-  # A JSON string the controller unmarshals. readOnly is part of the security
-  # argument, not a detail: an agent that answers questions about knowledge has
-  # no reason to be able to change it.
+  # A JSON string the controller unmarshals. Keep readOnly true: an agent that
+  # answers questions about knowledge has no reason to be able to change it.
   # sourceSetMounts:
   #   value: '[{"sourceSetName": "ss-<name>", "mountPath": "/knowledge", "readOnly": true}]'
   #
   # The specialists. `add flowagent --supervisor` writes the workflow that
-  # delegates and stops here, because who they are and where the line between
-  # them falls is the design -
+  # delegates and stops there, because choosing the specialists and the line
+  # between them is a design decision -
   # `.agents/skills/asgard-platform/usecase/flow-agent-supervisor.md` has how
   # to split them and what each entry may override.
   #
-  # A JSON string as well, for the same reason as sourceSetMounts above, and
-  # this is the one people write as a YAML list because its contents look like
-  # one. Each entry carries EXACTLY ONE of baseAgentName - an Agent CR in this
+  # A JSON string as well, like sourceSetMounts above. People often write it
+  # as a YAML list because its contents look like one. Each entry carries
+  # exactly one of baseAgentName - an Agent CR in this
   # chart, every other field on the entry then a delta merged onto it - or
   # aliasName, a subagent with no CR at all, defined entirely by the entry.
   # agents:

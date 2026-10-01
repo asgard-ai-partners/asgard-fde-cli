@@ -26,21 +26,20 @@ func newPipelineVariablesCmd() *cobra.Command {
 		Short: "Read and write a release's values",
 		Long: `Read and write the values a release deploys with.
 
-The repository declares which keys exist; the platform holds what they are. That
-split is the whole point: a chart in a customer's repository never contains a
-password, a hostname or an environment id, and a value can be changed without a
-commit.
+The repository declares which keys exist; the platform holds their values. So a
+chart in a customer's repository never contains a password, a hostname or an
+environment id, and a value can be changed without a commit.
 
     asgard-cli pipeline variables list --release internal-dev
     asgard-cli pipeline variables set --release internal-dev bpmDB.host db.internal
     asgard-cli pipeline variables set --release internal-dev --kind secret sendgrid_api_key --from-file ./key.txt
     asgard-cli pipeline variables sync-declared --release internal-dev
 
-SAVING CHANGES NOTHING ON THE CLUSTER. A value reaches the cluster only when a
+Saving changes nothing on the cluster. A value reaches the cluster only when a
 run applies it, which is why the release then reports that the platform holds
 something the cluster does not.
 
-SECRETS ARE WRITE-ONLY. A secret's value never comes back out of the platform,
+Secrets are write-only. A secret's value never comes back out of the platform,
 for any caller: the list reports whether one is set and how many lines it has,
 which is enough to tell a truncated PEM from a whole one without showing it.`,
 		Args: cobra.NoArgs,
@@ -95,13 +94,13 @@ func newVariablesListCmd() *cobra.Command {
 		Long: `List a release's stored values, and the declared keys that have none.
 
 Every row says whether the declaration still names it. A row marked Orphan is
-one the platform holds and the declaration does not: it is NOT injected, the
+one the platform holds and the declaration does not: it is not injected, the
 plan warns about it, and the fix is either to declare it or to delete it.
 
 The header states which config the declared / required / orphan answers came
 from - the release's own most recent run, or the pipeline's snapshot when it has
-never run. That line is the only explanation for why a key is marked Orphan, so
-it is worth reading before believing the column.
+never run. Read that line before trusting the column: it is what explains why a
+key is marked Orphan.
 
 A required key with no value fails the plan with ` + "`vars/required-missing`" + `, which
 is why those are listed first and separately.`,
@@ -223,10 +222,10 @@ func newVariablesSetCmd() *cobra.Command {
 --kind is chart_value by default, and is what the declaration lists the key
 under: chartValues, appSecret or appConfigMap.
 
-A SECRET'S VALUE CANNOT BE AN ARGUMENT. It has to come from --from-file, or from
+A secret's value cannot be an argument. It has to come from --from-file, or from
 standard input with --from-file -, because a value typed as an argument is in
 the shell history and in the process list of every other user on the machine.
-That is also what keeps a PEM intact: a file is read verbatim, with its newlines
+Reading from a file also keeps a PEM intact: a file is read verbatim, with its newlines
 and its trailing newline, and neither is trimmed.
 
 --random is for a secret nobody issues - a key whose value only has to be
@@ -397,9 +396,8 @@ It adds rows and never removes or overwrites one, so running it twice is the
 same as running it once.
 
 Which declaration it reads is the release's own: its most recent run's config,
-or the pipeline's snapshot when it has never run. ` + "`variables list`" + ` states which,
-and that matters here - keys added from the wrong config are keys that will be
-marked Orphan.`,
+or the pipeline's snapshot when it has never run. ` + "`variables list`" + ` states which.
+Keys added from the wrong config will be marked Orphan.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			pc, rel, err := v.resolve(cmd)

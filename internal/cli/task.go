@@ -32,14 +32,14 @@ path needs one before it is implemented - those three point at the customer's
 live systems, so they are reviewed before the change, not after.
 
 The record is a file in the customer repository, ` + "`" + work.TaskDir + `/TASK-xxx-<name>.md` + "`" + `,
-registered in ` + "`" + work.TaskIndex + "`" + `. Task IDs are global across projects: two
-branches numbering from their own project is how a collision happens.
+registered in ` + "`" + work.TaskIndex + "`" + `. Task IDs are global across projects, so two
+branches that number from their own project collide.
 
-**These are the engagement's own records, and the customer does not see
-them.** What somebody on the customer's side has to see, answer or supply goes
-on the workspace's Workbench (asgard-cli workbench create); a gap in this tool
-goes upstream (asgard-cli issue-report). "asgard-cli workbench --help" has the
-table for which is which.`,
+These are the engagement's own records, and the customer does not see them.
+What somebody on the customer's side has to see, answer or supply goes on the
+workspace's Workbench (asgard-cli workbench create); a gap in this tool goes
+upstream (asgard-cli issue-report). "asgard-cli workbench --help" has the table
+for which is which.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := checkFormat(format); err != nil {
@@ -125,9 +125,8 @@ func newTaskAddCmd() *cobra.Command {
 The spec is the single-file SDD shape the generated repo documents in
 ` + "`docs/spec-driven-development.md`" + `: Meta, 1) Requirements, 2) Design,
 3) Implementation Tasks, 4) Execution Log. Every part somebody has to answer is
-marked TODO, and nothing is filled in on their behalf - a field that looks
-decided but never was is worse than an empty one, because the next reader cannot
-tell the difference.
+marked TODO, and nothing is filled in on their behalf, because the next reader
+cannot tell a field that looks decided from one that was.
 
 It stamps today's date and ` + "`draft`" + `, registers the row, and points the index's
 Next Task section at whatever is now most advanced.
@@ -232,8 +231,8 @@ func newTaskStatusCmd(verb string, to work.Status, gate string) *cobra.Command {
 
 It rewrites the status in %s, in the task spec's own Meta section, appends a
 dated line to the spec's Execution Log, and refreshes the index's Next Task
-section. Doing those by hand is how a repo ends up saying two different things
-about the same task with no way to tell which is current.
+section. Doing those by hand can leave the repo saying two different things
+about the same task, with no way to tell which is current.
 
     asgard-cli task %s TASK-001`, to, gate, work.TaskIndex, verb),
 		Args: cobra.ExactArgs(1),
@@ -252,9 +251,9 @@ about the same task with no way to tell which is current.
 			fmt.Fprintf(out, "%s is now %s, as of %s\n", id, to, today())
 			if to == work.Done {
 				fmt.Fprintf(out, `
-Two obligations outlive the status, and a task that skipped them is not really
-done: apply the behaviour delta to the living spec, and give any decision it
-settled its own dated record under docs/decisions/.
+Two things remain after the status moves: apply the behaviour delta to the
+living spec, and give any decision it settled its own dated record under
+docs/decisions/.
 `)
 			}
 			return nil

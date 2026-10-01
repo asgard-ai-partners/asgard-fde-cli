@@ -19,12 +19,12 @@ func newDecisionCmd() *cobra.Command {
 
 A decision record answers "why is it this way". It is a snapshot, and it is
 immutable: changing your mind means writing a new one, not editing the old one.
-The current behaviour lives in the living spec instead, and the two are separate
-directories for exactly that reason.
+The current behaviour lives in the living spec instead, which is why the two are
+separate directories.
 
-Write it at the time. Filling one in afterwards can only restate what was built;
-it cannot recover why the rejected option was rejected, and that sentence is the
-only part of the document nobody can reconstruct later.`,
+Write it when the decision is made. A record written afterwards can restate what
+was built but not why the rejected option was rejected, and that reason cannot be
+reconstructed later.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
@@ -104,8 +104,8 @@ that changed it keeps its version.`,
 			fmt.Fprintf(out, "Linked from docs/spec/%s/README.md\n", specSlug)
 			fmt.Fprintf(out, `
 Fill in why, including why the option you rejected was rejected. Then apply the
-delta to the living spec module the record names - a decision that never reached
-the spec leaves the next reader implementing against a spec that is wrong.
+delta to the living spec module the record names; otherwise the next reader
+implements against a spec that is wrong.
 `)
 			return nil
 		},

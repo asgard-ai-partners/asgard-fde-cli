@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
 	"text/template/parse"
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/hack/internal/src"
@@ -405,16 +406,10 @@ const injected = `asgard:
   namespace: probe-ns
 `
 
-// **The claim, not the count.** TASK.md used to carry the four numbers and this
-// held them digit for digit - so every change to what `add` writes turned the
-// check red and the repair was to retype a number a script had just computed.
-// That is the shape this repository removed everywhere else: a number a script
-// can derive does not belong in prose.
-//
-// What TASK.md states is the judgement - that the chart half is the least
-// finished, because `add` writes a starting point rather than a chart - and
-// what this holds is whether that is still true. The numbers are printed by the
-// run above, where they cannot go stale.
+// The claim, not the count. APPROACH.md states the judgement - that the chart
+// half is the least finished, because `add` writes a starting point rather than
+// a chart - and this holds whether that is still true. The numbers are printed
+// by the run above rather than written in prose, where they would go stale.
 var specKeyClaim = regexp.MustCompile(`the least finished`)
 
 // fieldName is what a CRD field is called: lowerCamelCase, no separators. A
@@ -478,6 +473,50 @@ func specKeys(text string) map[string]bool {
 	return out
 }
 
+// referenceValues is what a reference chart is rendered with: its
+// per-environment values file when it still has one, and the values the
+// platform injects in every case. A chart deployed by the platform pipeline has
+// no per-environment file and requires `.Values.asgard.*`, so rendering it
+// without these gives nothing.
+func referenceValues(holder string) ([]string, error) {
+	var values []string
+	for _, n := range []string{"values-prod.yaml", "values-dev.yaml"} {
+		if _, err := os.Stat(filepath.Join(holder, n)); err == nil {
+			values = append(values, filepath.Join(holder, n))
+			break
+		}
+	}
+	f, err := injectedFile()
+	if err != nil {
+		return nil, err
+	}
+	return append(values, f), nil
+}
+
+var injectedOnce struct {
+	sync.Once
+	path string
+	err  error
+}
+
+// injectedFile writes the injected values once per process and returns where.
+func injectedFile() (string, error) {
+	injectedOnce.Do(func() {
+		f, err := os.CreateTemp("", "asgard-injected-*.yaml")
+		if err != nil {
+			injectedOnce.err = err
+			return
+		}
+		defer f.Close()
+		if _, err := f.WriteString(injected); err != nil {
+			injectedOnce.err = err
+			return
+		}
+		injectedOnce.path = f.Name()
+	})
+	return injectedOnce.path, injectedOnce.err
+}
+
 func helmRender(chart string, values []string) string {
 	args := []string{"template", "probe", chart}
 	for _, v := range values {
@@ -512,15 +551,9 @@ func production(base, root string) (map[string]map[string]bool, error) {
 			return nil
 		}
 		holder := filepath.Dir(p)
-		var values []string
-		for _, n := range []string{"values-prod.yaml", "values-dev.yaml"} {
-			if _, err := os.Stat(filepath.Join(holder, n)); err == nil {
-				values = append(values, filepath.Join(holder, n))
-				break
-			}
-		}
-		if len(values) == 0 {
-			return nil
+		values, err := referenceValues(holder)
+		if err != nil {
+			return err
 		}
 		text := helmRender(p, values)
 		if strings.TrimSpace(text) == "" {
@@ -690,13 +723,13 @@ var decided = map[string]string{
 	"gemini":               "internal/corpus/wiki/settings.md",
 	"openaiChat":           "internal/corpus/wiki/settings.md",
 
-	// A Workflow's label maps are open in the CRD, and which keys anything
-	// reads is P15 - which says in as many words not to teach or generate
-	// these. The entry's `default` is the dangerous one: it reads as "the entry
-	// to start at", and a workflow that starts in the wrong place is not
+	// A Workflow's label maps are open in the CRD and the runtime reads none of
+	// their keys. The entry's `default` is the dangerous one: it reads as "the
+	// entry to start at", when the entry is the BotProvider's
+	// `entrypoint.entry` and a workflow that starts in the wrong place is not
 	// something any check reports.
-	"entries.labels.default": "internal/corpus/wiki/platform-unknowns.md",
-	"relationships.labels":   "internal/corpus/wiki/platform-unknowns.md",
+	"entries.labels.default": "internal/corpus/usecase/workflow-chain.md",
+	"relationships.labels":   "internal/corpus/usecase/workflow-chain.md",
 
 	// The pre-rename SourceSet/Syncer pair, and the two halves are not in the
 	// same state: `members` is gone from the SourceSet, so a chart setting it
@@ -949,26 +982,26 @@ func runSpecKeyGap(args []string) error {
 		"every reference chart together", len(every), countMissing(every, mine))
 	fmt.Printf("  %-44s%4d spec key(s), from %3d `add` run(s)\n", "what `add` writes", len(mine), runs)
 
-	task, err := os.ReadFile(filepath.Join(root, "TASK.md"))
+	task, err := os.ReadFile(filepath.Join(root, "APPROACH.md"))
 	if err != nil {
 		return err
 	}
 	m := specKeyClaim.FindStringSubmatch(string(task))
 	if m == nil {
-		fmt.Println("\nTASK.md no longer says the chart half is the least finished, so this")
+		fmt.Println("\nAPPROACH.md no longer says the chart half is the least finished, so this")
 		fmt.Println("measures nothing. Either the claim is back, or this check goes with it.")
 		return errFailed
 	}
 	wantKeys, wantMissing := len(prod[widest]), countMissing(prod[widest], mine)
 	if wantMissing == 0 {
 		fmt.Printf("\n`add` now writes every one of the widest chart's %d spec keys.\n", wantKeys)
-		fmt.Println("TASK.md still says the chart half is the least finished, and that is what is")
+		fmt.Println("APPROACH.md still says the chart half is the least finished, and that is what is")
 		fmt.Println("wrong now - rewrite the paragraph rather than this check.")
 		return errFailed
 	}
 	fmt.Printf("\nThe widest reference chart uses %d spec keys and `add` does not write %d.\n",
 		wantKeys, wantMissing)
-	fmt.Println("TASK.md states that as a judgement and carries no number, which is why")
+	fmt.Println("APPROACH.md states that as a judgement and carries no number, which is why")
 	fmt.Println("neither can go stale. `--missing` splits those by what is owed on them:")
 	fmt.Println("nowhere at all, named in a commented skeleton, or absent on purpose with")
 	fmt.Println("the document that says why. `--shown` lists the skeletons.")

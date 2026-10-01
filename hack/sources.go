@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"sort"
 	"strings"
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/hack/internal/src"
@@ -14,26 +13,14 @@ import (
 func init() {
 	register("sources", check{
 		Needs: "the clones",
-		What:  "what each upstream resolves to, how far behind it is, and **whether a reading TASK.md records has gone behind the clone it was held against**; --extracts is how far each extract's source chart has moved",
+		What:  "what each upstream clone resolves to and how far behind its remote it is; --extracts is how far each extract's source chart has moved since the commit the extract was written from",
 		Run:   runSources,
 	})
 }
 
-// Two commits per deployment, and they answer different questions. `written
-// from` is the version an extract describes; `held against` is the version its
-// claims were last read against, which is a weaker act and a later commit.
+// writtenFrom reads each deployment row's commit: the version of the chart its
+// extracts describe.
 var writtenFrom = regexp.MustCompile(`(?m)^\|\s*([a-z0-9-]+)\s*\|\s*` + "`" + `([0-9a-f]{7,})` + "`")
-var heldAgainst = regexp.MustCompile(`(?m)^\|\s*([a-z0-9-]+)\s*\|\s*` + "`" + `[0-9a-f]{7,}` + "`" + `[^|]*\|\s*` + "`" + `([0-9a-f]{7,})` + "`")
-
-// The readings TASK.md records, and the clone each was held against. **This is
-// the only checkable thing about a reading**: not that it happened - nobody but
-// the reader can say that - but whether the thing it was held against has moved
-// since. A `never` row has nothing to go stale.
-var readings = map[string]string{
-	"extracts-vs-charts":    "deployments",
-	"wiki-vs-docs":          "docs",
-	"processors-vs-palette": "docs",
-}
 
 func sourcesDoc(root string) (string, error) {
 	b, err := os.ReadFile(filepath.Join(root, "source/SOURCES.md"))
@@ -105,18 +92,7 @@ func runSources(args []string) error {
 		}
 		fmt.Printf("%-*s  %-10s %-34s %s\n", width, s.Env, at, state, dir)
 	}
-	fmt.Println("\nNothing here pulls. `git -C <path> pull` before a reading that matters.")
-
-	stale := staleReadings(root, doc)
-	if len(stale) == 0 {
-		fmt.Println("\nEvery reading TASK.md records is against a source that has not moved.")
-		return nil
-	}
-	fmt.Println("\nreadings TASK.md records that are now behind their source:")
-	for _, s := range stale {
-		fmt.Printf("  %s\n", s)
-	}
-	fmt.Println("\nThat is not a failure - it is the size of what re-reading would cover.")
+	fmt.Println("\nNothing here pulls. `git -C <path> pull` before relying on a clone.")
 	return nil
 }
 
@@ -145,92 +121,6 @@ func behind(dir string) string {
 	return ""
 }
 
-// staleReadings reports which recorded readings are behind what they were held
-// against.
-//
-// **Against the commit the reading names, not against the remote.** This used
-// to report a clone that was behind its own origin as a reading gone stale,
-// which is a different fact about a different thing: the clone had not moved at
-// all, its remote had, and the extracts describe the clone.
-func staleReadings(root, doc string) []string {
-	task, err := os.ReadFile(filepath.Join(root, "TASK.md"))
-	if err != nil {
-		return []string{err.Error()}
-	}
-	var out []string
-	for _, key := range sortedKeys(readings) {
-		row := ""
-		for _, line := range strings.Split(string(task), "\n") {
-			if strings.HasPrefix(line, "|") && strings.Contains(line, "`"+key+"`") {
-				row = line
-				break
-			}
-		}
-		if row == "" {
-			out = append(out, key+": no row in TASK.md's pass, so nothing records what it was read against")
-			continue
-		}
-		if strings.Contains(row, "**never") {
-			continue
-		}
-		dir, err := src.Resolve(readings[key])
-		if err != nil {
-			out = append(out, fmt.Sprintf("%s: %s", key, err))
-			continue
-		}
-		if readings[key] != "deployments" {
-			if b := behind(dir); b != "" {
-				out = append(out, fmt.Sprintf("%s: read against %s, which is now %s",
-					key, src.Sources[readings[key]].Env, b))
-			}
-			continue
-		}
-		var moved []string
-		for _, name := range sortedKeys(toSet(heldAgainstNames(doc))) {
-			ref := heldAgainstMap(doc)[name]
-			clone := filepath.Join(dir, name)
-			if _, err := os.Stat(filepath.Join(clone, ".git")); err != nil {
-				out = append(out, fmt.Sprintf("%s: no clone of %s, so its reading cannot be answered", key, name))
-				continue
-			}
-			n := src.Since(clone, ref)
-			if n < 0 {
-				out = append(out, fmt.Sprintf("%s: %s has no commit %s, the one its claims were read against",
-					key, name, ref))
-			} else if n > 0 {
-				moved = append(moved, fmt.Sprintf("%s by %d", name, n))
-			}
-		}
-		if len(moved) > 0 {
-			shown := moved
-			suffix := ""
-			if len(shown) > 4 {
-				shown, suffix = shown[:4], "..."
-			}
-			out = append(out, fmt.Sprintf("%s: %d clone(s) have moved since the reading: %s%s",
-				key, len(moved), strings.Join(shown, ", "), suffix))
-		}
-	}
-	return out
-}
-
-func heldAgainstMap(doc string) map[string]string {
-	out := map[string]string{}
-	for _, m := range heldAgainst.FindAllStringSubmatch(doc, -1) {
-		out[m[1]] = m[2]
-	}
-	return out
-}
-
-func heldAgainstNames(doc string) []string {
-	var out []string
-	for n := range heldAgainstMap(doc) {
-		out = append(out, n)
-	}
-	sort.Strings(out)
-	return out
-}
-
 func toSet(list []string) map[string]bool {
 	out := map[string]bool{}
 	for _, s := range list {
@@ -241,10 +131,8 @@ func toSet(list []string) map[string]bool {
 
 // extractsReport says how far each extract's source chart has moved.
 //
-// **`source/SOURCES.md` used to carry these numbers as prose, and both of the
-// two that were not zero had rotted within nine days.** Written-down distances
-// between two moving things are the one shape of claim that cannot hold, so
-// that column points here instead.
+// A distance between two moving commits cannot be written down and stay true,
+// so it is computed here rather than kept in source/SOURCES.md.
 func extractsReport(root, doc string) error {
 	base, err := src.Resolve("deployments")
 	if err != nil {
@@ -276,12 +164,12 @@ func extractsReport(root, doc string) error {
 	for _, r := range rows {
 		switch {
 		case r.since < 0:
-			fmt.Printf("  %-*s  read at %s  -- %s\n", width, r.name, r.at, r.head)
+			fmt.Printf("  %-*s  written from %s  -- %s\n", width, r.name, r.at, r.head)
 		case r.since == 0:
-			fmt.Printf("  %-*s  read at %s  unmoved\n", width, r.name, r.at)
+			fmt.Printf("  %-*s  written from %s  unmoved\n", width, r.name, r.at)
 		default:
 			moved++
-			fmt.Printf("  %-*s  read at %s  %d commit(s) since, now at %s\n", width, r.name, r.at, r.since, r.head)
+			fmt.Printf("  %-*s  written from %s  %d commit(s) since, now at %s\n", width, r.name, r.at, r.since, r.head)
 		}
 	}
 	fmt.Printf("\n%d of %d have moved since the extracts were written from them.\n", moved, len(rows))

@@ -8,46 +8,55 @@ Service-to-service auth against an API that will not take a static key: fetch a
 token, then call the thing you wanted. Two HTTP calls in one Workflow, and the
 mechanism that carries the token between them is not obvious.
 
-**Seen in:** a notification path that sends mail through a corporate mail API,
-built and held behind a mock for days before anyone let it send.
+**Seen in:** a notification path built against a corporate mail API with client
+credentials and held behind a mock. The credential the customer then issued did
+not fit that API, and the path that shipped is one call with a static key; the
+mock-then-real rollout and the override list below are from the path that
+shipped.
 
-**Checked:** 2026-09-02 against token usage in two deployments, and the CRD.
-The mock-then-real rollout and the override list were re-read 2026-09-11
-against the chart they came from, at `80b16a5` - the field is
-`overrideRecipients`, a list, and this page had it singular.
+**Checked:** against unitech-e-asgard-kube `7db63d3`
+`projects/internal/chart/app/templates/workflow/wf-send-mail.yaml`, the two-call
+client-credentials version, and unitech-e-asgard-kube `44e71a2` for the same
+file, `values-dev.yaml` and `app/values.yaml` - the mock switch, and
+`overrideRecipients`, a list. Against asgard-core `478cf5d6`:
+asgard-core `internal/processor/task/http_request.go` (which configs are headers, what
+`httpResponse` holds, and that a status of 400 or above takes `failure`) and
+asgard-core `internal/bpcontroller/server/bp_controller.go` (where `prevPayload`
+is set).
 
-**Unchecked:** the two-call client-credentials shape itself. The deployments read tokens supplied per turn rather than fetching them - see per-turn-credentials - so this page's own shape is less exercised than it looks.
+**Unchecked:** the two-call chain was written in one deployment and replaced
+before it ever sent, so no deployment has run it.
 
-**Read the platform side first:** `../wiki/api.md` -
+Read the platform side first: `../wiki/api.md` -
 the endpoint, the SSE event sequence, and the four integration patterns. This page assumes you have.
 
 ## When this shape, and when not
 
-Use it when the API's auth is **OAuth 2.0 client credentials** - no user, no
+Use it when the API's auth is OAuth 2.0 client credentials - no user, no
 consent screen, a service acting as itself. Corporate APIs, most cloud vendors'
 management APIs, and anything behind an identity provider are this.
 
-**A per-user credential is a different shape.** When the token belongs to the
+A per-user credential is a different shape. When the token belongs to the
 person talking to the agent rather than to the service, it arrives in the
 BotProvider payload every turn and lands in the sandbox through a hook - see
 `../usecase/per-turn-credentials.md`.
 
-Do **not** use it when:
+Do not use it when:
 
-- **a static key works.** A header with a key from the release's Secret is one processor
+- a static key works. A header with a key from the release's Secret is one processor
   instead of two, and no token to expire. Read
   `../usecase/external-api.md` for that shape - the whole of it applies
   here too, and this extract only adds the token step.
-- **the auth is per user.** Client credentials authenticate the *service*.
+- the auth is per user. Client credentials authenticate the *service*.
   If the API needs to know which human is asking - and to enforce what that human
   may see - a token minted from a client secret is the wrong credential, and
-  using it means your agent can reach everything any user could. That is a
-  decision to escalate, not to implement.
-- **the token needs caching.** It cannot be. See below.
+  using it means your agent can reach everything any user could. Escalate
+  that decision rather than implementing it.
+- the token needs caching. It cannot be. See below.
 
-### The cost, stated plainly
+### The cost
 
-**A token is fetched on every single call.** `http-request` sends one request, and
+A token is fetched on every single call. `http-request` sends one request, and
 nothing in a Workflow persists across turns, so there is no cache to put a token
 in. A path handling single digits of calls per run can ignore this; one handling
 thousands per minute cannot, and that is a reason to reconsider whether the agent
@@ -59,9 +68,9 @@ should be calling this API directly at all.
 
 Then add the token processor in front of the call, and wire it as below. There is
 no generator for the two-step form: the second call's shape depends entirely on
-the API, and a skeleton that guessed it would be a skeleton you had to unpick.
+the API, and a generated guess would have to be undone.
 
-What the generator does get right, and is worth keeping: the display annotation,
+What the generator does write, and you should keep: the display annotation,
 the workflow-set labels, and the `variables` block - all three fail silently.
 
 ## The skeleton
@@ -191,72 +200,79 @@ spec:
 It goes in `projects/<project>/chart/app/templates/workflow/wf-<name>.yaml`, or
 under `templates/tool/` if the chart groups tool workflows there.
 
-## How the token crosses, and why it looks wrong
+## How the token crosses between the two calls
 
-**A processor's configs are evaluated immediately before that processor runs.** So
+A processor's configs are evaluated immediately before that processor runs. So
 when `send`'s `Authorization` is computed, `httpResponse` still holds
-**`get-token`'s** response - which is exactly where `access_token` is. By the time
+`get-token`'s response - which is exactly where `access_token` is. By the time
 `respond` is evaluated, `httpResponse` has been replaced by `send`'s response.
 
-This reads as a bug the first time and is the mechanism. Two consequences:
+This looks like a bug but is how it works. Three consequences:
 
-- **`httpResponse` means "the most recent HTTP response", not "this processor's".**
-  Insert a processor between the two and the token is gone.
-- **`prevPayload` is the tool's arguments** until an `http-request` runs, and then
-  it is not. If the call needs the arguments *after* an HTTP step, copy them into
-  context with an `update-context` processor first - see
-  `../usecase/external-api.md`.
+- `httpResponse` means "the most recent successful HTTP response", not "this
+  processor's". Every processor passes the context on, and only an
+  `http-request` that succeeds replaces it. Insert another `http-request`
+  between the two and the token is gone; a `push-message` or `update-context`
+  between them leaves it.
+- a failed `http-request` does not touch it. On `failure`, `httpResponse` is
+  still the previous call's, so in `respond-error` it may be the token response;
+  read `prevError` there, never `httpResponse`.
+- `prevPayload` stays the tool's arguments for the whole run. An `http-request`
+  copies the context through and adds `httpResponse` beside it, and
+  `prevPayload` is replaced only when the next turn or tool call arrives, which
+  is why `send` can still read `prevPayload.to`.
 
 ## Designing the credential and its scope
 
-The YAML is the easy half. These are the parts that took someone a conversation
-with the customer's IT:
+These parts need a conversation with the customer's IT:
 
-- **Application permission, not delegated.** Client credentials cannot use a
+- Application permission, not delegated. Client credentials cannot use a
   delegated permission - there is no user to delegate. Asking for the wrong one
   produces a token that mints fine and is refused by the API.
-- **Scope is `<resource>/.default`**, not a list of individual scopes. Application
+- Scope is `<resource>/.default`, not a list of individual scopes. Application
   permissions are granted on the app registration; `.default` says "whatever this
   app was granted".
-- **Narrow the permission at the provider, not in the prompt.** A mail-send
+- Narrow the permission at the provider, not in the prompt. A mail-send
   permission is global by default. One deployment's customer required an access
   policy restricting the app to a single sender address, and that requirement came
   from the customer explicitly - write it down as a decision record, because the
   next person will not know it was asked for.
-- **Only the secret is a secret.** Tenant id, client id, sender address are not:
+- Only the secret is a secret. Tenant id, client id, sender address are not:
   they go in values, so they are reviewable in a diff. Declaring them under
   `appSecret` instead makes them invisible for no benefit - a `chartValue` is in
   the plan report the reviewer reads, and a Secret key is not.
 
 ### The rollout that made this safe
 
-The deployment this came from **built the real sender and pointed the tool at a
-mock for days**, with the mock's contract - entry name, `tooling.name`,
-`inputSchema`, the `ok` field - **byte-identical** to the real one. Every run was
+The deployment this came from built the real sender and pointed the tool at a
+mock for days, with the mock's contract - entry name, `tooling.name`,
+`inputSchema`, the `ok` field - byte-identical to the real one. Every run was
 reviewable: who would have been mailed, and what the message said. Switching was
 changing one `entrypoint`.
 
-It also kept an `overrideRecipients` **list**: non-empty and every message goes
+It also kept an `overrideRecipients` list: non-empty and every message goes
 to those addresses instead of the real one, so routing is verifiable without
 involving anyone. Emptying it is the irreversible step that turns the feature
 on, and the two environments empty it at different times - dev keeps an
 engineer in it indefinitely, prod empties it at go-live.
 
-**It is a chart value, not a CR field.** The workflow reads it as a config
-entry - `join "," .Values.mail.overrideRecipients` - so what reaches the
-processor is one comma-joined string, and an empty list is an empty string
-meaning "no override". Do not look for it in the CRD.
+It is a chart value, not a CR field. The workflow declares it as a
+`variables` entry - `value: {{ join "," .Values.mail.overrideRecipients | quote }}` -
+because a variable's value is a string, so what the body expression reads as
+`vars.overrideRecipients` is one comma-joined string it splits back, and an
+empty list is an empty string meaning "no override". Do not look for it in the
+CRD.
 
-**Not the same thing as a BCC list.** An override *redirects*, temporarily; a
+Not the same thing as a BCC list. An override *redirects*, temporarily; a
 BCC leaves the real recipient receiving and adds a silent copy, permanently.
 One deployment carries both, and confusing them sends mail to a customer that
 was meant to go nowhere.
 
-**Configs are evaluated when the tool is called, not when the chart is applied.**
+Configs are evaluated when the tool is called, not when the chart is applied.
 So the unfinished real workflow could sit in the chart referencing a secret key
-that did not exist yet, and nothing failed - because nobody called it. That is
-what makes this rollout possible, and it is also a trap: a broken config is not a
-deploy failure, it is a runtime failure on first use.
+that did not exist yet, and nothing failed, because nobody called it. That makes
+this rollout possible. It also means a broken config does not fail the deploy;
+it fails at runtime on first use.
 
 ## Verify
 
@@ -267,12 +283,13 @@ pointing at this Workflow names an entry it actually declares.
 
 What it cannot check, and what to check by hand:
 
-- **that the token endpoint and scope are right.** Call it with curl using the
+- that the token endpoint and scope are right. Call it with curl using the
   same body the expression builds, and confirm you get a token.
-- **that the API accepts that token.** A token that mints is not a token that
-  works: a wrong permission type fails only at the second call.
-- **that every failure branch goes somewhere.** A processor with no `failure`
+- that the API accepts that token. A token can mint and still be refused: a
+  wrong permission type fails only at the second call.
+
+- that every failure branch goes somewhere. A processor with no `failure`
   relationship ends the run silently, and the agent sees a tool that returned
   nothing rather than a tool that failed.
-- **the status code range.** `== 200` is wrong for anything that answers 201 or
+- the status code range. `== 200` is wrong for anything that answers 201 or
   202, and both are normal for a send.

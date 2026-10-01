@@ -8,20 +8,19 @@ alwaysApply: false
 # Plain Chinese
 
 A customer who reads vendor documents recognises machine-written Chinese in
-about four seconds. What they conclude is not "this is AI". It is **"nobody here
-spent time on us"**, and that costs more than any wording.
+about four seconds, and concludes that nobody spent time on them.
 
 The register rule - prefer a checkable sentence to an adjective - catches empty
-words. It does not catch **shapes**: sentence patterns and section endings that
-give a document away while every individual word survives inspection. Those are
-what this skill is for. The register rule itself is stated in
+words. It does not catch shapes: sentence patterns and section endings that
+give a document away while every individual word survives inspection. This skill
+covers those shapes. The register rule itself is stated in
 `.agents/skills/proposal-deck/SKILL.md` under "The register", and holds for
 everything on the table below, not only a deck.
 
 Adapted from `writing-humanizer` (github.com/shyuan/writing-humanizer), which is
-written for zh-TW essays. Most of it transfers to this work. One rule inverts,
-and the inversion is in "Where this applies" below - read that before applying
-anything else, because getting it wrong damages a deck.
+written for zh-TW essays. Most of it transfers to this work. One rule inverts;
+read "Where this applies" below before applying anything else, because applying
+that rule to a deck damages it.
 
 ## The two that are absolute
 
@@ -29,49 +28,47 @@ anything else, because getting it wrong damages a deck.
     never    a page, section or paragraph that ends by announcing its own
              importance
 
-`不僅……更是……` is the single most recognisable AI sentence in Chinese. There is
-no context in which it survives. State the thing directly.
+`不僅……更是……` is the most recognisable AI sentence in Chinese. Do not use it
+anywhere. State the thing directly.
 
-The second is **意義蓋章** - closing with 具有重要意義、奠定了基礎、
-發揮關鍵作用、為……提供了重要框架. **Test it by deleting the sentence.** If what
-remains loses no information, it never had any:
+The second is 意義蓋章 - closing with 具有重要意義、奠定了基礎、
+發揮關鍵作用、為……提供了重要框架. Test it by deleting the sentence. If the
+text loses no information, delete it:
 
     no    導入語意層後,客服可直接查詢庫存,為後續智慧化轉型奠定重要基礎。
     yes   導入語意層後,客服不用再開 ERP 查庫存。下一階段才會碰到出貨單。
 
-One 意義蓋章 reads as enthusiasm. Every section carrying one is the tell: the
-model is filling the position where a conclusion goes, because it has no
-conclusion.
+One 意義蓋章 reads as enthusiasm. When every section ends with one, the model is
+filling the position where a conclusion goes because it has no conclusion.
 
 ## The sentence with a hole in it
 
-Every rule above and below is a prohibition on a shape that **appears**. This one
-is the opposite - it is about a noun that is **missing**, which is why none of
-the others reaches it and why it takes a second reader to catch:
+Every other rule here prohibits a shape that appears in the text. This one is
+about a noun that is missing, so none of the other rules catches it, and it
+usually takes a second reader to notice:
 
     記下是哪一個              哪一個什麼?
     這個檔案裡只有這兩個編號    什麼編號?
     那段描述是模型唯一的判斷依據  哪段描述?
     失敗有四種,只有一種是「查無資料」  四種什麼?
 
-**The test, and you can run it on yourself:**
+The test, which you can run on your own text:
 
-> **每個句子的主詞,在同一頁上找得到嗎?**
+> 每個句子的主詞,在同一頁上找得到嗎?
 > 「這個」「那段」「它們」、一個代名詞、一個沒有名詞的數字 - 它的名詞必須在
 > 同一頁出現。只在你腦子裡,或只在上一頁,就把名詞寫出來。
 
-**It does not read as machine-written, which is why it survives a register
-pass** - it reads as somebody talking to themselves. The noun was in your head
-an hour ago and the sentence is still fluent to you; to the reader it has a hole
-in it.
+It does not read as machine-written, so a register pass does not catch it. It
+reads as somebody talking to themselves: the noun was in your head an hour ago,
+so the sentence reads fluently to you, but the reader does not have the noun.
 
-**It is worse on a slide than in prose**, because a slide has no preceding
-paragraph to carry the antecedent. Every line on a slide is read cold.
+It matters more on a slide than in prose, because a slide has no preceding
+paragraph to carry the antecedent. Every line on a slide is read without context.
 
-**Naming the nouns is not the same as removing the count.** Told that
+Naming the nouns does not remove the count. Told that
 「12 個 CR,14 次部署,4 個坑」was vague, the fix offered was
 「一支查詢 API、552 份手冊、兩份 FAQ」- which names the nouns and still counts
-them. Both rules apply, and satisfying one is not evidence about the other.
+them. Both rules apply, and satisfying one does not satisfy the other.
 
 ## The shapes
 
@@ -82,7 +79,7 @@ three bullets then say the same thing, they were one bullet.
 
 **句內關鍵詞排比粗體.** Bolding two to four matching nouns inside one running
 sentence - `**經濟制裁**、**貿易優惠**、**投資協議**`. Emphasis comes from
-position and structure. Bold marks **the one thing you want read first**, and
+position and structure. Use bold only for the one thing you want read first;
 four bold phrases on a page mark nothing.
 
 **元論述 / 導讀宣告.** 本節將說明、接下來我們來看、了解了這點就能明白. Delete
@@ -92,17 +89,15 @@ heading. Neither needs to introduce itself.
 **升華結尾.** 共同邁向智慧化的未來、期待與貴公司攜手、讓我們一起. Finish on what
 happens next week and who does it.
 
-**排比金句.** 每一次……都是……,每一個……都是……. A slogan you invented is not a
-finding, and repeating it later does not make it one.
+**排比金句.** 每一次……都是……,每一個……都是……. Do not write slogans; state the
+finding.
 
-**三段式反射.** Three parallel items is a tell, because the model reaches for
-three whether reality has three or not. **When you have written three, check
-whether reality has two, or four**, and write that number. If it genuinely is
-three, keep it - the rule is to stop producing three by reflex, not to ban the
-number.
+**三段式反射.** The model writes three parallel items whether reality has three
+or not. When you have written three, check whether reality has two, or four,
+and write that number. If it really is three, keep it.
 
-**破折號.** The em dash is a machine habit in Chinese. A comma or a full stop
-does the same work without the salesroom cadence.
+**破折號.** The em dash is a machine habit in Chinese. Use a comma or a full
+stop instead.
 
 **繫動詞迴避.** 「這項功能扮演著關鍵的角色」when the sentence is 「這個功能會
 自動對帳」. Say what it does; the elaborate construction is the model avoiding
@@ -133,86 +128,77 @@ a plain 是 or a plain verb.
 
 | surface | applies | note |
 |---|---|---|
-| a proposal or discovery deck | yes, **except one rule** - see below | `.agents/skills/proposal-deck/SKILL.md` owns the rest of how a deck reads, including the register rule this page builds on |
+| a proposal or discovery deck | yes, except one rule - see below | `.agents/skills/proposal-deck/SKILL.md` owns the rest of how a deck reads, including the register rule this page builds on |
 | a reply to a customer's own question | in full | `docs/open-questions.md`, the "What the customer asked us" table |
 | the covering mail, meeting notes they will see | in full | prose, so every rule holds |
 | a CR's `<kind>-name` display annotation | the vocabulary, not the shapes | it is a noun phrase, not a sentence |
-| a cube, dimension or measure `description` | in full, and it matters twice | a model reads these to choose what to query, so 至關重要 there is not just noise - it is noise the agent has to guess past |
+| a cube, dimension or measure `description` | in full, and it matters more here | a model reads these to choose what to query, so a word like 至關重要 there is noise the agent has to guess past |
 | a deployed agent's prompt | in full | the agent writes in the register the prompt is written in |
 | a decision record | in full | it is read years later by somebody working out what was agreed, and 為後續發展奠定基礎 helps them with none of it |
 | a task spec, a request record | in full | read by whoever picks the work up, which is often not you |
 | meeting notes | your half of them | what the customer said stays verbatim - that is the record. What you wrote around it is yours |
 
-**Everything an engagement writes is covered.** There is no internal-only
+Everything an engagement writes is covered. There is no internal-only
 exemption: a decision record outlives the engagement, and a task spec is read by
-whoever picks the work up. The only thing that is never rewritten is **what the
-customer themselves said** - in a meeting note, in section 1 of a request, in a
-quoted question. Those are the record, and editing them destroys the thing they
-are for.
+whoever picks the work up. The only thing never rewritten is what the customer
+themselves said - in a meeting note, in section 1 of a request, in a quoted
+question. Those are the record; do not edit them.
 
-**The rule that inverts.** The source skill's strongest claim is that a Chinese
-document written as headings and bullet lists is AI, and that論說文 should be
-prose. **That is right for prose and wrong for a deck.** A slide is legitimately
-a list; an essay pasted onto a slide is unusable, and an agent applying that rule
-to a deck will destroy it.
+The rule that inverts: the source skill says that a Chinese document written as
+headings and bullet lists is AI, and that論說文 should be prose. That holds for
+prose, not for a deck. A slide is legitimately a list; an essay pasted onto a
+slide is unusable. Do not apply that rule to a deck.
 
-Keep the rule one level down, where it holds everywhere: **each bullet must be a
-sentence with content**, not a decorative label. The failure is never that the
-page is a list. It is that the list says nothing.
+What does apply everywhere, decks included: each bullet must be a sentence with
+content, not a decorative label. A list is fine; a list that says nothing is not.
 
 ## The second pass
 
-**Do not correct these while writing.** You will produce some regardless - they
-are what the model reaches for - and hunting them mid-draft costs the argument,
-which is the thing that actually matters.
+Do not correct these while writing. You will produce some anyway, and hunting
+them mid-draft takes attention away from the argument.
 
 When the document reads correctly end to end, make one pass that asks two
-questions. **The second is not a rewording of the first**, and a pass that asks
-only the first has been run over every draft this skill was corrected on:
+separate questions. Ask both; asking only the first is the usual mistake:
 
     這一頁哪裡看得出來是機器寫的?
     這一頁的每個句子,主詞都在同一頁上找得到嗎?
 
 The first catches a sentence that says too much in a recognisable way. The
-second catches one that says too little - and **that one does not look
-machine-written at all**, which is why asking the first question about it comes
-back clean.
+second catches one that says too little. That kind does not look
+machine-written, so the first question does not find it.
 
 Read it as the customer, who has seen twenty vendor documents this year.
-**List what you find before changing anything.** Naming them is what makes the
-pass honest; editing as you go lets you stop early and believe you were thorough.
+List what you find before changing anything. If you edit as you go, it is easy
+to stop early and assume you were thorough.
 
 ### The thoughts that end the pass early
 
 | the thought | the answer |
 |---|---|
-| 「這頁已經夠自然了」 | The first pass always misses some. That is what the second pass is. |
+| 「這頁已經夠自然了」 | The first pass always misses some. Run the second pass. |
 | 「這裡三項是合理的」 | Check whether reality has three. Usually it has two. |
-| 「破折號在這裡讀起來比較有力」 | That force is the tell. Use a comma. |
-| 「客戶自己的文件就是這樣寫的」 | Their **words** stay - 報修單 stays 報修單. Their **sentence patterns** do not. You are answering their document, not imitating it. |
-| 「這句對仗工整,拿來當標題很好」 | A slogan you invented is not a finding. |
+| 「破折號在這裡讀起來比較有力」 | That cadence is what marks it as machine-written. Use a comma. |
+| 「客戶自己的文件就是這樣寫的」 | Keep their words - 報修單 stays 報修單. Do not copy their sentence patterns. You are answering their document, not imitating it. |
+| 「這句對仗工整,拿來當標題很好」 | Use a finding as the title, not a slogan. |
 | 「加一句總結,讀者比較清楚」 | That is 意義蓋章. The page already said it. |
-| 「改太多會偏離原意」 | The AI pattern is not the original meaning. It is what the model added. |
+| 「改太多會偏離原意」 | The AI pattern was added by the model; removing it does not change the meaning. |
 
 ## What this skill will not do for you
 
-**It cannot make a thin page substantial.** If a capability's page is short
-because the customer's own document is short, the emptiness is true and says
-something useful - they have not worked it out either, and the meeting can start
-there. Rewriting it into fuller-sounding Chinese is the failure this skill is
-supposed to prevent, arriving by a different route.
+It cannot make a thin page substantial. If a capability's page is short
+because the customer's own document is short, that is accurate and useful: they
+have not worked it out either, and the meeting can start there. Do not pad it
+into fuller-sounding Chinese.
 
-**It cannot make an unchecked claim safe.** 全面提升效率 and 改善對帳流程 are
+It cannot make an unchecked claim safe. 全面提升效率 and 改善對帳流程 are
 both wrong if nobody has checked whether the agent can reach the ledger. Plain
-language makes a false claim easier to catch, which is a reason to prefer it and
-not a substitute for checking.
+language makes a false claim easier to catch, but it does not replace checking.
 
-**Checked:** 2026-09-04 - **no platform claims to check.** Every rule here is
+**Checked:** no platform claims to check. Every rule here is
 about 繁體中文 prose, and the sentence shapes it bans are checkable by reading
 what they produce.
 
 **Unchecked:** that these are the shapes that mark a document as machine-written
-to **this** audience. They were collected from what a customer read and reacted
-to in one engagement, in one industry, in Taiwan. Nothing corroborates them and
-nothing makes them a style guide; a reader whose customer speaks differently
-should treat the list as evidence rather than as rules.
+to this audience. They were collected from one customer's reactions, in one
+industry, in Taiwan, and a reader whose customer speaks differently should treat
+the list as evidence rather than as rules.

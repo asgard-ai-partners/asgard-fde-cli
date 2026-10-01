@@ -42,9 +42,7 @@ func init() {
 //
 // It reports rather than fails, because a document pointing at a changed one is
 // a question and not a defect: the pointer may be about a paragraph nothing
-// touched. What it cannot tell on its own is whether the pointing document was
-// read against the change; that is per link rather than per document, and
-// `reconcile` is the record of it.
+// touched.
 func runRelated(args []string) error {
 	root, err := src.Root()
 	if err != nil {
@@ -117,11 +115,8 @@ func corpusInEdges(root string) (map[string][]string, error) {
 		if err != nil {
 			continue
 		}
-		// **A root document with no pointer is not a node, and that is correct.**
-		// `Goal.md` names no corpus document, so there is nothing to reconcile it
-		// against; what records that somebody read it is `TASK.md`'s
-		// `root-documents` row, which carries a date because no program can
-		// produce one.
+		// A root document with no pointer is not a node: `Goal.md` names no
+		// corpus document, so nothing points from it.
 		addIn(in, "root/"+strings.TrimSuffix(strings.TrimSuffix(name, ".md"), ".zh-TW"), linksOf(string(data)))
 	}
 	skills, err := scaffold.Skills()
@@ -193,13 +188,8 @@ func relatedReport(w io.Writer, changed []string, in map[string][]string) []stri
 	}
 	sort.Strings(out)
 	fmt.Fprintf(w, "\n%d changed, %d other document(s) point at them.\n", len(changed), len(out))
-	fmt.Fprintln(w, "`go run ./hack reconcile` narrows that to the ones not read since.")
-	fmt.Fprintln(w, "\nThat list is the re-read, and it is not the corpus. A pointer is a")
-	fmt.Fprintln(w, "question rather than a defect - it may be about a paragraph nothing")
-	fmt.Fprintln(w, "touched - so this cannot fail, and a short list is not a clean bill.")
-	fmt.Fprintln(w, "This one answers which documents COULD be affected; which of them have")
-	fmt.Fprintln(w, "been read against the change is per link rather than per document, and")
-	fmt.Fprintln(w, "`go run ./hack reconcile` is where that is recorded.")
+	fmt.Fprintln(w, "\nThose are the documents to re-read against the change. A pointer may be")
+	fmt.Fprintln(w, "about a paragraph nothing touched, so this cannot fail.")
 	return out
 }
 

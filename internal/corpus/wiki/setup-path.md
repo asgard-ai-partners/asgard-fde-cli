@@ -4,46 +4,43 @@ description: "the order: where a credential goes, what to build from it, why Sin
 ---
 # From a credential to an agent someone can talk to
 
-Every other page here describes one object. This one describes the **order**,
-because the order is not written down anywhere else - not in the product
-documentation, which has a page per screen, and not in the extracts, which have a
-shape per CR. Assembling it from the pages on the spot is how it was done
-before this page existed, and everyone assembled it slightly differently.
+Every other page here describes one object. This one describes the order in
+which to build them. The product documentation has a page per screen and the
+extracts have a shape per CR; neither states the order.
 
 Read it when a customer has just handed over access and the question is "so what
 happens now", and when writing a deck or a handover that has to show them.
 
 ## The first fork: where does this credential even go?
 
-The most common wrong turn is at the very first step, because the console has a
-place called **Data Source** and people put everything there.
+The most common wrong turn is at the very first step: the console has a place
+called Data Source and people try to put every credential there.
 
 | what the customer handed over | where it goes |
 |---|---|
-| host, port, database, user, password | **Data Source**. Nine DB providers only - see [`settings.md`](../wiki/settings.md) |
-| an OAuth app for Dropbox / Google Drive / OneDrive / Google Sheets | **Connection** - [`settings.md`](../wiki/settings.md) |
-| **an API key or token for an HTTP API** | **neither.** It is a tool's config, not a data source |
+| host, port, database, user, password | Data Source. Nine DB providers only - see [`settings.md`](../wiki/settings.md) |
+| an OAuth app for Dropbox / Google Drive / OneDrive / Google Sheets / OneDrive Workbook | Connection - [`settings.md`](../wiki/settings.md) |
+| an API key or token for an HTTP API | neither. It is a tool's config, not a data source |
 | a chat platform's channel secret and access token | a `BotProvider` - [`integration.md`](../wiki/integration.md) |
 
-**An HTTP API has no home under Settings, and this surprises people.** Data
-Source takes nine database providers and nothing else; Connection is OAuth to
+An HTTP API has no home under Settings. Data Source takes nine database providers and nothing else; Connection is OAuth to
 five named services. A REST API with a bearer token is reached by a tool that
 carries its own credentials - either an `http-request` step inside a Workflow, or
 an MCP Server started with environment variables. `../usecase/external-api.md`
 is the whole shape, including which of the two to take and why.
 
-So "we have the API credentials, let's add the data source" is a sentence that
-cannot be completed, and an hour is usually lost finding that out.
+So API credentials cannot be added as a data source. Take them to the tool that
+calls the API.
 
 ## The order
 
-Five steps. Each one is finished and testable before the next, which is what
-makes it worth doing in this order rather than starting from the agent.
+Five steps. Each one can be finished and tested before the next, which is the
+reason to follow this order rather than start from the agent.
 
 **1. Land the credential.** Data Source, Connection, or a tool's own config, per
-the table above. A Data Source has **Test Connection** on the form - use it
-before Save. This is also where a network path failure shows up first, and it is
-the failure that has nothing to do with the credential: see
+the table above. A Data Source has Test Connection on the form - use it
+before Save. A network path failure also shows up here first, and it has nothing
+to do with the credential: see
 [`operations.md`](../wiki/operations.md), because a hosted platform reaching an internal
 system needs the customer's firewall opened first.
 
@@ -52,55 +49,55 @@ the source is, and they are not interchangeable:
 
 | the source | what to build | page |
 |---|---|---|
-| a database the agent should query freely | a **Semantic Model** | [`semantic-model.md`](../wiki/semantic-model.md) |
+| a database the agent should query freely | a Semantic Model | [`semantic-model.md`](../wiki/semantic-model.md) |
 | a database, but only a fixed set of answers | query tools in a Workflow | `../usecase/fixed-query-tools.md` |
-| an HTTP API | a Workflow with `http-request`, wrapped as an **MCP Server** | `../usecase/external-api.md` |
-| an existing MCP server somebody already wrote | **MCP Server**, From Existing | [`tools.md`](../wiki/tools.md) |
-| documents, manuals, FAQs | a **Drive** with a Context Index | [`knowledge.md`](../wiki/knowledge.md) |
-| how the customer's systems correspond, where their concepts do not line up - status codes, an id written three ways, a word that means two things | a **Skillset**. The row people forget, because it has no credential to ask for | [`tools.md`](../wiki/tools.md) |
+| an HTTP API | a Workflow with `http-request`, wrapped as an MCP Server | `../usecase/external-api.md` |
+| an existing MCP server somebody already wrote | MCP Server, From Existing | [`tools.md`](../wiki/tools.md) |
+| documents, manuals, FAQs | a Drive with a Context Index | [`knowledge.md`](../wiki/knowledge.md) |
+| how the customer's systems correspond, where their concepts do not line up - status codes, an id written three ways, a word that means two things | a Skillset. This row is often forgotten because it has no credential to ask for | [`tools.md`](../wiki/tools.md) |
 
-**New MCP Server has two entries and they lead to different work.** From
-Workflow asks only for Name and Description, then drops you into an empty
-Workflow editor where the actual tool is assembled - the form being short does
-not mean the step is. From Existing connects to a server that already exists,
+New MCP Server has two entries and they lead to different work. From
+Workflow asks only for Name and Description, then opens an empty
+Workflow editor where the actual tool is assembled; most of the work is there,
+not in the form. From Existing connects to a server that already exists,
 over STDIO (Asgard starts a local process with a Command, Arguments and
 Environment Variables) or Streamable HTTP (an endpoint already running).
 
 **3. Configure the agent.** A Managed Agent is where the pieces meet - see
 [`agents.md`](../wiki/agents.md) for the fields. Two of them decide more than the rest:
 
-  - **Description** is not a self-introduction. It is the routing text the
-    orchestrator reads to decide whether to delegate this question to this
-    agent, and it is the only thing that decision can see. Write it as "ask me
-    when ...", not as "I am a helpful assistant for ..."
-  - **Prompt** is four separate fields - Persona, Task, Context, Format - not one
-    box. Putting everything in Persona works until the agent has two tasks
+  - Description is not a self-introduction. It is the routing text the
+    orchestrator reads, labelled "when to spawn", when deciding whether to
+    delegate this question to this agent; the agent's sample questions are
+    appended to it, and the full prompt is in front of the orchestrator too.
+    Write it as "ask me when ...", not as "I am a helpful assistant for ..."
+  - Prompt is four separate fields - Persona, Task, Context, Format - not one
+    box. Putting everything in Persona stops working once the agent has two tasks
 
 Then mount what step 2 produced: MCP Servers, Skillsets, Drives, Semantic Model,
 and the Browser Configuration switch.
 
-Five built-in templates exist and are worth starting from rather than an empty
-form: 簡易線上客服, Customer Support, Knowledge Base Q&A, Data Analyst,
+Five built-in templates exist; start from one rather than an empty form: 簡易線上客服, Customer Support, Knowledge Base Q&A, Data Analyst,
 General Assistant.
 
-**4. There is no step 4 for Sindri.** This is the question people ask most often
-and the answer is that it is not a step:
+**4. There is no step 4 for Sindri.** This is the question people ask most often:
 
-> **Every Managed Agent is published to Sindri.** There is no import, no
+> Every Managed Agent is published to Sindri. There is no import, no
 > install, no "add agent to hub". An enabled agent serves immediately; a
 > disabled one stops serving and keeps its configuration.
 
 What a user sees in Sindri is the Available Agents list on the home page, each
 card showing a name and a line about when to delegate to it - that line being the
 Description from step 3. The user does not have to pick the right agent: the
-selector defaults to Sindri, which routes on those descriptions. See
+selector defaults to Sindri, which decides whether to delegate, reading those
+descriptions. See
 [`sindri.md`](../wiki/sindri.md).
 
-So the thing that makes an agent findable in the hub is not a publish action. It
-is having written the Description well two steps earlier.
+So an agent is found in the hub through the Description written in step 3, not
+through a publish action.
 
-**5. Only if someone outside has to reach it**, this is a different path, and
-this is where it stops being console work: a Flow Agent as the entry point, and a
+**5. Only if someone outside has to reach it.** This is a different path, and
+it is not console work: a Flow Agent as the entry point, and a
 `BotProvider` for the channel. An anonymous visitor cannot authenticate to the
 hub at all. [`integration.md`](../wiki/integration.md) has the four routes.
 
@@ -118,21 +115,20 @@ not the same is the count: a console object is often several CRs.
 | 2 | Drive | `SourceSet` (+ `Syncer`) - [`knowledge.md`](../wiki/knowledge.md) |
 | 2 | Skillset | `SkillSet` + `SourceSet` + `Syncer` - [`tools.md`](../wiki/tools.md) |
 | 3 | Managed Agent | one `Agent` - [`agents.md`](../wiki/agents.md) |
-| 5 | Flow Agent | **three** CRs, not one - [`agents.md`](../wiki/agents.md) |
+| 5 | Flow Agent | three CRs, not one - [`agents.md`](../wiki/agents.md) |
 
-**A console object is not one CR, and the names do not match.** There is no
+A console object is not one CR, and the names do not match. There is no
 `FlowAgent` kind, no `KnowledgeDrive` and no `HttpTool` - those are
 `asgard-cli add` template names, and the CRs they write are in the column above.
 [`agents.md`](../wiki/agents.md) has the full UI-to-CR table and is where that fact
 lives; this one is only here so the order can be followed in a chart.
 
-**Connection is the exception in the other direction**: OAuth authorisation
+Connection is the exception in the other direction: OAuth authorisation
 happens in the UI and is not declared in a chart at all.
 
-What this means in practice is that a screenshot of the console is a fair
-illustration of what a chart does - the customer's admin sees step 3 as a form
-whether or not the form is what we filled in. That is what makes the
-documentation's screenshots usable in a handover deck.
+So a screenshot of the console is a fair illustration of what a chart does - the
+customer's admin sees step 3 as a form whether or not the form is what we filled
+in - and the documentation's screenshots can be used in a handover deck.
 
 ## Screenshots, for a deck or a handover
 
@@ -142,7 +138,7 @@ this is the short version. Fetch them from:
 
     https://docs.asgard-ai.com/img/docs/<path>
 
-The console itself is in **English**; only the documentation's captions are
+The console itself is in English; only the documentation's captions are
 zh-TW, so a deck in either language can use them.
 
 The three that carry this page:
@@ -153,14 +149,12 @@ The three that carry this page:
 | 3 | `agent-hub-managed-agent/create.png` - the form an admin fills in |
 | 4 | `sindri-home/home-available-agents.png` - what their users see |
 
-**Check the file before using it.** These were captured against the product at
-some point and nothing here tracks when. A screenshot showing an older form is
-worse in a customer deck than no screenshot, because they will compare it to
-what they see.
+Check the file before using it. These were captured against the product at
+some point and nothing here tracks when. Do not put a screenshot of an older
+form in a customer deck; they will compare it to what they see.
 
-The last of the three is also the best available argument for writing a
-Description as routing text - every card on it reads 「當使用者要⋯時,委派給 X
-Agent」, which is the field doing its job in public.
+The last of the three also shows why a Description should be routing text:
+every card on it reads 「當使用者要⋯時,委派給 X Agent」.
 
 ## Corresponding extracts
 
@@ -177,27 +171,34 @@ The shapes it passes through are `../usecase/agent-hub.md`,
   [Configuration](https://docs.asgard-ai.com/docs/product-suite/odin/features/agent-hub-configuration),
   [Data Source](https://docs.asgard-ai.com/docs/product-suite/odin/features/settings/data-source),
   [Connection](https://docs.asgard-ai.com/docs/product-suite/odin/features/settings/connection)
-  - asgard-docs `f00e0ee`
-- Screenshot paths read off that same checkout's `static/img/docs/`, 2026-09-02
-- **The sequence itself is assembled and only its first fork is verified.** Each
-  step comes from the page that owns it; no source puts them in an order, which
-  is why this page exists. The one part held against a real console screen is
+  - asgard-docs `6261fdff`
+- Screenshot paths read off that same checkout's `static/img/docs/`
+- The sequence itself is assembled and only its first fork is verified. Each
+  step comes from the page that owns it; no source puts them in an order. The one part held against a real console screen is
   that an HTTP API's credential has no home under Settings - the fork that sends
   you to a Workflow instead. The rest is a reading of what each step needs from
   the one before, and the charts corroborate the dependency direction without
   saying anything about the console flow. If you work through it against a live
-  console and it is wrong anywhere, that is worth telling the maintainer: it is
-  the page most likely to be confidently wrong
-- Checked 2026-09-02, re-read 2026-09-11 against asgard-kube `cbd8d70`, head at the time: the CR column names only
+  console and it is wrong anywhere, tell the maintainer
+- Checked against asgard-kube `3da0365`: the CR column names only
   kinds the CRDs define. `HttpTool`, `KnowledgeDrive` and `FlowAgent` are not
-  among them, which an earlier draft of this table asserted
-- **Checked** 2026-09-02 against three of those images, opened rather than
+  among them
+- Checked against three of those images, opened rather than
   listed: the Data Source Provider list (every entry a database, no
   HTTP option), the Managed Agent form (the four Prompt fields and the live
   preview), and the Sindri home page (the Available Agents, each card showing
   its Description as routing text)
 
-**Unchecked:** the order itself. Every step is documented and every claim about a
-step comes from the page above it, but **no source states the sequence** - it is
-assembled here from the object pages plus what the CR mapping implies, which is
-the reason this page exists.
+**Checked:** asgard-docs `21c920f6` - `docs/product-suite/odin/features/settings/data-source.mdx`
+(nine providers, Test Connection before Save), `settings/connection.mdx` (the five
+OAuth services), `mcp-servers.mdx` (From Workflow and From Existing, STDIO or
+Streamable HTTP), `agent-hub-managed-agent.mdx` (the five built-in templates), and
+`docs/quickstarts-guide.mdx` plus the two Odin case studies, none of which states a
+build order; asgard-core `478cf5d6`
+asgard-core `internal/bpcontroller/server/sandbox_orchestration.go` for what the
+orchestrator is given about each agent; asgard-kube `3da0365` `pkg/apis/asgard/v1alpha1/types.go` for the
+dependency direction - `SemanticLayer.spec.dataConnectorName`, and
+`Agent.spec.managed` naming its SkillSets, Toolsets, SourceSet mounts and
+semantic layers.
+
+**Unchecked:** the order as a whole has not been walked through against a live console.

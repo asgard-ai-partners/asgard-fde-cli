@@ -24,17 +24,17 @@ func newUpdateCmd() *cobra.Command {
 		Long: `Replace this binary with the newest published release.
 
 It takes the version-less release asset for this platform, verifies the download
-against that release's own checksums by HASH rather than by name, runs the new
+against that release's own checksums by hash rather than by name, runs the new
 binary where it landed, and only then renames it over this one.
 
-**The order is what makes it safe.** A build macOS kills, a truncated download
-or an archive with nothing in it all fail before anything has been replaced, so
-the outcome is always either the new version or exactly what was there before -
-never a binary that does not run. On macOS this is also where the Gatekeeper
-scan of a newly written unnotarized binary is spent: it can take a minute, and
-spending it here means it is not spent in front of a customer.
+Because of that order, a build macOS kills, a truncated download or an empty
+archive all fail before anything has been replaced. The result is either the
+new version or exactly what was there before, never a binary that does not run.
+On macOS this is also when the Gatekeeper scan of a newly written unnotarized
+binary happens; it can take a minute, and it happens here rather than on the
+first run in front of a customer.
 
-**It refuses rather than guessing** when this binary is not a release build,
+It refuses rather than guessing when this binary is not a release build,
 when something else owns the file, or when the directory is not writable - and
 each refusal names what to run instead. A package manager's copy is upgraded
 with the package manager: replacing the file underneath it leaves its database

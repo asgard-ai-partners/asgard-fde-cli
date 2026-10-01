@@ -24,9 +24,8 @@ func newGuideCmd() *cobra.Command {
 		Long: `Read the guidance for one decision. With no argument, list all of it.
 
 Each of these is a decision somebody has to make, with the answer that has been
-got wrong before printed next to the right one. **None of them is a step you
-arrive at.** Read whichever the question in front of you reaches, in any order,
-as many times as it is useful.
+got wrong before printed next to the right one. They are not ordered steps.
+Read whichever one your current question needs, in any order.
 
     asgard-cli guide                 all of it
     asgard-cli guide read-path       one
@@ -34,11 +33,8 @@ as many times as it is useful.
                                      reach any of it by subject, alongside the
                                      wiki, the extracts and the skills
 
-Nothing raises one of these for you. There was a command that did - it read the
-repository, matched its shape against a fixed set of conditions and named the
-guidance each raised - and it was the walk with the numbers taken off: the
-conditions were the old rungs, in the old order. What replaced it is this list,
-and by grepping the material.
+No command picks one of these for you. Find the one you need in this list, or
+by grepping the material.
 
 Guidance that names actual projects and requests is rendered against the
 repository when there is one. Read outside a repository it still reads, with

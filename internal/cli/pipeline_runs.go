@@ -47,7 +47,7 @@ platform, against the real cluster's CRDs. This is where the answer comes back.
     asgard-cli pipeline runs log <run-id> lint
     asgard-cli pipeline runs approve <run-id>
 
-` + "`watch`" + ` is the one that closes the loop after a push: it waits for the run the
+Use ` + "`watch`" + ` after a push: it waits for the run the
 push created, follows its steps, and ends by printing the plan report or the
 reason it failed.`,
 		Args: cobra.NoArgs,
@@ -250,7 +250,7 @@ func newRunsWatchCmd() *cobra.Command {
 		Long: `Follow a run until it reaches a state that will not change again, then print the
 plan report or the reason it failed.
 
-This is what closes the loop after a push. The platform decides whether a change
+Run this after a push. The platform decides whether a change
 is deployable - it renders the chart, checks every CR against the cluster's own
 CRDs, and reports back - and this is how that answer arrives without opening a
 browser.
@@ -260,11 +260,11 @@ browser.
 
 --ref waits for the run the push created, which does not exist yet when the
 command starts: a push reaches the platform in a few seconds. Waiting for it to
-appear and then following it is one command because they are one question.
+appear and then following it is one command.
 
-**--ref is the tag or branch you pushed**, which is what a run is indexed by and
-what you already know. --commit takes a SHA instead, and there are two reasons
-not to reach for it: an ANNOTATED tag is its own git object, so
+--ref is the tag or branch you pushed, which is what a run is indexed by.
+--commit takes a SHA instead; prefer --ref, for two reasons: an annotated tag
+is its own git object, so
 "git rev-parse <tag>" is not the commit, and "git rev-parse HEAD" is not the tag
 target unless you tagged HEAD; and the run summaries carry no commit, so
 matching on one costs a request per run per poll.
@@ -274,12 +274,11 @@ matching on one costs a request per run per poll.
 The plan report is printed as "pipeline runs get" prints it: updates that only
 move the version are folded into one line, and --version-bumps lists them.
 
-If no run appears, this says which of the two it is rather than guessing. When
-there are runs it lists them - the push was received, and the search was for the
-wrong name. When there are none the push really did match nothing, and the
-pipeline's deliveries say why.
+If no run appears, this says which of two cases it is. When there are runs it
+lists them - the push was received, and the search was for the wrong name. When
+there are none the push matched nothing, and the pipeline's deliveries say why.
 
-EXIT CODES. 0 when the run succeeded or is waiting for review; 1 when it failed,
+Exit codes: 0 when the run succeeded or is waiting for review; 1 when it failed,
 was rejected, expired, was superseded or cancelled. Waiting for review is not a
 failure: the plan is good and a person has to approve it.`,
 		Args: cobra.NoArgs,
@@ -514,8 +513,8 @@ switched or a file edited since then changes nothing about this run.`
 		verb = "Reject a run waiting for review"
 		long = `Reject a run waiting for review.
 
-Nothing is applied and the run is finished. A comment is worth leaving: it is
-the only record of why, and the next run does not inherit it.`
+Nothing is applied and the run is finished. Leave a --comment: it is the only
+record of why, and the next run does not inherit it.`
 	}
 
 	cmd := &cobra.Command{
@@ -562,14 +561,13 @@ func newRunsCancelCmd() *cobra.Command {
 		Short: "Cancel a queued, planning or applying run",
 		Long: `Cancel a run.
 
-WHERE IT WAS DECIDES WHAT IT BECOMES. Cancelling before apply is ` + "`cancelled`" + `:
+The resulting state depends on when it is cancelled. Cancelling before apply is ` + "`cancelled`" + `:
 planning only fetches, renders and dry-runs, and has touched nothing. Cancelling
 during apply is ` + "`apply_failed`" + `, with a fixed reason saying so - the secret may
 already be written, the helm upgrade may already have run, and nothing is rolled
-back. It is not called cancelled because that would promise an undo the platform
-never performs.
+back. It is not called cancelled because the platform does not undo anything.
 
-That second form is the escape hatch for an apply stuck on the cluster - a
+Cancelling during apply is how to recover from an apply stuck on the cluster - a
 syncer job that never ends, a rollout waiting on something that never becomes
 ready. It releases the release's single active-run slot immediately, so the next
 run does not queue behind the stuck one.`,

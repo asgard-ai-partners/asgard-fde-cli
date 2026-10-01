@@ -32,14 +32,13 @@ BEFORE A MEETING, read the one for what you are about to do:
 
     asgard-cli guide requirements   the interview, and what to ask for
 
-**The riskiest thing in an engagement leaves no trace in a repository.** Talking
-to a customer changes no file, so nothing derived from what the repo contains can
-prepare anybody for it - and every entry under brief/ is there because somebody
-has actually got it wrong, not because it is important.
+Talking to a customer changes no file, so nothing derived from the repository
+can prepare anybody for it. Read the brief instead: every entry under brief/ is
+there because somebody has got it wrong before.
 
 ASKING - what the platform has, which CR a UI name maps to, how one shape is
-assembled field by field, and where each has been got wrong before. **That is
-not a command: it is files.** "asgard-cli init" writes all of it into the
+assembled field by field, and where each has been got wrong before. This is
+files, not a command. "asgard-cli init" writes all of it into the
 repository, and you read it with cat and grep:
 
     .agents/skills/asgard-platform/
@@ -53,12 +52,12 @@ repository, and you read it with cat and grep:
 
     grep -ril "<term>" .agents/skills/asgard-platform/
 
-**Read aliases.md first if the question did not arrive in English.** The
+Read aliases.md first if the question did not arrive in English. The
 material is English and a customer conversation usually is not, so a term
-taken from what somebody actually said matches nothing - and that reads
-exactly like a subject the material does not cover.
+taken from what somebody said may match nothing, which looks the same as a
+subject the material does not cover.
 
-**With no repository, "asgard-cli init" in an empty directory is enough.** It
+With no repository, "asgard-cli init" in an empty directory is enough. It
 needs no account and touches no network. The question gets asked in a meeting,
 before there is a directory, so that is the first thing to run:
 
@@ -73,7 +72,7 @@ BUILDING - a chart of Asgard custom resources per project, each deployed to its
 own namespace:
 
     asgard-cli init          onboard a repository: skeleton, binding, material
-    asgard-cli project       every chart: its shape, what it declares, what it lacks
+    asgard-cli project       every chart: its shape and what it declares
     asgard-cli question      what nobody has answered yet, and who each is with
     asgard-cli request       what the customer asked for and is not done
     asgard-cli task          the task specs that are open
@@ -82,10 +81,10 @@ own namespace:
 
 "project", "question", "request" and "task" each read a file in the
 customer's repository back to you, and each takes ` + "`--format json`" + `.
-**None of them says where the engagement is**, and there is no such command:
-an onboarding is not linear, so a single position derived from the earliest
-missing CR kind is a claim the repository cannot support. What answers "what
-now" is those records, plus guidance by name with "asgard-cli guide <name>" or
+None of them says where the engagement is, and no command does: an
+onboarding is not linear, so the repository cannot support a single position
+derived from the earliest missing CR kind. What answers "what now" is those
+records, plus guidance by name with "asgard-cli guide <name>" or
 by grep over the material.
 
 FILING - three places, decided by who has to act on it: the workspace's
@@ -103,13 +102,13 @@ that repo next can read where the work stands.
 
 With no repository yet, "asgard-cli init" writes one: the skeleton, and nothing
 else. It is the one command here written for a person rather than for an agent,
-because it runs before there is an agent to write for - what teaches one what a
-workspace is is the material init writes. Connecting the checkout to a platform
+because it runs before there is an agent. The material init writes is what
+teaches an agent what a workspace is. Connecting the checkout to a platform
 comes after, guided by that agent.
 
 Which workspace and which pipeline are the only two facts a repository cannot
-supply about itself, so they are the only two it records - and neither is ever
-guessed, not even from a list of one.
+supply about itself, so they are the only two it records. Neither is ever
+guessed, even from a list of one.
 
 Run "asgard-cli <command> --help" for details on an individual command.`,
 		Version: version.Get().String(),

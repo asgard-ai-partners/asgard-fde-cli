@@ -30,31 +30,30 @@ silently.
 A missing display annotation shows up as a nameless resource in the UI. A
 Workflow without its set labels is invisible there. A Trigger without its own two
 labels opens as a blank canvas. A field renamed upstream still lints clean under
-its old name. **None of those are caught by helm lint, by CRD validation, or by a
-server-side dry-run** - which is why they are worth generating rather than
-typing.
+its old name. Helm lint, CRD validation and a server-side dry-run catch none of
+those, so this command generates them.
 
 What is generated is a skeleton: the structure and the traps are right, and the
 content is marked TODO. Read the matching shape first - "asgard-cli add" names
-it for each kind - because the decision comes before the YAML.
+it for each kind - and decide the shape before writing the YAML.
 
 The rules every generated CR already follows - naming, the display annotations,
 what goes in values and what stays in the template - are in
 ".agents/skills/asgard-platform/usecase/conventions.md".
 Read it before writing a CR by hand, or before changing one this
-wrote: what it generates is those conventions applied, and an edit that departs
-from them is the half a rendered chart still passes.
+wrote: what it generates follows those conventions, and a rendered chart still
+passes an edit that departs from them.
 
 The name is written without the kind's prefix: "asgard-cli add dataconnector erp"
 creates dc-erp. Passing the prefixed form is accepted and means the same thing,
 so dc-erp never becomes dc-dc-erp.
 
-**--db-class takes any DataConnector class the CRD declares, and they share
-almost nothing.** salesforce has no port and no user; athena has neither host nor
+--db-class takes any DataConnector class the CRD declares, and the classes share
+few fields. salesforce has no port and no user; athena has neither host nor
 database, just a region, an S3 output location and an IAM key pair; netsuite
 authenticates with a certificate whose PEM is a secret and whose id is not;
-oracle takes serviceName **or** sid and the CRD refuses both and refuses
-neither. Each skeleton carries that class's fields and the note its shape cannot
+oracle takes serviceName or sid, and the CRD rejects setting both and rejects
+setting neither. Each skeleton carries that class's fields and the note its shape cannot
 say. hana is generated like the rest - the platform reads it - but
 the db-query skill cannot reach it, because SAP does not distribute its driver
 openly.
@@ -65,8 +64,8 @@ A flowagent serves your own front end unless --bot-class names a chat platform:
 
 That writes the channel's credential block and says what the channel costs -
 which credential keys have to be declared and set, and whether the class needs a connector pod.
-The field is immutable on the platform side, so it is worth getting right the
-first time. Read ".agents/skills/asgard-platform/usecase/chat-channel.md" before choosing.
+The field is immutable on the platform side, so choose the class before the
+first apply. Read ".agents/skills/asgard-platform/usecase/chat-channel.md" before choosing.
 
 Run "asgard-cli add" with no arguments to list the kinds.`,
 		Args: cobra.MaximumNArgs(2),

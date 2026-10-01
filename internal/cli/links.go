@@ -38,17 +38,16 @@ func newLinksCmd() *cobra.Command {
 
 An internal or partner deck is mostly links, and every id in one is already on
 disk: ` + "`.asgard-cli.yaml`" + ` carries the workspace, the git remote carries the
-repository. Assembling them by hand is the step that goes wrong - a link is a
-claim that a specific page is worth opening, and the weaker versions of it
-(the site root, the URL printed beside the name that is already the link, the
-link dropped on a guess about who can open it) all render correctly.
+repository. Links assembled by hand go wrong in ways that still render: the
+site root instead of the page, the URL printed beside a name that is already
+the link, or a link dropped on a guess about who can open it.
 
-**It prints only what it knows.** A row it cannot build says so and names where
-that is recorded, because a URL assembled from a guessed host resolves to
-nothing and looks exactly like one that works.
+It prints only what it knows. A row it cannot build says so and names where
+that is recorded, because a URL built from a guessed host resolves to nothing
+and looks the same as one that works.
 
-**The Console is a different host from the API and neither implies the other.**
-This tool is configured with the API's, so the Console is known for the hosted
+The Console is a different host from the API, and neither can be derived from
+the other. This tool is configured with the API's, so the Console is known for the hosted
 installation and unknown for any other - ` + "`asgard-cli profile show`" + ` says which
 one is in effect. Nothing here reaches the network or needs a session.
 

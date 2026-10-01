@@ -1,12 +1,12 @@
 # <<.DisplayName>>
 #
-# A SkillSet is a trio, not a CR: the SkillSet, its OWN SourceSet, and the git
+# A SkillSet takes three CRs: the SkillSet, its own SourceSet, and the git
 # Syncer that fills it, bound 1:1:1 and kept in this one file.
 #
 # Do not point several SkillSets at one SourceSet. The Platform UI reads the
 # 1:1:1 structure, and sharing leaves it unable to find a skill set's git
-# config - it renders as a skill set with no source. A UI failure, not a runtime
-# one, which is why it survives unnoticed.
+# config - it renders as a skill set with no source. Runtime is unaffected, so
+# this goes unnoticed.
 apiVersion: asgard-ai.com/v1alpha1
 kind: SourceSet
 metadata:
@@ -14,15 +14,15 @@ metadata:
   annotations:
     asgard-ai.com/source-set-name: "<<.DisplayName>> 來源"
   labels:
-    # **Needed on this CR and on the Syncer, and it does a different thing on
-    # each.** Here it is what the front end reads to recognise that this store
-    # is one skill set's own; on the Syncer it is what keeps it out of the
-    # generic Syncer list. It is also what the platform cascades on when the
-    # SkillSet is deleted.
+    # Needed on this CR and on the Syncer, and it does a different thing on
+    # each. Here the front end reads it to recognise that this store belongs
+    # to one skill set; on the Syncer it keeps the Syncer out of the generic
+    # Syncer list. The platform also cascades on it when the SkillSet is
+    # deleted.
     asgard-ai.com/managed-by: skill-set
     {{- include "<<.Chart>>.labels" . | nindent 4 }}
 spec:
-  # **This release's own resource key**, declared under `appSecret:` in
+  # This release's own resource key, declared under `appSecret:` in
   # .asgard-pipeline.yaml. edgeserver checks it as `X-API-KEY` on this
   # resource's own endpoints, and the platform's own callers read it back from
   # the CR, so nothing else has to know it. When no use case calls those
@@ -52,17 +52,17 @@ metadata:
     # fires the Syncers of this release that carry auto-fire-on-rollout and
     # waits for them, so sync timing is tied to deploys on purpose.
     #
-    # BOTH labels are load bearing, and they read nothing of each other.
+    # Both labels are required, and neither reads the other.
     # auto-fire-on-rollout is opt-in and only the platform's runner reads it;
     # the Syncer module ignores it and never looks at suspend. So a suspended
-    # Syncer without auto-fire NEVER RUNS - the skills resolve to zero, the
-    # chart renders, the gate is green and nothing reports it.
+    # Syncer without auto-fire never runs - the skills resolve to zero, the
+    # chart renders, the gate passes and nothing reports it.
     asgard-ai.com/syncer-suspend: "true"
     asgard-ai.com/auto-fire-on-rollout: "true"
     {{- include "<<.Chart>>.labels" . | nindent 4 }}
 spec:
   sourceSetName: ss-<<.Name>>
-  # A relative path inside the volume. The trailing slash is load bearing:
+  # A relative path inside the volume. The trailing slash is required:
   # without it the CRD rejects the resource.
   destinationPath: "git/"
   # No statePath on a git syncer - it clones the whole tree every run. The
@@ -73,13 +73,13 @@ spec:
   git:
     repoUrl: "<<.Repo>>"
 <<if .Private>>    # Pinning the release tag means the tag must be pushed before the Syncer can
-    # find its commit - and it is why a local helm upgrade breaks it.
+    # find its commit, and a local helm upgrade breaks it.
     revision: {{ .Chart.AppVersion | quote }}
     auth:
       type: http
-      # **The username is a constant, not a secret**, so it is written
-      # literally and a private repo costs exactly ONE declared key. The PAT in
-      # `password` below is what authenticates. One reference deployment reads
+      # The username is a constant, not a secret, so it is written literally
+      # and a private repo needs one declared key. The PAT in `password` below
+      # is what authenticates. One reference deployment reads
       # the username out of the release Secret as well -
       #
       #   valueFrom:
@@ -87,8 +87,8 @@ spec:
       #       name: <the release Secret>
       #       key: asgard-github-pat-username
       #
-      # - which works and needs no repair there, but it is a second key to
-      # declare, set and rotate for a value that never varies. Do not copy it
+      # - which works, but it is a second key to declare, set and rotate for a
+      # value that never varies. Do not copy it
       # into a new chart.
       username:
         value: "git"
@@ -115,7 +115,7 @@ metadata:
 spec:
   sourceSetName: ss-<<.Name>>
   searchPaths:
-    # ONE PATH PER SKILL DIRECTORY. Naming a parent directory resolves to
-    # nothing at all, and nothing catches it - the symptom is an agent with
-    # fewer skills than expected.
+    # One path per skill directory. A parent directory resolves to nothing,
+    # and no check catches it - the symptom is an agent with fewer skills than
+    # expected.
     - git/TODO/

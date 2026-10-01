@@ -57,7 +57,7 @@ func newLoginCmd() *cobra.Command {
 It opens a browser at the platform's sign-in page, waits for it to come back on a
 loopback port, and stores the session under this user account - never inside a
 customer repository. The flow is OAuth 2.0 authorization code with PKCE and the
-CLI ships no client secret, so nothing in a release is worth lifting out of it.
+CLI ships no client secret, so a release contains no secret to extract.
 
 The session lasts 24 hours and renews itself for 30 days without asking again;
 after that, or once it is revoked, the next command says to run this one.
@@ -67,28 +67,25 @@ after that, or once it is revoked, the next command says to run this one.
     asgard-cli login --no-browser        do not open a browser; the URL is
                                          printed either way
 
-**With nothing configured, there is one platform and it is the hosted one.**
-That is what the profile named ` + "`default`" + ` is, and every command falls back to it.
-` + "`prod`" + ` and ` + "`dev`" + ` were once built-in names and are not any more: a development
-platform is one installation among the ones this tool meets rather than a second
-kind of thing, so it is written like any other with ` + "`asgard-cli profile set`" + `.
-Passing either name now says so rather than signing you in somewhere.
+With nothing configured, the only platform is the hosted one. That is the
+profile named ` + "`default`" + `, and every command falls back to it.
+` + "`prod`" + ` and ` + "`dev`" + ` are not built-in names. Configure a development platform like
+any other installation, with ` + "`asgard-cli profile set`" + `. Passing either name
+reports this instead of signing you in.
 
 A session is held per profile, so signing in to one leaves the others alone and
 several can be held at once.
 
-**Nothing records which profile applies when nothing says; it is ` + "`default`" + `.** A
-default used to be recordable, in a file beside the credentials, and it is gone:
-a preference stored on one machine is a preference two people running the same
-command do not share, and it was one more file an upgrade had to keep
-understanding. Say it per command with --profile, or once per shell:
+When nothing names a profile, the profile is ` + "`default`" + `; no file records a
+different default, because a preference stored on one machine is not shared by
+two people running the same command. Name the profile per command with
+--profile, or once per shell:
 
     export ASGARD_PROFILE=onprem
 
-That way round is the safe one. The recorded default was usually a test
-platform, so forgetting it was set meant a command reaching a customer's
-platform believing it was the test one - and an exported variable is visible in
-the shell that set it, where a file under the user's config directory is not.
+An exported variable is visible in the shell that set it, where a file under
+the user's config directory is not, so it is harder to forget that a command
+will reach a customer's platform rather than a test one.
 
 IN THE WORKBENCH ASSISTANT'S SANDBOX (` + auth.EnvSandboxMode + `=true) there is nothing to sign in
 to: the platform supplies the member's identity, and this command says so and
@@ -262,10 +259,10 @@ func newWhoamiCmd() *cobra.Command {
 By default it asks the platform rather than reading the file: the same endpoint
 the platform's own IAM calls to verify a bearer token, so what it reports is the
 session the API would see. A token that has been revoked reads as signed in on
-disk and is rejected by every call, and this is what tells those two apart.
+disk and is rejected by every call; asking the platform tells those two apart.
 
-    asgard-cli whoami                    ask the dev platform
-    asgard-cli whoami --profile prod     ask prod
+    asgard-cli whoami                    ask the platform the active profile names
+    asgard-cli whoami --profile <name>   ask a particular profile's platform
     asgard-cli whoami --local            report what is stored, without a call
 
 --local answers offline, from what was recorded at sign-in. It says whether the

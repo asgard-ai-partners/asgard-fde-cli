@@ -4,10 +4,10 @@ This is the entrypoint for requirement navigation.
 
 ## Convention
 
-- **`docs/spec/<<.SpecSlug>>/` is the living spec** — what the system does today. Read the module
+- `docs/spec/<<.SpecSlug>>/` is the living spec — what the system does today. Read the module
   you are touching before writing a task spec, and apply the delta back to it when the task lands.
 - `docs/decisions/YYYY-MM-DD-*.md` are dated, immutable decision records — why it is the way it is.
-- `requirements/` is the implementation source of truth **for the work itself**.
+- `requirements/` is the implementation source of truth for the work itself.
 - `references/` is background only.
 - High-level requirements live in `requirements/requests/REQ-*.md`.
 - Executable task specs live in `requirements/tasks/TASK-*.md`.
@@ -22,8 +22,8 @@ This is the entrypoint for requirement navigation.
 - Requests: `requirements/requests/_index.md`
 - Tasks: `requirements/tasks/_index.md`
 
-**What may live in `requirements/` at all** - the two record types, the tense
-test, the one-fact-one-home table and the provenance rule - is in
+What may live in `requirements/` (the two record types, the tense
+test, the one-fact-one-home table and the provenance rule) is in
 [`README.md`](README.md). Read it before adding anything here that is not a
 `REQ-*.md` or a `TASK-*.md`.
 
@@ -48,7 +48,7 @@ asgard-cli gate                 # every local check, the lint step included
 asgard-cli verify <project>     # or one step alone, while iterating
 ```
 
-**Never run `helm lint` by hand** - the reserved `asgard` values file the gate supplies is what
+Never run `helm lint` by hand. The reserved `asgard` values file the gate supplies is what
 makes the lint step pass, and without it every chart that labels anything fails.
 
 `asgard-cli verify` is the step that catches dangling CR references (Agent → SemanticLayer /

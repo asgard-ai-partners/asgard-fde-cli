@@ -56,7 +56,7 @@ func workbenchErrorText(e *APIError, msg string) (string, bool) {
 	}
 	switch {
 	case e.ErrorCode == WorkbenchConflictRetry:
-		return fmt.Sprintf("the platform answered %d (%s): **nothing was written** - two writes to the same issue raced "+
+		return fmt.Sprintf("the platform answered %d (%s): nothing was written. Two writes to the same issue raced "+
 			"and this one lost twice. Running the same command again is safe", e.Status, WorkbenchConflictRetry), true
 	case e.ErrorCode == WorkbenchAssistantForbidden:
 		return fmt.Sprintf("the platform answered %d (%s): this CLI writes to the Workbench as the member's assistant, "+
@@ -71,7 +71,7 @@ func workbenchErrorText(e *APIError, msg string) (string, bool) {
 			"Nothing was written. Clear it first with --parent 0 on the sub-issue, or leave it where it is", e.Status, WorkbenchParentAlreadySet), true
 	case e.Status == http.StatusForbidden && strings.HasPrefix(e.Path, "/v1/workbench/audit-log"):
 		return fmt.Sprintf("not allowed to read the audit log (%d %s): Asgard Console decides who may, and it takes a "+
-			"workspace owner or a platform admin (IAM action audit-log/read). Say so rather than reporting an empty log", e.Status, msg), true
+			"workspace owner or a platform admin (IAM action audit-log/read). Report this refusal, not an empty log", e.Status, msg), true
 	case e.Status == http.StatusForbidden:
 		return fmt.Sprintf("not allowed (%d %s); the Workbench is open to every member of the workspace, so this account "+
 			"is probably not a member of it, or the action needs workspace administration", e.Status, msg), true

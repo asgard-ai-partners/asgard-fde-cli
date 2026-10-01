@@ -211,7 +211,7 @@ func installInSandbox(cmd *cobra.Command, pc *platformContext, before map[string
 	out := cmd.OutOrStdout()
 	fmt.Fprintln(out)
 	handLinkToMember(out, "install the app on "+where+
-		". Installing on an organisation may need one of its admins - a wait, not a failure; if so, say who has to do it",
+		". Installing on an organisation may need one of its admins to approve it; the flow then waits for them. If so, say who has to do it",
 		install.InstallUrl, install.ExpiresAt)
 	return errConnectPending
 }

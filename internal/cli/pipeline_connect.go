@@ -49,13 +49,13 @@ its repositories.
 The provider is an argument rather than part of the command name because more
 are expected: a connection records which provider it is, and adding one later
 should be a new value here, not a new command to learn. Today github is the only
-one, and naming another says so rather than pretending.
+one, and naming another is an error that says so.
 
-WHAT HAPPENS. This identifies you on the provider first, and only then works out
-what to connect. That order is deliberate: whether the app is already installed
-on the account is a fact the caller may not have — somebody else, or another
-workspace, may have installed it months ago — and the two ways in fail very
-differently if you guess wrong. So it is never asked.
+What happens: this identifies you on the provider first, and only then works out
+what to connect. The caller may not know whether the app is already installed
+on the account - somebody else, or another workspace, may have installed it
+months ago - and the two ways in fail very differently if that is guessed
+wrong. So it is never asked.
 
     1. the provider says who you are
     2. it lists the installations you can reach
@@ -67,33 +67,36 @@ remote, which is the account whose repositories this engagement is about; name
 it explicitly when connecting some other account, or when there is no remote to
 read.
 
-Step 4 is what makes the account you asked for reachable, and it is a step
-nobody can take unaided: the install page is /apps/<slug>/installations/new, the
-slug differs per platform, and a wrong slug and a private app look identical
-from outside. So the platform is asked for that URL rather than anybody guessing
-it. Whatever gets installed is then matched against --account again - an install
+Step 4 makes the account you asked for reachable. The install page is
+/apps/<slug>/installations/new, the slug differs per platform, and a wrong slug
+and a private app look identical from outside, so the platform is asked for
+that URL. Whatever gets installed is then matched against --account again - an install
 that lands on a different account is reported, not connected.
 
 The state is sealed rather than stored, so it stays usable for its whole
 lifetime rather than being spent on first use. The provider redirects back to
 the platform - not to this machine - which is what completes the connection.
-What this waits on is therefore two things at once: a connection appearing, and
-the platform reporting how the attempt ended. Both are needed: the callbacks
-never reach this process, so from here "nothing yet" and "it failed a minute
-ago" look identical.
+So this waits on two things at once: a connection appearing, and the platform
+reporting how the attempt ended. Both are needed because the callbacks never
+reach this process, so from here "nothing yet" and "it failed a minute ago"
+would otherwise look the same.
 
     asgard-cli pipeline connect --no-browser
 
 prints the URL instead of opening one, for a session where the browser is
 somewhere else. The URL is printed either way.
 
-ONE ACCOUNT, AS MANY WORKSPACES AS NEED IT. GitHub issues one installation per
-account, so a rule that one installation belongs to one workspace would have
-meant a GitHub organisation could serve one workspace. Each workspace holds its
-own connection to the same installation, and they do not see each other's.
+One account can serve many workspaces. GitHub issues one installation per
+account, and each workspace holds its own connection to the same installation;
+they do not see each other's.
 
-IN THE WORKBENCH ASSISTANT'S SANDBOX it is two steps, because the agent reads a
-command's output only when the command ends, and a link printed before a
+One workspace can hold many accounts: run this once per account, and the
+workspace ends up holding one connection per installation, which is what
+"pipeline create --connection" chooses between. Already holding a connection
+does not stop this command.
+
+In the Workbench assistant's sandbox it is two steps. The agent reads a
+command's output only when the command ends, so a link printed before a
 five-minute wait would reach the member five minutes late:
 
     asgard-cli pipeline connect --account acme    prints the link, and ends
@@ -102,16 +105,10 @@ five-minute wait would reach the member five minutes late:
     asgard-cli pipeline connect --continue        waits for the connection, as the
                                                   desktop's wait does
 
-The link is for the member's OWN browser - it is on GitHub, which their browser
-is signed in to - never the sandbox's. When the flow needs a second page
-(installing the app on an account that does not have it), --continue ends with
-that link, and the next --continue picks up from there. Nothing is opened here.
-
-AND ONE WORKSPACE, AS MANY ACCOUNTS. The other direction is a connection each:
-run this once per account, and the workspace ends up holding one connection per
-installation, which is what "pipeline create --connection" chooses between.
-Holding one already is not a reason this stops - it was, for as long as the only
-way in was the list of installations you already reach.`,
+The link is for the member's own browser, which is signed in to GitHub, not
+the sandbox's. When the flow needs a second page (installing the app on an
+account that does not have it), --continue ends with that link, and the next
+--continue picks up from there. Nothing is opened in the sandbox.`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			provider := platform.ProviderGitHub
@@ -453,7 +450,7 @@ func installFirst(
 		where = account
 	}
 	fmt.Fprintf(msg, "\nOpen this URL and install the app on %s:\n\n    %s\n\n", where, install.InstallUrl)
-	fmt.Fprintf(msg, "Installing on an organisation may need one of its admins, which is a wait\nrather than a failure.\n")
+	fmt.Fprintf(msg, "Installing on an organisation may need one of its admins; keep waiting if so.\n")
 	fmt.Fprintf(msg, "Waiting...\n")
 
 	created, choices, _, err := waitForConnection(ctx, pc, before, install.State, wait)

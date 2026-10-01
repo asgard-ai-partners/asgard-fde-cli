@@ -29,19 +29,19 @@ under in the editor's node menu:
 | Automation Tool | Validate Payload | `validate-payload` |
 | CRD only | LLM Query Database | `llm-query-database` |
 
-**Entry and Exit are nodes in that menu and are not processor types.** The
+Entry and Exit are nodes in that menu and are not processor types. The
 editor draws them under 流程控制 and the documentation gives each its own page,
 but a Workflow declares them as its own `entries` and `exits` arrays - so
 looking for an `entry` value in the enum finds nothing, and a processor written
 with one is rejected. Two more rows of the menu are not general either:
 Validate Payload and Response appear only in an Automation Tool workflow, and
-**Response has no type at all** - the output is a `push-message` scoped to
+Response has no type at all - the output is a `push-message` scoped to
 `automation_tool`, which `../wiki/processors.md` sets out. `llm-query-database`
 is the opposite case: a legal type the node menu will not add.
 
 At most 100 processors and 1000 relationships.
 
-`stream-llm-completion-message` is the workhorse of agent conversation:
+`stream-llm-completion-message` is the processor agent conversation runs on:
 semanticLayers, toolsets and sandboxBlueprint all hang off its config.
 
 ## Three ways a value is set, exactly one at a time
@@ -52,10 +52,10 @@ enforces exactly one.
 | form | syntax | for |
 |---|---|---|
 | Literal (`value`) | plain text | something fixed |
-| Expression (`expression`) | **JavaScript** | computation and logic |
-| Template (`template`) | **Handlebars** | rendering |
+| Expression (`expression`) | JavaScript | computation and logic |
+| Template (`template`) | Handlebars | rendering |
 
-Expression is JavaScript, not CEL, and it is **not** restricted to ECMA5 -
+Expression is JavaScript, not CEL, and it is not restricted to ECMA5 -
 that limit is `execute-script`'s Engine field and applies to a script body, not
 to these. One shipped tenant chart evaluates
 `prevBlobs.map(b => b.blobId).join(',')`, which is the evidence;
@@ -64,15 +64,14 @@ rather than a tally of how many use one. `||`, `??`, `String()`
 and `encodeURIComponent` work, as
 do built-in helpers such as `history(0, -1)` and `urlEncode(...)`.
 
-**`const` and `let` are a different question, and the answer is that they need a
-wrapper.** An Expression field holds one expression rather than statements, so a
+`const` and `let` need a wrapper. An Expression field holds one expression rather than statements, so a
 bare declaration has nowhere to go - the charts write an immediately-invoked
 arrow function around the statements instead, which is the form
 `../wiki/processors.md` sets out. If you want statements without one, that is
-`execute-script`, and there you are back inside ECMA5.
+`execute-script`, whose body runs in the same VM.
 
-This was once recorded as CEL, and anything written as CEL neither works nor
-explains why. The current documentation and the charts agree.
+An expression written as CEL does not work and gives no error saying why. The
+current documentation and the charts agree that Expression is JavaScript.
 
 ## Reading conversation context
 
@@ -95,7 +94,7 @@ single turn.
 ## What crosses between processors
 
 How `prevPayload` and `httpResponse` actually behave - in particular that an
-`http-request` **replaces** `prevPayload` - is in
+`http-request` adds `httpResponse` and leaves `prevPayload` as it was - is in
 `../usecase/workflow-chain.md`.
 
 ## Entry and tooling
@@ -123,7 +122,14 @@ or the change never reaches the system.
 Two further reference sets live under `developer-reference/asgard-builtin/` and
 are worth reading when needed rather than summarising here: the Expression
 variable and ECMAScript function lists, and the Handlebars helpers plus the
-button, carousel, chart, location, video and quick-reply message templates.
+message templates - text, hint, image, video, audio, location, button, carousel
+and chart, with quick replies and the emit, message and uri action objects as
+parts they share. Hint does not show quick replies even when they are set.
+
+The runtime and the SDK carry four more template types the documentation does
+not cover - table, attachment, question and canvas. They are what the
+platform's own card tools emit (`../wiki/tools.md`), so a chart does not need to
+write one, and a client built on the SDK has to render them.
 
 ## Before writing the chart
 
@@ -135,17 +141,16 @@ processors; `../usecase/fixed-query-tools.md` is the shape of a zero-parameter q
 Every processor field takes one of three kinds of value - Literal, Expression
 (JavaScript) or Template (Handlebars) - and the variables in scope, the
 built-in functions and the `Blob` shape are in
-[`processors`](../wiki/processors.md). **The ECMA5 limit is `execute-script`'s
-Engine field and does not reach an Expression**, which is the same thing this
-page says above and the deployed charts settle: one of them evaluates an arrow
-function. `const` and `let` need the immediately-invoked wrapper described
+[`processors`](../wiki/processors.md). `execute-script`'s `ECMA5` Engine value
+is a name, not a limit: its body and every Expression run in the same VM, and
+one deployed chart evaluates an arrow function. `const` and `let` need the immediately-invoked wrapper described
 above, which is structural rather than a limit - the field holds one
 expression, not statements.
 
 ## The editor's canvas is a ConfigMap
 
-A Workflow renders as a diagram in the platform's editor, and **where each node
-sits is not on the Workflow**. It is a plain Kubernetes `ConfigMap` holding one
+A Workflow renders as a diagram in the platform's editor, and where each node
+sits is not stored on the Workflow. It is a plain Kubernetes `ConfigMap` holding one
 key:
 
 ```yaml
@@ -162,31 +167,27 @@ data:
 
 The Workflow binds it by annotation - `asgard-ai.com/workflow-config-name`.
 
-**Do not write one for a new chart.** The platform lays the graph out itself
-since workflow-service #336-#340, 2026-08-31, and `source/SOURCES.md`'s
-generational table records the switch: the demo generator hand-writes these and
-the deployments authored after the change do not. A ConfigMap in a chart you are
-reading is the older shape, not a thing you are missing, and hand-written
-positions go stale against a graph anybody edits.
+Do not write one for a new chart. The platform lays the graph out itself. A
+ConfigMap like this in a chart you are reading is an older shape and does not
+need copying, and hand-written positions go stale once anybody edits the graph.
 
-**What still decides whether a chart-authored Workflow is usable in the UI is
-the label**, and it fails silently in a way the canvas no longer does:
+What still decides whether a chart-authored Workflow is usable in the UI is
+the label, and a missing label fails silently:
 
     project-environment-id missing   the editor opens as a blank canvas
 
 One deployment carries one per Workflow. `ConfigMap` is not an
-Asgard CR and appears in no CRD, which is why nothing else here mentions it -
-and why it is easy to conclude it is somebody else's concern.
+Asgard CR and appears in no CRD, which is why nothing else here mentions it.
 
 ## Sources
 
 - Every file under
   [processor](https://docs.asgard-ai.com/docs/developer-reference/processor/introduction)
-  - asgard-docs `23409b3`, read 2026-09-14. The type table above is the CRD's
-  `ProcessorType` enum at asgard-kube `cbd8d70` against that page's groups; the
-  two are not the same list, which is why Entry and Exit now say what they are
+  - asgard-docs `23409b3`. The type table above is the CRD's
+  `ProcessorType` enum at asgard-kube `3da0365` against that page's groups; the
+  two are not the same list, which is why the page says what Entry and Exit are
 - [Expression forms](https://docs.asgard-ai.com/docs/developer-reference/asgard-builtin/expression-introduction)
-  - asgard-docs `23409b3`, read 2026-09-14
+  - asgard-docs `23409b3`
 - [Architecture](https://docs.asgard-ai.com/docs/developer-reference/architecture)
   - asgard-docs `f00e0ee`
 - [Conversation context](https://docs.asgard-ai.com/docs/help-community/other/retrieve-conversation-context)
@@ -194,13 +195,17 @@ and why it is easy to conclude it is somebody else's concern.
   - asgard-docs `f00e0ee`
 - [JSON Schema editor](https://docs.asgard-ai.com/docs/help-community/other/json-schema)
   - asgard-docs `f00e0ee`
-- Processor list and the limits: checked 2026-09-02 against
-  [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `cbd8d70` -
-  `ProcessorType`, `WorkflowSpec`
-- Expression being JavaScript: confirmed 2026-09-02 from both sides - the product
+- Processor list, the limits and the exactly-one rule: checked against
+  [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `3da0365` -
+  `ProcessorType`, `WorkflowSpec`, `crd/asgard-ai.com_workflows.yaml`
+- Message templates: asgard-docs `21c920f6`,
+  `docs/developer-reference/asgard-builtin/message-template-*.mdx`;
+  asgard-core `478cf5d6` `internal/constants.go` (`MessageTemplateType`);
+  asgard-js-sdk `56ad14e` `packages/core/src/constants/enum.ts`
+- Expression being JavaScript: from both sides - the product
   documentation states it, the CRD makes no claim, and the deployments use
   JavaScript constructs throughout
 
-**Unchecked:** the processor list and value forms were held against the CRD, and
-`prevPayload` behaviour against the reference deployments; the message templates were not
-examined.
+**Checked:** the processor list and value forms against asgard-kube `3da0365`,
+the message templates against asgard-docs `21c920f6`, asgard-core `478cf5d6` and
+asgard-js-sdk `56ad14e`, as listed under Sources.

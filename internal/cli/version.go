@@ -27,26 +27,25 @@ Use --json when a script needs to read the values.
 
     asgard-cli version --check     ask whether a newer release is published
 
-**Every command that can reach a network asks the same question, at most once
-every ` + selfupdate.IntervalText() + `**, and says one line when the answer is yes. The answer is
+Every command that can reach a network asks the same question, at most once
+every ` + selfupdate.IntervalText() + `, and says one line when the answer is yes. The answer is
 recorded beside the profiles rather than in any repository, the question is
 asked beside the command rather than in front of it, and a run that does not get
 an answer inside its own short leash drops it rather than waiting. A command
 whose help says it touches no network never asks. --check asks now regardless,
 and is the only way to hear that nothing is newer.
 
-Failure is silent: no network, a rate limit or a proxy answering with HTML are
-none of them a reason for this command to behave differently, and a warning
-about a failed version check is noise on every run in an environment where it
-will never succeed.
+Failure is silent: no network, a rate limit or a proxy answering with HTML
+does not change what this command does. A warning about a failed version check
+would print on every run in an environment where the check never succeeds.
 
 Set ` + selfupdate.EnvDisable + ` to stop the background one. It is off already wherever
 stderr is not a terminal, so a CI log and a piped stderr get nothing.
 
-**Nothing here replaces the binary.** A CLI that overwrites itself has to pick a
-moment and every moment is somebody else's - a package manager's database goes
-out of step, a running .exe is locked, /usr/local/bin is usually root's. It
-prints the command instead.`,
+This command does not replace the binary. Overwriting it in place can leave a
+package manager's database out of step, fails on a running .exe, which is
+locked, and usually needs root for /usr/local/bin. It prints the command
+instead.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			info := version.Get()

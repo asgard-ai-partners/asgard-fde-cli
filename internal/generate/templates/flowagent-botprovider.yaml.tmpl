@@ -2,15 +2,15 @@
 #
 <<if ne .BotClass "generic">># botProviderClass: <<.BotClass>>.
 #
-# **This field is immutable after creation.** Changing channel means a new
+# This field is immutable after creation. Changing channel means a new
 # BotProvider with a new name, not an edit to this one.
 #
 <<if or (eq .BotClass "discord") (eq .BotClass "slack")>># This class holds an outbound WebSocket, so the operator creates a Connector
 # Deployment for it. The image comes from a platform-level env var, not from this
 # chart, so there is nothing here to configure and nothing to see in values.
-<<else>># This class receives an inbound webhook, so it costs exactly this one CR - no
+<<else>># This class receives an inbound webhook, so it needs only this one CR - no
 # connector pod, nothing else to deploy.
-<<end>><<if eq .BotClass "line">># ONE LINE 官方帳號 CANNOT HOST TWO BOTS. A channel has one webhook URL, so a
+<<end>><<if eq .BotClass "line">># One LINE 官方帳號 cannot host two bots. A channel has one webhook URL, so a
 # second BotProvider on the same channel means both receive every event and both
 # answer. Migrating an existing LINE bot is a cutover, not a deployment: deploy
 # this with disabled: true, verify against a test channel, remove the old
@@ -20,16 +20,15 @@
 # here. Only the generic class has embedConfig. Write down where it went.
 <<end>>#
 <<end>><<if eq .BotClass "generic">><<if .Public>># authMode: none. An anonymous visitor has no credential, and a key in front-end
-# JavaScript is not a key, so THE PROTECTION IS ON THE CAPABILITY SIDE: the whole
-# chain read-only, tools that take no parameters, mounts read-only. That argument
-# stops holding the moment a parameterised or write-capable tool is added here.
+# JavaScript is not secret, so the protection is on the capability side: the
+# whole chain read-only, tools that take no parameters, mounts read-only. That
+# no longer holds once a parameterised or write-capable tool is added here.
 <<else>># authMode: api-key. The caller holds a credential.
 <<end>><<else>># There is no authMode on this class: the channel's own credentials are the
 # authentication, and anyone who can message the account reaches this bot. So
-# THE PROTECTION IS ON THE CAPABILITY SIDE, exactly as for an anonymous widget:
-# the whole chain read-only, tools that take no parameters, mounts read-only.
-# That argument stops holding the moment a parameterised or write-capable tool is
-# added here.
+# the protection is on the capability side, as for an anonymous widget: the
+# whole chain read-only, tools that take no parameters, mounts read-only. That
+# no longer holds once a parameterised or write-capable tool is added here.
 <<end>>apiVersion: asgard-ai.com/v1alpha1
 kind: BotProvider
 metadata:
@@ -40,12 +39,11 @@ metadata:
     # asgard-ai.com/additional-annotation: |-
     #   {"embedConfig": {}}
 <<end>>  labels:
-    # NOT published to the Agent Hub, and that is a decision rather than an
-    # omission. The Hub serves callers that can authenticate to the platform; a
-    # bot reached here is the opposite audience, so listing it puts something in
-    # the internal Hub list that does not belong there.
+    # Not published to the Agent Hub, on purpose. The Hub serves callers that can
+    # authenticate to the platform; a bot reached here serves callers that
+    # cannot, so it does not belong in the internal Hub list.
     #
-    # Add asgard-ai.com/agent-hub-published: "true" ONLY when this bot is meant
+    # Add asgard-ai.com/agent-hub-published: "true" only when this bot is meant
     # to appear in the Hub's agent list - a supervisor an internal console calls.
     # One deployment inherited it by copying a supervisor's BotProvider into a
     # public widget and had to take it back out.
@@ -53,8 +51,8 @@ metadata:
     # Setting it also changes how the platform classifies the release: with the
     # label it is an agent-hub release, without it a channel release typed from
     # botProviderClass - which is what makes the embedConfig annotation count as
-    # this bot's appearance. Outward reachability is NOT affected either way;
-    # that is decided by authMode alone.
+    # this bot's appearance. The label does not affect outward reachability;
+    # authMode alone decides that.
     {{- include "<<.Chart>>.labels" . | nindent 4 }}
 spec:
   botProviderClass: <<.BotClass>>
@@ -64,22 +62,22 @@ spec:
   # Flip to take the endpoint down without deleting anything.
   disabled: {{ .Values.botProviders.<<.ValuesKey>>.disabled }}
   maxUnsupervisedSteps: 30
-  # Left unset on purpose. It is NOT the channel or the transcript lifetime -
-  # unset means the durable channel never expires, which is the design, and
-  # setting it is what makes a channel and its transcript get deleted once idle.
+  # Left unset on purpose. It is not the channel or the transcript lifetime:
+  # unset, the durable channel never expires, and setting it makes a channel
+  # and its transcript get deleted once idle.
   # What it bounds instead is in
   # `.agents/skills/asgard-platform/usecase/workflow-chain.md`. Milliseconds,
   # minimum 1.
   # channelMaxIdleMs: 259200000
 
-  # never | on-demand | always. **Not `always` on a live channel** - it keeps
-  # every turn's reasoning, which is the thing you least want retained on a
-  # channel a customer is talking to. `on-demand` is the one to ship: the
-  # debugging is there when somebody asks for it and off the rest of the time.
+  # never | on-demand | always. Do not use `always` on a live channel: it
+  # retains every turn's reasoning on a channel a customer is talking to. Ship
+  # `on-demand`: debugging is available when somebody asks for it and off the
+  # rest of the time.
   # `.agents/skills/asgard-platform/usecase/chat-channel.md` has the rest.
   debugMode: on-demand
   # Guards the admin API (`/history`).
-  # **This release's own resource key**, declared under `appSecret:` in
+  # This release's own resource key, declared under `appSecret:` in
   # .asgard-pipeline.yaml. edgeserver checks it as `X-API-KEY` on this
   # resource's own endpoints, and the platform's own callers read it back from
   # the CR, so nothing else has to know it. When no use case calls those
@@ -108,7 +106,7 @@ spec:
           name: {{ include "<<.Chart>>.appSecretName" . }}
           key: asgard_resource_api_key
 <<end>><<end>><<if eq .BotClass "line">>  # Both come from the LINE Developers console for this channel. They are new
-  # keys, so each has to be DECLARED under `appSecret:` in .asgard-pipeline.yaml
+  # keys, so each has to be declared under `appSecret:` in .asgard-pipeline.yaml
   # and then set with `variables set --kind secret`, before the first deploy. A
   # value set against no declaration is stored and never injected.
   line:

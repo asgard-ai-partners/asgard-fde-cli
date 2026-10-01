@@ -2,8 +2,7 @@
 
 Where the material in `internal/corpus/usecase/` came from.
 
-> **Internal only.** This file lives outside `internal/`, so it cannot be embedded
-> even by accident.
+> Internal only. This file lives outside `internal/`, so it cannot be embedded.
 > `internal/corpus/usecase/` ships to every engagement, so those files name no customer
 > and no deployment. This one exists so we can trace an extract back to the chart
 > it was taken from.
@@ -11,84 +10,62 @@ Where the material in `internal/corpus/usecase/` came from.
 Keep it that way: when adding an extract, put the customer-facing shape in
 `internal/corpus/usecase/` and the attribution here.
 
-**Record the commit you read.** The wiki side has always done this; this file
-had no commit for any of the eight, which made "which version of that chart
-did this extract describe" unanswerable. It is answerable now, and the answer
-below was reconstructed rather than recorded at the time: every clone's HEAD
-is dated **before** the extracts were written (2026-09-02 onward), so what was
-read is what each clone holds.
+Record the commit you read, so that it is possible to say which version of a
+chart an extract describes.
 
 ## What each clone held when its extracts were written
 
-Read 2026-09-11. **The right-hand column is the reason this table matters**: a
-chart moves, and an extract is a description of one version of one chart.
+Charts move, and an extract describes one version of one chart. Written from is
+that version.
 
-**Two commits per row, and they answer different questions.** *Written from* is
-the version an extract describes. *Held against* is the version somebody last
-read the extract's claims against, which is a weaker act and a later commit -
-checking field names and counts, not rewriting the extract. Both are fixed, so
-both can be checked; a distance between them cannot be written down at all.
+| deployment | written from |
+|---|---|
+| unitech-e-asgard-kube | `44e71a2` |
+| xxentria-asgard-kube | `967407c` |
+| finance-ai-asgard-kube | `d062197` |
+| buy123-asgard-kube | `4dab85d` |
+| asgard-freyr-kube | `3ebd2be` |
+| asgard-auto-post-kube | `55cc90e` |
+| asgard-industry-demo-generator | `718cc0e` |
+| asgard-freyr-skills | `f06331f` |
 
-| deployment | written from | held against |
-|---|---|---|
-| unitech-e-asgard-kube | `223a59a` (2026-09-01) | `80b16a5` (2026-09-11) |
-| xxentria-asgard-kube | `57e4b4c` (2026-09-01) | `57e4b4c` (2026-09-11) |
-| finance-ai-asgard-kube | `3a4ce84` (2026-09-01) | `3a4ce84` (2026-09-11) |
-| buy123-asgard-kube | `08dac8f` (2026-08-31) | `08dac8f` (2026-09-11) |
-| asgard-freyr-kube | `0594f68` (2026-08-24) | `47d0c06` (2026-09-11) |
-| asgard-auto-post-kube | `d11b802` (2026-09-01) | `edb0ad0` (2026-09-11) |
-| asgard-industry-demo-generator | `718cc0e` (2026-08-26) | `718cc0e` (2026-09-11) |
-| asgard-freyr-skills | `e0b3fe3` (2026-09-01) | `a5c84c6` (2026-09-11) |
+How far each has moved since is computed by `go run ./hack sources --extracts`,
+which asks whether an extract still describes that chart. Do not add a column
+of distances: the distance between two moving commits goes stale within days.
 
-**How far each has moved since is computed, not written here:**
-
-    go run ./hack sources --extracts     against `written from`, which is the question
-                                   "does this extract still describe that chart"
-    go run ./hack sources                against `held against`, which is the question
-                                   "has anything moved since somebody last checked"
-
-There used to be a third column with those distances in it, and **both of the
-two non-zero rows had rotted within nine days.** One named a commit the clone
-had already moved past; the other reported six commits of drift against a clone
-sitting exactly where the extract was read. A distance between two things that
-both move is the one shape of claim that cannot be written down and stay true -
-the left-hand column can, because a commit is fixed.
-
-**The two furthest along are the two that matter most for one extract each.**
+Two of these are each the only source for part of an extract.
 `asgard-freyr-skills` is the only source for
 `internal/corpus/usecase/browser-operation.md`, and `asgard-freyr-kube` is
-where `agents.expression` and the sandbox hooks were read. An extract resting on
-a sample of one, dozens of commits back, is the shape
-`internal/corpus/wiki/coverage.md` exists to make visible.
+where `agents.expression` and the sandbox hooks were read.
+`internal/corpus/wiki/coverage.md` reports extracts that rest on a single
+deployment.
 
-**These are not in `asgard-cli audit-material --sources`.** That check reads
-what is embedded in the binary, and this file deliberately is not - it is the
-only one that names a customer. Holding these rows against the clones is a
-thing somebody does here, with the clones, the way `go run ./hack tables`
-holds the pinned tables against asgard-kube.
+These rows are not in `asgard-cli audit-material --sources`. That check reads
+what is embedded in the binary, and this file is not embedded because it names
+customers. `go run ./hack sources --extracts` and `go run ./hack counts` hold
+these rows against the clones here instead.
 
 ## The deployments read so far
 
-**Both columns below are counted at the commit in the table above**, which is
-why `auto-post` says 28 Plugin CRs where `internal/corpus/usecase/plugin.md`
-says 29: that page recounted at `edb0ad0` and says so. Neither is stale - they
-are counts of different commits, and `go run ./hack counts` holds both against
-the clone.
+Both columns below are counted at the written-from commit in the table above,
+which is why `auto-post` says 28 Plugin CRs where `internal/corpus/usecase/plugin.md`
+says 29: that page counts at `edb0ad0` and says so. They are counts of
+different commits, and `go run ./hack counts` holds both against the clone.
 
 | deployment | shape it demonstrates | CR files | referred to in extracts as |
 |---|---|---|---|
-| unitech-e | agent hub (5 agents / 6 semantic layers) **and** a single-agent flow agent; trigger; knowledge drive. Its AGENTS.md is the most recently maintained of the set | 37 | "a later one", "a deployment with an internal hub and a public widget" |
-| freyr | supervisor + 5 subagents, `agents.expression`, sandbox hooks, shared SourceSet | 16 | "a commerce back-office with five specialists", "an earlier deployment" |
-| xxentria | supervisor + 9 agents | 18 | "a manufacturing one with nine" |
-| finance-ai | supervisor, 3 semantic layers | 13 | "a finance one with three" |
-| buy123 | the minimal flow agent - no Agent CR at all | 8 | not yet cited |
-| auto-post | 28 Plugin CRs, knowledge bases, api workflows | 60 | not yet cited |
+| unitech-e | agent hub (5 agents / 6 semantic layers) and a single-agent flow agent; trigger; knowledge drive. Archived 2026-09: the project moved to the customer's own repository (github.com/UnitechE/unitech-e-asgard-kube) and its namespaces were destroyed, so this clone is a record of the pilot and nothing newer | 41 | "a later one", "a deployment with an internal hub and a public widget" |
+| freyr | supervisor + 5 subagents, `agents.expression`, sandbox hooks, shared SourceSet; a DataConnector and two SemanticLayers bound with `allowedCubes` | 26 | "a commerce back-office with five specialists", "an earlier deployment" |
+| xxentria | supervisor + 9 agents | 17 | "a manufacturing one with nine" |
+| finance-ai | supervisor, 3 semantic layers | 12 | "a finance one with three" |
+| buy123 | the minimal flow agent - no Agent CR at all. Moved 2026-09-13 to github.com/xxtechec/infra-buy123-asgard-kube and deployed by the platform pipeline; this clone is the pre-move history | 8 | not yet cited |
+| auto-post | 28 Plugin CRs, knowledge bases, api workflows | 65 | not yet cited |
 | industry-demo-generator | 12 industries, read/write governance split, a Claude Code plugin of commands + skills | many | "a 12-industry demo chart set", "one agent per business role" |
 
 ### Which customer each one is
 
-**This is the only file that makes this link.** Nothing under `internal/` names a
-customer, and nothing under `internal/` may.
+This is the only file that makes this link. Nothing under `internal/` may name a
+customer.
 
 | repo | who |
 |---|---|
@@ -101,8 +78,8 @@ customer, and nothing under `internal/` may.
 | [asgard-industry-demo-generator](https://github.com/asgard-ai-platform/asgard-industry-demo-generator) | Demo Generator |
 | [asgard-freyr-skills](https://github.com/asgard-ai-platform/asgard-freyr-skills) | Freyr (runtime skills, a separate repo from the chart) |
 
-The demo generator and auto-post are Asgard's own rather than a customer engagement. **`Heimdall` is
-also the name of a product in the suite** (Media & PR AI, see `internal/corpus/wiki/
+The demo generator and auto-post are Asgard's own rather than a customer engagement. `Heimdall` is
+also the name of a product in the suite (Media & PR AI, see `internal/corpus/wiki/
 product-suite`) - the repo and the product are not the same thing, and an extract
 saying "Heimdall" without saying which is ambiguous.
 
@@ -114,8 +91,8 @@ deployment; both are listed in `AGENTS.md` alongside these.
 
 ## Generational conflicts found so far
 
-These matter more than any single extract: two charts disagree, and the
-disagreement is dated rather than a matter of taste.
+Each row is a place where two charts disagree, with the date that decides which
+one is current.
 
 | topic | earlier | later | which wins |
 |---|---|---|---|
@@ -127,25 +104,24 @@ disagreement is dated rather than a matter of taste.
 
 ## Where the platform's own documentation disagrees with every chart
 
-Not a generational conflict - a documentation error, and one an agent would act
-on.
+This is a documentation error rather than a generational conflict, and an agent
+would act on it.
 
 | topic | the CRD documentation says | every chart does | evidence |
 |---|---|---|---|
-| `config.expression` | "CEL 表達式" | **JavaScript**: arrow functions (26 occurrences), `const` (11), `String()` (7), `encodeURIComponent` (5), `??` (4), `JSON.stringify` (3) | CEL has none of those constructs. Counted across every chart in the deployments listed above, on 2026-09-01 |
+| `config.expression` | "CEL 表達式" | JavaScript: arrow functions (26 occurrences), `const` (11), `String()` (7), `encodeURIComponent` (5), `??` (4), `JSON.stringify` (3) | CEL has none of those constructs. Counted across every chart in the deployments listed above |
 
 `internal/corpus/usecase/workflow-chain.md` states the corrected version and
-says the docs are wrong, because an agent handed "it is CEL" writes something
+says the docs are wrong, because an agent told it is CEL writes an expression
 that cannot work and has no way to find out why.
 
-**unitech-e is the most recently maintained**, so it wins a conflict unless
-there is a reason to think otherwise. Record the reason when there is.
+unitech-e is the most recently maintained, so it wins a conflict unless there
+is a reason to think otherwise. Record the reason when there is.
 
 ## Which file each kind's material came from
 
-Attribution for `internal/corpus/usecase/`, moved here from `TASK.md` because
-this is the file that is allowed to name a deployment. Sizes are from when they
-were read, and are a rough guide to how much of the knowledge is in the header
+Attribution for `internal/corpus/usecase/`, kept here because this is the file
+that is allowed to name a deployment. Sizes are a rough guide to how much of the knowledge is in the header
 comments rather than the YAML.
 
 | kind | source |
@@ -166,6 +142,6 @@ comments rather than the YAML.
 `sampleQueries` shape. `CompletionModel` and the write-path `Workflow` with
 `requestConsent` come from the demo generator rather than a kube repo.
 
-**Where the two disagree, prefer `unitech-e`** - it is the more recently
-maintained. The disagreements are dated rather than contradictory, and the table
-above this one records them.
+Where the two disagree, prefer `unitech-e`, which is the more recently
+maintained. The generational conflicts table above records the dated
+disagreements.

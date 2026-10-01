@@ -33,8 +33,8 @@ func newAuditLogCmd() *cobra.Command {
 		Long: `Read the workspace's audit log: what agents, users and bots did on the
 platform, as Asgard Console's Explore records it. The platform relays it with
 your own session, and Console decides who may read it - a workspace owner or a
-platform admin (IAM action audit-log/read). Anyone else gets Console's 403, and
-the right thing to report then is that, not an empty summary.
+platform admin (IAM action audit-log/read). Anyone else gets Console's 403;
+report the 403 instead of an empty summary.
 
     asgard-cli audit-log summary                 the last 7 days, counted by dimension
     asgard-cli audit-log summary --days 30
@@ -43,7 +43,7 @@ the right thing to report then is that, not an empty summary.
 
 ` + auditReading + `
 
-**This is not "asgard-cli audit-material"**, which checks this tool's own
+"asgard-cli audit-material" is a different command: it checks this tool's own
 reference material.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error { return cmd.Help() },
@@ -76,7 +76,7 @@ func (r *auditRange) resolve(cmd *cobra.Command) (time.Time, time.Time, error) {
 	var from time.Time
 	if r.from != "" {
 		if cmd.Flags().Changed("days") {
-			return time.Time{}, time.Time{}, errors.New("--days and --from are two answers to one question; pass one")
+			return time.Time{}, time.Time{}, errors.New("pass --days or --from, not both")
 		}
 		t, err := time.Parse(time.RFC3339, r.from)
 		if err != nil {
@@ -111,8 +111,8 @@ func newAuditLogSummaryCmd() *cobra.Command {
 		Short: "Count the audit log by event, account, project and agent",
 		Long: `Count the workspace's audit events over a range - by event, by account, by
 project, and by bot provider, agent, completion model, toolset and semantic
-model - with Console's display names beside the raw keys. It is the material
-for a summary a person reads, not the summary itself.
+model - with Console's display names beside the raw keys. Write the summary a
+person reads from this output.
 
     asgard-cli audit-log summary
     asgard-cli audit-log summary --days 30 --top 5

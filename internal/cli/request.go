@@ -29,11 +29,11 @@ customer wants that the agent cannot do today. An onboarding is the first
 request, and everything after it arrives the same way.
 
 The record is a file in the customer repository, ` + "`" + work.RequestDir + `/REQ-xxx-<name>.md` + "`" + `,
-registered in ` + "`" + work.RequestIndex + "`" + `. Nothing is stored in this CLI: the repo is
-where the next agent looks, so the repo is where the state lives.
+registered in ` + "`" + work.RequestIndex + "`" + `. This CLI stores nothing; the state lives in
+the repo, where the next agent looks.
 
-**These are the engagement's own records, and the customer does not see
-them.** What somebody on the customer's side has to see, answer or supply goes
+These are the engagement's own records, and the customer does not see
+them. What somebody on the customer's side has to see, answer or supply goes
 on the workspace's Workbench (asgard-cli workbench create); a gap in this tool
 goes upstream (asgard-cli issue-report). "asgard-cli workbench --help" has the
 table for which is which.`,
@@ -125,8 +125,8 @@ Write the title in the customer's own words. The translation into a project, a
 read path and an entry point is the request's own job, and keeping the original
 wording is what lets the next reader check that the translation was right.
 
-One request per thing they asked for. Two capabilities in one file is how a
-half-finished request ends up marked done.
+Open one request per thing they asked for. With two capabilities in one file,
+a half-finished request can end up marked done.
 
 It writes the spec, registers it, and stamps today's date and ` + "`draft`" + ` on both.
 The ID is the first unused REQ number in ` + "`" + work.RequestDir + "`" + `, read from the file
@@ -138,8 +138,8 @@ number.
 
 --project is optional and usually unknown at this point: it is decided by who is
 on the other end, which is section 2 of the spec. Until it is set,
-` + "`asgard-cli request`" + ` shows it with no project named, which is what an
-interview that has not finished looks like.`,
+` + "`asgard-cli request`" + ` shows it with no project named, meaning the
+interview has not decided it yet.`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			title := args[0]
@@ -247,13 +247,13 @@ func newRequestTargetCmd() *cobra.Command {
 
 This is the answer the interview produces, and it is what moves the onboarding
 on: until a request names a project this repository has, ` + "`asgard-cli request`" + `
-lists it with no project, which is what an unfinished interview looks like.
+lists it with no project, meaning the interview has not finished.
 
-The project follows the audience, not the data. Same audience as an existing
+The project is decided by the audience, not by where the data is. Same audience as an existing
 project means it goes in that project; a new audience means a new project, with
 its own read path and its own way in. Putting a public capability into
-an internal project because the data happens to be nearby is how a semantic layer
-becomes reachable from a public endpoint.
+an internal project because the data happens to be nearby makes a semantic
+layer reachable from a public endpoint.
 
 It writes the Spec column of ` + "`" + work.RequestIndex + "`" + `, the Target project line of the
 request's Meta, and a dated line in its log.

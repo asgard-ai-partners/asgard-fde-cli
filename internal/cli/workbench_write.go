@@ -35,7 +35,7 @@ stdin); one of the two is required.
 --status moves the issue in the same write ("comment and mark as done"): the
 comment and the move land together or not at all.
 
-**When the member wants to read a comment before it is posted**, write it to a
+When the member wants to read a comment before it is posted, write it to a
 file first, let them read it, and post that file once they say so. There is no
 draft on the platform.
 
@@ -109,15 +109,16 @@ func newWorkbenchAttachCmd() *cobra.Command {
 --what (what the file is), --from (who gave it - a role, not a person's name)
 and --dated (the document's own date, YYYY-MM-DD) are required: they are what
 "asgard-cli workbench pull" writes next to the file when it lands in a
-repository's references/, and a file nobody can place is not evidence.
+repository's references/. Without them nobody can tell where the file came
+from, and it cannot be used as evidence.
 
-**An attachment is material, not fact.** Filing it on an issue does not make
-what it says true; the issue's fields and comments are the facts.
+Attaching a file to an issue does not make what it says true; the issue's
+fields and comments hold what is established.
 
 A newer version of a file already attached is a new upload with --supersedes
 naming the earlier attachment's id (from "asgard-cli workbench show"); the
-earlier one stays, which is what makes the two comparable. Never delete the
-old one to replace it - and this command cannot delete anything.
+earlier one stays, so the two can be compared. Never delete the old one to
+replace it; this command cannot delete anything.
 
 In the Workbench assistant's sandbox, a file the member dropped into the chat
 is already at /work/.blobs/<blobId>/<name>; attach it from there. At most

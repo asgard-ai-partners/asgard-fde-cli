@@ -236,7 +236,7 @@ func sweep(out io.Writer, sources []source, term string) error {
 		fmt.Fprintf(out, "\nNothing mentions it. If you were checking before a rename, there is\nnothing to rename; if you expected hits, check the spelling against\n`.agents/skills/asgard-platform/wiki/glossary.md`.\n")
 		return nil
 	}
-	fmt.Fprintf(out, "\nA rename has to touch all of them. The templates are the half that a\nprose-only search misses, and the half a customer's repository is built\nfrom - a stale field there is written into every new chart.\n")
+	fmt.Fprintf(out, "\nA rename has to touch all of them, including the templates: a prose-only\nsearch misses them, and a stale field there is written into every new chart.\n")
 	return nil
 }
 
@@ -423,11 +423,10 @@ func checkBare(out io.Writer, sources []source) error {
 	}
 
 	fmt.Fprintf(out, "Documents named without a path.\n\n"+
-		"**A pointer written this way is invisible.** `kb.Link` reads a pointer as a\n"+
-		"path, because that is what a reader can follow - so a name written without\n"+
-		"one is checked by nothing: `--links` does not see it, and `--orphans` does\n"+
-		"not count it. A page renamed upstream leaves every one of them pointing at\n"+
-		"nothing, reading perfectly.\n\n")
+		"`kb.Link` reads a pointer as a path, because that is what a reader can\n"+
+		"follow, so a name written without one is checked by nothing: `--links` does\n"+
+		"not see it, and `--orphans` does not count it. A page renamed upstream\n"+
+		"leaves every one of them pointing at nothing.\n\n")
 
 	for _, h := range found {
 		if h.why != "" {
@@ -517,17 +516,13 @@ func newAuditCmd() *cobra.Command {
 		Hidden: true,
 		Long: `Every instruction this tool ships, on one screen.
 
-Four ways this material has contradicted itself have reached a customer and
-every one was found by somebody walking into it. The cause is structural: the
-instructions are spread across every part of the corpus, so **no two opposing
-ones are ever in front of the same reader.** This makes that moment. The count
-of what it found is the last line it prints, because a number in this paragraph
-would be one nobody recomputes.
+The instructions are spread across every part of the corpus, so two opposing
+ones are rarely in front of the same reader. This puts them on one screen so a
+person can compare them. The last line it prints is the count of what it found.
 
-It detects nothing, deliberately. Matching opposing verbs over prose produces
-noise, and a checker that cries wolf teaches people to change what it can see
-rather than what is wrong - a failure this material has already caused once, in
-a customer deck.
+It detects nothing. Matching opposing verbs over prose produces false positives,
+and a checker that raises false alarms teaches people to change what it can see
+rather than what is wrong.
 
     asgard-cli audit-material              every instruction, by page
     asgard-cli audit-material --ask        only those about asking a customer
@@ -554,68 +549,52 @@ a customer deck.
     asgard-cli audit-material --urls       fetch every docs link; exits 1 on a
                                            404. Needs the network
 
-**--ask is the set to read whole.** All three incidents were in it, and it is
-short enough for one sitting.
+Read --ask in full. It is short enough for one sitting and holds the
+instructions that tell a reader to ask a customer something.
 
-**--links is the only part that fails.** Everything else here is for a person to
-read; this one resolves every ` + "`../wiki/<page>.md`" + ` and ` + "`../usecase/<extract>.md`" + `,
+--links resolves every ` + "`../wiki/<page>.md`" + ` and ` + "`../usecase/<extract>.md`" + `,
 ` + "`brief <activity>`" + ` and ` + "`guide <name>`" + ` the material writes, and exits 1
 on one that resolves to nothing. A renamed page leaves the pointers to it
-behind, and nobody finds out until a reader follows one - which is the same
-failure as a stale instruction, except that it can be checked mechanically. Run
-it before a release.
+behind. Run it before a release.
 
-**--commands is --links for the tool itself.** --links resolves the documents
-this material points at; this resolves the COMMANDS it tells somebody to run,
-against the tree this binary actually answers to. It shipped without one:
-` + "`asgard-cli pipeline deliveries`" + ` was named in six documents as the one place a
-push that produced no run explains itself, and no such command had ever been
-built. A claim a program can resolve instantly should not wait for somebody to
-re-read a provenance line. It reads the scaffold templates too, because a
-scaffolded README is where a customer meets these names first.
+--commands does the same for the tool itself: it resolves the commands the
+material tells somebody to run against the command tree this binary answers
+to. It reads the scaffold templates too, because a scaffolded README is where a
+customer meets these names first.
 
-**--orphans is the other half of --links.** A pointer that goes nowhere is
-caught by --links; a document nothing points at is not caught by anything, and
-costs more - material nobody links to is not read, and the writer never finds
-out, because the file is there. The index is deliberately not counted: one
-engagement had ` + "`wiki operations`" + ` sitting in it under the title Connectivity while
-an FDE spent a day on connectivity and never opened it. It does not fail the
-build, because search answers for some of them.
+--orphans lists documents nothing points at. --links does not catch those, and
+material nobody links to is not read. The index is not counted as a pointer,
+because a reader who has not heard of a page does not find it there. It does
+not fail the build, because search reaches some of them.
 
-**--paths is --links for everything that is not a document pointer.** These
-files are written into a customer's repository, where "this repo" means theirs
-and ` + "`source/SOURCES.md`" + ` is not there. A wiki page cited it in a Sources
-block and another cited ` + "`APPROACH.md`" + `; both read perfectly here and neither
-resolves where they land. A path inside a repository has to name the repository
-it is inside, on the same line.
+--paths checks every path that is not a document pointer. These files are
+written into a customer's repository, where "this repo" means theirs and
+` + "`source/SOURCES.md`" + ` or ` + "`APPROACH.md`" + ` is not there. A path inside a repository
+has to name the repository it is inside, on the same line.
 
-**--urls is the one that needs the network**, which is why it is not in --links.
-Nothing had ever checked, and the first run found two shapes of 404: directory
-URLs with no landing page, and pages marked ` + "`draft: true`" + `, which the site does
-not publish. A draft is the one worth knowing about - the file is readable in a
-checkout, so the material is sound and only the link is broken, and it looks
-identical to a link that was never right.
+--urls needs the network, which is why it is not part of --links. It reports
+two shapes of 404: directory URLs with no landing page, and pages marked
+` + "`draft: true`" + `, which the site does not publish. A draft page is readable in a
+checkout, so the material is sound and only the link is broken.
 
-**--term is for a rename, and its scope is the point.** When a platform field is
-renamed or retired it is taught in several places - a template that writes it,
-an extract that explains it, a stage prompt that mentions it, a help screen that
-names it - and fixing one leaves the rest teaching a field that no longer
-exists. So this reads every surface this repository is responsible for: the
-material, the scaffold templates, every ` + "`--help`" + ` screen, this package's own
-string literals, this repository's own documents and maintenance skills, and the
-gate under ` + "`hack/`" + `.
-**Deciding that set by hand is how a sweep comes back clean over a file nobody
-read** - the templates are the half a prose search misses, and the help screens
-are the half an audit of the material misses.
+--term is for a rename. A platform field is taught in several places - a
+template that writes it, an extract that explains it, a stage prompt that
+mentions it, a help screen that names it - and fixing one leaves the rest
+teaching the old field. So it reads every surface this repository is
+responsible for: the material, the scaffold templates, every ` + "`--help`" + ` screen,
+this package's own string literals, this repository's own documents and
+maintenance skills, and the gate under ` + "`hack/`" + `. Do not choose that set by
+hand: a prose search misses the templates, and an audit of the material misses
+the help screens.
 
-**--crossref catches the shape nothing else can.** A page saying "` + "`check`" + ` will
-report X" while ` + "`check`" + ` reports the opposite: both pages read correctly alone.
-Open each command a sentence names and confirm it says what the sentence claims.
+--crossref lists sentences that describe what another command does, such as
+"` + "`check`" + ` will report X". Both pages can read correctly alone while one
+describes the other wrongly. Open each command a sentence names and confirm it
+says what the sentence claims.
 
-It reads the embedded material - what an engagement actually gets - rather than
-the source files, and it is in the binary rather than beside the source because
-an audit that only runs on the maintainer's machine only finds what the
-maintainer can see.`,
+It reads the embedded material - what an engagement gets - rather than the
+source files, and it is in the binary so that it runs on any machine, not only
+the maintainer's.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			out := cmd.OutOrStdout()
@@ -773,10 +752,8 @@ func crossref(out io.Writer, sources []source) error {
 	}
 	fmt.Fprintf(out, "\n%d sentences claim what another command says.\n\n"+
 		"Open each command named and confirm it says what the sentence claims.\n"+
-		"Nothing textual catches this shape: both pages read correctly alone, and\n"+
-		"one describes the other wrongly. It has shipped once - a stage prompt said\n"+
-		"`check` would report a state until a request existed, while `check` said a\n"+
-		"request comes after the interview.\n", n)
+		"No text check catches this: both pages read correctly alone, and one\n"+
+		"describes the other wrongly.\n", n)
 	return nil
 }
 
@@ -868,11 +845,10 @@ func checkOrphans(out io.Writer, sources []source) error {
 	}
 
 	fmt.Fprintf(out, "Documents nothing else points at.\n\n"+
-		"**The index does not count.** `wiki operations` sat in it under the title\n"+
-		"Connectivity while an FDE spent a day on connectivity and never opened it:\n"+
-		"discovery is by pointer at the moment it is needed, and a document reachable\n"+
-		"only from a list is reachable only by somebody who already suspects it.\n\n"+
-		"Not a defect list. Search answers for some of these, and for some the right\n"+
+		"The index does not count as a pointer: a reader finds a document through a\n"+
+		"pointer at the moment they need it, and finds one listed only in an index\n"+
+		"only if they already suspect it exists.\n\n"+
+		"This is not a defect list. Search reaches some of these, and for others the\n"+
 		"fix is a sentence in the document that should have sent a reader here.\n")
 
 	var total, orphaned int
@@ -1224,7 +1200,10 @@ func findChild(node *cobra.Command, name string) *cobra.Command {
 // each one. Re-reading a source means changing all of them, and updating the
 // gate's constants while leaving the pages is a corpus that claims two
 // different readings of the same upstream with nothing to say which is true.
-var sourceCommit = regexp.MustCompile(`\b(asgard-[a-z0-9-]+)\s+` + "`?" + `([0-9a-f]{7,12})` + "`?" + `(\s*\(unread\))?`)
+// The repository name must not be the tail of a longer name: `\b` treats `-`
+// as a boundary, so a deployment named `unitech-e-asgard-kube` would otherwise
+// be read as asgard-kube.
+var sourceCommit = regexp.MustCompile(`(?:^|[^a-z0-9-])(asgard-[a-z0-9-]+)\s+` + "`?" + `([0-9a-f]{7,12})` + "`?" + `(\s*\(unread\))?`)
 
 // unreadMarker is how the material names a commit it has NOT read.
 //
@@ -1488,8 +1467,8 @@ func checkURLs(ctx context.Context, out io.Writer, sources []source) error {
 
 	fmt.Fprintf(out, "\n%d link(s) fetched, %d dead.\n", len(order), dead)
 	if dead > 0 {
-		fmt.Fprintf(out, "\n**A page that is not published is cited as a file, not as a URL.**\n"+
-			"`draft: true` and a directory with no landing page are both unpublished;\nthe file is readable in a checkout, so cite `asgard-docs <path>` and the\nprovenance is stronger than a link nobody can open.\n")
+		fmt.Fprintf(out, "\nCite a page that is not published as a file, not as a URL.\n"+
+			"`draft: true` and a directory with no landing page are both unpublished;\nthe file is readable in a checkout, so cite `asgard-docs <path>` instead.\n")
 		return fmt.Errorf("%d documentation link(s) are dead", dead)
 	}
 	return nil
@@ -1520,24 +1499,12 @@ func checkURLs(ctx context.Context, out io.Writer, sources []source) error {
 // saying so.
 func listUnchecked(out io.Writer) error {
 	fmt.Fprintf(out, "What each document says it has NOT been held against.\n\n"+
-		"**This is a listing, not a check.** Every document is expected to have\n"+
-		"one; a corpus where nothing did would be one that had stopped saying so.\n"+
+		"This is a listing, not a check. Every document is expected to have one.\n"+
 		"`--unverified` is the check beside it, and it asks the opposite question:\n"+
 		"which documents carry no marker at all.\n\n")
 
-	bodies := []struct {
-		label string
-		list  func() ([]kb.Doc, error)
-	}{
-		{"wiki", wiki.List},
-		{"usecase", usecase.List},
-		{"guide", stage.Docs},
-		{"skills", scaffold.List},
-		{"needs", needs.List},
-		{"brief", brief.List},
-	}
 	total, said := 0, 0
-	for _, b := range bodies {
+	for _, b := range markerBodies() {
 		docs, err := b.list()
 		if err != nil {
 			return err
@@ -1553,7 +1520,26 @@ func listUnchecked(out io.Writer) error {
 	}
 	fmt.Fprintf(out, "%d of %d document(s) name something they have not been held against.\n",
 		said, total)
+	fmt.Fprintf(out, "\nIf you found out one of these on a deployment, file it: asgard-cli issue-report --new, then --send\n")
 	return nil
+}
+
+// markerBodies is every body of material a provenance marker can sit in.
+func markerBodies() []struct {
+	label string
+	list  func() ([]kb.Doc, error)
+} {
+	return []struct {
+		label string
+		list  func() ([]kb.Doc, error)
+	}{
+		{"wiki", wiki.List},
+		{"usecase", usecase.List},
+		{"guide", stage.Docs},
+		{"skills", scaffold.List},
+		{"needs", needs.List},
+		{"brief", brief.List},
+	}
 }
 
 func checkUnverified(out io.Writer) error {

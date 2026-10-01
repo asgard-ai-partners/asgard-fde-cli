@@ -50,13 +50,13 @@ func newInitCmd() *cobra.Command {
     mkdir acme-asgard-kube && cd acme-asgard-kube
     asgard-cli init
 
-**This is the command a person runs, and the only one that asks questions.**
+This is the command a person runs, and the only one that asks questions.
 Everything else in this tool is written for a coding agent working in a
 repository that already exists - and until this has run, that repository does
 not. There is no AGENTS.md, no CLAUDE.md and no .agents/skills/, so an agent
 opened in an empty directory knows nothing about Asgard at all.
 
-**It touches no network and needs no account.** The skeleton is a fact about
+It touches no network and needs no account. The skeleton is a fact about
 this tool, not about any platform, so it can be written on a plane, before a
 workspace exists, or before anybody has signed in.
 
@@ -66,39 +66,33 @@ per project. What it deliberately does not write is the customer's own knowledge
 - which systems exist, how the work splits, what the CRs look like. That is what
 the onboarding produces.
 
-**Connecting this checkout to the platform is not part of it**, and that is
-deliberate rather than an omission. Signing in, choosing a workspace, creating a
-pipeline and fetching the reference material that describes the server all come
-after - guided by the coding agent this command just equipped, which is a better
-guide than a list of commands somebody has to follow by hand. When it is
-done, open the directory in your agent and say so; the closing message has the
+It does not connect this checkout to the platform. Signing in, choosing a
+workspace, creating a pipeline and fetching the reference material that
+describes the server all come after, guided by the coding agent this command
+just set up. When it is done, open the directory in your agent and say so; the closing message has the
 words.
 
 Run it again whenever this CLI has moved on or a project was added: existing
 files are left alone and reported as skipped.
 
-**The files this CLI ships are the ones it has an opinion about** - AGENTS.md and
-the design-time skills - and it keeps a record of which version of itself wrote
+For the files this CLI ships - AGENTS.md and the design-time skills - it keeps a record of which version of itself wrote
 each, in ` + "`.asgard-scaffold.json`" + `, so it can say which of four things a
 difference is rather than guessing. ` + "`behind`" + `: this CLI has moved on and nobody
 here touched the file. ` + "`edited`" + `: somebody here did, and ` + "`--force`" + ` would discard
 it. ` + "`ahead`" + `: a NEWER CLI wrote this repository, and ` + "`--force`" + ` will not hand it
 this binary's older copy. ` + "`retired`" + `: an older CLI shipped the file and this one
-does not, which nothing else in a repository can notice.
+does not, which nothing else in a repository records.
 
 ` + "`--force`" + ` takes the newer shipped material, discarding local edits to the
-skeleton; files this tool writes into - **the deployment declaration**, the
+skeleton; files this tool writes into - the deployment declaration, the
 indexes, the open-questions table, the living spec - are preserved either way
-and reported. The declaration is the one worth naming: it decides which releases
-exist and what each takes, none of which a scaffold can know, and ` + "`--force`" + `
-used to replace a hand-written one with the shape it generates from the
-directories under ` + "`projects/`" + `.
+and reported. The declaration decides which releases exist and what each takes,
+which a scaffold cannot know, so ` + "`--force`" + ` does not replace a hand-written one
+with the shape it generates from the directories under ` + "`projects/`" + `.
 
-**In a file with a managed region it takes the region and nothing else.** The
-scaffolded AGENTS.md tells its reader that the half above the marker is theirs
-and is never overwritten, so a ` + "`--force`" + ` that took the file whole made that
-sentence untrue in the file the sentence is in. What ` + "`--force`" + ` is entitled to
-replace there is exactly what the CLI wrote.
+In a file with a managed region, ` + "`--force`" + ` replaces the region and nothing
+else: the scaffolded AGENTS.md tells its reader that the half above the marker
+is theirs and is never overwritten.
 
 With ` + "`--yes`" + `, or when stdin is not a terminal, it asks nothing. That is the
 form for a re-run from an agent or from CI.`,
@@ -174,7 +168,7 @@ Now open this directory in your coding agent and say:
 
 It will sign you in, find the workspace, set up the pipeline and fetch the
 reference material for the server you deploy to - asking you for what only you
-can answer. **None of that has happened yet**, and ` + "`asgard-cli gate`" + ` says so at
+can answer. None of that has happened yet, and ` + "`asgard-cli gate`" + ` says so at
 any point.
 
 `
@@ -202,7 +196,7 @@ func refuseObviouslyWrongRoot(root string) error {
 	// would make it one repository that swallows all the others - a
 	// declaration is found by walking up, so every repository below would
 	// read it as its own.
-	if auth.SandboxMode() && filepath.Clean(root) == sandboxWorkDir {
+	if auth.SandboxMode() && filepath.ToSlash(filepath.Clean(root)) == sandboxWorkDir {
 		return fmt.Errorf(
 			"refusing to write the skeleton into %s itself: in the Workbench sandbox it holds every repository side by side\n\n"+
 				"    mkdir %s/<customer>-asgard-kube && cd %s/<customer>-asgard-kube\n"+

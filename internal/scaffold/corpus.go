@@ -156,8 +156,12 @@ func corpusIndex(jobs []job, described map[string]string) (string, error) {
 		{"guide", "which decision to make now, and what it costs to change later", ""},
 	} {
 		fmt.Fprintf(&b, "\n## `%s/` - %s\n\n", half.dir, half.what)
+		// A half with its own grouped index is listed there, by the question
+		// each document answers; a second flat copy here only doubles what a
+		// reader has to get through before the first answer.
 		if half.guide != "" {
-			fmt.Fprintf(&b, "Grouped by the question each answers in [`%s`](%s), which is\nworth reading first. This is the flat list.\n\n", half.guide, half.guide)
+			fmt.Fprintf(&b, "Listed, grouped by the question each answers, in [`%s`](%s).\n", half.guide, half.guide)
+			continue
 		}
 		b.WriteString("| document | covers |\n|---|---|\n")
 
@@ -209,8 +213,8 @@ description: The Asgard platform as greppable files - what the platform has, whi
 # The Asgard platform, as files
 
 The platform knowledge an agent in a customer repository does not otherwise
-have. **That repository describes one customer's systems and never the platform
-those systems run on**; this is the missing half.
+have. That repository describes one customer's systems, not the platform they
+run on.
 
     wiki/       what the platform has, and which CR a UI name maps to
     usecase/    how ONE deployment shape is assembled, field by field
@@ -219,15 +223,14 @@ those systems run on**; this is the missing half.
     guide/      which decision to make now, and what reversing it costs
     aliases.md  what a customer said -> what to search for
 
-**[` + "`index.md`" + `](index.md) is the map** - all five in one place as paths, the
-rule that turns a pointer into a path, and what is deliberately not here. Start
-there. ` + "`wiki/index.md`" + ` and ` + "`usecase/README.md`" + ` group their own documents by
-the question each answers, and ` + "`wiki/README.md`" + ` says what a page has to
-carry.
+Start at [` + "`index.md`" + `](index.md): it says which directory answers which
+kind of question, how a pointer becomes a path, and what is not here.
+` + "`wiki/index.md`" + ` and ` + "`usecase/README.md`" + ` list their documents grouped by
+the question each answers.
 
-**It is generated. Editing it is meaningless** - ` + "`asgard-cli init`" + ` writes it
-from the corpus inside that binary and the next run replaces it, so an edit is
-a claim about the platform that no other engagement sees.
+This directory is generated. ` + "`asgard-cli init`" + ` writes it from the corpus
+inside the binary and the next run replaces it, so do not edit it; file a
+correction instead.
 
 ## Grep it
 
@@ -236,25 +239,21 @@ a claim about the platform that no other engagement sees.
 
 ## Two things grep will not do for you
 
-**Read ` + "`aliases.md`" + ` before searching a question that arrived in another
-language.** The material is English; a term taken from what somebody actually
-said matches nothing, and grep reports that identically to a subject the
-material genuinely lacks. The file has two tables - words that replace a term,
-and names that are added to it.
+Read ` + "`aliases.md`" + ` before searching a question that arrived in another
+language. The material is English, so a word taken from what somebody said may
+match nothing, which looks the same as a subject the material lacks. The file
+has two tables: words that replace a term, and names that are added to it.
 
-**Check ` + "`wiki/glossary.md`" + ` for the word you searched.** A handful of words
-mean one thing here and something else to a customer. ` + "`payment`" + ` is billing
-between Asgard and the customer, and also the customer's own payment gateway:
-both sets of results are correct, nothing contradicts anything, and the wrong
-one reads exactly like an answer. **This is the failure a search cannot
-report**, because it found something.
+Check ` + "`wiki/glossary.md`" + ` for the word you searched. A few words mean one
+thing here and something else to a customer. ` + "`payment`" + ` is billing between
+Asgard and the customer, and also the customer's own payment gateway; results
+in the wrong sense look like an answer.
 
 ## When the answer is not here
 
-A page that is wrong, and a question these files do not answer, are both worth
-filing rather than working around. **Nothing an engagement learns reaches the
-next one any other way** - this material is compiled into the binary, so a note
-in one repository is a note one repository has:
+File a page that is wrong, or a question these files do not answer, rather
+than working around it. This material is compiled into the binary, so a note in
+one repository reaches no other engagement:
 
     asgard-cli issue-report --new > report.md
     asgard-cli issue-report --send report.md
@@ -266,10 +265,9 @@ Nothing in this directory can tell you which:
 
     asgard-cli init
 
-That compares what is here against the running binary and reports five states.
-**` + "`ahead`" + ` is the one worth knowing**: these files were written by a newer
-build of this CLI than the one you are running, so your binary is the stale
-half and ` + "`--force`" + ` would be a downgrade.
+That compares what is here against the running binary and reports its state.
+` + "`ahead`" + ` means these files were written by a newer build than the one you are
+running: your binary is the stale one, and ` + "`--force`" + ` would be a downgrade.
 
 The platform's own reference material is a separate half with its own record -
 ` + "`asgard-cli skill status`" + ` - because a customer's server can be several
@@ -356,7 +354,7 @@ They answer different questions and it is worth knowing which you have.
 have to ask them for" is ` + "`needs/`" + `; "where does this go wrong" is ` + "`brief/`" + `; and
 "which decision am I making" is ` + "`guide/`" + `.
 
-**A pointer is a path, relative to the document it is written in:**
+A pointer is a path, relative to the document it is written in:
 
     ../wiki/<name>.md     from a document inside one of the directories
     wiki/<name>.md        from ` + "`aliases.md`" + ` or this file, which are at the root
@@ -367,10 +365,9 @@ this lists everything a document points at:
 
     grep -o '\.\./[a-z]*/[a-z0-9-]*\.md' wiki/agents.md
 
-**Read ` + "`aliases.md`" + ` first if the question did not arrive in English.** The corpus
-is English and a customer conversation usually is not, so a term taken from what
-somebody actually said matches nothing - and grep reports that identically to a
-subject the material genuinely lacks.
+Read ` + "`aliases.md`" + ` first if the question did not arrive in English. The corpus
+is English, so a word taken from what somebody said may match nothing, which
+looks the same as a subject the material lacks.
 `
 
 const corpusIndexTail = `
@@ -381,11 +378,11 @@ exception, and it needs the ` + "`asgard-cli`" + ` binary:
 
 | pointer | why it is not a file |
 |---|---|
-| ` + "`asgard-cli guide <name>`" + ` | **half of it is here.** A guide renders this repository's own state into its guidance - which projects exist, what is still open - and that half cannot be a file, because a file would freeze one moment of it. The decisions are in ` + "`guide/`" + `; run the command for where this repository actually stands |
+| ` + "`asgard-cli guide <name>`" + ` | half of it is here. A guide renders this repository's own state into its guidance - which projects exist, what is still open - and a file would freeze one moment of that. The decisions are in ` + "`guide/`" + `; run the command for where this repository stands |
 
 The commands that answer that half directly, when it is all you want:
 
-    asgard-cli project     what each chart declares, and still lacks
+    asgard-cli project     what each chart declares
     asgard-cli question    what nobody has answered yet
     asgard-cli request     what the customer asked for
     asgard-cli task        the open task specs
