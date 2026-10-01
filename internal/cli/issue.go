@@ -8,6 +8,7 @@ import (
 
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/check"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/repo"
+	"github.com/asgard-ai-partners/asgard-fde-cli/internal/scaffold"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/version"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/work"
 )
@@ -22,11 +23,10 @@ func newIssueCmd() *cobra.Command {
 		Short: "How to report a gap in this tool, from wherever you found it",
 		Long: `How to file what this tool got wrong, or did not know.
 
-You are probably in a customer repository. **The gap does not belong there** - a
-note in one engagement's docs is a note one engagement has, and the next one
-starts over. It belongs upstream, where a fix reaches every engagement in one
-release. Same reason this material is compiled into the binary rather than
-copied into your repo.
+You are probably in a customer repository. File the gap upstream, not there: a
+note in one engagement's docs reaches only that engagement, and a fix upstream
+reaches every engagement in one release. This material is compiled into the
+binary rather than copied into your repo for the same reason.
 
 FILE ONE WHEN
 
@@ -49,34 +49,39 @@ memory of today.
      The real task in a sentence - "building a discovery deck for a customer
      whose three scenarios all read internal systems", not "using the skill".
 
-  2. The state I was in            REQUIRED, and it is what makes it a bug
-                                   report rather than a complaint
+  2. The state I was in            REQUIRED: without it nobody can reproduce
+                                   what you saw
      Somebody has to be able to stand where you stood. What the repo held, and
      what the customer situation was in shape. Do not assemble this by hand -
      --new collects it, and collects it safely. What a reader needs is the
      version, what the charts declare, what "asgard-cli check" says and how much
      is open; what they must never receive is the content of any of it.
 
-     **"asgard-cli question" and "asgard-cli request" are not pasteable.** Their
+     Do not paste "asgard-cli question" or "asgard-cli request" output. Their
      rows are the customer's own table names, column names and system names,
-     which is exactly what the rule below forbids. --new reports them as counts
+     which the rule below forbids. --new reports them as counts
      for that reason, and a count carries everything a fix needs.
 
   3. What I ran, and what came back
-     In order, with the real output pasted. Then what you expected instead. The
-     gap between those two is usually the whole report.
+     In order, with the real output pasted. Then what you expected instead.
 
   4. Where the answer actually was
-     The one that gets left out, and the most useful. Say what you searched for
+     This section is often left out and is the most useful. Say what you searched for
      first: "I searched for the marketplace names and got nothing; it was in
      asgard-freyr-skills the whole time." A missing page and an unfindable page
      need different fixes, and only this sentence tells them apart. If you never
-     found it, say that - it is also an answer.
+     found it, say that.
 
   5. What it cost
      Twenty minutes, or a wrong sentence to a customer, or nothing yet because
      you caught it. This decides what gets fixed first, and "nothing yet, but it
      nearly reached a slide" is a real answer.
+
+  6. What I now know
+     For a discovery rather than a defect: something the platform does that
+     the material does not say, which you found out on a deployment. Write the
+     claim and the shape it was seen on, never the customer. For a discovery,
+     sections 3 to 5 are optional.
 
 NEVER PASTE THE CUSTOMER'S CONTENT
 
@@ -86,30 +91,26 @@ everything a fix needs and identifies nobody.
 
 DO NOT FILE
 
-  - a fix you already made. That is a pull request and it is better
+  - a fix you already made. Open a pull request instead
   - "the documentation should be better". Name the sentence that misled you
   - a report with no state in it. Nobody can act on "find did not work"
 
 --new WRITES THE REPORT
 
-**One section is something this tool already knows, and it is the required
-one.** Section 2 is the state you were in, asking for it by hand is why it
-arrives missing, and it is what separates a bug report from a complaint. --new
-emits the body with that section collected and the rest marked TODO:
+--new emits the report body with section 2, the state you were in, filled in
+from what this tool can observe, and the other sections marked TODO:
 
     asgard-cli issue-report --new > report.md
     asgard-cli issue-report --new | gh issue create --repo asgard-ai-partners/asgard-fde-cli --body-file -
 
-**Section 2 is collected, not narrated.** A report is otherwise entirely
-somebody's account of what happened, and the account is the part that can be
-wrong. What --new puts in is the tool's own record: the version, what the
-charts declare, what "asgard-cli check" says, and how many questions, requests
-and task specs are open. The line the report closes with names what was
+Section 2 comes from the tool's own record rather than your account: the version, what the
+charts declare, what "asgard-cli check" says, how many questions, requests
+and task specs are open, and the paths of shipped files this repository has
+edited in place - paths only, never their contents. The line the report closes with names what was
 actually collected.
 
-**Read what it produced before filing it.** The rule above about never pasting
-a customer's content applies to what this generated exactly as much as to what
-you write.`,
+Read what it produced before filing it. The rule above about never pasting a
+customer's content applies to generated text as well as to what you write.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			out := cmd.OutOrStdout()
@@ -135,10 +136,8 @@ you write.`,
 
 // writeReport emits the issue body.
 //
-// The sections are the ones in this command's help, in that order, because a
-// reader of the repository's issues should not have to learn two shapes. What
-// differs is who fills each one: the tool fills what it can observe and marks
-// the rest TODO, rather than describing them all and hoping.
+// The sections are the ones in this command's help, in that order. The tool
+// fills what it can observe and marks the rest TODO.
 //
 // It works outside a repository. Half this tool's job is answering a question
 // asked before there is a directory, and a gap found there is worth the same
@@ -162,17 +161,21 @@ func writeReport(out io.Writer) error {
 			len(state.Questions), len(work.ActiveRequests(state.Requests)), len(work.ActiveTasks(state.Tasks)))
 	}
 	checked := writeCheck(out)
+	edited := writeEdited(out)
 
+	todo := "TODO"
 	fmt.Fprintf(out, "## 3) What I ran, and what came back\n\n")
-	fmt.Fprintf(out, "TODO - the rest, in order, with the real output pasted, then what you\nexpected instead. The gap between those two is usually the whole report.\n\n")
+	fmt.Fprintf(out, "%s - the rest, in order, with the real output pasted, then what you\nexpected instead.\n\n", todo)
 
 	fmt.Fprintf(out, "## 4) Where the answer actually was\n\n"+
-		"TODO - and this is the one that gets left out. A missing page and an\n"+
-		"unfindable page need different fixes, and only this sentence tells them\n"+
-		"apart. If you never found it, say that; it is also an answer.\n\n")
+		"%s - what you searched for first, and where the answer was. A missing\n"+
+		"page and an unfindable page need different fixes. If you never found it,\n"+
+		"say that.\n\n", todo)
 
 	fmt.Fprintf(out, "## 5) What it cost\n\n"+
-		"TODO - twenty minutes, a wrong sentence to a customer, or nothing yet\nbecause you caught it. This decides what gets fixed first.\n\n")
+		"%s - twenty minutes, a wrong sentence to a customer, or nothing yet\nbecause you caught it.\n\n", todo)
+
+	writeLearned(out)
 
 	// **What it says it collected has to be what it collected.** A line
 	// claiming evidence the run did not gather leaves a reader looking at a
@@ -185,9 +188,54 @@ func writeReport(out io.Writer) error {
 	if checked {
 		collected += ", the `check` report"
 	}
+	if edited {
+		collected += ", the edited shipped files"
+	}
 	fmt.Fprintf(out, "---\n\nWritten by `asgard-cli issue-report --new`. Collected: %s.\n"+
 		"The TODOs are not.\n", collected)
 	return nil
+}
+
+// writeLearned emits section 6, for a discovery rather than a defect. It is
+// always present, because a defect report sometimes carries one too.
+func writeLearned(out io.Writer) {
+	fmt.Fprintf(out, "## 6) What I now know\n\n"+
+		"TODO, or delete this section if there is nothing. The claim, and the\n"+
+		"shape it was seen on (never the customer).\n\n")
+}
+
+// writeEdited lists the shipped files this repository changed in place, by
+// path, and reports whether it listed any. An edit to shipped material is an
+// engagement disagreeing with it in writing, which is worth a maintainer's
+// look. Paths only: the contents may carry the customer's own names.
+func writeEdited(out io.Writer) bool {
+	root := repo.Root(".")
+	if root == "" {
+		return false
+	}
+	projects, err := repo.Projects(root)
+	if err != nil {
+		return false
+	}
+	results, err := scaffold.InspectShipped(root, projects)
+	if err != nil {
+		return false
+	}
+	var paths []string
+	for _, r := range results {
+		if r.Status == scaffold.Edited {
+			paths = append(paths, r.Path)
+		}
+	}
+	if len(paths) == 0 {
+		return false
+	}
+	fmt.Fprintf(out, "Shipped files edited in place in this repository:\n\n```\n")
+	for _, p := range paths {
+		fmt.Fprintf(out, "%s\n", p)
+	}
+	fmt.Fprintf(out, "```\n\n")
+	return true
 }
 
 // writeCheck puts `asgard-cli check` into section 2, and reports whether it did.

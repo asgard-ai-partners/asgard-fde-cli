@@ -207,7 +207,7 @@ func (e *needWorkspaceError) Error() string {
 	if e.InRepo {
 		fmt.Fprintf(&b, "\nRecord one in %s, which is committed so nobody has to choose again:\n\n", binding.FileName)
 		fmt.Fprintf(&b, "    asgard-cli workspace use <id>%s\n", profileArgFor(e.Profile))
-		fmt.Fprintf(&b, "\nNone is assumed, and that includes a list of one: which workspace a\nrepository deploys into is a decision, not a lookup.\n")
+		fmt.Fprintf(&b, "\nNo workspace is chosen for you, even when the account can reach only one:\nsomebody has to decide which workspace a repository deploys into.\n")
 	} else {
 		// Nothing is recorded outside a checkout. A machine-wide default
 		// existed and is gone: it was invisible where it was set and absent

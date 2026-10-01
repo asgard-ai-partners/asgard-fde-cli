@@ -9,45 +9,45 @@
 部署目標見 repo 根目錄的 [`.asgard-pipeline.yaml`](../../../.asgard-pipeline.yaml):
 一份 chart 可以被好幾個 Release 用,每個 Release 對到一個 Platform Project(= 一個
 namespace)、由一條 tag 或 branch 規則觸發。namespace 由那個 Project 決定,不寫在這裡
-也不寫在 chart 裡 —— chart 用 `.Values.asgard.namespace`。
+也不寫在 chart 裡;chart 用 `.Values.asgard.namespace`。
 
 現況用 `asgard-cli pipeline releases` 看。
 
 ## 資產清單
 
-> **TODO** —— 每加一個 CR 就補一列。這張表是 reviewer 判斷「這個 chart 現在有什麼」
-> 最快的入口,也是部署後人工驗證的清單。
+> TODO:每加一個 CR 就補一列。reviewer 用這張表看這個 chart 現在有什麼,
+> 部署後人工驗證也照這張表。
 
 | Kind | 名稱 | 用途 |
 |---|---|---|
 
 ## 專屬 Secret 需要哪些 key
 
-> **TODO** —— 這個 chart 的 CR 用到哪些憑證,逐一列出。每個 Release 有自己專屬的
+> TODO:這個 chart 的 CR 用到哪些憑證,逐一列出。每個 Release 有自己專屬的
 > Secret,由 Platform 建立與維護,名字注入 `.Values.asgard.appSecretName`;chart 只寫
-> `secretKeyRef` 指過去,**不得自己宣告那個 Secret**。key 名要與
+> `secretKeyRef` 指過去,不得自己宣告那個 Secret。key 名要與
 > `.asgard-pipeline.yaml` 的 `appSecret` 清單逐字一致,值用
 > `asgard-cli pipeline variables set --kind secret` 填。
 > 少一把 key 的症狀是 CR apply 成功但呼叫時失敗。
 
-> **平台資源憑證不在這張表裡。** `SourceSet.apiKey`、`Toolset.apiKey`、
+> 平台資源憑證不在這張表裡。`SourceSet.apiKey`、`Toolset.apiKey`、
 > `BotProvider.adminApiKey` 讀的是平台每個 namespace 自己生成的 Secret
-> `preset-agent-hub` / `api_key`,`asgard-cli add` 直接指過去 —— **不用宣告,
-> 也沒有值要去要**。自己宣告一把只會多出一個沒人讀、也拿不到值的 key。
+> `preset-agent-hub` / `api_key`,`asgard-cli add` 直接指過去,不用宣告,
+> 也沒有值要去要。自己宣告一把只會多出一個沒人讀、也拿不到值的 key。
 
 | key | 誰在用 |
 |---|---|
 | `<system>_db_password` | 每個資料庫一把,`asgard-cli add dataconnector` 會印出它實際寫了哪些 key 名 |
-| `asgard-github-pat-password` | 只有 git `Syncer` clone **私有** repo 時才需要 |
+| `asgard-github-pat-password` | 只有 git `Syncer` clone 私有 repo 時才需要 |
 
 ## 非機密的 runtime 值:專屬 ConfigMap
 
 Secret 有一個對應物,而且它一樣是 Platform 建的:`.Values.asgard.appConfigMapName`。
-**跟 `chartValues` 的差別在值在哪裡被解開:**
+跟 `chartValues` 的差別在值在哪裡被解開:
 
 | | 值在哪 | 誰看得到 |
 |---|---|---|
-| `chartValues` | **烘進渲染出來的 manifest** | reviewer 在 plan 報告上看得到,適合影響模板長相的值 |
+| `chartValues` | 烘進渲染出來的 manifest | reviewer 在 plan 報告上看得到,適合影響模板長相的值 |
 | `appConfigMap` | ConfigMap,CR 在 runtime 取 | 不進 manifest,適合會改而不想動模板的值 |
 
 兩種都在 `.asgard-pipeline.yaml` 宣告,寫法一樣:
@@ -70,8 +70,8 @@ asgard-cli pipeline variables set --release <r> --kind config email_recipients "
 asgard-cli gate
 ```
 
-**不要裸跑 `helm lint`。** Platform 每次渲染都疊一組保留的 `.Values.asgard` 進來,
-而 chart **不可以**在自己的 `values.yaml` 宣告它 —— 所以不帶 `-f` 跑會在每個讀
+不要裸跑 `helm lint`。Platform 每次渲染都疊一組保留的 `.Values.asgard` 進來,
+而 chart 不可以在自己的 `values.yaml` 宣告它,所以不帶 `-f` 跑會在每個讀
 `.Values.asgard.*` 的模板上失敗,也就是每個貼 label 或引用憑證的模板。`gate` 只供給
 那一個檔案,其他都不給,所以「chart 自己擁有的每個 `.Values.*` 都要有預設」這個性質
 仍然被驗到。
@@ -82,4 +82,4 @@ asgard-cli gate
 
 ## 部署後人工步驟
 
-> **TODO** —— 例如上傳知識文件到 Drive、觸發第一輪同步。沒有的話寫「無」。
+> TODO:例如上傳知識文件到 Drive、觸發第一輪同步。沒有的話寫「無」。

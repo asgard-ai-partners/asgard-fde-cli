@@ -4,37 +4,40 @@ description: the commerce channels a customer will name, what SHOPLINE cost, and
 ---
 # The commerce channels a customer will name, and what we have
 
-Written because the same names come up in every engagement here and the answer to
-"do you already integrate with X" was being worked out from scratch each time.
+The same channel names come up in every engagement here. This page answers "do
+you already integrate with X" for them.
 
 ## SHOPLINE: yes, and deeply
 
-**A commerce middleware deployment integrates SHOPLINE through two skills**, and
-they are the most developed channel material in existence here. Anyone asked
-about SHOPLINE should read them before answering:
+A commerce middleware deployment integrates SHOPLINE through two skills, and
+they are the most developed channel material here. Read them before answering a
+question about SHOPLINE:
 
     asgard-freyr-skills/shopline/              the Open API
     asgard-freyr-skills/shopline-backoffice/   the back office
 
 They are separate because the two surfaces are separate, and the split carries a
-constraint worth knowing before promising anything:
+constraint to know before promising anything:
 
-**The Open API cannot write the merchant's own fields.** Store name, phone,
+The Open API cannot write the merchant's own fields. Store name, phone,
 email are readable and not writable - there is no merchant write endpoint. What
-the API can write is Merchant Metafields, the store-level custom fields.
-Changing the store's own details means the back office.
+the API can write is Merchant Metafields, the store-level custom fields, plus a
+restricted direct product creation (`POST /v1/products`) that the skill allows
+only to a user holding `products:force_publish` who has chosen it over Freyr's
+review flow; it has no endpoint that modifies an existing product, and no
+orders. Changing the store's own details means the back office.
 
-**The back office is mapped, not browsed.** 88 L1 page entry points, each
+The back office is mapped rather than browsed: 88 L1 page entry points, each
 declared for whether anything deeper sits under them; 160 rows of operations
 covering in-page tabs, dialogs, editor panels and apps inside an iframe; 14 API
 domains recorded.
 
 That 88 is the count the map states in its own two headings and asserts with a
 script of its own, in `shopline-backoffice/references/page-map.md` in
-asgard-freyr-skills - **menu-level pages only**, with tabs, dialogs and nested
-apps in `operation-map.md` beside it. **Read the count off the document rather
-than recounting it**: this one states its own, and a figure taken from a
-neighbouring tally looks exactly as authoritative as the truth. The discipline is **API first** - where a contract was
+asgard-freyr-skills - menu-level pages only, with tabs, dialogs and nested
+apps in `operation-map.md` beside it. Read the count off the document rather
+than recounting it or taking a figure from a neighbouring tally. The skill works
+API first - where a contract was
 observed the skill calls the back office's own API rather than opening a
 browser, and browser operation is the fallback rather than the method.
 
@@ -42,51 +45,52 @@ That 88-page map is the one `../usecase/browser-operation.md` refers to when
 it says a capability was "a skill describing 88 pages plus everything the menu
 cannot see". This is that skill.
 
-**The token mechanism is decided and landed.** It is written up in the skill's
+The token mechanism is decided and implemented. It is written up in the skill's
 `access.md` rather than here, because it belongs with the calls it authorises.
 
-## Everything else: no, and saying so is the answer
+## Everything else: no
 
-Seven reference deployments were searched for PChome, momo, 蝦皮 / Shopee and
-Coupang. The only occurrence in the whole set is a customer's own document asking
-for them. So:
+Every reference deployment and the Freyr skills repository were searched for
+PChome, momo, 蝦皮 / Shopee and Coupang. No chart, skill or document integrates
+one. The only hits are this tool's own landed material and the SHOPLINE
+glossary, where `shopee` is one of SHOPLINE's own sales-channel identifiers
+under a merchant rather than an integration with Shopee. So:
 
     "Do you have a Shopee integration?"     "No. We have SHOPLINE, in depth.
                                              Here is what Shopee would take."
 
-**That is a real answer and a better one than a hedge**, and it is stronger for
-having SHOPLINE behind it: it says the work is understood rather than unfamiliar.
+Give that answer rather than a hedge. The SHOPLINE work shows the customer that
+this kind of integration is understood.
 
 ## What a new channel's answer depends on
 
-No table of which platform offers an open API, because that changes and this page
-would be stale before it was useful. What does not change is the ladder:
+This page does not list which platform offers an open API, because that changes.
+The options, from cheapest to most expensive:
 
     an open API with a test environment   `../usecase/external-api.md`
-    an open API, production only          the same shape - and **ask whether
-                                          they permit testing against it** - in
-                                          the meeting, not assumed here,
-                                          rather than assuming
+    an open API, production only          the same shape - and ask in the
+                                          meeting whether they permit testing
+                                          against it, rather than assuming
     a data export only            a Syncer over files, not a live integration
     only a web back office        browser operation - and SHOPLINE is what that
                                   costs: 88 pages before the first useful call
 
-**"Sandbox" means the platform's own here.** A customer's test environment is
-called that, everywhere, because the agent runs in a sandbox the platform starts
-and the two collide in the same paragraph otherwise.
+"Sandbox" here means the platform's own sandbox, where the agent runs. Call a
+customer's test environment a test environment, so the two are not confused.
 
-**Ask about each channel separately, in the interview.** This page is read by whoever is building an integration; that question is not theirs to answer, it is one to have asked before they got here. They differ, and one back-office-only
+Ask about each channel separately, in the interview, before anyone builds the
+integration. Channels differ, and one back-office-only
 channel among four sets the cost of the whole item. A customer answering "yes we
 have API access" usually means the one they use most.
 
-**A channel is usually two surfaces, not one.** SHOPLINE's split - an API that
-reads and a back office that writes the rest - is not a SHOPLINE peculiarity. Ask
+A channel is usually two surfaces. SHOPLINE's split - an API that
+reads and a back office that writes the rest - is common to other channels. Ask
 what the API cannot do before pricing the API.
 
 ## What this means for an estimate
 
-**A multi-channel integration is not N copies of one integration.** Before
-pricing four, ask the question that most often collapses them:
+Do not price a multi-channel integration as N copies of one integration. Before
+pricing four, ask the question that most often reduces them to one:
 
     "Is there already something that pulls these together for you?"
 
@@ -107,13 +111,18 @@ for a channel skill at full size.
 
 ## Sources
 
-- `asgard-freyr-skills`, read 2026-09-02: the two SHOPLINE skills, their
-  frontmatter and the repository's own skill table
-- Searched the same day across every reference deployment chart for PChome,
-  momo, 蝦皮/Shopee and Coupang: no chart, skill or document mentions one
+- asgard-freyr-skills at `f06331f`: `shopline/SKILL.md`, `shopline/glossary.md`,
+  `shopline-backoffice/SKILL.md` and `shopline-backoffice/references/page-map.md`
+  in asgard-freyr-skills
+- Searched for PChome, momo, 蝦皮/Shopee, Coupang and 酷澎 across every
+  reference deployment clone at the commits below, plus asgard-freyr-skills: unitech-e at `44e71a2`, xxentria at `967407c`,
+  finance-ai at `d062197`, buy123 at `4dab85d`, freyr at `3ebd2be`, auto-post at
+  `55cc90e`, industry-demo-generator at `718cc0e`
 
-**Unchecked:** which of the other channels offers an open API today. Deliberately
-not recorded - it is the vendor's to answer, it changes, and a stale answer here
-would be worse than none. Also unchecked: whether the SHOPLINE back-office map is
-still accurate against the current product, which is the standing risk with any
-mapped UI.
+**Checked:** the SHOPLINE split, the merchant write limit and the map's own
+counts against asgard-freyr-skills at `f06331f`; the absence of every other
+channel against the eight repositories at the commits above.
+
+**Unchecked:** which of the other channels offers an open API today, which is
+the vendor's to answer, and whether the SHOPLINE back-office map still matches
+the live SHOPLINE back office.

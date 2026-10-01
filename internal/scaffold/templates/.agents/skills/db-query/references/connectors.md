@@ -6,29 +6,28 @@ engine once you are connected.
 
 ## The naming convention, which is a convenience and not a contract
 
-**A `.env` key is `<PREFIX>` + the field name in upper snake case, and those
-names presently match what the `DataConnector` CRD calls them.**
+A `.env` key is `<PREFIX>` + the field name in upper snake case, and those
+names presently match what the `DataConnector` CRD calls them.
 
     spec.postgres.sslMode      ->  <PREFIX>SSL_MODE
     spec.athena.accessKeyId    ->  <PREFIX>ACCESS_KEY_ID
     spec.netsuite.privateKeyPem -> <PREFIX>PRIVATE_KEY_PEM
 
-It is worth having because it saves a translation: what you fill in locally goes
-into the CR a field at a time, and matching names mean nobody has to keep two
-vocabularies straight.
+It saves a translation: what you fill in locally goes into the CR a field at a
+time, and matching names mean nobody has to keep two vocabularies straight.
 
-**It is not a guarantee, and nothing checks it.** This skill's job is connecting
+It is not a guarantee, and nothing checks it. This skill's job is connecting
 to a database and reading it, not tracking a CRD. When the CRD grows a field, or
 when connecting needs something the CRD has no opinion about - a driver package,
 a port default measured against a real server, "a password or a JWT, at least
 one" - the two are allowed to diverge.
 
-**For what the platform will actually accept, the authority is
-`.agents/skills/asgard-cr-shapes/`**, which `asgard-cli skill update` fetches and
+For what the platform will actually accept, the authority is
+`.agents/skills/asgard-cr-shapes/`, which `asgard-cli skill update` fetches and
 which is read off a live cluster rather than off anybody's checkout. Not this
 page.
 
-**`<PREFIX>` is yours to choose, and this skill will not pick one for you.** An
+You choose `<PREFIX>`; this skill does not pick one for you. An
 engagement with two PostgreSQL databases has two groups of keys in one `.env`,
 and they cannot share names. Pick a prefix per system - `UOF_DB_`, `ERP_DB_`,
 `NS_` - and pass it to every command with `--prefix`.
@@ -37,15 +36,15 @@ and they cannot share names. Pick a prefix per system - `UOF_DB_`, `ERP_DB_`,
 
 ## The `.env` format
 
-Two rules, and they are the ones every dotenv reader uses:
+Two rules, the same ones every dotenv reader uses:
 
-- **A `#` starts a comment only when a space comes before it**, or at the start
+- A `#` starts a comment only when a space comes before it, or at the start
   of a line. So `PASSWORD=abc#123` is the whole password; `PASSWORD=abc #123` is
   `abc`.
-- **Inside quotes, a `#` is part of the value**, and quotes are how a value keeps
+- Inside quotes, a `#` is part of the value, and quotes are how a value keeps
   its leading or trailing spaces: `PASSWORD="  two spaces  "`.
 
-**A note about a key goes on its own line above it, never after the `=`.** A
+A note about a key goes on its own line above it, never after the `=`. A
 trailing comment is read as the value, so a key documented that way looks
 filled in when it is empty - and then the tool connects to a host named
 `# the bare host`, or hands a driver an `sslMode` of `# optional`. `--keys`
@@ -56,13 +55,13 @@ its newlines restored when it is used.
 
 ## Where the values come from, and where they do not
 
-The connection coordinates come from **the customer**: the person who runs that
+The connection coordinates come from the customer: the person who runs that
 system. The password comes from them too.
 
-**Not from the cluster.** A running `DataConnector` reads its password from a
-Kubernetes Secret the platform provisions, and that is a different mechanism with
-a different lifecycle - see the boundary table in `SKILL.md`. The value may well
-be the same string; how you obtain it is not.
+Do not take them from the cluster. A running `DataConnector` reads its password
+from a Kubernetes Secret the platform provisions, and that is a different
+mechanism with a different lifecycle - see the boundary table in `SKILL.md`. The
+value may be the same string, but you obtain it differently.
 
 ## postgres
 
@@ -77,7 +76,7 @@ be the same string; how you obtain it is not.
 | `database` | `<P>DATABASE` | yes | |
 | `sslMode` | `<P>SSL_MODE` | no | the CRD enum is `disable`, `require`, `verify-ca`, `verify-full` - narrower than libpq's, so `prefer` is not declarable even though libpq accepts it. Leave the key empty to let libpq decide locally, and set the CR to what the customer's server actually requires |
 
-> **A schema name containing a hyphen must be double-quoted in SQL.**
+> A schema name containing a hyphen must be double-quoted in SQL.
 > `select ... from "sales-eu".products`. Without the quotes PostgreSQL parses it
 > as `sales` minus `eu`, and the error message says nothing about schemas.
 
@@ -124,8 +123,8 @@ Dialect: `TOP n`, not `LIMIT n`.
 | `serviceName` | `<P>SERVICE_NAME` | one of | |
 | `sid` | `<P>SID` | one of | |
 
-**The CRD enforces exactly one of `serviceName` and `sid`**, and so does
-`query.py`. Filling both is not "belt and braces", it is a rejected CR.
+The CRD enforces exactly one of `serviceName` and `sid`, and so does
+`query.py`. A CR that fills both is rejected.
 
 Oracle stores identifiers upper case in its dictionary, and has no
 `information_schema` - use `all_tab_columns` / `all_tables`.
@@ -140,8 +139,8 @@ Oracle stores identifiers upper case in its dictionary, and has no
 | `consumerKey` | `<P>CONSUMER_KEY` | yes | secret |
 | `consumerSecret` | `<P>CONSUMER_SECRET` | yes | secret |
 
-**The Connected App must have the client credentials flow enabled and a run-as
-user assigned.** Without it the token endpoint answers `400
+The Connected App must have the client credentials flow enabled and a run-as
+user assigned. Without it the token endpoint answers `400
 unsupported_grant_type`, which does not say which of the two is missing.
 
 Salesforce speaks SOQL, not SQL: no `JOIN`, no `information_schema`. Relationships
@@ -160,15 +159,15 @@ object comes from the describe endpoint - `query.py --columns <SObject>` calls i
 | `certificateId` | `<P>CERTIFICATE_ID` | yes | |
 | `privateKeyPem` | `<P>PRIVATE_KEY_PEM` | yes | secret. PKCS#8 PEM. May be written on one line with literal `\n` - `netsuite.py` restores the newlines |
 
-Three things that cost time, all found the hard way:
+Three things that cost time:
 
-- **The OAuth scope must be `rest_webservices`.** SuiteQL and REST Web Services
+- The OAuth scope must be `rest_webservices`. SuiteQL and REST Web Services
   use it; RESTlets use `restlets`. The wrong one gives `401
   INVALID_LOGIN_ATTEMPT`, which does not mention scope.
-- **A non-existent column raises a bare `500 UNEXPECTED_ERROR`**, not "no such
+- A non-existent column raises a bare `500 UNEXPECTED_ERROR`, not "no such
   column". So does a `GROUP BY` it dislikes. When a query 500s, bisect it column
   by column.
-- **Dates lose their time on a plain SELECT.** `SELECT t.lastmodifieddate`
+- Dates lose their time on a plain SELECT. `SELECT t.lastmodifieddate`
   returns `2026/08/18`; `TO_CHAR(t.lastmodifieddate, 'YYYY-MM-DD HH24:MI:SS')`
   returns `2026-08-18 17:36:40`. Getting this wrong silently degrades an
   incremental cursor to day precision.
@@ -187,16 +186,16 @@ Three things that cost time, all found the hard way:
 | `jwtAccessToken` | `<P>JWT_ACCESS_TOKEN` | no | secret |
 | `sslCertificatePem` | `<P>SSL_CERTIFICATE_PEM` | no | secret. A PEM, which `query.py` writes to a temporary file because the HTTP client wants a CA bundle path |
 
-**All three credentials are optional**, in the CRD and here. A Trino behind a
+All three credentials are optional, in the CRD and here. A Trino behind a
 gateway that authenticates for it needs none of them, and that is a normal
 deployment rather than a half-filled configuration.
 
-**Over `http`, no credential is sent at all** - the Trino client refuses basic
-auth without TLS, and a JWT over cleartext is the token given away. Setting
+Over `http`, no credential is sent at all: the Trino client refuses basic
+auth without TLS, and sending a JWT over cleartext discloses it. Setting
 `SCHEME=http` together with a password or a JWT is refused rather than quietly
 downgraded: pick `https`, or leave the credential empty.
 
-**Trino federates, so a table is `catalog.schema.table`** - three parts, not two.
+Trino federates, so a table is `catalog.schema.table` - three parts, not two.
 `information_schema` exists once per catalog, so an unqualified query answers
 `MISSING_CATALOG_NAME`, which does not mention what is missing.
 `--columns tpch.sf1.orders` works; `--columns sf1.orders` is refused with the
@@ -211,7 +210,7 @@ reason. `show catalogs` lists what is mounted.
 | `region` | `<P>REGION` | yes | e.g. `ap-northeast-1` |
 | `accessKeyId` | `<P>ACCESS_KEY_ID` | yes | secret |
 | `secretAccessKey` | `<P>SECRET_ACCESS_KEY` | yes | secret |
-| `outputLocation` | `<P>OUTPUT_LOCATION` | yes | **must start with `s3://`** - the CRD has a rule for it. Athena writes every result set there, so the key needs write access to that bucket even for a read-only query |
+| `outputLocation` | `<P>OUTPUT_LOCATION` | yes | must start with `s3://` - the CRD has a rule for it. Athena writes every result set there, so the key needs write access to that bucket even for a read-only query |
 | `workGroup` | `<P>WORK_GROUP` | no | |
 
 Athena reads a Glue catalogue: `information_schema` works, and the "database" is
@@ -220,7 +219,7 @@ a Glue database.
 ## hana
 
 `spec.hana` exists in the CRD - `host`, `port`, `user`, `password` - and
-**`db-query` has no path for it.** SAP's Python driver (`hdbcli`) is distributed
+`db-query` has no path for it. SAP's Python driver (`hdbcli`) is distributed
 under SAP's own licence rather than from PyPI under an open one, so it cannot be
 a line in `requirements.txt` that anyone can install.
 
@@ -231,11 +230,10 @@ customer's own DBAs use, and record what you found in the spec.
 
 `query.py --columns <table>` covers the common case. These are the rest.
 
-**Run every one of these with `--limit 0`.** The default caps the fetch at 200
-rows, which is right for looking at data and wrong for enumerating a schema: a
-sweep of `information_schema.tables` on a database with several hundred base
-tables comes back truncated, and a truncated enumeration looks exactly like a
-complete one. One real source in this shape held roughly 580.
+Run every one of these with `--limit 0`. The default caps the fetch at 200
+rows, which suits looking at data, not enumerating a schema: a sweep of
+`information_schema.tables` on a database with several hundred base tables
+comes back truncated, with no sign that it was truncated. One real source in this shape held roughly 580.
 
 ### `information_schema` engines: postgres, mysql, mssql, trino, athena
 
@@ -284,7 +282,7 @@ Identifiers are upper case in the dictionary whatever case you wrote them in.
 ### netsuite
 
 No `information_schema`. Take one row and read its keys - that is what
-`--columns` does. **A NULL column is omitted from the row entirely**, so one
+`--columns` does. A NULL column is omitted from the row entirely, so one
 sample under-reports: take a row that actually has the fields you care about
 (`WHERE mainline = 'F'` on a transaction, for instance) and ask again.
 
@@ -297,8 +295,8 @@ its type and label. To list the objects themselves, the endpoint is
 ## Foreign keys are often absent
 
 Older business systems frequently declare none. When they do not, infer the
-relationship from naming and **verify it with a join query before writing it into
-a `SemanticLayer`**:
+relationship from naming and verify it with a join query before writing it into
+a `SemanticLayer`:
 
 ```sql
 select count(*) from a join b on a.sno = b.sno;

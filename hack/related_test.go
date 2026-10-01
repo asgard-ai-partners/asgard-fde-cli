@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/asgard-ai-partners/asgard-fde-cli/hack/internal/src"
 	"github.com/asgard-ai-partners/asgard-fde-cli/internal/kb"
 )
 
@@ -177,4 +178,13 @@ func captureStdout(t *testing.T, fn func()) string {
 	os.Stdout = saved
 	w.Close()
 	return <-done
+}
+
+func mustRoot(t *testing.T) string {
+	t.Helper()
+	root, err := src.Root()
+	if err != nil {
+		t.Fatal(err)
+	}
+	return root
 }

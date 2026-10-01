@@ -4,16 +4,16 @@ description: what each step of the gate is for, the step that only the platform 
 # Run the acceptance gate
 
 Every project has a read path and an entry point. Run the gate before committing
-anything, and **stop at the first red step** - do not push past it.
+anything, and stop at the first red step. Do not push until it is fixed.
 
 Run it with one command:
 
     asgard-cli gate
 
-That is the whole local half, and it is one command on purpose: **a checklist
-in prose is not a gate** - it goes stale where the binary cannot, and a reader
-has no way to tell. A step it could not run is reported as skipped, which is
-not a pass.
+That is the whole local half. It is one command because a checklist written in
+prose goes stale and the binary does not, and a reader cannot tell when the
+prose has gone stale. A step it could not run is reported as skipped, and a
+skipped step has not passed.
 
 Load the `asgard-cr-verification` skill under .agents/skills/ for what the
 PLATFORM checks, which is the other half and the authoritative one. It comes
@@ -43,8 +43,8 @@ What `asgard-cli gate` runs, and what each step is for:
   skills   whether the reference material here still describes the server this
            repository deploys to. Alone: asgard-cli skill status
 
-  lint     helm lint on each chart, **with the reserved asgard block and
-           nothing else**. That is what proves values.yaml declares a default
+  lint     helm lint on each chart, with the reserved asgard block and
+           nothing else. That is what proves values.yaml declares a default
            for every .Values.* the chart itself owns; overlay an environment
            file and a missing default is masked until it nil-pointers for
            somebody running plain helm template. Linting with no -f at all
@@ -55,7 +55,7 @@ What `asgard-cli gate` runs, and what each step is for:
 
   verify   the invariants helm cannot see, because to helm these are opaque
            CRs: a dangling reference, a missing display annotation, a Workflow
-           with no set labels, the agent split. A wrong **entry** name is as
+           with no set labels, the agent split. A wrong entry name is as
            fatal as a wrong workflow name, and apply catches neither.
            Alone: asgard-cli verify [release]
 
@@ -63,29 +63,27 @@ Then the step that cannot be run here. Push, and read the plan back:
 
          asgard-cli pipeline runs watch --release <name> --ref <tag>
 
-     **This is the step that cannot be run here, and it is not optional.** The
+     This step cannot be run here, and it is required. The
      plan renders with the release's real values and sends every CR to the
      apiserver with a server-side dry run, so CEL rules, patterns, required
      fields and unknown-field pruning are checked against the real cluster.
      Nothing local can do that: no cluster credential is issued to a client,
-     which is exactly why steps 1 to 3 check a different class of thing - what
-     a dry run passes and runtime still fails.
+     which is why the local steps above check a different class of thing -
+     what a dry run passes and runtime still fails.
 
-     It answers two questions the old local pair used to answer separately:
-     `crd/dry-run-rejected` is "will it be accepted", `crd/unknown-field` is
-     "**will it be kept**". A deprecated field once passed every plain
-     dry run and broke the deploy, because CRDs prune what they do not declare
-     while helm's server-side apply refuses it.
+     It answers two questions: `crd/dry-run-rejected` is "will it be
+     accepted", `crd/unknown-field` is "will it be kept". A field the CRD does
+     not declare passes a plain dry run and breaks the deploy, because CRDs
+     prune what they do not declare while helm's server-side apply refuses it.
 
      If the run was never created, the push matched nothing - no pattern
      matched, or the release was never created on the platform.
      `asgard-cli pipeline deliveries` says which.
 
-     **What this step is catching is written down.** `../wiki/crd-rules.md`
+     What this step catches is written down: `../wiki/crd-rules.md`
      lists the CEL validations the apiserver evaluates, which `helm lint` does
      not run and a dry-run does not report faithfully - and the one rule the
-     schema cannot express at all. Read it before deciding a red deploy is a
-     mystery.
+     schema cannot express at all. Read it when a deploy fails here.
 
 `asgard-cli gate` needs only `helm` on PATH, plus a session for the one step
 that asks the platform (`--offline` skips it). Reading the plan needs a remote
@@ -94,28 +92,20 @@ installed and how to install it.
 
 Done when: every step is green, and you have said which ones could not be run.
 
-**No command says a chart is complete, and `asgard-cli project` refuses to.**
+No command says a chart is complete, and `asgard-cli project` does not either.
 It lists what each chart declares and says nothing about what it lacks: a chart
 with a SemanticLayer and no Agent may be finished or unfinished, and the files
 cannot tell the two apart. Completeness is your judgement against the request,
 and after it new capability is added with the loop in `../guide/enhance.md`.
 
-**Checked:** 2026-09-11 - the steps above are `gate`'s own, in its own
-order, read off asgard-fde-cli's own `internal/cli/gate.go`; each names the command that runs it
-alone and each of those exists. This line described a four-step checklist that
-the body above had already replaced, and named dry-run and fidelity scripts as
-"the two the generated repo ships" when the scaffold ships neither. The claim
-that a dry-run reports success while dropping an undeclared field is the CRD's
+**Checked:** the steps above are `gate`'s own, in its own order, as
+`asgard-cli gate --help` lists them; each names the command that runs it alone
+and each of those exists. The scaffold ships no dry-run or fidelity script. The
+claim that a dry-run reports success while dropping an undeclared field is the CRD's
 documented pruning behaviour.
 
-**Unchecked:** what the platform's own half reports. The steps that need a
-session are the ones nobody has held this page against.
-
-**Unchecked:** that a step this cannot run is not a step that passed. Nothing
-enforces saying so, and the failure it guards against - a green gate that never
-reached a cluster - has happened once in the engagement this came from. Also
-unchecked: that these eight in this order are the whole gate. They are the gate
-**this tool implements**; a deployment that fails for a reason none of them
-looks at is the case that would disprove it, and there has been one: a chart
-that passed every step here and failed in the platform's own dry run, on a
-field the CRD prunes rather than rejects.
+**Unchecked:** what the platform's half reports - the plan's verdicts - needs a
+signed-in session against a live platform, and this page has not been held
+against one. Also unchecked: that the local steps and the plan together are the
+whole gate; a deploy that fails for a reason neither looks at is what would show
+otherwise.

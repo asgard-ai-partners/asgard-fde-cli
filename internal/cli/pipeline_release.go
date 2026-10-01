@@ -23,7 +23,7 @@ func newPipelineProjectsCmd() *cobra.Command {
 		Short: "List the workspace's platform Projects, which a release deploys into",
 		Long: `List the workspace's platform Projects.
 
-**A platform Project is not a project in this repository**, and both are in play
+A platform Project is not a project in this repository, and both are in play
 at the same moment: ` + "`projects/<slug>/`" + ` here is one chart, and a platform Project
 is the division inside the workspace that chart deploys INTO. Everywhere else in
 this tool the bare word means the first.
@@ -34,13 +34,12 @@ run as ` + "`.Values.asgard.namespace`" + ` and ` + "`.Values.asgard.projectEnvi
 chart never writes either of them down.
 
 This is the list ` + "`pipeline release create --project`" + ` takes a value from, so it
-also reports whether each has a **main platform Environment** - the platform's
+also reports whether each has a main platform Environment - the platform's
 own object, not this repository's ` + "`dev`" + ` and ` + "`prod`" + `, which are releases. One
-without is refused at create time, and finding that out after typing the id is
-the wrong end of the mistake: a platform Project created before they were
-mandatory can easily have none.
+without is refused at create time, so check here first: a platform Project
+created before they were mandatory can easily have none.
 
-**An empty list is the normal start for a new customer, not a fault.** A
+An empty list is the normal start for a new customer, not a fault. A
 workspace has no projects until somebody makes one, and
 ` + "`asgard-cli pipeline project create <name>`" + ` is that - it makes the default
 environment too, so what it creates can take a release immediately.`,
@@ -112,31 +111,31 @@ func newPipelineProjectCreateCmd() *cobra.Command {
 		Use:   "create <name>",
 		Short: "Create a platform Project in this workspace",
 		Long: `Create a platform Project in this workspace, and with it the default
-platform Environment. **Neither is a project or an environment in this
-repository**: a release here is what this tool calls an environment, and it
+platform Environment. Neither is a project or an environment in this
+repository: a release here is what this tool calls an environment, and it
 deploys into one of these.
 
     asgard-cli pipeline project create acme-internal
 
-**A workspace with no platform Projects is where a new customer starts**, not a
+A workspace with no platform Projects is where a new customer starts, not a
 fault to diagnose. A release deploys into one - it decides the namespace,
 and the platform injects that namespace and the project's main environment id
 into every run - so nothing can be deployed until one exists.
 
-**The environment comes with it.** The platform creates the project's default
+The environment comes with it. The platform creates the project's default
 environment and marks it as the main one in the same call, which matters because
 ` + "`pipeline release create`" + ` refuses a project that has none. What this makes can
 take a release immediately; the projects that cannot are older than the
 requirement.
 
-**It is not undone here.** Deleting a project deletes what has been deployed
-into it, and that is a decision worth making in a place that shows you what is
-there - the Console. This command creates.
+It cannot be undone here. Deleting a project deletes what has been deployed
+into it, so do that in the Console, which shows what is there. This command
+only creates.
 
-**It consumes account quota**, so a refusal can be a subscription limit rather
+It consumes account quota, so a refusal can be a subscription limit rather
 than anything about the name. The error says which.
 
-**A 5xx here is not a failure, it is an unknown.** The platform has answered 500
+A 5xx here does not mean the create failed. The platform has answered 500
 to a create that had already created, twice in one loop of four. Read
 ` + "`asgard-cli pipeline projects`" + ` back before trying again: a second attempt is a
 second platform Project, and removing one is the Console's job because it takes
@@ -239,7 +238,7 @@ run at all.
     asgard-cli pipeline release show internal-dev
     asgard-cli pipeline release update internal-dev --auto-apply
 
-WHAT IS DECIDED AT CREATE TIME AND WHAT IS NOT. ` + "`create`" + ` takes three things and
+What is decided at create time: ` + "`create`" + ` takes three things and
 only one of them can be changed afterwards:
 
     --project      fixed. It decides the namespace, and moving it is a
@@ -247,12 +246,8 @@ only one of them can be changed afterwards:
     <name>         fixed. The platform matches a trigger to a release by name
     --auto-apply   changed by ` + "`release update --auto-apply / --no-auto-apply`" + `
 
-That last line is here because the flag is one level deeper than the place
-somebody deciding "how do I set auto-apply" looks first, and a release created
-without it used to be a one-way door out of the CLI and into the Console.
-
-REMOVING ONE IS TWO DIFFERENT ACTS, and they are two commands rather than a
-flag on one: ` + "`destroy`" + ` uninstalls what the release put on the cluster, and
+Removing a release can mean two different things, so there are two commands:
+` + "`destroy`" + ` uninstalls what the release put on the cluster, and
 ` + "`detach`" + ` removes the platform side and leaves every CR running.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error { return cmd.Help() },
@@ -280,21 +275,21 @@ func newReleaseCreateCmd() *cobra.Command {
 		Long: `Create a release under this pipeline, bound to one platform Project.
 
 The name has to match the one the declaration uses: the platform matches a
-trigger to a release by name, so a release called something else is a release no
-event ever reaches. A name the declaration does not have is allowed and is
+trigger to a release by name, so no event reaches a release called something
+else. A name the declaration does not have is allowed and is
 marked "not declared" - which is a warning, not a refusal, because a declaration
 can be added afterwards.
 
 --project takes an id, a name or a namespace from ` + "`pipeline projects`" + ` - a
-**platform Project**, not one of this repository's charts. It decides the
+platform Project, not one of this repository's charts. It decides the
 namespace and cannot be changed afterwards.
 
 --auto-apply skips the review stop: a plan that succeeds applies immediately.
-Off by default, and worth leaving off for anything that reaches a cluster
-somebody cares about. It is not decided for good here -
+Off by default; leave it off for anything that reaches a cluster somebody
+cares about. It is not decided for good here -
 ` + "`release update --auto-apply / --no-auto-apply`" + ` changes it afterwards.
 
-WHAT IT CREATES. The platform prepares the namespace side straight away: this
+What it creates: the platform prepares the namespace side straight away: this
 release's own Secret and ConfigMap (empty at first), its deploy identity and its
 RBAC. The helm release itself does not exist until a run applies one.
 
@@ -378,10 +373,9 @@ func newReleaseShowCmd() *cobra.Command {
 		Long: `Show one release: where it deploys, what it declares, and which config that
 declaration was read from.
 
-That last one matters. A release that has run reads the declarations of its own
-most recent run; one that has not falls back to the pipeline's snapshot. It is
-the only explanation for why a variable is marked Orphan, so it is printed
-rather than assumed.`,
+A release that has run reads the declarations of its own most recent run; one
+that has not falls back to the pipeline's snapshot. This is what explains why a
+variable is marked Orphan, so it is printed.`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			pc, err := f.context(cmd)
@@ -428,16 +422,15 @@ func newReleaseUpdateCmd() *cobra.Command {
     asgard-cli pipeline release update internal-dev --no-auto-apply
 
 --auto-apply skips the review stop: a plan that succeeds applies immediately.
---no-auto-apply puts the stop back. **One of the two is required**, because a
-command that changes a setting has to be told which way; neither flag is a
+--no-auto-apply puts the stop back. One of the two is required; neither is a
 default.
 
-**The project and the name are not here, and cannot be.** The project decides
+The project and the name cannot be changed. The project decides
 the namespace and the platform matches a trigger to a release by name, so moving
 either is a different release rather than an edit to this one. The platform's
 own update accepts auto_apply and nothing else.
 
-IT TAKES EFFECT ON THE NEXT PLAN. The setting is read once, at the moment a
+It takes effect on the next plan. The setting is read once, at the moment a
 plan finishes, to decide between applying and stopping for review - so a run
 already waiting for review keeps waiting, and
 ` + "`asgard-cli pipeline runs approve <run-id>`" + ` is what releases that one.`,
@@ -502,17 +495,16 @@ func newReleaseDestroyCmd() *cobra.Command {
     asgard-cli pipeline release destroy internal-dev
     asgard-cli pipeline release destroy internal-dev --retry
 
-THIS REACHES THE CLUSTER. The platform walks helm uninstall, then the release's
+This reaches the cluster. The platform walks helm uninstall, then the release's
 own Secret and ConfigMap, then its deploy identity's RBAC, then the record with
 its variables and its runs. Every CR the release applied goes with it, and
 nothing here can put them back - the chart is in the repository, so a new
 release can deploy them again, but the objects and anything they hold are gone.
 
-**` + "`detach`" + ` is the other half of this choice**: it removes the platform side and
-leaves every CR running. If what you want is to stop the pipeline owning a
-deployment, that one, not this one.
+` + "`detach`" + ` is the alternative: it removes the platform side and leaves every CR
+running. To stop the pipeline owning a deployment, use that one, not this one.
 
-IT IS ASYNCHRONOUS AND THE ANSWER IS "STARTED". The release goes to ` + "`deleting`" + `
+It is asynchronous, and returns when the teardown has started. The release goes to ` + "`deleting`" + `
 and the runner does the steps; a failure parks it in ` + "`delete_failed`" + ` naming the
 step that failed, which ` + "`release show`" + ` prints. --retry resumes such a teardown
 from that step, is refused on a release that is not in ` + "`delete_failed`" + `, and does
@@ -521,8 +513,8 @@ not ask again - the teardown it resumes was confirmed when it was started.
 The platform refuses to start one while a run of this release is in flight;
 wait for it or cancel it.
 
-It asks first. --yes answers, which is the form for a script; with no terminal
-and no --yes it refuses rather than guessing.`,
+It asks first. --yes answers, for use in a script; with no terminal and no
+--yes it refuses.`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			pc, err := f.context(cmd)
@@ -589,16 +581,16 @@ running.
 
     asgard-cli pipeline release detach internal-dev
 
-WHAT GOES AND WHAT STAYS. The deploy identity's RBAC is revoked, helm's release
-history is deleted **without uninstalling**, and the record goes with its
+What goes and what stays: the deploy identity's RBAC is revoked, helm's release
+history is deleted without uninstalling, and the record goes with its
 variables and its runs. Every CR, Secret and ConfigMap the release applied keeps
 running, for the project UI to own from then on.
 
 So this is the command for "this deployment is no longer the pipeline's", and
-` + "`destroy`" + ` is the one for "this deployment should not exist". Choosing wrong in
-that direction cannot be undone from here.
+` + "`destroy`" + ` is the one for "this deployment should not exist". Detaching when
+you meant to destroy cannot be undone from here.
 
-**What is left behind has no IaC owner.** Helm's record of it is deleted, so
+What is left behind has no IaC owner. Helm's record of it is deleted, so
 nothing tracks those objects any more; what the objects still carry is the helm
 ownership metadata of the release that applied them, and that is what decides
 whether some later release can take them over. Know which you want before
@@ -608,7 +600,7 @@ The platform refuses this while a run is in flight, and on a release that is
 already being destroyed - its error says which.
 
 It is synchronous - when it returns, the release is gone. It asks first; --yes
-answers, and with no terminal and no --yes it refuses rather than guessing.`,
+answers, and with no terminal and no --yes it refuses.`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			pc, err := f.context(cmd)
@@ -777,11 +769,10 @@ holds them right now.
     asgard-cli pipeline manifest --release internal-dev --summary
     asgard-cli pipeline manifest --release internal-dev --format json
 
-THIS IS LIVE STATE, NOT A COMPARISON. The platform has no diff endpoint on
-purpose: comparing the cluster with the IaC source needs the source, and the
-source is here. So this hands back the objects and the comparing is yours -
-render the chart locally with helm and compare, and the three-way answer is
-worth more than the two-way one:
+This is live state, not a comparison. The platform has no diff endpoint,
+because comparing the cluster with the IaC source needs the source, and the
+source is here. So this returns the objects and you do the comparing: render
+the chart locally with helm and compare. Compare three ways, not two:
 
     live vs the render of the deployed commit   -> somebody changed the cluster
     the render of HEAD vs the deployed commit   -> the repository is ahead
@@ -789,8 +780,8 @@ worth more than the two-way one:
 The object list comes from the helm release record's stored manifest, not a
 label selector, because helm records ownership in an annotation that cannot be
 selected on - and because a selector silently omits an object somebody deleted,
-while the manifest reports it with found=false. Being deleted out of band is as
-important as being edited.
+while the manifest reports it with found=false. An object deleted out of band
+matters as much as one edited out of band.
 
 managedFields is stripped unless --include-managed-fields. It is large and
 mostly noise, and it is also the only record of which field manager owns which
@@ -799,22 +790,19 @@ in the UI".
 
 --status prints each object's own status block, which is already inside the
 YAML this returns - the objects come back from the cluster verbatim. It is the
-nearest thing there is to "does this deployment work", and it is worth knowing
-exactly how near.
+closest available answer to "does this deployment work", with the limits below.
 
-**Seven of the twenty-four kinds declare no status at all, by schema**, and an
+Seven of the twenty-four kinds declare no status at all, by schema, and an
 empty result on one of them is the schema rather than a reconciler that has not
-got to it. This says which of the two it is looking at, so the list is not one
-to carry in your head. They are Workflow, DataConnector, OAuthProvider and the
+got to it. The output says which of the two it is. They are Workflow, DataConnector, OAuthProvider and the
 model kinds - CompletionModel, EmbeddingModel, ImageGenerationModel and
 TranscriptionModel. Everything else has one, Agent and SemanticLayer included.
 
-**That matters most for a chart with no Syncer.** ` + "`asgard-cli verify`" + ` warns
-that with no Syncer a succeeded run only means helm returned, and a chart of a
-DataConnector and a SemanticLayer is a shape where the DataConnector has no
-status to give at all: presence is most of what there is, and the verification
-left is to open the product and ask the layer a question. This turns twenty
-minutes of looking for a read-back into one line that says so.
+This matters most for a chart with no Syncer. ` + "`asgard-cli verify`" + ` warns
+that with no Syncer a succeeded run only means helm returned, and in a chart of
+a DataConnector and a SemanticLayer the DataConnector has no status to give at
+all. Presence is most of what can be checked here; the remaining verification
+is to open the product and ask the layer a question.
 
 A release that has never deployed has no manifest, and says so.`,
 		Args: cobra.NoArgs,

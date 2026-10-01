@@ -4,14 +4,32 @@ description: where every CR goes, what it is called, what all of them need
 ---
 # Conventions
 
-**Read the platform side first:** the pages in `../wiki/` - what the platform is made
-of, and who each piece is for. These conventions are how this repo writes it
-down; the wiki is what is being written down.
+Read the platform side first: the pages in `../wiki/` - what the platform is made
+of, and who each piece is for. The wiki describes the platform; this page
+describes how a chart for it is written.
 
-**Checked:** 2026-09-02: every naming prefix in the table below and the
+**Checked:** every naming prefix in the table below and the
 `templates/<kind>/` layout, against the deployments they came from.
 
-**Unchecked:** the rest of the conventions. They are house style, and house style has no external source to check against.
+The platform claims below - the minted `preset-agent-hub` Secret, the
+`asgard-ai.com/product` codes and who stamps each, the workload Role's Secret
+rule and the `ValueExprTemplate` trio - against asgard-core `478cf5d6`:
+asgard-core `internal/bpoperator/reconciler/ns_reconciler.go`
+(`createAgentHubSecret`, `createAgentHubBotProvider`, the workload Role),
+asgard-core `internal/constants.go`, asgard-core
+`internal/bpoperator/reconciler/sl_reconciler.go`, asgard-core
+`internal/bpoperator/reconciler/tr_reconciler.go`, asgard-core
+`internal/bpcontroller/server/audit.go` and asgard-core
+`internal/jobrunner/job/backfill_product_label_job.go`; and against asgard-kube
+`3da0365` `pkg/apis/asgard/v1alpha1/types.go` for `ValueExprTemplate` and
+`ToolsetSpec.apiKey`.
+
+**Unchecked:** the layout beyond `templates/<kind>/`, the chain suffixes and the
+rest of the house style have no external source to check against. The list of
+display annotations is held against `asgard-cli verify`, not against its
+authority, workflow-service `internal/shared.go`, which no clone here has.
+Whether a release created by a non-admin account reads the minted Secret the
+same way needs such a release on a live cluster.
 
 Where every CR goes, what it is called, and what all of them need.
 Read this once; the shape extracts assume it.
@@ -23,32 +41,33 @@ and what the integration costs to maintain.
 
 | route | what you get | shape |
 |---|---|---|
-| **a database you can read** | the agent composes its own queries and joins across tables. Questions nobody thought to expose an endpoint for still work | `../usecase/semantic-layer.md` |
-| **an HTTP API** | a fixed set of calls, but a real contract - reviewable, and gateable for writes | `../usecase/external-api.md` |
-| **any other protocol** | the agent runs the client itself in its sandbox: SNMP, SSH, a vendor CLI, a database client. **Not limited to HTTP** | `../usecase/external-api.md`, the sandbox half |
-| **only a web UI** | last resort. Brittle, slow, and verifying the agent did the right thing is hard | `../usecase/browser-operation.md` |
+| a database you can read | the agent composes its own queries and joins across tables. Questions nobody thought to expose an endpoint for still work | `../usecase/semantic-layer.md` |
+| an HTTP API | a fixed set of calls, but a real contract - reviewable, and gateable for writes | `../usecase/external-api.md` |
+| any other protocol | the agent runs the client itself in its sandbox: SNMP, SSH, a vendor CLI, a database client. Not limited to HTTP | `../usecase/external-api.md`, the sandbox half |
+| only a web UI | last resort. Brittle, slow, and verifying the agent did the right thing is hard | `../usecase/browser-operation.md` |
 
-**"No API" does not mean "browser".** The sandbox is a real environment: if a
+"No API" does not mean "browser". The sandbox is a real environment: if a
 client exists for the protocol, the agent can run it. A network device with SNMP
 or SSH is reached that way, and it is far more reliable than driving its web
 console. Check for a command-line route before concluding there is only a UI.
 
-The gate rule does not move: **reads may happen in the sandbox, writes go
-through a Toolset with `requestConsent`** whatever the protocol.
+The gate rule does not move: reads may happen in the sandbox, writes go
+through a Toolset with `requestConsent` whatever the protocol.
 
-**A system offering both a database and an API: read from the database, write
-through the API.**
+A system offering both a database and an API: read from the database, write
+through the API.
 
 Two questions that change the answer, and are worth asking before designing
 anything:
 
-- **Does something already consolidate these systems?** Middleware, an OMS, a
+- Does something already consolidate these systems? Middleware, an OMS, a
   warehouse that already pulls the channels in. If so, several integrations
   collapse into one database.
-- **Does the vendor have an API nobody has asked for?** A web console is usually
+- Does the vendor have an API nobody has asked for? A web console is usually
   a client of one.
 
-If nobody knows, that is a row in `docs/open-questions.md`, not an assumption.
+If nobody knows, record it as a row in `docs/open-questions.md` rather than
+assuming an answer.
 
 ## Where things go
 
@@ -83,7 +102,7 @@ point, holding its BotProvider, Workflow and SandboxBlueprint together:
   supervisor/<name>/{bot_provider,workflow,sandbox_blueprint}.yaml
 ```
 
-**One CR per file**, except where CRs have no independent life: a SkillSet with
+One CR per file, except where CRs have no independent life: a SkillSet with
 its SourceSet and Syncer, or a Plugin with the SkillSet it bundles, go in one
 file separated by `---`.
 
@@ -95,7 +114,7 @@ file separated by `---`.
 | `SemanticLayer` | `sl-` | the source system |
 | `DataConnector` | `dc-` | the source system, matching its layer |
 | `Toolset` | `ts-` | what the set is for |
-| `Workflow` | `wf-` | **`<verb>-<noun>`** for an action or a tool; the entry point's name for a conversation loop |
+| `Workflow` | `wf-` | `<verb>-<noun>` for an action or a tool; the entry point's name for a conversation loop |
 | `Trigger` | `tr-` | `<verb>-<noun>`, matching its entrypoint workflow |
 | `SkillSet` | `sk-` | the domain |
 | `SourceSet` | `ss-` | what it stores |
@@ -104,11 +123,11 @@ file separated by `---`.
 | `SandboxBlueprint` | `sbp-` | the entry point, matching its BotProvider |
 | `Plugin` | `pg-` | the bundle |
 
-A Workflow that backs a tool and the tool's own name are **different**: the CR is
+A Workflow that backs a tool and the tool's own name are different: the CR is
 `wf-search-products`, the `tooling.name` the model sees is `search_products`.
 Snake case there, kebab case in the CR name.
 
-Where several CRs form one chain, **repeat the same suffix across them** so the
+Where several CRs form one chain, repeat the same suffix across them so the
 chain is visible in a file listing: `bp-website` / `wf-website` / `sbp-website`.
 
 ## What every CR needs
@@ -127,15 +146,15 @@ metadata:
     {{- include "<chart>.labels" . | nindent 4 }}
 ```
 
-The annotation key is the kind in kebab case, and **these kinds are
-enforced**: `agent-name`, `semantic-layer-name`, `data-connector-name`,
+The annotation key is the kind in kebab case, and these kinds are
+enforced: `agent-name`, `semantic-layer-name`, `data-connector-name`,
 `skill-set-name`, `source-set-name`, `syncer-name`, `toolset-name`,
 `workflow-name`, `trigger-name`, `bot-provider-name`,
 `sandbox-blueprint-name`, `knowledge-base-name`, `loader-name`,
 `completion-model-name` and `plugin-name`. Several kinds also take a
 `-description`.
 
-**The one exemption is a SkillSet a Plugin bundles**, which is not presented in
+The one exemption is a SkillSet a Plugin bundles, which is not presented in
 the UI at all and so has no name to be missing - `../usecase/plugin.md` is the
 shape.
 
@@ -143,40 +162,47 @@ shape.
 
 Every CR `asgard-cli project add` writes carries
 `asgard-ai.com/product: platform`, from the chart's own `<chart>.labels`
-helper. **It is not a display annotation and not one of those above**, so
+helper. It is not a display annotation and not one of those above, so
 nothing in the gate asks for it and a chart without it deploys.
 
 What it does is name the product that owns the resource, as the IAM product
-code, and **asgard-core echoes it into every audit-log event so the Console can
-filter by product** - it is the dimension an audit event is filed under. The IAM product codes are `product: agent-hub`, `product: data-insight`
-and `product: platform`, and **unlabelled means no product** rather than a default - a resource with no
+code, and asgard-core copies it into every audit-log event so the Console can
+filter by product - it is the dimension an audit event is filed under. The
+event takes it from the BotProvider that served the turn; a Trigger's label is
+copied onto the BotProvider the Trigger derives. The IAM product codes are `product: agent-hub`, `product: data-insight`
+and `product: platform`, and unlabelled means no product rather than a default - a resource with no
 label is one the Console's product filter will not find.
 
 `platform` is right for a chart's own CRs: they are applied by the pipeline
-rather than created inside a product. The other two are stamped by the platform
-itself - workflow-service on a Flow Agent, the preset reconcilers on the
-per-namespace preset BotProviders - so a chart never writes them.
+rather than created inside a product. The other two are stamped by the
+platform's own reconcilers - `product: agent-hub` on the per-namespace preset
+Agent Hub objects, `product: data-insight` on the BotProviders a SemanticLayer
+derives - so a chart never writes them. workflow-service stamps `platform` on a
+Flow Agent it saves. A BotProvider, Toolset or Trigger created without the
+label stays unlabelled.
 
-**Do not drop it from a migrated chart because a grep of this material came
-back empty.** It did, and the label read as retired; it is current, and what it
-costs to remove is a gap in the audit trail that nothing reports.
+What an audit event carries, and where it is kept, is in `../wiki/console.md`.
 
-`asgard-cli verify` enforces the display annotations. **The authority for every
-platform key is the workflow-service source, `internal/shared.go`** - read it
+Do not drop it from a migrated chart because a grep of this material came
+back empty. Such a grep once made the label look retired. It is current, and
+removing it leaves a gap in the audit trail that nothing reports.
+
+`asgard-cli verify` enforces the display annotations. The authority for every
+platform key is the workflow-service source, `internal/shared.go` - read it
 rather than inferring a convention from another chart. Anything not on the
-checker's list is invisible to every check, so a new UI label is a check to add,
-not just a line to write.
+checker's list is invisible to every check, so a new UI label needs a check
+added as well as the line written.
 
 ## Values, and what never goes in them
 
 Connection coordinates, endpoints, schedules and suspend switches go in
 the platform's variables, one group per thing, declared as `chartValues`. `values.yaml` declares a default
-for **every** `.Values.*` the chart itself owns - the lint `asgard-cli gate` runs,
+for every `.Values.*` the chart itself owns - the lint `asgard-cli gate` runs,
 which supplies only the reserved `asgard` block and no environment file,
 is the only step that proves it, and without it a missing default is masked in
 the gate and nil-pointers for anyone running plain `helm template`.
 
-**Credentials never go in values, and neither does the name.** A chart writes a
+Credentials never go in values, and neither does the name. A chart writes a
 `secretKeyRef` and reads the object's name through its `appSecretName` helper:
 each Release has its own Secret, created and maintained by the Platform, whose
 name arrives as `.Values.asgard.appSecretName`. A literal name in a template
@@ -184,14 +210,14 @@ points at an object that is not in that namespace, and nothing catches it - the
 CR is valid, the dry run passes, apply succeeds, and it fails at runtime.
 
 `SourceSet.apiKey`, `Toolset.apiKey` and `BotProvider.adminApiKey` are all
-platform resource credentials, and **none of them needs a declared key**:
+platform resource credentials, and none of them needs a declared key:
 `asgard-cli add` points each at the Secret the platform mints, which the next
 section is about. A declared key of your own is for a resource that genuinely
-needs a different credential from the namespace's, and **whether one does is a
-requirement about rotation scope** rather than a rule this page can state: the
+needs a different credential from the namespace's, and whether one does is a
+requirement about rotation scope rather than a rule this page can state: the
 Platform reads whatever `secretKeyRef.key` says and never the name itself.
 
-**That question is only ever about a key you declare.** The namespace's own
+That question is only ever about a key you declare. The namespace's own
 resource credential is one key the platform mints and shares by design, so its
 rotation scope is not an engagement's to decide - `../usecase/write-path.md`
 says the same from the write side, and the two read as contradicting each other
@@ -199,14 +225,14 @@ only if it is unclear which key each is about.
 
 ### Where that credential comes from
 
-**Nobody issues it. The platform mints it, once per namespace.** When the
+Nobody issues it. The platform mints it, once per namespace. When the
 namespace is reconciled the platform creates a Secret named
 `preset-agent-hub` holding one key, `api_key`, whose value it generates - and
-**that one value backs both `BotProvider.apiKey` and `SourceSet.apiKey`**. It is
+that one value backs both `BotProvider.apiKey` and `SourceSet.apiKey`. It is
 deliberately stable: created when missing and never rotated on a version bump,
 because Agent Hub holds the same key outside the cluster.
 
-**So read it where it is, and there is nothing to obtain:**
+So read it where it is, and there is nothing to obtain:
 
     apiKey:
       valueFrom:
@@ -218,28 +244,21 @@ Nothing to declare under `appSecret:`, nothing to set with `pipeline variables
 set`, nobody to ask. The platform's own preset Toolset, SourceSet and
 BotProvider read it exactly this way, and `asgard-cli add` now writes it.
 
-**Proved on a deployed namespace, 2026-09-14, and how far differs by kind.**
-A SourceSet is proved end to end: admission accepted the cross-object
-reference, apply succeeded, it came up Ready and its Syncers ran on rollout. A
-Toolset is proved to the server-side dry run, which is the step that builds the
-typed patch, and had not applied when this was written. A BotProvider's
-`adminApiKey` is the same field read by the same resolver and has not been
-exercised at all. Treat the first as settled, the second as very likely, and
-the third as reasoned. The namespace role grants `get` on every
-Secret in the namespace with no `resourceNames` restriction, and a `ValueSource`
-is resolved by the platform reading the Secret by name - the release's own
-deploy identity is not what reads it.
+A SourceSet, a Toolset and a BotProvider's `adminApiKey` all read the Secret
+this way: the platform resolves each `ValueSource` with the same code, reading
+the Secret by name. The namespace role grants `get` on every Secret in the
+namespace with no `resourceNames` restriction, so the release's own deploy
+identity is not what reads it.
 
-**The older route is not wrong, just unnecessary.** The reference deployments
+The older route is not wrong, just unnecessary. The reference deployments
 copy the value into the release's own Secret under `asgard_resource_api_key`,
 declared under `appSecret:`. Those charts work and need no change. What that
-route costs is a value somebody has to obtain first, and **there is no
-documented way to obtain it** - which blocked a first deploy once and is
-`../wiki/platform-unknowns.md` P13. A chart being written now should read the
-Secret rather than copy it.
+route costs is a value somebody has to obtain first, and no public route
+returns it (below) - which blocked a first deploy once. A chart being written
+now should read the Secret rather than copy it.
 
-**A third form you will find on a Toolset is `apiKey: {value: ""}`, and it is
-one chart's answer to a required field.** The CRD requires `apiKey` whatever
+A third form you will find on a Toolset is `apiKey: {value: ""}`, and it is
+one chart's answer to a required field. The CRD requires `apiKey` whatever
 the `toolsetClass` is, so a `workflow-tooling` Toolset - whose tools are
 Workflows in the same chart, with no external service behind them - has no key
 of its own to put there, and one deployment writes an empty string to satisfy
@@ -249,31 +268,38 @@ reference above, which costs nothing to declare and is what the platform's own
 preset Toolset carries. Where the tool really does reach an external service,
 that service's own token goes on the backing Workflow's `variables`, not here.
 
-**One caveat on the verification.** The release it was proved on was created
+One caveat on the verification. The release it was proved on was created
 under a platform admin account, and nothing available here can show whether that
 made its deploy identity broader than an ordinary one. The reasoning above says
 it should not matter - the identity is not the reader - but a confirmation from
 a release created by a non-admin account is what would close it.
 
-**This is not the API key the product documentation tells you to create**, and
+This is not the API key the product documentation tells you to create, and
 the two are easy to read as one. That one is the `X-API-KEY` header for calling
-the Asgard API from outside - `../wiki/api.md` - and the documentation's route
-to it is a console page. A CR calling back into the platform uses the resource
-credential above, which no console page issues.
+the Asgard API from outside, which carries the BotProvider's own
+`spec.generic.apiKey` - `../wiki/api.md`. A CR calling back into the platform
+uses the resource credential above.
 
-**What is not settled is how to read the minted value out.** It is a Kubernetes
-Secret in the namespace, this tool is never given a cluster credential, and
-`pipeline manifest` reads back only what the helm release deployed - which that
-Secret is not, since the platform's own reconciler created it.
-`../wiki/platform-unknowns.md` P13 carries the question and who to ask.
+No public route reads the minted value out, so do not design on having
+it. It is a Kubernetes Secret the platform's namespace reconciler creates
+with a random value, this tool is never given a cluster credential, and
+`pipeline manifest` reads back only what the helm release deployed, which that
+Secret is not. In asgard-core the only code returning it is two internal gRPC
+methods on bpcontroller, `GetBotProviderManifest` and `GetSourceSetManifest`,
+and bpcontroller has no ingress; the edge server compares it against a header
+and never returns it - asgard-core `478cf5d6`
+asgard-core `internal/bpoperator/reconciler/ns_reconciler.go` (`createAgentHubSecret`),
+asgard-core `internal/bpcontroller/server/bp_controller.go`,
+asgard-core `internal/edgeserver/component/gin.go`. The services calling those two methods
+are outside asgard-core and were not read.
 
-**Do not declare a `secretKeyRef` for a key that does not exist yet.** Config
+Do not declare a `secretKeyRef` for a key that does not exist yet. Config
 evaluation fails at call time, not at apply time, so the chart deploys and the
 CR breaks the first time it is used.
 
 ## Two field shapes that are easy to get wrong
 
-**`ValueExprTemplate`** is a trio, and the CRD takes **exactly one** of the
+`ValueExprTemplate` is a trio, and the CRD takes exactly one of the
 three: a static `value:`, an `expression:` of JavaScript evaluated per turn with
 the caller's payload as `prevPayload`, or a Handlebars `template:`. So swapping
 form is a deletion and a write rather than a write, and anything that reads only
@@ -281,8 +307,8 @@ form is a deletion and a write rather than a write, and anything that reads only
 `SandboxBlueprint` shape and nothing else carries it; asgard-kube's
 `pkg/apis/asgard/v1alpha1/types.go` declares it.
 
-On a `SandboxBlueprint`, the `*Names` fields are **comma-separated strings**, not
-lists, and `sourceSetMounts` is a **JSON string** the controller unmarshals.
+On a `SandboxBlueprint`, the `*Names` fields are comma-separated strings, not
+lists, and `sourceSetMounts` is a JSON string the controller unmarshals.
 
 ```yaml
   toolsetNames:
@@ -291,36 +317,38 @@ lists, and `sourceSetMounts` is a **JSON string** the controller unmarshals.
     value: '[{"sourceSetName": "ss-x", "mountPath": "/knowledge", "readOnly": true}]'
 ```
 
-**Every config value is a string**, including booleans: `parseJson` is `"true"`,
+Every config value is a string, including booleans: `parseJson` is `"true"`,
 a suspend label is `"true"`, not `true`.
 
 ## Where a sandbox mount may go, and where it kills the agent
 
-Four rules, and the first one has taken a deployment's every conversation down.
+Four rules. Breaking the first one has stopped every conversation in a
+deployment.
 
-**Never mount anything under the agent's `~/.claude`.** kubelet creates a
-mount's missing **parent** directory as `root:root` before the container starts,
+Never mount anything under the agent's `~/.claude`. kubelet creates a
+mount's missing parent directory as `root:root` before the container starts,
 the sandbox runs as uid 1000, and `~/.claude` is the one directory the CLI driver
-**must** write - its appended-system-prompt seed file lands there. So a
+must write - its appended-system-prompt seed file lands there. So a
 read-only mount at `~/.claude/anything` makes the driver die at start-up, and
-the symptom looks nothing like a mount: the conversation fails with the driver
+the symptom does not point at the mount: the conversation fails with the driver
 never coming ready. The platform solves this for its own nested mounts by giving
-the parent (`<home>/local-plugin`) its own fsGroup-owned emptyDir, and **there
-is no such volume for `~/.claude`**.
+the parent (`<home>/local-plugin`) its own fsGroup-owned emptyDir, and there
+is no such volume for `~/.claude`.
 
-**The sandbox working directory is where it does work.** `/work` is the
+The sandbox working directory is where it does work. `/work` is the
 sandbox's home for the channel, `/work/.claude` does not exist on a fresh
 sandbox, and a project-level skills directory under it is discovered the same way
 - so `/work/.claude/skills/<name>` is a mount that both lands and loads.
 
-**`sourceSetMounts` is the only mechanism that takes a `subPath`.** A SkillSet
-always mounts its **whole** SourceSet - the controller joins the volume path with
+`sourceSetMounts` is the only mechanism that takes a `subPath`. A SkillSet
+always mounts its whole SourceSet - the controller joins the volume path with
 an empty member sub - and its `searchPaths` are static. So a SkillSet cannot
 expose part of a store, and using one to carry per-customer or per-brand files
-puts **every** tenant's files in **every** sandbox. Per-tenant isolation is
-`sourceSetMounts` with a `subPath`, or it does not exist.
+puts every tenant's files in every sandbox. Per-tenant isolation requires
+`sourceSetMounts` with a `subPath`; nothing else provides it.
 
-**Skill discovery has two chains and they do not meet.** A SkillSet reaches the
+
+Skill discovery has two chains and they do not meet. A SkillSet reaches the
 agent through the environment's skill-set JSON and the runtime plugin allowlist;
 a `sourceSetMounts` mount is on neither, and is found only by being a directory
 inside a skills directory. Mounted anywhere else it is a readable file nothing
@@ -331,16 +359,16 @@ wrong place.
 
 | field | validated as | what that leaves to you |
 |---|---|---|
-| `sourceSetMounts[].mountPath` | `^/.+` | **nothing else.** No traversal check, no character rule. A mountPath built from a name a customer chose is a path-traversal surface, and two entries resolving to the same mountPath are deduped **first-wins**, silently dropping one |
-| `sourceSetMounts[].subPath` | rejected if absolute, or containing `.`, `..` or a double slash | a rejected one takes the **whole Sandbox** not-ready with `InvalidSourceSetMountSubPath`, which stops every conversation - far worse than skipping one entry. So validate in the expression and **skip** a bad entry rather than repairing it |
-| `credentialMounts[].mountPath` | `^/.+`, and it is a **directory** | the token lands in it as `access_token`. A single-file mount would need a `subPath`, and kubelet never refreshes those - the token would be a one-time copy taken at pod start, which is the whole thing this field exists to avoid |
+| `sourceSetMounts[].mountPath` | `^/.+` | nothing else. No traversal check, no character rule. A mountPath built from a name a customer chose is a path-traversal surface, and two entries resolving to the same mountPath are deduped first-wins, silently dropping one |
+| `sourceSetMounts[].subPath` | rejected if absolute, or containing `.`, `..` or a double slash | a rejected one takes the whole Sandbox not-ready with `InvalidSourceSetMountSubPath`, which stops every conversation - far worse than skipping one entry. So validate in the expression and skip a bad entry rather than repairing it |
+| `credentialMounts[].mountPath` | `^/.+`, and it is a directory | the token lands in it as `access_token`. A single-file mount would need a `subPath`, and kubelet never refreshes those - the token would be a one-time copy taken at pod start, which this field exists to avoid |
 
-**Checked:** 2026-09-11 against asgard-core `623ceb5` - its
+**Checked:** against asgard-core `623ceb5` - its
 asgard-core `internal/bpoperator/reconciler/sb_reconciler.go` for the mount
 construction, the subPath validation and the local-plugin emptyDir, and
 asgard-core `internal/processor/clidriver/options.go` for the seed file the
 driver writes - and against asgard-kube `cbd8d70`, its asgard-kube
 `pkg/apis/asgard/v1alpha1/types.go` for the patterns and the directory
 rule. The `~/.claude` failure was reported by a
-deployment that had hit it in production, and the mechanism was then re-read in
-the platform source rather than taken from the report.
+deployment that hit it in production; the mechanism above is from the platform
+source, not from the report.

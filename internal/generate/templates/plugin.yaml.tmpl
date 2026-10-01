@@ -4,15 +4,15 @@
 # the same agent needs different capabilities on different turns; when the set
 # is fixed, attach the skills directly and skip this.
 #
-# Decide the axes before the fifth bundle - the naming IS the taxonomy. One that
-# works: what it knows, versus how it presents.
+# Decide the axes before the fifth bundle, because the names become the
+# taxonomy. One that works: what it knows, versus how it presents.
 apiVersion: asgard-ai.com/v1alpha1
 kind: Plugin
 metadata:
   name: <<.CRName>>
   annotations:
     # Required. Without it the CR applies cleanly and shows up nameless in the
-    # UI - and the gate rejects it, which is the only thing that catches it.
+    # UI. Only the gate rejects it.
     asgard-ai.com/plugin-name: "<<.DisplayName>>"
   labels:
     {{- include "<<.Chart>>.labels" . | nindent 4 }}
@@ -29,7 +29,7 @@ apiVersion: asgard-ai.com/v1alpha1
 kind: SkillSet
 metadata:
   name: sk-<<.Name>>
-  # **No skill-set-name and no managed-by here, on purpose.** A SkillSet a
+  # No skill-set-name and no managed-by here, on purpose. A SkillSet a
   # Plugin bundles is the bundle's implementation rather than something a
   # person picks in the UI, so the platform does not present it and there is no
   # name for it to show. The 29-Plugin deployment carries none on any of them.

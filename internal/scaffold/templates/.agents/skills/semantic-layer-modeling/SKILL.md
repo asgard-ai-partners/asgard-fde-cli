@@ -8,18 +8,18 @@ alwaysApply: false
 # SemanticLayer Modeling (design time)
 
 This repo's job is to define the Asgard CRs that let the customer build Agentic applications.
-The single highest-value, highest-effort artifact in that set is the **`SemanticLayer` CR** —
-the read surface the agent composes SQL against. Modeling one well requires looking at the
-**real database**, not guessing.
+The highest-value, highest-effort artifact in that set is the `SemanticLayer` CR —
+the read surface the agent composes SQL against. Model it from the real database, not from
+guesses.
 
 This skill covers turning what an introspection found into a `SemanticLayer` CR: what a cube
 is worth being, which joins earn a declaration, and the conventions that decide whether the
-agent can actually use the layer. **Reaching the database is the `db-query` skill** - load that
+agent can actually use the layer. Reaching the database is the `db-query` skill - load that
 first, come back with the schema.
 
-> **Design time, not runtime.** This skill is for the *coding agent* working in this repo.
-> It is never synced into the platform. Skills the *deployed* agent uses at runtime live in
-> `assets/skills/<skill>/SKILL.md` and are bound via a `SkillSet` CR — a completely separate
+> Design time, not runtime. This skill is for the coding agent working in this repo.
+> It is never synced into the platform. Skills the deployed agent uses at runtime live in
+> `assets/skills/<skill>/SKILL.md` and are bound via a `SkillSet` CR — a separate
 > mechanism. Do not confuse the two.
 
 ## When To Use
@@ -37,7 +37,7 @@ first, come back with the schema.
 
 ## Connecting, and looking at the data
 
-**Connection and introspection are the `db-query` skill's job**, not this one.
+Connection and introspection are covered by the `db-query` skill, not this one.
 Load it and come back with what you found:
 
     .agents/skills/db-query/SKILL.md
@@ -58,14 +58,13 @@ Q --class postgres --prefix UOF_DB_ "select status, count(*) from sales.orders g
 A function, not `Q="..."`: zsh does not word-split an unquoted `$Q`, so the
 variable form is one word and exits 127 with nothing to say why.
 
-**Every database this repository models should be reachable that way before a
-single cube is written.** A cube written from a document rather than from the
-schema is a guess with YAML around it.
+Every database this repository models should be reachable that way before any
+cube is written. Write cubes from the schema, not from a document.
 
 ### The map from a system to its CRs
 
-Keep this table current as each system is wired up. It is what the next reader
-opens first, and the only place the three names for one system meet.
+Keep this table current as each system is wired up. The next reader opens it
+first, and it is the only place that lists the three names for one system together.
 
 | system | class | `.env` prefix | `DataConnector` | `SemanticLayer` |
 |---|---|---|---|---|
@@ -138,49 +137,50 @@ spec:
 ### Conventions that are easy to get wrong
 
 - Write every description to `.agents/skills/plain-chinese/SKILL.md` - a model reads
-  them to choose a column, so 至關重要 there costs a wrong answer, not a clumsy
-  sentence.
-- **`description` on every cube / dimension / measure, in 繁體中文.** This is not decoration — it
-  is what the agent reads to decide which column answers a question. A dimension with no
-  description is effectively invisible to the model.
-- **Common analysis views go in top-level `sampleQueries[]`** (`comment` + `sql`), **never** as a
+  them to choose a column, so a word like 至關重要 there can produce a wrong answer.
+- `description` on every cube / dimension / measure, in 繁體中文. The agent reads it to decide
+  which column answers a question, and the CRD refuses a cube, dimension or measure without
+  one.
+- Common analysis views go in top-level `sampleQueries[]` (`comment` + `sql`), never as a
   cube-level `sql:` virtual cube.
-- **Run every `sampleQuery` against the live DB before committing it.** A `sampleQuery` that errors
-  or returns nonsense actively misleads the agent. Record the row count you observed in the
+- Run every `sampleQuery` against the live DB before committing it. A `sampleQuery` that errors
+  or returns nonsense misleads the agent. Record the row count you observed in the
   `comment` if it helps set expectations.
-- **`effort` and the chart's model are one decision.** `disabled` is the value for a
+- Decide `effort` and the chart's model together. `disabled` is the value for a
   layer whose `completionModelName` is not a reasoning model - that pairing fails
   every turn rather than being ignored, including the turns that send no effort at
-  all. `../asgard-platform/wiki/settings.md` has why, and it is the reason to settle
-  the model before the layer rather than after it.
-- **`measures` must be present on every cube; its CONTENTS are optional.** The key is
-  **required** by the CRD - `measures: []` is a declaration the apiserver accepts, omitting the
+  all. `../asgard-platform/wiki/settings.md` has why. Settle the model before the
+  layer, not after it.
+- `measures` must be present on every cube; its contents are optional. The key is
+  required by the CRD - `measures: []` is a declaration the apiserver accepts, omitting the
   key is rejected outright, and `helm lint` does not see the difference. So `measures: []` is the
   normal outcome when there is no real aggregate the business asks for; do not mechanically add
   `count` to every cube, and do not read "optional" as permission to leave the key out.
-- **Nothing narrows a layer once it is mounted on an Agent.** `allowedCubes` is not a field on
-  `SemanticLayer` - it exists on `Agent.spec.managed.semanticLayers[]`, and `gate` R4 refuses an
-  Agent that sets it, on the standing decision that a bound layer is queryable in full. So every
+- `joins` is required the same way. A layer with no joins writes `joins: []`.
+- Nothing in this repository narrows a layer once it is mounted on an Agent. `allowedCubes`
+  is not a field on `SemanticLayer` - it exists on `Agent.spec.managed.semanticLayers[]`, and the
+  platform honours it, but `gate` R4 refuses an Agent that sets it, on the standing decision that
+  a bound layer is queryable in full. So every
   cube and every dimension you add widens the reach of whatever consumes the layer, with no
-  second setting that takes it back — which is why this needs a spec (below).
+  second setting that takes it back. That is why this needs a spec (below).
 
-  **A Flow Agent is the other shape and it does narrow.** Where the layer is mounted on a
+  A Flow Agent can narrow. Where the layer is mounted on a
   processor rather than on an Agent CR, `semanticLayer.allowedCubes` is a config key on both
   LLM processors and on `query-database` as `allowedTables`, and setting it restricts what that
-  processor may compose SQL over. **So "the layer is queryable in full" is a statement about the
-  Agent path, not about the platform**, and on the flow-agent path the narrowing exists and is
-  the whole argument for using it with an anonymous audience. Both default to empty, which means
+  processor may compose SQL over. So "the layer is queryable in full" applies to the
+  Agent path, not to the platform. On the flow-agent path the narrowing exists, and it is
+  the main reason to use that path with an anonymous audience. Both default to empty, which means
   unrestricted, so the widening still happens by default either way.
 - `Agent.managed.semanticLayers[]` needs `allowQuery: true` and (today) `allowWrite: false`.
 
 ## Spec Gate
 
-Per `docs/spec-driven-development.md`, **a new `SemanticLayer`/`DataConnector`, or widening which
-cubes the agent may query, requires SDD** — the databases are real. Write the task spec under
+Per `docs/spec-driven-development.md`, a new `SemanticLayer`/`DataConnector`, or widening which
+cubes the agent may query, requires SDD — the databases are real. Write the task spec under
 `requirements/tasks/`, register it in `requirements/tasks/_index.md`, get it to `ready`, and wait
 for explicit instruction before implementing.
 
-Introspection and ad-hoc read queries are *research* and do not need a spec — they are exactly how
+Introspection and ad-hoc read queries are research and do not need a spec — they are how
 you gather the "known context" a spec needs.
 
 ## Verify
@@ -194,39 +194,41 @@ asgard-cli gate               # every local check, the lint step included
 asgard-cli verify <project>   # or one step alone, while iterating
 ```
 
-**Never run `helm lint` by hand**: without the reserved `asgard` values file that `gate` supplies,
+Never run `helm lint` by hand: without the reserved `asgard` values file that `gate` supplies,
 every chart that labels anything fails. `asgard-cli gate --help` says why.
 
 `asgard-cli verify` confirms `SemanticLayer.dataConnectorName` resolves to a real
-`DataConnector` and that the `Agent` references only layers that exist. It does **not** validate
+`DataConnector` and that the `Agent` references only layers that exist. It does not validate
 SQL against the live schema — that is what your introspection queries are for.
 
-> **Reasoning about a schema is not verifying it.** One NetSuite layer's first Item Receipt
-> draft was written from a spec document's SuiteQL and looked entirely plausible. Running it
+> Run the queries; reading the schema is not enough. One NetSuite layer's first Item Receipt
+> draft was written from a spec document's SuiteQL and looked plausible. Running it
 > found that `transaction.createdfrom` does not exist, that a missing `isinventoryaffecting = 'T'`
-> filter makes the quantities sum to **zero**, and that over half the Item Receipts were transfer
-> orders rather than purchases - so the number the agent would have reported was not a rounding
-> error, it was a different question's answer. None of that is visible in column names.
+> filter makes the quantities sum to zero, and that over half the Item Receipts were transfer
+> orders rather than purchases - so the number the agent would have reported answered a
+> different question. None of that is visible in column names.
 
-**Checked:** 2026-09-04, re-read 2026-09-11 against asgard-kube `cbd8d70`. `SemanticLayer.spec`
-requires `completionModelName` and `cubes`, and the Agent CRD has no
+**Checked:** against asgard-kube `cbd8d70`. `SemanticLayer.spec`
+requires `completionModelName`, `cubes`, `dataConnectorName`, `joins`, `locale`
+and `timezone` (asgard-kube `3da0365`), and the Agent CRD has no
 `completionModelName` at all - so the asymmetry this page warns about is real
 and a layer written from an Agent's shape fails on a required field. A
-dimension or measure requires `description`, `name`, `sql`, `title` and `type`,
-which makes the description a **contract requirement** rather than only a
+dimension requires `description`, `name`, `sql`, `title` and `type`; a measure
+requires the same less `sql`, which a CEL rule demands unless its type is
+`count`; a cube requires `description` too. That makes the description a contract requirement rather than only a
 convention here; that it is written in 繁體中文 is ours.
 
-Re-read 2026-09-14 against asgard-core `623ceb5`, which corrected one statement:
-**"nothing narrows a layer once it is mounted" is true of the Agent path only.**
+Against asgard-core `478cf5d6`, asgard-core `internal/constants.go`:
+"nothing narrows a layer once it is mounted" is true of the Agent path only.
 Both LLM processors declare `semanticLayer.allowedCubes` and `query-database`
 declares `allowedTables`, so a Flow Agent can restrict what it composes SQL
 over - and both default to empty, meaning unrestricted, which is why the
-widening still happens by default.
+widening still happens by default. The `get_database_semantic_model` tool
+hands the agent every `sampleQuery` unchanged and nothing runs one first
+(asgard-core `internal/processor/domaintools/domaintools.go`).
 
-**Unchecked:** everything about the modelling itself. That a cube per business
-entity beats a cube per table, which joins are worth declaring, and what makes a
-`sampleQuery` useful rather than misleading - all of that is this engagement's
-practice against its customers' schemas, and **no source states any of it**. The
-one instruction here that must survive a reader who discounts the rest is to run
-every `sampleQuery` against the live database before committing it: a query that
-errors is worse than an absent one, because the agent treats it as an example.
+**Unchecked:** the modelling itself - a cube per business entity over a cube per
+table, which joins are worth declaring, what makes a `sampleQuery` useful - is
+this engagement's practice against its customers' schemas, and no source states
+it. Keep running every `sampleQuery` against the live database before committing
+it even if you discount the rest.

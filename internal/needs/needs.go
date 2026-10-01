@@ -68,8 +68,8 @@ var shapes = []Shape{{
 	Description: "the connection and the account, whether it is read-only, the outbound addresses that have to go on their allowlist, a description per cube",
 	Items: []Item{
 		{Ask: "host, port, database or schema, and the account name", Why: "there is no connection without them", From: "../guide/requirements.md"},
-		{Ask: "**is that account read-only?** Ask explicitly", Why: "the one offered first usually is not, and finding out later means going back for a second credential", From: "../guide/requirements.md"},
-		{Ask: "**that Asgard's four outbound addresses go on their allowlist** - ask their network team for exactly that, not for \"a VPN, an allowlist or a jump host\"", Why: "Asgard is hosted and the agent runs in the platform's own cloud; there is nothing of ours to put on their network. **This is the single most expensive thing to discover in week three**, and it is a ticket, an approval and a window in most companies", From: "../wiki/operations.md"},
+		{Ask: "is that account read-only? Ask explicitly", Why: "the one offered first usually is not, and finding out later means going back for a second credential", From: "../guide/requirements.md"},
+		{Ask: "that Asgard's four outbound addresses go on their allowlist - ask their network team for exactly that, not for \"a VPN, an allowlist or a jump host\"", Why: "Asgard is hosted and the agent runs in the platform's own cloud; there is nothing of ours to put on their network. In most companies this change needs a ticket, an approval and a maintenance window, so discovering it late delays the project by weeks", From: "../wiki/operations.md"},
 		{Ask: "whether the allowlist change can be done, and roughly when", Why: "a date changes the plan. Do not ask who approves it - a name changes nothing we build", From: "../guide/requirements.md"},
 		{Ask: "a description of every cube, dimension and measure, in the customer's own words", Why: "the CRD requires a description on each, and it is what the model matches on - not the column name", From: "../usecase/semantic-layer.md"},
 	},
@@ -79,22 +79,22 @@ var shapes = []Shape{{
 	Description: "the base URL and its credential, whether a test environment exists, the rate limit, and why mail is an HTTP API rather than SMTP",
 	Items: []Item{
 		{Ask: "the base URL, the auth scheme, and a credential for it", Why: "endpoints and non-secret settings become chart values; a token is a secret", From: "../usecase/external-api.md"},
-		{Ask: "**whether there is a test environment**, before designing a mock", Why: "writing into a real test environment proves the fields, the validation rules and the status codes; a mock proves none of them", From: "../usecase/write-path.md"},
-		{Ask: "if it is production-only, **whether they permit testing against it**", Why: "in the meeting, not assumed here - the answer decides whether the first delivery can be proved at all", From: "../wiki/taiwan-channels.md"},
+		{Ask: "whether there is a test environment, before designing a mock", Why: "writing into a real test environment proves the fields, the validation rules and the status codes; a mock proves none of them", From: "../usecase/write-path.md"},
+		{Ask: "if it is production-only, whether they permit testing against it", Why: "in the meeting, not assumed here - the answer decides whether the first delivery can be proved at all", From: "../wiki/taiwan-channels.md"},
 		{Ask: "the rate limit", Why: "it decides whether a Syncer can backfill at all", From: "../guide/requirements.md"},
-		{Ask: "**if the system is email — an HTTP mail API and a key for it, plus a sender address already verified with that provider.** Not SMTP credentials", Why: "the platform's only outbound call is HTTPS, so a username, a password and an SMTP host **cannot be used at all** - and that is what gets handed over when you ask for mail access. The verification is their IT's to do, on their schedule, and an unverified sender is refused outright", From: "../wiki/integration.md"},
+		{Ask: "if the system is email — an HTTP mail API and a key for it, plus a sender address already verified with that provider. Not SMTP credentials", Why: "the platform's only outbound call is HTTPS, so a username, a password and an SMTP host cannot be used - and that is what gets handed over when you ask for mail access. The verification is their IT's to do, on their schedule, and an unverified sender is refused outright", From: "../wiki/integration.md"},
 	},
 }, {
 	Name:        "chat-channel",
 	What:        "the agent reached from a chat platform the customer's users already use",
 	Description: "which channel, asked before anything else because the field is immutable; the credential pair each platform actually takes; the LINE step that gates the rest",
 	Items: []Item{
-		{Ask: "**which channel**, in the same breath as who is on the other end", Why: "`botProviderClass` is immutable once created, so changing it later is a new BotProvider rather than an edit", From: "../guide/requirements.md"},
-		{Ask: "LINE: **that Messaging API is enabled on the Official Account**, before anything else", Why: "it is their step in their console, and it gates every other LINE question. The Channel Secret and Channel Access Token do not exist until it is done", From: "../wiki/integration.md"},
-		{Ask: "LINE: Channel Secret and Channel Access Token — and somebody who can paste a Webhook URL back into the LINE Developers Console and enable Use webhook", Why: "**LINE is the only two-way setup**: Asgard produces a URL that has to go back. The rest only take credentials inward", From: "../wiki/integration.md"},
-		{Ask: "Slack: **an app-level token and a bot token** - the `xapp-` and `xoxb-` pair, not a Client ID", Why: "**those are different credentials, and the wrong one gets asked for.** The client id, client secret, signing secret and scopes are what the platform's own UI flow installs an OAuth app with; a chart's `spec.slack` requires `appToken` and `botToken` and neither of those four. Ask for the client pair as well only if the engagement is going through the UI", From: "../wiki/integration.md"},
-		{Ask: "Discord: the Bot Token, and **the bot authorised and invited to the server** in their Developer Portal", Why: "the invitation is their step in their console rather than ours, and none of it is the token - a chart with the right `botToken` still has nowhere to speak", From: "../wiki/integration.md"},
-		{Ask: "Telegram: the Bot Token from BotFather. **The second field is ours, not theirs**", Why: "`spec.telegram` requires `webhookSecretToken` beside the bot token and no documentation page mentions it - it is a secret we choose, so it is not something to ask for, but a CR without it is refused", From: "../wiki/integration.md"},
+		{Ask: "which channel, asked together with who is on the other end", Why: "`botProviderClass` is immutable once created, so changing it later is a new BotProvider rather than an edit", From: "../guide/requirements.md"},
+		{Ask: "LINE: that Messaging API is enabled on the Official Account, before anything else", Why: "it is their step in their console, and it gates every other LINE question. The Channel Secret and Channel Access Token do not exist until it is done", From: "../wiki/integration.md"},
+		{Ask: "LINE: Channel Secret and Channel Access Token — and somebody who can paste a Webhook URL back into the LINE Developers Console and enable Use webhook", Why: "LINE is the only two-way setup: Asgard produces a URL that has to go back. The rest only take credentials inward", From: "../wiki/integration.md"},
+		{Ask: "Slack: an app-level token and a bot token - the `xapp-` and `xoxb-` pair, not a Client ID", Why: "those are different credentials, and the Client ID is often asked for by mistake. The client id, client secret, signing secret and scopes are what the platform's own UI flow installs an OAuth app with; a chart's `spec.slack` requires `appToken` and `botToken` and neither of those four. Ask for the client pair as well only if the engagement is going through the UI", From: "../wiki/integration.md"},
+		{Ask: "Discord: the Bot Token, and the bot authorised and invited to the server in their Developer Portal", Why: "the invitation is their step in their console rather than ours, and none of it is the token - a chart with the right `botToken` still has nowhere to speak", From: "../wiki/integration.md"},
+		{Ask: "Telegram: the Bot Token from BotFather. The second field is ours, not theirs", Why: "`spec.telegram` requires `webhookSecretToken` beside the bot token and no documentation page mentions it - it is a secret we choose, so it is not something to ask for, but a CR without it is refused", From: "../wiki/integration.md"},
 		{Ask: "whether anything sits between the channel and us", Why: "an existing bot, a middleware, a support desk already on that channel - it changes the entry point", From: "../guide/requirements.md"},
 	},
 }, {
@@ -110,8 +110,8 @@ var shapes = []Shape{{
 	What:        "the agent doing something rather than answering",
 	Description: "whether a test environment exists, and who is on the other end when the approval gate stops",
 	Items: []Item{
-		{Ask: "**whether there is a test environment**, first", Why: "reaching for a mock before asking loses the strongest version of the first delivery", From: "../usecase/write-path.md"},
-		{Ask: "who is on the other end when the gate stops for approval", Why: "on a public channel the person approving is the visitor, not staff - and what that looks like is a platform unknown", From: "../wiki/platform-unknowns.md"},
+		{Ask: "whether there is a test environment, first", Why: "choosing a mock before asking loses the strongest version of the first delivery", From: "../usecase/write-path.md"},
+		{Ask: "who is on the other end when the gate stops for approval", Why: "on a public channel the person approving is the visitor, not staff", From: "../wiki/tools.md"},
 	},
 }, {
 	Name:        "browser-operation",
@@ -119,7 +119,7 @@ var shapes = []Shape{{
 	Description: "a back-office login, whether a non-production one exists, how many pages and operations actually matter",
 	Items: []Item{
 		{Ask: "a login to the back office, and whether a non-production one exists", Why: "the whole shape is driving their UI; there is nothing else to reach", From: "../usecase/browser-operation.md"},
-		{Ask: "how many pages and operations actually matter", Why: "**SHOPLINE is what this costs: 88 menu-level page entry points mapped before the first useful call, and a second map for everything below them.** One back-office-only system among four sets the cost of the whole item", From: "../wiki/taiwan-channels.md"},
+		{Ask: "how many pages and operations actually matter", Why: "SHOPLINE is what this costs: 88 menu-level page entry points mapped before the first useful call, and a second map for everything below them. One back-office-only system among four sets the cost of the whole item", From: "../wiki/taiwan-channels.md"},
 	},
 }, {
 	Name:        "skill-set",
@@ -181,16 +181,15 @@ const provenance = `
 ` + "`asgard-cli audit-material --links`" + ` resolves those. That is the whole of the
 checking: a row is as good as the document it cites.
 
-**Unchecked:** the list itself. Nothing holds it against a finished engagement,
-so a shape can be missing something every one of its rows is right about.
+**Unchecked:** whether the list is complete for a shape, which only a finished engagement of that shape can show.
 `
 
 // intro is on every shape rather than in one file they all point at: a reader
 // arrives here by grepping for a word in one row, and the rule that governs how
 // to ask is worth more at that moment than a pointer to it.
-const intro = `**This is theirs to provide, not ours to design.** Ask for exactly the thing
-named - offering options invites the other side to pick one that does not
-apply, and the week it takes to find that out is the week you were saving.
+const intro = `The customer provides these; we do not design them. Ask for exactly the
+thing named. If you offer options, the customer may pick one that does not
+apply, and it can take a week to find that out.
 `
 
 // Documents renders every shape, for the export and for the audit that resolves

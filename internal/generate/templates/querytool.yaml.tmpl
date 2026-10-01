@@ -1,13 +1,12 @@
 # <<.DisplayName>>
 #
-# A zero-parameter query. No user input reaches SQL, so the injection surface is
-# zero - that property is the reason this shape exists for a public audience.
-# Do not add parameters: interpolating a keyword re-opens exactly the hole it
-# closes. A query that wants a filter gets rewritten to aggregate instead.
+# A zero-parameter query. No user input reaches SQL, so there is no injection
+# surface, which is why this shape is used for a public audience. Do not add
+# parameters: interpolating a keyword reintroduces injection. A query that wants a filter gets rewritten to aggregate instead.
 #
 # Do not ship a second tool on the same FROM/JOIN differing only in projection:
-# each description then has to name the other as the alternative, which is where
-# a model picks wrong. Make the difference a column value.
+# each description then has to name the other as the alternative, and a model
+# often picks the wrong one. Make the difference a column value.
 apiVersion: asgard-ai.com/v1alpha1
 kind: Workflow
 metadata:
@@ -57,11 +56,10 @@ spec:
       configs:
         - name: dataConnector
           value: <<.Connector>>
-        # **Not optional, and not what the name suggests.** query-database
-        # resolves a MISSING allowWrite to TRUE - the definitions give it a
-        # default of true and describe it as permitting INSERT, UPDATE, DELETE
-        # and DDL. So a processor configured by adding only what you want is a
-        # write path, and the rendered chart does not show that it happened.
+        # Required in practice. query-database resolves a missing allowWrite to
+        # true - the definitions give it a default of true and describe it as
+        # permitting INSERT, UPDATE, DELETE and DDL. So a processor that omits
+        # it is a write path, and the rendered chart does not show that.
         # This shape serves anonymous callers; leave it false.
         - name: allowWrite
           value: "false"
@@ -74,10 +72,10 @@ spec:
             -- DISTINCT, how a path is built. There is nowhere else for it.
             select 1
 
-    # **The query needs somewhere to come out.** `resultField` names the
-    # variable the rows land in; this is what returns them to the caller. A
-    # query with no response processor runs, succeeds, and answers nothing -
-    # and every deployed fixed query tool has this pair.
+    # Returns the rows to the caller. `resultField` names the variable the rows
+    # land in, and this processor sends it back. A query with no response
+    # processor runs, succeeds, and answers nothing. Every deployed fixed query
+    # tool has this pair.
     - name: proc-response
       type: push-message
       labels:
@@ -89,11 +87,11 @@ spec:
               return rows;
             })()
 
-  # **`relationships` is what runs the chain.** Without it the run starts at
-  # the entry's handlingProcessor and stops there. The CR is legal either way,
-  # so helm lint, CRD validation, the server-side dry run and `asgard-cli
-  # verify` are all green while the tool returns nothing - and an agent handed
-  # silence answers from memory.
+  # `relationships` runs the chain. Without it the run starts at the entry's
+  # handlingProcessor and stops there. The CR is valid either way, so helm
+  # lint, CRD validation, the server-side dry run and `asgard-cli verify` all
+  # pass while the tool returns nothing - and an agent that gets no result
+  # answers from memory.
   relationships:
     - from: {processor: proc-query, relationName: success}
       to: {processor: proc-response}
@@ -108,9 +106,9 @@ spec:
 #         workflow: <<.CRName>>
 #       requestConsent: false
 #
-# Those two fields are the whole entry. A Toolset tool carries NO name and NO
-# description - writing them here is an unknown field the apiserver drops in
-# silence, and the tool reaches the model unnamed.
+# Those two fields are the whole entry. A Toolset tool carries no name and no
+# description - writing them here adds unknown fields the apiserver drops
+# silently, and the tool reaches the model unnamed.
 #
 # Both live on the Workflow entry's `tooling` block above, which is where the
 # text the model reads to choose between tools already is. Say there which
@@ -130,16 +128,13 @@ metadata:
     {{- include "<<.Chart>>.labels" . | nindent 4 }}
 spec:
   toolsetClass: workflow-tooling
-  # **The platform mints this and guarantees the Secret in every namespace**, so
+  # The platform mints this and guarantees the Secret in every namespace, so
   # there is nothing to obtain and nothing to declare: `preset-agent-hub` /
   # `api_key` is created by the namespace reconciler, once, and never rotated.
   # The platform's own preset Toolset, SourceSet and BotProvider read it the
-  # same way. **Proved end to end for a SourceSet** - applied, Ready, its
-  # Syncers ran - and to the server-side dry run for a Toolset, 2026-09-14. A
-  # BotProvider's adminApiKey is the same field resolved by the same code and
-  # has not been exercised.
+  # same way.
   #
-  # It is NOT the X-API-KEY the documentation tells you to create for calling
+  # It is not the X-API-KEY a caller sends when calling
   # the API from outside - see
   # `.agents/skills/asgard-platform/usecase/conventions.md`.
   apiKey:

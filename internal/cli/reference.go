@@ -19,9 +19,8 @@ func newReferenceCmd() *cobra.Command {
 the running agent reads - domain knowledge the agent needs at run time belongs in
 a skill, because a skill is synced into the platform and this directory is not.
 
-Filing a document is a step every engagement takes and none has done the same
-way: each invented its own provenance table, and one invented a directory name
-that then read like a convention.`,
+Every engagement files documents. This command gives them one provenance
+table and one directory instead of a different one per engagement.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
@@ -43,24 +42,24 @@ func newReferenceAddCmd() *cobra.Command {
       --what "the RMA status codes, as their support team uses them" \
       --from "their support team" --dated 2024-11 --as erp/rma-status.xlsx
 
-**The document is copied byte-identical and never rewritten.** The provenance
+The document is copied byte-identical and never rewritten. The provenance
 goes in ` + "`" + work.ReferenceIndex + "`" + ` instead of a header pasted into their file, so that
 when they send a second version you can diff it against the filed one. For the
 same reason, filing over an existing name is refused: a customer's second version
 is a different document, and the two together are how anyone sees what changed.
 
-**--dated is the document's own date, not today.** It is the one that decides
-whether the material is stale. A document carrying no date is worth recording as
-carrying none - material a customer wrote for their own staff describes the
-system they believe they have, and a stale page reads exactly like a current one.
+--dated is the document's own date, not today. It decides whether the
+material is stale. If the document carries no date, record that it has none:
+material a customer wrote for their own staff describes the system they believe
+they have, and a stale page looks the same as a current one.
 
-**--what is the sentence the file name cannot carry.** "the RMA status codes, as
-their support team uses them" is worth more than "rma.xlsx", and it is what a
-reader six weeks later uses to decide whether to open it.
+--what describes the document in a sentence. "the RMA status codes, as their
+support team uses them" tells a later reader more than "rma.xlsx" does, and is
+what they use to decide whether to open it.
 
 Every row starts ` + "`verified: no`" + ` and is meant to be edited by hand once you have
-held a claim against the running system. A row marked no is worth more than a
-plausible one, because the reader knows which to trust.
+held a claim against the running system. Leave it at no until then, so the
+reader knows which rows to trust.
 
 Filing material is not reading it. ` + "`asgard-cli check`" + ` says so: material in
 ` + "`references/`" + ` with no question and no request recorded against it is a warning,
@@ -93,7 +92,7 @@ because the interview is what turns a document into a requirement.`,
 				missing = append(missing, "--dated")
 			}
 			if len(missing) > 0 {
-				fmt.Fprintf(out, "\nThe row is short of %v. Fill them in now rather than later:\nwhoever handed you this document is the only person who knows, and they\nstop being available at exactly the point somebody needs to know.\n", missing)
+				fmt.Fprintf(out, "\nThe row is missing %v. Fill them in now: whoever handed you\nthis document is the only person who knows, and may not be available later.\n", missing)
 			}
 
 			fmt.Fprintf(out, `

@@ -5,7 +5,7 @@ description: Thread, View, Dashboard, Knowledge
 # Mimir - Data Insight
 
 Explores data by conversation and produces charts and dashboards. It reads the
-Semantic Models built in Odin and **does not edit them**.
+Semantic Models built in Odin and does not edit them.
 
 Four concepts, from the most transient to the most fixed:
 
@@ -36,9 +36,7 @@ what the model actually can answer, rather than improvising.
 
 ## View
 
-A Thread is the exploring; a View is the conclusion kept.
-
-Created from a reply's Data result, then View data, then Create View. The dialog
+A View saves a result from a Thread. It is created from a reply's Data result, then View data, then Create View. The dialog
 has Name (required, prefilled with the original question and usually worth
 rewriting into a chart title), Description, SQL, and Visualization.
 
@@ -60,28 +58,38 @@ sizing and placing charts.
 Stores the organisation's own query conventions so answers match expectations
 without restating them each time. Split into Question-SQL pairs and Instructions.
 
-**Question-SQL pairs** are a question plus the SQL your team accepts for it.
+Question-SQL pairs are a question plus the SQL your team accepts for it.
 Mimir refers to that shape for similar questions instead of deriving one afresh.
 The typical use is settling what the data itself cannot: when one table carries
 both `store_id` and `store_name`, and both `on_hand` and `safety_stock`, which
 two columns a shortfall subtracts and whether a store shows as a code or a name
 are team conventions.
 
-**Instructions** set the definitions and formats an answer has to follow.
+Instructions set the definitions and formats an answer has to follow.
 
-Knowledge belongs to **the currently selected semantic model**, not to the
+Knowledge belongs to the currently selected semantic model, not to the
 Project. Knowledge created under model A is invisible under model B.
+
+It also belongs to the person asking. The platform describes it as what one end
+user has accumulated against one model - their own question-SQL pairs and their
+own instructions - and the Data Insight service attaches the asker's knowledge
+to each question. An instruction is either global, applying to every question,
+or matched, applying only when the question resembles one it lists. The list is
+capped per question and cut from the tail, so the service sends the most
+relevant entries first rather than everything a person has saved.
 
 ## Mimir or an agent
 
 When a customer says "I want an AI that answers stock questions", ask what they
 do with the answer: glancing at it each morning is a Dashboard, looking one thing
-up is an agent. Getting that wrong builds something used once and left.
+up is an agent. Choosing the wrong one builds something the customer does not
+keep using.
 
 ## Corresponding extracts
 
-Mimir reads Semantic Models and produces no CRs of its own. Building the model is
-`../usecase/semantic-layer.md`.
+Mimir reads Semantic Models and a chart writes no CR for it. The platform
+derives Mimir's chat Workflow, BotProvider and SandboxBlueprint from each
+`SemanticLayer` itself. Building the model is `../usecase/semantic-layer.md`.
 
 ## Sources
 
@@ -90,7 +98,11 @@ Mimir reads Semantic Models and produces no CRs of its own. Building the model i
   [Dashboard](https://docs.asgard-ai.com/docs/product-suite/mimir/features/dashboard),
   [Knowledge](https://docs.asgard-ai.com/docs/product-suite/mimir/features/knowledge),
   [Data Model](https://docs.asgard-ai.com/docs/product-suite/mimir/features/data-model)
-  - asgard-docs `f00e0ee`
+  - asgard-docs `6261fdff`
 
-**Unchecked:** everything here comes from the product documentation. Mimir
-produces no CRs, so there is no chart to hold it against.
+**Checked:** Knowledge being per user and per semantic model, the two
+instruction scopes, the cap, and the resources derived from a `SemanticLayer`,
+against asgard-core `478cf5d6` `internal/bpoperator/reconciler/sl_reconciler.go`.
+
+**Unchecked:** the Thread, View and Dashboard screens come from the product
+documentation only, and only a Console account can show them.

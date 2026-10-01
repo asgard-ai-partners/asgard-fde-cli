@@ -1,45 +1,42 @@
 # The index: what a customer says, and what to search for
 
-**This is an index, not a page about the platform.** It lives beside `wiki/`
-rather than in it, next to `index.md`, for the same reason that does
-- it is the wiki's own bookkeeping. Keeping it inside the corpus made it compete
-with what it points at: it lists every alias, so it was unusually likely to be
-the one document carrying every term of a translated query, and a search for 電商
-returned this table instead of `wiki/taiwan-channels.md`.
+This is an index, not a page about the platform. It lives beside `wiki/`
+rather than in it, next to `index.md`, because both are the wiki's own
+bookkeeping. Inside the corpus it competed with the pages it points at: it lists
+every alias, so it was often the one document carrying every term of a
+translated query, and a search for 電商 returned this table instead of
+`wiki/taiwan-channels.md`.
 
-**Apply both tables below to a query before searching.** A term with a row here
-will not match the material as the customer said it.
+Apply both tables below to a query before searching. A term with a row here
+does not match the material as the customer said it.
 
 ## How a row gets here
 
-**Every row is a term somebody searched for.** Add one when a search of yours
-came back empty and the subject turned out to exist under another name; that is
-the only test, and **a row nobody has needed is a guess.** When a search of
-yours lands nowhere and the subject turns out to exist under another name,
-that is a row - and worth `asgard-cli issue-report --new` so every engagement
-gets it.
+Every row is a term somebody searched for. Add one when a search came back
+empty and the subject turned out to exist under another name; that is the only
+test, and a row nobody has needed is a guess. File it with
+`asgard-cli issue-report --new` as well, so every engagement gets it.
 
 Point a row at a page where one page answers it: the pointer is checked by
 `asgard-cli audit-material --links`, which a bare word would not be.
 
-**The words are checked too.** `go run ./hack aliases` greps the landed corpus
-for every term in the right-hand column and fails on one that appears nowhere -
-a row sending a reader to a word the material does not use is a search that
-comes back empty, which reads exactly like a subject nobody covered. `稽核` sent
-one to `logging`, and nothing here has ever used that word.
+Every term in the right-hand column is one the material uses. Grep this
+directory for a term before adding it: a row sending a reader to a word the
+material does not use gives an empty search, and an empty search looks like a
+subject nobody covered.
 
-**Prefer the term a page actually writes.** A near-miss is worse than a dead
-term: `audit` on its own lands mostly on this tool's own `audit-material`, so
-the row says `audit event`, which is what the page says.
+Use the term a page actually writes. A near-miss is worse than a dead term:
+`audit` on its own lands mostly on this tool's own `audit-material`, so the row
+says `audit event`, which is what the page says.
 
 ## What a customer says, in the words this material uses
 
 The corpus is English and a customer conversation is not, so a query taken from
-what somebody actually said lands on nothing and the reader concludes the
-subject is missing rather than named differently.
+what somebody said finds nothing, and the reader concludes the subject is
+missing when it is only named differently.
 
-**These replace the word.** A Chinese term appears nowhere in an English corpus,
-so keeping it in the query would only add a term that lands nowhere.
+These replace the word. A Chinese term appears nowhere in an English corpus,
+so keeping it in the query only adds a term that matches nothing.
 
 | they said | search for |
 |---|---|
@@ -50,8 +47,11 @@ so keeping it in the query would only add a term that lands nowhere.
 | 庫存 | inventory, stock |
 | 訂單 | order |
 | 客服 | support, customer service, help desk - and `usecase/chat-channel.md` |
-| 權限 | permission, scope, console - and `wiki/platform-unknowns.md` P1 |
-| 稽核 | audit-log, auditor - and `wiki/platform-unknowns.md` P2 |
+| 權限 | permission, scope, console - and `wiki/console.md` |
+| 稽核 | audit-log, audit event - and `wiki/console.md` |
+| 入口 | entry point, channel - and `needs/chat-channel.md` |
+| 上限, 限制 | limit, quota - and `wiki/integration.md` |
+| 步驟 | step - and `wiki/glossary.md` |
 | 報表 | dashboard, report, view - and `usecase/mimir-dashboard.md` |
 | 儀表板 | dashboard - and `usecase/mimir-dashboard.md` |
 | 知識庫 | knowledge, drive, context index |
@@ -78,9 +78,9 @@ so keeping it in the query would only add a term that lands nowhere.
 Somebody searched the reference deployments for each of these and wrote down what
 came back, so the row routes to a page that has the answer.
 
-**These are added to a query rather than replacing it**, which is the difference
-from the table above: the name may be written verbatim in a page - SHOPLINE is -
-and that page is the best answer there is. Replacing the name would throw it away.
+These are added to a query rather than replacing it, unlike the table above:
+the name may be written verbatim in a page (SHOPLINE is), and that page is the
+best answer. Replacing the name would lose it.
 
 | they said | also search for |
 |---|---|
@@ -93,15 +93,14 @@ and that page is the best answer there is. Replacing the name would throw it awa
 
 ## Names it only routes
 
-**Nothing here names these.** The row exists
-because somebody searched for it and the search was recorded; what it routes to
-is **the shape the thing belongs to**, which is what this material actually has.
+The material does not name these. The row exists because somebody searched
+for it and the search was recorded; it routes to the shape the thing belongs to,
+which is what this material has.
 
-This is the distinction the table above does not carry on its own, and it is the
-one that matters: a row that routes reads exactly like a row that answers, and a
-reader who cannot tell them apart takes results about a shape as results about a
-product. Moving a row up means somebody did the search and recorded the answer -
-that is what `## Names the material covers` means, and nothing else.
+A row that routes looks the same as a row that answers, so a reader can take
+results about a shape as results about a product. Move a row up to
+`## Names the material covers` only when somebody has done the search and
+recorded the answer.
 
 | they said | also search for |
 |---|---|

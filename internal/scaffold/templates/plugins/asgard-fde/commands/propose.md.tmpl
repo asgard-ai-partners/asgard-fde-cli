@@ -2,8 +2,7 @@
 description: Build the deck that goes in front of the customer.
 ---
 
-Before writing a single slide, load the deck skill - it holds the rules that were
-learned the expensive way:
+Before writing any slide, load the deck skill, which holds the rules for decks:
 
 ```
 .agents/skills/proposal-deck/SKILL.md
@@ -11,11 +10,11 @@ learned the expensive way:
 
 The three that get broken most:
 
-- **No CR kinds, no `ts-` / `sl-` / `dc-` prefixes, no internal tool names** -
+- No CR kinds, no `ts-` / `sl-` / `dc-` prefixes, no internal tool names -
   not in the text, and not inside a screenshot either
-- **Say what it does, in their words.** Not what it is made of
-- **A question page is not a list of everything you do not know.** It is the
-  short list of things whose answer changes what gets built
+- Say what it does, in their words, not what it is made of
+- A question page lists only the things whose answer changes what gets built,
+  not everything you do not know
 
 What the deck is proposing has to be decided before it is written, and the
 material for that is:
@@ -26,7 +25,7 @@ asgard-cli size <shape>                 # how big the thing actually is
 `.agents/skills/asgard-platform/wiki/screenshots.md`             # which picture answers which question
 ```
 
-**Open any screenshot before it goes on a slide.** Nothing records when they
+Open any screenshot before it goes on a slide. Nothing records when they
 were captured, most of the index has never been opened, and of the ones that
-have, cropping was needed as often as not. A screenshot of a console the
-customer will not recognise is worse than no screenshot.
+have, cropping was needed as often as not. Leave out a screenshot of a console
+the customer will not recognise.

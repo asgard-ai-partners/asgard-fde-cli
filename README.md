@@ -6,13 +6,13 @@ Command line tool for Asgard FDE (`asgard-cli`).
 
 ## Install
 
-**On macOS or Linux, one command:**
+On macOS or Linux:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/asgard-ai-partners/asgard-fde-cli/main/install.sh | sh
 ```
 
-**On Windows, in PowerShell:**
+On Windows, in PowerShell:
 
 ```powershell
 irm https://raw.githubusercontent.com/asgard-ai-partners/asgard-fde-cli/main/install.ps1 | iex
@@ -21,26 +21,25 @@ irm https://raw.githubusercontent.com/asgard-ai-partners/asgard-fde-cli/main/ins
 `install.ps1` is the Windows half and makes the same decisions: it verifies the
 download against the release's own checksums, installs under `%LOCALAPPDATA%`
 and adds that to your user PATH. Installing where the user owns the files needs
-no elevation and is what lets `asgard-cli update` replace the binary later.
+no elevation and lets `asgard-cli update` replace the binary later.
 
-It takes the newest release for this platform, **verifies the download against
-the release's own checksums**, installs to `/usr/local/bin`, and then runs the
-binary once - because macOS scans a newly written unnotarized binary on first
-execution, and that scan is better spent inside an installer than in front of a
-customer. `install.sh` at the repository root is what runs, and it is worth
-reading before piping anything into a shell.
+`install.sh` takes the newest release for this platform, verifies the download
+against the release's own checksums, installs to `/usr/local/bin`, and then runs
+the binary once. macOS scans a newly written unnotarized binary on first
+execution, and running it once in the installer means that scan does not happen
+in front of a customer. Read `install.sh` at the repository root before piping
+it into a shell.
 
-**`/usr/local/bin` on Linux too, and that is the point rather than a default.**
-The `.deb` and the `.rpm` install into `/usr/bin`, which is the package
-manager's, and a binary there cannot replace itself - `asgard-cli update`
-refuses rather than leaving dpkg describing a version that is not on disk. The
-filesystem standard reserves `/usr/local` for software installed outside the
-package manager, so an install made this way is one that updates itself
-afterwards.
+It installs to `/usr/local/bin` on Linux too, on purpose. The `.deb` and the
+`.rpm` install into `/usr/bin`, which belongs to the package manager, and a
+binary there cannot replace itself: `asgard-cli update` refuses rather than
+leaving dpkg describing a version that is not on disk. The filesystem standard
+reserves `/usr/local` for software installed outside the package manager, so an
+install made this way can update itself afterwards.
 
-Everything below is the same thing done by hand.
+The rest of this section does the same thing by hand.
 
-**The URL carries no version**, so it keeps working across releases - GitHub
+The URL carries no version, so it keeps working across releases. GitHub
 resolves `/releases/latest/download/<name>` to the newest:
 
 ```bash
@@ -63,13 +62,13 @@ curl -fLO https://github.com/asgard-ai-partners/asgard-fde-cli/releases/latest/d
 sudo dpkg -i asgard-cli_linux_${arch}.deb
 ```
 
-That puts it in `/usr/bin`, so **upgrades go through dpkg rather than through
-`asgard-cli update`** - which is what the update command will tell you if you
-run it there. Take the tarball or the installer instead if you would rather the
-tool kept itself current.
+That puts it in `/usr/bin`, so upgrades go through dpkg rather than through
+`asgard-cli update`, and the update command says so if you run it there. Take
+the tarball or the installer instead if you want the tool to keep itself
+current.
 
-If you would rather have the platform detected for you, or you want a specific
-release rather than the newest:
+To have the platform detected for you, or to take a specific release rather
+than the newest:
 
 ```bash
 repo=asgard-ai-partners/asgard-fde-cli
@@ -89,23 +88,21 @@ does. Debian or RPM hosts can take the `.deb` / `.rpm` instead.
 
 ### macOS may stall or kill the first run
 
-The binaries are ad-hoc signed - what Go's linker does so they run at all - and
-**they are not notarized**, so macOS scans the first execution. The same asset,
+The binaries are ad-hoc signed (what Go's linker does so they run at all) and
+are not notarized, so macOS scans the first execution. The same asset,
 downloaded with `gh` on one machine, did all three of these: ran immediately,
 stalled for minutes and then ran, and was killed with exit 137 and no output
-before working on the next attempt. **A browser download is the reliable
-failure** - the quarantine mark it adds got exit 137 every time.
+before working on the next attempt. A browser download fails reliably: the
+quarantine mark it adds got exit 137 every time.
 
-So if it appears to do nothing, it is this rather than the tool:
+If it appears to do nothing, this is the cause:
 
 ```bash
 xattr -d com.apple.quarantine ./asgard-cli   # only if a browser downloaded it
 ./asgard-cli version                          # and try a second time
 ```
 
-**This is fixed by notarizing the release, not by a workaround**, and until that
-is done an install is worth doing before somebody needs the tool rather than
-during a meeting.
+Install the tool before somebody needs it rather than during a meeting.
 
 If you already build Go, the module works directly:
 
@@ -124,52 +121,49 @@ asgard-cli update              take the newest release
 asgard-cli version --check     ask whether there is one, and change nothing
 ```
 
-**Every command that can reach a network asks whether a newer release is
-published, at most once every two hours**, and prints one line on stderr when
-the answer is yes. The answer is recorded in `update-check.json` beside the profiles - never in a customer's
-repository, which is somebody else's checkout and is committed - and the
-question is asked alongside the command rather than in front of it, so the
-runs that ask are not slower than the ones that read the cached answer.
+Every command that can reach a network asks whether a newer release is
+published, at most once every two hours, and prints one line on stderr when
+the answer is yes. The answer is recorded in `update-check.json` beside the
+profiles, never in a customer's repository, which is somebody else's checkout
+and is committed. The question is asked alongside the command rather than
+before it, so runs that ask are not slower than runs that read the cached
+answer.
 
 `update` replaces this binary in place: it takes the version-less asset for
 this platform, verifies the download against that release's own checksums by
-HASH rather than by name, **runs the new binary where it landed, and only then
-renames it over the old one.** The order is what makes it safe - a build macOS
-kills, a truncated download or an archive with nothing in it all fail before
-anything has been replaced, so the outcome is either the new version or exactly
-what was there before, never a binary that does not run. On macOS it is also
-where the Gatekeeper scan of a newly written unnotarized binary is spent, which
-is better than spending it in front of a customer.
+HASH rather than by name, runs the new binary where it landed, and only then
+renames it over the old one. Because of that order, a build macOS kills, a
+truncated download or an empty archive all fail before anything has been
+replaced: the result is either the new version or exactly what was there
+before. On macOS this is also where the Gatekeeper scan of a newly written
+unnotarized binary happens, instead of in front of a customer.
 
-**It refuses rather than guessing**, and each refusal names what to run
-instead: a package manager's copy is that package manager's to move, a
-directory you cannot write needs `sudo asgard-cli update`, and a `go build`
-binary has no release to be compared against. The line every command prints
-names whichever of those applies to your install rather than one command for
-everybody.
+It refuses when it cannot update safely, and each refusal names what to run
+instead: a package manager's copy is moved by that package manager, a directory
+you cannot write needs `sudo asgard-cli update`, and a `go build` binary has no
+release to be compared against. The line every command prints names whichever
+of those applies to your install.
 
-**On Windows it takes two renames rather than one.** A running `.exe` cannot be
-written or deleted, but it can be renamed, so the old binary is moved aside to
-`asgard-cli.exe.old` and the new one takes its name - and the displaced file
-cannot be removed until the process running from it exits, so a later run
-sweeps it. Seeing one beside the binary after an update is that, not a failure.
+On Windows it takes two renames. A running `.exe` cannot be written or deleted,
+but it can be renamed, so the old binary is moved aside to `asgard-cli.exe.old`
+and the new one takes its name. The displaced file cannot be removed until the
+process running from it exits, so a later run deletes it. A leftover
+`asgard-cli.exe.old` beside the binary after an update is expected.
 
-**Nothing replaces the binary without being asked.** A CLI that overwrites
-itself in the background has to pick a moment and every moment is somebody
-else's - mid-command, mid-meeting, or while a package manager believes it owns
-the file.
+Nothing replaces the binary without being asked. A CLI that overwrites itself
+in the background can land mid-command, mid-meeting, or while a package manager
+believes it owns the file.
 
-It is off wherever stderr is not a terminal, so a CI log and a piped stderr get
-nothing and make no call. **A command whose help says it touches no network
-never asks** - `init`, `size` and `guide` among them, the half that answers in a
-meeting - because a request that fails silently still leaves from the meeting's
-network. `ASGARD_NO_UPDATE_CHECK` turns off the background one everywhere else;
-`--check` still answers.
+The check is off wherever stderr is not a terminal, so a CI log and a piped
+stderr get nothing and make no call. A command whose help says it touches no
+network never asks - `init`, `size` and `guide` among them, the commands used in
+a meeting - because even a request that fails silently goes out over the
+meeting's network. `ASGARD_NO_UPDATE_CHECK` turns off the background check
+everywhere else; `--check` still answers.
 
-A repository can also say it on its own, with no network at all:
-`.asgard-scaffold.json` records which version wrote each file this CLI ships,
-so a checkout somebody has already run a newer binary in is one `asgard-cli
-gate` away from naming that version.
+A repository also records this without a network: `.asgard-scaffold.json`
+records which version wrote each file this CLI ships, so in a checkout where
+somebody has already run a newer binary, `asgard-cli gate` names that version.
 
 ## Development
 
@@ -181,22 +175,21 @@ make help        # the rest
 ```
 
 `make install` is `go install ./cmd/asgard-cli`: the binary lands in `GOBIN`,
-or in `go env GOPATH`/bin when that is unset, and the target says so afterwards
-- along with a warning when something earlier on your PATH will shadow what it
+or in `go env GOPATH`/bin when that is unset, and the target says so afterwards,
+along with a warning when something earlier on your PATH will shadow what it
 just installed. To install somewhere else, name it:
 
 ```bash
 make install GOBIN=~/.local/bin
 ```
 
-**What lives in which directory is [STRUCTURE.md](STRUCTURE.md)**, and is not
-repeated here: two copies of a directory listing drift, and the reader cannot
-tell which is current.
+What lives in which directory is in [STRUCTURE.md](STRUCTURE.md) and is not
+repeated here, so that there is one directory listing to keep current.
 
 To add a subcommand, write a `newXxxCmd()` in `internal/cli/` and register it
 through `addTo(cmd, group..., ...)` in `root.go`. The group is required - cobra
-panics on a `GroupID` the parent does not have - so a command cannot be added
-without deciding where in the help it belongs.
+panics on a `GroupID` the parent does not have - so every command is placed in
+a help group when it is added.
 
 - [Goal.md](Goal.md) - what this tool is for, in four points.
 - [APPROACH.md](APPROACH.md) - how the main capabilities are implemented: the
@@ -206,7 +199,7 @@ without deciding where in the help it belongs.
   bodies of embedded material and which one a change belongs to.
 - [AGENTS.md](AGENTS.md) - the conventions this repo follows, and what the gate
   is.
-- [TASK.md](TASK.md) - where it stands, and what is not finished.
+- [TASK.md](TASK.md) - what is still to do.
 
 ## Commands
 
@@ -246,46 +239,42 @@ Now open this directory in your coding agent and say:
     Connect this repo to the Asgard platform
 ```
 
-**This is the one command written for a person, and the only one that asks
-questions.** Everything else here is written for a coding agent working in a
-repository that already exists - and until this has run, that repository does
-not: no `AGENTS.md`, no `CLAUDE.md`, no `.agents/skills/`. An agent opened in an
-empty directory knows nothing about Asgard at all, which is why asking it to run
-a command that needs a workspace id was circular.
+This is the one command written for a person, and the only one that asks
+questions. Every other command is written for a coding agent working in a
+repository that already exists, and until `init` has run that repository has no
+`AGENTS.md`, no `CLAUDE.md` and no `.agents/skills/`. An agent opened in an
+empty directory knows nothing about Asgard, so it cannot be asked to run a
+command that needs a workspace id.
 
-**It touches no network and needs no account.** The skeleton is a fact about
-this tool, not about any platform, so it can be written on a plane, before a
-workspace exists, or before anybody has signed in. That is what makes it
-possible to run first.
+It touches no network and needs no account. The skeleton depends only on this
+tool, not on any platform, so it can be written offline, before a workspace
+exists, or before anybody has signed in. That is why it can run first.
 
-**Connecting the checkout to a platform is deliberately not part of it.**
-Signing in, choosing a workspace, creating a pipeline and fetching the material
-describing the server all come afterwards, guided by the agent this command just
-equipped - which is a better guide than a list of commands somebody follows
-by hand. `asgard-cli gate` says what is still missing at any point.
+Connecting the checkout to a platform is not part of it. Signing in, choosing a
+workspace, creating a pipeline and fetching the material describing the server
+come afterwards, guided by the agent this command just equipped.
+`asgard-cli gate` says what is still missing at any point.
 
 Run it again whenever this CLI has moved on or a project was added: existing
 files are left alone and reported as skipped. `--force` takes the newer shipped
 material, discarding local edits to the skeleton; files this tool writes into -
 the indexes, the open-questions table, the living spec - are preserved either
 way and reported. In a file carrying an `asgard-cli:managed` region it replaces
-the region and nothing else, because that is the whole of what this CLI wrote
-there - the scaffolded `AGENTS.md` promises its reader as much about the half
-above the marker. `--yes` asks nothing, which is also what happens when stdin is
-not a terminal, so a re-run from an agent or from CI needs no interaction.
+the region and nothing else, because that region is all this CLI wrote there;
+the scaffolded `AGENTS.md` tells its reader the same about the half above the
+marker. `--yes` asks nothing, which is also what happens when stdin is not a
+terminal, so a re-run from an agent or from CI needs no interaction.
 
-**"Already present" is not "up to date"**, and the files this CLI ships are the
-ones where that matters: AGENTS.md and the design-time skills. It records which
+A file that is already present may still be out of date, and this matters for
+the files this CLI ships: AGENTS.md and the design-time skills. It records which
 version of itself wrote each of them, in `.asgard-scaffold.json` beside the
 declaration, and reports a difference as `behind` (this CLI moved on, nobody here
 touched it), `edited` (somebody here did, and `--force` would discard it), `ahead`
 (a newer CLI wrote this repository, and `--force` refuses to downgrade it) or
-`retired` (an older CLI shipped the file and this one does not). Before the
-record, all four were one line saying "yours are older", which was printed over an
-engagement's own answers as readily as over material that really was behind.
+`retired` (an older CLI shipped the file and this one does not).
 
-It refuses to write into a home directory or a filesystem root. A whole scaffold
-one directory up from where it was meant is the mistake worth a guard.
+It refuses to write into a home directory or a filesystem root, to guard
+against writing a whole scaffold one directory above where it was meant.
 
 It writes the part of a customer repo that is the same for every engagement:
 
@@ -299,9 +288,8 @@ It writes the part of a customer repo that is the same for every engagement:
 | `.asgard-pipeline.yaml` | the deployment declaration, with one release per project to fill in |
 | `projects/<slug>/` | one chart skeleton per project |
 
-What it does **not** write is the customer's own knowledge: which systems exist,
-how the projects split, what the CRs look like. That is what the onboarding
-produces, and no template can generate it.
+It does not write the customer's own knowledge: which systems exist, how the
+projects split, what the CRs look like. The onboarding produces that.
 
 The generated skeleton passes its own gate on the first run:
 
@@ -309,18 +297,17 @@ The generated skeleton passes its own gate on the first run:
 asgard-cli gate                               # everything this machine can check
 ```
 
-**Do not run `helm lint` by hand.** The platform injects a reserved
+Do not run `helm lint` by hand. The platform injects a reserved
 `.Values.asgard` block into every render, and a chart must not declare it in its
-own `values.yaml` - so a bare lint fails on every chart that reads
+own `values.yaml`, so a bare lint fails on every chart that reads
 `.Values.asgard.projectEnvironmentId`, which is every chart that labels
 anything. `gate` supplies that one file and nothing else.
 
 ### `guide`
 
-**`guide` reads one decision, against the repository you are in.** That is the
-whole reason it is still a command: the static half of each piece lands as a
-file like everything else, and what a command adds is this repository's own
-state - which projects exist, what is still open.
+`guide` reads one decision against the repository you are in. The static half
+of each piece lands as a file like everything else; the command adds this
+repository's own state - which projects exist, what is still open.
 
 ```bash
 asgard-cli guide                  # every piece of guidance, by name
@@ -331,26 +318,25 @@ cat .agents/skills/asgard-platform/guide/requirements.md   # the static half
 
 ### The links to this engagement's own systems
 
-A deck for partners is mostly links, and every id in one is already on disk -
+A deck for partners is mostly links, and every id in one is already on disk:
 `.asgard-cli.yaml` carries the workspace, the git remote carries the repository.
-Assembling them by hand is the step that goes wrong, because a link is a claim
-that a specific page is worth opening and the weaker versions of it all render
-correctly: the site's root in place of the page, the URL spelled out beside the
-name that is already the link, the link dropped on a guess about who can open it.
+Assembling them by hand goes wrong in ways that still render correctly: the
+site's root in place of the page, the URL spelled out beside the name that is
+already the link, or the link dropped on a guess about who can open it.
 
 ```bash
 asgard-cli links                  # what this checkout is bound to
 ```
 
-**It prints only what it knows.** The Console is a different host from the API
+It prints only what it knows. The Console is a different host from the API
 and neither implies the other, so the Console is known for the hosted
 installation and unknown for any other; a pipeline's Console path is written
-down nowhere. Those come out as a named absence rather than as a plausible URL.
+down nowhere. Unknown values are printed as named absences, not as guessed URLs.
 It reaches no network and needs no session.
 
-**There is no command that says where the engagement is**, and that is
-deliberate. `project`, `question`, `request` and `task` each read one file back
-to you; none of them derives a position from the others.
+No command says where the engagement is. `project`, `question`, `request` and
+`task` each read one file back to you; none of them derives a position from the
+others.
 
 ```
   requirements   Turn what the customer said into a request
@@ -365,27 +351,26 @@ to you; none of them derives a position from the others.
   idle           Nothing in flight
 ```
 
-**None of these is a step you arrive at.** An onboarding is not linear: three
-of the most expensive decisions in the engagement this was built from were
-made, built and reversed, and an engagement that has already gathered every
-requirement has no stage at all. So nothing here raises guidance at you. It is
-reached by name with `guide`, or by grepping `guide/` for the subject.
+These are not steps in a sequence. An onboarding is not linear: three of the
+most expensive decisions in the engagement this was built from were made, built
+and reversed, and an engagement that has already gathered every requirement has
+no stage at all. Guidance is reached by name with `guide`, or by grepping
+`guide/` for the subject.
 
-**`read-path`, `entry-point` and `knowledge` print the wrong answer next to the
-right one.** Those are the three decisions this engagement got wrong once and
+`read-path`, `entry-point` and `knowledge` print the wrong answer next to the
+right one. Those are the three decisions this engagement got wrong once and
 reversed, and in each case the wrong answer is the one that looks obvious.
 
-**A chart does not always end with an entry point**, and no command here says
+A chart does not always end with an entry point, and no command here says
 whether one is finished. A SemanticLayer with nothing mounted on it is either a
 finished Mimir deliverable or an agent nobody has written yet, and the files
 cannot tell the two apart. `asgard-cli size <shape>` lists what a shape is made
-of, for a person to compare against; nothing records a chart's intended shape,
-because a note of what somebody meant to build is not something this tool can
-check.
+of, for a person to compare against. Nothing records a chart's intended shape,
+because this tool cannot check a note of what somebody meant to build.
 
 ### `project`, `request`, `task`, `question`
 
-**Four commands read the repository back to you**, one file each, each with
+Four commands read the repository back to you, one file each, each with
 `--format json`. None of them infers anything from the others.
 
 ```bash
@@ -395,8 +380,8 @@ asgard-cli task        # the task specs that are open
 asgard-cli project     # what each chart declares
 ```
 
-**Read `question` first.** The fastest way to do damage in a repository somebody
-else started is to design past a question they already knew was open.
+Read `question` first. In a repository somebody else started, designing past a
+question they already knew was open is the fastest way to do damage.
 
 ```
 Projects:
@@ -405,59 +390,55 @@ Projects:
   helpdesk             chart is empty
 ```
 
-**It says what each chart HAS and nothing about what it lacks.** That used to be
-measured against a "shape" recorded per project, and reporting "this shape asks
-for X and X is absent" meant treating somebody's note of intent as a
-specification. The list itself is the repository - the chart paths the
-declaration names, and the directories under `projects/` - so there is no second
-copy of it to drift.
+It says what each chart has and nothing about what it lacks. Comparing against
+a recorded per-project shape would treat somebody's note of intent as a
+specification. The list comes from the repository itself - the chart paths the
+declaration names, and the directories under `projects/` - so there is no
+second copy of it.
 
 ### `reference` - filing what the customer hands over
 
     asgard-cli reference add <file> --what "<what it is>" \
       --from "<who supplied it>" --dated <the document's own date>
 
-`references/` is background for humans and spec-writing agents. **It is not what
-the running agent reads**: domain knowledge the agent needs at run time belongs
-in a skill, because a skill is synced into the platform and this directory is
-not.
+`references/` is background for humans and spec-writing agents. The running
+agent does not read it: domain knowledge the agent needs at run time belongs in
+a skill, because a skill is synced into the platform and this directory is not.
 
-The command exists because filing a document is a step every engagement takes
-and none has done the same way - each invented its own provenance table, and one
-invented a directory name that then read like a convention. It copies the file
-byte-identical, so a later version can be diffed against the filed one, and puts
-the provenance in `references/_index.md` rather than in a header pasted into the
-customer's own file.
+Every engagement files documents, and without a command each invented its own
+provenance table and directory name. This command copies the file
+byte-identical, so a later version can be diffed against the filed one, and
+puts the provenance in `references/_index.md` rather than in a header pasted
+into the customer's own file.
 
-**`--dated` is the document's own date, not today.** That is the one that decides
-whether the material is stale, and a document carrying no date is worth
-recording as carrying none. `asgard-cli check` warns about rows that are short.
+`--dated` is the document's own date, not today. That date decides whether the
+material is stale; record a document that carries no date as carrying none.
+`asgard-cli check` warns about rows that are short.
 
 ### `local-env` - a form, because a password must not reach a transcript
 
     asgard-cli local-env
     asgard-cli local-env --focus UOF_DB_HOST,UOF_DB_PASSWORD
 
-**A coding agent must never ask anybody to say a password to it** - not in the
-conversation, and not "paste it and I will remove it after": a credential that
-has been through a transcript is disclosed. The alternative had been to ask
-somebody who may not be an engineer to open a dotfile, find the right line and
-mind the whitespace, which is a request that fails.
+A coding agent must never ask anybody to give it a password, either in the
+conversation or as "paste it and I will remove it after": a credential that has
+been through a transcript is disclosed. Asking a non-engineer to edit a dotfile
+by hand is also unreliable.
 
-So the agent writes the key names with empty values, and this opens a form to
-fill them in: one page on 127.0.0.1 on a random port, a one-time token in the
-URL, no other host name answered, and a policy that lets the page talk to
+So the agent writes the key names with empty values, and this command opens a
+form to fill them in: one page on 127.0.0.1 on a random port, a one-time token
+in the URL, no other host name answered, and a policy that lets the page talk to
 nothing but the process that served it. It closes as soon as the form is saved.
 
-**What comes back is a list of key names, never a value** - not on save, not in
-an error, not in the summary. `--focus` highlights the keys you are waiting for
-and **does not hide the others**, deliberately: the person filling it in may know
-about a second database nobody has mentioned, and they can add keys, so re-read
-`.env` afterwards rather than assuming you got back what you asked for.
+It returns only key names, never a value - not on save, not in an error, not in
+the summary. `--focus` highlights the keys you are waiting for and does not hide
+the others: the person filling it in may know about a second database nobody
+has mentioned, and they can add keys. Re-read `.env` afterwards rather than
+assuming you got back only what you asked for.
 
 ### `request`, `task`, `question`, `decision` - writing the records
 
-Work arrives as a **request**: one thing the customer wants that the agent cannot
+Work arrives as a request: one thing the customer wants that the agent cannot
 do today. Everything else hangs off it.
 
 ```bash
@@ -476,7 +457,7 @@ asgard-cli question answered 1 "location 608 only" --decision 2026-09-04-safety-
 asgard-cli decision add "the website reads through fixed query tools" --module architecture.md
 ```
 
-**None of this state lives in the CLI.** Each command writes a file in the
+None of this state lives in the CLI. Each command writes a file in the
 customer's repository, because that repository is what the next agent opens:
 
 | record | file | carries |
@@ -486,13 +467,13 @@ customer's repository, because that repository is what the next agent opens:
 | open question | a row in `docs/open-questions.md` | date raised, what it blocks, who can answer |
 | decision | `docs/decisions/YYYY-MM-DD-<topic>.md` + a traceability row | the date in the file name, the module it changed |
 
-The reason these are commands rather than instructions to write a file is that
-each record lives in more than one place. A task's status is in the queue table,
-in the spec's own `Meta`, and in the spec's execution log; a request's target
-project is in the registry's Spec column and in its `Meta`. Moving one by hand
-means three or four edits, and a repository where two of them disagree gives the
-next reader no way to tell which is current. Every command here moves all of
-them, and stamps the date rather than asking for it.
+These are commands rather than instructions to write a file because each record
+lives in more than one place. A task's status is in the queue table, in the
+spec's own `Meta`, and in the spec's execution log; a request's target project
+is in the registry's Spec column and in its `Meta`. Moving one by hand means
+three or four edits, and if two of them disagree the next reader cannot tell
+which is current. Every command here updates all of them, and stamps the date
+rather than asking for it.
 
 `asgard-cli question`, `request`, `task` and `project` read them back, each with
 `--format json`.
@@ -523,27 +504,27 @@ Next:
 Ten kinds: `dataconnector`, `semanticlayer`, `agent`, `httptool`, `querytool`,
 `skillset`, `trigger`, `knowledgedrive`, `plugin`, `flowagent`.
 
-**What it generates is a skeleton**: the structure and the traps are right, the
-content is marked TODO. The parts worth generating are the ones nothing catches -
-a missing display annotation shows a nameless resource in the UI, a Workflow
-without its set labels is invisible there, a Trigger without its own two labels
-opens as a blank canvas, and a field renamed upstream still lints clean under its
-old name. None of those is caught by `helm lint`, by CRD validation, or by a
-server-side dry-run.
+It generates a skeleton: the structure and the traps are right, and the content
+is marked TODO. It generates the parts nothing else catches: a missing display
+annotation shows a nameless resource in the UI, a Workflow without its set
+labels is invisible there, a Trigger without its own two labels opens as a blank
+canvas, and a field renamed upstream still lints clean under its old name. None
+of those is caught by `helm lint`, by CRD validation, or by a server-side
+dry-run.
 
 It reads the chart before writing into it, so a reference it emits points at
 something that exists: one SemanticLayer in the chart is mounted, several are
 refused by name, a SkillSet is referenced only if one is there. A second query
 tool does not re-emit a Toolset the first one already wrote.
 
-The two pointers it prints are in reading order and answer different questions -
+The two pointers it prints are in reading order and answer different questions:
 `wiki` says what the thing is, `usecase` says how it is assembled and assumes you
 already know the first.
 
 ### The material, as files
 
-Five bodies of reference material, compiled into the binary and **written into a
-customer repository by `asgard-cli init`**, under one directory:
+Five bodies of reference material, compiled into the binary and written into a
+customer repository by `asgard-cli init`, under one directory:
 
 ```
 .agents/skills/asgard-platform/
@@ -565,30 +546,29 @@ customer repository by `asgard-cli init`**, under one directory:
 | `guide/` | one decision, the obvious answer, and what reversing it costs | three decisions reversed in production |
 
 An extract assumes you already know the platform has that shape; a wiki page is
-where that assumption comes from. `asgard-cli add` prints one of each.
+where that knowledge comes from. `asgard-cli add` prints one of each.
 
-**There is no search command, and that is the design.** The documents are on
-disk, so `cat` and `grep` are the interface:
+There is no search command. The documents are on disk, so `cat` and `grep` are
+the interface:
 
 ```bash
 grep -ril "allowlist" .agents/skills/asgard-platform/
 cat .agents/skills/asgard-platform/wiki/processors.md
 ```
 
-Two things a grep does not do for itself, so read them first:
+Read two files first, because a grep does not cover what they do:
 
-**`aliases.md`, if the question did not arrive in English.** The material is
-English and a customer conversation usually is not, so a term taken from what
-somebody actually said matches nothing - and that reads exactly like a subject
-the material does not cover.
+- `aliases.md`, if the question did not arrive in English. The material is
+  English and a customer conversation usually is not, so a term taken from what
+  somebody said matches nothing, which looks the same as a subject the material
+  does not cover.
+- `wiki/glossary.md`, for the word you searched. A result in the wrong sense
+  looks like an answer: `payment` is billing between Asgard and the customer,
+  and also the customer's own payment gateway.
 
-**`wiki/glossary.md`, for the word you searched.** A result in the wrong sense
-reads exactly like an answer: `payment` is billing between Asgard and the
-customer, and also the customer's own payment gateway.
-
-**With no repository, run `asgard-cli init` in an empty directory.** It needs
-no account and touches no network, which is the point: the question gets asked
-in a meeting, before there is a directory.
+With no repository, run `asgard-cli init` in an empty directory. It needs no
+account and touches no network, so it works in a meeting, before there is a
+directory.
 
 ```bash
 mkdir -p /tmp/asgard && cd /tmp/asgard && asgard-cli init
@@ -601,31 +581,35 @@ it is kept from going stale as the platform moves - are in `wiki/README.md`.
 
 Two commands that read no repository.
 
-**`size`** is what one capability is made of before it is written - the first
-question a proposal is asked, and the basis of a quote. The counts come from
-deployments in production rather than from reasoning, which matters most where
-the intuitive answer is wrong: **the flow-agent shapes contain no `Agent` CR at
-all.**
+`size` shows what one capability is made of before it is written, which is the
+first question a proposal is asked and the basis of a quote. The counts come
+from deployments in production rather than from reasoning, which matters where
+the intuitive answer is wrong: the flow-agent shapes contain no `Agent` CR at
+all.
 
 ```bash
 asgard-cli size                      # the shapes, and what each costs empty
 asgard-cli size flow-agent-single --databases 2 --queries 4
 ```
 
-**`issue-report`** is how a gap in this tool gets filed, and it is the only way
-what an engagement learned reaches the next one. The gap does not belong in the
-customer repository: a note in one engagement is a note one engagement has.
+`issue-report` files a gap in this tool, and it is the only way what one
+engagement learned reaches the next. The gap does not belong in the customer
+repository, where only that engagement would see it.
 
 ```bash
 asgard-cli issue-report               # the URL, and what a report has to say
 asgard-cli issue-report --new         # a body with the evidence already in it
 ```
 
+The report ends with "What I now know", for a discovery rather than a defect:
+something the platform does that the material does not say, found out on a
+deployment.
+
 ### `check`
 
 The first step of the acceptance gate, and the only one that needs no external
-tool. It verifies the invariants a chart render cannot see - the ones that
-otherwise surface at deploy time, or when the next person picks the repo up:
+tool. It verifies the invariants a chart render cannot see, which otherwise
+surface at deploy time or when the next person picks the repo up:
 
 ```bash
 asgard-cli check                    # whole repo
@@ -647,15 +631,14 @@ ok  structure is consistent (1 project(s): [erp])
 - the `docs/` spec layer is intact: required files, the living spec's module index
   matching the files on disk, dated filenames, and every relative link inside
   `docs/` resolving
-- **no page is an orphan** - a document under `docs/` or `requirements/` that
-  nothing links to is not read, and the person who wrote it never finds out,
-  because the file is still there. A warning rather than an error: a decision
-  recorded today and not yet applied is an orphan for as long as that takes.
+- no page is an orphan: a document under `docs/` or `requirements/` that
+  nothing links to is not read. This is a warning rather than an error, because
+  a decision recorded today and not yet applied is an orphan until it is.
 
 `asgard-cli verify` adds the invariants a render carries, including the CRDs'
 conditional CEL rules: a credential that sets neither a literal nor a reference
 or both, a class block missing or doubled, a `toolsetClass` without the block it
-requires. **Every one of those renders, lints and passes a server-side dry-run**,
+requires. Every one of those renders, lints and passes a server-side dry-run,
 and is refused at apply. 40 of the 79 `XValidation` markers are
 `self == oldSelf`, comparing a proposal against the object already on the
 cluster, and cannot be seen offline at all.
@@ -663,14 +646,14 @@ cluster, and cannot be seen offline at all.
 Naming projects limits the project-scoped checks to those; the repo-wide checks
 always run. It exits non-zero when anything fails, and warnings do not fail it.
 
-The rot this cannot see - two pages that contradict each other, a claim a newer
-source superseded, a concept every document explains in passing and none owns -
-needs a reader. The `knowledge-base` skill under `.agents/skills/` in the
+It cannot see two pages that contradict each other, a claim a newer source
+superseded, or a concept every document explains in passing and none owns;
+those need a reader. The `knowledge-base` skill under `.agents/skills/` in the
 generated repo is the pass for that.
 
 ### `render`, `verify`, `doctor`
 
-These three are why the acceptance gate now runs on Windows.
+These three let the acceptance gate run on Windows.
 
 ```bash
 asgard-cli render internal-dev         # manifests to stdout, summary to stderr
@@ -680,16 +663,15 @@ asgard-cli verify --format json        # one record per render, each check named
 asgard-cli doctor                      # which external tools are here, and how to get them
 ```
 
-`render` takes a **release**, not a project and an environment. Where a chart
+`render` takes a release, not a project and an environment. Where a chart
 deploys is a release in `.asgard-pipeline.yaml`, and one chart can have several;
 `asgard-cli pipeline releases` lists the ones the platform has.
 
-**`check` and `verify` are the pair an agent works hardest**, because they are
-the gate it is trying to turn green - so both take `--format json`. In text a
-warning and a failure differ by one word at the left margin and only one of them
-is fatal; in JSON they are separate arrays. A failing JSON run exits 1 and
-prints nothing to stderr: the report already says it failed, and a second
-account of it on another stream is a second source for one fact.
+`check` and `verify` are the gate an agent is trying to turn green, so both
+take `--format json`. In text a warning and a failure differ by one word at the
+left margin and only one of them is fatal; in JSON they are separate arrays. A
+failing JSON run exits 1 and prints nothing to stderr, because the report
+already says it failed.
 
 `render` replaces the generated repo's `common/render.sh`, and `verify` replaces
 its `check_chart_xref.py` and `check_agent_split.py`. The old chain was:
@@ -698,8 +680,8 @@ its `check_chart_xref.py` and `check_agent_split.py`. The old chain was:
 bash render.sh  ->  yq  ->  helm template  ->  python3 + PyYAML
 ```
 
-Four external dependencies, of which **three do not work on Windows without WSL
-or Git Bash** - while helm and kubectl both have native Windows builds. The
+Four external dependencies, of which three do not work on Windows without WSL
+or Git Bash, while helm and kubectl both have native Windows builds. The
 prerequisite is now `helm` alone, and one binary:
 
 ```
@@ -708,28 +690,19 @@ asgard-cli verify  ->  helm template  ->  internal/gate
 
 `verify` renders in process, so there is no pipeline and no temporary file, and
 `render` keeps the manifests on stdout with everything else on stderr so the pipe
-forms still work identically in cmd, PowerShell and bash.
+forms work identically in cmd, PowerShell and bash.
 
-The gate rules were ported one for one, and the port was checked by running both
-implementations over the same rendered chart: same findings, same counts.
-
-**What used to be step 4 is not a local step any more.** It ran `kubectl` and a
-`check_crd_fidelity.py` against a cluster; both moved to the platform's plan at
-the Pipeline cut-over, because the checks worth the most - the apiserver's own
-CEL, pattern and required validation, and the unknown-field pruning a dry run
-hides - need a cluster, and **no client is ever issued credentials for one**.
-The local half is `asgard-cli gate`; the authority is the plan report.
+The apiserver's own CEL, pattern and required validation, and the unknown-field
+pruning a dry run hides, need a cluster, and no client is ever issued
+credentials for one, so they run in the platform's plan. The local half is
+`asgard-cli gate`; the authority is the plan report.
 
 ### helm and kubectl are prerequisites, not dependencies
 
 Nothing about how asgard-cli is distributed can install them. A tar.gz, a zip and
-`go install` carry no dependency metadata and never can, and a dependency
-declared on a Homebrew tap or a Scoop bucket would only cover people who install
-that way - which is nobody, because those channels are still off (see
-[Releasing](#the-channels-that-are-off-and-the-reason-that-expired)).
-Declaring one anyway would read as a guarantee that does not hold.
+`go install` carry no dependency metadata.
 
-So the binary is the mechanism. Every command that needs helm resolves it through
+So the binary handles it. Every command that needs helm resolves it through
 `internal/tool` first and refuses with the install line for the machine it is on,
 and `asgard-cli doctor` reports all of them at once:
 
@@ -749,75 +722,74 @@ Install it with:
 ```
 
 It works out the command for the machine it runs on, including which Linux
-distribution - neither kubectl nor helm is in the Debian or Ubuntu default
-repositories, so the honest answer there is not an `apt install`. It exits
-non-zero when a required tool is missing, so it works as a CI preflight.
+distribution: neither kubectl nor helm is in the Debian or Ubuntu default
+repositories, so the answer there is not an `apt install`. It exits non-zero
+when a required tool is missing, so it works as a CI preflight.
 
 `init`, `project`, `request`, `task`, `question`, `decision`
 and `check` need none of these tools. `render`, `verify` and the chart
-steps of `gate` need helm. **kubectl is optional**: nothing in this binary talks
+steps of `gate` need helm. kubectl is optional: nothing in this binary talks
 to a cluster, and `doctor` lists it because a person debugging a deployment
 still wants to know whether it is there.
 
 ### The files
 
-Six, and each is somebody else's answer to a different question.
+Six files, each answering a different question.
 
 | file | who writes it | who reads it | committed |
 |---|---|---|---|
-| `.asgard-pipeline.yaml` | a person | **the platform**, on every run | yes |
+| `.asgard-pipeline.yaml` | a person | the platform, on every run | yes |
 | `.asgard-cli.yaml` | `asgard-cli` | `asgard-cli` only | yes |
 | `.asgard-scaffold.json` | `asgard-cli init` | `asgard-cli` only | yes |
 | `.agents/skills/.asgard-docs.json` | `asgard-cli skill update` | `asgard-cli` only | yes |
-| `os.UserConfigDir()/asgard-cli/credentials.json` | `asgard-cli login` | `asgard-cli` | **never** |
-| `os.UserConfigDir()/asgard-cli/profiles.json` | `asgard-cli profile set` | `asgard-cli` | **never** (but it can be handed to a colleague) |
+| `os.UserConfigDir()/asgard-cli/credentials.json` | `asgard-cli login` | `asgard-cli` | never |
+| `os.UserConfigDir()/asgard-cli/profiles.json` | `asgard-cli profile set` | `asgard-cli` | never (but it can be handed to a colleague) |
 
-**`.asgard-pipeline.yaml` is the declaration**, and the only file a deployment
+`.asgard-pipeline.yaml` is the declaration, and the only file a deployment
 depends on: which releases exist, which chart each deploys, what triggers it,
 which keys it takes. See `internal/pipelineconfig`.
 
-**`.asgard-cli.yaml` is the binding**: which workspace and which pipeline this
+`.asgard-cli.yaml` is the binding: which workspace and which pipeline this
 checkout acts on, and nothing else. Both fields are required and neither is
 derived. See `internal/binding`, whose package comment explains why it lives
 beside the declaration rather than at the repository root.
 
-**The two records answer the same question about different halves of the
-material, and neither is a version check.** `.asgard-scaffold.json` says which
+The two records answer the same question about different halves of the
+material, and neither is a version check. `.asgard-scaffold.json` says which
 version of this binary wrote each of the files this binary ships - AGENTS.md and
 the design-time skills - and what it wrote, so a difference can be reported as
-`behind`, `edited`, `ahead` or `retired` rather than guessed at. See
-`internal/scaffold`. `.asgard-docs.json` is the platform's side of it: which
-version of the fetched reference material is here, and each upstream's digest as
-it was when it was fetched. See `internal/skills`. **The two version numbers are
-unrelated**, and so are the commands that move them.
+`behind`, `edited`, `ahead` or `retired`. See `internal/scaffold`.
+`.asgard-docs.json` is the platform's side: which version of the fetched
+reference material is here, and each upstream's digest as it was when it was
+fetched. See `internal/skills`. The two version numbers are unrelated, and so
+are the commands that move them.
 
-**`profiles.json` names a platform this binary does not have compiled in** -
+`profiles.json` names a platform this binary does not have compiled in -
 an on-prem deployment, or a stack running locally. It holds no secret and it is
 optional: with no file, every profile is the hosted platform. See
 [`profile`](#profile).
 
-**`credentials.json` is the secret this CLI keeps outside a repository.**
-0600, one file for every profile, and nothing beside it. There was a
-`config.json` there too, holding a default profile, a default workspace per
-profile and a map of custom profiles; it is gone. Every field was a preference
-some flag or environment variable already expressed, and every one of them was a
-thing an upgrade had to keep understanding. A credential is the one thing that
-genuinely has to live there: it is a secret, it is per-person rather than
-per-repository, and it cannot be re-derived.
+`credentials.json` is the one secret this CLI keeps outside a repository:
+0600, one file for every profile, and nothing beside it. The earlier
+`config.json` there, holding a default profile, a default workspace per profile
+and a map of custom profiles, is gone. Every field in it was a preference some
+flag or environment variable already expressed. A credential has to live there
+because it is a secret, it is per-person rather than per-repository, and it
+cannot be re-derived.
 
-A leftover `config.json` is **an error, not a warning**. The retired
+A leftover `config.json` is an error, not a warning. The retired
 `defaultProfile` was usually `dev`, so ignoring the file silently would move
 every command to `prod` - a customer's platform. The first command that resolves
 a profile refuses instead, names each retired key and what replaces it, and says
 to delete the file.
 
-**What is deliberately not stored anywhere:** which projects the repository has
-(read off the declaration's chart paths and `projects/*/`), the customer's
-display name (asked of the platform when a template needs it), and what a chart
-is "meant to be" (a claim about intent no tool can check). The rule they each
-failed: *a value belongs in a config file only when nothing on disk implies it
-and the platform cannot be asked.* See
-`docs/decisions/2026-09-05-asgard-cli-config-surface.md` in `asgard-odin-pm`.
+Deliberately not stored anywhere: which projects the repository has (read off
+the declaration's chart paths and `projects/*/`), the customer's display name
+(asked of the platform when a template needs it), and what a chart is "meant to
+be" (a claim about intent no tool can check). The rule: *a value belongs in a
+config file only when nothing on disk implies it and the platform cannot be
+asked.* See `docs/decisions/2026-09-05-asgard-cli-config-surface.md` in
+`asgard-odin-pm`.
 
 ### `login`, `logout`, `whoami`
 
@@ -836,26 +808,26 @@ RFC 8252 asks for on a machine that has a browser. The binary ships no client
 secret. The session is stored under this user account - never inside a customer
 repository - at `os.UserConfigDir()/asgard-cli/`, 0600.
 
-A **profile** is one Asgard installation. `--profile` picks per command and
+A profile is one Asgard installation. `--profile` picks per command and
 `ASGARD_PROFILE` sets it for a shell; with neither it is `default`, which is the
-hosted platform. **Nothing records a current profile**, and `login --set-default`
-used to: a preference on one machine is a preference two people running the same
-command do not share.
+hosted platform. Nothing records a current profile, and `login --set-default`
+no longer does: a preference stored on one machine is not shared by two people
+running the same command.
 
 Profiles other than the hosted one are written with
 [`asgard-cli profile`](#profile). `ASGARD_PLATFORM_API`, `ASGARD_ISSUER` and
 `ASGARD_CLIENT_ID` still override one field at a time on top of whichever
 profile applies, for a one-off.
 
-**`ASGARD_PLATFORM_API` is named for the service, not for "the API".** This tool
+`ASGARD_PLATFORM_API` is named for the service, not for "the API". This tool
 talks to one Asgard service today and is expected to grow into others - the
-Control Center API is the next one - so the general word is not spent on
-whichever arrived first. `ASGARD_ISSUER`, `ASGARD_CLIENT_ID` and `ASGARD_TOKEN`
-stay general on purpose: every Asgard service authenticates against the same
-Casdoor and accepts the same token, so those three genuinely are about all of
-them. It was called `ASGARD_API` in v0.1.0; a shell that still exports that name
-is refused with the rename rather than quietly ignored, because ignoring it
-would send every command to the built-in prod URL.
+Control Center API is the next one - so the general name is not given to the
+first. `ASGARD_ISSUER`, `ASGARD_CLIENT_ID` and `ASGARD_TOKEN` stay general on
+purpose: every Asgard service authenticates against the same Casdoor and
+accepts the same token, so those three apply to all of them. It was called
+`ASGARD_API` in v0.1.0; a shell that still exports that name is refused with the
+rename rather than ignored, because ignoring it would send every command to the
+built-in prod URL.
 
 With no browser - CI, a container, an agent sandbox - set `ASGARD_TOKEN` to an
 access token instead. It bypasses the store completely, reading nothing from
@@ -863,10 +835,10 @@ disk and writing nothing to it.
 
 ### `profile`
 
-**If you use the hosted Asgard platform, you need none of this.** With no file
-at all, every command reaches it - that is what `default` means, and why it is
-the default. These commands exist for the two installations this binary cannot
-know about: an on-prem deployment, and a stack running locally.
+If you use the hosted Asgard platform, you need none of this. With no file
+at all, every command reaches it - that is what `default` means. These commands
+exist for the two installations this binary cannot know about: an on-prem
+deployment, and a stack running locally.
 
 ```bash
 asgard-cli profile list              # what is configured, and what applies now
@@ -876,7 +848,7 @@ asgard-cli profile set onprem --platform-api https://asgard.acme.internal \
 asgard-cli profile remove onprem
 ```
 
-A profile's values **each fall back on their own** to the hosted platform's:
+Each of a profile's values falls back on its own to the hosted platform's:
 
 | | |
 |---|---|
@@ -884,11 +856,11 @@ A profile's values **each fall back on their own** to the hosted platform's:
 | `--issuer` | the Casdoor that issues tokens for it |
 | `--client-id` | the application this CLI presents itself as (not a secret - it is disclosed to the browser on every sign-in) |
 
-**An on-prem installation sets all three.** Its API and the Casdoor that issues
+An on-prem installation sets all three. Its API and the Casdoor that issues
 tokens for it are the same deployment, and a token from one is not accepted by
-the other - so setting the API alone leaves you signing in against the hosted
-Casdoor and presenting that token to somebody else's server. `profile show`
-prints where every value came from and warns when the two disagree:
+the other, so setting the API alone signs you in against the hosted Casdoor and
+presents that token to somebody else's server. `profile show` prints where every
+value came from and warns when the two disagree:
 
 ```
 profile        onprem
@@ -903,9 +875,9 @@ identity provider from the hosted platform ...
 It warns rather than refuses, because a local Platform API against a real
 Casdoor is a legitimate way to develop.
 
-**There is no `profile use`.** Recording which profile is current is the one
-field of the retired `config.json` that is not coming back - it was invisible on
-the machine that had it and absent on every other. Which profile is `--profile`,
+There is no `profile use`. A recorded current profile is invisible on the
+machine that has it and absent on every other, so it is not coming back from
+the retired `config.json`. The profile in effect is `--profile`,
 `ASGARD_PROFILE`, or `default`.
 
 `profile set` is the only command that creates `profiles.json`, and only when
@@ -915,12 +887,12 @@ and cannot.
 
 #### Working against our own development platform
 
-`dev` is not a built-in name. Our development platform is one installation among
-the ones this tool meets, not a second kind of thing, and compiling it in would
-put an internal endpoint in every customer's binary.
+`dev` is not a built-in name. Our development platform is one installation like
+any other, and compiling it in would put an internal endpoint in every
+customer's binary.
 
-Write it like any other, with the values from the internal setup notes -
-**they are not in this repository**:
+Write it like any other, with the values from the internal setup notes. They are
+not in this repository:
 
 ```bash
 asgard-cli profile set dev \
@@ -945,32 +917,28 @@ asgard-cli workspace show            # which apply here, and why
 ```
 
 Both land in `.asgard-cli.yaml`, beside the declaration they belong to, and
-**that file is committed**: whoever clones the repository, and whatever agent
-works in it, then needs no flags. The platform never reads it.
+that file is committed, so whoever clones the repository, and whatever agent
+works in it, needs no flags. The platform never reads it.
 
-**Nothing is ever inferred, including from a list of one.** A command with
-nothing recorded lists the candidates and refuses. A rule that resolves while a
-list holds one entry starts resolving to something nobody chose on the day it
-holds two, and nobody is watching that day.
+Nothing is inferred, including from a list of one. A command with nothing
+recorded lists the candidates and refuses. A rule that picks the only entry
+would silently pick something nobody chose once the list holds two.
 
-**No git remote is read as identity.** The pipeline used to be found by matching
-the checkout's `origin` against the workspace's pipelines; a repository may have
-any number of remotes, and which one carries that name is its owner's business.
-The gap that leaves - a repository copied wholesale into another repository of
-the *same* workspace keeps a pipeline id that still resolves - is stated in
-`.asgard-cli.yaml`'s own header rather than guarded by a rule that fires on the
-wrong input. Run `pipeline use` after copying a repository.
+No git remote is read as identity. A repository may have any number of
+remotes, and which one is called `origin` is its owner's choice. The remaining
+gap - a repository copied wholesale into another repository of the *same*
+workspace keeps a pipeline id that still resolves - is stated in
+`.asgard-cli.yaml`'s own header. Run `pipeline use` after copying a repository.
 
-**`workspace use` clears the pipeline line** when the workspace changes, because
-a pipeline belongs to one workspace. Every pipeline command then refuses and
-names the remedy, and `asgard-cli gate`'s `binding` step goes red - which is the
-failure landing on the next command instead of on whichever later one happened
-to be destructive. Commit both lines together.
+`workspace use` clears the pipeline line when the workspace changes, because a
+pipeline belongs to one workspace. Every pipeline command then refuses and names
+the remedy, and `asgard-cli gate`'s `binding` step goes red, so the failure
+shows on the next command rather than on a later destructive one. Commit both
+lines together.
 
 Resolution order, highest first: `--workspace`, `ASGARD_WORKSPACE`, the
 checkout's `.asgard-cli.yaml`. That is the whole list. `workspace show` reports
-*why* that workspace, which is the useful half: acting in the wrong one is the
-failure the order exists to prevent.
+why that workspace applies, so you can catch acting in the wrong one.
 
 ### `pipeline`
 
@@ -992,13 +960,13 @@ asgard-cli pipeline runs watch --release <name> --ref <tag>
 asgard-cli pipeline runs approve <run-id>
 ```
 
-**These hold no rules of their own.** Whether a change is deployable is the
+These hold no rules of their own. Whether a change is deployable is the
 platform's answer: it renders the chart, checks every rendered CR against the
-cluster's own CRDs with a server-side dry run, and reports back. That is not
-reproducible here - no cluster credential is ever issued to a client - so the
-loop is: change the chart, check what can be checked locally with
-`asgard-cli gate`, push, and read the plan back with `runs watch`. **Not
-`helm lint` by hand** - a bare lint has no reserved asgard values file and fails
+cluster's own CRDs with a server-side dry run, and reports back. That cannot be
+reproduced here, because no cluster credential is ever issued to a client, so
+the loop is: change the chart, check what can be checked locally with
+`asgard-cli gate`, push, and read the plan back with `runs watch`. Do not run
+`helm lint` by hand: a bare lint has no reserved asgard values file and fails
 on every chart that labels anything.
 
 Which release a command acts on comes from the name the declaration uses. Which
@@ -1006,7 +974,7 @@ workspace, and which pipeline when a repository carries more than one, come from
 `.asgard-cli.yaml` beside the declaration - written by `workspace use` and
 `pipeline create`, and committed, so a clone and an agent both inherit it.
 
-**The platform never reads that file.** A run reads the declaration at the
+The platform never reads that file. A run reads the declaration at the
 pipeline's config path and the chart it names, and nothing else, so nothing in
 `.asgard-cli.yaml` can make a deployment succeed or fail. It exists so the
 commands need no `--workspace`, and so an agent landing in a fresh clone can see
@@ -1041,41 +1009,21 @@ goreleaser check
 goreleaser release --snapshot --clean --skip=publish
 ```
 
-### The channels that are off, and the reason that expired
-
-**This repository is public, and the argument for the channels being off was
-that it was not.** A Homebrew tap or a Scoop bucket is a second repository
-whoever installs has to be able to read, and making that one private too meant
-every user running `brew tap` against a repo needing credentials - more setup
-than the download line it would replace. That objection is gone.
-
-The bottom of `.goreleaser.yaml` has ready-made **Homebrew tap** and **Scoop
-bucket** blocks, still commented out, with their prerequisites named
-(`HOMEBREW_TAP_TOKEN`, `SCOOP_BUCKET_TOKEN`). What is left to decide is whether
-a package manager earns a second repository to keep in step - not whether it is
-possible. **A tap would also fix the macOS first-run problem**, because Homebrew
-clears the quarantine mark that an unnotarized binary is killed for; notarizing
-the release fixes it for every install path instead.
-
-Until that is taken, the install command is the version-less asset URL, which
-resolves to the newest release and needs no token.
-
 Other things worth knowing:
 
-- **CGO**: builds run with `CGO_ENABLED=0` so cross-compilation fits on a single
+- CGO: builds run with `CGO_ENABLED=0` so cross-compilation fits on a single
   runner. Pulling in a cgo dependency (sqlite and friends) means switching to
   zig cc or per-platform runners.
-- **macOS signing**: the binaries are unsigned. That is survivable *because* the
-  install path is a CLI download - `gh` and `curl` do not set the
-  `com.apple.quarantine` attribute that makes Gatekeeper refuse an unsigned
-  binary; a browser does. Handing somebody a release URL to click is the case
-  that breaks, and `anchore/quill` is the answer if that ever becomes the normal
-  way in.
-- **main builds a release, a pull request does not.** `ci.yml`'s `build` job
+- macOS signing: the binaries are unsigned. That works because the install path
+  is a CLI download: `gh` and `curl` do not set the `com.apple.quarantine`
+  attribute that makes Gatekeeper refuse an unsigned binary; a browser does.
+  Handing somebody a release URL to click is the case that breaks, and
+  `anchore/quill` is the answer if that becomes the normal way in.
+- main builds a release, a pull request does not. `ci.yml`'s `build` job
   runs `goreleaser release --snapshot --clean --skip=publish` on a push to
   `main`, so a config or cross-compilation break is caught before it is a failed
   tag. It is off on a pull request because it takes three minutes to answer what
   `test` answers in forty seconds - whether the code compiles - and the part it
-  uniquely checks cannot break on the merge commit without having been broken on
-  the branch. `make snapshot` is the same build on a laptop, which is what to
-  run when a change touches `.goreleaser.yaml`.
+  alone checks cannot break on the merge commit without having been broken on
+  the branch. `make snapshot` is the same build on a laptop; run it when a
+  change touches `.goreleaser.yaml`.

@@ -23,20 +23,19 @@ is only for the db-query skill, which reads a customer's source systems at desig
 time, so a missing one is reported without failing. An engagement that never
 connects to a database never needs it.
 
-**The gate's lint step is the only place a chart gets linted.** A bare
+Lint a chart only through the gate's lint step. A bare
 ` + "`helm lint <chart>`" + ` has no reserved asgard values file, so it fails on every
 chart that labels anything - see ` + "`asgard-cli gate --help`" + `.
 
 The install line is worked out for the machine it runs on - including which Linux
 distribution, because neither helm nor kubectl is in the Debian or Ubuntu default
-repositories and an apt install that fails on an unmet dependency is worse than
-no advice.
+repositories, and an apt install of either fails on an unmet dependency.
 
 Exits non-zero when a required tool is missing, so it works as a CI preflight.
 
-It reports; it does not install. Nothing about how asgard-cli is distributed can
-install these for you - a tar.gz, a zip and "go install" carry no dependency
-metadata and never can - so this prints the command and you run it.
+It reports and does not install. asgard-cli is distributed as a tar.gz, a zip
+and through "go install", none of which carry dependency metadata, so this
+prints the command and you run it.
 
 ` + "`asgard-cli gate`" + ` checks helm as its ` + "`tools`" + ` step and stops there, because
 that is the only tool a check needs. This lists every tool, optional ones

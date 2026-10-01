@@ -15,93 +15,110 @@ Four ways.
 
 ## Chat platforms
 
-Each platform needs different credentials, all supplied by the customer -
-**and for Slack the answer depends on which path you are on**, which is the one
-row here that has been got wrong:
+Each platform needs different credentials, all supplied by the customer. For
+Slack the answer depends on which path you are on, and that row has been got
+wrong before:
 
 | platform | the chart's `BotProvider` needs | the documentation's UI flow asks for |
 |---|---|---|
 | LINE | `channelAccessToken`, `channelSecret` | the same two, as Channel Access Token and Channel Secret |
-| Slack | `appToken`, `botToken` - **both required** | Client ID, Client Secret, Signing Secret, Permission Scopes |
+| Slack | `appToken`, `botToken` - both required | Client ID, Client Secret, Signing Secret, Permission Scopes |
 | Discord | `botToken` | Bot Token |
-| Telegram | `botToken` **and `webhookSecretToken`, both required** | Bot Token only |
+| Telegram | `botToken` and `webhookSecretToken`, both required | Bot Token only |
 
-**Two of those rows differ, and in both cases the chart asks for more or other
-than the documentation does.**
+In two of those rows the chart asks for more than, or something other than,
+what the documentation asks for.
 
-**Slack is two different credentials, not two names for one.** The UI's flow is
-an OAuth app installation - client id, client secret, signing secret, scopes -
-and it is what somebody clicking through Applications supplies. A chart writes
-neither: `spec.slack` takes an **app-level token** and a **bot token**, the
-`xapp-` and `xoxb-` pair. Asking a customer for a client id and then writing a
+Slack has two different sets of credentials. The UI's flow is an OAuth app
+installation - client id, client secret, signing secret, scopes - and it is what
+somebody clicking through Applications supplies. A chart uses none of them:
+`spec.slack` takes an app-level token and a bot token, the `xapp-` and `xoxb-`
+pair. Asking a customer for a client id and then writing a
 chart leaves you without either field the CR requires.
 
-**Telegram's second field is in the CRD and in no documentation page.**
-`webhookSecretToken` is required beside `botToken`, and a page that lists only
-the bot token sends an FDE to the meeting with half the ask. It is ours to
-generate rather than theirs to supply - Telegram accepts a secret you choose -
-but it has to exist before the CR applies.
+Telegram's second field, `webhookSecretToken`, is in the CRD and in no
+documentation page. It is required beside `botToken`. We generate it rather than
+the customer supplying it - Telegram accepts a secret you choose - but it has to
+exist before the CR applies. The platform compares it with the
+`X-Telegram-Bot-Api-Secret-Token` header on every inbound call and refuses a
+mismatch, so the webhook has to be registered with Telegram under the same value.
 
-LINE is the only one needing **two-way** setup - Asgard gives a URL that has to go
+LINE is the only one needing two-way setup - Asgard gives a URL that has to go
 back into LINE, which somebody has to paste into the LINE Developers Console,
 verify, and then enable Use webhook on. The rest only take credentials inward.
-**LINE also has a prerequisite before any of that**: Messaging API has to be
+LINE also has a prerequisite before any of that: Messaging API has to be
 enabled on the Official Account, which is the customer's own step in a console
 nobody here can reach. For Taiwanese customers LINE is usually the first one
 asked about.
 
-**Discord has a prerequisite of the same kind, and it is not a credential**: the
+Discord also has a customer-side prerequisite that is not a credential: the
 app and its bot are created in the Discord Developer Portal, authorised with
-their permissions, and **invited to the server**. All of it is theirs, in their
-console, and none of it is the token - so a chart holding the right `botToken`
-still has nowhere to speak until somebody does it.
+their permissions, and invited to the server. The customer does all of it in
+their console. Until they do, a chart holding the right `botToken` cannot post
+anywhere.
 
-**Discord and Slack get a Connector Pod** rather than a webhook, because both
+Discord and Slack get a Connector Pod rather than a webhook, because both
 hold an outbound WebSocket - `../usecase/chat-channel.md` has what that costs.
 
 `botProviderClass` is immutable in the CRD, so it has to be right the first time.
 
 ## What the platform does NOT own: the conversation
 
-This is the question every customer service engagement asks, and the answer is
-the same one every time.
+Every customer service engagement asks about this, and the answer is always
+the same.
 
-**Handing over to a human, pausing the agent while a person replies, resuming
+Handing over to a human, pausing the agent while a person replies, resuming
 afterwards, counting how many questions one user has asked - none of these are
-platform features.** There is no CR for any of them, and no field: searching the
-CRDs for a handoff, a takeover, a suspend or a per-user quota finds nothing.
+platform features. There is no CR for any of them, and no field: searching the
+CRDs for a handoff, a takeover or a per-user quota finds nothing, and the only
+suspend in them pauses a schedule. The API's `message/suspend` stops the run in
+flight on a channel; it does not hold the channel for a person.
 
-What the platform quota does cover is capacity, not people. All eight numbers,
-and **they apply to the Workspace - projects inside it share them**:
+The platform quota covers capacity, not people. All eight numbers, and they
+apply to the Workspace - projects inside it share them:
 
 | per request | per workspace |
 |---|---|
 | 5 RPS per endpoint | 40 Projects |
 | 3 minutes | 300 GB of Knowledge Base |
-| 30 steps | 500 Processors |
-| | **10 Loaders** |
+| 30 steps - a chart field, below | 500 Processors |
+| | 10 Loaders |
 | | 150 Indexers |
 
-**Ten Loaders is the one that bites first.** A Loader is one recurring pull, so a
+Ten Loaders is usually the first limit reached. A Loader is one recurring pull, so a
 customer with a dozen document sources exceeds it before anything else on this
 list - see [`knowledge.md`](../wiki/knowledge.md).
 
-**These are defaults, not ceilings, and they are per plan.** They are raised by
-contacting sales or writing to service@asgard-ai.com, which is a different
-sentence in a meeting than "that is the limit". The overview says a Workspace
+These are defaults, and apart from the steps they are per plan. They are
+raised by contacting sales or writing to service@asgard-ai.com, so in a meeting
+say that, not "that is the limit". The overview says a Workspace
 has a price plan and that how many Projects it may hold depends on it - so 40 is
 one plan's number rather than the platform's. What is not documented is which
 plan gives what. See [`what-they-read.md`](../wiki/what-they-read.md).
 
-A multi-system troubleshooting conversation can reach 30 steps,
-which is worth saying out loud before somebody designs one.
+The step ceiling is a field on the chart, not a plan quota. A step
+is one hand-off from one processor to the next in a workflow, counted from the
+user's message; an LLM processor is one step however many tools it calls inside
+it. The ceiling is the BotProvider's `spec.maxUnsupervisedSteps`, and 30 is its
+default, so it is raised by the chart rather than by sales. Reaching it ends the
+request with `Max execution steps 30 reached. Consider setting a higher value
+for maxUnsupervisedSteps in bot spec.` - asgard-core `478cf5d6`
+asgard-core `internal/bpcontroller/server/bp_controller.go` (`sendTask` checks it,
+`HandleTaskResult` adds one per hand-off, a new message or a consent resume
+starts it again at 1) and asgard-core `internal/constants.go` `DefaultMaxUnsupervisedSteps`.
+So a workflow that chains many processors per turn reaches it, and an agent that
+calls many tools inside one processor does not.
 
 The mechanism the platform's own case study describes puts the conversation
 somewhere else entirely. A retail site's support desk receives the customer's
 message, writes it into its own conversation log and answers the customer
 immediately; only then does it forward the message to the Flow Agent in the
 background, with a scope-limited credential. A human can join that same thread at
-any time, because the thread was never the agent's to begin with.
+any time, because the thread was never the agent's to begin with. The demo
+behind the case study is built that way: the site keeps every message in its own
+tables with the sender marked as the customer, the agent or a human, uses its
+own conversation id as `customChannelId`, and a staff login posts into the same
+conversation.
 
 So the shape is:
 
@@ -112,46 +129,49 @@ So the shape is:
 a human" is that middle layer counting. "Ten questions a day" is that middle
 layer counting too.
 
-**With a website the middle layer is obvious - the site itself. On a chat
-platform it is whatever the customer already runs there**, and which surface
-that is belongs in the interview rather than here: it is the vendor's behaviour
-on the customer's own account, it changes, and an answer written down here goes
-stale without anything noticing. `../wiki/taiwan-channels.md` states the same
+With a website the middle layer is the site itself. On a chat platform it is
+whatever the customer already runs there. Find out which surface that is in the
+interview, not here: it is the vendor's behaviour on the customer's own account,
+it changes, and an answer written down here would go stale unnoticed. `../wiki/taiwan-channels.md` states the same
 rule for the commerce channels and is the longer version.
 
-What does not change is the part above: **none of the pause, the counting or the
-takeover is the platform's**, so whichever surface it turns out to be, that
-state lives outside Asgard. That is what decides the shape, and it is settled
-without knowing the answer.
+None of the pause, the counting or the takeover is the platform's, so
+whichever surface it turns out to be, that state lives outside Asgard. That
+decides the shape, whatever the interview answer is.
 
 ## Two pages in Odin
 
-- **Applications -> Data Insight & Agent Hub** - browse and open the Mimir and
+- Applications -> Data Insight & Agent Hub - browse and open the Mimir and
   Sindri applications published to this Workspace, filtered by All, Data Insight
   or Agent Hub
-- **Applications -> Customized Integration** - manage integrations connecting an
-  agent to outside channels and applications, filtered by All, Bot, API or MCP
-  Servers
+- Applications -> Customized Integration - the list of every integration in
+  the Project, filtered by All, Bot (what Flow Agents have released), API
+  (workflows of the Automation Tool type) or MCP Servers (Toolsets). A card's
+  switch disables an integration without deleting it. Nothing is created on
+  this page: an integration is a Flow Agent's release, made from the Release
+  panel of its workflow set, and a Flow Agent that was never released does not
+  appear here. The release form takes an Application Type (Generic Chatbot,
+  Telegram, Slack, LINE, Discord, or Sindri), a Name, an optional Description, a
+  Debug Mode (`Never` by default, `Always`, or `On-Demand` for requests carrying
+  `is_debug=true`), and Channel Max Idle Days. `Always` and `On-Demand` can send
+  prompts, variable values and tool arguments to the end user's browser
 
 ## API and SSE
 
 ```
-POST {base_url}/generic/ns/{namespace}/bot-provider/{bot_provider_name}/message/sse
+POST {base_url}/ns/{namespace}/bot-provider/{bot_provider_name}/message/sse
 ```
 
-**Do not hand that URL to anyone - two shapes of it are in circulation.** The
-SDK and a production tenant's own chart README both give it without `/generic`.
-`../wiki/api.md` has the evidence and the rule that follows: take the URL
-from the deployment, where the BotProvider's name and namespace are, and confirm
-it with one request before it goes in a document. `../wiki/platform-unknowns.md` P9
-tracks which is right.
+There is no `/generic/` segment. The API reference prints one, and that form is a
+legacy route that skips the subscription check and the metering;
+`../wiki/api.md` has both routes and the code that registers them.
 
-Authenticated with an `X-API-KEY` header. The key comes from the project's
-Integration -> App settings page - **the documentation's route, and an
-engagement could not find that page**; `../wiki/platform-unknowns.md` P14 has
-it. It is also **not** the credential a CR reads: that one is a platform
-resource key, minted per namespace, and `../usecase/conventions.md` says where
-it comes from.
+Authenticated with an `X-API-KEY` header carrying the BotProvider's own
+`spec.generic.apiKey` - `../wiki/api.md` has the check. It
+is not the credential a CR reads: that one is a platform resource key,
+minted per namespace, and `../usecase/conventions.md` says where it comes from.
+A generic integration released through the UI has no key field: the platform
+issues its key at creation, and it can only be replaced by regenerating it.
 
 The response is Server-Sent Events; the connection stays open and carries agent
 messages, system events and end-user messages.
@@ -189,33 +209,31 @@ console and declared, and whether the class needs a connector pod.
 
 ## What the platform cannot send
 
-**There is no mail capability anywhere in the platform** - no SMTP, no preset
-mail Toolset, nothing in the core. "Email me when it happens" is one of the most
-common things a customer asks for, and the answer is not "yes, of course".
+There is no mail capability anywhere in the platform - no SMTP, no preset
+mail Toolset, nothing in the core. Customers often ask for "email me when it
+happens"; answer according to what they have:
 
     they have an HTTP endpoint that sends mail   an external-api call
     they have no endpoint                        it cannot be built yet
 
-**And SMTP credentials are not an endpoint.** The platform's only outbound
-capability is `http-request`, which speaks HTTPS; SMTP is a multi-round protocol
-on its own TCP port and a Workflow has no way to speak it. So a username, a
-password and `smtp.<host>:587` cannot be used at all - **not "with more work",
-at all** - and that is the shape of credential a customer hands over when asked
+SMTP credentials are not an endpoint. The platform's only outbound capability
+is `http-request`, which speaks HTTPS; SMTP is a multi-round protocol on its own
+TCP port and a Workflow has no way to speak it. So a username, a password and
+`smtp.<host>:587` cannot be used at all, with any amount of work, and that is
+the shape of credential a customer hands over when asked
 for mail access. One deployment asked for a mail API, was told which one, and
 received SMTP credentials for it; they are different authentication mechanisms
 and not interchangeable.
 
-**The reason to say no is that we cannot speak it, and nothing else.** "SMTP
-basic auth is being switched off soon" is a tempting second argument and it is
-**not true**: Microsoft has deferred that three times, the current schedule
+Give only that reason for saying no: the platform cannot speak SMTP. Do not
+add "SMTP basic auth is being switched off soon" - it is not true: Microsoft has deferred that three times, the current schedule
 turns it off by default at the end of 2026 with administrators able to turn it
-back on, and no final removal date is announced. A deployment put the deferral
-correction into its own record for exactly this reason - the next person reaches
-for the same wrong argument.
+back on, and no final removal date is announced. A deployment recorded the
+deferral correction in its own record so that nobody repeats the argument.
 
 ### So mail means a provider with an HTTP API
 
-Two shapes, and the cost difference is worth raising in the meeting:
+Two shapes; raise the cost difference in the meeting:
 
 | | a single-call API | a token-first API |
 |---|---|---|
@@ -223,37 +241,37 @@ Two shapes, and the cost difference is worth raising in the meeting:
 | processors | send, respond | get-token, send, respond |
 | secrets to hold | 1 | 3 |
 
-**The sender has to be verified with the provider**, per address or per domain,
-or the send is refused outright - and that verification is the customer's IT to
-do, on their schedule. Ask for it in the same breath as the API key.
+The sender has to be verified with the provider, per address or per domain,
+or the send is refused - and the customer's IT does that verification, on their
+schedule. Ask for it in the same breath as the API key.
 
-Three details read off a working send, each of which looks like a bug when it
-bites:
+Three details read off a working send, each of which looks like a bug when you
+hit it:
 
-  - **success can be a 2xx that is not 200, with an empty body.** Test the
+  - success can be a 2xx that is not 200, with an empty body. Test the
     status as a range rather than `== 200`, and set `parseJson: false` - there
     is no JSON to parse and every run leaves a parse warning otherwise
-  - **turn the provider's click tracking off.** It rewrites every link in the
+  - turn the provider's click tracking off. It rewrites every link in the
     mail to its own tracking domain, and an internal notification arriving with
     an unfamiliar redirect domain in it reads as phishing
-  - **on `http-request`, every config key that is not `url`, `method`, `body` or
-    `parseJson` is sent as an HTTP header** - which is how the API key and the
+  - on `http-request`, every config key that is not `url`, `method`, `body` or
+    `parseJson` is sent as an HTTP header - which is how the API key and the
     content type get there, and `../wiki/processors.md` has the rest of what an
     extra key means per processor
 
-**A deployment that mocks it owes a disclosure**, and this is worth copying. One
-does: `wf-send-mail` is a single `push-message` returning
+A deployment that mocks mail sending has to disclose it. One deployment does
+this in a way worth copying: `wf-send-mail` is a single `push-message` returning
 `{ok: true, mocked: true, to, subject, body}`, so the whole pipeline runs and
-the drafted mail lands in the invocation record for review. **`ok: true` is
-deliberate** - a false would stop a Trigger's cursor and the path would never be
+the drafted mail lands in the invocation record for review. `ok: true` is
+deliberate - a false would stop a Trigger's cursor and the path would never be
 exercised.
 
-Which makes disclosure the entire safety property. That deployment requires both
+So disclosure is the only safeguard. That deployment requires both
 the tool's `tooling.description` and the agent prompt to lead every summary with
 "MOCK - not actually sent", and to never say "notified".
 
-**A log that reads as though people were emailed is the real damage a mock can
-do.** The same applies to any mocked outward action - a ticket not created, an
+The risk of a mock is a log that reads as though people were emailed. The same
+applies to any mocked outward action - a ticket not created, an
 order not placed.
 
 ## Sources
@@ -264,16 +282,17 @@ order not placed.
   - asgard-docs `f00e0ee`. `integration/Discord.mdx` is an empty file; the
   Discord content is under `integration-with-asgard/`
 - [SDK](https://docs.asgard-ai.com/docs/integration/sdk)
-  - asgard-docs `23409b3`, read 2026-09-14. The page is a two-line pointer at
+  - asgard-docs `23409b3`. The page is a two-line pointer at
   the two SDK guides, and what moved since `f00e0ee` is the form of those two
   links - nothing this page says rests on it
 - The pages under `integration-with-asgard/` (api, line, slack, discord)
   - asgard-docs `f00e0ee`. All four are marked `draft`, and they describe an
-  interface called "Published -> add integrated" inside a Project, which does not
-  match Odin's current Applications -> Customized Integration. **Possibly stale**
-  - **Discord's own prerequisite** - the app and bot created in the Developer
+  interface called "Published -> add integrated" inside a Project. Odin's current
+  interface creates an integration from the Release panel of a Flow Agent's
+  workflow set, which may be the same step renamed. Possibly stale
+  - Discord's own prerequisite - the app and bot created in the Developer
   Portal, authorised, and invited to the server - is `integration-with-discord.md`,
-  read 2026-09-15 at asgard-docs `23409b3`. It is the same page and the same
+  at asgard-docs `23409b3`. It is the same page and the same
   `draft: true`; what is recorded here is the customer-side step, which the
   Applications interface above does not bear on
 - [Authentication](https://docs.asgard-ai.com/docs/developer-reference/authentication)
@@ -281,36 +300,40 @@ order not placed.
   - asgard-docs `f00e0ee`
 - [Applications overview](https://docs.asgard-ai.com/docs/product-suite/odin/features/applications-overview)
   and [Customized Integration](https://docs.asgard-ai.com/docs/product-suite/odin/features/applications-customized-integration)
-  - asgard-docs `f00e0ee`
-- **That SMTP cannot be reached at all, and what a real mail send costs**: read
-  2026-09-11 off `unitech-e-asgard-kube`, which asked for a mail API, received
+  - asgard-docs `6261fdff`
+- That SMTP cannot be reached at all, and what a real mail send costs: read
+  off `unitech-e-asgard-kube`, which asked for a mail API, received
   SMTP credentials for it, and wrote down why neither route worked. The
   single-call shape, the empty-bodied 202, the click-tracking rewrite and the
   verified-sender requirement are from that deployment's own working send; the
-  deferral correction is recorded in its living spec. **That an extra config key
-  on `http-request` is sent as an HTTP header** was then confirmed at asgard-core
+  deferral correction is recorded in its living spec. That an extra config key
+  on `http-request` is sent as an HTTP header is at asgard-core
   `623ceb5`, asgard-core `internal/processor/task/http_request.go`, which is also
   where the value having to be a string comes from
-- `botProviderClass` being immutable: checked against
-  [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `cbd8d70` -
-  `BotProviderSpec`
-- **The platform owning no handoff, takeover, suspend or per-user quota**:
-  checked 2026-09-02 against
-  [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `cbd8d70` -
+- `botProviderClass` being immutable, and each class's credential fields:
+  [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `3da0365` -
+  `BotProviderSpec` and the per-class specs
+- The platform owning no handoff, takeover, suspend or per-user quota:
+  [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `3da0365` -
   no CRD and no field carries any of those concepts
 - The quota numbers, all eight, that they are Workspace-level and shared, and
-  that they are raised through sales:
+  that they are raised through sales - apart from the steps, which asgard-core
+  `478cf5d6` shows are a chart field:
   [Quota and limits](https://docs.asgard-ai.com/docs/help-community/quota-limits)
-  - asgard-docs `f00e0ee`, read in full 2026-09-02
+  - asgard-docs `f00e0ee`, read in full
 - The support desk owning the conversation:
   [AI customer service answering order enquiries](https://docs.asgard-ai.com/docs/product-suite/odin/case-studies/retail-ai-customer-service)
-  - asgard-docs `f00e0ee`
+  - asgard-docs `6261fdff`
 
-**Unchecked:** the per-platform credentials come from the product documentation
-only, and **no deployment uses a non-generic class** - every BotProvider across
-every reference deployment is `generic`. That the support desk owns the
-conversation is read from one case study and has not been held against a
-deployment. **Which takeover surface a chat platform already gives a customer is
-deliberately not recorded here** - it is the vendor's behaviour on the
-customer's own account, it changes, and a stale answer would be worse than none;
-it is asked in the interview, and the shape above holds either way.
+**Checked:** the chart column of the credentials table against
+asgard-kube `3da0365` `pkg/apis/asgard/v1alpha1/types.go`; the Connector Pod for
+Slack and Discord only against asgard-core `478cf5d6` `internal/bpoperator/reconciler/bp_reconciler.go`;
+that Telegram's `webhookSecretToken` is read on every inbound call against
+asgard-core `478cf5d6` `internal/edgeserver/handler/bot_provider.go`; the support
+desk owning the conversation against the retail demo,
+asgard-industry-demo-generator `718cc0e` `common/worker/src/retail/customer-support/`
+and `retail/chart/app/templates/supervisor/customer_service/` in the same repository.
+
+**Unchecked:** every BotProvider in every reference deployment is `generic`, so
+no chat-platform class has been seen running, and the UI's credential flows
+come from the product documentation only.

@@ -21,26 +21,26 @@ metadata:
 spec:
   # Required on a SemanticLayer, unlike an Agent. Never hardcode a model name.
   completionModelName: {{ .Values.defaultCompletionModelName | quote }}
-  # Omitting effort is NOT the same as medium: it sends no effort at all and
+  # Omitting effort is not the same as medium: it sends no effort at all and
   # the model's own default applies.
   effort: {{ .Values.defaultSemanticLayerEffort | quote }}
   dataConnectorName: <<.Connector>>
   locale: zh-TW
   timezone: Asia/Taipei
   # The summary, the instruction, and every title and description in this file,
-  # are 繁體中文 the MODEL reads to choose what to query - see
-  # .agents/skills/plain-chinese/. This is the one place empty language costs a
-  # wrong answer rather than a clumsy sentence: 「至關重要的訂單資料」tells the
-  # model nothing it can select on, where 「每筆訂單一列,含成立時間與出貨狀態」does.
+  # are 繁體中文 the model reads to choose what to query - see
+  # .agents/skills/plain-chinese/. Here vague language produces wrong answers:
+  # 「至關重要的訂單資料」tells the model nothing it can select on, and
+  # 「每筆訂單一列,含成立時間與出貨狀態」does.
   #
-  # summary is how the model chooses BETWEEN layers, not a description of this
-  # one, and it is the same job the Agent CRD gives description. The tool it
+  # summary is how the model chooses between layers, not a description of this
+  # one - the same job the Agent CRD gives description. The tool it
   # lists them with, list_database_semantic_models, returns {model_name,
-  # summary} and NOTHING else - so with a second layer mounted, an empty one
-  # leaves the choice to be made on the CR name alone, before a single cube is
+  # summary} and nothing else - so with a second layer mounted, an empty one
+  # leaves the model to choose on the CR name alone, before any cube is
   # visible. Name the systems and the entities it covers.
   #
-  # Optional to the apiserver, which is why it goes missing.
+  # Optional to the apiserver, so it is often left out.
   summary: |-
     TODO: which systems and entities this layer covers.
   instruction: |-
@@ -58,20 +58,19 @@ spec:
           title: TODO
           description: TODO
           type: string
-      # REQUIRED on every cube, even a cube that is only ever read row by row.
-      # An empty list is a declaration the apiserver accepts; omitting the key
-      # is rejected outright, and helm lint does not see the difference - but
-      # `[]` is also a layer that answers no question, because a cube with
-      # dimensions and no measures gives the model columns to group by and
-      # nothing to aggregate.
+      # Required on every cube, even a cube that is only ever read row by row.
+      # The apiserver accepts an empty list and rejects an omitted key, and helm
+      # lint does not see the difference. But with `[]` the layer answers no
+      # aggregate question: a cube with dimensions and no measures gives the
+      # model columns to group by and nothing to aggregate.
       #
-      # Every measure needs sql EXCEPT type: count, which counts rows and takes
-      # none. Getting that backwards is a CEL rejection at apply time.
+      # Every measure needs sql except type: count, which counts rows and takes
+      # none. The CEL rule rejects the wrong combination at apply time.
       #
-      # **This is the entry.** name, title, description and type are required on
-      # every one, and sql joins them for every type but count. `description`
-      # is what the MODEL reads to pick between two measures that aggregate the
-      # same column, so an empty one is a coin flip:
+      # The shape of one entry. name, title, description and type are required
+      # on every one, and sql for every type but count. The model reads
+      # `description` to pick between two measures that aggregate the same
+      # column, so without one it guesses:
       #
       #   - name: revenue              # unique inside the cube
       #     title: Revenue             # what a person sees
@@ -82,9 +81,9 @@ spec:
       #                                # count_distinct_approx|sum|avg|min|max
       #     sql: amount                # required unless type is count
       #
-      # **The three below are for the case that asks for them, not for every
-      # measure.** Reach for one when the question does: a currency or percent
-      # that a bare number reads wrong, a business term that is one name and one
+      # The three below are for specific cases, not for every measure. Use one
+      # when the question needs it: a currency or percent that a bare number
+      # misrepresents, a business term that is one name and one
       # predicate, or a "show me the rows" that has to expand to something:
       #
       #     format: currency           # currency|percent, and nothing else
@@ -98,32 +97,32 @@ spec:
   # Run every one against the live database before committing it, and put the
   # row count you saw in the comment - a query returning 89 rows sets a
   # different expectation from one returning 4. One that errors or returns
-  # nonsense actively misleads the agent reading it.
+  # nonsense misleads the agent reading it.
   #
   #   - comment: TODO: what it answers, and what the numbers leave out
   #     sql: |
   #       select ...
   sampleQueries: []
   # Plain strings. Data Insight renders each as a button under this layer's
-  # prompt box and sends it when somebody clicks it, so an empty list is a
-  # blank page for whoever opens the layer. Optional to the apiserver and the
-  # highest-value optional field there is when a person is the consumer.
+  # prompt box and sends it when somebody clicks it, so an empty list shows a
+  # blank page to whoever opens the layer. Optional to the apiserver, and the
+  # most useful optional field when a person is the consumer.
   #
-  # NOT the Agent CRD's managed.sampleQuestions: same name, different CR, and
+  # Not the Agent CRD's managed.sampleQuestions: same name, different CR, and
   # the two-question minimum that `gate` R7 enforces there does not apply here.
   sampleQuestions: []
-  # REQUIRED, and the same trap as measures: a single-cube layer still has to
+  # Required, as measures is: a single-cube layer still has to
   # say `joins: []` rather than leave the key out.
   #
   # Every field of an entry is required, and each `cube` is a cube's own `name`
   # as spelled above. The CRD checks the two `dimensions` lists are the same
   # length, so a composite key is written out on both sides.
   #
-  # Verify the relationship with a join query BEFORE writing an entry. Foreign
+  # Verify the relationship with a join query before writing an entry. Foreign
   # keys are often absent in older business systems, so a relationship inferred
   # from column naming is a guess, and a wrong one_to_many fans rows out and
-  # silently inflates every count that crosses it. That failure is invisible in
-  # the column names, which is why
+  # silently inflates every count that crosses it. The column names do not show
+  # this, which is why
   # .agents/skills/asgard-platform/usecase/semantic-layer.md says to introspect
   # the database rather than reason about it.
   #

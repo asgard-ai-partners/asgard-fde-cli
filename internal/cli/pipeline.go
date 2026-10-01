@@ -41,25 +41,21 @@ the platform, never in the repository.
     asgard-cli pipeline releases               its releases, and the ghost rows
 
 These commands are a wrapper over the platform's API and hold no rules of their
-own. **The checking runs on the platform**, because the checks worth the most -
+own. The checking runs on the platform, because the most important checks -
 the apiserver's own CEL, pattern and required validation of every rendered CR -
 need a cluster, and no cluster credential is ever issued to a client. So the
 loop is: change the chart, run ` + "`asgard-cli gate`" + `, push, and read the plan back.
-**Not ` + "`helm lint`" + ` by hand** - a bare lint has no reserved asgard values file and
-fails on every chart that labels anything, which looks like a broken chart and
-is not. The gate supplies that one file and nothing else, which is what keeps
-the lint meaningful.
+Do not run ` + "`helm lint`" + ` by hand: a bare lint has no reserved asgard values file
+and fails on every chart that labels anything, although the chart is fine. The
+gate supplies that one file and nothing else.
 
 Which pipeline a command acts on is the one recorded in ` + "`.asgard-cli.yaml`" + `, which
-` + "`asgard-cli pipeline use`" + ` writes and which is committed. **It is never derived.**
-It used to be read off the origin remote whenever exactly one pipeline of the
-workspace bound it, and that guessed twice: that a remote called ` + "`origin`" + ` is this
-repository's identity - a repository may have several remotes, and which one
-carries that name is nobody's business but its owner's - and that one candidate
-means no choice had to be made. A command with nothing recorded now lists the
-pipelines and stops. Which workspace is ` + "`asgard-cli workspace`" + `.
+` + "`asgard-cli pipeline use`" + ` writes and which is committed. It is never derived,
+not from a remote called ` + "`origin`" + ` (a repository may have several remotes) and
+not from there being only one candidate. A command with nothing recorded lists
+the pipelines and stops. Which workspace is ` + "`asgard-cli workspace`" + `.
 
-WHICH REPOSITORY A PIPELINE READS IS DECIDED AT ` + "`create`" + `, and there is no
+Which repository a pipeline reads is decided at ` + "`create`" + `, and there is no
 ` + "`update`" + ` here that moves it. The platform's own update takes the name, the
 config path and the declaration ref; pointing a pipeline at a different
 repository is a separate operation there - a preflight that reads the
@@ -67,8 +63,8 @@ candidate's ` + "`.asgard-pipeline.yaml`" + ` and compares it against this pipel
 release by release, then the switch that applies what the preflight showed. The
 Console runs the two together, as Change source.
 
-**That comparison is what makes the switch safe, so a flag here that skipped it
-would be the dangerous half on its own.** Nothing else moves: every release
+The comparison is what makes the switch safe, so this tool has no flag that
+does the switch without it. Nothing else moves: every release
 keeps its platform Project, its namespace, its variables and its deploy
 identity. So a release whose name the new repository also declares deploys a
 different chart into the namespace the old one is running in; one it does not
@@ -347,9 +343,9 @@ That is not a refusal: one repository may carry several pipelines as long as
 their config paths differ, which is how a monorepo holds two independent sets of
 releases.
 
---connection is required. A workspace with one connection today has two the day
-somebody connects a second GitHub organisation, and a default that quietly
-stopped applying is worse than one that never did. ` + "`asgard-cli pipeline connections`" + `
+--connection is required, with no default even when the workspace has one
+connection, because a second GitHub organisation can be connected at any time
+and the default would then silently change meaning. ` + "`asgard-cli pipeline connections`" + `
 lists them, and so does the error.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
@@ -417,7 +413,7 @@ func resolveConnection(ctx context.Context, pc *platformContext, want string) (s
 	// connection this workspace holds is not evidence that it is the one this
 	// repository is under, and connecting another account is the other half of
 	// the choice. Offering only the list makes the list the answer.
-	fmt.Fprintf(&b, "\nNone is assumed, and that includes a list of one: a connection is one provider\n"+
+	fmt.Fprintf(&b, "\nNone is assumed, even from a list of one: a connection is one provider\n"+
 		"account, and the repository this engagement is about may be under a different\n"+
 		"one. `asgard-cli pipeline connect --account <account>` adds that account.\n")
 	return "", fmt.Errorf("%s", b.String())
@@ -440,9 +436,9 @@ func newPipelineCreateCmd() *cobra.Command {
 
 --repo takes either the repository id from ` + "`pipeline repos`" + ` or its "owner/name",
 which is resolved through the connection. Without it, this checkout's origin
-remote is used and the command says so on stderr before creating anything -
-which is the one place a remote name is read, at the moment a person is naming
-a new thing and reads the confirmation. Nothing afterwards looks at a remote.
+remote is used and the command says so on stderr before creating anything.
+This is the only place a remote name is read; nothing afterwards looks at a
+remote.
 
     asgard-cli pipeline create --name iac-test --connection <id>
     asgard-cli pipeline create --name iac-test --connection <id> --repo asgard-ai-platform/asgard-iac-test
@@ -451,15 +447,15 @@ a new thing and reads the confirmation. Nothing afterwards looks at a remote.
 snapshot is read from, which is what draws the ghost rows and the trigger
 column. Leaving it empty follows the repository's default branch, so a branch
 renamed on the provider is followed rather than breaking the sync. It never
-decides what is deployed - a run always reads the yaml at its own commit - which
-is exactly why it can be pointed at a working branch.
+decides what is deployed - a run always reads the yaml at its own commit - so
+it can safely be pointed at a working branch.
 
 A missing or invalid ` + "`.asgard-pipeline.yaml`" + ` does not fail the create; it is
 reported on the pipeline as a failed config sync, and fixing the ref or the path
 recovers it.
 
-**The connection and the repository are decided here and nowhere else in this
-tool**; ` + "`asgard-cli pipeline`" + ` says what moving them afterwards takes, and why it
+The connection and the repository are decided here and nowhere else in this
+tool; ` + "`asgard-cli pipeline`" + ` says what moving them afterwards takes, and why it
 is not a flag.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
@@ -579,7 +575,7 @@ its last config sync.
 The starred row is the one this checkout records in ` + "`.asgard-cli.yaml`" + `, so a wrong
 binding is visible here without running anything that acts on it.
 
-A failed sync is worth reading before anything else: a pipeline whose
+Read a failed sync before anything else: a pipeline whose
 declaration could not be read declares no releases at all, so its releases tab
 looks empty for a reason that has nothing to do with what was created.`,
 		Args: cobra.NoArgs,
@@ -643,18 +639,15 @@ It writes the ` + "`pipeline`" + ` line of ` + "`.asgard-cli.yaml`" + `, beside 
 belongs to, and that file is committed: whoever clones this repository, and
 whatever agent works in it, then needs no --pipeline.
 
-**It is checked against the platform and against nothing else.** The pipeline
-has to exist in the workspace currently in effect - that is one call, and a
-typo is worth catching here rather than three commands later. What is NOT
-checked is the repository: this never looks at a git remote. A checkout may
+It is checked against the platform and nothing else. The pipeline has to
+exist in the workspace currently in effect, so a typo is caught here. The
+repository is not checked: this never looks at a git remote. A checkout may
 have several, and which one is called ` + "`origin`" + ` says nothing about what it
-deploys, so a rule built on that name refuses correct setups and passes broken
-ones depending on how somebody happened to name things.
+deploys.
 
 Run it after copying a repository. A copy carries the previous repository's
-pipeline id, and if the copy lives in the same workspace that id still resolves
-- which is the one silent way this file can be wrong, and is written into its
-own header for the same reason.
+pipeline id, and if the copy lives in the same workspace that id still
+resolves without any error. The file's own header says so too.
 
 Which workspace a pipeline belongs to is ` + "`asgard-cli workspace use`" + `, and changing
 that clears this line, because a pipeline of one workspace means nothing in
@@ -990,9 +983,9 @@ func newPipelineDeliveriesCmd() *cobra.Command {
 		Short: "Why a push did or did not produce a run",
 		Long: `List the events this pipeline received and what came of each.
 
-**This is the only place a push that produced nothing explains itself.** A run
+This is the only place that explains a push that produced nothing. A run
 that was never created leaves no record of its own, so when a tag appears to
-have been ignored the reason is here and nowhere else:
+have been ignored the reason is here:
 
     release "x" not created      the pattern matched, but nobody created it
     no release matches tag "x"   no pattern in the declaration matched the ref

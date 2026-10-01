@@ -9,18 +9,18 @@ projects/<slug>/
     app/values.yaml              # 只放預設值。實際的值在 Platform 上
 ```
 
-**這裡沒有部署目標。** 一份 chart 部署到哪裡,是根目錄 `.asgard-pipeline.yaml` 裡的
+這裡沒有部署目標。一份 chart 部署到哪裡,是根目錄 `.asgard-pipeline.yaml` 裡的
 Release 決定的:一個 Release 綁一個 Platform Project(= 一個 namespace),由一條 tag 或
 branch 規則觸發,一份 chart 可以有好幾個 Release。namespace 從 `.Values.asgard.namespace`
 來,不寫在 chart 裡。
 
-用 `asgard-cli project add <slug>` 產生上面的骨架。**不要手動建目錄** ——
+用 `asgard-cli project add <slug>` 產生上面的骨架,不要手動建目錄。
 根 README 的 project 表由 `asgard-cli init` 與 `asgard-cli project add` 維護,清單直接讀這個目錄與
 `.asgard-pipeline.yaml` 宣告的 chart 路徑(沒有第三份清單會跟它們不一致),
-而 `asgard-cli check` 會比對那張表與這裡實際的資料夾,兩邊對不上就是紅的。
+而 `asgard-cli check` 會比對那張表與這裡實際的資料夾,兩邊對不上就會失敗。
 
 ## 怎麼切
 
-切分依**受眾**,不依整齊。內部可驗證的呼叫端與匿名訪客需要不同的入口形狀與讀取路徑,
-那兩者無法共用,所以他們不能是同一個 project。詳見 `.agents/skills/asgard-platform/guide/projects.md`
+依受眾切分 project。內部可驗證的呼叫端與匿名訪客需要不同的入口形狀與讀取路徑,
+兩者無法共用,所以要分成不同的 project。詳見 `.agents/skills/asgard-platform/guide/projects.md`
 與根目錄 `AGENTS.md` 的「The three decisions that get answered wrong」。

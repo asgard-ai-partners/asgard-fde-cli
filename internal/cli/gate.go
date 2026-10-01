@@ -91,18 +91,13 @@ func newGateCmd() *cobra.Command {
     asgard-cli gate --format json    one record per step, for an agent
 
 The first line says which platform this run's verdict is about, and how that
-profile came to be the one in effect. Some of the steps ask a platform, so a
-verdict read against the wrong one is worth nothing; ` + "`--offline`" + ` and "not signed
-in" say so there rather than leaving the line out.
+profile came to be the one in effect. Some of the steps ask a platform, so check
+that line before trusting the verdict. With ` + "`--offline`" + `, or when not signed in, the
+line says so rather than being left out.
 
-**Run it after changing anything under a chart or ` + "`" + pipelineconfig.FileName + "`" + `.** It is the
-build step of a repository that has no build step: an agent working in a
-compiled language knows that whatever it changed, it runs the compiler, and the
-compiler is one command whose definition lives with the code. Nothing here was
-missing before - ` + "`check`" + `, ` + "`helm lint`" + `, ` + "`render`" + `, ` + "`verify`" + ` and the reference
-material's freshness all existed - but the only thing that assembled them was
-prose, and prose goes stale. The gate this replaces described four steps, and
-the fourth ran a script that no longer existed.
+Run it after changing anything under a chart or ` + "`" + pipelineconfig.FileName + "`" + `. It is
+this repository's build step: one command that runs ` + "`check`" + `, ` + "`helm lint`" + `,
+` + "`render`" + `, ` + "`verify`" + ` and the check on the reference material's freshness.
 
 What it runs, in order:
 
@@ -129,11 +124,11 @@ What it runs, in order:
            Needs a session; --offline skips the half that asks
   skills   whether the reference material here still describes the server this
            repository deploys to. Needs a session; --offline skips it
-  lint     helm lint on each chart, with the reserved asgard block and NOTHING
+  lint     helm lint on each chart, with the reserved asgard block and nothing
            else. That is what proves values.yaml declares a default for every
            .Values.* the chart itself owns; overlay an environment file and a
            missing default is masked until somebody runs plain helm template.
-           Linting with no values file at all - the old instruction - fails on
+           Linting with no values file at all fails on
            every chart that reads .Values.asgard.*, which a chart must not
            declare and the platform always injects
   render   each release renders, with placeholder platform values
@@ -141,9 +136,9 @@ What it runs, in order:
            halves of every entrypoint, missing display annotations, the
            workflow-set labels, the agent-split invariants
 
-**A skip is not a pass**, and the two are printed differently on purpose.
+A skip is not a pass, and the two are printed differently.
 
-**This is the local half of the loop, and it is the half this binary owns.**
+This command is step 1 of the deploy loop, the local step:
 
     1. locally      asgard-cli gate                 <- documented here
     2. push         a tag or branch matching a release's trigger
@@ -153,27 +148,25 @@ What it runs, in order:
 
 Steps 2 to 5 belong to the platform, and the platform describes them: the
 ` + "`asgard-cr-verification`" + ` skill that ` + "`asgard-cli skill update`" + ` fetches lists the
-run steps, every rule code and what each means. **It deliberately says
-nothing about step 1**, because a server cannot know which version of this
-binary somebody installed - an on-prem customer's CLI can be several releases
-from the platform's in either direction. So the two documents interlock rather
-than overlap, and each is written where it moves when the thing it describes
-moves. This help is the answer to "what does step 1 check".
+run steps, every rule code and what each means. It says nothing about step 1,
+because a server cannot know which version of this binary somebody installed -
+an on-prem customer's CLI can be several releases from the platform's in either
+direction. This help describes what step 1 checks.
 
-**Do not run helm by hand here.** The platform injects a reserved ` + "`asgard`" + ` block
+Do not run helm by hand here. The platform injects a reserved ` + "`asgard`" + ` block
 into every render, and a chart must not declare it in its own values.yaml - so
 ` + "`helm lint <chart>`" + ` with no -f fails on every chart that reads
 ` + "`.Values.asgard.projectEnvironmentId`" + `, which is every chart that labels
-anything. That failure looks like the chart is broken and it is not. This
+anything. That failure does not mean the chart is broken. This
 supplies that one file and nothing else, which is why the lint step still
 proves that values.yaml defaults everything the chart itself owns.
 
-**It does not reproduce the platform's checks, and it must not.** Whether a CR
+It does not reproduce the platform's checks. Whether a CR
 is admitted is decided by an apiserver, and no client is ever given credentials
 for one - so a copy of those rules here would drift from the server the first
 time either changed, while still missing the two that matter most: a field the
 CRD silently prunes, and a rejection only the apiserver can produce. A green
-gate means "worth pushing", never "this will deploy". The authority is the plan:
+gate means "worth pushing", not "this will deploy". The plan decides:
 
     asgard-cli pipeline runs watch --release <name> --ref <tag>
 
@@ -436,9 +429,9 @@ func gateBinding(cmd *cobra.Command, root, profile string, offline bool) stepRes
 		}
 		res.Remedy = remedy
 		res.Details = append(res.Details,
-			"`asgard-cli init` writes the skeleton and deliberately stops there - it needs no account, "+
-				"so the repository exists before the platform does. Connecting it is a separate act, and "+
-				"`asgard-cli pipeline create` makes the pipeline when there is none yet.")
+			"`asgard-cli init` writes the skeleton and does not connect it to the platform, so it needs no "+
+				"account. Connect it as a separate step; `asgard-cli pipeline create` makes the pipeline "+
+				"when there is none yet.")
 		return res
 	case err != nil:
 		res.Status = stepFail
@@ -556,9 +549,9 @@ func gateOrigin(ctx context.Context, root string) (detail, remedy string) {
 	}
 	remoteURL, err := gitrepo.OriginURL(ctx, root)
 	if errors.Is(err, gitrepo.ErrNoOrigin) {
-		return "**no `origin` remote**, so `pipeline connect` and `pipeline create` have nothing to " +
-				"derive an account or a repository from. Ask for this repository's remote URL - one " +
-				"URL is the whole answer - then set it and push. Push, not only add: the pipeline reads " +
+		return "no `origin` remote, so `pipeline connect` and `pipeline create` have nothing to " +
+				"derive an account or a repository from. Ask for this repository's remote URL, " +
+				"then set it and push. Push, not only add: the pipeline reads " +
 				"its declaration off the default branch, and a repository with no commits fails its " +
 				"first config sync.",
 			"git remote add origin <url> and push, then " + connect

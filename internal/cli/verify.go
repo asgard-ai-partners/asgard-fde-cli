@@ -48,7 +48,7 @@ server-side dry run all pass:
     each of their CRDs, which is why the enforced count is far higher
   - the agent split: every Agent has some source of capability, no Agent lists
     the same semantic layer twice, no allowedCubes, and sampleQuestions on
-    anything published. **Two things this deliberately no longer checks**: how
+    anything published. Two things it does not check: how
     many layers one Agent mounts, and whether prompt.task and prompt.format are
     identical across the Agents of one render. Both are shapes the CRD and the
     platform accept, both have a chart set that means them, and a rule cannot
@@ -56,18 +56,18 @@ server-side dry run all pass:
     ".agents/skills/asgard-platform/usecase/agent-hub.md" argues for the shape
     each one departs from
   - every credential reference reads a key ` + "`.asgard-pipeline.yaml`" + ` declares,
-    **and every declared key is read by something**. Setting a value on the
+    and every declared key is read by something. Setting a value on the
     platform without declaring the key is stored and never injected -
     ` + "`variables list`" + ` marks it ORPHAN and the run reports ` + "`vars/orphan`" + `. The
-    reverse says nothing at all: a declared key with no reader is created and
-    injected on every run into a Secret no CR names, ` + "`variables list`" + ` shows a
-    value, and every check here is green, which is what a shape change leaves
+    reverse produces no other signal: a declared key with no reader is created
+    and injected on every run into a Secret no CR names, ` + "`variables list`" + `
+    shows a value, and every other check passes. A shape change leaves this
     behind when whatever read the key is replaced. Both are warnings, and both
     need a release name, because the declaration is per release
-  - the generator's own TODOs, still in the render. **A warning, never a
-    failure** - a chart carries them through the whole middle of an onboarding.
-    This is the last place between ` + "`asgard-cli add`" + ` and a tag where anybody
-    says they are there: helm renders the word, the apiserver accepts it, the
+  - the generator's own TODOs, still in the render. A warning, never a
+    failure, because a chart carries them through most of an onboarding.
+    This is the last check between ` + "`asgard-cli add`" + ` and a tag that reports
+    them: helm renders the word, the apiserver accepts it, the
     run succeeds, and a published Agent shows "TODO" to the customer as its
     sample questions
 
@@ -85,15 +85,14 @@ process, so there is no pipeline and no temporary file:
     asgard-cli verify --rendered .out/rendered.yaml
     asgard-cli verify --tools               every tool description, side by side
 
-**--tools prints and checks nothing.** ` + "`tooling.description`" + ` is the single
-field where a wrong value makes a model call the wrong tool, and what makes one wrong
-is that it does not distinguish itself from the tool beside it - a property of
-the set, not of any entry, and so not something a rule can read. A person
-reading all of them at once can, and there was nowhere that put them together.
-Read them as the model does: in one list, with no other context, deciding which
-one answers the question.
+--tools prints and checks nothing. ` + "`tooling.description`" + ` is the field
+where a wrong value makes a model call the wrong tool. A description is wrong
+when it does not distinguish its tool from the one beside it, which depends on
+the whole set, so no rule can check it; a person reading all of them at once
+can. Read them as the model does: in one list, with no other context, deciding
+which one answers the question.
 
-**This is the ` + "`verify`" + ` step of ` + "`asgard-cli gate`" + `**, which renders first and
+This is the ` + "`verify`" + ` step of ` + "`asgard-cli gate`" + `, which renders first and
 then runs these. It needs only helm on PATH.
 Exits non-zero on any problem.
 
@@ -102,9 +101,8 @@ the CRDs accept each object, and whether a field they do not declare is being
 silently dropped. That is the platform's plan, and it is the authority.
 
 --format json emits one record per render, with each check named and its
-problems and warnings separate. This is the gate an agent works against, and in
-text a warning and a failure differ by one word at the left margin while only
-one of them is fatal.
+problems and warnings separate. Agents should use it: in text, a warning and a
+failure differ only by one word at the left margin.
 
 Run ` + "`gate`" + ` after changing anything; run this one alone while you are
 fixing a single finding and do not want the steps in front of it each
@@ -212,7 +210,7 @@ time.`,
 		},
 	}
 
-	cmd.Flags().BoolVar(&tools, "tools", false, "print every tool name and description instead of checking; the one review a rule cannot do")
+	cmd.Flags().BoolVar(&tools, "tools", false, "print every tool name and description for a person to review, instead of checking")
 	cmd.Flags().StringVar(&rendered, "rendered", "", "check a file of already-rendered manifests, or - for stdin (defaults to rendering each project)")
 	cmd.Flags().StringVar(&format, formatFlag, formatText, formatUsage)
 

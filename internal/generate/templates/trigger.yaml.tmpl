@@ -1,6 +1,6 @@
 # <<.DisplayName>>
 #
-# Do NOT write a BotProvider for this. The Trigger reconciler provisions the
+# Do not write a BotProvider for this. The Trigger reconciler provisions the
 # BotProvider, its API-key Secret, and the CronJob itself.
 #
 # State is one cursor, saved by the agent and injected into the next run's
@@ -71,14 +71,13 @@ spec:
         # values key is the one every SemanticLayer in this project reads.
         - name: completionModel
           value: {{ .Values.defaultCompletionModelName | quote }}
-<<if .Layers>>        # An ARRAY: one run can mount several systems and do the cross-system
-        # matching in its own reasoning. That is what replaces an ETL.
+<<if .Layers>>        # An array: one run can mount several systems and do the cross-system
+        # matching in its own reasoning, instead of an ETL.
         #
         # allowWrite: false is written out on every entry and must stay that
-        # way. This processor resolves a MISSING allowWrite to true, so leaving
-        # it off is not "read-only by default" - it hands a run that nobody is
-        # watching a write path into the customer's systems, and nothing in the
-        # rendered chart shows that it happened.
+        # way. This processor resolves a missing allowWrite to true, so leaving
+        # it off gives an unwatched run a write path into the customer's
+        # systems, and the rendered chart does not show it.
         - name: semanticLayers
           expression: '[<<range $i, $l := .Layers>><<if $i>>, <<end>>{"name": "<<$l>>", "allowQuery": true, "allowWrite": false}<<end>>]'
 <<else>>        # allowWrite: false is not optional here - omitting it resolves to true.

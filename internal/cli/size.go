@@ -19,26 +19,22 @@ func newSizeCmd() *cobra.Command {
 		Long: `Estimate a capability's shape and size from what the interview established.
 
 "How many agents, how many projects" is the first question a proposal is asked
-and the basis of a quote, and until this existed the answer was worked out by
-hand, differently each time. The stage prompts say how the split is decided and
-the extracts say what one shape contains; nothing added them up.
+and the basis of a quote. The stage prompts say how the split is decided and
+the extracts say what one shape contains; this command adds them up.
 
     asgard-cli size                       the shapes, and what each costs empty
     asgard-cli size flow-agent-single --databases 2 --queries 4 --writes 1 --knowledge 1
 
-**One capability at a time.** A request covering two audiences is two requests
+Estimate one capability at a time. A request covering two audiences is two requests
 and two estimates - they share no entry point and no read path, so adding their
 CRs together describes nothing that will be built.
 
-The counts come from deployments in production rather than from reasoning, which
-matters most where the intuitive answer is wrong: **the flow-agent shapes
-contain no Agent CR at all.**
+The counts come from deployments in production rather than from reasoning.
+Note that the flow-agent shapes contain no Agent CR at all.
 
-Two outputs, and the second is not decoration. The CR table is for the estimate;
-the plain reading is what may go in front of the customer, because CR kinds are
-the first thing a proposal deck forbids. Handing over only the table means
-somebody translates it under time pressure, and reaches for the word in front of
-them.`,
+There are two outputs. The CR table is for the estimate. The plain reading is
+what may go in front of the customer, because a proposal deck must not show CR
+kinds; without it, somebody has to translate the table under time pressure.`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			out := cmd.OutOrStdout()
@@ -84,7 +80,7 @@ them.`,
 			}
 			fmt.Fprintf(out, "  %-18s %d\n", "TOTAL", e.Total)
 			if e.CRs["Agent"] == 0 {
-				fmt.Fprintf(out, "\n  Agents: 0. That is the shape, not an omission.\n")
+				fmt.Fprintf(out, "\n  Agents: 0. This shape has none.\n")
 			}
 
 			fmt.Fprintf(out, "\nThe same thing, said the way a customer can check:\n\n")
@@ -107,8 +103,8 @@ them.`,
 				}
 			}
 
-			fmt.Fprintf(out, "A number stated where an open question could double it is a guess with a\n"+
-				"decimal point. `asgard-cli question` prints what is still unanswered.\n")
+			fmt.Fprintf(out, "Do not state this number while an open question could double it.\n"+
+				"`asgard-cli question` prints what is still unanswered.\n")
 			return nil
 		},
 	}

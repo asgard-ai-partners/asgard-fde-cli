@@ -8,28 +8,27 @@ Things filed under help-community that come up in practice.
 
 ## Reaching a system inside the customer's network
 
-**Asgard is a hosted cloud service.** It runs in Asgard's own cloud, not in the
-customer's data centre and not on their network, and there is no deployment that
-puts it inside. Everything follows from that.
+Asgard is a hosted cloud service. It runs in Asgard's own cloud, not in the
+customer's data centre or on their network, and no deployment option puts it
+inside.
 
-**And the agent runs in a sandbox that the platform starts**, in that cloud. So
-there is no fixed machine of ours to put on their network, nothing to install
-behind their firewall, and no endpoint of theirs we can reach out from. The
-traffic leaves Asgard's cloud, and it leaves from the addresses below.
+The agent runs in a sandbox that the platform starts in that cloud. So there is
+no fixed machine of ours to put on their network, nothing to install behind
+their firewall, and no endpoint of theirs we can connect out from. The traffic
+leaves Asgard's cloud from the addresses below.
 
-So the ask has exactly one shape, and it is not a menu:
+So there is one thing to ask for:
 
     they add Asgard's outbound addresses to their allowlist
 
-**Do not offer a VPN, a bastion or a jump host as alternatives.** They are the
-shapes for connecting two networks, and this is not that: it is a hosted service
-calling in from fixed addresses. Presenting three options invites their network
-team to pick the one that suits their habits, and then a week is spent
-discovering it does not apply. If their policy requires a VPN, that is a
-conversation for their side about how the allowlist is implemented - it does not
-change what we need from them.
+Do not offer a VPN, a bastion or a jump host as alternatives. Those connect two
+networks; here a hosted service calls in from fixed addresses. If you present
+three options, their network team may pick the one that suits their habits and
+spend a week finding out it does not apply. If their policy requires a VPN, how
+they implement the allowlist is their decision; it does not change what we need
+from them.
 
-The work is theirs, not ours. We supply the addresses; they own the change, the
+The customer does the work. We supply the addresses; they own the change, the
 approval and the schedule.
 
 Traffic from the platform to a customer's internal database or service leaves
@@ -42,80 +41,71 @@ from these four fixed addresses:
 57.181.108.84
 ```
 
-All four have to be allowlisted, not one - which of them a given request leaves
-from is not something to rely on.
+All four have to be allowlisted, not one. Do not rely on a given request
+leaving from any particular one of them.
 
 ### How these are handed over, which is not "in the deck"
 
-**Do not copy them out of this page** - not into a proposal, not into a
-decision record, not into an email that will be forwarded. Give them directly to
-the person making the firewall change, once, and read them from here when you
-do.
+Do not copy them out of this page into a proposal, a decision record, or an
+email that will be forwarded. Give them directly to the person making the
+firewall change, once, and read them from here when you do.
 
-**This page is already in the repository**, written by `asgard-cli init` under
+This page is already in the repository, written by `asgard-cli init` under
 `.agents/skills/asgard-platform/`, and replaced when the CLI's version moves.
-That is what makes it the one copy allowed to exist: a second one, written by
-hand into this engagement's own files, is updated by nobody.
+That makes it the one copy allowed to exist. A second copy written by hand into
+this engagement's own files is updated by nobody.
 
-The reason is this material's own core argument, applied to itself. The
-screenshots page refuses to carry images because *a copy in one engagement goes
-stale where nobody is looking* - and an address is the same kind of thing with a
-worse failure. **A stale screenshot is embarrassing; a stale allowlist is the
-customer's connection dropping, and they will come back to us about it.** A
-slide or a mail thread is a copy nobody will update; this page is a copy the
-CLI replaces.
+The screenshots page carries no images for the same reason: a copy in one
+engagement goes stale without anyone noticing. A stale address list does more
+damage than a stale screenshot: the customer's connection drops, and they come
+back to us about it. A slide or a mail thread is a copy nobody will update; this
+page is a copy the CLI replaces.
 
-It also resolves a contradiction that was sitting in plain sight: the
-`proposal-deck` skill forbids **coordinates** on a customer's screen - hostnames,
-connection strings, account names, not even in a screenshot's corner - and that
-rule is about the customer's infrastructure. Ours is the same class of thing, and
-this page was encouraging the opposite. Two documents, opposite instincts, and
-nothing said they were about the same subject.
+The `proposal-deck` skill forbids coordinates on a customer's screen -
+hostnames, connection strings, account names, including in a screenshot's
+corner. That rule is written about the customer's infrastructure, and it applies
+to Asgard's addresses too.
 
-**In the meeting, ask whether the change can be made.** Then send the addresses
-to whoever will make it, afterwards and directly.
+In the meeting, ask whether the change can be made. Then send the addresses to
+whoever will make it, afterwards and directly.
 
-**Find out who will make it, for the follow-up list in the engagement's `docs/open-questions.md`** - not for a slide. That
-phrasing is deliberate, and so is where the boundary sits: **a caveat beside an
-imperative reads as elaboration, not as a limit**, so the limit is in the
-sentence rather than the paragraph. The destination has to be
-inside the instruction.
+Find out who will make it, for the follow-up list in the engagement's `docs/open-questions.md`, not for a slide. The
+destination is written inside the instruction on purpose: a caveat placed beside
+an imperative gets read as elaboration and dropped when the imperative is
+copied.
 
-**Nothing here records how these change.** They read as constants and there is no
-documented channel for a revision, which is itself worth knowing before treating
-a copy of them as durable.
+Nothing documents how these addresses change. They read as constants and there
+is no documented channel for a revision, so do not treat a copy of them as
+durable.
 
-Two things this changes in an interview.
+This changes two things in an interview.
 
-**It is a question with a known answer, so ask it in the first meeting.** "Can
-four addresses be added to that system's firewall allowlist?" - the question,
-not the addresses and not the org chart. It avoids discovering in week three
+Ask it in the first meeting, because the answer is known in advance. "Can four
+addresses be added to that system's firewall allowlist?" - the question, not the
+addresses and not the org chart. Asking early avoids finding out in week three
 that the credential works, the query is right, and nothing can connect.
 
-**Track the outcome, not the person.** This is worth an open question rather
-than a note, because it blocks the first delivery and we cannot do it
-ourselves - but what is tracked is *whether the allowlist can be changed, and
-then whether it has been*. Not who signs it, not how many approvals, not how
-long their process takes.
+Track the outcome, not the person. Record it as an open question rather than a
+note, because it blocks the first delivery and we cannot do it ourselves. What
+is tracked is whether the allowlist can be changed, and then whether it has
+been. Not who signs it, how many approvals it needs, or how long their process
+takes.
 
     ours     can this be changed, and is it done yet
     theirs   who signs, which queue, how long
 
-**Asking who approves it fails this material's own filter**, and it has been
-asked on a slide: `../guide/requirements.md` filter 0 tests whether
-an answer changes what we build, and an approver's name does not. Worse, filter
-0 names this exact case - turning an operational precondition into a design
-question - and asking it in front of a customer reads as managing their internal
-process.
+Do not ask who approves it. It fails filter 0 in `../guide/requirements.md`,
+which tests whether an answer changes what we build; an approver's name does
+not. Filter 0 names this case - turning an operational precondition into a
+design question - and asking it in front of a customer reads as managing their
+internal process.
 
-It is fine to ask when they expect it, because a date changes our plan. It is
-not fine to ask who, because a name does not.
+Asking when they expect it done is fine, because a date changes our plan.
+Asking who is not, because a name does not.
 
-**This page has now contradicted the interview stage twice** - once by offering a
-VPN or a jump host as alternatives, once here. Its reader is usually somebody
-preparing for a meeting, and it was written as though for somebody doing an
-integration. **Any line here that says "ask this in the meeting" should be run
-through filter 0 before it is followed.**
+This page's reader is usually preparing for a meeting, not doing an
+integration. Run any line here that says "ask this in the meeting" through
+filter 0 before following it.
 
 The order the rest of the setup follows once the path is open is
 [`setup-path.md`](../wiki/setup-path.md).
@@ -136,7 +126,9 @@ not produce them, and does not handle audio at all.
 | Voyage | docs.voyageai.com/docs/pricing |
 
 Semantic Model adds a hard floor of its own: the Completion Model must support at
-least 60,000 Max Output Tokens.
+least 60,000 Max Output Tokens. The workflows the platform derives from a
+`SemanticLayer` set `maxTokens` to 60000 on their model processors, so a model
+with a lower output ceiling fails there.
 
 ## Common LLM Completion failures
 
@@ -157,8 +149,8 @@ Settings, save, and try again.
 
 Services whose API is OpenAI-compatible, such as DeepSeek, need no new provider:
 
-1. Model Provider: **OpenAI Chat Completion**
-2. Model Name: **Other**, then the real model name (`deepseek-chat`)
+1. Model Provider: OpenAI Chat Completion
+2. Model Name: Other, then the real model name (`deepseek-chat`)
 3. Endpoint: the service's address (`https://api.deepseek.com`)
 
 ## Environment
@@ -167,23 +159,26 @@ A Project can hold several Environments. The system creates Main by default and 
 user can add others - Main as production and another for development, say - and
 merge a finished one back into the main environment.
 
-This is not the same thing as a chart's `dev` / `prod`: those map to namespaces
-and values files, while a platform Environment is a division inside a Project.
-**How the two correspond is not documented, and is unconfirmed.**
+This is not the same thing as a chart's `dev` / `prod`. Those are releases: each
+is bound to its own platform Project, deploys into that Project's namespace,
+and takes its values from variables set on the platform rather than from a
+values file. The two meet at one point: the platform injects the Project's main
+Environment id into every run as `.Values.asgard.projectEnvironmentId`, and a
+chart stamps it on its Workflows, CompletionModels and Triggers as the
+`asgard-ai.com/project-environment-id` label.
 
 ## Vocabulary
 
 | term | meaning |
 |---|---|
-| Workspace | the **smallest unit a subscription is billed against** |
+| Workspace | the smallest unit a subscription is billed against |
 | Project | a project under a Workspace; its resources - knowledge bases, settings, apps - are shared within it |
 | Collection | a set of workflows, a workflow set |
 | Workflow | processors connected into a flow, with a start and an end |
 | Processor | the smallest processing node |
 
-That a Workspace is the billing unit is worth keeping in mind: when a customer
-asks about cost structure, this is where the effect of how things are divided
-begins.
+When a customer asks about cost structure, start from the Workspace: it is the
+billing unit, so how resources are divided into Workspaces affects cost.
 
 ## Corresponding extracts
 
@@ -197,14 +192,14 @@ Connectivity and vocabulary produce no CRs, so there is no extract for them.
   [LLM Completion troubleshooting](https://docs.asgard-ai.com/docs/help-community/other/troubleshooting-llm-completion),
   [DeepSeek](https://docs.asgard-ai.com/docs/help-community/faq/deepseek),
   and asgard-docs `docs/help-community/faq/how-to-show-channel-log.mdx`
-  - **Cited as a file because the published page does not exist, and this one
-  is not a draft.** It carries `draft` nowhere, `hidden: false` and its own
-  slug, and its two neighbours in that directory serve 200 - it is simply not
-  in `sidebars.js`. That is an upstream omission rather than a judgement, and
-  worth telling whoever maintains asgard-docs
+  - Cited as a file because the published page does not exist, and this one
+  is not a draft. It carries `draft` nowhere, `hidden: false` and its own
+  slug, and its two neighbours in that directory serve 200; it is missing from
+  `sidebars.js`. That is an upstream omission rather than a decision; tell
+  whoever maintains asgard-docs
   - asgard-docs `f00e0ee`
-- asgard-docs `docs/overview/asgard-environment.md` - **cited as a file: it is
-  `draft: true`, so there is no page to link to.** The file is readable in a
+- asgard-docs `docs/overview/asgard-environment.md` - cited as a file: it is
+  `draft: true`, so there is no page to link to. The file is readable in a
   checkout and that is where it was read
   - asgard-docs `f00e0ee`
 - [Glossary](https://docs.asgard-ai.com/docs/help-community/glossary)
@@ -212,9 +207,13 @@ Connectivity and vocabulary produce no CRs, so there is no extract for them.
   does not match the current `ProcessorType`; take [`workflow.md`](../wiki/workflow.md)
   as the current one
 
-**Unchecked:** the IPs and the model lists come from the product documentation
-only. That Asgard is hosted and therefore always needs the customer to open the
-path inward is the FDE team's account of how every engagement so far has gone,
-recorded 2026-09-02; no document states it, and it has not been held against a
-deployment that failed for the opposite reason. How a platform Environment corresponds to a chart's dev/prod is
-undocumented and unconfirmed.
+**Checked:** the 60,000-token floor against
+asgard-core `478cf5d6` `internal/bpoperator/reconciler/sl_reconciler.go`; the four addresses against
+asgard-docs `95a27895` `docs/help-community/other/vpn-white-list-ip.mdx`; the
+Environment id reaching a chart against
+xxentria-asgard-kube `967407c` `.asgard-pipeline.yaml` and its Workflow labels.
+
+**Unchecked:** the addresses are the documentation's, and the egress
+configuration behind them is in none of the repositories here. That Asgard
+always needs the customer to open the path inward is the FDE team's account of
+every engagement so far and no document states it.

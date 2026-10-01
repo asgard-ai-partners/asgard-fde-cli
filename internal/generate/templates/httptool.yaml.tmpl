@@ -1,12 +1,12 @@
 # <<.DisplayName>>
 #
-<<if .Write>># A WRITE path. The gate is requestConsent: true on the Toolset entry below -
+<<if .Write>># A write path. The gate is requestConsent: true on the Toolset entry below -
 # the harness intercepts the call and waits for a person.
 #
-# Do not describe an approval flow in any prompt: the gate is the harness's, and
-# prompting around it only adds a fake one the model can talk itself past.
+# Do not describe an approval flow in any prompt: the harness owns the gate, and
+# a prompted approval is one the model can talk itself past.
 #
-# This Toolset must NOT be reachable from a Trigger. A scheduled run has nobody
+# This Toolset must not be reachable from a Trigger. A scheduled run has nobody
 # to approve, so requestConsent: true parks it until it times out.
 <<else>># A read tool. requestConsent: false because it changes nothing.
 <<end>>#
@@ -15,7 +15,7 @@
 #   2. The request body - measure it against the real API, do not infer it from
 #      the field names on our side.
 #   3. Auth: a config has no valueFrom, so a credential is a variable read back
-#      as vars.<name> - the skeleton is beside `variables` below. Do NOT declare
+#      as vars.<name> - the skeleton is beside `variables` below. Do not declare
 #      a secretKeyRef for a key infra has not created yet - config evaluation
 #      fails at call time, so it deploys and then breaks on first use.
 apiVersion: asgard-ai.com/v1alpha1
@@ -32,10 +32,10 @@ metadata:
     {{- end }}
     {{- include "<<.Chart>>.labels" . | nindent 4 }}
 spec:
-  # **A credential goes here and nowhere else**: a config has no valueFrom, so a
+  # A credential goes here and nowhere else: a config has no valueFrom, so a
   # token is a variable, read back as vars.<name>.
   # `.agents/skills/asgard-platform/usecase/external-api.md` has why the
-  # alternatives are not it.
+  # alternatives do not work.
   # - name: apiToken
   #   valueFrom:
   #     secretKeyRef:
@@ -77,8 +77,8 @@ spec:
           that is the failure nothing can check for you.
           Read them together afterwards: asgard-cli verify --tools
         allowUploadFile: false
-  # No exit: the run ends when its last processor finishes. Declare one where a
-  # named end is worth seeing on the canvas, and route the last relationship at
+  # No exit: the run ends when its last processor finishes. Declare one if you
+  # want a named end on the canvas, and route the last relationship at
   # it - `to` takes exactly one of processor and exit.
   # - name: finish
   #   labels:
@@ -88,8 +88,9 @@ spec:
   #     exit: finish
   exits: []
   processors:
-    # MUST come first. After http-request, prevPayload is the HTTP response,
-    # not the tool arguments - anything not pulled into context here is gone.
+    # Comes first, so the tool arguments are in context under names the rest
+    # of the chain reads. http-request leaves prevPayload alone and adds
+    # httpResponse; a second http-request replaces httpResponse.
     - name: proc-input
       type: update-context
       labels:
@@ -136,7 +137,7 @@ spec:
               return { raw: body };
             })()
 
-    # **A failed call has to say so.** Without this branch the run ends at
+    # A failed call has to report the failure. Without this branch the run ends at
     # proc-call and the tool returns nothing, which the model reads as "no
     # result" rather than "the call failed" - and then answers from memory.
     - name: proc-error
@@ -150,12 +151,12 @@ spec:
               return { error: (prevError && String(prevError)) || "the request failed" };
             })()
 
-  # **`relationships` is what runs the chain.** Without it the run starts at the
-  # entry's handlingProcessor and stops there: the arguments are read into
-  # context and the HTTP call is never made. The CR is legal either way, so
-  # helm lint, CRD validation, the server-side dry run and `asgard-cli verify`
-  # are all green while the tool does one third of what this file looks like it
-  # does - and an agent handed silence answers from memory.
+  # `relationships` runs the chain. Without it the run starts at the entry's
+  # handlingProcessor and stops there: the arguments are read into context and
+  # the HTTP call is never made. The CR is valid either way, so helm lint, CRD
+  # validation, the server-side dry run and `asgard-cli verify` all pass while
+  # the tool runs only its first processor - and an agent that gets no result
+  # answers from memory.
   relationships:
     - from: {processor: proc-input, relationName: success}
       to: {processor: proc-call}
@@ -178,16 +179,13 @@ metadata:
     {{- include "<<.Chart>>.labels" . | nindent 4 }}
 spec:
   toolsetClass: workflow-tooling
-  # **The platform mints this and guarantees the Secret in every namespace**, so
+  # The platform mints this and guarantees the Secret in every namespace, so
   # there is nothing to obtain and nothing to declare: `preset-agent-hub` /
   # `api_key` is created by the namespace reconciler, once, and never rotated.
   # The platform's own preset Toolset, SourceSet and BotProvider read it the
-  # same way. **Proved end to end for a SourceSet** - applied, Ready, its
-  # Syncers ran - and to the server-side dry run for a Toolset, 2026-09-14. A
-  # BotProvider's adminApiKey is the same field resolved by the same code and
-  # has not been exercised.
+  # same way.
   #
-  # It is NOT the X-API-KEY the documentation tells you to create for calling
+  # It is not the X-API-KEY a caller sends when calling
   # the API from outside - see
   # `.agents/skills/asgard-platform/usecase/conventions.md`.
   apiKey:

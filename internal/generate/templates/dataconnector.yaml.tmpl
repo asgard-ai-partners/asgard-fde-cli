@@ -5,8 +5,8 @@
 # creates and maintains that Secret, and injects its name; never a value, never in git.
 #
 # The password key has to be declared under `appSecret:` in .asgard-pipeline.yaml as well as set on
-# the platform. Set without declared is stored and never injected, and the CR then resolves to
-# nothing at runtime while lint, render and the dry run all stay green.
+# the platform. A key that is set but not declared is stored and never injected, and the CR then
+# resolves to nothing at runtime while lint, render and the dry run all pass.
 apiVersion: asgard-ai.com/v1alpha1
 kind: DataConnector
 metadata:

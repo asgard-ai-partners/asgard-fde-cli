@@ -31,48 +31,46 @@ The built-in tiers are semantic aliases rather than specific model names, which
 is usually the right default: customers rarely have a view, and a hardcoded model
 name becomes something to come back and fix when the model is retired.
 
-**A builtin tier is a logical model, and a router resolves it.** This is what
-the alias buys, and none of it is visible from the platform side:
+A builtin tier is a logical model, and a router resolves it. None of the
+following is visible from the platform side:
 
-  - one logical name is backed by **several provider-model pairs**, and the
+  - one logical name is backed by several provider-model pairs, and the
     selection policy is weighted-random, weighted round-robin or ordered
     fallback
-  - **automatic failover**: a 5xx or a timeout from one provider retries the
+  - automatic failover: a 5xx or a timeout from one provider retries the
     next candidate rather than failing the run
   - the managed key lives in the router's own environment
 
-So a builtin tier is not "a model we picked for you" - it is a pool with
-failover. **A custom `CompletionModel` gives that up**: one provider, one key,
+So a builtin tier is a pool of models with failover. A custom `CompletionModel`
+gives that up: one provider, one key,
 one point of failure, and an outage at that provider is an outage for the
 customer.
 
-**And it is only available on Odin.** Sindri and Mimir use the platform's
+A custom model is also only available on Odin. Sindri and Mimir use the platform's
 designated models and the LLM cannot be swapped there - see
 [`fehu.md`](../wiki/fehu.md). So a custom `CompletionModel` does not make a hub agent or
 a dashboard use the customer's key, and "we will use our own model" has a
 different answer per product.
 
-That is the trade to state when a customer asks for a specific model. They may
-still want it - a compliance requirement, an existing contract, a model they have
-tested against - and those are good reasons. "We prefer this one" usually is not.
+State this trade when a customer asks for a specific model. A compliance
+requirement, an existing contract or a model they have tested against are good
+reasons to still want one. A plain preference usually is not.
 
-**In a chart, a custom model is a `CompletionModel` CR** - the built-in tiers are
-that CR's `builtin` class rather than the absence of one, which is the reading
-that gets this wrong. **A chart using a built-in tier declares no CR at all**:
+In a chart, a custom model is a `CompletionModel` CR. The built-in tiers are
+that CR's `builtin` class, not the absence of one. A chart using a built-in
+tier declares no CR at all:
 the namespace already carries them under the names `preset-balanced`,
 `preset-complex`, `preset-fast` and `preset-vision`, and every field that takes a
 model takes one of those as a plain string. Three reference deployments declare
 their own, with the provider's key as a secretKeyRef into the release's own
 Secret - whose name the Platform injects, and which a chart never writes out:
 
-**`asgard-cli add` has no `completionmodel` kind, and that is the decision
-rather than a gap.** The common case writes no CR, so a generator for this would
-produce one whenever somebody reached for it - and the uncommon case is a
-contract with a provider: which model id, whose key, and who pays for the
-tokens. None of that is a skeleton's to guess, and a wrong provider block is a
-CR the apiserver accepts and every turn then fails on. The shape is here to copy
-from, which is the right amount of help for a decision somebody has already
-made.
+`asgard-cli add` has no `completionmodel` kind, by decision. The common case
+writes no CR, so a generator for this would produce one whenever somebody
+reached for it. The uncommon case is a contract with a provider: which model id,
+whose key, and who pays for the tokens. A skeleton cannot guess those, and a
+wrong provider block is a CR the apiserver accepts and every turn then fails on.
+Copy the shape below once that decision is made.
 
 | | |
 |---|---|
@@ -81,29 +79,28 @@ made.
 | the model | `spec.<provider>.model`, the provider's own model id |
 | the key | `spec.<provider>.apiKey.valueFrom.secretKeyRef` |
 
-**`completionModelClass` is immutable**, so moving a customer from one provider
+`completionModelClass` is immutable, so moving a customer from one provider
 to another is a new CR rather than an edit - the same trap as
 `BotProvider.botProviderClass`. The exactly-one rule is a CRD validation, so a CR
 carrying two provider blocks is refused by the apiserver and passes `helm lint`.
 
-**Name the CR after the chart value everything else already reads**, rather than
+Name the CR after the chart value everything else already reads, rather than
 writing a name of its own. A chart refers to its model as a string, so the
 deployment that does this cleanly sets the CR's `metadata.name` from the same
 value its workflow configs take - one value, not two. The name is not a
-reference the apiserver resolves: asgard-core `623ceb50` builds it into the model
-router's URL, `.../ns/<namespace>/completion-model/<name>/router`, so **a name
-that matches nothing is a 404 on the first turn rather than anything a chart
-check can see**.
+reference the apiserver resolves: asgard-core `478cf5d6` builds it into the model
+router's URL, `.../ns/<namespace>/completion-model/<name>/router`, so a name
+that matches nothing is a 404 on the first turn, and no chart check sees it.
 
-**A declared model that nothing names costs a key and buys nothing.** In the
+A declared model that nothing names costs a key and changes nothing. In the
 demo generator's charts every `CompletionModel` is unreferenced - each layer and
 each agent still names `preset-balanced` - and in the auto-post chart all but one
 are. Copying that block into an engagement's chart obtains a provider key,
 declares an `appSecret`, and changes which model answers nothing at all. Before
 writing the CR, find the field that will name it.
 
-**A model that is not a reasoning model makes the effort setting a failure
-rather than an ignored field.** asgard-core `623ceb50` records the platform's own
+On a model that is not a reasoning model, the effort setting causes failures
+rather than being ignored. asgard-core `478cf5d6` records the platform's own
 `preset-fast` rejecting the reasoning-effort parameter outright - every turn on
 it failed, including turns that sent none, because the agent supplies its own
 default level - and the deployment bringing its own non-reasoning model pins its
@@ -114,26 +111,26 @@ effort value are one decision; `../usecase/semantic-layer.md` has the field.
 
 Only one built-in, Builtin (Balanced).
 
-The custom form's fields change with the provider, **and Azure OpenAI is the
-expensive one to ask for.** The default, Azure OpenAI Embedding Model, takes six
+The custom form's fields change with the provider, and Azure OpenAI needs the
+most from the customer. The default, Azure OpenAI Embedding Model, takes six
 required fields - Name, Model Provider, Resource Name, Deployment ID, API
 Version and API Key - where plain OpenAI takes two. In a chart that is
-`spec.aoai` with **all four of `resourceName`, `deploymentId`, `apiVersion` and
-`apiKey` required**, against `spec.openai` needing `apiKey` and `model`.
+`spec.aoai` with all four of `resourceName`, `deploymentId`, `apiVersion` and
+`apiKey` required, against `spec.openai` needing `apiKey` and `model`.
 
 So for a customer on Azure, three of the four are things only their Azure
-administrator has: **`deploymentId` is what they named the deployment and is not
-the model name**, `resourceName` is the resource rather than the endpoint, and
+administrator has: `deploymentId` is what they named the deployment and is not
+the model name, `resourceName` is the resource rather than the endpoint, and
 `apiVersion` is a dated version string that has to be given rather than guessed.
 Ask for all three together - a request that comes back one field at a time costs
 a round trip each.
 
 `ImageGenerationModel` and `TranscriptionModel` carry the same `aoai` block with
-the same four required fields. **Both are internal and neither is a route an
-engagement takes** - confirmed 2026-09-14, `../wiki/platform-unknowns.md` P12 -
+the same four required fields. Both are internal and neither is a route an
+engagement takes, per the platform team,
 so a customer wanting image generation or transcription is a conversation with
-the platform team rather than a CR to write. The field shape is recorded for the
-day that changes, not as an invitation.
+the platform team rather than a CR to write. The field shape is recorded in case
+that changes; do not write these CRs.
 
 ## Data Source
 
@@ -149,7 +146,7 @@ In a chart, the non-secret coordinates are declared as `chartValues` and the pas
 both set on the platform per release. The password is only ever a secretKeyRef, and the Secret's name
 comes from `.Values.asgard.appSecretName` - a literal name in a template points at nothing.
 
-**An HTTP API does not go here.** Data Source is these nine database providers
+An HTTP API does not go here. Data Source is these nine database providers
 and nothing else, and Connection below is OAuth to five named services. A REST
 API with a key or a bearer token is configured on the tool that calls it - an
 `http-request` step in a Workflow, or an MCP Server's environment variables.
@@ -190,22 +187,25 @@ in a chart.
   [Embedding Model](https://docs.asgard-ai.com/docs/product-suite/odin/features/settings/embedding-model),
   [Data Source](https://docs.asgard-ai.com/docs/product-suite/odin/features/settings/data-source),
   [Connection](https://docs.asgard-ai.com/docs/product-suite/odin/features/settings/connection)
-  - asgard-docs `f00e0ee`
-- The CR mapping and the provider list: checked 2026-09-02 against
-  [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `cbd8d70` -
+  - asgard-docs `6261fdff`
+- The CR mapping and the provider list: checked against
+  [asgard-kube](https://github.com/asgard-ai-platform/asgard-kube) `3da0365` -
   `DataConnectorClass`, `CompletionModelClass`, `EmbeddingModelClass`
 
 - The router's behaviour behind a builtin alias - logical models, the three
   selection policies, failover on 5xx or timeout, and the managed key in its own
-  environment: `asgard-router`'s README, read 2026-09-02
+  environment: `asgard-router`'s README
 
-**Checked:** 2026-09-02, re-read 2026-09-11 against asgard-kube `cbd8d70`
-(`completionModelClass` enum, the immutability rule and the ExactlyOneOf
-validation) and against three deployments that declare their own model.
-Re-read 2026-09-15 against asgard-core `623ceb50` for the `preset-*` names, the
-model router's URL shape and the `preset-fast` effort guard, and against every
-`CompletionModel` CR in those three deployments held against every reference to
-a model name in the same charts.
+**Checked:** against asgard-kube `3da0365` `pkg/apis/asgard/v1alpha1/types.go`
+(the `completionModelClass`, `embeddingModelClass` and `dataConnectorClass`
+enums, the immutability rules, the ExactlyOneOf validations, the required
+`aoai` embedding fields and the builtin alias enums) and against three
+deployments that declare their own model; against asgard-core `478cf5d6`
+asgard-core `internal/constants.go` for the `preset-*` names and the
+`preset-fast` effort guard, and asgard-core `internal/processor/component/model_router_client.go` for
+the model router's URL shape; against `asgard-router`'s README;
+against every `CompletionModel` CR in those three deployments held against every
+reference to a model name in the same charts.
 
-**Unchecked:** the provider list was held against the CRD; the UI form fields come
-from the product documentation only.
+**Unchecked:** the UI form fields and the Connection Type list come from the
+product documentation, and nobody here has opened the forms in a Console account.

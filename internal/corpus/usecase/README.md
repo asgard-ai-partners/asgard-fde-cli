@@ -4,9 +4,8 @@ description: every deployment shape, grouped by the decision it belongs to - ent
 # The extracts
 
 Extracts from Asgard deployments that are already in production, organised by the
-**shape** an engagement needs rather than by CR kind. These become the answer to
-"how do I write this" - the material an agent gets when it is about to author a
-chart.
+shape an engagement needs rather than by CR kind. They answer "how do I write
+this", and an agent reads them when it is about to author a chart.
 
 These are shipped to every engagement, so they name no customer, no tenant and
 no deployment. Where two deployments disagree they are "an earlier one" and "a
@@ -17,22 +16,22 @@ later one", and what matters is which is newer and why.
 Each file answers four questions in this order:
 
 1. **When this shape, and when not.** The decision, with the alternative and why
-   it loses. This is the part worth reading before writing anything.
+   it loses. Read this part before writing anything.
 2. **The shape.** Which CRs, how they reference each other, in dependency order.
-3. **The fields that are not obvious.** Not a restatement of the CRD - only what
-   a reader cannot infer, and what a wrong value does.
-4. **What it cost someone.** Dated incidents, because a rule with a date behind
-   it survives contact with someone who thinks they know better.
+3. **The fields that are not obvious.** Only what a reader cannot infer from the
+   CRD, and what a wrong value does.
+4. **What it cost someone.** Dated incidents, so a reader can see the rule came
+   from something that happened.
 
 ## Two warnings that apply to every extract
 
-**Deployments disagree, and the disagreements are generational.** The platform
-keeps changing what it derives for you, and a chart that has not been touched
-since is still carrying the old workaround. Where an extract notes a conflict it
-says which side is newer, and why. Never resolve one by picking the version you
-happened to see first.
+Deployments disagree, and the disagreements come from different generations of
+the platform. The platform keeps changing what it derives for you, and a chart
+that has not been touched since still carries the old workaround. Where an
+extract notes a conflict it says which side is newer, and why. Do not resolve
+one by picking the version you saw first.
 
-**The top-level layout is not settled either.** Different deployments group by
+The top-level layout is not settled either. Different deployments group by
 `projects/<name>/`, by `tenants/<name>/`, by domain, or use a single chart with
 no grouping at all. The CR shapes below are independent of that choice.
 
@@ -82,16 +81,16 @@ no grouping at all. The CR shapes below are independent of that choice.
 | file | when |
 |---|---|
 | [`api-oauth.md`](../usecase/api-oauth.md) | an API that will not take a static key: the two-call token chain |
-| [`per-turn-credentials.md`](../usecase/per-turn-credentials.md) | the agent calls **as the person talking to it**, on a short-lived token |
+| [`per-turn-credentials.md`](../usecase/per-turn-credentials.md) | the agent calls as the person talking to it, on a short-lived token |
 
 **More entry points and more read paths**, which did not exist when the groups
 above were written:
 
 | file | when |
 |---|---|
-| [`chat-channel.md`](../usecase/chat-channel.md) | LINE, Telegram, Discord or Slack instead of a web widget. **Nothing has run this** - read its provenance line first |
+| [`chat-channel.md`](../usecase/chat-channel.md) | LINE, Telegram, Discord or Slack instead of a web widget. No deployment runs this shape; read its provenance line first |
 | [`knowledge-base.md`](../usecase/knowledge-base.md) | documents through a `KnowledgeBase` rather than a Drive - against [`knowledge-drive.md`](../usecase/knowledge-drive.md), which is the other half of the same decision |
-| [`mimir-dashboard.md`](../usecase/mimir-dashboard.md) | a SemanticLayer whose consumer is Data Insight and **no Agent at all**. The shape a later reader breaks by tidying it up |
+| [`mimir-dashboard.md`](../usecase/mimir-dashboard.md) | a SemanticLayer whose consumer is Data Insight, with no Agent at all, and why adding an Agent breaks it |
 
 **The mechanism, and the scale:**
 
@@ -103,12 +102,8 @@ above were written:
 
 ## Keeping this list complete
 
-**A new extract needs a row here.** The directory lists every file whatever
-happens, so nothing breaks when one is missing - what is lost is the grouping,
-which is the part that answers "which shape is this" for somebody who does not
-already know the file name.
-
-**Adding an extract means adding a row here**, under the question it answers
-rather than at the end. If it does not fit a group, the group list is what is
-wrong.
+The rows above are generated from each extract's own frontmatter: `group:`
+names the question it answers and `description:` is the row's text. Do not edit
+a row here; change the extract's frontmatter. If an extract fits no group,
+change the group list.
 

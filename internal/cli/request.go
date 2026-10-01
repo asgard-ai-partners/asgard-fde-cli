@@ -119,8 +119,8 @@ Write the title in the customer's own words. The translation into a project, a
 read path and an entry point is the request's own job, and keeping the original
 wording is what lets the next reader check that the translation was right.
 
-One request per thing they asked for. Two capabilities in one file is how a
-half-finished request ends up marked done.
+Open one request per thing they asked for. With two capabilities in one file,
+a half-finished request can end up marked done.
 
 It writes the spec, registers it, and stamps today's date and ` + "`draft`" + ` on both.
 The ID is the first unused REQ number in ` + "`" + work.RequestDir + "`" + `, read from the file
@@ -246,8 +246,8 @@ lists it with no project, which is what an unfinished interview looks like.
 The project follows the audience, not the data. Same audience as an existing
 project means it goes in that project; a new audience means a new project, with
 its own read path and its own way in. Putting a public capability into
-an internal project because the data happens to be nearby is how a semantic layer
-becomes reachable from a public endpoint.
+an internal project because the data happens to be nearby makes a semantic
+layer reachable from a public endpoint.
 
 It writes the Spec column of ` + "`" + work.RequestIndex + "`" + `, the Target project line of the
 request's Meta, and a dated line in its log.
