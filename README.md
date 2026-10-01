@@ -615,12 +615,15 @@ asgard-cli size flow-agent-single --databases 2 --queries 4
 **`issue-report`** is how a gap in this tool gets filed, and it is the only way
 what an engagement learned reaches the next one. The gap does not belong in the
 customer repository: a note in one engagement is a note one engagement has.
-It is for the tool, never for the customer: the repository is public, and what
-is wrong in the customer's systems goes on the Workbench (see `workbench`).
+It is sent as a User Feedback to the maintainers' Sentry project, which only
+they read - not as an issue on this repository, which is public. It is for the
+tool, never for the customer: what is wrong in the customer's systems goes on
+the Workbench (see `workbench`).
 
 ```bash
-asgard-cli issue-report               # the URL, and what a report has to say
-asgard-cli issue-report --new         # a body with the evidence already in it
+asgard-cli issue-report                          # the route, and what a report has to say
+asgard-cli issue-report --new > report.md        # a body with the evidence already in it
+asgard-cli issue-report --send report.md --email you@example.com   # once every TODO is answered
 ```
 
 ### `check`
@@ -1094,11 +1097,12 @@ of the three places a thing goes is decided by who has to act on it:
 |---|---|---|
 | the customer's side has to see, answer, supply or decide it - or something is wrong in what is live | the workspace's Workbench (the customer reads it) | `workbench create` |
 | whoever builds next needs it: the spec, the design, an open decision | the customer repository's records | `question add`, `request add`, `task add` |
-| the makers of this tool, or of the platform behind it | upstream, a public GitHub issue | `issue-report --new` |
+| the makers of this tool, or of the platform behind it | upstream, a feedback only the maintainers read | `issue-report --new`, then `--send` |
 
 A failure of this tool is never a Workbench `bug` - that type is what is wrong
 in the customer's deployment, and the customer reads it. Nothing about the
-customer goes upstream, because that repository is public. In the Workbench
+customer goes upstream, because a report leaves the engagement for a third
+party's service. In the Workbench
 assistant's sandbox, what the member has to keep track of goes on the
 Workbench, and a gap in the tool is still reported with `issue-report`.
 The same table is in `asgard-cli workbench --help` and in the `AGENTS.md` that
