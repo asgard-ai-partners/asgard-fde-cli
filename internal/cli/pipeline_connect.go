@@ -97,6 +97,8 @@ command's output only when the command ends, and a link printed before a
 five-minute wait would reach the member five minutes late:
 
     asgard-cli pipeline connect --account acme    prints the link, and ends
+                                                  (--account is required here:
+                                                  ask the member which account)
     asgard-cli pipeline connect --continue        waits for the connection, as the
                                                   desktop's wait does
 
@@ -134,7 +136,7 @@ way in was the list of installations you already reach.`,
 				if wait <= 0 {
 					wait = connectTimeout
 				}
-				return continueConnectInSandbox(cmd, pc, f.format, wait)
+				return continueConnectInSandbox(cmd, pc, f.format, wait, account)
 			}
 
 			// Snapshot first. The new connection is identified by not having
@@ -166,6 +168,15 @@ way in was the list of installations you already reach.`,
 			}
 
 			if auth.SandboxMode() {
+				if wanted == "" {
+					// Asked BEFORE the link, not after: an authorization started
+					// with no account to attach ends in "name the account" once the
+					// member has already clicked, and the agent's way out used to be
+					// a second link and a second authorization. Which account is
+					// the member's to say - it is never inferred, not even when
+					// they reach exactly one.
+					return errSandboxConnectNeedsAccount
+				}
 				return startConnectInSandbox(cmd, pc, before, wanted)
 			}
 
@@ -188,7 +199,7 @@ way in was the list of installations you already reach.`,
 			}
 			fmt.Fprintf(msg, "Open this URL and authorize, so the provider can say what you can connect:\n\n    %s\n\n", install.InstallUrl)
 			if install.ExpiresAt != nil {
-				fmt.Fprintf(msg, "The link expires %s.\n", install.ExpiresAt.Local().Format("15:04"))
+				fmt.Fprintf(msg, "The link expires %s.\n", expiryLabel(*install.ExpiresAt))
 			}
 			fmt.Fprintf(msg, "Waiting for the connection to appear...\n")
 
@@ -224,7 +235,8 @@ way in was the list of installations you already reach.`,
 	cmd.Flags().BoolVar(&noBrowser, "no-browser", false,
 		"do not open a browser; the URL is printed either way")
 	cmd.Flags().StringVar(&account, "account", "",
-		"which provider account to connect; defaults to the owner of this checkout's origin remote")
+		"the GitHub organisation or user the app installation belongs to - the account being connected, not the person authorizing; "+
+			"defaults to the owner of this checkout's origin remote. In the Workbench sandbox it is required, and --continue takes it too")
 	cmd.Flags().DurationVar(&wait, "wait", connectTimeout,
 		"how long to wait for the connection to appear before giving up")
 	cmd.Flags().BoolVar(&cont, "continue", false,
@@ -365,11 +377,26 @@ func attachNamedAccount(
 		}
 		fmt.Fprintf(msg, "  %s (%s) - %s%s\n", in.AccountLogin, in.AccountType, repositoryScope(in.RepositorySelection), held)
 	}
+	// The list is what is ALREADY installed, so on its own it reads as the
+	// whole choice - and it was taken as one: an agent connected the only org
+	// listed, for a member who never got to say which org they meant. Another
+	// account is one flag away; say so every time the list is shown.
+	fmt.Fprintf(msg, "\nThese are the accounts the app is already installed on. To connect a different\n"+
+		"organisation or personal account, name it with --account%s: the app's install\n"+
+		"page comes next, where the member picks that account, and the result is checked\n"+
+		"against the name before anything is connected.\n", continueHint())
 
 	if account == "" {
 		// Nothing to match and nothing to install towards either: which account
 		// this engagement is about is the one fact neither the checkout nor the
 		// provider supplied.
+		if auth.SandboxMode() {
+			// The authorization above still stands: the account is all that is
+			// missing, so the remedy is this same step with it, not a new link.
+			return nil, errors.New("no account to connect. The member's authorization still stands - do not start over.\n" +
+				"Ask the member which GitHub organisation or personal account to connect (listed above, or another one), then run\n" +
+				"    asgard-cli pipeline connect --continue --account <login>")
+		}
 		return nil, fmt.Errorf(
 			"no --account, and this is not a git checkout with a recognisable origin remote.\n" +
 				"Name the account to connect with --account; the ones you reach are listed above")
@@ -536,4 +563,19 @@ func findInstallation(installations []*platform.UserInstallation, account string
 // wrong connects an account nobody asked for.
 func isGitHubHost(host string) bool {
 	return host == "github.com" || host == "www.github.com"
+}
+
+// continueHint is how --account is passed at the point the account list is
+// shown: in the sandbox that is the second step, on a desktop a fresh run.
+func continueHint() string {
+	if auth.SandboxMode() {
+		return " (asgard-cli pipeline connect --continue --account <login>)"
+	}
+	return " (asgard-cli pipeline connect --account <login>)"
+}
+
+// expiryLabel names the zone: a bare "20:54" was read in the member's zone by
+// an agent relaying it from a UTC sandbox.
+func expiryLabel(t time.Time) string {
+	return t.Local().Format("15:04 MST")
 }

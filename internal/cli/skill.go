@@ -724,6 +724,17 @@ func warnIfBehind(cmd *cobra.Command) {
 		if !isPipelineRepo(repoRoot) {
 			return
 		}
+		// "No material yet" is for an agent about to write CRs. The plumbing
+		// commands - connecting, creating a repository, the pipeline's
+		// bookkeeping, issues, the audit log - write none, and a fresh
+		// repository runs a string of them first, each of which used to end
+		// with this line. A version mismatch below is still said everywhere.
+		for c := cmd; c != nil; c = c.Parent() {
+			switch c.Name() {
+			case "pipeline", "workbench", "audit-log":
+				return
+			}
+		}
 		fmt.Fprintf(errOut, "\nno reference material here yet; this platform serves version %s\n"+
 			"    asgard-cli skill update\n", remote)
 		return

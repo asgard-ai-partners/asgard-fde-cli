@@ -894,8 +894,13 @@ talking to it. The image sets `ASGARD_SANDBOX_MODE=true`, and then:
 - **`init` refuses `/work` itself**, which holds every repository side by side.
 - **Nothing opens the desktop's browser, because there is none.** A page on the
   internet - GitHub's install and authorize pages - is printed as a link for the
-  member's own browser: `pipeline connect` prints it and ends, and
-  `pipeline connect --continue` waits for the connection. A page only the sandbox
+  member's own browser: `pipeline connect --account <login>` prints it and ends,
+  and `pipeline connect --continue` waits for the connection. The account (the
+  organisation or user the app is installed on, not the person authorizing) is
+  the member's to name: without one, and without an origin remote to take it
+  from, connect starts nothing and says to ask; `--continue --account <login>`
+  supplies it later on the same authorization, and an account that does not have
+  the app yet leads to its install page. A page only the sandbox
   can reach - `local-env`'s form on 127.0.0.1 - is opened in the sandbox's browser
   over CDP, in the tab the member sees; the agent hands it over with
   `open_sandbox_browser`, and `local-env --wait` waits for the save, a few minutes
