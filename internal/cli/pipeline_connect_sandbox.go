@@ -33,6 +33,15 @@ import (
 // errConnectPending ends a step that handed the member a link to open.
 var errConnectPending = errors.New("waiting for the member to open a link")
 
+// errSandboxConnectNeedsAccount is connect's first step without an account to
+// connect and no origin remote to take one from. No link is started: one that
+// ends in "which account?" after the member has clicked it is a link wasted.
+var errSandboxConnectNeedsAccount = errors.New("which GitHub account to connect is not known yet, so no link was started.\n" +
+	"Ask the member which GitHub organisation (or personal account) to connect - the account the app is\n" +
+	"installed on, not the person who will authorize - then run\n" +
+	"    asgard-cli pipeline connect --account <login>\n" +
+	"An organisation that does not have the app yet is fine: the flow installs it there.")
+
 // connectPending is what the two steps share: which flow, and what the
 // workspace held before it started. It is kept beside the Workbench session
 // file, 0600 - the state is a bearer for the install flow.
@@ -98,7 +107,7 @@ func handLinkToMember(w io.Writer, purpose, url string, expires *time.Time) {
 		"browser - not the sandbox's, which is not signed in to GitHub:\n\n    %s\n\n"+
 		"There they %s.\n", url, purpose)
 	if expires != nil {
-		fmt.Fprintf(w, "The link expires %s.\n", expires.Local().Format("15:04"))
+		fmt.Fprintf(w, "The link expires %s.\n", expiryLabel(*expires))
 	}
 	fmt.Fprintf(w, "\nThen run `asgard-cli pipeline connect --continue`. It notices the connection by\n"+
 		"itself, so do not ask the member to say they are done. If it gives up, say so\n"+
@@ -125,10 +134,20 @@ func startConnectInSandbox(cmd *cobra.Command, pc *platformContext, before map[s
 
 // continueConnectInSandbox is --continue: pick the flow up where the last step
 // left it.
-func continueConnectInSandbox(cmd *cobra.Command, pc *platformContext, format string, wait time.Duration) error {
+func continueConnectInSandbox(cmd *cobra.Command, pc *platformContext, format string, wait time.Duration, account string) error {
 	p, err := loadConnectPending()
 	if err != nil {
 		return err
+	}
+	// --account here replaces the one the first step recorded. That is the
+	// way out of a flow that started without one, and the error that says so
+	// names exactly this command - it used to be ignored, so following the
+	// instruction failed the same way and the member had to authorize again.
+	if account != "" && !strings.EqualFold(account, p.Account) {
+		p.Account = account
+		if err := saveConnectPending(p); err != nil {
+			return err
+		}
 	}
 	if p.Workspace != pc.Workspace {
 		return fmt.Errorf("the connection being set up is for workspace %s, not %s; pass --workspace %s, or start over with `asgard-cli pipeline connect`",
