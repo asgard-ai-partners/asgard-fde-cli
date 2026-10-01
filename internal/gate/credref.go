@@ -177,8 +177,8 @@ func CredentialRefs(docs []Doc, opts Options) Result {
 					"cannot rotate its own key and shares its blast radius with every platform function in the "+
 					"namespace. Write `name: {{ include \"<chart>.appSecretName\" . }}`, `key: %s`, declare the "+
 					"key under `appSecret:`, and when no use case calls this resource from outside the platform, "+
-					"set a random value: `openssl rand -hex 32 | tr -d '\\n' | asgard-cli pipeline variables set "+
-					"--release <release> --kind secret %s --from-file -`",
+					"set a random value: `asgard-cli pipeline variables set "+
+					"--release <release> --kind secret %s --random`",
 					render.ResourceAPIKey, render.ResourceAPIKey)
 				continue
 			}

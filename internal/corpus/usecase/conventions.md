@@ -216,8 +216,10 @@ Agent Hub fetches a SourceSet's.
 **So when no use case calls those endpoints from outside the platform, set a
 random value and ask nobody:**
 
-    openssl rand -hex 32 | tr -d '\n' | \
-      asgard-cli pipeline variables set --release <release> --kind secret asgard_resource_api_key --from-file -
+    asgard-cli pipeline variables set --release <release> --kind secret asgard_resource_api_key --random
+
+`--random` generates 32 random bytes as hex in the CLI itself, so it is the
+same on every operating system and needs no `openssl`.
 
 That is the whole answer for most charts, and it is not a placeholder to come
 back to - the platform does the same for the keys it generates itself.
