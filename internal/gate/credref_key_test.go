@@ -72,7 +72,7 @@ func TestPlatformInternalSecretIsReported(t *testing.T) {
 		"secretKeyRef": {}, "configMapKeyRef": {},
 	}}
 	got := Placeholder(CredentialRefs([]Doc{doc}, opts))
-	for _, want := range []string{"Agent Hub's own credential", "asgard_resource_api_key", "openssl rand"} {
+	for _, want := range []string{"Agent Hub's own credential", "asgard_resource_api_key", "--random"} {
 		if !strings.Contains(got, want) {
 			t.Errorf("a reference to preset-agent-hub did not say %q:\n%s", want, got)
 		}

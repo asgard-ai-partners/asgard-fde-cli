@@ -1033,6 +1033,7 @@ asgard-cli pipeline release update <name> --auto-apply    # the one create-time 
 asgard-cli pipeline releases                    # created releases, and the ghost rows
 asgard-cli pipeline variables list --release <name>
 asgard-cli pipeline variables set --release <name> --kind secret <key> --from-file <path>
+asgard-cli pipeline variables set --release <name> --kind secret <key> --random    # a secret nobody issues
 asgard-cli pipeline runs watch --release <name> --ref <tag>
 asgard-cli pipeline runs approve <run-id>
 ```
