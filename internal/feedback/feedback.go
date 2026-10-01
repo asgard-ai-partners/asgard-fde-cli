@@ -44,7 +44,7 @@ type Report struct {
 	Body    string // the report, as `issue-report --new` writes it
 	Email   string // optional: where the maintainers can answer
 	Name    string // optional
-	Release string // the version line, `asgard-cli <version>`
+	Release string // `asgard-cli@<version>`: Sentry drops a release with a "/" in it, so not the version line
 }
 
 // Send delivers r and returns the event id Sentry files it under.

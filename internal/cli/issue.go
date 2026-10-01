@@ -205,7 +205,7 @@ func sendReport(cmd *cobra.Command, path, email, name string) error {
 		Body:    report + "\n",
 		Email:   email,
 		Name:    name,
-		Release: "asgard-cli " + version.Get().String(),
+		Release: "asgard-cli@" + version.Get().Version,
 	})
 	if err != nil {
 		return fmt.Errorf("%w (the report is still at %s; send it again later)", err, path)
